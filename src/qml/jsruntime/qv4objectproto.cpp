@@ -734,29 +734,28 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
     // is the standard built-in constructor with that name.
     ScopedObject o(scope, engine->newObject());
     ScopedString s(scope);
+    ScopedValue v(scope);
 
-    ScopedProperty pd(scope);
     if (attrs.isData()) {
-        pd->value = desc->value;
         s = engine->newString(QStringLiteral("value"));
-        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-        pd->value = Primitive::fromBoolean(attrs.isWritable());
+        o->put(s, desc->value);
+        v = Primitive::fromBoolean(attrs.isWritable());
         s = engine->newString(QStringLiteral("writable"));
-        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
+        o->put(s, v);
     } else {
-        pd->value = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
+        v = desc->getter() ? desc->getter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("get"));
-        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-        pd->value = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
+        o->put(s, v);
+        v = desc->setter() ? desc->setter()->asReturnedValue() : Encode::undefined();
         s = engine->newString(QStringLiteral("set"));
-        o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
+        o->put(s, v);
     }
-    pd->value = Primitive::fromBoolean(attrs.isEnumerable());
+    v = Primitive::fromBoolean(attrs.isEnumerable());
     s = engine->newString(QStringLiteral("enumerable"));
-    o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
-    pd->value = Primitive::fromBoolean(attrs.isConfigurable());
+    o->put(s, v);
+    v = Primitive::fromBoolean(attrs.isConfigurable());
     s = engine->newString(QStringLiteral("configurable"));
-    o->__defineOwnProperty__(scope.engine, s, pd, Attr_Data);
+    o->put(s, v);
 
     return o.asReturnedValue();
 }
