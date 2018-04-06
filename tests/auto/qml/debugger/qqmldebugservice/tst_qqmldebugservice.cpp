@@ -75,8 +75,6 @@ void tst_QQmlDebugService::initTestCase()
     QQmlDebugConnector::setPluginKey(QLatin1String("QQmlDebugServer"));
     QQmlDebugConnector::setServices(QStringList()
                                     << QStringLiteral("tst_QQmlDebugService"));
-    QTest::ignoreMessage(QtWarningMsg,
-                         "QML debugger: Cannot set plugin key after loading the plugin.");
     m_service = new QQmlDebugTestService("tst_QQmlDebugService", 2);
 
     foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices())

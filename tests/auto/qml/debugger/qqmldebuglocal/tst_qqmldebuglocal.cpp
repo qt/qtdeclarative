@@ -65,8 +65,6 @@ void tst_QQmlDebugLocal::initTestCase()
 {
     fileName = QString::fromLatin1("tst_QQmlDebugLocal%1").arg(std::time(nullptr));
     QQmlDebugConnector::setPluginKey("QQmlDebugServer");
-    QTest::ignoreMessage(QtWarningMsg,
-                         "QML debugger: Cannot set plugin key after loading the plugin.");
     m_service = new QQmlDebugTestService("tst_QQmlDebugLocal::handshake()");
 
     const QString waitingMsg = QString("QML Debugger: Connecting to socket %1...").arg(fileName);

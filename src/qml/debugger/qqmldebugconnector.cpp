@@ -82,7 +82,7 @@ Q_GLOBAL_STATIC(QQmlDebugConnectorParams, qmlDebugConnectorParams)
 void QQmlDebugConnector::setPluginKey(const QString &key)
 {
     QQmlDebugConnectorParams *params = qmlDebugConnectorParams();
-    if (params) {
+    if (params && params->pluginKey != key) {
         if (params->instance)
             qWarning() << "QML debugger: Cannot set plugin key after loading the plugin.";
         else
