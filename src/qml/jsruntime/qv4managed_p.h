@@ -140,6 +140,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     classname::IsFunctionObject,   \
     classname::IsErrorObject,   \
     classname::IsArrayData,   \
+    classname::IsStringOrSymbol,   \
     0,                                          \
     classname::MyType,                          \
     #classname, \
@@ -163,6 +164,7 @@ struct Q_QML_PRIVATE_EXPORT Managed : Value
     enum {
         IsExecutionContext = false,
         IsString = false,
+        IsStringOrSymbol = false,
         IsObject = false,
         IsFunctionObject = false,
         IsErrorObject = false,

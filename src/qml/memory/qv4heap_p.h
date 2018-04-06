@@ -75,7 +75,8 @@ struct VTable
     uint isFunctionObject : 1;
     uint isErrorObject : 1;
     uint isArrayData : 1;
-    uint unused : 18;
+    uint isStringOrSymbol : 1;
+    uint unused : 17;
     uint type : 8;
     const char *className;
     void (*destroy)(Heap::Base *);

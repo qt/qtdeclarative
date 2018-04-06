@@ -64,7 +64,13 @@ struct Identifier;
 
 namespace Heap {
 
-struct Q_QML_PRIVATE_EXPORT String : Base {
+struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
+{
+    mutable QStringData *text;
+    mutable Identifier identifier;
+};
+
+struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
     enum StringType {
         StringType_Regular,
@@ -118,8 +124,6 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
 
     bool startsWithUpper() const;
 
-    mutable QStringData *text;
-    mutable Identifier identifier;
     mutable uint subtype;
     mutable uint stringHash;
 private:
@@ -150,9 +154,18 @@ int String::length() const {
 
 }
 
-struct Q_QML_PRIVATE_EXPORT String : public Managed {
+struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
 #ifndef V4_BOOTSTRAP
-    V4_MANAGED(String, Managed)
+    V4_MANAGED(StringOrSymbol, Managed)
+    enum {
+        IsStringOrSymbol = true
+    };
+#endif
+};
+
+struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
+#ifndef V4_BOOTSTRAP
+    V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)
     V4_NEEDS_DESTROY
@@ -283,6 +296,11 @@ struct ComplexString : String {
         return dptr;
     }
 };
+
+template<>
+inline const StringOrSymbol *Value::as() const {
+    return isManaged() && m()->internalClass->vtable->isStringOrSymbol ? static_cast<const String *>(this) : nullptr;
+}
 
 template<>
 inline const String *Value::as() const {

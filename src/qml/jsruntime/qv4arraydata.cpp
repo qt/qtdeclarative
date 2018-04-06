@@ -59,6 +59,7 @@ const QV4::VTable QV4::ArrayData::static_vtbl = {
     QV4::ArrayData::IsFunctionObject,
     QV4::ArrayData::IsErrorObject,
     QV4::ArrayData::IsArrayData,
+    QV4::ArrayData::IsStringOrSymbol,
     0,
     QV4::ArrayData::MyType,
     "ArrayData",

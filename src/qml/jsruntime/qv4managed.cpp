@@ -55,6 +55,7 @@ const VTable Managed::static_vtbl =
     Managed::IsFunctionObject,
     Managed::IsErrorObject,
     Managed::IsArrayData,
+    Managed::IsStringOrSymbol,
     0,
     Managed::MyType,
     "Managed",

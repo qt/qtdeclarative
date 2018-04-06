@@ -69,6 +69,7 @@ void Heap::String::markObjects(Heap::Base *that, MarkStack *markStack)
     }
 }
 
+DEFINE_MANAGED_VTABLE(StringOrSymbol);
 DEFINE_MANAGED_VTABLE(String);
 
 
