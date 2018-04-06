@@ -132,7 +132,6 @@ Context::ResolvedName Context::resolveName(const QString &name)
                 result.type = ResolvedName::Local;
                 return result;
             } else {
-                Q_ASSERT(scope == 0);
                 result.index = argIdx + sizeof(CallData)/sizeof(Value) - 1;
                 result.scope = 0;
                 result.type = ResolvedName::Stack;

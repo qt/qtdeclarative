@@ -524,6 +524,12 @@ void ScanFunctions::calcEscapingVariables()
         for (const QString &var : qAsConst(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
+                Context *current = c;
+                c = c->parent;
+                if (current->isWithBlock || current->contextType != ContextType::Block)
+                    break;
+            }
+            while (c) {
                 Context::MemberMap::const_iterator it = c->members.find(var);
                 if (it != c->members.end()) {
                     if (c != inner) {
