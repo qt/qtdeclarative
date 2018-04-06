@@ -175,7 +175,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 bool ExecutionContext::deleteProperty(String *name)
 {
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
@@ -211,7 +211,7 @@ bool ExecutionContext::deleteProperty(String *name)
 ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
 {
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     QV4::ExecutionEngine *v4 = engine();
     Heap::ExecutionContext *ctx = d();
@@ -274,7 +274,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            Identifier *id = name->identifier();
+            Identifier id = name->identifier();
 
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
@@ -311,7 +311,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             name->makeIdentifier();
-            Identifier *id = name->identifier();
+            Identifier id = name->identifier();
 
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)

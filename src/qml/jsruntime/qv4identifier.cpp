@@ -93,7 +93,7 @@ void IdentifierHash::detach()
 }
 
 
-IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
+IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
 {
     // fill up to max 50%
     bool grow = (d->alloc <= d->size*2);
@@ -107,8 +107,8 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
             const IdentifierHashEntry &e = d->entries[i];
             if (!e.identifier)
                 continue;
-            uint idx = e.identifier->id % newAlloc;
-            while (newEntries[idx].identifier) {
+            uint idx = e.identifier.id % newAlloc;
+            while (newEntries[idx].identifier.isValid()) {
                 ++idx;
                 idx %= newAlloc;
             }
@@ -119,8 +119,8 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
         d->alloc = newAlloc;
     }
 
-    uint idx = identifier->id % d->alloc;
-    while (d->entries[idx].identifier) {
+    uint idx = identifier.id % d->alloc;
+    while (d->entries[idx].identifier.isValid()) {
         Q_ASSERT(d->entries[idx].identifier != identifier);
         ++idx;
         idx %= d->alloc;
@@ -130,13 +130,13 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
     return d->entries + idx;
 }
 
-const IdentifierHashEntry *IdentifierHash::lookup(const Identifier *identifier) const
+const IdentifierHashEntry *IdentifierHash::lookup(Identifier identifier) const
 {
     if (!d)
         return nullptr;
     Q_ASSERT(d->entries);
 
-    uint idx = identifier->id % d->alloc;
+    uint idx = identifier.id % d->alloc;
     while (1) {
         if (!d->entries[idx].identifier)
             return nullptr;
@@ -152,7 +152,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
     if (!d)
         return nullptr;
 
-    Identifier *id = d->identifierTable->identifier(str);
+    Identifier id = d->identifierTable->identifier(str);
     return lookup(id);
 }
 
@@ -160,18 +160,18 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
         return nullptr;
-    if (str->d()->identifier)
+    if (str->d()->identifier.isValid())
         return lookup(str->d()->identifier);
     return lookup(str->toQString());
 }
 
-const Identifier *IdentifierHash::toIdentifier(const QString &str) const
+const Identifier IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
 }
 
-const Identifier *IdentifierHash::toIdentifier(Heap::String *str) const
+const Identifier IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
@@ -182,8 +182,8 @@ QString QV4::IdentifierHash::findId(int value) const
     IdentifierHashEntry *e = d->entries;
     IdentifierHashEntry *end = e + d->alloc;
     while (e < end) {
-        if (e->identifier && e->value == value)
-            return d->identifierTable->stringFromIdentifier(e->identifier)->toQString();
+        if (e->identifier.isValid() && e->value == value)
+            return d->identifierTable->stringForId(e->identifier)->toQString();
         ++e;
     }
     return QString();

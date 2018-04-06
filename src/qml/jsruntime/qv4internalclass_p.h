@@ -70,7 +70,7 @@ struct PropertyHashData;
 struct PropertyHash
 {
     struct Entry {
-        const Identifier *identifier;
+        Identifier identifier;
         uint index;
     };
 
@@ -82,8 +82,8 @@ struct PropertyHash
     PropertyHash &operator=(const PropertyHash &other);
 
     void addEntry(const Entry &entry, int classSize);
-    uint lookup(const Identifier *identifier) const;
-    int removeIdentifier(Identifier *identifier, int classSize);
+    uint lookup(Identifier identifier) const;
+    int removeIdentifier(Identifier identifier, int classSize);
     void detach(bool grow, int classSize);
 };
 
@@ -129,11 +129,11 @@ inline PropertyHash &PropertyHash::operator=(const PropertyHash &other)
 
 
 
-inline uint PropertyHash::lookup(const Identifier *identifier) const
+inline uint PropertyHash::lookup(Identifier identifier) const
 {
     Q_ASSERT(d->entries);
 
-    uint idx = identifier->id % d->alloc;
+    uint idx = identifier.id % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
             return d->entries[idx].index;
@@ -237,7 +237,7 @@ struct SharedInternalClassData {
 struct InternalClassTransition
 {
     union {
-        Identifier *id;
+        Identifier id;
         const VTable *vtable;
         Heap::Object *prototype;
     };
@@ -261,6 +261,8 @@ struct InternalClassTransition
     { return id < other.id || (id == other.id && flags < other.flags); }
 };
 
+static_assert(sizeof(Identifier) == sizeof(VTable *), "Identifier needs to be one pointer large to map into the union above");
+
 namespace Heap {
 
 struct InternalClass : Base {
@@ -271,7 +273,7 @@ struct InternalClass : Base {
     InternalClass *parent;
 
     PropertyHash propertyTable; // id to valueIndex
-    SharedInternalClassData<Identifier *> nameMap;
+    SharedInternalClassData<Identifier> nameMap;
     SharedInternalClassData<PropertyAttributes> propertyData;
 
     typedef InternalClassTransition Transition;
@@ -292,12 +294,12 @@ struct InternalClass : Base {
 
     static void addMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index);
     Q_REQUIRED_RESULT InternalClass *addMember(QV4::String *string, PropertyAttributes data, uint *index = nullptr);
-    Q_REQUIRED_RESULT InternalClass *addMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
-    Q_REQUIRED_RESULT InternalClass *changeMember(Identifier *identifier, PropertyAttributes data, uint *index = nullptr);
+    Q_REQUIRED_RESULT InternalClass *addMember(Identifier identifier, PropertyAttributes data, uint *index = nullptr);
+    Q_REQUIRED_RESULT InternalClass *changeMember(Identifier identifier, PropertyAttributes data, uint *index = nullptr);
     static void changeMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index = nullptr);
-    static void removeMember(QV4::Object *object, Identifier *identifier);
+    static void removeMember(QV4::Object *object, Identifier identifier);
     uint find(const QV4::String *string);
-    uint find(const Identifier *id)
+    uint find(const Identifier id)
     {
         uint index = propertyTable.lookup(id);
         if (index < size)
@@ -330,7 +332,7 @@ struct InternalClass : Base {
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
-    InternalClass *addMemberImpl(Identifier *identifier, PropertyAttributes data, uint *index);
+    InternalClass *addMemberImpl(Identifier identifier, PropertyAttributes data, uint *index);
 
     void removeChildEntry(InternalClass *child);
     friend struct ExecutionEngine;

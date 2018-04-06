@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 using namespace QV4;
 
 
-void Lookup::resolveProtoGetter(Identifier *name, const Heap::Object *proto)
+void Lookup::resolveProtoGetter(Identifier name, const Heap::Object *proto)
 {
     while (proto) {
         uint index = proto->internalClass->find(name);
@@ -70,7 +70,7 @@ void Lookup::resolveProtoGetter(Identifier *name, const Heap::Object *proto)
 ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *object)
 {
     Heap::Object *obj = object->d();
-    Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    Identifier name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
     uint index = obj->internalClass->find(name);
     if (index != UINT_MAX) {
@@ -125,7 +125,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
         primitiveLookup.proto = engine->numberPrototype()->d();
     }
 
-    Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    Identifier name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     protoLookup.protoId = primitiveLookup.proto->internalClass->protoId;
     resolveProtoGetter(name, primitiveLookup.proto);
 
@@ -139,7 +139,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
 ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
 {
     Object *o = engine->globalObject;
-    Identifier *name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    Identifier name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     protoLookup.protoId = o->internalClass()->protoId;
     resolveProtoGetter(name, o->d());
 

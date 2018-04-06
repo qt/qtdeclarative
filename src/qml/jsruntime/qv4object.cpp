@@ -267,7 +267,7 @@ void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p
         return getOwnProperty(idx, attrs, p);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     uint member = internalClass()->find(id);
     if (member < UINT_MAX) {
@@ -309,7 +309,7 @@ MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *att
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     Heap::Object *o = d();
     while (o) {
@@ -389,7 +389,7 @@ bool Object::hasOwnProperty(String *name) const
         return hasOwnProperty(idx);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     if (internalClass()->find(id) < UINT_MAX)
         return true;
@@ -449,7 +449,7 @@ PropertyAttributes Object::query(const Managed *m, String *name)
         return queryIndexed(m, idx);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     const Object *o = static_cast<const Object *>(m);
     idx = o->internalClass()->find(id);
@@ -529,7 +529,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
     }
 
     while (it->memberIndex < o->internalClass()->size) {
-        Identifier *n = o->internalClass()->nameMap.at(it->memberIndex);
+        Identifier n = o->internalClass()->nameMap.at(it->memberIndex);
         if (!n) {
             // accessor properties have a dummy entry with n == 0
             ++it->memberIndex;
@@ -540,7 +540,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            name->setM(o->engine()->identifierTable->stringFromIdentifier(n));
+            name->setM(o->engine()->identifierTable->stringForId(n));
             *attrs = a;
             pd->value = *o->propertyData(idx);
             if (a.isAccessor())
@@ -560,7 +560,7 @@ ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
         return getIndexed(idx, hasProperty);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     Heap::Object *o = d();
     while (o) {
@@ -627,7 +627,7 @@ bool Object::internalPut(String *name, const Value &value)
         return putIndexed(idx, value);
 
     name->makeIdentifier();
-    Identifier *id = name->identifier();
+    Identifier id = name->identifier();
 
     MemberData::Index memberIndex{nullptr, nullptr};
     uint member = internalClass()->find(id);

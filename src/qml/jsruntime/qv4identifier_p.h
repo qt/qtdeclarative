@@ -66,12 +66,19 @@ struct ExecutionEngine;
 
 struct Identifier
 {
-    uint id;
+    quintptr id;
+
+    static Identifier invalid() { return Identifier{0}; }
+    bool isValid() const { return id != 0; }
+    bool operator !() const { return id == 0; }
+    bool operator ==(const Identifier &other) const { return id == other.id; }
+    bool operator !=(const Identifier &other) const { return id != other.id; }
+    bool operator <(const Identifier &other) const { return id < other.id; }
 };
 
 
 struct IdentifierHashEntry {
-    const Identifier *identifier;
+    Identifier identifier;
     int value;
 };
 
@@ -116,12 +123,12 @@ struct IdentifierHash
     QString findId(int value) const;
 
 protected:
-    IdentifierHashEntry *addEntry(const Identifier *i);
-    const IdentifierHashEntry *lookup(const Identifier *identifier) const;
+    IdentifierHashEntry *addEntry(Identifier i);
+    const IdentifierHashEntry *lookup(Identifier identifier) const;
     const IdentifierHashEntry *lookup(const QString &str) const;
     const IdentifierHashEntry *lookup(String *str) const;
-    const Identifier *toIdentifier(const QString &str) const;
-    const Identifier *toIdentifier(Heap::String *str) const;
+    const Identifier toIdentifier(const QString &str) const;
+    const Identifier toIdentifier(Heap::String *str) const;
 };
 
 

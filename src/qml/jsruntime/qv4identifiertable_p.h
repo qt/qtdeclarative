@@ -78,21 +78,21 @@ public:
 
     Heap::String *insertString(const QString &s);
 
-    Identifier *identifier(const Heap::String *str) {
-        if (str->identifier)
+    Identifier identifier(const Heap::String *str) {
+        if (str->identifier.isValid())
             return str->identifier;
         return identifierImpl(str);
     }
-    Identifier *identifier(const QV4::String *str) {
+    Identifier identifier(const QV4::String *str) {
         return identifier(str->d());
     }
 
-    Identifier *identifier(const QString &s);
-    Identifier *identifier(const char *s, int len);
+    Identifier identifier(const QString &s);
+    Identifier identifier(const char *s, int len);
 
-    Identifier *identifierImpl(const Heap::String *str);
+    Identifier identifierImpl(const Heap::String *str);
 
-    Q_QML_PRIVATE_EXPORT Heap::String *stringFromIdentifier(const Identifier *i) const;
+    Q_QML_PRIVATE_EXPORT Heap::String *stringForId(Identifier i) const;
 
     void mark(MarkStack *markStack) {
         for (int i = 0; i < alloc; ++i) {

@@ -67,9 +67,6 @@ IdentifierTable::IdentifierTable(ExecutionEngine *engine)
 
 IdentifierTable::~IdentifierTable()
 {
-    for (int i = 0; i < alloc; ++i)
-        if (entriesByHash[i])
-            delete entriesByHash[i]->identifier;
     free(entriesByHash);
     free(entriesById);
 }
@@ -81,8 +78,7 @@ void IdentifierTable::addEntry(Heap::String *str)
     if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->identifier = new Identifier;
-    str->identifier->id = engine->nextStringOrSymbolId();
+    str->identifier = engine->nextIdentifier();
 
     bool grow = (alloc <= size*2);
 
@@ -111,7 +107,7 @@ void IdentifierTable::addEntry(Heap::String *str)
             Heap::String *e = entriesById[i];
             if (!e)
                 continue;
-            uint idx = e->identifier->id % newAlloc;
+            uint idx = e->identifier.id % newAlloc;
             while (newEntries[idx]) {
                 ++idx;
                 idx %= newAlloc;
@@ -131,7 +127,7 @@ void IdentifierTable::addEntry(Heap::String *str)
     }
     entriesByHash[idx] = str;
 
-    idx = str->identifier->id % alloc;
+    idx = str->identifier.id % alloc;
     while (entriesById[idx]) {
         ++idx;
         idx %= alloc;
@@ -163,13 +159,13 @@ Heap::String *IdentifierTable::insertString(const QString &s)
 }
 
 
-Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
+Identifier IdentifierTable::identifierImpl(const Heap::String *str)
 {
-    if (str->identifier)
+    if (str->identifier.isValid())
         return str->identifier;
     uint hash = str->hashValue();
     if (str->subtype == Heap::String::StringType_ArrayIndex)
-        return nullptr;
+        return Identifier::invalid();
 
     uint idx = hash % alloc;
     while (Heap::String *e = entriesByHash[idx]) {
@@ -185,12 +181,12 @@ Identifier *IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
-Heap::String *IdentifierTable::stringFromIdentifier(const Identifier *i) const
+Heap::String *IdentifierTable::stringForId(Identifier i) const
 {
     if (!i)
         return nullptr;
 
-    uint idx = i->id % alloc;
+    uint idx = i.id % alloc;
     while (1) {
         Heap::String *e = entriesById[idx];
         Q_ASSERT(e);
@@ -201,12 +197,12 @@ Heap::String *IdentifierTable::stringFromIdentifier(const Identifier *i) const
     }
 }
 
-Identifier *IdentifierTable::identifier(const QString &s)
+Identifier IdentifierTable::identifier(const QString &s)
 {
     return insertString(s)->identifier;
 }
 
-Identifier *IdentifierTable::identifier(const char *s, int len)
+Identifier IdentifierTable::identifier(const char *s, int len)
 {
     uint subtype;
     uint hash = String::createHashValue(s, len, &subtype);

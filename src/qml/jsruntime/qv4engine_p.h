@@ -158,9 +158,9 @@ public:
     QJSEngine *publicEngine;
 
 private:
-    int stringOrSymbolId = 0;
+    quintptr currentIdentifier = 0;
 public:
-    int nextStringOrSymbolId() { return ++stringOrSymbolId; }
+    Identifier nextIdentifier() { return Identifier{ ++currentIdentifier }; }
 
     enum JSObjects {
         RootContext,

@@ -175,7 +175,7 @@ void Heap::String::simplifyString() const
     text = result.data_ptr();
     text->ref.ref();
     const ComplexString *cs = static_cast<const ComplexString *>(this);
-    identifier = nullptr;
+    identifier = Identifier::invalid();
     cs->left = cs->right = nullptr;
 
     internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));

@@ -117,7 +117,7 @@ struct Lookup {
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
     ReturnedValue resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object);
     ReturnedValue resolveGlobalGetter(ExecutionEngine *engine);
-    void resolveProtoGetter(Identifier *name, const Heap::Object *proto);
+    void resolveProtoGetter(Identifier name, const Heap::Object *proto);
 
     static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);

@@ -108,7 +108,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
         if (hashValue() != other->hashValue())
             return false;
         Q_ASSERT(subtype < StringType_Complex);
-        if (identifier && identifier == other->identifier)
+        if (identifier.isValid() && identifier == other->identifier)
             return true;
         if (subtype == Heap::String::StringType_ArrayIndex && other->subtype == Heap::String::StringType_ArrayIndex)
             return true;
@@ -119,7 +119,7 @@ struct Q_QML_PRIVATE_EXPORT String : Base {
     bool startsWithUpper() const;
 
     mutable QStringData *text;
-    mutable Identifier *identifier;
+    mutable Identifier identifier;
     mutable uint subtype;
     mutable uint stringHash;
 private:
@@ -192,7 +192,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
     uint toUInt(bool *ok) const;
 
     void makeIdentifier() const {
-        if (d()->identifier)
+        if (d()->identifier.isValid())
             return;
         makeIdentifierImpl();
     }
@@ -214,7 +214,7 @@ struct Q_QML_PRIVATE_EXPORT String : public Managed {
 
     bool startsWithUpper() const { return d()->startsWithUpper(); }
 
-    Identifier *identifier() const { return d()->identifier; }
+    Identifier identifier() const { return d()->identifier; }
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
