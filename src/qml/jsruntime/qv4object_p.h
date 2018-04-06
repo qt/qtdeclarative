@@ -97,12 +97,12 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
         WriteBarrier::write(e, this, prop->data_ptr(), b->asReturnedValue());
     }
 
-    QV4::MemberData::Index writablePropertyData(uint index) {
+    PropertyIndex writablePropertyData(uint index) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline)
-            return { this, reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index};
+            return PropertyIndex{ this, reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index};
         index -= nInline;
-        return { memberData, memberData->values.values + index };
+        return PropertyIndex{ memberData, memberData->values.values + index };
     }
 
     const Value *propertyData(uint index) const {
@@ -243,8 +243,8 @@ struct Q_QML_EXPORT Object: Managed {
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = nullptr);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
 
-    MemberData::Index getValueOrSetter(String *name, PropertyAttributes *attrs);
-    ArrayData::Index getValueOrSetter(uint index, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(String *name, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
 
     bool hasProperty(String *name) const;
     bool hasProperty(uint index) const;

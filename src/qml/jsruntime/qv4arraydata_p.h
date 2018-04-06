@@ -103,18 +103,6 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
 
     enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
 
-    struct Index {
-        Heap::ArrayData *arrayData;
-        uint index;
-
-        void set(EngineBase *e, Value newVal) {
-            arrayData->values.set(e, index, newVal);
-        }
-        const Value *operator->() const { return &arrayData->values[index]; }
-        const Value &operator*() const { return arrayData->values[index]; }
-        bool isNull() const { return !arrayData; }
-    };
-
     bool isSparse() const { return type == Sparse; }
 
     const ArrayVTable *vtable() const { return reinterpret_cast<const ArrayVTable *>(internalClass->vtable); }
@@ -124,7 +112,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
     }
     inline bool getProperty(uint index, Property *p, PropertyAttributes *attrs);
     inline void setProperty(EngineBase *e, uint index, const Property *p);
-    inline Index getValueOrSetter(uint index, PropertyAttributes *attrs);
+    inline PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
     inline PropertyAttributes attributes(uint i) const;
 
     bool isEmpty(uint i) const {
@@ -188,8 +176,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
     enum {
         IsArrayData = true
     };
-
-    typedef Heap::ArrayData::Index Index;
 
     uint alloc() const { return d()->values.alloc; }
     uint &alloc() { return d()->values.alloc; }
@@ -305,9 +291,9 @@ bool ArrayData::getProperty(uint index, Property *p, PropertyAttributes *attrs)
 
     *attrs = attributes(index);
     if (p) {
-        p->value = *(Index{ this, mapped });
+        p->value = *(PropertyIndex{ this, values.values + mapped });
         if (attrs->isAccessor())
-            p->set = *(Index{ this, mapped + 1 /*Object::SetterOffset*/ });
+            p->set = *(PropertyIndex{ this, values.values + mapped + 1 /*Object::SetterOffset*/ });
     }
     return true;
 }
@@ -328,16 +314,18 @@ inline PropertyAttributes ArrayData::attributes(uint i) const
     return static_cast<const SimpleArrayData *>(this)->attributes(i);
 }
 
-ArrayData::Index ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
+PropertyIndex ArrayData::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
     uint idx = mappedIndex(index);
     if (idx == UINT_MAX) {
         *attrs = Attr_Invalid;
-        return { nullptr, 0 };
+        return { nullptr, nullptr };
     }
 
     *attrs = attributes(index);
-    return { this, attrs->isAccessor() ? idx + 1 /* QV4::Object::SetterOffset*/ : idx };
+    if (attrs->isAccessor())
+        ++idx;
+    return { this, values.values + idx };
 }
 
 

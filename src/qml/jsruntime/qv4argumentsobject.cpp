@@ -133,7 +133,7 @@ bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, con
         mapAttrs = arrayData()->attributes(index);
         arrayData()->getProperty(index, map, &mapAttrs);
         setArrayAttributes(index, Attr_Data);
-        ArrayData::Index arrayIndex{ arrayData(), arrayData()->mappedIndex(index) };
+        PropertyIndex arrayIndex{ arrayData(), arrayData()->values.values + arrayData()->mappedIndex(index) };
         arrayIndex.set(scope.engine, d()->mappedArguments->values[index]);
     }
 

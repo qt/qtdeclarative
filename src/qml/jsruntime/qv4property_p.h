@@ -142,6 +142,19 @@ inline void Property::merge(PropertyAttributes &attrs, const Property *other, Pr
     }
 }
 
+struct PropertyIndex {
+    Heap::Base *base;
+    Value *slot;
+
+    void set(EngineBase *e, Value newVal) {
+        WriteBarrier::write(e, base, slot->data_ptr(), newVal.asReturnedValue());
+    }
+    const Value *operator->() const { return slot; }
+    const Value &operator*() const { return *slot; }
+    bool isNull() const { return !slot; }
+};
+
+
 }
 
 Q_DECLARE_TYPEINFO(QV4::Property, Q_MOVABLE_TYPE);

@@ -74,18 +74,6 @@ struct MemberData : Managed
     V4_MANAGED(MemberData, Managed)
     V4_INTERNALCLASS(MemberData)
 
-    struct Index {
-        Heap::Base *base;
-        Value *slot;
-
-        void set(EngineBase *e, Value newVal) {
-            WriteBarrier::write(e, base, slot->data_ptr(), newVal.asReturnedValue());
-        }
-        const Value *operator->() const { return slot; }
-        const Value &operator*() const { return *slot; }
-        bool isNull() const { return !slot; }
-    };
-
     const Value &operator[] (uint idx) const { return d()->values[idx]; }
     const Value *data() const { return d()->values.data(); }
     void set(EngineBase *e, uint index, Value v) { d()->values.set(e, index, v); }

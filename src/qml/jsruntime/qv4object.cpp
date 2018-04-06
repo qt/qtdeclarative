@@ -304,7 +304,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 }
 
 // Section 8.12.2
-MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
+PropertyIndex Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
@@ -325,7 +325,7 @@ MemberData::Index Object::getValueOrSetter(String *name, PropertyAttributes *att
     return { nullptr, nullptr };
 }
 
-ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
+PropertyIndex Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
 {
     Heap::Object *o = d();
     while (o) {
@@ -333,7 +333,7 @@ ArrayData::Index Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
             uint idx = o->arrayData->mappedIndex(index);
             if (idx != UINT_MAX) {
                 *attrs = o->arrayData->attributes(index);
-                return { o->arrayData , attrs->isAccessor() ? idx + SetterOffset : idx };
+                return { o->arrayData , o->arrayData->values.values + (attrs->isAccessor() ? idx + SetterOffset : idx) };
             }
         }
         if (o->vtable()->type == Type_StringObject) {
@@ -629,7 +629,7 @@ bool Object::internalPut(String *name, const Value &value)
     name->makeIdentifier();
     Identifier id = name->identifier();
 
-    MemberData::Index memberIndex{nullptr, nullptr};
+    PropertyIndex memberIndex{nullptr, nullptr};
     uint member = internalClass()->find(id);
     PropertyAttributes attrs;
     if (member < UINT_MAX) {
@@ -705,7 +705,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
     PropertyAttributes attrs;
 
-    ArrayData::Index arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : ArrayData::Index{ nullptr, 0 };
+    PropertyIndex arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : PropertyIndex{ nullptr, 0 };
 
     if (arrayIndex.isNull() && isStringObject()) {
         if (index < static_cast<StringObject *>(this)->length())
