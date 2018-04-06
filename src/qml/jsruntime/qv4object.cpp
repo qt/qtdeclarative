@@ -249,7 +249,8 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
-    Heap::InternalClass::addMember(this, s, attributes, &idx);
+    s->makeIdentifier();
+    Heap::InternalClass::addMember(this, s->identifier(), attributes, &idx);
 
     if (attributes.isAccessor()) {
         setProperty(idx + GetterOffset, p->value);
@@ -812,7 +813,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
     uint memberIndex;
 
     if (isArrayObject() && name->equals(engine->id_length())) {
-        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()));
+        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()->identifier()));
         ScopedProperty lp(scope);
         PropertyAttributes cattrs;
         getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
@@ -833,7 +834,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
         }
         if (attrs.hasWritable() && !attrs.isWritable()) {
             cattrs.setWritable(false);
-            Heap::InternalClass::changeMember(this, engine->id_length(), cattrs);
+            Heap::InternalClass::changeMember(this, engine->id_length()->identifier(), cattrs);
         }
         if (!succeeded)
             return false;
@@ -981,7 +982,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *
 
     current->merge(cattrs, p, attrs);
     if (member) {
-        Heap::InternalClass::changeMember(this, member, cattrs);
+        Heap::InternalClass::changeMember(this, member->identifier(), cattrs);
         setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);

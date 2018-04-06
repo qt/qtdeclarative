@@ -234,7 +234,8 @@ bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
         return false;
     QV4::Scoped<QQmlContextWrapper> wrapper(scope, resource);
 
-    uint member = wrapper->internalClass()->find(name);
+    name->makeIdentifier();
+    uint member = wrapper->internalClass()->find(name->identifier());
     if (member < UINT_MAX)
         return wrapper->putValue(member, value);
 

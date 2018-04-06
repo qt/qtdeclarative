@@ -225,11 +225,12 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
         o->setProperty(v4, size + 1, Primitive::undefinedValue());
 }
 
-void InternalClass::changeMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index)
+void InternalClass::changeMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
 {
+    Q_ASSERT(id.isValid());
     uint idx;
     Heap::InternalClass *oldClass = object->internalClass();
-    Heap::InternalClass *newClass = oldClass->changeMember(string->identifier(), data, &idx);
+    Heap::InternalClass *newClass = oldClass->changeMember(id, data, &idx);
     if (index)
         *index = idx;
 
@@ -382,31 +383,26 @@ Heap::InternalClass *InternalClass::nonExtensible()
     return newClass;
 }
 
-void InternalClass::addMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index)
+void InternalClass::addMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
 {
+    Q_ASSERT(id.isValid());
     data.resolve();
-    object->internalClass()->engine->identifierTable->identifier(string);
-    if (object->internalClass()->propertyTable.lookup(string->d()->identifier) < object->internalClass()->size) {
-        changeMember(object, string, data, index);
+    if (object->internalClass()->propertyTable.lookup(id) < object->internalClass()->size) {
+        changeMember(object, id, data, index);
         return;
     }
 
     uint idx;
-    Heap::InternalClass *newClass = object->internalClass()->addMemberImpl(string->identifier(), data, &idx);
+    Heap::InternalClass *newClass = object->internalClass()->addMemberImpl(id, data, &idx);
     if (index)
         *index = idx;
 
     object->setInternalClass(newClass);
 }
 
-Heap::InternalClass *InternalClass::addMember(QV4::String *string, PropertyAttributes data, uint *index)
-{
-    engine->identifierTable->identifier(string);
-    return addMember(string->identifier(), data, index);
-}
-
 Heap::InternalClass *InternalClass::addMember(Identifier identifier, PropertyAttributes data, uint *index)
 {
+    Q_ASSERT(identifier.isValid());
     data.resolve();
 
     if (propertyTable.lookup(identifier) < size)
@@ -477,18 +473,6 @@ void InternalClass::removeMember(QV4::Object *object, Identifier identifier)
 
     // we didn't remove the data slot, just made it inaccessible
     Q_ASSERT(object->internalClass()->size == oldClass->size);
-}
-
-uint InternalClass::find(const QV4::String *string)
-{
-    engine->identifierTable->identifier(string);
-    const Identifier id = string->d()->identifier;
-
-    uint index = propertyTable.lookup(id);
-    if (index < size)
-        return index;
-
-    return UINT_MAX;
 }
 
 Heap::InternalClass *InternalClass::sealed()

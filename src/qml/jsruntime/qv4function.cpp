@@ -115,8 +115,8 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     Scope scope(engine);
     ScopedString arg(scope);
     for (const QString &parameterName : parameterNames) {
-        arg = engine->newString(parameterName);
-        internalClass = internalClass->addMember(arg, Attr_NotConfigurable);
+        arg = engine->newIdentifier(parameterName);
+        internalClass = internalClass->addMember(arg->identifier(), Attr_NotConfigurable);
     }
     nFormals = parameters.size();
 

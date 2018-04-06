@@ -60,9 +60,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct String;
-struct Object;
-struct Identifier;
 struct VTable;
 struct MarkStack;
 
@@ -292,15 +289,15 @@ struct InternalClass : Base {
 
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
 
-    static void addMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(QV4::String *string, PropertyAttributes data, uint *index = nullptr);
+    static void addMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index);
     Q_REQUIRED_RESULT InternalClass *addMember(Identifier identifier, PropertyAttributes data, uint *index = nullptr);
     Q_REQUIRED_RESULT InternalClass *changeMember(Identifier identifier, PropertyAttributes data, uint *index = nullptr);
-    static void changeMember(QV4::Object *object, QV4::String *string, PropertyAttributes data, uint *index = nullptr);
+    static void changeMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index = nullptr);
     static void removeMember(QV4::Object *object, Identifier identifier);
-    uint find(const QV4::String *string);
     uint find(const Identifier id)
     {
+        Q_ASSERT(id.isValid());
+
         uint index = propertyTable.lookup(id);
         if (index < size)
             return index;

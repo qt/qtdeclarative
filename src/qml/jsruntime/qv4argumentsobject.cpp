@@ -61,9 +61,9 @@ void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
-    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()));
+    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->identifier()));
     setProperty(v4, CalleePropertyIndex, context->d()->function);
-    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()));
+    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->identifier()));
     setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
 }
 
@@ -74,7 +74,7 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
 
     Object::init();
 
-    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()));
+    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->identifier()));
     setProperty(v4, CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
     setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
 
@@ -83,7 +83,7 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     args->arrayReserve(frame->originalArgumentsCount);
     args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
 
-    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()));
+    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()->identifier()));
     setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(frame->originalArgumentsCount));
 }
 
