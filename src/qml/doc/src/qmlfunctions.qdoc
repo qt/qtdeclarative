@@ -105,6 +105,8 @@
   than the actual version of the library. Indeed, it is normal for the new library to allow
   QML written to previous versions to continue to work, even if more advanced versions of
   some of its types are available.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -141,7 +143,8 @@
 
   Returns the QML type id.
 
-  \sa qmlRegisterTypeNotAvailable()
+  \sa qmlRegisterTypeNotAvailable(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -266,7 +269,8 @@
 
   Without this, a generic "Game is not a type" message would be given.
 
-  \sa qmlRegisterUncreatableType()
+  \sa qmlRegisterUncreatableType(),
+      {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -278,7 +282,77 @@
   system. Instances of this type cannot be created from the QML
   system.
 
+  This function should be used when the type will not be referenced by name.
+  Specifically, it has to be used for C++ types that are used as the left-hand
+  side of a property binding.
+
+  For example, consider the following two classes:
+
+    \code
+    class Bar : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(QString baz READ baz WRITE setBaz NOTIFY bazChanged)
+
+    public:
+        Bar() {}
+
+        QString baz() const { return mBaz; }
+
+        void setBaz(const QString &baz)
+        {
+            if (baz == mBaz)
+                return;
+
+            mBaz = baz;
+            emit bazChanged();
+        }
+
+    signals:
+        void bazChanged();
+
+    private:
+        QString mBaz;
+    };
+
+    class Foo : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(Bar *bar READ bar CONSTANT FINAL)
+
+    public:
+        Foo() {}
+
+        Bar *bar() { return &mBar; }
+
+    private:
+        Bar mBar;
+    };
+    \endcode
+
+  In QML, we assign a string to the \c baz property of \c bar:
+
+    \code
+    Foo {
+        bar.baz: "abc"
+        Component.onCompleted: print(bar.baz)
+    }
+    \endcode
+
+  For the QML engine to know that the \c Bar type has a \c baz property,
+  we have to make \c Bar known:
+
+    \code
+    qmlRegisterType<Foo>("App", 1, 0, "Foo");
+    qmlRegisterType<Bar>();
+    \code
+
+  As the \c Foo type is instantiated in QML, it must be registered
+  with the version of \l qmlRegisterType() that takes an import URI.
+
   Returns the QML type id.
+
+  \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 
 /*!
@@ -346,7 +420,9 @@
        property int someValue: ExampleApi.MyApi.someProperty
    }
    \endqml
-  */
+
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
     \fn template<typename T> QObject *qmlAttachedPropertiesObject(const QObject *attachee, bool create = true)
@@ -486,7 +562,8 @@
    }
    \endcode
 
-  */
+   \sa {Choosing the Correct Integration Method Between C++ and QML}
+*/
 
 /*!
    \fn int qmlRegisterSingletonType(const QUrl &url, const char *uri, int versionMajor, int versionMinor, const char *qmlName)

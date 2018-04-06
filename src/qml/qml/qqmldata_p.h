@@ -208,12 +208,12 @@ public:
     QQmlData**prevContextObject;
 
     inline bool hasBindingBit(int) const;
-    void clearBindingBit(int);
-    void setBindingBit(QObject *obj, int);
+    inline void setBindingBit(QObject *obj, int);
+    inline void clearBindingBit(int);
 
     inline bool hasPendingBindingBit(int index) const;
-    void setPendingBindingBit(QObject *obj, int);
-    void clearPendingBindingBit(int);
+    inline void setPendingBindingBit(QObject *obj, int);
+    inline void clearPendingBindingBit(int);
 
     quint16 lineNumber;
     quint16 columnNumber;
@@ -304,6 +304,27 @@ private:
         const BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
         return bits[offset] & bitFlagForBit(bit);
     }
+
+    Q_ALWAYS_INLINE void clearBit(int bit)
+    {
+        uint offset = QQmlData::offsetForBit(bit);
+        if (bindingBitsArraySize > offset) {
+            BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
+            bits[offset] &= ~QQmlData::bitFlagForBit(bit);
+        }
+    }
+
+    Q_ALWAYS_INLINE void setBit(QObject *obj, int bit)
+    {
+        uint offset = QQmlData::offsetForBit(bit);
+        BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
+        if (Q_UNLIKELY(bindingBitsArraySize <= offset))
+            bits = growBits(obj, bit);
+        bits[offset] |= QQmlData::bitFlagForBit(bit);
+    }
+
+    Q_NEVER_INLINE BindingBitsType *growBits(QObject *obj, int bit);
+
     Q_DISABLE_COPY(QQmlData);
 };
 
@@ -356,12 +377,40 @@ bool QQmlData::hasBindingBit(int coreIndex) const
     return hasBitSet(coreIndex * 2);
 }
 
+void QQmlData::setBindingBit(QObject *obj, int coreIndex)
+{
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
+    setBit(obj, coreIndex * 2);
+}
+
+void QQmlData::clearBindingBit(int coreIndex)
+{
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
+    clearBit(coreIndex * 2);
+}
+
 bool QQmlData::hasPendingBindingBit(int coreIndex) const
 {
     Q_ASSERT(coreIndex >= 0);
     Q_ASSERT(coreIndex <= 0xffff);
 
     return hasBitSet(coreIndex * 2 + 1);
+}
+
+void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
+{
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
+    setBit(obj, coreIndex * 2 + 1);
+}
+
+void QQmlData::clearPendingBindingBit(int coreIndex)
+{
+    Q_ASSERT(coreIndex >= 0);
+    Q_ASSERT(coreIndex <= 0xffff);
+    clearBit(coreIndex * 2 + 1);
 }
 
 void QQmlData::flushPendingBinding(QObject *o, QQmlPropertyIndex propertyIndex)

@@ -126,8 +126,10 @@ void tst_QQmlDebuggingEnabler::qmlscene()
     }
 
     QCOMPARE(m_process->state(), QProcess::Running);
-    if (!blockMode)
-        QTRY_VERIFY(m_process->output().contains(QLatin1String("qml: Component.onCompleted")));
+    if (!blockMode) {
+        QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains(
+                                     QLatin1String("Component.onCompleted")), 15000);
+    }
 }
 
 void tst_QQmlDebuggingEnabler::custom_data()
@@ -171,8 +173,10 @@ void tst_QQmlDebuggingEnabler::custom()
     }
 
     QCOMPARE(m_process->state(), QProcess::Running);
-    if (!blockMode)
-        QTRY_VERIFY(m_process->output().contains(QLatin1String("QQmlEngine created")));
+    if (!blockMode) {
+        QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains(QLatin1String("QQmlEngine created")),
+                                 15000);
+    }
 }
 
 QTEST_MAIN(tst_QQmlDebuggingEnabler)

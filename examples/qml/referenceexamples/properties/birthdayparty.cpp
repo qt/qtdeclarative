@@ -90,7 +90,7 @@ Person *BirthdayParty::guest(int index) const
 }
 
 void BirthdayParty::clearGuests() {
-    return m_guests.clear();
+    m_guests.clear();
 }
 
 // ![0]

@@ -753,11 +753,24 @@ void tst_QQmlProfilerService::memory()
     QVERIFY(smallItems > 5);
 }
 
+static bool hasCompileEvents(const QVector<QQmlProfilerEventType> &types)
+{
+    for (const QQmlProfilerEventType &type : types) {
+        if (type.message() == QQmlProfilerDefinitions::MaximumMessage
+                && type.rangeType() == QQmlProfilerDefinitions::Compiling)
+            return true;
+    }
+    return false;
+}
+
 void tst_QQmlProfilerService::compile()
 {
-    connect(true, "test.qml");
+    // Flush interval so that we actually get the events before we stop recording.
+    connect(true, "test.qml", true, 100);
 
-    QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
+    // We need to check specifically for compile events as we can otherwise stop recording after the
+    // StartTrace has arrived, but before it compiles anything.
+    QTRY_VERIFY(hasCompileEvents(m_client->types));
     m_client->client->setRecording(false);
 
     checkTraceReceived();
