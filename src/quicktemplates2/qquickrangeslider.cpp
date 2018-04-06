@@ -86,6 +86,8 @@ QT_BEGIN_NAMESPACE
     RangeSlider. In the example above, \l {first.visualPosition} will be \c 0.24
     in a left-to-right application, and \c 0.76 in a right-to-left application.
 
+    For a slider that allows the user to select a single value, see \l Slider.
+
     \sa {Customizing RangeSlider}, {Input Controls},
         {Focus Management in Qt Quick Controls 2}
 */

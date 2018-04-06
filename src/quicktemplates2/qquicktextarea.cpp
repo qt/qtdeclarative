@@ -529,7 +529,10 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     delete d->background;
     d->background = background;
     if (background) {
-        background->setParentItem(this);
+        if (d->flickable)
+            background->setParentItem(d->flickable);
+        else
+            background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         if (isComponentComplete())

@@ -73,6 +73,9 @@ QT_BEGIN_NAMESPACE
     In the example above, \l visualPosition will be \c 0.24 in a left-to-right
     application, and \c 0.76 in a right-to-left application.
 
+    For a slider that allows the user to select a range by providing two
+    handles, see \l RangeSlider.
+
     \sa {Customizing Slider}, {Input Controls}
 */
 
