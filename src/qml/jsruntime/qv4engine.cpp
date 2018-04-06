@@ -209,7 +209,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_SparseArrayData] = classes[Class_Empty]->changeVTable(QV4::SparseArrayData::staticVTable());
     classes[Class_ExecutionContext] = classes[Class_Empty]->changeVTable(QV4::ExecutionContext::staticVTable());
     classes[Class_CallContext] = classes[Class_Empty]->changeVTable(QV4::CallContext::staticVTable());
-    classes[Class_CatchContext] = classes[Class_Empty]->changeVTable(QV4::CatchContext::staticVTable());
     classes[Class_QmlContext] = classes[Class_Empty]->changeVTable(QV4::QmlContext::staticVTable());
 
     jsStrings[String_Empty] = newIdentifier(QString());

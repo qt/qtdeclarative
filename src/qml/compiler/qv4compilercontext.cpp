@@ -84,15 +84,17 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
         if (formals && formals->containsName(name))
             return (scope == QQmlJS::AST::VariableScope::Var);
     }
-    MemberMap::iterator it = members.find(name);
-    if (it != members.end()) {
-        if (scope != QQmlJS::AST::VariableScope::Var || (*it).scope != QQmlJS::AST::VariableScope::Var)
-            return false;
-        if ((*it).type <= type) {
-            (*it).type = type;
-            (*it).function = function;
+    if (!isCatchBlock || name != catchedVariable) {
+        MemberMap::iterator it = members.find(name);
+        if (it != members.end()) {
+            if (scope != VariableScope::Var || (*it).scope != VariableScope::Var)
+                return false;
+            if ((*it).type <= type) {
+                (*it).type = type;
+                (*it).function = function;
+            }
+            return true;
         }
-        return true;
     }
     Member m;
     m.type = type;
@@ -164,10 +166,18 @@ int Context::emitBlockHeader(Codegen *codegen)
     if (requiresExecutionContext ||
         contextType == ContextType::Binding) { // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
         if (contextType == ContextType::Block) {
-            Instruction::PushBlockContext blockContext;
-            blockContext.index = blockIndex;
-            blockContext.reg = contextReg = bytecodeGenerator->newRegister();
-            bytecodeGenerator->addInstruction(blockContext);
+            if (isCatchBlock) {
+                Instruction::PushCatchContext catchContext;
+                catchContext.index = blockIndex;
+                catchContext.reg = contextReg = bytecodeGenerator->newRegister();
+                catchContext.name = codegen->registerString(catchedVariable);
+                bytecodeGenerator->addInstruction(catchContext);
+            } else {
+                Instruction::PushBlockContext blockContext;
+                blockContext.index = blockIndex;
+                blockContext.reg = contextReg = bytecodeGenerator->newRegister();
+                bytecodeGenerator->addInstruction(blockContext);
+            }
         } else {
             Instruction::CreateCallContext createContext;
             bytecodeGenerator->addInstruction(createContext);

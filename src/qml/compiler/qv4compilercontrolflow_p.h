@@ -409,32 +409,33 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
     ~ControlFlowCatch() {
         // emit code for unwinding
-
-        cg->_context->forceLookupByName = true;
         insideCatch = true;
 
         Codegen::RegisterScope scope(cg);
 
         // exceptions inside the try block go here
         exceptionLabel.link();
-        Moth::StackSlot savedContextReg = Moth::StackSlot::createRegister(generator()->newRegister());
-        Instruction::PushCatchContext pushCatch;
-        pushCatch.name = cg->registerString(catchExpression->name.toString());
-        pushCatch.reg = savedContextReg;
-        generator()->addInstruction(pushCatch);
+
+        cg->enterContext(catchExpression);
+        Context *block = cg->currentContext();
+        cg->_module->blocks.append(block);
+        block->blockIndex = cg->_module->blocks.count() - 1;
+
+        int savedContextReg = block->emitBlockHeader(cg);
+
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
         generator()->setExceptionHandler(&catchUnwindLabel);
 
-        cg->statement(catchExpression->statement);
+        cg->statementList(catchExpression->statement->statements);
 
         insideCatch = false;
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
-        Instruction::PopContext pop;
-        pop.reg = savedContextReg;
-        generator()->addInstruction(pop);
+        block->emitBlockFooter(cg, savedContextReg);
+
+        cg->leaveContext();
 
         // break/continue/return statements in try go here
         unwindLabel.link();

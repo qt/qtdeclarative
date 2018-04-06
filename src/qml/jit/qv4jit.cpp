@@ -604,7 +604,7 @@ void BaselineJIT::generate_CreateCallContext()
     as->storeHeapObject(CallData::Context);
 }
 
-void BaselineJIT::generate_PushCatchContext(int name, int reg) { as->pushCatchContext(name, reg); }
+void BaselineJIT::generate_PushCatchContext(int reg, int index, int name) { as->pushCatchContext(reg, index, name); }
 
 static void pushWithContextHelper(ExecutionEngine *engine, QV4::Value *stack, int reg)
 {

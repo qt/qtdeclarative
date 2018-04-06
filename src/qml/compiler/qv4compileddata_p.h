@@ -231,7 +231,7 @@ struct Function
         UsesArgumentsObject = 0x4,
         IsArrowFunction     = 0x8,
         IsGenerator         = 0x20,
-        HasCatchOrWith      = 0x10
+        HasWith      = 0x10
     };
 
     // Absolute offset into file where the code for this function is located.

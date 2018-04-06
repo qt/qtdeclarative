@@ -103,8 +103,6 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
     switch (scopeType) {
     case QV4::Heap::ExecutionContext::Type_GlobalContext:
         return 0;
-    case QV4::Heap::ExecutionContext::Type_CatchContext:
-        return 4;
     case QV4::Heap::ExecutionContext::Type_WithContext:
         return 2;
     case QV4::Heap::ExecutionContext::Type_CallContext:

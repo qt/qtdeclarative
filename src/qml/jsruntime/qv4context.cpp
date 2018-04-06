@@ -53,7 +53,6 @@ using namespace QV4;
 
 DEFINE_MANAGED_VTABLE(ExecutionContext);
 DEFINE_MANAGED_VTABLE(CallContext);
-DEFINE_MANAGED_VTABLE(CatchContext);
 
 Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int blockIndex)
 {
@@ -119,11 +118,14 @@ Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
     return c;
 }
 
-Heap::CatchContext *ExecutionContext::newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue)
+Heap::ExecutionContext *ExecutionContext::newCatchContext(CppStackFrame *frame, int blockIndex, Heap::String *exceptionVarName)
 {
-    Scope scope(this);
-    ScopedValue e(scope, exceptionValue);
-    return engine()->memoryManager->alloc<CatchContext>(d(), exceptionVarName, e);
+    Scope scope(frame->context());
+    ScopedString name(scope, exceptionVarName);
+    ScopedValue val(scope, scope.engine->catchException(nullptr));
+    ScopedContext ctx(scope, newBlockContext(frame, blockIndex));
+    ctx->setProperty(name, val);
+    return ctx->d();
 }
 
 void ExecutionContext::createMutableBinding(String *name, bool deletable)
@@ -170,16 +172,6 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     activation->__defineOwnProperty__(scope.engine, name, desc, attrs);
 }
 
-void Heap::CatchContext::init(ExecutionContext *outerContext, String *exceptionVarName,
-                              const Value &exceptionValue)
-{
-    Heap::ExecutionContext::init(Heap::ExecutionContext::Type_CatchContext);
-    outer.set(internalClass->engine, outerContext);
-
-    this->exceptionVarName.set(internalClass->engine, exceptionVarName);
-    this->exceptionValue.set(internalClass->engine, exceptionValue);
-}
-
 bool ExecutionContext::deleteProperty(String *name)
 {
     name->makeIdentifier();
@@ -188,12 +180,6 @@ bool ExecutionContext::deleteProperty(String *name)
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
-        case Heap::ExecutionContext::Type_CatchContext: {
-            Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name->d()))
-                return false;
-            break;
-        }
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
@@ -232,14 +218,6 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
 
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
-        case Heap::ExecutionContext::Type_CatchContext: {
-            Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name->d())) {
-                    c->exceptionValue.set(v4, value);
-                    return NoError;
-            }
-            break;
-        }
         case Heap::ExecutionContext::Type_WithContext: {
             Scope scope(v4);
             ScopedObject w(scope, ctx->activation);
@@ -293,12 +271,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
-        case Heap::ExecutionContext::Type_CatchContext: {
-            Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name->d()))
-                return c->exceptionValue.asReturnedValue();
-            break;
-        }
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
@@ -335,12 +307,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
-        case Heap::ExecutionContext::Type_CatchContext: {
-            Heap::CatchContext *c = static_cast<Heap::CatchContext *>(ctx);
-            if (c->exceptionVarName->isEqualTo(name->d()))
-                return c->exceptionValue.asReturnedValue();
-            break;
-        }
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);

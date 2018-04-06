@@ -541,7 +541,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
             function->length = function->nFormals;
 
             // Hack to ensure an activation is created.
-            function->flags |= QV4::CompiledData::Function::HasCatchOrWith | QV4::CompiledData::Function::HasDirectEval;
+            function->flags |= QV4::CompiledData::Function::HasWith | QV4::CompiledData::Function::HasDirectEval;
 
             signalParameterNameTableOffset += function->nFormals * sizeof(quint32);
         }

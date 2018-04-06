@@ -163,7 +163,7 @@ public:
     void setException();
     void setExceptionHandler(int offset);
     void clearExceptionHandler();
-    void pushCatchContext(int name, int reg);
+    void pushCatchContext(int reg, int index, int name);
     void popContext(int reg);
 
     // other stuff

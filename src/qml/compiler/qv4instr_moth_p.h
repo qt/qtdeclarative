@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
 #define INSTR_SetException(op) INSTRUCTION(op, SetException, 0)
 #define INSTR_CreateCallContext(op) INSTRUCTION(op, CreateCallContext, 0)
-#define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 2, name, reg)
+#define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 3, reg, index, name)
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
 #define INSTR_PushBlockContext(op) INSTRUCTION(op, PushBlockContext, 2, reg, index)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)

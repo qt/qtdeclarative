@@ -321,8 +321,8 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::IsArrowFunction;
     if (irFunction->isGenerator)
         function->flags |= CompiledData::Function::IsGenerator;
-    if (irFunction->hasTry || irFunction->hasWith)
-        function->flags |= CompiledData::Function::HasCatchOrWith;
+    if (irFunction->hasWith)
+        function->flags |= CompiledData::Function::HasWith;
     function->nestedFunctionIndex =
             irFunction->returnsClosure ? quint32(module->functions.indexOf(irFunction->nestedContexts.first()))
                                        : std::numeric_limits<uint32_t>::max();
@@ -421,6 +421,14 @@ void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context 
     quint32_le *locals = (quint32_le *)(b + block->localsOffset);
     for (int i = 0; i < irBlock->locals.size(); ++i)
         locals[i] = getStringId(irBlock->locals.at(i));
+
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+    if (showCode) {
+        qDebug() << "=== Variables for block" << irBlock->blockIndex;
+        for (int i = 0; i < irBlock->locals.size(); ++i)
+            qDebug() << "    " << i << ":" << locals[i];
+        qDebug();
+    }
 }
 
 QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Compiler::JSUnitGenerator::GeneratorOption option, quint32_le *blockAndFunctionOffsets, uint *jsClassDataOffset)

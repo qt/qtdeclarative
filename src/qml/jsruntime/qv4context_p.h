@@ -107,11 +107,10 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
 
     enum ContextType {
         Type_GlobalContext = 0x1,
-        Type_CatchContext = 0x2,
-        Type_WithContext = 0x3,
-        Type_QmlContext = 0x4,
-        Type_BlockContext = 0x5,
-        Type_CallContext = 0x6
+        Type_WithContext = 0x2,
+        Type_QmlContext = 0x3,
+        Type_BlockContext = 0x4,
+        Type_CallContext = 0x5
     };
 
     void init(ContextType t)
@@ -169,16 +168,6 @@ Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 //Q_STATIC_ASSERT(sizeof(CallContext) == sizeof(ExecutionContext) + sizeof(CallContextData));
 //#endif
 
-#define CatchContextMembers(class, Member) \
-    Member(class, Pointer, String *, exceptionVarName) \
-    Member(class, HeapValue, HeapValue, exceptionValue)
-
-DECLARE_HEAP_OBJECT(CatchContext, ExecutionContext) {
-    DECLARE_MARKOBJECTS(CatchContext);
-
-    void init(ExecutionContext *outerContext, String *exceptionVarName, const Value &exceptionValue);
-};
-Q_STATIC_ASSERT(std::is_trivial< CatchContext >::value);
 
 }
 
@@ -195,7 +184,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     static Heap::CallContext *newBlockContext(QV4::CppStackFrame *frame, int blockIndex);
     static Heap::CallContext *newCallContext(QV4::CppStackFrame *frame);
     Heap::ExecutionContext *newWithContext(Heap::Object *with);
-    Heap::CatchContext *newCatchContext(Heap::String *exceptionVarName, ReturnedValue exceptionValue);
+    static Heap::ExecutionContext *newCatchContext(CppStackFrame *frame, int blockIndex, Heap::String *exceptionVarName);
 
     void createMutableBinding(String *name, bool deletable);
 
@@ -226,12 +215,6 @@ struct Q_QML_EXPORT CallContext : public ExecutionContext
     const Value *args() const {
         return d()->args();
     }
-};
-
-struct CatchContext : public ExecutionContext
-{
-    V4_MANAGED(CatchContext, ExecutionContext)
-    V4_INTERNALCLASS(CatchContext)
 };
 
 inline CallContext *ExecutionContext::asCallContext()

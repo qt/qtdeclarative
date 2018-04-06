@@ -1183,11 +1183,6 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
     return method_typeofValue(engine, prop);
 }
 
-/* The next three methods are a bit tricky. They can't open up a Scope, as that
- * would mess up the pushing of the context.
- *
- * Instead the push/pop pair acts as a non local scope.
- */
 ReturnedValue Runtime::method_createWithContext(ExecutionContext *parent, const Value &o)
 {
     Q_ASSERT(o.isObject());
@@ -1195,11 +1190,11 @@ ReturnedValue Runtime::method_createWithContext(ExecutionContext *parent, const 
     return parent->newWithContext(obj.d())->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int exceptionVarNameIndex)
+ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int blockIndex, int exceptionVarNameIndex)
 {
     ExecutionEngine *e = parent->engine();
-    return parent->newCatchContext(e->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex],
-                                   e->catchException(nullptr))->asReturnedValue();
+    return parent->newCatchContext(e->currentStackFrame, blockIndex,
+                                   e->currentStackFrame->v4Function->compilationUnit->runtimeStrings[exceptionVarNameIndex])->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_createBlockContext(ExecutionContext *parent, int index)

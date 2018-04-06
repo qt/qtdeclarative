@@ -2222,11 +2222,12 @@ void Assembler::clearExceptionHandler()
     pasm()->storePtr(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
 }
 
-void Assembler::pushCatchContext(int name, int reg)
+void Assembler::pushCatchContext(int reg, int index, int name)
 {
     pasm()->copyReg(pasm()->contextAddress(), regAddr(reg));
-    prepareCallWithArgCount(2);
-    passInt32AsArg(name, 1);
+    prepareCallWithArgCount(3);
+    passInt32AsArg(name, 2);
+    passInt32AsArg(index, 1);
     passRegAsArg(CallData::Context, 0);
     IN_JIT_GENERATE_RUNTIME_CALL(Runtime::method_createCatchContext, ResultInAccumulator);
     pasm()->storeAccumulator(pasm()->contextAddress());

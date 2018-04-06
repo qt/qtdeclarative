@@ -123,7 +123,6 @@ protected:
     bool visit(AST::FunctionDeclaration *ast) override;
     void endVisit(AST::FunctionDeclaration *) override;
 
-    bool visit(AST::TryStatement *ast) override;
     bool visit(AST::WithStatement *ast) override;
 
     bool visit(AST::DoWhileStatement *ast) override;
@@ -135,6 +134,9 @@ protected:
 
     bool visit(AST::Block *ast) override;
     void endVisit(AST::Block *ast) override;
+
+    bool visit(AST::Catch *ast) override;
+    void endVisit(AST::Catch *ast) override;
 
 protected:
     bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, bool enterName);

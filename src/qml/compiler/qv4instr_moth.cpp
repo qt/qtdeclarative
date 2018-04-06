@@ -397,7 +397,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(CreateCallContext)
 
         MOTH_BEGIN_INSTR(PushCatchContext)
-            d << dumpRegister(reg, nFormals) << ", " << name;
+            d << dumpRegister(reg, nFormals) << ", " << index << ", " << name;
         MOTH_END_INSTR(PushCatchContext)
 
         MOTH_BEGIN_INSTR(PushWithContext)

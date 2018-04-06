@@ -317,13 +317,6 @@ void ScanFunctions::endVisit(FunctionDeclaration *)
     leaveEnvironment();
 }
 
-bool ScanFunctions::visit(TryStatement *)
-{
-    // ### should limit to catch(), as try{} finally{} should be ok without
-    _context->hasTry = true;
-    return true;
-}
-
 bool ScanFunctions::visit(WithStatement *ast)
 {
     if (_context->isStrict) {
@@ -402,6 +395,23 @@ bool ScanFunctions::visit(Block *ast)
 }
 
 void ScanFunctions::endVisit(Block *)
+{
+    leaveEnvironment();
+}
+
+bool ScanFunctions::visit(Catch *ast)
+{
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("CatchBlock");
+    _context->isCatchBlock = true;
+    _context->catchedVariable = ast->name.toString();
+    _context->addLocalVar(ast->name.toString(), Context::MemberType::VariableDefinition, VariableScope::Let);
+    Node::accept(ast->statement->statements, this);
+    return false;
+}
+
+void ScanFunctions::endVisit(Catch *)
 {
     leaveEnvironment();
 }
@@ -513,7 +523,7 @@ void ScanFunctions::calcEscapingVariables()
         }
     }
     for (Context *c : qAsConst(m->contextMap)) {
-        bool allVarsEscape = c->hasWith || c->hasTry || c->hasDirectEval;
+        bool allVarsEscape = c->hasWith || c->hasDirectEval;
         if (allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             allVarsEscape = false;
         if (m->debugMode)
@@ -528,6 +538,11 @@ void ScanFunctions::calcEscapingVariables()
         // ### Shouldn't be required, we could probably rather change the ContextType to FunctionCode for strict eval
         if (c->contextType == ContextType::Eval && c->isStrict)
             c->requiresExecutionContext = true;
+        if (c->contextType == ContextType::Block && c->isCatchBlock) {
+            c->requiresExecutionContext = true;
+            auto m = c->members.find(c->catchedVariable);
+            m->canEscape = true;
+        }
         if (!c->parent || c->usesArgumentsObject == Context::ArgumentsObjectUnknown)
             c->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
         if (c->usesArgumentsObject == Context::ArgumentsObjectUsed) {

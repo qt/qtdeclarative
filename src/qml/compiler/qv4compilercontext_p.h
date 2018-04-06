@@ -155,6 +155,8 @@ struct Context {
     mutable bool argumentsCanEscape = false;
     bool requiresExecutionContext = false;
     bool forceLookupByName = false;
+    bool isCatchBlock = false;
+    QString catchedVariable;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,

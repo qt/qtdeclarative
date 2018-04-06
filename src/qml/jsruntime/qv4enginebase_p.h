@@ -96,7 +96,6 @@ struct Q_QML_EXPORT EngineBase {
         Class_SparseArrayData,
         Class_ExecutionContext,
         Class_CallContext,
-        Class_CatchContext,
         Class_QmlContext,
         Class_Object,
         Class_ArrayObject,

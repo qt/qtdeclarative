@@ -2923,8 +2923,6 @@ bool Codegen::visit(TryStatement *ast)
     if (hasError)
         return true;
 
-    Q_ASSERT(_context->hasTry);
-
     RegisterScope scope(this);
 
     if (ast->finallyExpression && ast->finallyExpression->statement) {
