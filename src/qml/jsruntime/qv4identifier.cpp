@@ -107,7 +107,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
             const IdentifierHashEntry &e = d->entries[i];
             if (!e.identifier)
                 continue;
-            uint idx = e.identifier->hashValue % newAlloc;
+            uint idx = e.identifier->id % newAlloc;
             while (newEntries[idx].identifier) {
                 ++idx;
                 idx %= newAlloc;
@@ -119,7 +119,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(const Identifier *identifier)
         d->alloc = newAlloc;
     }
 
-    uint idx = identifier->hashValue % d->alloc;
+    uint idx = identifier->id % d->alloc;
     while (d->entries[idx].identifier) {
         Q_ASSERT(d->entries[idx].identifier != identifier);
         ++idx;
@@ -136,7 +136,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const Identifier *identifier) 
         return nullptr;
     Q_ASSERT(d->entries);
 
-    uint idx = identifier->hashValue % d->alloc;
+    uint idx = identifier->id % d->alloc;
     while (1) {
         if (!d->entries[idx].identifier)
             return nullptr;

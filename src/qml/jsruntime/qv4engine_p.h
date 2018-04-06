@@ -157,6 +157,11 @@ public:
     QV8Engine *v8Engine;
     QJSEngine *publicEngine;
 
+private:
+    int stringOrSymbolId = 0;
+public:
+    int nextStringOrSymbolId() { return ++stringOrSymbolId; }
+
     enum JSObjects {
         RootContext,
         IntegerNull, // Has to come after the RootContext to make the context stack safe

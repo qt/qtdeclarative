@@ -133,7 +133,7 @@ inline uint PropertyHash::lookup(const Identifier *identifier) const
 {
     Q_ASSERT(d->entries);
 
-    uint idx = identifier->hashValue % d->alloc;
+    uint idx = identifier->id % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
             return d->entries[idx].index;

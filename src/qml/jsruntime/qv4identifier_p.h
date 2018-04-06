@@ -66,7 +66,7 @@ struct ExecutionEngine;
 
 struct Identifier
 {
-    uint hashValue;
+    uint id;
 };
 
 

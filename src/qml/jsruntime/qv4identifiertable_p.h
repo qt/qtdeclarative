@@ -66,7 +66,8 @@ struct IdentifierTable
     int alloc;
     int size;
     int numBits;
-    Heap::String **entries;
+    Heap::String **entriesByHash;
+    Heap::String **entriesById;
 
     void addEntry(Heap::String *str);
 
@@ -95,7 +96,7 @@ public:
 
     void mark(MarkStack *markStack) {
         for (int i = 0; i < alloc; ++i) {
-            Heap::String *entry = entries[i];
+            Heap::String *entry = entriesByHash[i];
             if (!entry || entry->isMarked())
                 continue;
             entry->setMarkBit();
