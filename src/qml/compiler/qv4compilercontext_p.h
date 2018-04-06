@@ -150,11 +150,10 @@ struct Context {
     bool isGenerator = false;
     bool usesThis = false;
     bool hasTry = false;
-    bool hasWith = false;
     bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;
     bool requiresExecutionContext = false;
-    bool forceLookupByName = false;
+    bool isWithBlock = false;
     bool isCatchBlock = false;
     QString catchedVariable;
 

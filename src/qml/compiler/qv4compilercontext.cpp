@@ -112,7 +112,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
     ResolvedName result;
 
     while (c->parent) {
-        if (c->forceLookupByName)
+        if (c->isWithBlock)
             return result;
 
         Context::Member m = c->findMember(name);
@@ -148,7 +148,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
     }
 
     // ### can we relax the restrictions here?
-    if (c->forceLookupByName || contextType == ContextType::Eval || c->contextType == ContextType::Binding)
+    if (contextType == ContextType::Eval || c->contextType == ContextType::Binding)
         return result;
 
     result.type = ResolvedName::Global;

@@ -311,18 +311,12 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     function->nameIndex = getStringId(irFunction->name);
     function->flags = 0;
-    if (irFunction->hasDirectEval)
-        function->flags |= CompiledData::Function::HasDirectEval;
-    if (irFunction->usesArgumentsObject)
-        function->flags |= CompiledData::Function::UsesArgumentsObject;
     if (irFunction->isStrict)
         function->flags |= CompiledData::Function::IsStrict;
     if (irFunction->isArrowFunction)
         function->flags |= CompiledData::Function::IsArrowFunction;
     if (irFunction->isGenerator)
         function->flags |= CompiledData::Function::IsGenerator;
-    if (irFunction->hasWith)
-        function->flags |= CompiledData::Function::HasWith;
     function->nestedFunctionIndex =
             irFunction->returnsClosure ? quint32(module->functions.indexOf(irFunction->nestedContexts.first()))
                                        : std::numeric_limits<uint32_t>::max();

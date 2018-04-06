@@ -227,11 +227,8 @@ struct Function
 {
     enum Flags : unsigned int {
         IsStrict            = 0x1,
-        HasDirectEval       = 0x2,
-        UsesArgumentsObject = 0x4,
-        IsArrowFunction     = 0x8,
-        IsGenerator         = 0x20,
-        HasWith      = 0x10
+        IsArrowFunction     = 0x2,
+        IsGenerator         = 0x4
     };
 
     // Absolute offset into file where the code for this function is located.

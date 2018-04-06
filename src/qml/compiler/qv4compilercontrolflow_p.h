@@ -92,18 +92,15 @@ struct ControlFlow {
     Codegen *cg;
     ControlFlow *parent;
     Type type;
-    bool contextUsedLookupByName;
 
     ControlFlow(Codegen *cg, Type type)
         : cg(cg), parent(cg->controlFlow), type(type)
     {
-        contextUsedLookupByName = cg->_context->forceLookupByName;
         cg->controlFlow = this;
     }
 
     virtual ~ControlFlow() {
         cg->controlFlow = parent;
-        cg->_context->forceLookupByName = contextUsedLookupByName;
     }
 
     void emitReturnStatement() const {
@@ -308,8 +305,6 @@ struct ControlFlowWith : public ControlFlowUnwind
     ControlFlowWith(Codegen *cg)
         : ControlFlowUnwind(cg, With)
     {
-        cg->currentContext()->forceLookupByName = true;
-
         setupExceptionHandler();
         savedContextRegister = Moth::StackSlot::createRegister(generator()->newRegister());
 

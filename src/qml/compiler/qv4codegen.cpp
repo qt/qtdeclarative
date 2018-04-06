@@ -2977,17 +2977,18 @@ bool Codegen::visit(WithStatement *ast)
 
     RegisterScope scope(this);
 
-    Q_ASSERT(_context->hasWith);
-
     Reference src = expression(ast->expression);
     if (hasError)
         return false;
     src = src.storeOnStack(); // trigger load before we setup the exception handler, so exceptions here go to the right place
     src.loadInAccumulator();
 
-    ControlFlowWith flow(this);
-
-    statement(ast->statement);
+    enterContext(ast);
+    {
+        ControlFlowWith flow(this);
+        statement(ast->statement);
+    }
+    leaveContext();
 
     return false;
 }

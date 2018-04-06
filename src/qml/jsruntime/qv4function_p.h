@@ -98,7 +98,6 @@ struct Q_QML_EXPORT Function {
     inline QString sourceFile() const { return compilationUnit->fileName(); }
     inline QUrl finalUrl() const { return compilationUnit->finalUrl(); }
 
-    inline bool usesArgumentsObject() const { return compiledFunction->flags & CompiledData::Function::UsesArgumentsObject; }
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
     inline bool isArrowFunction() const { return compiledFunction->flags & CompiledData::Function::IsArrowFunction; }
 

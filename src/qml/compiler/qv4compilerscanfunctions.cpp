@@ -150,7 +150,7 @@ void ScanFunctions::endVisit(Program *)
 
 bool ScanFunctions::visit(CallExpression *ast)
 {
-    if (! _context->hasDirectEval) {
+    if (!_context->hasDirectEval) {
         if (IdentifierExpression *id = cast<IdentifierExpression *>(ast->base)) {
             if (id->name == QLatin1String("eval")) {
                 if (_context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
@@ -317,17 +317,6 @@ void ScanFunctions::endVisit(FunctionDeclaration *)
     leaveEnvironment();
 }
 
-bool ScanFunctions::visit(WithStatement *ast)
-{
-    if (_context->isStrict) {
-        _cg->throwSyntaxError(ast->withToken, QStringLiteral("'with' statement is not allowed in strict mode"));
-        return false;
-    }
-
-    _context->hasWith = true;
-    return true;
-}
-
 bool ScanFunctions::visit(DoWhileStatement *ast) {
     {
         TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_context->isStrict);
@@ -416,6 +405,29 @@ void ScanFunctions::endVisit(Catch *)
     leaveEnvironment();
 }
 
+bool ScanFunctions::visit(WithStatement *ast)
+{
+    Node::accept(ast->expression, this);
+
+    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("WithBlock");
+    _context->isWithBlock = true;
+
+    if (_context->isStrict) {
+        _cg->throwSyntaxError(ast->withToken, QStringLiteral("'with' statement is not allowed in strict mode"));
+        return false;
+    }
+    Node::accept(ast->statement, this);
+
+    return false;
+}
+
+void ScanFunctions::endVisit(WithStatement *)
+{
+    leaveEnvironment();
+}
+
 bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
 {
     Context *outerContext = _context;
@@ -487,6 +499,28 @@ void ScanFunctions::calcEscapingVariables()
     Module *m = _cg->_module;
 
     for (Context *inner : qAsConst(m->contextMap)) {
+        if (inner->contextType == ContextType::Block && inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
+            Context *c = inner->parent;
+            while (c->contextType == ContextType::Block)
+                c = c->parent;
+            c->usesArgumentsObject = Context::ArgumentsObjectUsed;
+            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+        }
+    }
+    for (Context *inner : qAsConst(m->contextMap)) {
+        if (!inner->parent || inner->usesArgumentsObject == Context::ArgumentsObjectUnknown)
+            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+        if (inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
+            QString arguments = QStringLiteral("arguments");
+            inner->addLocalVar(arguments, Context::VariableDeclaration, AST::VariableScope::Var);
+            if (!inner->isStrict) {
+                inner->argumentsCanEscape = true;
+                inner->requiresExecutionContext = true;
+            }
+        }
+    }
+
+    for (Context *inner : qAsConst(m->contextMap)) {
         for (const QString &var : qAsConst(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
@@ -511,19 +545,11 @@ void ScanFunctions::calcEscapingVariables()
         Context *c = inner->parent;
         while (c) {
             c->hasDirectEval |= inner->hasDirectEval;
-            c->hasWith |= inner->hasWith;
             c = c->parent;
-        }
-        if (inner->contextType == ContextType::Block && inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-            Context *f = inner->parent;
-            while (f->contextType == ContextType::Block)
-                f = f->parent;
-            f->usesArgumentsObject = Context::ArgumentsObjectUsed;
-            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
         }
     }
     for (Context *c : qAsConst(m->contextMap)) {
-        bool allVarsEscape = c->hasWith || c->hasDirectEval;
+        bool allVarsEscape = c->hasDirectEval;
         if (allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             allVarsEscape = false;
         if (m->debugMode)
@@ -542,16 +568,6 @@ void ScanFunctions::calcEscapingVariables()
             c->requiresExecutionContext = true;
             auto m = c->members.find(c->catchedVariable);
             m->canEscape = true;
-        }
-        if (!c->parent || c->usesArgumentsObject == Context::ArgumentsObjectUnknown)
-            c->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-        if (c->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-            QString arguments = QStringLiteral("arguments");
-            c->addLocalVar(arguments, Context::VariableDeclaration, AST::VariableScope::Var);
-            if (!c->isStrict) {
-                c->argumentsCanEscape = true;
-                c->requiresExecutionContext = true;
-            }
         }
         if (allVarsEscape) {
             for (auto &m : c->members)
