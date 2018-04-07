@@ -160,6 +160,12 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
     enum {
         IsStringOrSymbol = true
     };
+
+    inline void makeIdentifier() const;
+    Identifier identifier() const { return d()->identifier; }
+
+    uint asArrayIndex() const;
+
 #endif
 };
 
@@ -204,12 +210,6 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
     }
     uint toUInt(bool *ok) const;
 
-    void makeIdentifier() const {
-        if (d()->identifier.isValid())
-            return;
-        makeIdentifierImpl();
-    }
-
     // slow path
     Q_NEVER_INLINE void makeIdentifierImpl() const;
 
@@ -226,8 +226,6 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
     }
 
     bool startsWithUpper() const { return d()->startsWithUpper(); }
-
-    Identifier identifier() const { return d()->identifier; }
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
@@ -296,6 +294,21 @@ struct ComplexString : String {
         return dptr;
     }
 };
+
+inline
+void StringOrSymbol::makeIdentifier() const {
+    if (d()->identifier.isValid())
+        return;
+    Q_ASSERT(isString());
+    static_cast<const String *>(this)->makeIdentifierImpl();
+}
+
+inline
+uint StringOrSymbol::asArrayIndex() const {
+    if (isString())
+        return static_cast<const String *>(this)->asArrayIndex();
+    return UINT_MAX;
+}
 
 template<>
 inline const StringOrSymbol *Value::as() const {

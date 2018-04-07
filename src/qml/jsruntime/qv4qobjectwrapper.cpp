@@ -693,15 +693,22 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
 {
+    if (name->isSymbol())
+        return Object::get(m, name, hasProperty);
+    String *n = static_cast<String *>(name);
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     QQmlContextData *qmlContext = that->engine()->callingQmlContext();
-    return that->getQmlProperty(qmlContext, name, IgnoreRevision, hasProperty, /*includeImports*/ true);
+    return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-bool QObjectWrapper::put(Managed *m, String *name, const Value &value)
+bool QObjectWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
 {
+    if (n->isSymbol())
+        return Object::put(m, n, value);
+    String *name = static_cast<String *>(n);
+
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ExecutionEngine *v4 = that->engine();
 
@@ -726,8 +733,12 @@ bool QObjectWrapper::put(Managed *m, String *name, const Value &value)
     return true;
 }
 
-PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
+PropertyAttributes QObjectWrapper::query(const Managed *m, StringOrSymbol *name)
 {
+    if (name->isSymbol())
+        return QV4::Object::query(m, name);
+    String *n = static_cast<String *>(name);
+
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     const QObject *thatObject = that->d()->object();
     if (QQmlData::wasDeleted(thatObject))
@@ -736,8 +747,8 @@ PropertyAttributes QObjectWrapper::query(const Managed *m, String *name)
     ExecutionEngine *engine = that->engine();
     QQmlContextData *qmlContext = engine->callingQmlContext();
     QQmlPropertyData local;
-    if (that->findProperty(engine, qmlContext, name, IgnoreRevision, &local)
-        || name->equals(engine->id_destroy()) || name->equals(engine->id_toString()))
+    if (that->findProperty(engine, qmlContext, n, IgnoreRevision, &local)
+        || n->equals(engine->id_destroy()) || n->equals(engine->id_toString()))
         return QV4::Attr_Data;
     else
         return QV4::Object::query(m, name);

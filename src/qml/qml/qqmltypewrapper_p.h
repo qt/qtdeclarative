@@ -112,9 +112,9 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
                                 Heap::QQmlTypeWrapper::TypeNameMode = Heap::QQmlTypeWrapper::IncludeEnums);
 
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
-    static PropertyAttributes query(const Managed *, String *name);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
+    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
+    static PropertyAttributes query(const Managed *, StringOrSymbol *name);
     static bool isEqualTo(Managed *that, Managed *o);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 };
@@ -124,7 +124,7 @@ struct Q_QML_EXPORT QQmlScopedEnumWrapper : Object
     V4_OBJECT2(QQmlScopedEnumWrapper, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
 };
 
 }

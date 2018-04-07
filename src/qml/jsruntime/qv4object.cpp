@@ -246,7 +246,7 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
     }
 }
 
-void Object::insertMember(String *s, const Property *p, PropertyAttributes attributes)
+void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
     s->makeIdentifier();
@@ -305,7 +305,7 @@ void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
 }
 
 // Section 8.12.2
-PropertyIndex Object::getValueOrSetter(String *name, PropertyAttributes *attrs)
+PropertyIndex Object::getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs)
 {
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
@@ -423,7 +423,7 @@ ReturnedValue Object::call(const FunctionObject *f, const Value *, const Value *
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue Object::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
 {
     return static_cast<const Object *>(m)->internalGet(name, hasProperty);
 }
@@ -433,7 +433,7 @@ ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty
     return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-bool Object::put(Managed *m, String *name, const Value &value)
+bool Object::put(Managed *m, StringOrSymbol *name, const Value &value)
 {
     return static_cast<Object *>(m)->internalPut(name, value);
 }
@@ -443,7 +443,7 @@ bool Object::putIndexed(Managed *m, uint index, const Value &value)
     return static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
-PropertyAttributes Object::query(const Managed *m, String *name)
+PropertyAttributes Object::query(const Managed *m, StringOrSymbol *name)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -473,7 +473,7 @@ PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
     return Attr_Invalid;
 }
 
-bool Object::deleteProperty(Managed *m, String *name)
+bool Object::deleteProperty(Managed *m, StringOrSymbol *name)
 {
     return static_cast<Object *>(m)->internalDeleteProperty(name);
 }
@@ -554,7 +554,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(String *name, bool *hasProperty) const
+ReturnedValue Object::internalGet(StringOrSymbol *name, bool *hasProperty) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -617,7 +617,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 
 
 // Section 8.12.5
-bool Object::internalPut(String *name, const Value &value)
+bool Object::internalPut(StringOrSymbol *name, const Value &value)
 {
     ExecutionEngine *engine = this->engine();
     if (engine->hasException)
@@ -646,7 +646,7 @@ bool Object::internalPut(String *name, const Value &value)
             return false;
         } else if (!attrs.isWritable())
             return false;
-        else if (isArrayObject() && name->equals(engine->id_length())) {
+        else if (isArrayObject() && id == engine->id_length()->identifier()) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok) {
@@ -764,7 +764,7 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(String *name)
+bool Object::internalDeleteProperty(StringOrSymbol *name)
 {
     if (internalClass()->engine->hasException)
         return false;
@@ -774,11 +774,12 @@ bool Object::internalDeleteProperty(String *name)
         return deleteIndexedProperty(idx);
 
     name->makeIdentifier();
+    Identifier id = name->identifier();
 
-    uint memberIdx = internalClass()->find(name->identifier());
+    uint memberIdx = internalClass()->find(id);
     if (memberIdx != UINT_MAX) {
         if (internalClass()->propertyData[memberIdx].isConfigurable()) {
-            Heap::InternalClass::removeMember(this, name->identifier());
+            Heap::InternalClass::removeMember(this, id);
             return true;
         }
         return false;

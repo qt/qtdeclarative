@@ -197,7 +197,7 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
     return Encode::undefined();
 }
 
-ReturnedValue QtObject::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QtObject::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
 {
     bool hasProp = false;
     if (hasProperty == nullptr) {

@@ -183,8 +183,8 @@ struct ModelObject : public QObjectWrapper {
 
 struct ModelObject : public QObjectWrapper
 {
-    static bool put(Managed *m, String *name, const Value& value);
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static bool put(Managed *m, StringOrSymbol *name, const Value& value);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     V4_OBJECT2(ModelObject, QObjectWrapper)

@@ -102,9 +102,14 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
+
+    if (n->isSymbol())
+        return Object::get(m, n, hasProperty);
+    String *name = static_cast<String *>(n);
+
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
@@ -140,7 +145,7 @@ ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *has
     return Primitive::undefinedValue().asReturnedValue();
 }
 
-bool QmlListWrapper::put(Managed *m, String *name, const Value &value)
+bool QmlListWrapper::put(Managed *m, StringOrSymbol *name, const Value &value)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);

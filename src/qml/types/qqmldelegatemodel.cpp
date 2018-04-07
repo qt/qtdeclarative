@@ -3347,12 +3347,13 @@ public:
         return object.asReturnedValue();
     }
 
-    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::String *name, bool *hasProperty)
+    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::StringOrSymbol *name, bool *hasProperty)
     {
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
         const QQmlDelegateModelGroupChangeArray *array = static_cast<const QQmlDelegateModelGroupChangeArray *>(m);
 
-        if (name->equals(array->engine()->id_length())) {
+        name->makeIdentifier();
+        if (name->identifier() == array->engine()->id_length()->identifier()) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Encode(array->count());

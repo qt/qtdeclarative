@@ -228,7 +228,7 @@ public:
     static ReturnedValue create(ExecutionEngine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 };
 
@@ -250,7 +250,7 @@ public:
     V4_NEEDS_DESTROY
 
     // JS API
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
 
     // C++ API
@@ -904,9 +904,14 @@ ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasPr
     return Encode::undefined();
 }
 
-ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
+
+    if (n->isSymbol())
+        return Object::get(m, n, hasProperty);
+    String *name = static_cast<String *>(n);
+
     const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
@@ -949,7 +954,7 @@ ReturnedValue NodeList::getIndexed(const Managed *m, uint index, bool *hasProper
     return Encode::undefined();
 }
 
-ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue NodeList::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
     const NodeList *r = static_cast<const NodeList *>(m);
@@ -957,7 +962,7 @@ ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
 
     name->makeIdentifier();
 
-    if (name->equals(v4->id_length()))
+    if (name->identifier() == v4->id_length()->identifier())
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
     return Object::get(m, name, hasProperty);
 }

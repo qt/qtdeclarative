@@ -166,13 +166,13 @@ struct ObjectVTable
     VTable vTable;
     ReturnedValue (*call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
-    ReturnedValue (*get)(const Managed *, String *name, bool *hasProperty);
+    ReturnedValue (*get)(const Managed *, StringOrSymbol *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
-    bool (*put)(Managed *, String *name, const Value &value);
+    bool (*put)(Managed *, StringOrSymbol *name, const Value &value);
     bool (*putIndexed)(Managed *, uint index, const Value &value);
-    PropertyAttributes (*query)(const Managed *, String *name);
+    PropertyAttributes (*query)(const Managed *, StringOrSymbol *name);
     PropertyAttributes (*queryIndexed)(const Managed *, uint index);
-    bool (*deleteProperty)(Managed *m, String *name);
+    bool (*deleteProperty)(Managed *m, StringOrSymbol *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
@@ -243,7 +243,7 @@ struct Q_QML_EXPORT Object: Managed {
     void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = nullptr);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
 
-    PropertyIndex getValueOrSetter(String *name, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs);
     PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
 
     bool hasProperty(String *name) const;
@@ -289,13 +289,13 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
     void defineReadonlyConfigurableProperty(String *name, const Value &value);
 
-    void insertMember(String *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
+    void insertMember(StringOrSymbol *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
         ScopedProperty p(scope);
         p->value = v;
         insertMember(s, p, attributes);
     }
-    void insertMember(String *s, const Property *p, PropertyAttributes attributes);
+    void insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes);
 
     bool isExtensible() const { return d()->internalClass->extensible; }
 
@@ -364,13 +364,13 @@ public:
         return false;
     }
 
-    inline ReturnedValue get(String *name, bool *hasProperty = nullptr) const
+    inline ReturnedValue get(StringOrSymbol *name, bool *hasProperty = nullptr) const
     { return vtable()->get(this, name, hasProperty); }
     inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
     { return vtable()->getIndexed(this, idx, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
-    inline bool put(String *name, const Value &v)
+    inline bool put(StringOrSymbol *name, const Value &v)
     { return vtable()->put(this, name, v); }
     inline bool putIndexed(uint idx, const Value &v)
     { return vtable()->putIndexed(this, idx, v); }
@@ -381,7 +381,7 @@ public:
     };
 
     // ES6: 7.3.3 Set (O, P, V, Throw)
-    inline bool set(String *name, const Value &v, ThrowOnFailure shouldThrow)
+    inline bool set(StringOrSymbol *name, const Value &v, ThrowOnFailure shouldThrow)
     {
         bool ret = vtable()->put(this, name, v);
         // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
@@ -396,11 +396,11 @@ public:
         return ret;
     }
 
-    PropertyAttributes query(String *name) const
+    PropertyAttributes query(StringOrSymbol *name) const
     { return vtable()->query(this, name); }
     PropertyAttributes queryIndexed(uint index) const
     { return vtable()->queryIndexed(this, index); }
-    bool deleteProperty(String *name)
+    bool deleteProperty(StringOrSymbol *name)
     { return vtable()->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
     { return vtable()->deleteIndexedProperty(this, index); }
@@ -413,24 +413,24 @@ public:
 protected:
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
+    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
     static bool putIndexed(Managed *m, uint index, const Value &value);
-    static PropertyAttributes query(const Managed *m, String *name);
+    static PropertyAttributes query(const Managed *m, StringOrSymbol *name);
     static PropertyAttributes queryIndexed(const Managed *m, uint index);
-    static bool deleteProperty(Managed *m, String *name);
+    static bool deleteProperty(Managed *m, StringOrSymbol *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static qint64 getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 
 private:
-    ReturnedValue internalGet(String *name, bool *hasProperty) const;
+    ReturnedValue internalGet(StringOrSymbol *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
-    bool internalPut(String *name, const Value &value);
+    bool internalPut(StringOrSymbol *name, const Value &value);
     bool internalPutIndexed(uint index, const Value &value);
-    bool internalDeleteProperty(String *name);
+    bool internalDeleteProperty(StringOrSymbol *name);
     bool internalDeleteIndexedProperty(uint index);
 
     friend struct ObjectIterator;

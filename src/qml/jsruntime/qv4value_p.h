@@ -332,6 +332,8 @@ public:
         Q_ASSERT(isDouble());
     }
     inline bool isString() const;
+    inline bool isStringOrSymbol() const;
+    inline bool isSymbol() const;
     inline bool isObject() const;
     inline bool isFunctionObject() const;
     inline bool isInt32() {
@@ -503,6 +505,18 @@ inline bool Value::isString() const
 {
     Heap::Base *b = heapObject();
     return b && b->internalClass->vtable->isString;
+}
+
+bool Value::isStringOrSymbol() const
+{
+    Heap::Base *b = heapObject();
+    return b && b->internalClass->vtable->isStringOrSymbol;
+}
+
+bool Value::isSymbol() const
+{
+    Heap::Base *b = heapObject();
+    return b && b->internalClass->vtable->isStringOrSymbol && !b->internalClass->vtable->isString;
 }
 inline bool Value::isObject() const
 {

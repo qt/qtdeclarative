@@ -241,12 +241,16 @@ bool QQmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QQmlValueTypeWrapper::query(const Managed *m, String *name)
+PropertyAttributes QQmlValueTypeWrapper::query(const Managed *m, StringOrSymbol *name)
 {
+    if (name->isSymbol())
+        return Object::query(m, name);
+
+    String *n = static_cast<String *>(name);
     Q_ASSERT(m->as<const QQmlValueTypeWrapper>());
     const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
 
-    QQmlPropertyData *result = r->d()->propertyCache()->property(name, nullptr, nullptr);
+    QQmlPropertyData *result = r->d()->propertyCache()->property(n, nullptr, nullptr);
     return result ? Attr_Data : Attr_Invalid;
 }
 
@@ -355,9 +359,14 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
     return Encode(b->engine()->newString(result));
 }
 
-ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
+
+    if (n->isSymbol())
+        return Object::get(m, n, hasProperty);
+    String *name = static_cast<String *>(n);
+
     const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
@@ -413,8 +422,12 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, String *name, bool *ha
 #undef VALUE_TYPE_ACCESSOR
 }
 
-bool QQmlValueTypeWrapper::put(Managed *m, String *name, const Value &value)
+bool QQmlValueTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
 {
+    if (n->isSymbol())
+        return Object::put(m, n, value);
+    String *name = static_cast<String *>(n);
+
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
     ExecutionEngine *v4 = static_cast<QQmlValueTypeWrapper *>(m)->engine();
     Scope scope(v4);

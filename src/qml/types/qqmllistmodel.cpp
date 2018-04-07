@@ -1474,8 +1474,12 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
 
 namespace QV4 {
 
-bool ModelObject::put(Managed *m, String *name, const Value &value)
+bool ModelObject::put(Managed *m, StringOrSymbol *n, const Value &value)
 {
+    if (n->isSymbol())
+        return Object::put(m, n, value);
+    String *name = static_cast<String *>(n);
+
     ModelObject *that = static_cast<ModelObject*>(m);
 
     ExecutionEngine *eng = that->engine();
@@ -1491,8 +1495,12 @@ bool ModelObject::put(Managed *m, String *name, const Value &value)
     return true;
 }
 
-ReturnedValue ModelObject::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue ModelObject::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
 {
+    if (n->isSymbol())
+        return Object::get(m, n, hasProperty);
+    String *name = static_cast<String *>(n);
+
     const ModelObject *that = static_cast<const ModelObject*>(m);
     const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
     if (!role)

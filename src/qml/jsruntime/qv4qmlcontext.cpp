@@ -78,9 +78,14 @@ void Heap::QQmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
+
+    if (n->isSymbol())
+        return Object::get(m, n, hasProperty);
+    String *name = static_cast<String *>(n);
+
     const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
@@ -224,9 +229,14 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, String *name, bool *hasP
     return Encode::undefined();
 }
 
-bool QQmlContextWrapper::put(Managed *m, String *name, const Value &value)
+bool QQmlContextWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
+
+    if (n->isSymbol())
+        return Object::put(m, n, value);
+    String *name = static_cast<String *>(n);
+
     QQmlContextWrapper *resource = static_cast<QQmlContextWrapper *>(m);
     ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);

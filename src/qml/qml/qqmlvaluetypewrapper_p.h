@@ -106,10 +106,10 @@ public:
     int typeId() const;
     bool write(QObject *target, int propertyIndex) const;
 
-    static ReturnedValue get(const Managed *m, String *name, bool *hasProperty);
-    static bool put(Managed *m, String *name, const Value &value);
+    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
+    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
     static bool isEqualTo(Managed *m, Managed *other);
-    static PropertyAttributes query(const Managed *, String *name);
+    static PropertyAttributes query(const Managed *, StringOrSymbol *name);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static ReturnedValue method_toString(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
