@@ -199,7 +199,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
 
     identifierTable = new IdentifierTable(this);
-    symbolTable = new IdentifierTable(this);
 
     memset(classes, 0, sizeof(classes));
     classes[Class_Empty] = memoryManager->allocIC<InternalClass>();
@@ -235,6 +234,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_boolean] = newIdentifier(QStringLiteral("boolean"));
     jsStrings[String_number] = newIdentifier(QStringLiteral("number"));
     jsStrings[String_string] = newIdentifier(QStringLiteral("string"));
+    jsStrings[String_symbol] = newIdentifier(QStringLiteral("symbol"));
     jsStrings[String_object] = newIdentifier(QStringLiteral("object"));
     jsStrings[String_function] = newIdentifier(QStringLiteral("function"));
     jsStrings[String_length] = newIdentifier(QStringLiteral("length"));

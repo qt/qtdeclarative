@@ -66,8 +66,20 @@ namespace Heap {
 
 struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
 {
+    enum StringType {
+        StringType_Symbol,
+        StringType_Regular,
+        StringType_ArrayIndex,
+        StringType_Unknown,
+        StringType_AddedString,
+        StringType_SubString,
+        StringType_Complex = StringType_AddedString
+    };
+
     mutable QStringData *text;
     mutable Identifier identifier;
+    mutable uint subtype;
+    mutable uint stringHash;
 
     static void markObjects(Heap::Base *that, MarkStack *markStack);
     void destroy();
@@ -79,18 +91,18 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
         text->ref.ref();
         return QString(ptr);
     }
+    void createHashValue() const;
+    inline unsigned hashValue() const {
+        if (subtype >= StringType_Unknown)
+            createHashValue();
+        Q_ASSERT(subtype < StringType_Complex);
+
+        return stringHash;
+    }
 };
 
 struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
-    enum StringType {
-        StringType_Regular,
-        StringType_ArrayIndex,
-        StringType_Unknown,
-        StringType_AddedString,
-        StringType_SubString,
-        StringType_Complex = StringType_AddedString
-    };
 
 #ifndef V4_BOOTSTRAP
     const VTable *vtable() const {
@@ -102,14 +114,6 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
     int length() const;
     std::size_t retainedTextSize() const {
         return subtype >= StringType_Complex ? 0 : (std::size_t(text->size) * sizeof(QChar));
-    }
-    void createHashValue() const;
-    inline unsigned hashValue() const {
-        if (subtype >= StringType_Unknown)
-            createHashValue();
-        Q_ASSERT(subtype < StringType_Complex);
-
-        return stringHash;
     }
     inline QString toQString() const {
         if (subtype >= StringType_Complex)
@@ -134,8 +138,6 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
 
     bool startsWithUpper() const;
 
-    mutable uint subtype;
-    mutable uint stringHash;
 private:
     static void append(const String *data, QChar *ch);
 #endif
@@ -282,7 +284,7 @@ public:
         uint h = toArrayIndex(ch, end);
         if (h != UINT_MAX) {
             if (subtype)
-                *subtype = Heap::String::StringType_ArrayIndex;
+                *subtype = Heap::StringOrSymbol::StringType_ArrayIndex;
             return h;
         }
 
@@ -292,7 +294,7 @@ public:
         }
 
         if (subtype)
-            *subtype = Heap::String::StringType_Regular;
+            *subtype = (*ch == QLatin1Char('@')) ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };

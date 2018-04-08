@@ -1174,6 +1174,8 @@ ReturnedValue Runtime::method_typeofValue(ExecutionEngine *engine, const Value &
     case Value::Managed_Type:
         if (value.isString())
             res = engine->id_string();
+        else if (value.isSymbol())
+            res = engine->id_symbol();
         else if (value.objectValue()->as<FunctionObject>())
             res = engine->id_function();
         else

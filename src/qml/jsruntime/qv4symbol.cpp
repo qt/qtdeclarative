@@ -39,16 +39,18 @@
 
 #include <qv4symbol_p.h>
 #include <qv4functionobject_p.h>
+#include <qv4identifiertable_p.h>
 
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(SymbolCtor);
 DEFINE_MANAGED_VTABLE(Symbol);
 
-void Heap::Symbol::init(Heap::String *description)
+void Heap::Symbol::init(const QString &s)
 {
+    Q_ASSERT(s.at(0) == QLatin1Char('@'));
     identifier = Identifier::fromHeapObject(this);
-    QString desc = description->toQString();
+    QString desc(s);
     text = desc.data_ptr();
     text->ref.ref();
 }
@@ -66,19 +68,32 @@ ReturnedValue QV4::SymbolCtor::call(const QV4::FunctionObject *f, const QV4::Val
         s = argv[0].toString(scope.engine);
     if (scope.hasException())
         return Encode::undefined();
-    return f->engine()->memoryManager->alloc<Symbol>(s->d())->asReturnedValue();
+    QString desc = QLatin1Char('@') + s->toQString();
+    return Symbol::create(scope.engine, desc)->asReturnedValue();
 }
 
-ReturnedValue SymbolCtor::method_for(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue SymbolCtor::method_for(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-//    Scope scope(f);
-//    ScopedValue k(s, argc ? argv[0]: Encode::undefined());
-//    ScopedString key(scope, k->toString(scope.engine));
-//    CHECK_EXCEPTION();
+    Scope scope(f);
+    ScopedValue k(scope, argc ? argv[0]: Primitive::undefinedValue());
+    ScopedString key(scope, k->toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+    QString desc = QLatin1Char('@') + key->toQString();
+    return scope.engine->identifierTable->insertSymbol(desc)->asReturnedValue();
 }
 
-ReturnedValue SymbolCtor::method_keyFor(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue SymbolCtor::method_keyFor(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
+    ExecutionEngine *e = f->engine();
+    if (!argc || !argv[0].isSymbol())
+        return e->throwTypeError(QLatin1String("Symbol.keyFor: Argument is not a symbol."));
+    const Symbol &arg = static_cast<const Symbol &>(argv[0]);
+    Heap::Symbol *s = e->identifierTable->symbolForId(arg.identifier());
+    Q_ASSERT(!s || s == arg.d());
+    if (s)
+        return e->newString(arg.toQString().mid((1)))->asReturnedValue();
+    return Encode::undefined();
 }
 
 void SymbolPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -86,6 +101,9 @@ void SymbolPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedValue v(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (v = this));
+
+    ctor->defineDefaultProperty(QStringLiteral("for"), SymbolCtor::method_for, 1);
+    ctor->defineDefaultProperty(QStringLiteral("keyFor"), SymbolCtor::method_keyFor, 1);
 
     defineDefaultProperty(QStringLiteral("toString"), method_toString);
     defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf);
@@ -100,7 +118,7 @@ ReturnedValue SymbolPrototype::method_toString(const FunctionObject *f, const Va
     return e->newString(s->descriptiveString())->asReturnedValue();
 }
 
-ReturnedValue SymbolPrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue SymbolPrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
     const Symbol *s = thisObject->as<Symbol>();
     if (!s) {
@@ -110,7 +128,13 @@ ReturnedValue SymbolPrototype::method_valueOf(const FunctionObject *f, const Val
     return s->asReturnedValue();
 }
 
+Heap::Symbol *Symbol::create(ExecutionEngine *e, const QString &s)
+{
+    Q_ASSERT(s.at(0) == QLatin1Char('@'));
+    return e->memoryManager->alloc<Symbol>(s);
+}
+
 QString Symbol::descriptiveString() const
 {
-    return QLatin1String("Symbol(") + toQString() + QLatin1String(")");
+    return QLatin1String("Symbol(") + toQString().midRef(1) + QLatin1String(")");
 }

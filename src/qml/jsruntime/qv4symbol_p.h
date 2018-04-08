@@ -65,7 +65,7 @@ struct SymbolCtor : FunctionObject {
 };
 
 struct Symbol : StringOrSymbol {
-    void init(Heap::String *description);
+    void init(const QString &s);
 };
 
 }
@@ -94,6 +94,8 @@ struct Symbol : StringOrSymbol
     Q_MANAGED_TYPE(Symbol)
     V4_INTERNALCLASS(Symbol)
     V4_NEEDS_DESTROY
+
+    static Heap::Symbol *create(ExecutionEngine *e, const QString &s);
 
     QString descriptiveString() const;
 };

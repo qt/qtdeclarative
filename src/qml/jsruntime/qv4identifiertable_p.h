@@ -67,12 +67,12 @@ struct IdentifierTable
     int alloc;
     int size;
     int numBits;
-    Heap::String **entriesByHash;
-    Heap::String **entriesById;
+    Heap::StringOrSymbol **entriesByHash;
+    Heap::StringOrSymbol **entriesById;
 
     QSet<IdentifierHashData *> idHashes;
 
-    void addEntry(Heap::String *str);
+    void addEntry(Heap::StringOrSymbol *str);
 
 public:
 
@@ -80,6 +80,7 @@ public:
     ~IdentifierTable();
 
     Heap::String *insertString(const QString &s);
+    Heap::Symbol *insertSymbol(const QString &s);
 
     Identifier identifier(const Heap::String *str) {
         if (str->identifier.isValid())
@@ -95,7 +96,9 @@ public:
 
     Identifier identifierImpl(const Heap::String *str);
 
+    Heap::StringOrSymbol *resolveId(Identifier i) const;
     Q_QML_PRIVATE_EXPORT Heap::String *stringForId(Identifier i) const;
+    Q_QML_PRIVATE_EXPORT Heap::Symbol *symbolForId(Identifier i) const;
 
     void markObjects(MarkStack *markStack);
     void sweep();

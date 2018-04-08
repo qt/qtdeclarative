@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 #include "qv4identifiertable_p.h"
+#include "qv4symbol_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -59,8 +60,8 @@ IdentifierTable::IdentifierTable(ExecutionEngine *engine)
     , numBits(8)
 {
     alloc = primeForNumBits(numBits);
-    entriesByHash = (Heap::String **)malloc(alloc*sizeof(Heap::String *));
-    entriesById = (Heap::String **)malloc(alloc*sizeof(Heap::String *));
+    entriesByHash = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
+    entriesById = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
     memset(entriesByHash, 0, alloc*sizeof(Heap::String *));
     memset(entriesById, 0, alloc*sizeof(Heap::String *));
 }
@@ -73,7 +74,7 @@ IdentifierTable::~IdentifierTable()
         h->identifierTable = nullptr;
 }
 
-void IdentifierTable::addEntry(Heap::String *str)
+void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
 {
     uint hash = str->hashValue();
 
@@ -87,10 +88,10 @@ void IdentifierTable::addEntry(Heap::String *str)
     if (grow) {
         ++numBits;
         int newAlloc = primeForNumBits(numBits);
-        Heap::String **newEntries = (Heap::String **)malloc(newAlloc*sizeof(Heap::String *));
-        memset(newEntries, 0, newAlloc*sizeof(Heap::String *));
+        Heap::StringOrSymbol **newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
+        memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
         for (int i = 0; i < alloc; ++i) {
-            Heap::String *e = entriesByHash[i];
+            Heap::StringOrSymbol *e = entriesByHash[i];
             if (!e)
                 continue;
             uint idx = e->stringHash % newAlloc;
@@ -103,10 +104,10 @@ void IdentifierTable::addEntry(Heap::String *str)
         free(entriesByHash);
         entriesByHash = newEntries;
 
-        newEntries = (Heap::String **)malloc(newAlloc*sizeof(Heap::String *));
-        memset(newEntries, 0, newAlloc*sizeof(Heap::String *));
+        newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
+        memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
         for (int i = 0; i < alloc; ++i) {
-            Heap::String *e = entriesById[i];
+            Heap::StringOrSymbol *e = entriesById[i];
             if (!e)
                 continue;
             uint idx = e->identifier.id % newAlloc;
@@ -146,9 +147,9 @@ Heap::String *IdentifierTable::insertString(const QString &s)
     uint subtype;
     uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
     uint idx = hash % alloc;
-    while (Heap::String *e = entriesByHash[idx]) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
-            return e;
+            return static_cast<Heap::String *>(e);
         ++idx;
         idx %= alloc;
     }
@@ -158,6 +159,28 @@ Heap::String *IdentifierTable::insertString(const QString &s)
     str->subtype = subtype;
     addEntry(str);
     return str;
+}
+
+Heap::Symbol *IdentifierTable::insertSymbol(const QString &s)
+{
+    Q_ASSERT(s.at(0) == QLatin1Char('@'));
+
+    uint subtype;
+    uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    uint idx = hash % alloc;
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
+        if (e->stringHash == hash && e->toQString() == s)
+            return static_cast<Heap::Symbol *>(e);
+        ++idx;
+        idx %= alloc;
+    }
+
+    Heap::Symbol *str = Symbol::create(engine, s);
+    str->stringHash = hash;
+    str->subtype = subtype;
+    addEntry(str);
+    return str;
+
 }
 
 
@@ -172,8 +195,8 @@ Identifier IdentifierTable::identifierImpl(const Heap::String *str)
     }
 
     uint idx = hash % alloc;
-    while (Heap::String *e = entriesByHash[idx]) {
-        if (e->stringHash == hash && e->isEqualTo(str)) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
+        if (e->stringHash == hash && e->toQString() == str->toQString()) {
             str->identifier = e->identifier;
             return e->identifier;
         }
@@ -185,7 +208,7 @@ Identifier IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
-Heap::String *IdentifierTable::stringForId(Identifier i) const
+Heap::StringOrSymbol *IdentifierTable::resolveId(Identifier i) const
 {
     uint arrayIdx = i.asArrayIndex();
     if (arrayIdx < UINT_MAX)
@@ -195,13 +218,26 @@ Heap::String *IdentifierTable::stringForId(Identifier i) const
 
     uint idx = i.id % alloc;
     while (1) {
-        Heap::String *e = entriesById[idx];
-        Q_ASSERT(e);
-        if (e->identifier == i)
+        Heap::StringOrSymbol *e = entriesById[idx];
+        if (!e || e->identifier == i)
             return e;
         ++idx;
         idx %= alloc;
     }
+}
+
+Heap::String *IdentifierTable::stringForId(Identifier i) const
+{
+    Heap::StringOrSymbol *s = resolveId(i);
+    Q_ASSERT(s && s->internalClass->vtable->isString);
+    return static_cast<Heap::String *>(s);
+}
+
+Heap::Symbol *IdentifierTable::symbolForId(Identifier i) const
+{
+    Heap::StringOrSymbol *s = resolveId(i);
+    Q_ASSERT(!s || !s->internalClass->vtable->isString);
+    return static_cast<Heap::Symbol *>(s);
 }
 
 void IdentifierTable::markObjects(MarkStack *markStack)
@@ -211,7 +247,7 @@ void IdentifierTable::markObjects(MarkStack *markStack)
 }
 
 template <typename Key>
-int sweepTable(Heap::String **table, int alloc, std::function<Key(Heap::String *)> f) {
+int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
     int freed = 0;
     Key lastKey = 0;
     int lastEntry = -1;
@@ -224,7 +260,7 @@ int sweepTable(Heap::String **table, int alloc, std::function<Key(Heap::String *
 
     for (int i = 0; i < alloc; ++i) {
         int idx = (i + start) % alloc;
-        Heap::String *entry = table[idx];
+        Heap::StringOrSymbol *entry = table[idx];
         if (!entry) {
             lastEntry = -1;
             continue;
@@ -247,7 +283,7 @@ int sweepTable(Heap::String **table, int alloc, std::function<Key(Heap::String *
         ++freed;
     }
     for (int i = 0; i < alloc; ++i) {
-        Heap::String *entry = table[i];
+        Heap::StringOrSymbol *entry = table[i];
         if (!entry)
             continue;
         Q_ASSERT(entry->isMarked());
@@ -257,8 +293,8 @@ int sweepTable(Heap::String **table, int alloc, std::function<Key(Heap::String *
 
 void IdentifierTable::sweep()
 {
-    int f = sweepTable<int>(entriesByHash, alloc, [](Heap::String *entry) {return entry->hashValue(); });
-    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::String *entry) {return entry->identifier.id; });
+    int f = sweepTable<int>(entriesByHash, alloc, [](Heap::StringOrSymbol *entry) {return entry->hashValue(); });
+    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::StringOrSymbol *entry) {return entry->identifier.id; });
     Q_UNUSED(f);
     Q_ASSERT(f == freed);
     size -= freed;
@@ -278,7 +314,7 @@ Identifier IdentifierTable::identifier(const char *s, int len)
 
     QLatin1String latin(s, len);
     uint idx = hash % alloc;
-    while (Heap::String *e = entriesByHash[idx]) {
+    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == latin)
             return e->identifier;
         ++idx;

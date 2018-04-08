@@ -238,10 +238,12 @@ void Heap::String::append(const String *data, QChar *ch)
     }
 }
 
-void Heap::String::createHashValue() const
+void Heap::StringOrSymbol::createHashValue() const
 {
-    if (!text)
-        simplifyString();
+    if (!text) {
+        Q_ASSERT(internalClass->vtable->isString);
+        static_cast<const Heap::String *>(this)->simplifyString();
+    }
     Q_ASSERT(text);
     const QChar *ch = reinterpret_cast<const QChar *>(text->data());
     const QChar *end = ch + text->size;
