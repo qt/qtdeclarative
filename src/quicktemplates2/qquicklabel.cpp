@@ -94,6 +94,22 @@ QQuickLabelPrivate::~QQuickLabelPrivate()
 #endif
 }
 
+void QQuickLabelPrivate::resizeBackground()
+{
+    Q_Q(QQuickLabel);
+    if (background) {
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (!p->widthValid) {
+            background->setWidth(q->width());
+            p->widthValid = false;
+        }
+        if (!p->heightValid) {
+            background->setHeight(q->height());
+            p->heightValid = false;
+        }
+    }
+}
+
 /*!
     \internal
 
@@ -279,6 +295,8 @@ void QQuickLabel::setBackground(QQuickItem *background)
         background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
+        if (isComponentComplete())
+            d->resizeBackground();
     }
     if (!d->background.isExecuting())
         emit backgroundChanged();
@@ -359,17 +377,7 @@ void QQuickLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickLabel);
     QQuickText::geometryChanged(newGeometry, oldGeometry);
-    if (d->background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->background);
-        if (!p->widthValid) {
-            d->background->setWidth(newGeometry.width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid) {
-            d->background->setHeight(newGeometry.height());
-            p->heightValid = false;
-        }
-    }
+    d->resizeBackground();
 }
 
 QT_END_NAMESPACE
