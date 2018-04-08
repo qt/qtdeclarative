@@ -320,6 +320,7 @@ QSGSoftwareInternalImageNode::QSGSoftwareInternalImageNode()
     , m_subSourceRect(0, 0, 1, 1)
     , m_texture(nullptr)
     , m_mirror(false)
+    , m_textureIsLayer(false)
     , m_smooth(true)
     , m_tileHorizontal(false)
     , m_tileVertical(false)
@@ -366,6 +367,7 @@ void QSGSoftwareInternalImageNode::setTexture(QSGTexture *texture)
 {
     m_texture = texture;
     m_cachedMirroredPixmapIsDirty = true;
+    m_textureIsLayer = static_cast<bool>(qobject_cast<QSGSoftwareLayer*>(texture));
     markDirty(DirtyMaterial);
 }
 
@@ -415,8 +417,13 @@ void QSGSoftwareInternalImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrap
 void QSGSoftwareInternalImageNode::update()
 {
     if (m_cachedMirroredPixmapIsDirty) {
-        if (m_mirror) {
-            m_cachedMirroredPixmap = pixmap().transformed(QTransform(-1, 0, 0, 1, 0, 0));
+        if (m_mirror || m_textureIsLayer) {
+            QTransform transform(
+                        (m_mirror ? -1 : 1), 0,
+                        0                  , (m_textureIsLayer ? -1 :1),
+                        0                  , 0
+            );
+            m_cachedMirroredPixmap = pixmap().transformed(transform);
         } else {
             //Cleanup cached pixmap if necessary
             if (!m_cachedMirroredPixmap.isNull())
@@ -436,6 +443,7 @@ void QSGSoftwareInternalImageNode::preprocess()
     }
     if (doDirty)
         markDirty(DirtyMaterial);
+    m_cachedMirroredPixmapIsDirty = doDirty;
 }
 
 static Qt::TileRule getTileRule(qreal factor)
@@ -454,7 +462,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
 
-    const QPixmap &pm = m_mirror ? m_cachedMirroredPixmap : pixmap();
+    const QPixmap &pm = m_mirror || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
 
     if (m_innerTargetRect != m_targetRect) {
         // border image
