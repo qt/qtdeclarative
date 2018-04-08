@@ -312,6 +312,22 @@ public:
     };
     Value *jsStrings;
 
+    enum JSSymbols {
+        Symbol_hasInstance,
+        Symbol_isConcatSpreadable,
+        Symbol_iterator,
+        Symbol_match,
+        Symbol_replace,
+        Symbol_search,
+        Symbol_species,
+        Symbol_split,
+        Symbol_toPrimitive,
+        Symbol_toStringTag,
+        Symbol_unscopables,
+        NJSSymbols
+    };
+    Value *jsSymbols;
+
     String *id_empty() const { return reinterpret_cast<String *>(jsStrings + String_Empty); }
     String *id_undefined() const { return reinterpret_cast<String *>(jsStrings + String_undefined); }
     String *id_null() const { return reinterpret_cast<String *>(jsStrings + String_null); }
@@ -349,6 +365,18 @@ public:
     String *id_byteOffset() const { return reinterpret_cast<String *>(jsStrings + String_byteOffset); }
     String *id_buffer() const { return reinterpret_cast<String *>(jsStrings + String_buffer); }
     String *id_lastIndex() const { return reinterpret_cast<String *>(jsStrings + String_lastIndex); }
+
+    Symbol *symbol_hasInstance() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_hasInstance); }
+    Symbol *symbol_isConcatSpreadable() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_isConcatSpreadable); }
+    Symbol *symbol_iterator() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_iterator); }
+    Symbol *symbol_match() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_match); }
+    Symbol *symbol_replace() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_replace); }
+    Symbol *symbol_search() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_search); }
+    Symbol *symbol_species() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_species); }
+    Symbol *symbol_split() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_split); }
+    Symbol *symbol_toPrimitive() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_toPrimitive); }
+    Symbol *symbol_toStringTag() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_toStringTag); }
+    Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
 
 #ifndef V4_BOOTSTRAP
     QIntrusiveList<CompiledData::CompilationUnit, &CompiledData::CompilationUnit::nextCompilationUnit> compilationUnits;
@@ -416,6 +444,7 @@ public:
     Heap::String *newIdentifier(const QString &text);
 
     Heap::Object *newStringObject(const String *string);
+    Heap::Object *newSymbolObject(const Symbol *symbol);
     Heap::Object *newNumberObject(double value);
     Heap::Object *newBooleanObject(bool b);
 

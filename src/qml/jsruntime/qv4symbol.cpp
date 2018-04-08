@@ -45,6 +45,7 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(SymbolCtor);
 DEFINE_MANAGED_VTABLE(Symbol);
+DEFINE_OBJECT_VTABLE(SymbolObject);
 
 void Heap::Symbol::init(const QString &s)
 {
@@ -60,15 +61,22 @@ void Heap::SymbolCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Symbol"));
 }
 
+void Heap::SymbolObject::init(const QV4::Symbol *s)
+{
+    Object::init();
+    symbol.set(internalClass->engine, s->d());
+}
+
 ReturnedValue QV4::SymbolCtor::call(const QV4::FunctionObject *f, const QV4::Value *, const QV4::Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedString s(scope);
-    if (argc)
-        s = argv[0].toString(scope.engine);
-    if (scope.hasException())
-        return Encode::undefined();
-    QString desc = QLatin1Char('@') + s->toQString();
+    QString desc = QChar::fromLatin1('@');
+    if (argc && !argv[0].isUndefined()) {
+        ScopedString s(scope, argv[0].toString(scope.engine));
+        if (scope.hasException())
+            return Encode::undefined();
+        desc += s->toQString();
+    }
     return Symbol::create(scope.engine, desc)->asReturnedValue();
 }
 
@@ -101,31 +109,65 @@ void SymbolPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedValue v(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (v = this));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
 
     ctor->defineDefaultProperty(QStringLiteral("for"), SymbolCtor::method_for, 1);
     ctor->defineDefaultProperty(QStringLiteral("keyFor"), SymbolCtor::method_keyFor, 1);
+    ctor->defineReadonlyProperty(QStringLiteral("hasInstance"), *engine->symbol_hasInstance());
+    ctor->defineReadonlyProperty(QStringLiteral("isConcatSpreadable"), *engine->symbol_isConcatSpreadable());
+    ctor->defineReadonlyProperty(QStringLiteral("iterator"), *engine->symbol_iterator());
+    ctor->defineReadonlyProperty(QStringLiteral("match"), *engine->symbol_match());
+    ctor->defineReadonlyProperty(QStringLiteral("replace"), *engine->symbol_replace());
+    ctor->defineReadonlyProperty(QStringLiteral("search"), *engine->symbol_search());
+    ctor->defineReadonlyProperty(QStringLiteral("species"), *engine->symbol_species());
+    ctor->defineReadonlyProperty(QStringLiteral("split"), *engine->symbol_split());
+    ctor->defineReadonlyProperty(QStringLiteral("toPrimitive"), *engine->symbol_toPrimitive());
+    ctor->defineReadonlyProperty(QStringLiteral("toStringTag"), *engine->symbol_toStringTag());
+    ctor->defineReadonlyProperty(QStringLiteral("unscopables"), *engine->symbol_unscopables());
 
+    defineDefaultProperty(QStringLiteral("constructor"), (v = ctor));
     defineDefaultProperty(QStringLiteral("toString"), method_toString);
     defineDefaultProperty(QStringLiteral("valueOf"), method_valueOf);
+    defineDefaultProperty(engine->symbol_toPrimitive(), method_symbolToPrimitive, 1, Attr_ReadOnly_ButConfigurable);
+
+    v = engine->newString(QStringLiteral("Symbol"));
+    defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), v);
+
 }
 
 ReturnedValue SymbolPrototype::method_toString(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
-    ExecutionEngine *e = f->engine();
-    const Symbol *s = thisObject->as<Symbol>();
-    if (!s)
-        return e->throwTypeError();
-    return e->newString(s->descriptiveString())->asReturnedValue();
+    Scope scope(f);
+    Scoped<Symbol> s(scope, thisObject->as<Symbol>());
+    if (!s) {
+        if (const SymbolObject *o = thisObject->as<SymbolObject>())
+            s = o->d()->symbol;
+        else
+            return scope.engine->throwTypeError();
+    }
+    return scope.engine->newString(s->descriptiveString())->asReturnedValue();
 }
 
 ReturnedValue SymbolPrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
-    const Symbol *s = thisObject->as<Symbol>();
+    Scope scope(f);
+    Scoped<Symbol> s(scope, thisObject->as<Symbol>());
     if (!s) {
-        ExecutionEngine *e = f->engine();
-        return e->throwTypeError();
+        if (const SymbolObject *o = thisObject->as<SymbolObject>())
+            s = o->d()->symbol;
+        else
+            return scope.engine->throwTypeError();
     }
     return s->asReturnedValue();
+}
+
+ReturnedValue SymbolPrototype::method_symbolToPrimitive(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    if (thisObject->isSymbol())
+        return thisObject->asReturnedValue();
+    if (const SymbolObject *o = thisObject->as<SymbolObject>())
+        return o->d()->symbol->asReturnedValue();
+    return f->engine()->throwTypeError();
 }
 
 Heap::Symbol *Symbol::create(ExecutionEngine *e, const QString &s)

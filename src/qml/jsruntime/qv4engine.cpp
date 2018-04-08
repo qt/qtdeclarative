@@ -194,6 +194,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));
     typedArrayCtors = static_cast<FunctionObject *>(jsAlloca(NTypedArrayTypes));
     jsStrings = jsAlloca(NJSStrings);
+    jsSymbols = jsAlloca(NJSSymbols);
 
     // set up stack limits
     jsStackLimit = jsStackBase + JSStackLimit/sizeof(Value);
@@ -264,6 +265,18 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
 
+    jsSymbols[Symbol_hasInstance] = Symbol::create(this, QStringLiteral("@Symbol.hasInstance"));
+    jsSymbols[Symbol_isConcatSpreadable] = Symbol::create(this, QStringLiteral("@Symbol.isConcatSpreadable"));
+    jsSymbols[Symbol_iterator] = Symbol::create(this, QStringLiteral("@Symbol.iterator"));
+    jsSymbols[Symbol_match] = Symbol::create(this, QStringLiteral("@Symbol.match"));
+    jsSymbols[Symbol_replace] = Symbol::create(this, QStringLiteral("@Symbol.replace"));
+    jsSymbols[Symbol_search] = Symbol::create(this, QStringLiteral("@Symbol.search"));
+    jsSymbols[Symbol_species] = Symbol::create(this, QStringLiteral("@Symbol.species"));
+    jsSymbols[Symbol_split] = Symbol::create(this, QStringLiteral("@Symbol.split"));
+    jsSymbols[Symbol_toPrimitive] = Symbol::create(this, QStringLiteral("@Symbol.toPrimitive"));
+    jsSymbols[Symbol_toStringTag] = Symbol::create(this, QStringLiteral("@Symbol.toStringTag"));
+    jsSymbols[Symbol_unscopables] = Symbol::create(this, QStringLiteral("@Symbol.unscopables"));
+
     ic = newInternalClass(ArrayPrototype::staticVTable(), objectPrototype());
     Q_ASSERT(ic->d()->prototype);
     ic = ic->addMember(id_length()->identifier(), Attr_NotConfigurable|Attr_NotEnumerable);
@@ -288,6 +301,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly);
     classes[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
     Q_ASSERT(classes[Class_StringObject]->find(id_length()->identifier()) == Heap::StringObject::LengthPropertyIndex);
+
+    classes[Class_SymbolObject] = newInternalClass(QV4::SymbolObject::staticVTable(), symbolPrototype());
 
     jsObjects[NumberProto] = memoryManager->allocate<NumberPrototype>();
     jsObjects[BooleanProto] = memoryManager->allocate<BooleanPrototype>();
@@ -591,6 +606,11 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
     return memoryManager->allocate<StringObject>(string);
+}
+
+Heap::Object *ExecutionEngine::newSymbolObject(const Symbol *symbol)
+{
+    return memoryManager->allocObject<SymbolObject>(classes[Class_SymbolObject], symbol);
 }
 
 Heap::Object *ExecutionEngine::newNumberObject(double value)

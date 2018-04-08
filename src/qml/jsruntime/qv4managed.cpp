@@ -97,6 +97,9 @@ QString Managed::className() const
     case Type_StringObject:
         s = "String";
         break;
+    case Type_SymbolObject:
+        s = "Symbol";
+        break;
     case Type_DateObject:
         s = "Date";
         break;

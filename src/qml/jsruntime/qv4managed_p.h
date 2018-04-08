@@ -188,6 +188,7 @@ public:
         Type_BooleanObject,
         Type_NumberObject,
         Type_StringObject,
+        Type_SymbolObject,
         Type_DateObject,
         Type_RegExpObject,
         Type_ErrorObject,
@@ -212,6 +213,7 @@ public:
 
     bool isArrayObject() const { return d()->internalClass->vtable->type == Type_ArrayObject; }
     bool isStringObject() const { return d()->internalClass->vtable->type == Type_StringObject; }
+    bool isSymbolObject() const { return d()->internalClass->vtable->type == Type_SymbolObject; }
 
     QString className() const;
 

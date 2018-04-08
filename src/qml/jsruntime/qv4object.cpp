@@ -156,7 +156,8 @@ void Object::defineDefaultProperty(const QString &name, const Value &value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount)
+void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+                                   int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -164,17 +165,21 @@ void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(co
     ExecutionContext *global = e->rootContext();
     ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, s, code));
     function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(s, function);
+    defineDefaultProperty(s, function, attributes);
 }
 
-void Object::defineDefaultProperty(String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount)
+void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+                                   int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
     ExecutionContext *global = e->rootContext();
+    ScopedString name(scope, nameOrSymbol);
+    if (!name)
+        name = e->newString(QChar::fromLatin1('[') + nameOrSymbol->toQString().midRef(1) + QChar::fromLatin1(']'));
     ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, name, code));
     function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
-    defineDefaultProperty(name, function);
+    defineDefaultProperty(nameOrSymbol, function, attributes);
 }
 
 void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
@@ -221,7 +226,7 @@ void Object::defineReadonlyConfigurableProperty(const QString &name, const Value
     defineReadonlyConfigurableProperty(s, value);
 }
 
-void Object::defineReadonlyConfigurableProperty(String *name, const Value &value)
+void Object::defineReadonlyConfigurableProperty(StringOrSymbol *name, const Value &value)
 {
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
 }
@@ -261,7 +266,7 @@ void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttribut
 }
 
 // Section 8.12.1
-void Object::getOwnProperty(String *name, PropertyAttributes *attrs, Property *p)
+void Object::getOwnProperty(StringOrSymbol *name, PropertyAttributes *attrs, Property *p)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -351,7 +356,7 @@ PropertyIndex Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
     return { nullptr, 0 };
 }
 
-bool Object::hasProperty(String *name) const
+bool Object::hasProperty(StringOrSymbol *name) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -383,7 +388,7 @@ bool Object::hasProperty(uint index) const
     return false;
 }
 
-bool Object::hasOwnProperty(String *name) const
+bool Object::hasOwnProperty(StringOrSymbol *name) const
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -802,7 +807,7 @@ bool Object::internalDeleteIndexedProperty(uint index)
 }
 
 // Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const Property *p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs)
 {
     uint idx = name->asArrayIndex();
     if (idx != UINT_MAX)
@@ -813,7 +818,7 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, String *name, const 
 
     uint memberIndex;
 
-    if (isArrayObject() && name->equals(engine->id_length())) {
+    if (isArrayObject() && name->identifier() == engine->id_length()->identifier()) {
         Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()->identifier()));
         ScopedProperty lp(scope);
         PropertyAttributes cattrs;
@@ -904,7 +909,7 @@ bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Prope
     return __defineOwnProperty__(engine, index, nullptr, p, attrs);
 }
 
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs)
+bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())

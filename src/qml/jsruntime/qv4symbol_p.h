@@ -68,6 +68,14 @@ struct Symbol : StringOrSymbol {
     void init(const QString &s);
 };
 
+#define SymbolObjectMembers(class, Member) \
+    Member(class, Pointer, Symbol *, symbol)
+
+DECLARE_HEAP_OBJECT(SymbolObject, Object) {
+    DECLARE_MARKOBJECTS(SymbolObject);
+    void init(const QV4::Symbol *s);
+};
+
 }
 
 struct SymbolCtor : FunctionObject
@@ -86,6 +94,8 @@ struct SymbolPrototype : Object
 
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_symbolToPrimitive(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Symbol : StringOrSymbol
@@ -98,6 +108,18 @@ struct Symbol : StringOrSymbol
     static Heap::Symbol *create(ExecutionEngine *e, const QString &s);
 
     QString descriptiveString() const;
+};
+
+struct SymbolObject : Object
+{
+    V4_OBJECT2(SymbolObject, Object)
+    Q_MANAGED_TYPE(SymbolObject)
+    V4_INTERNALCLASS(SymbolObject)
+    V4_PROTOTYPE(symbolPrototype)
+
+    static bool put(Managed *, StringOrSymbol *, const Value &) { return false; }
+    static bool putIndexed(Managed *, uint, const Value &) { return false; }
+
 };
 
 }

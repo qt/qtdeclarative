@@ -119,7 +119,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* delete */ \
     F(bool, deleteElement, (ExecutionEngine *engine, const Value &base, const Value &index)) \
     F(bool, deleteMember, (ExecutionEngine *engine, const Value &base, int nameIndex)) \
-    F(bool, deleteMemberString, (ExecutionEngine *engine, const Value &base, String *name)) \
+    F(bool, deleteMemberString, (ExecutionEngine *engine, const Value &base, StringOrSymbol *name)) \
     F(bool, deleteName, (ExecutionEngine *engine, int nameIndex)) \
     \
     /* exceptions & scopes */ \

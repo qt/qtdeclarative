@@ -240,20 +240,20 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
-    void getOwnProperty(String *name, PropertyAttributes *attrs, Property *p = nullptr);
+    void getOwnProperty(StringOrSymbol *name, PropertyAttributes *attrs, Property *p = nullptr);
     void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
 
     PropertyIndex getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs);
     PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
 
-    bool hasProperty(String *name) const;
+    bool hasProperty(StringOrSymbol *name) const;
     bool hasProperty(uint index) const;
 
-    bool hasOwnProperty(String *name) const;
+    bool hasOwnProperty(StringOrSymbol *name) const;
     bool hasOwnProperty(uint index) const;
 
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, String *member, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, String *name, const Property *p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
+    bool __defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs);
     bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
@@ -271,12 +271,14 @@ struct Q_QML_EXPORT Object: Managed {
     bool putValue(uint memberIndex, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
-    void defineDefaultProperty(String *name, const Value &value) {
-        insertMember(name, value, Attr_Data|Attr_NotEnumerable);
+    void defineDefaultProperty(StringOrSymbol *name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable) {
+        insertMember(name, value, attributes);
     }
     void defineDefaultProperty(const QString &name, const Value &value);
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount = 0);
-    void defineDefaultProperty(String *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc), int argumentCount = 0);
+    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+                               int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
+    void defineDefaultProperty(StringOrSymbol *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+                               int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
     void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
                                 ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
     void defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
@@ -287,7 +289,7 @@ struct Q_QML_EXPORT Object: Managed {
 
     /* Fixed: Writable: false, Enumerable: false, Configurable: true */
     void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
-    void defineReadonlyConfigurableProperty(String *name, const Value &value);
+    void defineReadonlyConfigurableProperty(StringOrSymbol *name, const Value &value);
 
     void insertMember(StringOrSymbol *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());

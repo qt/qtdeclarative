@@ -327,7 +327,7 @@ bool Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, c
             return o->deleteIndexedProperty(n);
     }
 
-    ScopedString name(scope, index.toString(engine));
+    ScopedStringOrSymbol name(scope, index.toStringOrSymbol(engine));
     return method_deleteMemberString(engine, base, name);
 }
 
@@ -338,7 +338,7 @@ bool Runtime::method_deleteMember(ExecutionEngine *engine, const Value &base, in
     return method_deleteMemberString(engine, base, name);
 }
 
-bool Runtime::method_deleteMemberString(ExecutionEngine *engine, const Value &base, String *name)
+bool Runtime::method_deleteMemberString(ExecutionEngine *engine, const Value &base, StringOrSymbol *name)
 {
     Scope scope(engine);
     ScopedObject obj(scope, base.toObject(engine));
@@ -371,7 +371,7 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
     if (!ro)
         return engine->throwTypeError();
     Scope scope(engine);
-    ScopedString s(scope, left.toString(engine));
+    ScopedStringOrSymbol s(scope, left.toStringOrSymbol(engine));
     if (scope.hasException())
         return Encode::undefined();
     bool r = ro->hasProperty(s);
@@ -463,8 +463,7 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     case Value::Managed_Type:
         Q_ASSERT(value.isStringOrSymbol());
         if (!value.isString())
-            // ### this is a symbol, which is an immutable object according to spec
-            return nullptr;
+            return engine->newSymbolObject(value.symbolValue());
         return engine->newStringObject(value.stringValue());
     case Value::Integer_Type:
     default: // double

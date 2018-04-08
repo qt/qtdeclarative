@@ -154,7 +154,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
     ScopedValue v(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
-    ScopedString name(scope, v->toString(scope.engine));
+    ScopedStringOrSymbol name(scope, v->toStringOrSymbol(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -255,7 +255,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedString name(scope, argc > 1 ? argv[1] : Primitive::undefinedValue(), ScopedString::Convert);
+    ScopedStringOrSymbol name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -287,7 +287,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
     ScopedValue val(scope);
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
-    ScopedString name(scope);
+    ScopedStringOrSymbol name(scope);
     ScopedProperty pd(scope);
     ScopedProperty n(scope);
     while (1) {
@@ -518,7 +518,7 @@ ReturnedValue ObjectPrototype::method_valueOf(const FunctionObject *b, const Val
 ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedString P(scope, argc ? argv[0] : Primitive::undefinedValue(), ScopedString::Convert);
+    ScopedStringOrSymbol P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
     ScopedObject O(scope, thisObject->toObject(scope.engine));
@@ -552,7 +552,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
 ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedString p(scope, argc ? argv[0] : Primitive::undefinedValue(), ScopedString::Convert);
+    ScopedStringOrSymbol p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
