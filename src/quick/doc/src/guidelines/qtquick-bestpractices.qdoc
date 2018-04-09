@@ -191,8 +191,11 @@ or frequently modified.
 \section2 Interacting with QML from C++
 
 Although Qt enables you to manipulate QML from C++, it is not recommended to do
-so. To explain why, let's take a look at a simplified example. Suppose we were
-writing the UI for a settings page:
+so. To explain why, let's take a look at a simplified example.
+
+\section3 Pulling References from QML
+
+Suppose we were writing the UI for a settings page:
 
 \qml
     import QtQuick 2.11
@@ -261,14 +264,18 @@ Then, in C++, we find that object and connect to its change signal:
     #include "main.moc"
 \endcode
 
-The problem with this approach is that the C++ logic layer depends on the QML
+With this approach, references to objects are "pulled" from QML.
+The problem with this is that the C++ logic layer depends on the QML
 presentation layer. If we were to refactor the QML in such a way that the
 \c objectName changes, or some other change breaks the ability for the C++
 to find the QML object, our workflow becomes much more complicated and tedious.
 
+\section3 Pushing References to QML
+
 Refactoring QML is a lot easier than refactoring C++, so in order to make
 maintenance pain-free, we should strive to keep C++ types unaware of QML as
-much as possible. This can be achieved by exposing the C++ types to QML:
+much as possible. This can be achieved by "pushing" references to C++ types
+into QML:
 
 \code
     int main(int argc, char *argv[])
@@ -303,6 +310,15 @@ The QML then calls the C++ slot directly:
 
 With this approach, the C++ remains unchanged in the event that the QML needs
 to be refactored in the future.
+
+In the example above, we set a context property on the root context to expose
+the C++ object to QML. This means that the property is available to every
+component loaded by the engine. Context properties are useful for objects that
+must be available as soon as the QML is loaded and cannot be instantiated in
+QML.
+
+\l {Integrating QML and C++} demonstrates an alternative approach where QML is
+made aware of a C++ type so that it can instantiate it itself.
 
 \section2 Related Information
 \list

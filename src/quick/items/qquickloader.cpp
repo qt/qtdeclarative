@@ -311,10 +311,7 @@ QQuickLoader::QQuickLoader(QQuickItem *parent)
 QQuickLoader::~QQuickLoader()
 {
     Q_D(QQuickLoader);
-    if (d->item) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(d->item);
-        p->removeItemChangeListener(d, watchedChanges);
-    }
+    d->clear();
 }
 
 /*!
