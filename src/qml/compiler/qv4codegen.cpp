@@ -2300,7 +2300,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // at all, because if the onSignal is a signal handler, the user is actually making it explicit
     // that the binding is a function, so we should execute that. However, we don't know that during
     // AOT compilation, so mark the surrounding function as only-returning-a-closure.
-    _context->returnsClosure = cast<ExpressionStatement *>(ast) && cast<FunctionExpression *>(cast<ExpressionStatement *>(ast)->expression);
+    _context->returnsClosure = body && body->statement && cast<ExpressionStatement *>(body->statement) && cast<FunctionExpression *>(cast<ExpressionStatement *>(body->statement)->expression);
 
     BytecodeGenerator bytecode(_context->line, _module->debugMode);
     BytecodeGenerator *savedBytecodeGenerator;

@@ -498,7 +498,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiObjectBinding *node)
 
 bool IRBuilder::visit(QQmlJS::AST::UiScriptBinding *node)
 {
-    appendBinding(node->qualifiedId, node->statement);
+    appendBinding(node->qualifiedId, node->statement, node);
     return false;
 }
 
@@ -958,7 +958,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 QQmlJS::AST::Node::accept(node->binding, this);
             } else if (node->statement) {
                 if (!isRedundantNullInitializerForPropertyDeclaration(_propertyDeclaration, node->statement))
-                    appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement);
+                    appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex, node->statement, node);
             }
             qSwap(_propertyDeclaration, property);
         }
@@ -972,6 +972,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
     if (QQmlJS::AST::FunctionDeclaration *funDecl = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration *>(node->sourceElement)) {
         CompiledFunctionOrExpression *foe = New<CompiledFunctionOrExpression>();
         foe->node = funDecl;
+        foe->parentNode = funDecl;
         foe->nameIndex = registerString(funDecl->name.toString());
         foe->disableAcceleratedLookups = false;
         const int index = _object->functionsAndExpressions->append(foe);
@@ -1045,7 +1046,7 @@ QStringRef IRBuilder::textRefAt(const QQmlJS::AST::SourceLocation &first, const 
     return QStringRef(&sourceCode, first.offset, last.offset + last.length - first.offset);
 }
 
-void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement)
+void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, QQmlJS::AST::Node *parentNode)
 {
     QQmlJS::AST::SourceLocation loc = statement->firstSourceLocation();
     binding->valueLocation.line = loc.startLine;
@@ -1091,6 +1092,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
 
         CompiledFunctionOrExpression *expr = New<CompiledFunctionOrExpression>();
         expr->node = statement;
+        expr->parentNode = parentNode;
         expr->nameIndex = registerString(QLatin1String("expression for ")
                                          + stringAt(binding->propertyNameIndex));
         expr->disableAcceleratedLookups = false;
@@ -1217,7 +1219,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
     }
 }
 
-void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value)
+void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode)
 {
     const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
     Object *object = nullptr;
@@ -1228,7 +1230,7 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Sta
         return;
     }
     qSwap(_object, object);
-    appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), value);
+    appendBinding(qualifiedNameLocation, name->identifierToken, registerString(name->name.toString()), value, parentNode);
     qSwap(_object, object);
 }
 
@@ -1243,7 +1245,8 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex,
     qSwap(_object, object);
 }
 
-void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value)
+void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+                              QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode)
 {
     Binding *binding = New<Binding>();
     binding->propertyNameIndex = propertyNameIndex;
@@ -1251,7 +1254,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
     binding->location.line = nameLocation.startLine;
     binding->location.column = nameLocation.startColumn;
     binding->flags = 0;
-    setBindingValue(binding, value);
+    setBindingValue(binding, value, parentNode);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
         recordError(qualifiedNameLocation, error);
@@ -1813,12 +1816,15 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     scan.enterGlobalEnvironment(QV4::Compiler::ContextType::Binding);
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
+        Q_ASSERT(f.parentNode && f.parentNode != qmlRoot);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
 
-        if (function)
+        if (function) {
             scan.enterQmlFunction(function);
-        else
-            scan.enterEnvironment(f.node, QV4::Compiler::ContextType::Binding);
+        } else {
+            Q_ASSERT(f.node != f.parentNode);
+            scan.enterEnvironment(f.parentNode, QV4::Compiler::ContextType::Binding);
+        }
 
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
@@ -1863,7 +1869,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         }
 
         _disableAcceleratedLookups = qmlFunction.disableAcceleratedLookups;
-        int idx = defineFunction(name, node,
+        int idx = defineFunction(name, function ? function : qmlFunction.parentNode,
                                  function ? function->formals : nullptr,
                                  body);
         runtimeFunctionIndices[i] = idx;

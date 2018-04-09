@@ -958,7 +958,7 @@ void tst_qqmlecmascript::deferredPropertiesErrors()
     QVERIFY(!object->objectProperty());
     QVERIFY(!object->objectProperty2());
 
-    QString warning = component.url().toString() + ":6:21: Unable to assign [undefined] to QObject*";
+    QString warning = component.url().toString() + ":6:5: Unable to assign [undefined] to QObject*";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     qmlExecuteDeferred(object);
@@ -1119,13 +1119,13 @@ void tst_qqmlecmascript::enums()
     {
     QUrl file = testFileUrl("enums.2.qml");
     QString w1 = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'MyEnum' for property 'MyUnregisteredEnumTypeObject::enumProperty'");
-    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:21 depends on non-NOTIFYable properties:");
+    QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:5 depends on non-NOTIFYable properties:");
     QString w3 = QLatin1String("    MyUnregisteredEnumTypeObject::enumProperty");
-    QString w4 = file.toString() + ":7:21: Unable to assign [undefined] to int";
-    QString w5 = file.toString() + ":8:21: Unable to assign [undefined] to int";
-    QString w6 = file.toString() + ":9:21: Unable to assign [undefined] to int";
-    QString w7 = file.toString() + ":13:23: Unable to assign [undefined] to [unknown property type]";
-    QString w8 = file.toString() + ":31:23: Unable to assign int to [unknown property type]";
+    QString w4 = file.toString() + ":7:5: Unable to assign [undefined] to int";
+    QString w5 = file.toString() + ":8:5: Unable to assign [undefined] to int";
+    QString w6 = file.toString() + ":9:5: Unable to assign [undefined] to int";
+    QString w7 = file.toString() + ":13:9: Unable to assign [undefined] to [unknown property type]";
+    QString w8 = file.toString() + ":31:9: Unable to assign int to [unknown property type]";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
@@ -1319,7 +1319,7 @@ void tst_qqmlecmascript::nonExistentAttachedObject()
 {
     QQmlComponent component(&engine, testFileUrl("nonExistentAttachedObject.qml"));
 
-    QString warning = component.url().toString() + ":4:21: Unable to assign [undefined] to QString";
+    QString warning = component.url().toString() + ":4:5: Unable to assign [undefined] to QString";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QObject *object = component.create();
@@ -1935,7 +1935,7 @@ void tst_qqmlecmascript::scriptErrors()
     QString warning3 = url.left(url.length() - 3) + "js:4: Error: Invalid write to global property \"a\"";
     QString warning4 = url + ":13: ReferenceError: a is not defined";
     QString warning5 = url + ":11: ReferenceError: a is not defined";
-    QString warning6 = url + ":10:21: Unable to assign [undefined] to int";
+    QString warning6 = url + ":10:5: Unable to assign [undefined] to int";
     QString warning7 = url + ":15: TypeError: Cannot assign to read-only property \"trueProperty\"";
     QString warning8 = url + ":16: Error: Cannot assign to non-existent property \"fakeProperty\"";
 
@@ -5656,7 +5656,7 @@ void tst_qqmlecmascript::sequenceConversionBindings()
 
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.error.qml");
-        QString warning = QString(QLatin1String("%1:17:27: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
+        QString warning = QString(QLatin1String("%1:17:9: Unable to assign QList<int> to QList<bool>")).arg(qmlFile.toString());
         QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
         QQmlComponent component(&engine, qmlFile);
         QObject *object = component.create();
@@ -6026,10 +6026,10 @@ void tst_qqmlecmascript::functionAssignment_fromBinding()
     QQmlComponent component(&engine, testFileUrl("functionAssignment.1.qml"));
 
     QString url = component.url().toString();
-    QString w1 = url + ":4:25: Unable to assign a function to a property of any type other than var.";
-    QString w2 = url + ":5:25: Invalid use of Qt.binding() in a binding declaration.";
-    QString w3 = url + ":6:21: Invalid use of Qt.binding() in a binding declaration.";
-    QString w4 = url + ":7:15: Invalid use of Qt.binding() in a binding declaration.";
+    QString w1 = url + ":4:5: Unable to assign a function to a property of any type other than var.";
+    QString w2 = url + ":5:5: Invalid use of Qt.binding() in a binding declaration.";
+    QString w3 = url + ":6:5: Invalid use of Qt.binding() in a binding declaration.";
+    QString w4 = url + ":7:5: Invalid use of Qt.binding() in a binding declaration.";
     QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, w2.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, w3.toLatin1().constData());
@@ -6881,7 +6881,7 @@ void tst_qqmlecmascript::nonNotifyable()
 
     QString expected1 = QLatin1String("QQmlExpression: Expression ") +
                         component.url().toString() +
-                        QLatin1String(":5:24 depends on non-NOTIFYable properties:");
+                        QLatin1String(":5:5 depends on non-NOTIFYable properties:");
     QString expected2 = QLatin1String("    ") +
                         QLatin1String(object->metaObject()->className()) +
                         QLatin1String("::value");
@@ -7050,7 +7050,7 @@ void tst_qqmlecmascript::switchStatement()
     {
         QQmlComponent component(&engine, testFileUrl("switchStatement.4.qml"));
 
-        QString warning = component.url().toString() + ":4:12: Unable to assign [undefined] to int";
+        QString warning = component.url().toString() + ":4:5: Unable to assign [undefined] to int";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());

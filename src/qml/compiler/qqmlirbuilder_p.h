@@ -340,12 +340,9 @@ struct Function
 struct Q_QML_PRIVATE_EXPORT CompiledFunctionOrExpression
 {
     CompiledFunctionOrExpression()
-
     {}
-    CompiledFunctionOrExpression(QQmlJS::AST::Node *n)
-        : node(n)
 
-    {}
+    QQmlJS::AST::Node *parentNode = nullptr; // FunctionDeclaration, Statement or Expression
     QQmlJS::AST::Node *node = nullptr; // FunctionDeclaration, Statement or Expression
     quint32 nameIndex = 0;
     bool disableAcceleratedLookups = false;
@@ -516,12 +513,12 @@ public:
     QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,
                          const QQmlJS::AST::SourceLocation &last) const;
 
-    void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement);
+    void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, AST::Node *parentNode);
     void tryGeneratingTranslationBinding(const QStringRef &base, QQmlJS::AST::ArgumentList *args, QV4::CompiledData::Binding *binding);
 
-    void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value);
+    void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value, AST::Node *parentNode);
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
-    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value);
+    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, QQmlJS::AST::Statement *value, AST::Node *parentNode);
     void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     bool appendAlias(QQmlJS::AST::UiPublicMember *node);

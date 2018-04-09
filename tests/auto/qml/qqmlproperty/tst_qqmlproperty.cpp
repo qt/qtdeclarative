@@ -2007,15 +2007,15 @@ void tst_qqmlproperty::warnOnInvalidBinding()
     QString expectedWarning;
 
     // V4 error message for property-to-property binding
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":6:36: Unable to assign QQuickText to QQuickRectangle");
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":6:5: Unable to assign QQuickText to QQuickRectangle");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     // V8 error message for function-to-property binding
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":7:36: Unable to assign QQuickText to QQuickRectangle");
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":7:5: Unable to assign QQuickText to QQuickRectangle");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     // V8 error message for invalid binding to anchor
-    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:33: Unable to assign QQuickItem_QML_8 to QQuickAnchorLine");
+    expectedWarning = testUrl.toString() + QString::fromLatin1(":14:9: Unable to assign QQuickItem_QML_8 to QQuickAnchorLine");
     QTest::ignoreMessage(QtWarningMsg, expectedWarning.toLatin1().constData());
 
     QQmlComponent component(&engine, testUrl);
