@@ -2364,6 +2364,16 @@ void tst_QQuickItem::mapCoordinates()
             Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
     QCOMPARE(result.value<QPointF>(), qobject_cast<QQuickItem*>(a)->mapFromGlobal(QPointF(x, y)));
 
+    // for orphans we are primarily testing that we don't crash.
+    // when orphaned the final position is the original position of the item translated by x,y
+    QVERIFY(QMetaObject::invokeMethod(root, "mapOrphanToGlobal",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
+    QCOMPARE(result.value<QPointF>(), QPointF(150,150) + QPointF(x, y));
+
+    QVERIFY(QMetaObject::invokeMethod(root, "mapOrphanFromGlobal",
+            Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, x), Q_ARG(QVariant, y)));
+    QCOMPARE(result.value<QPointF>(), -QPointF(150,150) + QPointF(x, y));
+
     QString warning1 = testFileUrl("mapCoordinates.qml").toString() + ":35:5: QML Item: mapToItem() given argument \"1122\" which is neither null nor an Item";
     QString warning2 = testFileUrl("mapCoordinates.qml").toString() + ":35:5: QML Item: mapFromItem() given argument \"1122\" which is neither null nor an Item";
 
