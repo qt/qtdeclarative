@@ -82,6 +82,8 @@ public:
     void itemSiblingOrderChanged(QQuickItem *item) override;
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
     void itemDestroyed(QQuickItem *item) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
     static int contentData_count(QQmlListProperty<QObject> *prop);
@@ -93,6 +95,17 @@ public:
     static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
+    virtual qreal getContentWidth() const;
+    virtual qreal getContentHeight() const;
+
+    void updateContentWidth();
+    void updateContentHeight();
+    void updateContentSize();
+
+    bool hasContentWidth;
+    bool hasContentHeight;
+    qreal contentWidth;
+    qreal contentHeight;
     QObjectList contentData;
     QQmlObjectModel *contentModel;
     int currentIndex;

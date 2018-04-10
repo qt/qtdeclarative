@@ -106,22 +106,14 @@ public:
     void updateCurrentIndex();
     void updateLayout();
 
-    qreal getContentWidth() const;
-    qreal getContentHeight() const;
-
-    void updateContentWidth();
-    void updateContentHeight();
-    void updateContentSize();
+    qreal getContentWidth() const override;
+    qreal getContentHeight() const override;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
     bool updatingLayout;
-    bool hasContentWidth;
-    bool hasContentHeight;
-    qreal contentWidth;
-    qreal contentHeight;
     QQuickTabBar::Position position;
 };
 
@@ -149,10 +141,6 @@ public:
 
 QQuickTabBarPrivate::QQuickTabBarPrivate()
     : updatingLayout(false),
-      hasContentWidth(false),
-      hasContentHeight(false),
-      contentWidth(0),
-      contentHeight(0),
       position(QQuickTabBar::Header)
 {
     changeTypes |= Geometry | ImplicitWidth | ImplicitHeight;
@@ -249,57 +237,6 @@ qreal QQuickTabBarPrivate::getContentHeight() const
     return maxHeight;
 }
 
-void QQuickTabBarPrivate::updateContentWidth()
-{
-    Q_Q(QQuickTabBar);
-    if (hasContentWidth)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth();
-    if (qFuzzyCompare(contentWidth, oldContentWidth))
-        return;
-
-    emit q->contentWidthChanged();
-}
-
-void QQuickTabBarPrivate::updateContentHeight()
-{
-    Q_Q(QQuickTabBar);
-    if (hasContentHeight)
-        return;
-
-    const qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight();
-    if (qFuzzyCompare(contentHeight, oldContentHeight))
-        return;
-
-    emit q->contentHeightChanged();
-}
-
-void QQuickTabBarPrivate::updateContentSize()
-{
-    Q_Q(QQuickTabBar);
-    if (hasContentWidth && hasContentHeight)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    if (!hasContentWidth)
-        contentWidth = getContentWidth();
-
-    const qreal oldContentHeight = contentHeight;
-    if (!hasContentHeight)
-        contentHeight = getContentHeight();
-
-    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
-    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
-
-    if (widthChanged)
-        emit q->contentWidthChanged();
-    if (heightChanged)
-        emit q->contentHeightChanged();
-}
-
 void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
 {
     if (!updatingLayout) {
@@ -309,14 +246,18 @@ void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange
     }
 }
 
-void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *)
+void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
-    updateContentWidth();
+    QQuickContainerPrivate::itemImplicitWidthChanged(item);
+    if (item != contentItem)
+        updateContentWidth();
 }
 
-void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *)
+void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
-    updateContentHeight();
+    QQuickContainerPrivate::itemImplicitHeightChanged(item);
+    if (item != contentItem)
+        updateContentHeight();
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent)
@@ -366,38 +307,11 @@ void QQuickTabBar::setPosition(Position position)
     This property holds the content width. It is used for calculating the total
     implicit width of the tab bar.
 
-    Unless explicitly overridden, the content width is automatically calculated
-    based on the total implicit width of the tabs and the \l {Control::}{spacing}
-    of the tab bar.
+    \note This property is available in TabBar since QtQuick.Controls 2.2 (Qt 5.9),
+    but it was promoted to the Container base type in QtQuick.Controls 2.5 (Qt 5.12).
 
-    \sa contentHeight
+    \sa Container::contentWidth
 */
-qreal QQuickTabBar::contentWidth() const
-{
-    Q_D(const QQuickTabBar);
-    return d->contentWidth;
-}
-
-void QQuickTabBar::setContentWidth(qreal width)
-{
-    Q_D(QQuickTabBar);
-    d->hasContentWidth = true;
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
-}
-
-void QQuickTabBar::resetContentWidth()
-{
-    Q_D(QQuickTabBar);
-    if (!d->hasContentWidth)
-        return;
-
-    d->hasContentWidth = false;
-    d->updateContentWidth();
-}
 
 /*!
     \since QtQuick.Controls 2.2 (Qt 5.9)
@@ -406,37 +320,11 @@ void QQuickTabBar::resetContentWidth()
     This property holds the content height. It is used for calculating the total
     implicit height of the tab bar.
 
-    Unless explicitly overridden, the content height is automatically calculated
-    based on the maximum implicit height of the tabs.
+    \note This property is available in TabBar since QtQuick.Controls 2.2 (Qt 5.9),
+    but it was promoted to the Container base type in QtQuick.Controls 2.5 (Qt 5.12).
 
-    \sa contentWidth
+    \sa Container::contentHeight
 */
-qreal QQuickTabBar::contentHeight() const
-{
-    Q_D(const QQuickTabBar);
-    return d->contentHeight;
-}
-
-void QQuickTabBar::setContentHeight(qreal height)
-{
-    Q_D(QQuickTabBar);
-    d->hasContentHeight = true;
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
-}
-
-void QQuickTabBar::resetContentHeight()
-{
-    Q_D(QQuickTabBar);
-    if (!d->hasContentHeight)
-        return;
-
-    d->hasContentHeight = false;
-    d->updateContentHeight();
-}
 
 QQuickTabBarAttached *QQuickTabBar::qmlAttachedProperties(QObject *object)
 {

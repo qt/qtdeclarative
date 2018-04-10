@@ -85,12 +85,8 @@ public:
     void onItemTriggered();
     void onMenuAboutToHide();
 
-    qreal getContentWidth() const;
-    qreal getContentHeight() const;
-
-    void updateContentWidth();
-    void updateContentHeight();
-    void updateContentSize();
+    qreal getContentWidth() const override;
+    qreal getContentHeight() const override;
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
@@ -104,10 +100,6 @@ public:
 
     bool popupMode;
     bool triggering;
-    bool hasContentWidth;
-    bool hasContentHeight;
-    qreal contentWidth;
-    qreal contentHeight;
     QQmlComponent *delegate;
     QPointer<QQuickMenuBarItem> currentItem;
 };

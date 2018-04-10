@@ -110,10 +110,6 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
 public:
     QQuickSwipeViewPrivate()
         : interactive(true),
-          hasContentWidth(false),
-          hasContentHeight(false),
-          contentWidth(0),
-          contentHeight(0),
           orientation(Qt::Horizontal)
     {
         changeTypes |= ImplicitWidth | ImplicitHeight;
@@ -127,18 +123,10 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    qreal getContentWidth() const;
-    qreal getContentHeight() const;
-
-    void updateContentWidth();
-    void updateContentHeight();
-    void updateContentSize();
+    qreal getContentWidth() const override;
+    qreal getContentHeight() const override;
 
     bool interactive;
-    bool hasContentWidth;
-    bool hasContentHeight;
-    qreal contentWidth;
-    qreal contentHeight;
     Qt::Orientation orientation;
 };
 
@@ -199,6 +187,7 @@ QQuickSwipeViewPrivate *QQuickSwipeViewPrivate::get(QQuickSwipeView *view)
 void QQuickSwipeViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_Q(QQuickSwipeView);
+    QQuickContainerPrivate::itemImplicitWidthChanged(item);
     if (item == q->currentItem())
         updateContentWidth();
 }
@@ -206,6 +195,7 @@ void QQuickSwipeViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
 void QQuickSwipeViewPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     Q_Q(QQuickSwipeView);
+    QQuickContainerPrivate::itemImplicitHeightChanged(item);
     if (item == q->currentItem())
         updateContentHeight();
 }
@@ -224,64 +214,13 @@ qreal QQuickSwipeViewPrivate::getContentHeight() const
     return currentItem ? currentItem->implicitHeight() : 0;
 }
 
-void QQuickSwipeViewPrivate::updateContentWidth()
-{
-    Q_Q(QQuickSwipeView);
-    if (hasContentWidth)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth();
-    if (qFuzzyCompare(contentWidth, oldContentWidth))
-        return;
-
-    emit q->contentWidthChanged();
-}
-
-void QQuickSwipeViewPrivate::updateContentHeight()
-{
-    Q_Q(QQuickSwipeView);
-    if (hasContentHeight)
-        return;
-
-    const qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight();
-    if (qFuzzyCompare(contentHeight, oldContentHeight))
-        return;
-
-    emit q->contentHeightChanged();
-}
-
-void QQuickSwipeViewPrivate::updateContentSize()
-{
-    Q_Q(QQuickSwipeView);
-    if (hasContentWidth && hasContentHeight)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    if (!hasContentWidth)
-        contentWidth = getContentWidth();
-
-    const qreal oldContentHeight = contentHeight;
-    if (!hasContentHeight)
-        contentHeight = getContentHeight();
-
-    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
-    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
-
-    if (widthChanged)
-        emit q->contentWidthChanged();
-    if (heightChanged)
-        emit q->contentHeightChanged();
-}
-
 QQuickSwipeView::QQuickSwipeView(QQuickItem *parent)
     : QQuickContainer(*(new QQuickSwipeViewPrivate), parent)
 {
     Q_D(QQuickSwipeView);
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
-    QObjectPrivate::connect(this, &QQuickContainer::currentItemChanged, d, &QQuickSwipeViewPrivate::updateContentSize);
+    QObjectPrivate::connect(this, &QQuickContainer::currentItemChanged, d, &QQuickContainerPrivate::updateContentSize);
 }
 
 /*!
@@ -372,85 +311,6 @@ bool QQuickSwipeView::isVertical() const
 QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
 {
     return new QQuickSwipeViewAttached(object);
-}
-
-/*!
-    \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlproperty real QtQuick.Controls::SwipeView::contentWidth
-
-    This property holds the content width. It is used for calculating the total
-    implicit width of the button box.
-
-    Unless explicitly overridden, the content width is automatically calculated
-    based on the total implicit width of the buttons and the \l {Control::}{spacing}
-    of the button box.
-
-    \sa contentHeight
-*/
-qreal QQuickSwipeView::contentWidth() const
-{
-    Q_D(const QQuickSwipeView);
-    return d->contentWidth;
-}
-
-void QQuickSwipeView::setContentWidth(qreal width)
-{
-    Q_D(QQuickSwipeView);
-    d->hasContentWidth = true;
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
-}
-
-void QQuickSwipeView::resetContentWidth()
-{
-    Q_D(QQuickSwipeView);
-    if (!d->hasContentWidth)
-        return;
-
-    d->hasContentWidth = false;
-    d->updateContentWidth();
-}
-
-/*!
-    \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlproperty real QtQuick.Controls::SwipeView::contentHeight
-
-    This property holds the content height. It is used for calculating the total
-    implicit height of the button box.
-
-    Unless explicitly overridden, the content height is automatically calculated
-    based on the maximum implicit height of the buttons.
-
-    \sa contentWidth
-*/
-qreal QQuickSwipeView::contentHeight() const
-{
-    Q_D(const QQuickSwipeView);
-    return d->contentHeight;
-}
-
-void QQuickSwipeView::setContentHeight(qreal height)
-{
-    Q_D(QQuickSwipeView);
-    d->hasContentHeight = true;
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
-}
-
-void QQuickSwipeView::resetContentHeight()
-{
-    Q_D(QQuickSwipeView);
-    if (!d->hasContentHeight)
-        return;
-
-    d->hasContentHeight = false;
-    d->updateContentHeight();
 }
 
 void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)

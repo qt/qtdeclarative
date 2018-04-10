@@ -79,10 +79,6 @@ QT_BEGIN_NAMESPACE
 QQuickMenuBarPrivate::QQuickMenuBarPrivate()
     : popupMode(false),
       triggering(false),
-      hasContentWidth(false),
-      hasContentHeight(false),
-      contentWidth(0),
-      contentHeight(0),
       delegate(nullptr)
 {
     changeTypes |= ImplicitWidth | ImplicitHeight;
@@ -249,65 +245,18 @@ qreal QQuickMenuBarPrivate::getContentHeight() const
     return maxHeight;
 }
 
-void QQuickMenuBarPrivate::updateContentWidth()
+void QQuickMenuBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
-    Q_Q(QQuickMenuBar);
-    if (hasContentWidth)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth();
-    if (qFuzzyCompare(contentWidth, oldContentWidth))
-        return;
-
-    emit q->contentWidthChanged();
+    QQuickContainerPrivate::itemImplicitWidthChanged(item);
+    if (item != contentItem)
+        updateContentWidth();
 }
 
-void QQuickMenuBarPrivate::updateContentHeight()
+void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
-    Q_Q(QQuickMenuBar);
-    if (hasContentHeight)
-        return;
-
-    const qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight();
-    if (qFuzzyCompare(contentHeight, oldContentHeight))
-        return;
-
-    emit q->contentHeightChanged();
-}
-
-void QQuickMenuBarPrivate::updateContentSize()
-{
-    Q_Q(QQuickMenuBar);
-    if (hasContentWidth && hasContentHeight)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    if (!hasContentWidth)
-        contentWidth = getContentWidth();
-
-    const qreal oldContentHeight = contentHeight;
-    if (!hasContentHeight)
-        contentHeight = getContentHeight();
-
-    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
-    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
-
-    if (widthChanged)
-        emit q->contentWidthChanged();
-    if (heightChanged)
-        emit q->contentHeightChanged();
-}
-
-void QQuickMenuBarPrivate::itemImplicitWidthChanged(QQuickItem *)
-{
-    updateContentWidth();
-}
-
-void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *)
-{
-    updateContentHeight();
+    QQuickContainerPrivate::itemImplicitHeightChanged(item);
+    if (item != contentItem)
+        updateContentHeight();
 }
 
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -457,81 +406,30 @@ QQuickMenu *QQuickMenuBar::takeMenu(int index)
 }
 
 /*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty real QtQuick.Controls::MenuBar::contentWidth
 
     This property holds the content width. It is used for calculating the total
     implicit width of the menu bar.
 
-    Unless explicitly overridden, the content width is automatically calculated
-    based on the total implicit width of the items and the \l {Control::}{spacing}
-    of the menu bar.
+    \note This property is available in MenuBar since QtQuick.Controls 2.3 (Qt 5.10),
+    but it was promoted to the Container base type in QtQuick.Controls 2.5 (Qt 5.12).
 
-    \sa contentHeight
+    \sa Container::contentWidth
 */
-qreal QQuickMenuBar::contentWidth() const
-{
-    Q_D(const QQuickMenuBar);
-    return d->contentWidth;
-}
-
-void QQuickMenuBar::setContentWidth(qreal width)
-{
-    Q_D(QQuickMenuBar);
-    d->hasContentWidth = true;
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
-}
-
-void QQuickMenuBar::resetContentWidth()
-{
-    Q_D(QQuickMenuBar);
-    if (!d->hasContentWidth)
-        return;
-
-    d->hasContentWidth = false;
-    d->updateContentWidth();
-}
 
 /*!
+    \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlproperty real QtQuick.Controls::MenuBar::contentHeight
 
     This property holds the content height. It is used for calculating the total
     implicit height of the menu bar.
 
-    Unless explicitly overridden, the content height is automatically calculated
-    based on the maximum implicit height of the items.
+    \note This property is available in MenuBar since QtQuick.Controls 2.3 (Qt 5.10),
+    but it was promoted to the Container base type in QtQuick.Controls 2.5 (Qt 5.12).
 
-    \sa contentWidth
+    \sa Container::contentHeight
 */
-qreal QQuickMenuBar::contentHeight() const
-{
-    Q_D(const QQuickMenuBar);
-    return d->contentHeight;
-}
-
-void QQuickMenuBar::setContentHeight(qreal height)
-{
-    Q_D(QQuickMenuBar);
-    d->hasContentHeight = true;
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
-}
-
-void QQuickMenuBar::resetContentHeight()
-{
-    Q_D(QQuickMenuBar);
-    if (!d->hasContentHeight)
-        return;
-
-    d->hasContentHeight = false;
-    d->updateContentHeight();
-}
 
 /*!
     \qmlproperty list<Menu> QtQuick.Controls::MenuBar::menus

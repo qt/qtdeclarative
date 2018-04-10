@@ -198,11 +198,7 @@ static QQuickDialogButtonBox::ButtonLayout platformButtonLayout()
 }
 
 QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
-    : hasContentWidth(false),
-      hasContentHeight(false),
-      contentWidth(0),
-      contentHeight(0),
-      alignment(0),
+    : alignment(0),
       position(QQuickDialogButtonBox::Footer),
       standardButtons(QPlatformDialogHelper::NoButton),
       buttonLayout(platformButtonLayout()),
@@ -212,6 +208,7 @@ QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
 
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
+    QQuickContainerPrivate::itemImplicitWidthChanged(item);
     if (item == contentItem)
         resizeContent();
     else
@@ -220,6 +217,7 @@ void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
 
 void QQuickDialogButtonBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
+    QQuickContainerPrivate::itemImplicitHeightChanged(item);
     if (item == contentItem)
         resizeContent();
     else
@@ -358,57 +356,6 @@ qreal QQuickDialogButtonBoxPrivate::getContentHeight() const
             maxHeight = qMax(maxHeight, item->implicitHeight());
     }
     return maxHeight;
-}
-
-void QQuickDialogButtonBoxPrivate::updateContentWidth()
-{
-    Q_Q(QQuickDialogButtonBox);
-    if (hasContentWidth)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    contentWidth = getContentWidth();
-    if (qFuzzyCompare(contentWidth, oldContentWidth))
-        return;
-
-    emit q->contentWidthChanged();
-}
-
-void QQuickDialogButtonBoxPrivate::updateContentHeight()
-{
-    Q_Q(QQuickDialogButtonBox);
-    if (hasContentHeight)
-        return;
-
-    const qreal oldContentHeight = contentHeight;
-    contentHeight = getContentHeight();
-    if (qFuzzyCompare(contentHeight, oldContentHeight))
-        return;
-
-    emit q->contentHeightChanged();
-}
-
-void QQuickDialogButtonBoxPrivate::updateContentSize()
-{
-    Q_Q(QQuickDialogButtonBox);
-    if (hasContentWidth && hasContentHeight)
-        return;
-
-    const qreal oldContentWidth = contentWidth;
-    if (!hasContentWidth)
-        contentWidth = getContentWidth();
-
-    const qreal oldContentHeight = contentHeight;
-    if (!hasContentHeight)
-        contentHeight = getContentHeight();
-
-    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
-    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
-
-    if (widthChanged)
-        emit q->contentWidthChanged();
-    if (heightChanged)
-        emit q->contentHeightChanged();
 }
 
 void QQuickDialogButtonBoxPrivate::handleClick()
@@ -732,85 +679,6 @@ void QQuickDialogButtonBox::setButtonLayout(ButtonLayout layout)
 void QQuickDialogButtonBox::resetButtonLayout()
 {
     setButtonLayout(platformButtonLayout());
-}
-
-/*!
-    \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlproperty real QtQuick.Controls::DialogButtonBox::contentWidth
-
-    This property holds the content width. It is used for calculating the total
-    implicit width of the button box.
-
-    Unless explicitly overridden, the content width is automatically calculated
-    based on the total implicit width of the buttons and the \l {Control::}{spacing}
-    of the button box.
-
-    \sa contentHeight
-*/
-qreal QQuickDialogButtonBox::contentWidth() const
-{
-    Q_D(const QQuickDialogButtonBox);
-    return d->contentWidth;
-}
-
-void QQuickDialogButtonBox::setContentWidth(qreal width)
-{
-    Q_D(QQuickDialogButtonBox);
-    d->hasContentWidth = true;
-    if (qFuzzyCompare(d->contentWidth, width))
-        return;
-
-    d->contentWidth = width;
-    emit contentWidthChanged();
-}
-
-void QQuickDialogButtonBox::resetContentWidth()
-{
-    Q_D(QQuickDialogButtonBox);
-    if (!d->hasContentWidth)
-        return;
-
-    d->hasContentWidth = false;
-    d->updateContentWidth();
-}
-
-/*!
-    \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlproperty real QtQuick.Controls::DialogButtonBox::contentHeight
-
-    This property holds the content height. It is used for calculating the total
-    implicit height of the button box.
-
-    Unless explicitly overridden, the content height is automatically calculated
-    based on the maximum implicit height of the buttons.
-
-    \sa contentWidth
-*/
-qreal QQuickDialogButtonBox::contentHeight() const
-{
-    Q_D(const QQuickDialogButtonBox);
-    return d->contentHeight;
-}
-
-void QQuickDialogButtonBox::setContentHeight(qreal height)
-{
-    Q_D(QQuickDialogButtonBox);
-    d->hasContentHeight = true;
-    if (qFuzzyCompare(d->contentHeight, height))
-        return;
-
-    d->contentHeight = height;
-    emit contentHeightChanged();
-}
-
-void QQuickDialogButtonBox::resetContentHeight()
-{
-    Q_D(QQuickDialogButtonBox);
-    if (!d->hasContentHeight)
-        return;
-
-    d->hasContentHeight = false;
-    d->updateContentHeight();
 }
 
 void QQuickDialogButtonBox::updatePolish()

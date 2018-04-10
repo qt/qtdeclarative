@@ -64,6 +64,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainer : public QQuickControl
     Q_PROPERTY(QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DefaultProperty", "contentData")
 
 public:
@@ -87,6 +90,15 @@ public:
     int currentIndex() const;
     QQuickItem *currentItem() const;
 
+    // 2.5 (Qt 5.12)
+    qreal contentWidth() const;
+    void setContentWidth(qreal width);
+    void resetContentWidth();
+
+    qreal contentHeight() const;
+    void setContentHeight(qreal height);
+    void resetContentHeight();
+
 public Q_SLOTS:
     void setCurrentIndex(int index);
     // 2.1 (Qt 5.8)
@@ -98,6 +110,10 @@ Q_SIGNALS:
     void contentChildrenChanged();
     void currentIndexChanged();
     void currentItemChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void buttonLayoutChanged();
+    Q_REVISION(5) void contentWidthChanged();
+    Q_REVISION(5) void contentHeightChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);

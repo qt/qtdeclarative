@@ -65,9 +65,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
-    // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 5)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
@@ -86,23 +83,11 @@ public:
     bool isHorizontal() const;
     bool isVertical() const;
 
-    // 2.5 (Qt 5.12)
-    qreal contentWidth() const;
-    void setContentWidth(qreal width);
-    void resetContentWidth();
-
-    qreal contentHeight() const;
-    void setContentHeight(qreal height);
-    void resetContentHeight();
-
 Q_SIGNALS:
     // 2.1 (Qt 5.8)
     Q_REVISION(1) void interactiveChanged();
     // 2.2 (Qt 5.9)
     Q_REVISION(2) void orientationChanged();
-    // 2.5 (Qt 5.12)
-    Q_REVISION(5) void contentWidthChanged();
-    Q_REVISION(5) void contentHeightChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
