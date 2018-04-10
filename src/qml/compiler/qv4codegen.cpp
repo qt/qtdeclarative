@@ -2242,7 +2242,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
     RegisterScope scope(this);
 
     if (_context->compilationMode == QmlBinding)
-        Reference::fromName(this, ast->name.toString()).loadInAccumulator();
+        referenceForName(ast->name.toString(), true).loadInAccumulator();
     _expr.accept(nx);
     return false;
 }
