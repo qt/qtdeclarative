@@ -78,6 +78,9 @@ public:
     void moveItem(int from, int to);
     void removeItem(int index, QQuickItem *item);
 
+    void createAndAppendItem(QObject *object);
+    void recreateItems();
+
     QQuickItem *beginCreateItem();
     void completeCreateItem();
 
