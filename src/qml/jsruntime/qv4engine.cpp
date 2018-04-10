@@ -1071,12 +1071,7 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
         error.setColumn(frame.column);
     }
     QV4::Scoped<QV4::ErrorObject> errorObj(scope, exception);
-    if (!!errorObj && errorObj->asSyntaxError()) {
-        QV4::ScopedString m(scope, newString(QStringLiteral("message")));
-        QV4::ScopedValue v(scope, errorObj->get(m));
-        error.setDescription(v->toQStringNoThrow());
-    } else
-        error.setDescription(exception->toQStringNoThrow());
+    error.setDescription(exception->toQStringNoThrow());
     return error;
 }
 
