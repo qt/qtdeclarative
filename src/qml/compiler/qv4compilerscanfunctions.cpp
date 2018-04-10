@@ -73,13 +73,20 @@ void ScanFunctions::operator()(Node *node)
     calcEscapingVariables();
 }
 
+void ScanFunctions::enterGlobalEnvironment(CompilationMode compilationMode)
+{
+    enterEnvironment(astNodeForGlobalEnvironment, compilationMode);
+}
+
 void ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
 {
-    Context *e = _cg->_module->newContext(node, _context, compilationMode);
-    if (!e->isStrict)
-        e->isStrict = _cg->_strictMode;
-    _contextStack.append(e);
-    _context = e;
+    Context *c = _cg->_module->contextMap.value(node);
+    if (!c)
+        c = _cg->_module->newContext(node, _context, compilationMode);
+    if (!c->isStrict)
+        c->isStrict = _cg->_strictMode;
+    _contextStack.append(c);
+    _context = c;
 }
 
 void ScanFunctions::leaveEnvironment()
@@ -440,7 +447,7 @@ void ScanFunctions::calcEscapingVariables()
 {
     Module *m = _cg->_module;
 
-    for (Context *inner : m->contextMap) {
+    for (Context *inner : qAsConst(m->contextMap)) {
         for (const QString &var : qAsConst(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
@@ -468,7 +475,7 @@ void ScanFunctions::calcEscapingVariables()
     static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
-        for (Context *c : m->contextMap) {
+        for (Context *c : qAsConst(m->contextMap)) {
             qDebug() << "Context" << c->name << ":";
             qDebug() << "    Arguments escape" << c->argumentsCanEscape;
             for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {

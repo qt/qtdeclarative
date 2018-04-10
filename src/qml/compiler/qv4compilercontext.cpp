@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
 
 Context *Module::newContext(Node *node, Context *parent, CompilationMode compilationMode)
 {
+    Q_ASSERT(!contextMap.contains(node));
+
     Context *c = new Context(parent, compilationMode);
     if (node) {
         SourceLocation loc = node->firstSourceLocation();
