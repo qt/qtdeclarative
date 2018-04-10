@@ -2996,7 +2996,7 @@ void tst_QJSEngine::arraySort()
 void tst_QJSEngine::lookupOnDisappearingProperty()
 {
     QJSEngine eng;
-    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"function(obj) { return obj.someProperty; }\")})()");
+    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"(function(obj) { return obj.someProperty; })\")})()");
     QVERIFY(func.isCallable());
 
     QJSValue o = eng.newObject();
@@ -3341,7 +3341,7 @@ void tst_QJSEngine::prototypeChainGc()
 
     QJSValue getProto = engine.evaluate("Object.getPrototypeOf");
 
-    QJSValue factory = engine.evaluate("function() { return Object.create(Object.create({})); }");
+    QJSValue factory = engine.evaluate("(function() { return Object.create(Object.create({})); })");
     QVERIFY(factory.isCallable());
     QJSValue obj = factory.call();
     engine.collectGarbage();
