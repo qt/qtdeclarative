@@ -186,13 +186,12 @@ void tst_qqmlparser::qmlParser()
     Lexer lexer(&engine);
     lexer.setCode(code, 1, qmlMode);
     Parser parser(&engine);
-    if (qmlMode)
-        parser.parse();
-    else
-        parser.parseProgram();
+    bool ok = qmlMode ? parser.parse() : parser.parseProgram();
 
-    check::Check chk;
-    chk(parser.rootNode());
+    if (ok) {
+        check::Check chk;
+        chk(parser.rootNode());
+    }
 }
 #endif
 
