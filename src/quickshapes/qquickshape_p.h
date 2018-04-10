@@ -51,7 +51,8 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+#include <QtQuick/qquickitem.h>
 
 #include <private/qtquickglobal_p.h>
 #include <private/qquickpath_p_p.h>
@@ -62,7 +63,7 @@ QT_BEGIN_NAMESPACE
 class QQuickShapePathPrivate;
 class QQuickShapePrivate;
 
-class QQuickShapeGradient : public QQuickGradient
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeGradient : public QQuickGradient
 {
     Q_OBJECT
     Q_PROPERTY(SpreadMode spread READ spread WRITE setSpread NOTIFY spreadChanged)
@@ -88,7 +89,7 @@ private:
     SpreadMode m_spread;
 };
 
-class QQuickShapeLinearGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeLinearGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal x1 READ x1 WRITE setX1 NOTIFY x1Changed)
@@ -120,7 +121,7 @@ private:
     QPointF m_end;
 };
 
-class QQuickShapeRadialGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeRadialGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
@@ -167,7 +168,7 @@ private:
     qreal m_focalRadius = 0;
 };
 
-class QQuickShapeConicalGradient : public QQuickShapeGradient
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeConicalGradient : public QQuickShapeGradient
 {
     Q_OBJECT
     Q_PROPERTY(qreal centerX READ centerX WRITE setCenterX NOTIFY centerXChanged)
@@ -197,7 +198,7 @@ private:
     qreal m_angle = 0;
 };
 
-class QQuickShapePath : public QQuickPath
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePath : public QQuickPath
 {
     Q_OBJECT
 
@@ -296,7 +297,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_fillGradientChanged())
 };
 
-class QQuickShape : public QQuickItem
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShape : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(RendererType rendererType READ rendererType NOTIFY rendererChanged)

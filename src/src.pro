@@ -8,7 +8,8 @@ SUBDIRS += \
 
 qtConfig(qml-animation) {
     SUBDIRS += \
-        quick
+        quick \
+        quickshapes
 
     qtConfig(testlib): \
         SUBDIRS += qmltest
@@ -30,3 +31,5 @@ qtConfig(qml-network) {
     QT_FOR_CONFIG += network
     qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug
 }
+
+DISTFILES += sync.profile configure.json

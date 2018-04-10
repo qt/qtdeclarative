@@ -51,8 +51,9 @@
 // We mean it.
 //
 
-#include "qquickshape_p_p.h"
-#include "qquicknvprfunctions_p.h"
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+#include <QtQuickShapes/private/qquickshape_p_p.h>
+#include <QtQuickShapes/private/qquicknvprfunctions_p.h>
 #include <qsgrendernode.h>
 #include <QColor>
 #include <QVector4D>

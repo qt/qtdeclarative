@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,34 +37,27 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKNVPRFUNCTIONS_P_P_H
-#define QQUICKNVPRFUNCTIONS_P_P_H
+#ifndef QQUICKSHAPESGLOBAL_P_H
+#define QQUICKSHAPESGLOBAL_P_H
 
 //
 //  W A R N I N G
 //  -------------
 //
-// This file is not part of the Qt API.  It exists for the convenience
-// of a number of Qt sources files.  This header file may change from
-// version to version without notice, or even be removed.
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
 //
 // We mean it.
 //
 
-#include "qquicknvprfunctions_p.h"
+#include "qquickshapesglobal.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickNvprFunctionsPrivate
-{
-public:
-    QQuickNvprFunctionsPrivate(QQuickNvprFunctions *q_ptr) : q(q_ptr) { }
-
-    bool resolve();
-
-    QQuickNvprFunctions *q;
-};
+#define Q_QUICKSHAPES_PRIVATE_EXPORT Q_QUICKSHAPES_EXPORT
 
 QT_END_NAMESPACE
 
-#endif // QQUICKNVPRFUNCTIONS_P_P_H
+
+#endif // QQUICKSHAPESGLOBAL_P_H

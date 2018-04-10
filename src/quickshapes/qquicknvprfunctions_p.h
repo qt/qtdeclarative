@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <qopengl.h>
 #include <QtGui/qsurfaceformat.h>
 

@@ -51,7 +51,8 @@
 // We mean it.
 //
 
-#include "qquickshape_p.h"
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+#include <QtQuickShapes/private/qquickshape_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QPainterPath>
 #include <QColor>
@@ -122,7 +123,7 @@ struct QQuickShapeStrokeFillParams
     QQuickShapeGradient *fillGradient;
 };
 
-class QQuickShapePathPrivate : public QQuickPathPrivate
+class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
 {
     Q_DECLARE_PUBLIC(QQuickShapePath)
 

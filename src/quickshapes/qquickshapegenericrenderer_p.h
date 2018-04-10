@@ -51,7 +51,8 @@
 // We mean it.
 //
 
-#include "qquickshape_p_p.h"
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+#include <QtQuickShapes/private/qquickshape_p_p.h>
 #include <qsgnode.h>
 #include <qsggeometry.h>
 #include <qsgmaterial.h>

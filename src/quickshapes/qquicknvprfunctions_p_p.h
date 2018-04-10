@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,41 +37,35 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQuickShapes/private/qquickshape_p.h>
+#ifndef QQUICKNVPRFUNCTIONS_P_P_H
+#define QQUICKNVPRFUNCTIONS_P_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists for the convenience
+// of a number of Qt sources files.  This header file may change from
+// version to version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+#include <QtQuickShapes/private/qquicknvprfunctions_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QmlShapesPlugin : public QQmlExtensionPlugin
+class QQuickNvprFunctionsPrivate
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
 public:
-    QmlShapesPlugin(QObject *parent = nullptr)
-        : QQmlExtensionPlugin(parent)
-    {
-    }
+    QQuickNvprFunctionsPrivate(QQuickNvprFunctions *q_ptr) : q(q_ptr) { }
 
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));
-        qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");
-        qmlRegisterType<QQuickShapePath>(uri, 1, 0, "ShapePath");
-        qmlRegisterUncreatableType<QQuickShapeGradient>(uri, 1, 0, "ShapeGradient", QQuickShapeGradient::tr("ShapeGradient is an abstract base class"));
-        qmlRegisterType<QQuickShapeLinearGradient>(uri, 1, 0, "LinearGradient");
-        qmlRegisterType<QQuickShapeRadialGradient>(uri, 1, 0, "RadialGradient");
-        qmlRegisterType<QQuickShapeConicalGradient>(uri, 1, 0, "ConicalGradient");
+    bool resolve();
 
-        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions
-        qmlRegisterModule(uri, 1, QT_VERSION_MINOR);
-
-        // revision in Qt 5.11: added containsMode property
-        qmlRegisterType<QQuickShape, 11>(uri, 1, 11, "Shape");
-    }
+    QQuickNvprFunctions *q;
 };
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#endif // QQUICKNVPRFUNCTIONS_P_P_H

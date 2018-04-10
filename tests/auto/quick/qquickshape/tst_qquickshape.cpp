@@ -33,7 +33,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>
-#include "../../../../src/imports/shapes/qquickshape_p.h"
+#include <QtQuickShapes/private/qquickshape_p.h>
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"

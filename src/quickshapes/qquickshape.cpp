@@ -658,9 +658,22 @@ void QQuickShapePrivate::setStatus(QQuickShape::Status newStatus)
     }
 }
 
+struct QQuickShapeResourceInitializer
+{
+    QQuickShapeResourceInitializer()
+    {
+#if defined(QT_STATIC)
+        Q_INIT_RESOURCE(qtquickshapes);
+#endif
+    }
+};
+
+Q_GLOBAL_STATIC(QQuickShapeResourceInitializer, initQQuickShapeResources)
+
 QQuickShape::QQuickShape(QQuickItem *parent)
   : QQuickItem(*(new QQuickShapePrivate), parent)
 {
+    initQQuickShapeResources();
     setFlag(ItemHasContents);
 }
 
