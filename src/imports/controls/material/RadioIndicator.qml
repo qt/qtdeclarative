@@ -43,8 +43,8 @@ Rectangle {
     implicitHeight: 20
     radius: width / 2
     border.width: 2
-    border.color: control.enabled && (control.checked || control.down)
-        ? control.Material.accentColor : control.Material.secondaryTextColor
+    border.color: !control.enabled ? control.Material.hintTextColor
+        : control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
     color: "transparent"
 
     property Item control
