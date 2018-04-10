@@ -207,6 +207,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
             if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
                 loopType = ThreadedRenderLoop;
 #endif
+
             if (qmlNoThreadedRenderer())
                 loopType = BasicRenderLoop;
             else if (qmlForceThreadedRenderer())
@@ -469,6 +470,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
         maybeUpdate(window);
+#ifdef Q_OS_HTML5
+        QCoreApplication::processEvents(QEventLoop::EventLoopExec);
+#endif
 }
 
 void QSGGuiThreadRenderLoop::exposureChanged(QQuickWindow *window)

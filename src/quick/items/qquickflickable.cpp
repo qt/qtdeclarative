@@ -493,6 +493,9 @@ void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExt
     data.inOvershoot = false;
     fixupMode = Normal;
     data.vTime = timeline.time();
+#ifdef Q_OS_HTML5
+        QCoreApplication::processEvents(QEventLoop::EventLoopExec);
+#endif
 }
 
 static bool fuzzyLessThanOrEqualTo(qreal a, qreal b)

@@ -135,9 +135,6 @@ QSGAdaptationBackendData *contextFactory()
             && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
             requestedBackend = QString::fromLocal8Bit("software");
         }
-#ifdef Q_OS_HTML5
-        requestedBackend = QString::fromLocal8Bit("software");
-#endif
 
         if (!requestedBackend.isEmpty()) {
             qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));

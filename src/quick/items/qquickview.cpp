@@ -102,11 +102,7 @@ void QQuickViewPrivate::execute()
     }
     if (!source.isEmpty()) {
         QML_MEMORY_SCOPE_URL(engine.data()->baseUrl().resolved(source));
-#ifdef Q_OS_HTML5
-        component = new QQmlComponent(engine.data(), source, QQmlComponent::PreferSynchronous, q);
-#else
         component = new QQmlComponent(engine.data(), source, q);
-#endif
         if (!component->isLoading()) {
             q->continueExecute();
         } else {
