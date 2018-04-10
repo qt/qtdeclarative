@@ -338,6 +338,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPopupAnchors>();
     qmlRegisterType<QQuickRangeSlider, 5>(uri, 2, 5, "RangeSlider");
     qmlRegisterType<QQuickSlider, 5>(uri, 2, 5, "Slider");
+    qmlRegisterType<QQuickSwipeView, 5>(uri, 2, 5, "SwipeView");
     qmlRegisterType<QQuickTextArea, 5>(uri, 2, 5, "TextArea");
     qmlRegisterType<QQuickTextField, 5>(uri, 2, 5, "TextField");
     qmlRegisterType<QQuickToolTip, 5>(uri, 2, 5, "ToolTip");

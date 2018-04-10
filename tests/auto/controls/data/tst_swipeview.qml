@@ -85,43 +85,60 @@ TestCase {
         compare(control.currentIndex, -1)
         compare(control.currentItem, null)
 
-        control.addItem(page.createObject(control, {text: "0"}))
+        var item0 = page.createObject(control, {text: "0"})
+        control.addItem(item0)
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
         compare(currentItemChangedSpy.count, 1);
+        compare(control.contentWidth, item0.implicitWidth)
+        compare(control.contentHeight, item0.implicitHeight)
 
-        control.addItem(page.createObject(control, {text: "1"}))
+        var item1 = page.createObject(control, {text: "11"})
+        control.addItem(item1)
         compare(control.count, 2)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
         compare(currentItemChangedSpy.count, 1);
+        compare(control.contentWidth, item0.implicitWidth)
+        compare(control.contentHeight, item0.implicitHeight)
 
-        control.addItem(page.createObject(control, {text: "2"}))
+        var item2 = page.createObject(control, {text: "222"})
+        control.addItem(item2)
         compare(control.count, 3)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "0")
         compare(currentItemChangedSpy.count, 1);
+        compare(control.contentWidth, item0.implicitWidth)
+        compare(control.contentHeight, item0.implicitHeight)
 
         control.currentIndex = 1
         compare(control.currentIndex, 1)
-        compare(control.currentItem.text, "1")
+        compare(control.currentItem.text, "11")
         compare(currentItemChangedSpy.count, 2);
+        compare(control.contentWidth, item1.implicitWidth)
+        compare(control.contentHeight, item1.implicitHeight)
 
         control.currentIndex = 2
         compare(control.currentIndex, 2)
-        compare(control.currentItem.text, "2")
+        compare(control.currentItem.text, "222")
         compare(currentItemChangedSpy.count, 3);
+        compare(control.contentWidth, item2.implicitWidth)
+        compare(control.contentHeight, item2.implicitHeight)
 
         control.decrementCurrentIndex()
         compare(control.currentIndex, 1)
-        compare(control.currentItem.text, "1")
+        compare(control.currentItem.text, "11")
         compare(currentItemChangedSpy.count, 4);
+        compare(control.contentWidth, item1.implicitWidth)
+        compare(control.contentHeight, item1.implicitHeight)
 
         control.incrementCurrentIndex()
         compare(control.currentIndex, 2)
-        compare(control.currentItem.text, "2")
+        compare(control.currentItem.text, "222")
         compare(currentItemChangedSpy.count, 5);
+        compare(control.contentWidth, item2.implicitWidth)
+        compare(control.contentHeight, item2.implicitHeight)
     }
 
     Component {

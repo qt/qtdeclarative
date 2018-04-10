@@ -43,9 +43,9 @@ T.SwipeView {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             contentHeight + topPadding + bottomPadding)
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0
