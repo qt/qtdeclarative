@@ -85,7 +85,7 @@ QQuickMenuBarPrivate::QQuickMenuBarPrivate()
       contentHeight(0),
       delegate(nullptr)
 {
-    changeTypes |= Geometry;
+    changeTypes |= ImplicitWidth | ImplicitHeight;
 }
 
 QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
@@ -223,49 +223,91 @@ void QQuickMenuBarPrivate::onMenuAboutToHide()
     activateItem(nullptr);
 }
 
+qreal QQuickMenuBarPrivate::getContentWidth() const
+{
+    Q_Q(const QQuickMenuBar);
+    const int count = contentModel->count();
+    qreal totalWidth = qMax(0, count - 1) * spacing;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item)
+            totalWidth += item->implicitWidth();
+    }
+    return totalWidth;
+}
+
+qreal QQuickMenuBarPrivate::getContentHeight() const
+{
+    Q_Q(const QQuickMenuBar);
+    const int count = contentModel->count();
+    qreal maxHeight = 0;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item)
+            maxHeight = qMax(maxHeight, item->implicitHeight());
+    }
+    return maxHeight;
+}
+
+void QQuickMenuBarPrivate::updateContentWidth()
+{
+    Q_Q(QQuickMenuBar);
+    if (hasContentWidth)
+        return;
+
+    const qreal oldContentWidth = contentWidth;
+    contentWidth = getContentWidth();
+    if (qFuzzyCompare(contentWidth, oldContentWidth))
+        return;
+
+    emit q->contentWidthChanged();
+}
+
+void QQuickMenuBarPrivate::updateContentHeight()
+{
+    Q_Q(QQuickMenuBar);
+    if (hasContentHeight)
+        return;
+
+    const qreal oldContentHeight = contentHeight;
+    contentHeight = getContentHeight();
+    if (qFuzzyCompare(contentHeight, oldContentHeight))
+        return;
+
+    emit q->contentHeightChanged();
+}
+
 void QQuickMenuBarPrivate::updateContentSize()
 {
     Q_Q(QQuickMenuBar);
     if (hasContentWidth && hasContentHeight)
         return;
 
-    const int count = contentModel->count();
-    if (count <= 0 || !contentItem)
-        return;
+    const qreal oldContentWidth = contentWidth;
+    if (!hasContentWidth)
+        contentWidth = getContentWidth();
 
-    qreal maxHeight = 0;
-    qreal totalWidth = qMax(0, count - 1) * spacing;
+    const qreal oldContentHeight = contentHeight;
+    if (!hasContentHeight)
+        contentHeight = getContentHeight();
 
-    for (int i = 0; i < count; ++i) {
-        QQuickItem *item = q->itemAt(i);
-        if (item) {
-            totalWidth += item->width();
-            maxHeight = qMax(maxHeight, item->implicitHeight());
-        }
-    }
+    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
+    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
 
-    bool contentWidthChange = false;
-    if (!hasContentWidth && !qFuzzyCompare(contentWidth, totalWidth)) {
-        contentWidth = totalWidth;
-        contentWidthChange = true;
-    }
-
-    bool contentHeightChange = false;
-    if (!hasContentHeight && !qFuzzyCompare(contentHeight, maxHeight)) {
-        contentHeight = maxHeight;
-        contentHeightChange = true;
-    }
-
-    if (contentWidthChange)
+    if (widthChanged)
         emit q->contentWidthChanged();
-    if (contentHeightChange)
+    if (heightChanged)
         emit q->contentHeightChanged();
 }
 
-void QQuickMenuBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
+void QQuickMenuBarPrivate::itemImplicitWidthChanged(QQuickItem *)
 {
-    if ((change.widthChange() && !hasContentWidth) || (change.heightChange() && !hasContentHeight))
-        updateContentSize();
+    updateContentWidth();
+}
+
+void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *)
+{
+    updateContentHeight();
 }
 
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -450,8 +492,7 @@ void QQuickMenuBar::resetContentWidth()
         return;
 
     d->hasContentWidth = false;
-    if (isComponentComplete())
-        d->updateContentSize();
+    d->updateContentWidth();
 }
 
 /*!
@@ -489,8 +530,7 @@ void QQuickMenuBar::resetContentHeight()
         return;
 
     d->hasContentHeight = false;
-    if (isComponentComplete())
-        d->updateContentSize();
+    d->updateContentHeight();
 }
 
 /*!
@@ -520,20 +560,6 @@ QQmlListProperty<QObject> QQuickMenuBarPrivate::contentData()
                                      QQuickContainerPrivate::contentData_count,
                                      QQuickContainerPrivate::contentData_at,
                                      QQuickContainerPrivate::contentData_clear);
-}
-
-void QQuickMenuBar::updatePolish()
-{
-    Q_D(QQuickMenuBar);
-    QQuickContainer::updatePolish();
-    d->updateContentSize();
-}
-
-void QQuickMenuBar::componentComplete()
-{
-    Q_D(QQuickMenuBar);
-    QQuickContainer::componentComplete();
-    d->updateContentSize();
 }
 
 bool QQuickMenuBar::eventFilter(QObject *object, QEvent *event)
@@ -616,10 +642,7 @@ void QQuickMenuBar::itemAdded(int index, QQuickItem *item)
         if (QQuickMenu *menu = menuBarItem->menu())
             QObjectPrivate::connect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
     }
-    if (isComponentComplete())
-        polish();
-    if (isComponentComplete())
-        polish();
+    d->updateContentSize();
     emit menusChanged();
 }
 
@@ -640,6 +663,7 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
         if (QQuickMenu *menu = menuBarItem->menu())
             QObjectPrivate::disconnect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
     }
+    d->updateContentSize();
     emit menusChanged();
 }
 

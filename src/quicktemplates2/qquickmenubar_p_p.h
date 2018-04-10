@@ -85,8 +85,15 @@ public:
     void onItemTriggered();
     void onMenuAboutToHide();
 
+    qreal getContentWidth() const;
+    qreal getContentHeight() const;
+
+    void updateContentWidth();
+    void updateContentHeight();
     void updateContentSize();
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
 
