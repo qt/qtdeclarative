@@ -43,8 +43,9 @@ Rectangle {
     implicitWidth: 18
     implicitHeight: 18
     color: "transparent"
-    border.color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
-    border.width: control.checked ? width / 2 : 2
+    border.color: !control.enabled ? control.Material.hintTextColor
+        : control.checkState !== Qt.Unchecked ? control.Material.accentColor : control.Material.secondaryTextColor
+    border.width: control.checkState !== Qt.Unchecked ? width / 2 : 2
     radius: 2
 
     property Item control
