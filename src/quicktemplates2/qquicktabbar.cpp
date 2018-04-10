@@ -106,6 +106,13 @@ public:
     void updateCurrentIndex();
     void updateLayout();
 
+    qreal getContentWidth() const;
+    qreal getContentHeight() const;
+
+    void updateContentWidth();
+    void updateContentHeight();
+    void updateContentSize();
+
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
@@ -173,8 +180,6 @@ void QQuickTabBarPrivate::updateLayout()
     if (count <= 0 || !contentItem)
         return;
 
-    qreal maxHeight = 0;
-    qreal totalWidth = 0;
     qreal reservedWidth = 0;
     int resizableCount = 0;
 
@@ -185,21 +190,15 @@ void QQuickTabBarPrivate::updateLayout()
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid) {
+            if (!p->widthValid)
                 ++resizableCount;
-                totalWidth += item->implicitWidth();
-            } else {
+            else
                 reservedWidth += item->width();
-                totalWidth += item->width();
-            }
-            maxHeight = qMax(maxHeight, item->implicitHeight());
             allItems += item;
         }
     }
 
     const qreal totalSpacing = qMax(0, count - 1) * spacing;
-    totalWidth += totalSpacing;
-
     const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / qMax(1, resizableCount);
 
     updatingLayout = true;
@@ -210,48 +209,114 @@ void QQuickTabBarPrivate::updateLayout()
             p->widthValid = false;
         }
         if (!p->heightValid) {
-            item->setHeight(hasContentHeight ? contentHeight : maxHeight);
+            item->setHeight(contentHeight);
             p->heightValid = false;
         } else {
-            item->setY((maxHeight - item->height()) / 2);
+            item->setY((contentHeight - item->height()) / 2);
         }
     }
     updatingLayout = false;
+}
 
-    bool contentWidthChange = false;
-    if (!hasContentWidth && !qFuzzyCompare(contentWidth, totalWidth)) {
-        contentWidth = totalWidth;
-        contentWidthChange = true;
+qreal QQuickTabBarPrivate::getContentWidth() const
+{
+    Q_Q(const QQuickTabBar);
+    const int count = contentModel->count();
+    qreal totalWidth = qMax(0, count - 1) * spacing;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item) {
+            QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+            if (!p->widthValid)
+                totalWidth += item->implicitWidth();
+            else
+                totalWidth += item->width();
+        }
     }
+    return totalWidth;
+}
 
-    bool contentHeightChange = false;
-    if (!hasContentHeight && !qFuzzyCompare(contentHeight, maxHeight)) {
-        contentHeight = maxHeight;
-        contentHeightChange = true;
+qreal QQuickTabBarPrivate::getContentHeight() const
+{
+    Q_Q(const QQuickTabBar);
+    const int count = contentModel->count();
+    qreal maxHeight = 0;
+    for (int i = 0; i < count; ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item)
+            maxHeight = qMax(maxHeight, item->implicitHeight());
     }
+    return maxHeight;
+}
 
-    if (contentWidthChange)
+void QQuickTabBarPrivate::updateContentWidth()
+{
+    Q_Q(QQuickTabBar);
+    if (hasContentWidth)
+        return;
+
+    const qreal oldContentWidth = contentWidth;
+    contentWidth = getContentWidth();
+    if (qFuzzyCompare(contentWidth, oldContentWidth))
+        return;
+
+    emit q->contentWidthChanged();
+}
+
+void QQuickTabBarPrivate::updateContentHeight()
+{
+    Q_Q(QQuickTabBar);
+    if (hasContentHeight)
+        return;
+
+    const qreal oldContentHeight = contentHeight;
+    contentHeight = getContentHeight();
+    if (qFuzzyCompare(contentHeight, oldContentHeight))
+        return;
+
+    emit q->contentHeightChanged();
+}
+
+void QQuickTabBarPrivate::updateContentSize()
+{
+    Q_Q(QQuickTabBar);
+    if (hasContentWidth && hasContentHeight)
+        return;
+
+    const qreal oldContentWidth = contentWidth;
+    if (!hasContentWidth)
+        contentWidth = getContentWidth();
+
+    const qreal oldContentHeight = contentHeight;
+    if (!hasContentHeight)
+        contentHeight = getContentHeight();
+
+    const bool widthChanged = !qFuzzyCompare(contentWidth, oldContentWidth);
+    const bool heightChanged = !qFuzzyCompare(contentHeight, oldContentHeight);
+
+    if (widthChanged)
         emit q->contentWidthChanged();
-    if (contentHeightChange)
+    if (heightChanged)
         emit q->contentHeightChanged();
 }
 
-void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
+void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
 {
-    if (!updatingLayout)
+    if (!updatingLayout) {
+        if (change.sizeChange())
+            updateContentSize();
         updateLayout();
+    }
 }
 
 void QQuickTabBarPrivate::itemImplicitWidthChanged(QQuickItem *)
 {
-    if (!updatingLayout && !hasContentWidth)
-        updateLayout();
+    updateContentWidth();
 }
 
 void QQuickTabBarPrivate::itemImplicitHeightChanged(QQuickItem *)
 {
-    if (!updatingLayout && !hasContentHeight)
-        updateLayout();
+    updateContentHeight();
 }
 
 QQuickTabBar::QQuickTabBar(QQuickItem *parent)
@@ -331,8 +396,7 @@ void QQuickTabBar::resetContentWidth()
         return;
 
     d->hasContentWidth = false;
-    if (isComponentComplete())
-        d->updateLayout();
+    d->updateContentWidth();
 }
 
 /*!
@@ -371,8 +435,7 @@ void QQuickTabBar::resetContentHeight()
         return;
 
     d->hasContentHeight = false;
-    if (isComponentComplete())
-        d->updateLayout();
+    d->updateContentHeight();
 }
 
 QQuickTabBarAttached *QQuickTabBar::qmlAttachedProperties(QObject *object)
@@ -417,6 +480,7 @@ void QQuickTabBar::itemAdded(int index, QQuickItem *item)
     QQuickTabBarAttached *attached = qobject_cast<QQuickTabBarAttached *>(qmlAttachedPropertiesObject<QQuickTabBar>(item));
     if (attached)
         QQuickTabBarAttachedPrivate::get(attached)->update(this, index);
+    d->updateContentSize();
     if (isComponentComplete())
         polish();
 }
@@ -437,6 +501,7 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
     QQuickTabBarAttached *attached = qobject_cast<QQuickTabBarAttached *>(qmlAttachedPropertiesObject<QQuickTabBar>(item));
     if (attached)
         QQuickTabBarAttachedPrivate::get(attached)->update(nullptr, -1);
+    d->updateContentSize();
     if (isComponentComplete())
         polish();
 }
