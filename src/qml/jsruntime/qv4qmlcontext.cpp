@@ -312,7 +312,7 @@ Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, cons
     context->isInternal = true;
     context->isJSContext = true;
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, (QObject*)nullptr));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocate<QQmlContextWrapper>(context, (QObject*)nullptr));
     qml->d()->isNullWrapper = true;
 
     qml->setReadOnly(false);
@@ -330,7 +330,7 @@ Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *
 {
     Scope scope(parent);
 
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocObject<QQmlContextWrapper>(context, scopeObject));
+    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocate<QQmlContextWrapper>(context, scopeObject));
     Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
     Q_ASSERT(c->vtable() == staticVTable());
     return c;

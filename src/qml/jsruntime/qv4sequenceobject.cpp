@@ -691,7 +691,7 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->allocObject<QQml##ElementTypeName##List>(object, propertyIndex)); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(object, propertyIndex)); \
         return obj.asReturnedValue(); \
     } else
 
@@ -709,7 +709,7 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->allocObject<QQml##ElementTypeName##List>(v.value<SequenceType >())); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(v.value<SequenceType >())); \
         return obj.asReturnedValue(); \
     } else
 

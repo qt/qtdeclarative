@@ -69,7 +69,7 @@ ReturnedValue DataViewCtor::callAsConstructor(const FunctionObject *f, const Val
     if (bo != byteOffset || bl != byteLength || byteOffset + byteLength > bufferLength)
         return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
-    Scoped<DataView> a(scope, scope.engine->memoryManager->allocObject<DataView>());
+    Scoped<DataView> a(scope, scope.engine->memoryManager->allocate<DataView>());
     a->d()->buffer.set(scope.engine, buffer->d());
     a->d()->byteLength = byteLength;
     a->d()->byteOffset = byteOffset;

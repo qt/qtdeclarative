@@ -8677,7 +8677,7 @@ void QV4::Heap::QQuickItemWrapper::markObjects(QV4::Heap::Base *that, QV4::MarkS
 
 quint64 QQuickItemPrivate::_q_createJSWrapper(QV4::ExecutionEngine *engine)
 {
-    return (engine->memoryManager->allocObject<QQuickItemWrapper>(q_func()))->asReturnedValue();
+    return (engine->memoryManager->allocate<QQuickItemWrapper>(q_func()))->asReturnedValue();
 }
 
 QT_END_NAMESPACE

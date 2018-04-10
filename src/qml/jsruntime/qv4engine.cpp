@@ -258,7 +258,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(ic->prototype);
     jsObjects[ArrayProto] = memoryManager->allocObject<ArrayPrototype>(ic);
     internalClasses[Class_ArrayObject] = ic->changePrototype(arrayPrototype()->d());
-    jsObjects[PropertyListProto] = memoryManager->allocObject<PropertyListPrototype>();
+    jsObjects[PropertyListProto] = memoryManager->allocate<PropertyListPrototype>();
 
     InternalClass *argsClass = newInternalClass(ArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length(), Attr_NotEnumerable);
@@ -278,9 +278,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     internalClasses[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
     Q_ASSERT(internalClasses[EngineBase::Class_StringObject]->find(id_length()) == Heap::StringObject::LengthPropertyIndex);
 
-    jsObjects[NumberProto] = memoryManager->allocObject<NumberPrototype>();
-    jsObjects[BooleanProto] = memoryManager->allocObject<BooleanPrototype>();
-    jsObjects[DateProto] = memoryManager->allocObject<DatePrototype>();
+    jsObjects[NumberProto] = memoryManager->allocate<NumberPrototype>();
+    jsObjects[BooleanProto] = memoryManager->allocate<BooleanPrototype>();
+    jsObjects[DateProto] = memoryManager->allocate<DatePrototype>();
 
     uint index;
     ic = newInternalClass(QV4::FunctionPrototype::staticVTable(), objectPrototype());
@@ -350,7 +350,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[TypeErrorProto] = memoryManager->allocObject<TypeErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
     jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(internalClasses[EngineBase::Class_ErrorProto]->changePrototype(errorPrototype()->d()));
 
-    jsObjects[VariantProto] = memoryManager->allocObject<VariantPrototype>();
+    jsObjects[VariantProto] = memoryManager->allocate<VariantPrototype>();
     Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
 
 #if QT_CONFIG(qml_sequence_object)
@@ -359,21 +359,21 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #endif
 
     ExecutionContext *global = rootContext();
-    jsObjects[Object_Ctor] = memoryManager->allocObject<ObjectCtor>(global);
-    jsObjects[String_Ctor] = memoryManager->allocObject<StringCtor>(global);
-    jsObjects[Number_Ctor] = memoryManager->allocObject<NumberCtor>(global);
-    jsObjects[Boolean_Ctor] = memoryManager->allocObject<BooleanCtor>(global);
-    jsObjects[Array_Ctor] = memoryManager->allocObject<ArrayCtor>(global);
-    jsObjects[Function_Ctor] = memoryManager->allocObject<FunctionCtor>(global);
-    jsObjects[Date_Ctor] = memoryManager->allocObject<DateCtor>(global);
-    jsObjects[RegExp_Ctor] = memoryManager->allocObject<RegExpCtor>(global);
-    jsObjects[Error_Ctor] = memoryManager->allocObject<ErrorCtor>(global);
-    jsObjects[EvalError_Ctor] = memoryManager->allocObject<EvalErrorCtor>(global);
-    jsObjects[RangeError_Ctor] = memoryManager->allocObject<RangeErrorCtor>(global);
-    jsObjects[ReferenceError_Ctor] = memoryManager->allocObject<ReferenceErrorCtor>(global);
-    jsObjects[SyntaxError_Ctor] = memoryManager->allocObject<SyntaxErrorCtor>(global);
-    jsObjects[TypeError_Ctor] = memoryManager->allocObject<TypeErrorCtor>(global);
-    jsObjects[URIError_Ctor] = memoryManager->allocObject<URIErrorCtor>(global);
+    jsObjects[Object_Ctor] = memoryManager->allocate<ObjectCtor>(global);
+    jsObjects[String_Ctor] = memoryManager->allocate<StringCtor>(global);
+    jsObjects[Number_Ctor] = memoryManager->allocate<NumberCtor>(global);
+    jsObjects[Boolean_Ctor] = memoryManager->allocate<BooleanCtor>(global);
+    jsObjects[Array_Ctor] = memoryManager->allocate<ArrayCtor>(global);
+    jsObjects[Function_Ctor] = memoryManager->allocate<FunctionCtor>(global);
+    jsObjects[Date_Ctor] = memoryManager->allocate<DateCtor>(global);
+    jsObjects[RegExp_Ctor] = memoryManager->allocate<RegExpCtor>(global);
+    jsObjects[Error_Ctor] = memoryManager->allocate<ErrorCtor>(global);
+    jsObjects[EvalError_Ctor] = memoryManager->allocate<EvalErrorCtor>(global);
+    jsObjects[RangeError_Ctor] = memoryManager->allocate<RangeErrorCtor>(global);
+    jsObjects[ReferenceError_Ctor] = memoryManager->allocate<ReferenceErrorCtor>(global);
+    jsObjects[SyntaxError_Ctor] = memoryManager->allocate<SyntaxErrorCtor>(global);
+    jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
+    jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
@@ -399,19 +399,19 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     // typed arrays
 
-    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocObject<ArrayBufferCtor>(global);
-    jsObjects[ArrayBufferProto] = memoryManager->allocObject<ArrayBufferPrototype>();
+    jsObjects[ArrayBuffer_Ctor] = memoryManager->allocate<ArrayBufferCtor>(global);
+    jsObjects[ArrayBufferProto] = memoryManager->allocate<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
 
-    jsObjects[DataView_Ctor] = memoryManager->allocObject<DataViewCtor>(global);
-    jsObjects[DataViewProto] = memoryManager->allocObject<DataViewPrototype>();
+    jsObjects[DataView_Ctor] = memoryManager->allocate<DataViewCtor>(global);
+    jsObjects[DataViewProto] = memoryManager->allocate<DataViewPrototype>();
     static_cast<DataViewPrototype *>(dataViewPrototype())->init(this, dataViewCtor());
     jsObjects[ValueTypeProto] = (Heap::Base *) nullptr;
     jsObjects[SignalHandlerProto] = (Heap::Base *) nullptr;
 
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
-        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocObject<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
-        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocObject<TypedArrayPrototype>(Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocate<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
+        static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocate<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
     }
 
@@ -443,15 +443,15 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
-    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocObject<MathObject>()));
-    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocObject<JsonObject>()));
+    globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocate<MathObject>()));
+    globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocate<JsonObject>()));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
     globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
 
 
-    jsObjects[Eval_Function] = memoryManager->allocObject<EvalFunction>(global);
+    jsObjects[Eval_Function] = memoryManager->allocate<EvalFunction>(global);
     globalObject->defineDefaultProperty(QStringLiteral("eval"), *evalFunction());
 
     // ES6: 20.1.2.12 &  20.1.2.13:
@@ -545,7 +545,7 @@ InternalClass *ExecutionEngine::newInternalClass(const VTable *vtable, Object *p
 
 Heap::Object *ExecutionEngine::newObject()
 {
-    return memoryManager->allocObject<Object>();
+    return memoryManager->allocate<Object>();
 }
 
 Heap::Object *ExecutionEngine::newObject(InternalClass *internalClass, QV4::Object *prototype)
@@ -567,23 +567,23 @@ Heap::String *ExecutionEngine::newIdentifier(const QString &text)
 
 Heap::Object *ExecutionEngine::newStringObject(const String *string)
 {
-    return memoryManager->allocObject<StringObject>(string);
+    return memoryManager->allocate<StringObject>(string);
 }
 
 Heap::Object *ExecutionEngine::newNumberObject(double value)
 {
-    return memoryManager->allocObject<NumberObject>(value);
+    return memoryManager->allocate<NumberObject>(value);
 }
 
 Heap::Object *ExecutionEngine::newBooleanObject(bool b)
 {
-    return memoryManager->allocObject<BooleanObject>(b);
+    return memoryManager->allocate<BooleanObject>(b);
 }
 
 Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>());
+    ScopedArrayObject object(scope, memoryManager->allocate<ArrayObject>());
 
     if (count) {
         if (count < 0x1000)
@@ -596,7 +596,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(int count)
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int length)
 {
     Scope scope(this);
-    ScopedArrayObject a(scope, memoryManager->allocObject<ArrayObject>());
+    ScopedArrayObject a(scope, memoryManager->allocate<ArrayObject>());
 
     if (length) {
         size_t size = sizeof(Heap::ArrayData) + (length-1)*sizeof(Value);
@@ -624,7 +624,7 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
 Heap::ArrayObject *ExecutionEngine::newArrayObject(const QStringList &list)
 {
     Scope scope(this);
-    ScopedArrayObject object(scope, memoryManager->allocObject<ArrayObject>(list));
+    ScopedArrayObject object(scope, memoryManager->allocate<ArrayObject>(list));
     return object->d();
 }
 
@@ -638,31 +638,31 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(InternalClass *internalClass,
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(const QByteArray &array)
 {
-    return memoryManager->allocObject<ArrayBuffer>(array);
+    return memoryManager->allocate<ArrayBuffer>(array);
 }
 
 Heap::ArrayBuffer *ExecutionEngine::newArrayBuffer(size_t length)
 {
-    return memoryManager->allocObject<ArrayBuffer>(length);
+    return memoryManager->allocate<ArrayBuffer>(length);
 }
 
 
 Heap::DateObject *ExecutionEngine::newDateObject(const Value &value)
 {
-    return memoryManager->allocObject<DateObject>(value);
+    return memoryManager->allocate<DateObject>(value);
 }
 
 Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(dt));
+    Scoped<DateObject> object(scope, memoryManager->allocate<DateObject>(dt));
     return object->d();
 }
 
 Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
 {
     Scope scope(this);
-    Scoped<DateObject> object(scope, memoryManager->allocObject<DateObject>(t));
+    Scoped<DateObject> object(scope, memoryManager->allocate<DateObject>(t));
     return object->d();
 }
 
@@ -679,12 +679,12 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re)
 {
-    return memoryManager->allocObject<RegExpObject>(re);
+    return memoryManager->allocate<RegExpObject>(re);
 }
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 {
-    return memoryManager->allocObject<RegExpObject>(re);
+    return memoryManager->allocate<RegExpObject>(re);
 }
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
@@ -731,13 +731,13 @@ Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
 {
-    return memoryManager->allocObject<VariantObject>(v);
+    return memoryManager->allocate<VariantObject>(v);
 }
 
 Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, memoryManager->allocObject<ForEachIteratorObject>(o));
+    ScopedObject obj(scope, memoryManager->allocate<ForEachIteratorObject>(o));
     return obj->d();
 }
 
@@ -905,8 +905,8 @@ void ExecutionEngine::requireArgumentsAccessors(int n)
         }
         ExecutionContext *global = rootContext();
         for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->allocObject<ArgumentsGetterFunction>(global, i));
-            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->allocObject<ArgumentsSetterFunction>(global, i));
+            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->allocate<ArgumentsGetterFunction>(global, i));
+            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->allocate<ArgumentsSetterFunction>(global, i));
         }
     }
 }

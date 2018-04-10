@@ -7388,7 +7388,7 @@ void tst_qqmlecmascript::onDestructionViaGC()
         QVERIFY2(!weakReferenceMutator.isNull(), qPrintable(component.errorString()));
         weakReferenceMutator->init(v4, weakRef.data(), &mutatorResult);
 
-        v4->memoryManager->allocObject<QV4::WeakReferenceSentinel>(weakRef.data(), &sentinelResult);
+        v4->memoryManager->allocate<QV4::WeakReferenceSentinel>(weakRef.data(), &sentinelResult);
     }
     gc(engine);
 

@@ -1418,7 +1418,7 @@ ReturnedValue QtObject::method_binding(const FunctionObject *b, const Value *, c
     if (!f)
         THROW_TYPE_ERROR_WITH_MESSAGE("binding(): argument (binding expression) must be a function");
 
-    return Encode(scope.engine->memoryManager->allocObject<QQmlBindingFunction>(f));
+    return Encode(scope.engine->memoryManager->allocate<QQmlBindingFunction>(f));
 }
 
 
@@ -1797,7 +1797,7 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
         globalObject->defineDefaultProperty(QStringLiteral("print"), QV4::ConsoleObject::method_log);
 
 
-        QV4::ScopedObject console(scope, globalObject->engine()->memoryManager->allocObject<QV4::ConsoleObject>());
+        QV4::ScopedObject console(scope, globalObject->engine()->memoryManager->allocate<QV4::ConsoleObject>());
         globalObject->defineDefaultProperty(QStringLiteral("console"), console);
     }
 

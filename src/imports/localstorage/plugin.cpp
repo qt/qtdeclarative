@@ -148,7 +148,7 @@ public:
 
     static Heap::QQmlSqlDatabaseWrapper *create(QV4::ExecutionEngine *engine)
     {
-        return engine->memoryManager->allocObject<QQmlSqlDatabaseWrapper>();
+        return engine->memoryManager->allocate<QQmlSqlDatabaseWrapper>();
     }
 
     ~QQmlSqlDatabaseWrapper() {

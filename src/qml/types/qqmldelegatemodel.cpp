@@ -93,7 +93,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
 
     static Heap::DelegateModelGroupFunction *create(QV4::ExecutionContext *scope, uint flag, QV4::ReturnedValue (*code)(QQmlDelegateModelItem *item, uint flag, const QV4::Value &arg))
     {
-        return scope->engine()->memoryManager->allocObject<DelegateModelGroupFunction>(scope, flag, code);
+        return scope->engine()->memoryManager->allocate<DelegateModelGroupFunction>(scope, flag, code);
     }
 
     static ReturnedValue call(const QV4::FunctionObject *that, const Value *thisObject, const Value *argv, int argc)
@@ -2521,7 +2521,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
         model->m_cacheMetaType->initializePrototype();
     QV4::ExecutionEngine *v4 = model->m_cacheMetaType->v4Engine;
     QV4::Scope scope(v4);
-    QV4::ScopedObject o(scope, v4->memoryManager->allocObject<QQmlDelegateModelItemObject>(cacheItem));
+    QV4::ScopedObject o(scope, v4->memoryManager->allocate<QQmlDelegateModelItemObject>(cacheItem));
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
     o->setPrototype(p);
     ++cacheItem->scriptRef;
@@ -3279,7 +3279,7 @@ struct QQmlDelegateModelGroupChange : QV4::Object
     V4_OBJECT2(QQmlDelegateModelGroupChange, QV4::Object)
 
     static QV4::Heap::QQmlDelegateModelGroupChange *create(QV4::ExecutionEngine *e) {
-        return e->memoryManager->allocObject<QQmlDelegateModelGroupChange>();
+        return e->memoryManager->allocate<QQmlDelegateModelGroupChange>();
     }
 
     static QV4::ReturnedValue method_get_index(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int) {
@@ -3316,7 +3316,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
 public:
     static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
     {
-        return engine->memoryManager->allocObject<QQmlDelegateModelGroupChangeArray>(changes);
+        return engine->memoryManager->allocate<QQmlDelegateModelGroupChangeArray>(changes);
     }
 
     quint32 count() const { return d()->changes->count(); }

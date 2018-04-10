@@ -1421,7 +1421,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QQmlComponentExtension *e = componentExtension(args->v4engine());
 
-    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->allocObject<QV4::QmlIncubatorObject>(mode));
+    QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->allocate<QV4::QmlIncubatorObject>(mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
     r->setPrototype(p);
 

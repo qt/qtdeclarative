@@ -188,7 +188,7 @@ void QV8Engine::initializeGlobal()
     QV4::Scope scope(m_v4Engine);
     QV4::GlobalExtensions::init(m_v4Engine->globalObject, QJSEngine::AllExtensions);
 
-    QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocObject<QV4::QtObject>(m_engine));
+    QV4::ScopedObject qt(scope, m_v4Engine->memoryManager->allocate<QV4::QtObject>(m_engine));
     m_v4Engine->globalObject->defineDefaultProperty(QStringLiteral("Qt"), qt);
 
 #if QT_CONFIG(qml_locale)

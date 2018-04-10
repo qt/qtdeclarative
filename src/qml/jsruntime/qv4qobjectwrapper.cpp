@@ -248,7 +248,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
             return QV4::QObjectMethod::create(global, object, property->coreIndex());
         } else if (property->isSignalHandler()) {
             QmlSignalHandler::initProto(engine);
-            return engine->memoryManager->allocObject<QV4::QmlSignalHandler>(object, property->coreIndex())->asReturnedValue();
+            return engine->memoryManager->allocate<QV4::QmlSignalHandler>(object, property->coreIndex())->asReturnedValue();
         } else {
             ExecutionContext *global = engine->rootContext();
             return QV4::QObjectMethod::create(global, object, property->coreIndex());
@@ -687,7 +687,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
                 return result;
         }
     }
-    return (engine->memoryManager->allocObject<QV4::QObjectWrapper>(object))->asReturnedValue();
+    return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
 QV4::ReturnedValue QObjectWrapper::get(const Managed *m, String *name, bool *hasProperty)
@@ -1840,7 +1840,7 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
     method->d()->setObject(object);
 
     if (QQmlData *ddata = QQmlData::get(object))
@@ -1853,7 +1853,7 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocObject<QObjectMethod>(scope));
+    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
     method->d()->setPropertyCache(valueType->d()->propertyCache());
     method->d()->index = index;
     method->d()->valueTypeWrapper.set(valueScope.engine, valueType->d());
@@ -2026,7 +2026,7 @@ void Heap::QMetaObjectWrapper::ensureConstructorsCache() {
 ReturnedValue QMetaObjectWrapper::create(ExecutionEngine *engine, const QMetaObject* metaObject) {
 
      QV4::Scope scope(engine);
-     Scoped<QMetaObjectWrapper> mo(scope, engine->memoryManager->allocObject<QV4::QMetaObjectWrapper>(metaObject)->asReturnedValue());
+     Scoped<QMetaObjectWrapper> mo(scope, engine->memoryManager->allocate<QV4::QMetaObjectWrapper>(metaObject)->asReturnedValue());
      mo->init(engine);
      return mo->asReturnedValue();
 }

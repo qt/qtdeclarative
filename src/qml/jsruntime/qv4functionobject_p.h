@@ -167,7 +167,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static Heap::FunctionObject *createBuiltinFunction(ExecutionContext *scope, String *name,
                                                        ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
     {
-        return scope->engine()->memoryManager->allocObject<FunctionObject>(scope, name, code);
+        return scope->engine()->memoryManager->allocate<FunctionObject>(scope, name, code);
     }
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
@@ -234,7 +234,7 @@ struct BoundFunction: FunctionObject {
 
     static Heap::BoundFunction *create(ExecutionContext *scope, FunctionObject *target, const Value &boundThis, QV4::MemberData *boundArgs)
     {
-        return scope->engine()->memoryManager->allocObject<BoundFunction>(scope, target, boundThis, boundArgs);
+        return scope->engine()->memoryManager->allocate<BoundFunction>(scope, target, boundThis, boundArgs);
     }
 
     Heap::FunctionObject *target() const { return d()->target; }

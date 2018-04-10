@@ -595,7 +595,7 @@ ReturnedValue NodePrototype::getProto(ExecutionEngine *v4)
     Scope scope(v4);
     QQmlXMLHttpRequestData *d = xhrdata(v4);
     if (d->nodePrototype.isUndefined()) {
-        ScopedObject p(scope, v4->memoryManager->allocObject<NodePrototype>());
+        ScopedObject p(scope, v4->memoryManager->allocate<NodePrototype>());
         d->nodePrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -606,7 +606,7 @@ ReturnedValue Node::create(ExecutionEngine *v4, NodeImpl *data)
 {
     Scope scope(v4);
 
-    Scoped<Node> instance(scope, v4->memoryManager->allocObject<Node>(data));
+    Scoped<Node> instance(scope, v4->memoryManager->allocate<Node>(data));
     ScopedObject p(scope);
 
     switch (data->type) {
@@ -876,7 +876,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
         return Encode::null();
     }
 
-    ScopedObject instance(scope, v4->memoryManager->allocObject<Node>(document));
+    ScopedObject instance(scope, v4->memoryManager->allocate<Node>(document));
     document->release(); // the GC should own the NodeImpl via Node now
     ScopedObject p(scope);
     instance->setPrototype((p = Document::prototype(v4)));
@@ -930,7 +930,7 @@ ReturnedValue NamedNodeMap::get(const Managed *m, String *name, bool *hasPropert
 
 ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QList<NodeImpl *> &list)
 {
-    return (v4->memoryManager->allocObject<NamedNodeMap>(data, list))->asReturnedValue();
+    return (v4->memoryManager->allocate<NamedNodeMap>(data, list))->asReturnedValue();
 }
 
 ReturnedValue NodeList::getIndexed(const Managed *m, uint index, bool *hasProperty)
@@ -964,7 +964,7 @@ ReturnedValue NodeList::get(const Managed *m, String *name, bool *hasProperty)
 
 ReturnedValue NodeList::create(ExecutionEngine *v4, NodeImpl *data)
 {
-    return (v4->memoryManager->allocObject<NodeList>(data))->asReturnedValue();
+    return (v4->memoryManager->allocate<NodeList>(data))->asReturnedValue();
 }
 
 ReturnedValue Document::method_documentElement(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -1643,7 +1643,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         const QQmlXMLHttpRequestCtor *ctor = static_cast<const QQmlXMLHttpRequestCtor *>(f);
 
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager(), scope.engine);
-        Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
+        Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocate<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
         return w.asReturnedValue();
@@ -2049,7 +2049,7 @@ void *qt_add_qmlxmlhttprequest(ExecutionEngine *v4)
 {
     Scope scope(v4);
 
-    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->allocObject<QQmlXMLHttpRequestCtor>(v4));
+    Scoped<QQmlXMLHttpRequestCtor> ctor(scope, v4->memoryManager->allocate<QQmlXMLHttpRequestCtor>(v4));
     ScopedString s(scope, v4->newString(QStringLiteral("XMLHttpRequest")));
     v4->globalObject->defineReadonlyProperty(s, ctor);
 

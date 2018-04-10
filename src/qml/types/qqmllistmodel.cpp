@@ -2434,7 +2434,7 @@ QQmlV4Handle QQmlListModel::get(int index) const
             QObject *object = m_listModel->getOrCreateModelObject(const_cast<QQmlListModel *>(this), index);
             QQmlData *ddata = QQmlData::get(object);
             if (ddata->jsWrapper.isNullOrUndefined()) {
-                result = scope.engine->memoryManager->allocObject<QV4::ModelObject>(object, const_cast<QQmlListModel *>(this));
+                result = scope.engine->memoryManager->allocate<QV4::ModelObject>(object, const_cast<QQmlListModel *>(this));
                 // Keep track of the QObjectWrapper in persistent value storage
                 ddata->jsWrapper.set(scope.engine, result);
             } else {

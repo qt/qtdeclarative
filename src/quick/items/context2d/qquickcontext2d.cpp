@@ -596,7 +596,7 @@ public:
     static QV4::Heap::QQuickJSContext2DPrototype *create(QV4::ExecutionEngine *engine)
     {
         QV4::Scope scope(engine);
-        QV4::Scoped<QQuickJSContext2DPrototype> o(scope, engine->memoryManager->allocObject<QQuickJSContext2DPrototype>());
+        QV4::Scoped<QQuickJSContext2DPrototype> o(scope, engine->memoryManager->allocate<QQuickJSContext2DPrototype>());
 
         o->defineDefaultProperty(QStringLiteral("quadraticCurveTo"), method_quadraticCurveTo, 0);
         o->defineDefaultProperty(QStringLiteral("restore"), method_restore, 0);
@@ -954,7 +954,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
 {
     QV4::Scope scope(v4);
     QQuickContext2DEngineData *ed = engineData(scope.engine);
-    QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, scope.engine->memoryManager->allocObject<QQuickJSContext2DPixelData>());
+    QV4::Scoped<QQuickJSContext2DPixelData> pixelData(scope, scope.engine->memoryManager->allocate<QQuickJSContext2DPixelData>());
     QV4::ScopedObject p(scope, ed->pixelArrayProto.value());
     pixelData->setPrototype(p);
 
@@ -966,7 +966,7 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
         *pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
-    QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, scope.engine->memoryManager->allocObject<QQuickJSContext2DImageData>());
+    QV4::Scoped<QQuickJSContext2DImageData> imageData(scope, scope.engine->memoryManager->allocate<QQuickJSContext2DImageData>());
     imageData->d()->pixelData = pixelData.asReturnedValue();
     return imageData.asReturnedValue();
 }
@@ -1582,7 +1582,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createLinearGradient(const
         }
         QQuickContext2DEngineData *ed = engineData(scope.engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocate<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QLinearGradient(x0, y0, x1, y1);
@@ -1634,7 +1634,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(const
 
         QQuickContext2DEngineData *ed = engineData(scope.engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocate<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
@@ -1678,7 +1678,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createConicalGradient(cons
 
         QQuickContext2DEngineData *ed = engineData(scope.engine);
 
-        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
+        QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocate<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
         *gradient->d()->brush = QConicalGradient(x, y, angle);
@@ -1738,7 +1738,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(const QV4::F
     CHECK_CONTEXT(r)
 
     if (argc >= 2) {
-        QV4::Scoped<QQuickContext2DStyle> pattern(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
+        QV4::Scoped<QQuickContext2DStyle> pattern(scope, scope.engine->memoryManager->allocate<QQuickContext2DStyle>());
 
         QColor color = scope.engine->toVariant(argv[0], qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
@@ -4399,7 +4399,7 @@ void QQuickContext2D::setV4Engine(QV4::ExecutionEngine *engine)
 
         QQuickContext2DEngineData *ed = engineData(engine);
         QV4::Scope scope(engine);
-        QV4::Scoped<QQuickJSContext2D> wrapper(scope, engine->memoryManager->allocObject<QQuickJSContext2D>());
+        QV4::Scoped<QQuickJSContext2D> wrapper(scope, engine->memoryManager->allocate<QQuickJSContext2D>());
         QV4::ScopedObject p(scope, ed->contextPrototype.value());
         wrapper->setPrototype(p);
         wrapper->d()->context = this;

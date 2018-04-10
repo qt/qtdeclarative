@@ -111,7 +111,7 @@ ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, 
     Q_ASSERT(t.isValid());
     Scope scope(engine);
 
-    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocObject<QQmlTypeWrapper>());
+    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>());
     w->d()->mode = mode; w->d()->object = o;
     w->d()->typePrivate = t.priv();
     QQmlType::refHandle(w->d()->typePrivate);
@@ -127,7 +127,7 @@ ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, 
     Q_ASSERT(importNamespace);
     Scope scope(engine);
 
-    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocObject<QQmlTypeWrapper>());
+    Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>());
     w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t; w->d()->importNamespace = importNamespace;
     t->addref();
     return w.asReturnedValue();
@@ -232,7 +232,7 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, String *name, bool *hasProp
 
                 value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
                 if (ok) {
-                    Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocObject<QQmlScopedEnumWrapper>());
+                    Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
                     enumWrapper->d()->typePrivate = type.priv();
                     QQmlType::refHandle(enumWrapper->d()->typePrivate);
                     enumWrapper->d()->scopeEnumIndex = value;

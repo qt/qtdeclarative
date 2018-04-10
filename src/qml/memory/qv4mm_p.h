@@ -225,7 +225,7 @@ public:
     }
 
     template <typename ObjectType, typename... Args>
-    typename ObjectType::Data *allocObject(Args... args)
+    typename ObjectType::Data *allocate(Args... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());

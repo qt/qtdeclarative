@@ -173,7 +173,7 @@ ReturnedValue FunctionObject::call(const FunctionObject *, const Value *, const 
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
-    return scope->engine()->memoryManager->allocObject<ScriptFunction>(scope, function);
+    return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
 bool FunctionObject::isBinding() const

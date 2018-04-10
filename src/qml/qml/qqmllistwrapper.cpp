@@ -74,7 +74,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
 
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = object;
     r->d()->propertyType = propType;
     void *args[] = { &r->d()->property(), nullptr };
@@ -86,7 +86,7 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProp
 {
     Scope scope(engine);
 
-    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocObject<QmlListWrapper>());
+    Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = prop.object;
     r->d()->property() = prop;
     r->d()->propertyType = propType;
