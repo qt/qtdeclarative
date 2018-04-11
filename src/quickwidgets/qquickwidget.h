@@ -143,6 +143,7 @@ protected:
 
     bool event(QEvent *) override;
     void paintEvent(QPaintEvent *event) override;
+    bool focusNextPrevChild(bool next) override;
 
 private:
     Q_DISABLE_COPY(QQuickWidget)

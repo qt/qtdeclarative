@@ -276,12 +276,16 @@ struct PlatformAssembler_X86_All : JSC::MacroAssembler<JSC::MacroAssemblerX86>
         push(JSStackFrameRegister);
         push(CppStackFrameRegister);
         push(EngineRegister);
+        // Ensure the stack is 16-byte aligned in order for compiler generated aligned SSE2
+        // instructions to be able to target the stack.
+        subPtr(TrustedImm32(8), StackPointerRegister);
         loadPtr(Address(FramePointerRegister, 2 * PointerSize), CppStackFrameRegister);
         loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
     }
 
     void generatePlatformFunctionExit()
     {
+        addPtr(TrustedImm32(8), StackPointerRegister);
         pop(EngineRegister);
         pop(CppStackFrameRegister);
         pop(JSStackFrameRegister);

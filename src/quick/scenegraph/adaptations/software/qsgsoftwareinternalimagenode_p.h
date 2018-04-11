@@ -136,6 +136,7 @@ private:
     QPixmap m_cachedMirroredPixmap;
 
     bool m_mirror;
+    bool m_textureIsLayer;
     bool m_smooth;
     bool m_tileHorizontal;
     bool m_tileVertical;

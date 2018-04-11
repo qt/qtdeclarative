@@ -40,7 +40,7 @@
 #include <QtQml/qqmlengine.h>
 
 #include <QtCore/QLoggingCategory>
-
+#include <QtGui/qstylehints.h>
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QLabel>
 
@@ -140,6 +140,7 @@ private slots:
     void mouseEventWindowPos();
     void synthMouseFromTouch_data();
     void synthMouseFromTouch();
+    void tabKey();
 
 private:
     QTouchDevice *device = QTest::createTouchDevice();
@@ -618,6 +619,43 @@ void tst_qquickwidget::synthMouseFromTouch()
     QCOMPARE(childView->m_mouseEvents.count(), 0);
     for (const QMouseEvent &ev : item->m_mouseEvents)
         QCOMPARE(ev.source(), Qt::MouseEventSynthesizedByQt);
+}
+
+void tst_qquickwidget::tabKey()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This function doesn't support NOT iterating all.");
+    QWidget window1;
+    QQuickWidget *qqw = new QQuickWidget(&window1);
+    qqw->setSource(testFileUrl("activeFocusOnTab.qml"));
+    QQuickWidget *qqw2 = new QQuickWidget(&window1);
+    qqw2->setSource(testFileUrl("noActiveFocusOnTab.qml"));
+    qqw2->move(100, 0);
+    window1.show();
+    qqw->setFocus();
+    QVERIFY(QTest::qWaitForWindowExposed(&window1, 5000));
+    QVERIFY(qqw->hasFocus());
+    QQuickItem *item = qobject_cast<QQuickItem *>(qqw->rootObject());
+    QQuickItem *topItem = item->findChild<QQuickItem *>("topRect");
+    QQuickItem *middleItem = item->findChild<QQuickItem *>("middleRect");
+    QQuickItem *bottomItem = item->findChild<QQuickItem *>("bottomRect");
+    topItem->forceActiveFocus();
+    QVERIFY(topItem->property("activeFocus").toBool());
+    QTest::keyClick(qqw, Qt::Key_Tab);
+    QTRY_VERIFY(middleItem->property("activeFocus").toBool());
+    QTest::keyClick(qqw, Qt::Key_Tab);
+    QTRY_VERIFY(bottomItem->property("activeFocus").toBool());
+    QTest::keyClick(qqw, Qt::Key_Backtab);
+    QTRY_VERIFY(middleItem->property("activeFocus").toBool());
+
+    qqw2->setFocus();
+    QQuickItem *item2 = qobject_cast<QQuickItem *>(qqw2->rootObject());
+    QQuickItem *topItem2 = item2->findChild<QQuickItem *>("topRect2");
+    QTRY_VERIFY(qqw2->hasFocus());
+    QVERIFY(topItem2->property("activeFocus").toBool());
+    QTest::keyClick(qqw2, Qt::Key_Tab);
+    QTRY_VERIFY(qqw->hasFocus());
+    QVERIFY(middleItem->property("activeFocus").toBool());
 }
 
 QTEST_MAIN(tst_qquickwidget)

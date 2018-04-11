@@ -2131,7 +2131,7 @@ void tst_qqmllanguage::scriptStringJs()
     QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
 
     QJSValue inst = engine.newQObject(object.data());
-    QJSValue func = engine.evaluate("function(value) { this.scriptProperty = value }");
+    QJSValue func = engine.evaluate("(function(value) { this.scriptProperty = value })");
 
     func.callWithInstance(inst, QJSValueList() << "test a \"string ");
     QCOMPARE(QQmlScriptStringPrivate::get(object->scriptProperty())->script, QString("\"test a \\\"string \""));
@@ -2263,7 +2263,7 @@ void tst_qqmllanguage::scriptStringComparison()
     //QJSValue inst1 = engine.newQObject(object1);
     QJSValue inst2 = engine.newQObject(object2.data());
     QJSValue inst3 = engine.newQObject(object3.data());
-    QJSValue func = engine.evaluate("function(value) { this.scriptProperty = value }");
+    QJSValue func = engine.evaluate("(function(value) { this.scriptProperty = value })");
 
     const QString s = "hello\\n\\\"world\\\"";
     const qreal n = 12.345;

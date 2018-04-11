@@ -84,11 +84,9 @@ public:
     ScanFunctions(Codegen *cg, const QString &sourceCode, CompilationMode defaultProgramMode);
     void operator()(AST::Node *node);
 
+    void enterGlobalEnvironment(CompilationMode compilationMode);
     void enterEnvironment(AST::Node *node, CompilationMode compilationMode);
     void leaveEnvironment();
-
-    void enterQmlScope(AST::Node *ast, const QString &name)
-    { enterFunction(ast, name, /*formals*/nullptr, /*body*/nullptr, /*expr*/nullptr); }
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)
     { enterFunction(ast, false); }
@@ -149,6 +147,9 @@ protected:
 
     bool _allowFuncDecls;
     CompilationMode defaultProgramMode;
+
+private:
+    static constexpr AST::Node *astNodeForGlobalEnvironment = nullptr;
 };
 
 }

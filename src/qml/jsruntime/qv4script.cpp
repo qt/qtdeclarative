@@ -90,6 +90,12 @@ void Script::parse()
 
     Module module(v4->debugger() != nullptr);
 
+    if (sourceCode.startsWith(QLatin1String("function("))) {
+        qWarning() << "Warning: Using function expressions as statements in scripts in not compliant with the ECMAScript specification at\n"
+                   << (sourceCode.leftRef(70) + QLatin1String("..."))
+                   << "\nThis will throw a  syntax error in Qt 5.12. If you want a function expression, surround it by parentheses.";
+    }
+
     Engine ee, *engine = &ee;
     Lexer lexer(engine);
     lexer.setCode(sourceCode, line, parseAsBinding);
