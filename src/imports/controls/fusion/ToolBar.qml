@@ -44,8 +44,8 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.ToolBar {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth, contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
 
     horizontalPadding: 6
     topPadding: control.position === T.ToolBar.Footer ? 1 : 0

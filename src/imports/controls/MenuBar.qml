@@ -42,9 +42,9 @@ import QtQuick.Controls.impl 2.5
 T.MenuBar {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding)
 
     delegate: MenuBarItem { }

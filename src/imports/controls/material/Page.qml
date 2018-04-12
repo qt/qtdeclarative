@@ -41,11 +41,11 @@ import QtQuick.Controls.Material 2.5
 T.Page {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             Math.max(contentWidth,
                                      header && header.visible ? header.implicitWidth : 0,
                                      footer && footer.visible ? footer.implicitWidth : 0) + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding
                              + (header && header.visible ? header.implicitHeight + spacing : 0)
                              + (footer && footer.visible ? footer.implicitHeight + spacing : 0))

@@ -41,9 +41,9 @@ import QtQuick.Controls.Universal 2.5
 T.TabBar {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding)
 
     contentItem: PathView {

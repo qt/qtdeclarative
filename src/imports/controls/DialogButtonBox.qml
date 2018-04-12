@@ -40,9 +40,9 @@ import QtQuick.Templates 2.5 as T
 T.DialogButtonBox {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             (control.count === 1 ? contentWidth * 2 : contentWidth) + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding)
 
     spacing: 1

@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.ProgressBar {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentItem ? contentItem.implicitWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentItem ? contentItem.implicitHeight + topPadding + bottomPadding : 0)
 
     contentItem: Item {

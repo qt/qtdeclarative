@@ -40,8 +40,8 @@ import QtQuick.Templates 2.5 as T
 T.Control {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             (contentItem ? contentItem.implicitWidth : 0) + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              (contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding)
 }

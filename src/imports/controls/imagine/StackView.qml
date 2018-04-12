@@ -42,8 +42,8 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.StackView {
     id: control
 
-    implicitWidth: background ? background.implicitWidth : 0
-    implicitHeight: background ? background.implicitHeight : 0
+    implicitWidth: implicitBackgroundWidth
+    implicitHeight: implicitBackgroundHeight
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0

@@ -42,12 +42,12 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.SpinBox {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentItem.implicitWidth + 2 * padding +
                             (up.indicator ? up.indicator.implicitWidth : 0) +
                             (down.indicator ? down.indicator.implicitWidth : 0))
     implicitHeight: Math.max(contentItem.implicitHeight + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
+                             implicitBackgroundHeight,
                              up.indicator ? up.indicator.implicitHeight : 0,
                              down.indicator ? down.indicator.implicitHeight : 0)
 

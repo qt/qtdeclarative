@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.RoundButton {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
     padding: 6

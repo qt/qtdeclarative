@@ -43,10 +43,10 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.GroupBox {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             label ? label.implicitWidth + leftPadding + rightPadding : 0,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
 
     topPadding: (background ? background.topPadding : 0) + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
     leftPadding: background ? background.leftPadding : 0
