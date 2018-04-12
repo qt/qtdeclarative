@@ -116,13 +116,16 @@ void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QS
             for (const QString &importPath : importPathList) {
                 QString name = entry.dir().dirName() + "/" + entry.fileName();
                 QString filePath = importPath + "/" + targetPath + "/" + entry.fileName();
+                if (filePath.startsWith(":"))
+                    filePath.prepend("qrc");
                 if (QFile::exists(filePath)) {
                     QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
                     break;
                 } else {
+                    QUrl url(filePath);
                     filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
                     if (!filePath.isEmpty() && QFile::exists(filePath)) {
-                        QTest::newRow(qPrintable(name)) << QUrl(filePath);
+                        QTest::newRow(qPrintable(name)) << url;
                         break;
                     }
                 }
