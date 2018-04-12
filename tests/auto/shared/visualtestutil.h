@@ -136,6 +136,8 @@ namespace QQuickVisualTestUtil
         QQuickApplicationWindow *appWindow;
         QQuickWindow *window;
     };
+
+    void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList());
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

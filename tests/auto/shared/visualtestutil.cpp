@@ -40,6 +40,8 @@
 #include <QtCore/QDebug>
 #include <QtGui/QCursor>
 #include <QtCore/QCoreApplication>
+#include <QtQml/QQmlFile>
+#include <QtTest/QTest>
 
 bool QQuickVisualTestUtil::delegateVisible(QQuickItem *item)
 {
@@ -91,4 +93,40 @@ void QQuickVisualTestUtil::centerOnScreen(QQuickWindow *window)
     const QRect screenGeometry = window->screen()->availableGeometry();
     const QPoint offset = QPoint(window->width() / 2, window->height() / 2);
     window->setFramePosition(screenGeometry.center() - offset);
+}
+
+void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist)
+{
+    // We cannot use QQmlComponent to load QML files directly from the source tree.
+    // For styles that use internal QML types (eg. material/Ripple.qml), the source
+    // dir would be added as an "implicit" import path overriding the actual import
+    // path (qtbase/qml/QtQuick/Controls.2/Material). => The QML engine fails to load
+    // the style C++ plugin from the implicit import path (the source dir).
+    //
+    // Therefore we only use the source tree for finding out the set of QML files that
+    // a particular style implements, and then we locate the respective QML files in
+    // the engine's import path. This way we can use QQmlComponent to load each QML file
+    // for benchmarking.
+
+    const QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
+    for (const QFileInfo &entry : entries) {
+        QString name = entry.baseName();
+        if (!skiplist.contains(name)) {
+            const auto importPathList = engine->importPathList();
+            for (const QString &importPath : importPathList) {
+                QString name = entry.dir().dirName() + "/" + entry.fileName();
+                QString filePath = importPath + "/" + targetPath + "/" + entry.fileName();
+                if (QFile::exists(filePath)) {
+                    QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
+                    break;
+                } else {
+                    filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
+                    if (!filePath.isEmpty() && QFile::exists(filePath)) {
+                        QTest::newRow(qPrintable(name)) << QUrl(filePath);
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }

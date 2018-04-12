@@ -7,3 +7,4 @@ SOURCES += $$PWD/visualtestutil.cpp \
            $$PWD/util.cpp
 
 DEFINES += QT_QMLTEST_DATADIR=\\\"$${_PRO_FILE_PWD_}/data\\\"
+DEFINES += QQC2_IMPORT_PATH=\\\"$$QQC2_SOURCE_TREE/src/imports\\\"
