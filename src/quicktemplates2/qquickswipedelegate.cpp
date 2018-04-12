@@ -1217,12 +1217,19 @@ void QQuickSwipeDelegate::touchEvent(QTouchEvent *event)
     event->ignore();
 }
 
+void QQuickSwipeDelegate::componentComplete()
+{
+    Q_D(QQuickSwipeDelegate);
+    QQuickItemDelegate::componentComplete();
+    QQuickSwipePrivate::get(&d->swipe)->reposition(DontAnimatePosition);
+}
+
 void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeDelegate);
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
 
-    if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
+    if (isComponentComplete() && !qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);
         swipePrivate->reposition(DontAnimatePosition);
     }

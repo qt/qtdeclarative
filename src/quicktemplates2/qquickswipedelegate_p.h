@@ -79,6 +79,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void touchEvent(QTouchEvent *event) override;
 
+    void componentComplete() override;
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QFont defaultFont() const override;
