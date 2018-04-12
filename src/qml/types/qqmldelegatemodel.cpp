@@ -1709,8 +1709,15 @@ void QQmlDelegateModel::_q_rowsMoved(
 void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
 {
     Q_D(QQmlDelegateModel);
-    if (begin.parent() == d->m_adaptorModel.rootIndex)
-        _q_itemsChanged(begin.row(), end.row() - begin.row() + 1, roles);
+    if (begin.parent() != d->m_adaptorModel.rootIndex)
+        return;
+
+    int rowCount = end.row() - begin.row() + 1;
+
+    for (int col = begin.column(); col <= end.column(); ++col) {
+        int startIndex = d->m_adaptorModel.indexAt(begin.row(), col);
+        _q_itemsChanged(startIndex, rowCount, roles);
+    }
 }
 
 bool QQmlDelegateModel::isDescendantOf(const QPersistentModelIndex& desc, const QList< QPersistentModelIndex >& parents) const
