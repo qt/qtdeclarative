@@ -42,8 +42,8 @@ import QtQuick.Templates 2.5 as T
 T.MenuSeparator {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth, contentItem.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight, contentItem.implicitHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
 
     padding: 2
     verticalPadding: padding + 4

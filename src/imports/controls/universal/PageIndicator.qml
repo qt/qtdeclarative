@@ -42,9 +42,9 @@ T.PageIndicator {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding)
 
     padding: 6
     spacing: 7

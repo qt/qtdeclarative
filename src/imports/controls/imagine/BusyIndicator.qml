@@ -43,9 +43,9 @@ T.BusyIndicator {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding)
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0

@@ -44,8 +44,8 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.BusyIndicator {
     id: control
 
-    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
-    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
+    implicitWidth: implicitContentWidth + leftPadding + rightPadding
+    implicitHeight: implicitContentHeight + topPadding + bottomPadding
 
     padding: 6
 

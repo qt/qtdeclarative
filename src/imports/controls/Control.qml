@@ -41,7 +41,7 @@ T.Control {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            (contentItem ? contentItem.implicitWidth : 0) + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             (contentItem ? contentItem.implicitHeight : 0) + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding)
 }

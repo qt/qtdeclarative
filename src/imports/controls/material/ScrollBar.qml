@@ -42,9 +42,9 @@ T.ScrollBar {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            contentItem.implicitWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             contentItem.implicitHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding)
 
     padding: control.interactive ? 1 : 2
     visible: control.policy !== T.ScrollBar.AlwaysOff
