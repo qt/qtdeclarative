@@ -111,7 +111,7 @@ protected:
     bool visit(AST::FunctionExpression *ast) override;
     bool visit(AST::TemplateLiteral *ast) override;
 
-    void enterFunction(AST::FunctionExpression *ast, bool enterName);
+    bool enterFunction(AST::FunctionExpression *ast, bool enterName);
 
     void endVisit(AST::FunctionExpression *) override;
 
@@ -136,7 +136,7 @@ protected:
     bool visit(AST::Block *ast) override;
 
 protected:
-    void enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, AST::FunctionExpression *expr);
+    bool enterFunction(AST::Node *ast, const QString &name, AST::FormalParameterList *formals, AST::StatementList *body, AST::FunctionExpression *expr);
 
     void calcEscapingVariables();
 // fields:

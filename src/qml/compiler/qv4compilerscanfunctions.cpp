@@ -225,7 +225,8 @@ bool ScanFunctions::visit(ExpressionStatement *ast)
         if (!_allowFuncDecls)
             _cg->throwSyntaxError(expr->functionToken, QStringLiteral("conditional function or closure declaration"));
 
-        enterFunction(expr, /*enterName*/ true);
+        if (!enterFunction(expr, /*enterName*/ true))
+            return false;
         Node::accept(expr->formals, this);
         Node::accept(expr->body, this);
         leaveEnvironment();
@@ -241,8 +242,7 @@ bool ScanFunctions::visit(ExpressionStatement *ast)
 
 bool ScanFunctions::visit(FunctionExpression *ast)
 {
-    enterFunction(ast, /*enterName*/ false);
-    return true;
+    return enterFunction(ast, /*enterName*/ false);
 }
 
 bool ScanFunctions::visit(TemplateLiteral *ast)
@@ -256,11 +256,11 @@ bool ScanFunctions::visit(TemplateLiteral *ast)
 
 }
 
-void ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
+bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : nullptr);
+    return enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName ? ast : nullptr);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -289,8 +289,7 @@ bool ScanFunctions::visit(ObjectLiteral *ast)
 bool ScanFunctions::visit(PropertyGetterSetter *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, true);
-    enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/nullptr);
-    return true;
+    return enterFunction(ast, QString(), ast->formals, ast->functionBody, /*FunctionExpression*/nullptr);
 }
 
 void ScanFunctions::endVisit(PropertyGetterSetter *)
@@ -300,8 +299,7 @@ void ScanFunctions::endVisit(PropertyGetterSetter *)
 
 bool ScanFunctions::visit(FunctionDeclaration *ast)
 {
-    enterFunction(ast, /*enterName*/ true);
-    return true;
+    return enterFunction(ast, /*enterName*/ true);
 }
 
 void ScanFunctions::endVisit(FunctionDeclaration *)
@@ -390,7 +388,7 @@ bool ScanFunctions::visit(Block *ast) {
     return false;
 }
 
-void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, FunctionExpression *expr)
+bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, FunctionExpression *expr)
 {
     Context *outerContext = _context;
     enterEnvironment(ast, FunctionCode);
@@ -401,7 +399,7 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
         if (expr) {
             if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr)) {
                 _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
-                return;
+                return false;
             }
         }
         if (name == QLatin1String("arguments"))
@@ -430,18 +428,19 @@ void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             bool duplicate = (boundNames.indexOf(arg, i + 1) != -1);
             if (duplicate) {
                 _cg->throwSyntaxError(formals->firstSourceLocation(), QStringLiteral("Duplicate parameter name '%1' is not allowed.").arg(arg));
-                return;
+                return false;
             }
         }
         if (_context->isStrict) {
             if (arg == QLatin1String("eval") || arg == QLatin1String("arguments")) {
                 _cg->throwSyntaxError(formals->firstSourceLocation(), QStringLiteral("'%1' cannot be used as parameter name in strict mode").arg(arg));
-                return;
+                return false;
             }
         }
         if (!_context->arguments.contains(arg))
             _context->addLocalVar(arg, Context::VariableDefinition, QQmlJS::AST::VariableDeclaration::FunctionScope);
     }
+    return true;
 }
 
 void ScanFunctions::calcEscapingVariables()
