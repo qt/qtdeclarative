@@ -1994,8 +1994,13 @@ bool Codegen::visit(ObjectPattern *ast)
         for (const auto &c : qAsConst(computedProperties)) {
             // ### if RHS is an anonymous FunctionExpression, we need to set it's name to the computed name
             Reference element = Reference::fromSubscript(result, c.first);
-            c.second.rvalue.loadInAccumulator();
-            element.storeConsumeAccumulator();
+            if (c.second.getter >= 0 || c.second.setter >= 0) {
+                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("getter/setter with computed property names unimplemented."));
+                return false;// ###
+            } else {
+                c.second.rvalue.loadInAccumulator();
+                element.storeConsumeAccumulator();
+            }
         }
     }
 
