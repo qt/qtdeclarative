@@ -29,6 +29,7 @@
 \page qtquick-bestpractices.html
 \title Best Practices for QML and Qt Quick
 \brief Lists best practices for working with QML and Qt Quick
+\ingroup best-practices
 
 Despite all of the benefits that QML and Qt Quick offer, they can be
 challenging in certain situations. The following sections elaborate on some of
