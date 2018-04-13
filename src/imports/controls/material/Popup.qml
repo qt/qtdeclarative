@@ -44,9 +44,9 @@ T.Popup {
 
     Material.elevation: 24
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
 
     padding: 12

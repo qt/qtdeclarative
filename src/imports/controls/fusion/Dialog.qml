@@ -44,11 +44,11 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.Dialog {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
+    implicitWidth: Math.max(implicitBackgroundWidth,
                             header && header.visible ? header.implicitWidth : 0,
                             footer && footer.visible ? footer.implicitWidth : 0,
                             contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
+    implicitHeight: Math.max(implicitBackgroundHeight,
                              (header && header.visible ? header.implicitHeight + spacing : 0)
                              + (footer && footer.visible ? footer.implicitHeight + spacing : 0)
                              + (contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0))

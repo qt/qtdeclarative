@@ -126,6 +126,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL)
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL)
     Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPopupAnchors *anchors READ getAnchors DESIGNABLE false CONSTANT FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitContentWidth READ implicitContentWidth NOTIFY implicitContentWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
 
@@ -315,6 +319,12 @@ public:
     void setVerticalPadding(qreal padding);
     void resetVerticalPadding();
 
+    qreal implicitContentWidth() const;
+    qreal implicitContentHeight() const;
+
+    qreal implicitBackgroundWidth() const;
+    qreal implicitBackgroundHeight() const;
+
 public Q_SLOTS:
     void open();
     void close();
@@ -373,6 +383,10 @@ Q_SIGNALS:
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void horizontalPaddingChanged();
     Q_REVISION(5) void verticalPaddingChanged();
+    Q_REVISION(5) void implicitContentWidthChanged();
+    Q_REVISION(5) void implicitContentHeightChanged();
+    Q_REVISION(5) void implicitBackgroundWidthChanged();
+    Q_REVISION(5) void implicitBackgroundHeightChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

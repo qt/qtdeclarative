@@ -282,6 +282,10 @@ void QQuickPopupPrivate::init()
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     QObject::connect(popupItem, &QQuickControl::backgroundChanged, q, &QQuickPopup::backgroundChanged);
     QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
+    QObject::connect(popupItem, &QQuickControl::implicitContentWidthChanged, q, &QQuickPopup::implicitContentWidthChanged);
+    QObject::connect(popupItem, &QQuickControl::implicitContentHeightChanged, q, &QQuickPopup::implicitContentHeightChanged);
+    QObject::connect(popupItem, &QQuickControl::implicitBackgroundWidthChanged, q, &QQuickPopup::implicitBackgroundWidthChanged);
+    QObject::connect(popupItem, &QQuickControl::implicitBackgroundHeightChanged, q, &QQuickPopup::implicitBackgroundHeightChanged);
     positioner = new QQuickPopupPositioner(q);
 }
 
@@ -2184,6 +2188,74 @@ void QQuickPopup::resetVerticalPadding()
 {
     Q_D(QQuickPopup);
     d->popupItem->resetVerticalPadding();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::implicitContentWidth
+    \readonly
+
+    This property holds the implicit content width.
+
+    The value is calculated based on the content children.
+
+    \sa implicitContentHeight, implicitBackgroundWidth
+*/
+qreal QQuickPopup::implicitContentWidth() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitContentWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::implicitContentHeight
+    \readonly
+
+    This property holds the implicit content height.
+
+    The value is calculated based on the content children.
+
+    \sa implicitContentWidth, implicitBackgroundHeight
+*/
+qreal QQuickPopup::implicitContentHeight() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitContentHeight();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::implicitBackgroundWidth
+    \readonly
+
+    This property holds the implicit background width.
+
+    The value is equal to \c {background ? background.implicitWidth : 0}.
+
+    \sa implicitBackgroundHeight, implicitContentWidth
+*/
+qreal QQuickPopup::implicitBackgroundWidth() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitBackgroundWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::implicitBackgroundHeight
+    \readonly
+
+    This property holds the implicit background height.
+
+    The value is equal to \c {background ? background.implicitHeight : 0}.
+
+    \sa implicitBackgroundWidth, implicitContentHeight
+*/
+qreal QQuickPopup::implicitBackgroundHeight() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->implicitBackgroundHeight();
 }
 
 bool QQuickPopup::filtersChildMouseEvents() const
