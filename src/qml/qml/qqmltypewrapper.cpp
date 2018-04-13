@@ -388,6 +388,7 @@ ReturnedValue QQmlTypeWrapper::instanceOf(const Object *typeObject, const Value 
         QQmlTypeData *td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         CompiledData::CompilationUnit *cu = td->compilationUnit();
         myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
+        td->release();
     } else {
         myQmlType = qenginepriv->metaObjectForType(myTypeId);
     }
