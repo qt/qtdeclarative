@@ -48,7 +48,7 @@ T.MenuItem {
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
                              Math.max(implicitContentHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+                                      implicitIndicatorHeight) + topPadding + bottomPadding)
 
     padding: 16
     verticalPadding: Material.menuItemVerticalPadding

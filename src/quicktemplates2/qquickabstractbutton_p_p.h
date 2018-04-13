@@ -105,6 +105,9 @@ public:
     void cancelIndicator();
     void executeIndicator(bool complete = false);
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+
     QString text;
     bool explicitText;
     bool down;

@@ -48,7 +48,7 @@ T.SwitchDelegate {
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
                              Math.max(implicitContentHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+                                      implicitIndicatorHeight) + topPadding + bottomPadding)
 
     spacing: 12
 

@@ -76,6 +76,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION 4)
     Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION 4)
     Q_PROPERTY(qreal pressY READ pressY NOTIFY pressYChanged FINAL REVISION 4)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator")
 
 public:
@@ -141,6 +144,10 @@ public:
     qreal pressX() const;
     qreal pressY() const;
 
+    // 2.5 (Qt 5.12)
+    qreal implicitIndicatorWidth() const;
+    qreal implicitIndicatorHeight() const;
+
 public Q_SLOTS:
     void toggle();
 
@@ -170,6 +177,9 @@ Q_SIGNALS:
     Q_REVISION(4) void autoRepeatIntervalChanged();
     Q_REVISION(4) void pressXChanged();
     Q_REVISION(4) void pressYChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void implicitIndicatorWidthChanged();
+    Q_REVISION(5) void implicitIndicatorHeightChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);

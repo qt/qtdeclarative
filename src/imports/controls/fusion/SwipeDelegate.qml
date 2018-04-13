@@ -48,7 +48,7 @@ T.SwipeDelegate {
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
                              Math.max(implicitContentHeight,
-                                      indicator ? indicator.implicitHeight : 0) + topPadding + bottomPadding)
+                                      implicitIndicatorHeight) + topPadding + bottomPadding)
 
     padding: 6
     spacing: 6

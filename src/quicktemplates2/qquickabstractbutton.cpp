@@ -388,6 +388,22 @@ void QQuickAbstractButtonPrivate::executeIndicator(bool complete)
         quickCompleteDeferred(q, indicatorName(), indicator);
 }
 
+void QQuickAbstractButtonPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickAbstractButton);
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == indicator)
+        emit q->implicitIndicatorWidthChanged();
+}
+
+void QQuickAbstractButtonPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickAbstractButton);
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == indicator)
+        emit q->implicitIndicatorHeightChanged();
+}
+
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
 {
     Q_Q(const QQuickAbstractButton);
@@ -458,6 +474,7 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
 QQuickAbstractButton::~QQuickAbstractButton()
 {
     Q_D(QQuickAbstractButton);
+    d->removeImplicitSizeListener(d->indicator);
     if (d->group)
         d->group->removeButton(this);
     d->ungrabShortcut();
@@ -706,13 +723,24 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     if (!d->indicator.isExecuting())
         d->cancelIndicator();
 
+    const qreal oldImplicitIndicatorWidth = implicitIndicatorWidth();
+    const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
+
+    d->removeImplicitSizeListener(d->indicator);
     delete d->indicator;
     d->indicator = indicator;
+
     if (indicator) {
         if (!indicator->parentItem())
             indicator->setParentItem(this);
         indicator->setAcceptedMouseButtons(Qt::LeftButton);
+        d->addImplicitSizeListener(indicator);
     }
+
+    if (!qFuzzyCompare(oldImplicitIndicatorWidth, implicitIndicatorWidth()))
+        emit implicitIndicatorWidthChanged();
+    if (!qFuzzyCompare(oldImplicitIndicatorHeight, implicitIndicatorHeight()))
+        emit implicitIndicatorHeightChanged();
     if (!d->indicator.isExecuting())
         emit indicatorChanged();
 }
@@ -937,6 +965,50 @@ qreal QQuickAbstractButton::pressY() const
 {
     Q_D(const QQuickAbstractButton);
     return d->movePoint.y();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::AbstractButton::implicitIndicatorWidth
+    \readonly
+
+    This property holds the implicit indicator width.
+
+    The value is equal to \c {indicator ? indicator.implicitWidth : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentWidth} and
+    \l {Control::}{implicitBackgroundWidth}, to calculate the \l {Item::}{implicitWidth}.
+
+    \sa implicitIndicatorHeight
+*/
+qreal QQuickAbstractButton::implicitIndicatorWidth() const
+{
+    Q_D(const QQuickAbstractButton);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::AbstractButton::implicitIndicatorHeight
+    \readonly
+
+    This property holds the implicit indicator height.
+
+    The value is equal to \c {indicator ? indicator.implicitHeight : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentHeight} and
+    \l {Control::}{implicitBackgroundHeight}, to calculate the \l {Item::}{implicitHeight}.
+
+    \sa implicitIndicatorWidth
+*/
+qreal QQuickAbstractButton::implicitIndicatorHeight() const
+{
+    Q_D(const QQuickAbstractButton);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitHeight();
 }
 
 /*!

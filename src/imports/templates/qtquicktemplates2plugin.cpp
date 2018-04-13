@@ -332,6 +332,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickSpinBox, 4>(uri, 2, 4, "SpinBox");
 
     // QtQuick.Templates 2.5 (new types and revisions in Qt 5.12)
+    qmlRegisterType<QQuickAbstractButton, 5>(uri, 2, 5, "AbstractButton");
     qmlRegisterType<QQuickDialogButtonBox, 5>(uri, 2, 5, "DialogButtonBox");
     qmlRegisterType<QQuickControl, 5>(uri, 2, 5, "Control");
     qmlRegisterType<QQuickContainer, 5>(uri, 2, 5, "Container");
