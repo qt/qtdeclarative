@@ -209,15 +209,8 @@ bool ScanFunctions::visit(PatternElement *ast)
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
             return false;
         }
-        const Context::Member *m = nullptr;
-        if (_context->memberInfo(name, &m)) {
-            if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
-                _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
-                return false;
-            }
-        }
         if (!_context->addLocalVar(name, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
-            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(ast->bindingIdentifier));
+            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
             return false;
         }
     }

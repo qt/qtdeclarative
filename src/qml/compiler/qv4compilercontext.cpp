@@ -73,16 +73,13 @@ Context *Module::newContext(Node *node, Context *parent, ContextType contextType
 
 bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function)
 {
-    // hoist var declarations to the function level
-    if (contextType == ContextType::Block && (scope == VariableScope::Var && type != MemberType::FunctionDefinition))
-        return parent->addLocalVar(name, type, scope, function);
-
+    // ### can this happen?
     if (name.isEmpty())
         return true;
 
     if (type != FunctionDefinition) {
         if (formals && formals->containsName(name))
-            return (scope == QQmlJS::AST::VariableScope::Var);
+            return (scope == VariableScope::Var);
     }
     if (!isCatchBlock || name != catchedVariable) {
         MemberMap::iterator it = members.find(name);
@@ -96,6 +93,11 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
             return true;
         }
     }
+
+    // hoist var declarations to the function level
+    if (contextType == ContextType::Block && (scope == VariableScope::Var && type != MemberType::FunctionDefinition))
+        return parent->addLocalVar(name, type, scope, function);
+
     Member m;
     m.type = type;
     m.function = function;
