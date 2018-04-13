@@ -405,8 +405,10 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
             baseRef.loadInAccumulator();
             BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
             Reference expr = expression(e->initializer);
-            if (hasError)
+            if (hasError) {
+                jump.link();
                 return;
+            }
             expr.loadInAccumulator();
             varToStore.storeConsumeAccumulator();
             jump.link();
@@ -414,8 +416,10 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
             baseRef.loadInAccumulator();
             BytecodeGenerator::Jump jump = bytecodeGenerator->jumpNotUndefined();
             Reference expr = expression(e->initializer);
-            if (hasError)
+            if (hasError) {
+                jump.link();
                 return;
+            }
             expr.loadInAccumulator();
             jump.link();
             varToStore.storeConsumeAccumulator();
