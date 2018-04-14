@@ -1219,6 +1219,7 @@ void UiEnumMemberList::accept0(Visitor *visitor)
 void TaggedTemplate::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        accept(base, visitor);
         accept(templateLiteral, visitor);
     }
 
