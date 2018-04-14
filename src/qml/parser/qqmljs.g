@@ -2491,7 +2491,7 @@ AssignmentExpression: LeftHandSideExpression T_EQ AssignmentExpression;
 AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
 /.
     case $rule_number: {
-        // need to convert the LHS to an AssignmentPatthern if it was an Array/ObjectLiteral
+        // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
         if (AST::Pattern *p = sym(1).Expression->patternCast()) {
             AST::SourceLocation errorLoc;
             QString errorMsg;

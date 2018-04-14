@@ -431,6 +431,7 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
     }
     if (auto *i = cast<IdentifierExpression *>(lhs)) {
         bindingIdentifier = i->name.toString();
+        identifierToken = i->identifierToken;
         return true;
     }
     *errorLocation = lastSourceLocation();
