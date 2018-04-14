@@ -453,13 +453,18 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         Reference property;
         if (cname) {
-            Reference computedName = expression(cname->expression).storeOnStack();
+            Reference computedName = expression(cname->expression);
+            if (hasError)
+                return;
+            computedName = computedName.storeOnStack();
             property = Reference::fromSubscript(object, computedName);
         } else {
             QString propertyName = p->name->asString();
             property = Reference::fromMember(object, propertyName);
         }
         initializeAndDestructureBindingElement(p, property);
+        if (hasError)
+            return;
     }
 }
 
@@ -479,9 +484,11 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
         PatternElement *e = p->element;
         if (!e)
             continue;
-        if (e->type != PatternElement::RestElement)
+        if (e->type != PatternElement::RestElement) {
             initializeAndDestructureBindingElement(e, property);
-        else {
+            if (hasError)
+                return;
+        } else {
             throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
         }
         ++index;
@@ -679,7 +686,10 @@ bool Codegen::visit(ArrayPattern *ast)
             (void) c.storeOnStack(temp);
         } else {
             RegisterScope scope(this);
-            (void) expression(arg).storeOnStack(temp);
+            Reference r = expression(arg);
+            if (hasError)
+                return;
+            (void) r.storeOnStack(temp);
         }
         ++argc;
     };
@@ -1720,6 +1730,8 @@ bool Codegen::visit(FunctionExpression *ast)
     RegisterScope scope(this);
 
     int function = defineFunction(ast->name.toString(), ast, ast->formals, ast->body);
+    if (hasError)
+        return false;
     loadClosure(function);
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
@@ -2358,8 +2370,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             bytecodeGenerator->addInstruction(rest);
             arg.storeConsumeAccumulator();
         } else {
-            if (e->bindingPattern || e->initializer)
+            if (e->bindingPattern || e->initializer) {
                 initializeAndDestructureBindingElement(e, arg);
+                if (hasError)
+                    break;
+            }
         }
         formals = formals->next;
         ++argc;
