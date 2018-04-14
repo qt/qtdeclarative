@@ -1746,7 +1746,9 @@ PropertyDefinition: IdentifierReference;
     case $rule_number: {
         AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
-        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1));
+        AST::IdentifierExpression *expr = new (pool) AST::IdentifierExpression(stringRef(1));
+        expr->identifierToken = loc(1);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, expr);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -1759,7 +1761,8 @@ CoverInitializedName: IdentifierReference Initializer_In;
 /.
     case $rule_number: {
         AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
-        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
+        name->propertyNameToken = loc(1);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, sym(2).Expression);
         node->colonToken = loc(2);
         sym(1).Node = node;
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
