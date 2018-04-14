@@ -108,6 +108,11 @@ double Value::toNumberImpl(Value val)
 #else
         if (String *s = val.stringValue())
             return RuntimeHelpers::stringToNumber(s->toQString());
+        if (val.isSymbol()) {
+            Managed &m = static_cast<Managed &>(val);
+            m.engine()->throwTypeError();
+            return 0;
+        }
     {
         Q_ASSERT(val.isObject());
         Scope scope(val.objectValue()->engine());
