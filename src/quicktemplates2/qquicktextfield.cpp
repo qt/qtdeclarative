@@ -593,6 +593,7 @@ void QQuickTextField::componentComplete()
     Q_D(QQuickTextField);
     d->executeBackground(true);
     QQuickTextInput::componentComplete();
+    d->resizeBackground();
 #if QT_CONFIG(quicktemplates2_hover)
     if (!d->explicitHoverEnabled)
         setAcceptHoverEvents(QQuickControlPrivate::calcHoverEnabled(d->parentItem));
