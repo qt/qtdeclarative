@@ -74,6 +74,8 @@ public:
         return static_cast<QQuickLabelPrivate *>(QObjectPrivate::get(item));
     }
 
+    void resizeBackground();
+
     void resolveFont();
     void inheritFont(const QFont &font);
     void updateFont(const QFont &font);

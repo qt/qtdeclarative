@@ -1351,11 +1351,13 @@ TestCase {
             visible: true
 
             property alias popup: popup
+            property alias shortcut: shortcut
 
             Popup {
                 id: popup
 
                 Shortcut {
+                    id: shortcut
                     sequence: "Tab"
                     onActivated: popup.visible = !popup.visible
                 }
@@ -1369,11 +1371,17 @@ TestCase {
         var window = createTemporaryObject(shortcutWindowComponent, testCase)
         var control = window.popup
 
+        var shortcutActivatedSpy = createTemporaryObject(signalSpy, testCase,
+            { target: window.shortcut, signalName: "activated"} )
+        verify(shortcutActivatedSpy.valid)
+
         waitForRendering(window.contentItem)
         keyClick(Qt.Key_Tab)
+        compare(shortcutActivatedSpy.count, 1)
         tryCompare(control, "visible", true)
 
         keyClick(Qt.Key_Tab)
+        compare(shortcutActivatedSpy.count, 2)
         tryCompare(control, "visible", false)
     }
 }

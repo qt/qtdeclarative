@@ -66,6 +66,18 @@ TestCase {
     }
 
     Component {
+        id: backgroundLabel
+        Label {
+            background: Rectangle { }
+        }
+    }
+
+    Component {
+        id: rectangle
+        Rectangle { }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -114,5 +126,17 @@ TestCase {
 
         compare(child.font[data.tag], defaultValue)
         compare(childSpy.count, 0)
+    }
+
+    function test_background() {
+        var control = createTemporaryObject(backgroundLabel, testCase, {text: "Label"})
+        verify(control)
+
+        compare(control.background.width, control.width)
+        compare(control.background.height, control.height)
+
+        control.background = rectangle.createObject(control)
+        compare(control.background.width, control.width)
+        compare(control.background.height, control.height)
     }
 }
