@@ -546,7 +546,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            name->setM(o->engine()->identifierTable->stringForId(n));
+            name->setM(n.asHeapObject());
             *attrs = a;
             pd->value = *o->propertyData(idx);
             if (a.isAccessor())

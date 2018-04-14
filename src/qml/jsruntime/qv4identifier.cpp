@@ -204,7 +204,7 @@ QString QV4::IdentifierHash::findId(int value) const
     IdentifierHashEntry *end = e + d->alloc;
     while (e < end) {
         if (e->identifier.isValid() && e->value == value)
-            return d->identifierTable->stringForId(e->identifier)->toQString();
+            return e->identifier.toQString();
         ++e;
     }
     return QString();
