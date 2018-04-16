@@ -1891,7 +1891,10 @@ bool Codegen::visit(ObjectPattern *ast)
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         if (cname) {
-            Reference name = expression(cname->expression).storeOnStack();
+            Reference name = expression(cname->expression);
+            if (hasError)
+                return false;
+            name = name.storeOnStack();
             computedProperties.append({name, ObjectPropertyValue()});
         }
         QString name = p->name->asString();
