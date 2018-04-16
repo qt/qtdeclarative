@@ -215,14 +215,10 @@ bool ScanFunctions::visit(VariableDeclaration *ast)
         return false;
     }
     QString name = ast->name.toString();
-    const Context::Member *m = nullptr;
-    if (_context->memberInfo(name, &m)) {
-        if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
-            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
-            return false;
-        }
+    if (!_context->addLocalVar(ast->name.toString(), ast->expression ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
+        return false;
     }
-    _context->addLocalVar(ast->name.toString(), ast->expression ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope);
     return true;
 }
 
@@ -397,16 +393,22 @@ bool ScanFunctions::visit(Block *ast) {
 
 void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr)
 {
-    if (_context) {
-        _context->hasNestedFunctions = true;
+    Context *outerContext = _context;
+    enterEnvironment(ast, FunctionCode);
+
+    if (outerContext) {
+        outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
-        if (expr)
-            _context->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr);
+        if (expr) {
+            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr)) {
+                _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
+                return;
+            }
+        }
         if (name == QLatin1String("arguments"))
-            _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+            outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
 
-    enterEnvironment(ast, FunctionCode);
     if (formalsContainName(formals, QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
 
