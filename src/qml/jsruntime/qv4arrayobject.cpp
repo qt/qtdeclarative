@@ -352,9 +352,9 @@ ReturnedValue ArrayPrototype::method_push(const FunctionObject *b, const Value *
     instance->arrayCreate();
     Q_ASSERT(instance->arrayData());
 
-    uint len = instance->getLength();
+    quint64 len = instance->getLength();
 
-    if (len + argc < len) {
+    if (len + quint64(argc) >= UINT_MAX) {
         // ughh... this goes beyond UINT_MAX
         double l = len;
         ScopedString s(scope);
