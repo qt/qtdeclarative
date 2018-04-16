@@ -824,7 +824,7 @@ inline unsigned int Value::toUInt32() const
 inline qint64 Value::toLength() const
 {
     if (Q_LIKELY(integerCompatible()))
-        return int_32();
+        return int_32() < 0 ? 0 : int_32();
     double i = Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
     if (i <= 0)
         return 0;

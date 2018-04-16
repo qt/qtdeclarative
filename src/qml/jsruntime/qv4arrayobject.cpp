@@ -352,7 +352,7 @@ ReturnedValue ArrayPrototype::method_push(const FunctionObject *b, const Value *
     instance->arrayCreate();
     Q_ASSERT(instance->arrayData());
 
-    quint64 len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (len + quint64(argc) >= UINT_MAX) {
         // ughh... this goes beyond UINT_MAX
@@ -393,7 +393,7 @@ ReturnedValue ArrayPrototype::method_push(const FunctionObject *b, const Value *
             return scope.engine->throwTypeError();
     }
 
-    return Encode(len);
+    return Encode(uint(len));
 }
 
 ReturnedValue ArrayPrototype::method_reverse(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -403,7 +403,10 @@ ReturnedValue ArrayPrototype::method_reverse(const FunctionObject *b, const Valu
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint length = instance->getLength();
+    qint64 length = instance->getLength();
+    // ### FIXME
+    if (length >= UINT_MAX)
+        return scope.engine->throwRangeError(QLatin1String("Array.prototype.reverse: Length out of range."));
 
     int lo = 0, hi = length - 1;
 

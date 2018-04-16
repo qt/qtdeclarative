@@ -408,7 +408,7 @@ public:
     { return vtable()->deleteIndexedProperty(this, index); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
-    quint64 getLength() const { return vtable()->getLength(this); }
+    qint64 getLength() const { return vtable()->getLength(this); }
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
