@@ -5562,17 +5562,18 @@ void tst_qqmlecmascript::sequenceConversionArray()
     // ensure that in JS the returned sequences act just like normal JS Arrays.
     QUrl qmlFile = testFileUrl("sequenceConversion.array.qml");
     QQmlComponent component(&engine, qmlFile);
-    QObject *object = component.create();
+    QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QMetaObject::invokeMethod(object, "indexedAccess");
+    QMetaObject::invokeMethod(object.data(), "indexedAccess");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "arrayOperations");
+    QMetaObject::invokeMethod(object.data(), "arrayOperations");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "testEqualitySemantics");
+    QMetaObject::invokeMethod(object.data(), "testEqualitySemantics");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "testReferenceDeletion");
+    QMetaObject::invokeMethod(object.data(), "testReferenceDeletion");
     QCOMPARE(object->property("referenceDeletion").toBool(), true);
-    delete object;
+    QMetaObject::invokeMethod(object.data(), "jsonConversion");
+    QVERIFY(object->property("success").toBool());
 }
 
 

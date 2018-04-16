@@ -637,7 +637,7 @@ struct Stringify
     Stringify(ExecutionEngine *e) : v4(e), replacerFunction(nullptr), propertyList(nullptr), propertyListSize(0) {}
 
     QString Str(const QString &key, const Value &v);
-    QString JA(ArrayObject *a);
+    QString JA(Object *a);
     QString JO(Object *o);
 
     QString makeMember(const QString &key, const Value &v);
@@ -743,8 +743,8 @@ QString Stringify::Str(const QString &key, const Value &v)
     o = value->asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
-            if (o->as<ArrayObject>()) {
-                return JA(static_cast<ArrayObject *>(o.getPointer()));
+            if (o->as<ArrayObject>() || o->isListType()) {
+                return JA(o.getPointer());
             } else {
                 return JO(o);
             }
@@ -827,7 +827,7 @@ QString Stringify::JO(Object *o)
     return result;
 }
 
-QString Stringify::JA(ArrayObject *a)
+QString Stringify::JA(Object *a)
 {
     if (stackContains(a)) {
         v4->throwTypeError();
