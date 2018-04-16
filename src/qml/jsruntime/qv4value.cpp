@@ -205,9 +205,12 @@ QString Value::toQString() const
         else
             return QStringLiteral("false");
     case Value::Managed_Type:
-        if (String *s = stringValue())
+        if (String *s = stringValue()) {
             return s->toQString();
-        {
+        } else if (isSymbol()) {
+            static_cast<const Managed *>(this)->engine()->throwTypeError();
+            return QString();
+        } else {
             Q_ASSERT(isObject());
             Scope scope(objectValue()->engine());
             ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));

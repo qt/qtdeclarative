@@ -306,12 +306,11 @@ ReturnedValue StringPrototype::method_endsWith(const FunctionObject *b, const Va
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    QString searchString;
-    if (argc) {
-        if (argv[0].as<RegExpObject>())
-            return v4->throwTypeError();
-        searchString = argv[0].toQString();
-    }
+    if (argc && argv[0].as<RegExpObject>())
+        return v4->throwTypeError();
+    QString searchString = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
+    if (v4->hasException)
+        return Encode::undefined();
 
     int pos = value.length();
     if (argc > 1)
@@ -331,9 +330,9 @@ ReturnedValue StringPrototype::method_indexOf(const FunctionObject *b, const Val
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    QString searchString;
-    if (argc)
-        searchString = argv[0].toQString();
+    QString searchString = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
+    if (v4->hasException)
+        return Encode::undefined();
 
     int pos = 0;
     if (argc > 1)
@@ -353,12 +352,11 @@ ReturnedValue StringPrototype::method_includes(const FunctionObject *b, const Va
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    QString searchString;
-    if (argc) {
-        if (argv[0].as<RegExpObject>())
-            return v4->throwTypeError();
-        searchString = argv[0].toQString();
-    }
+    if (argc && argv[0].as<RegExpObject>())
+        return v4->throwTypeError();
+    QString searchString = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
+    if (v4->hasException)
+        return Encode::undefined();
 
     int pos = 0;
     if (argc > 1) {
@@ -382,9 +380,9 @@ ReturnedValue StringPrototype::method_lastIndexOf(const FunctionObject *b, const
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    QString searchString;
-    if (argc)
-        searchString = argv[0].toQString();
+    QString searchString = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
+    if (v4->hasException)
+        return Encode::undefined();
 
     double position = argc > 1 ? RuntimeHelpers::toNumber(argv[1]) : +qInf();
     if (std::isnan(position))
@@ -785,12 +783,11 @@ ReturnedValue StringPrototype::method_startsWith(const FunctionObject *b, const 
     if (v4->hasException)
         return QV4::Encode::undefined();
 
-    QString searchString;
-    if (argc) {
-        if (argv[0].as<RegExpObject>())
-            return v4->throwTypeError();
-        searchString = argv[0].toQString();
-    }
+    if (argc && argv[0].as<RegExpObject>())
+        return v4->throwTypeError();
+    QString searchString = (argc ? argv[0] : Primitive::undefinedValue()).toQString();
+    if (v4->hasException)
+        return Encode::undefined();
 
     int pos = 0;
     if (argc > 1)
