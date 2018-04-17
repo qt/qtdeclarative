@@ -66,6 +66,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
     // 2.3 (Qt 5.10)
     Q_PROPERTY(int result READ result WRITE setResult NOTIFY resultChanged FINAL REVISION 3)
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitHeaderWidth READ implicitHeaderWidth NOTIFY implicitHeaderWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHeaderHeight READ implicitHeaderHeight NOTIFY implicitHeaderHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitFooterWidth READ implicitFooterWidth NOTIFY implicitFooterWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitFooterHeight READ implicitFooterHeight NOTIFY implicitFooterHeightChanged FINAL REVISION 5)
 
 public:
     explicit QQuickDialog(QObject *parent = nullptr);
@@ -90,6 +95,13 @@ public:
     int result() const;
     void setResult(int result);
 
+    // 2.5 (Qt 5.12)
+    qreal implicitHeaderWidth() const;
+    qreal implicitHeaderHeight() const;
+
+    qreal implicitFooterWidth() const;
+    qreal implicitFooterHeight() const;
+
 public Q_SLOTS:
     virtual void accept();
     virtual void reject();
@@ -108,6 +120,11 @@ Q_SIGNALS:
     Q_REVISION(3) void discarded();
     Q_REVISION(3) void helpRequested();
     Q_REVISION(3) void resultChanged();
+    // 2.5 (Qt 5.12)
+    void implicitHeaderWidthChanged();
+    void implicitHeaderHeightChanged();
+    void implicitFooterWidthChanged();
+    void implicitFooterHeightChanged();
 
 protected:
 #if QT_CONFIG(accessibility)

@@ -337,6 +337,7 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickComboBox, 5>(uri, 2, 5, "ComboBox");
     qmlRegisterType<QQuickControl, 5>(uri, 2, 5, "Control");
     qmlRegisterType<QQuickContainer, 5>(uri, 2, 5, "Container");
+    qmlRegisterType<QQuickDialog, 5>(uri, 2, 5, "Dialog");
     qmlRegisterType<QQuickPage, 5>(uri, 2, 5, "Page");
     qmlRegisterType<QQuickPopup, 5>(uri, 2, 5, "Popup");
     qmlRegisterType<QQuickPopupAnchors>();

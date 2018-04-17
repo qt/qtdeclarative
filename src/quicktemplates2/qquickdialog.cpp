@@ -186,6 +186,10 @@ QQuickDialog::QQuickDialog(QObject *parent)
     connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
     connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
     connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
+    connect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
+    connect(d->popupItem, &QQuickPopupItem::implicitHeaderHeightChanged, this, &QQuickDialog::implicitHeaderHeightChanged);
+    connect(d->popupItem, &QQuickPopupItem::implicitFooterWidthChanged, this, &QQuickDialog::implicitFooterWidthChanged);
+    connect(d->popupItem, &QQuickPopupItem::implicitFooterHeightChanged, this, &QQuickDialog::implicitFooterHeightChanged);
 }
 
 /*!
@@ -405,6 +409,74 @@ void QQuickDialog::setResult(int result)
 
     d->result = result;
     emit resultChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Dialog::implicitHeaderWidth
+    \readonly
+
+    This property holds the implicit header width.
+
+    The value is equal to \c {header && header.visible ? header.implicitWidth : 0}.
+
+    \sa implicitHeaderHeight, implicitFooterWidth
+*/
+qreal QQuickDialog::implicitHeaderWidth() const
+{
+    Q_D(const QQuickDialog);
+    return d->popupItem->implicitHeaderWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Dialog::implicitHeaderHeight
+    \readonly
+
+    This property holds the implicit header height.
+
+    The value is equal to \c {header && header.visible ? header.implicitHeight : 0}.
+
+    \sa implicitHeaderWidth, implicitFooterHeight
+*/
+qreal QQuickDialog::implicitHeaderHeight() const
+{
+    Q_D(const QQuickDialog);
+    return d->popupItem->implicitHeaderHeight();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Dialog::implicitFooterWidth
+    \readonly
+
+    This property holds the implicit footer width.
+
+    The value is equal to \c {footer && footer.visible ? footer.implicitWidth : 0}.
+
+    \sa implicitFooterHeight, implicitHeaderWidth
+*/
+qreal QQuickDialog::implicitFooterWidth() const
+{
+    Q_D(const QQuickDialog);
+    return d->popupItem->implicitFooterWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Dialog::implicitFooterHeight
+    \readonly
+
+    This property holds the implicit footer height.
+
+    The value is equal to \c {footer && footer.visible ? footer.implicitHeight : 0}.
+
+    \sa implicitFooterWidth, implicitHeaderHeight
+*/
+qreal QQuickDialog::implicitFooterHeight() const
+{
+    Q_D(const QQuickDialog);
+    return d->popupItem->implicitFooterHeight();
 }
 
 /*!
