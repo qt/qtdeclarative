@@ -146,9 +146,37 @@ void QQuickPagePrivate::resizeContent()
 
 void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
 {
+    Q_Q(QQuickPage);
     QQuickPanePrivate::itemVisibilityChanged(item);
-    if (item == header || item == footer)
+    if (item == header) {
+        emit q->implicitHeaderWidthChanged();
+        emit q->implicitHeaderHeightChanged();
         relayout();
+    } else if (item == footer) {
+        emit q->implicitFooterWidthChanged();
+        emit q->implicitFooterHeightChanged();
+        relayout();
+    }
+}
+
+void QQuickPagePrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickPage);
+    QQuickPanePrivate::itemImplicitWidthChanged(item);
+    if (item == header)
+        emit q->implicitHeaderWidthChanged();
+    else if (item == footer)
+        emit q->implicitFooterWidthChanged();
+}
+
+void QQuickPagePrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickPage);
+    QQuickPanePrivate::itemImplicitHeightChanged(item);
+    if (item == header)
+        emit q->implicitHeaderHeightChanged();
+    else if (item == footer)
+        emit q->implicitFooterHeightChanged();
 }
 
 void QQuickPagePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff)
@@ -165,10 +193,14 @@ void QQuickPagePrivate::itemDestroyed(QQuickItem *item)
     if (item == header) {
         header = nullptr;
         relayout();
+        emit q->implicitHeaderWidthChanged();
+        emit q->implicitHeaderHeightChanged();
         emit q->headerChanged();
     } else if (item == footer) {
         footer = nullptr;
         relayout();
+        emit q->implicitFooterWidthChanged();
+        emit q->implicitFooterHeightChanged();
         emit q->footerChanged();
     }
 }
@@ -325,6 +357,82 @@ void QQuickPage::setFooter(QQuickItem *footer)
     if (isComponentComplete())
         d->relayout();
     emit footerChanged();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Page::implicitHeaderWidth
+    \readonly
+
+    This property holds the implicit header width.
+
+    The value is equal to \c {header && header.visible ? header.implicitWidth : 0}.
+
+    \sa implicitHeaderHeight, implicitFooterWidth
+*/
+qreal QQuickPage::implicitHeaderWidth() const
+{
+    Q_D(const QQuickPage);
+    if (!d->header || !d->header->isVisible())
+        return 0;
+    return d->header->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Page::implicitHeaderHeight
+    \readonly
+
+    This property holds the implicit header height.
+
+    The value is equal to \c {header && header.visible ? header.implicitHeight : 0}.
+
+    \sa implicitHeaderWidth, implicitFooterHeight
+*/
+qreal QQuickPage::implicitHeaderHeight() const
+{
+    Q_D(const QQuickPage);
+    if (!d->header || !d->header->isVisible())
+        return 0;
+    return d->header->implicitHeight();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Page::implicitFooterWidth
+    \readonly
+
+    This property holds the implicit footer width.
+
+    The value is equal to \c {footer && footer.visible ? footer.implicitWidth : 0}.
+
+    \sa implicitFooterHeight, implicitHeaderWidth
+*/
+qreal QQuickPage::implicitFooterWidth() const
+{
+    Q_D(const QQuickPage);
+    if (!d->footer || !d->footer->isVisible())
+        return 0;
+    return d->footer->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Page::implicitFooterHeight
+    \readonly
+
+    This property holds the implicit footer height.
+
+    The value is equal to \c {footer && footer.visible ? footer.implicitHeight : 0}.
+
+    \sa implicitFooterWidth, implicitHeaderHeight
+*/
+qreal QQuickPage::implicitFooterHeight() const
+{
+    Q_D(const QQuickPage);
+    if (!d->footer || !d->footer->isVisible())
+        return 0;
+    return d->footer->implicitHeight();
 }
 
 void QQuickPage::componentComplete()

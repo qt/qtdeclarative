@@ -46,12 +46,12 @@ T.Page {
 
     implicitWidth: Math.max(implicitBackgroundWidth,
                             contentWidth + leftPadding + rightPadding,
-                            header && header.visible ? header.implicitWidth : 0,
-                            footer && footer.visible ? footer.implicitWidth : 0)
+                            implicitHeaderWidth,
+                            implicitFooterWidth)
     implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding
-                             + (header && header.visible ? header.implicitHeight + spacing : 0)
-                             + (footer && footer.visible ? footer.implicitHeight + spacing : 0))
+                             + (implicitHeaderHeight > 0 ? implicitHeaderHeight + spacing : 0)
+                             + (implicitFooterHeight > 0 ? implicitFooterHeight + spacing : 0))
 
     background: Rectangle {
         color: palette.window

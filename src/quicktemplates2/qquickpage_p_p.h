@@ -63,6 +63,8 @@ public:
     void resizeContent() override;
 
     void itemVisibilityChanged(QQuickItem *item) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff) override;
     void itemDestroyed(QQuickItem *item) override;
 

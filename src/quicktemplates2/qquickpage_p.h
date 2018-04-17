@@ -64,6 +64,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickPane
     // 2.1 (Qt 5.8)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitHeaderWidth READ implicitHeaderWidth NOTIFY implicitHeaderWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHeaderHeight READ implicitHeaderHeight NOTIFY implicitHeaderHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitFooterWidth READ implicitFooterWidth NOTIFY implicitFooterWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitFooterHeight READ implicitFooterHeight NOTIFY implicitFooterHeightChanged FINAL REVISION 5)
 
 public:
     explicit QQuickPage(QQuickItem *parent = nullptr);
@@ -78,10 +83,22 @@ public:
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
 
+    // 2.5 (Qt 5.12)
+    qreal implicitHeaderWidth() const;
+    qreal implicitHeaderHeight() const;
+
+    qreal implicitFooterWidth() const;
+    qreal implicitFooterHeight() const;
+
 Q_SIGNALS:
     void titleChanged();
     void headerChanged();
     void footerChanged();
+    // 2.5 (Qt 5.12)
+    void implicitHeaderWidthChanged();
+    void implicitHeaderHeightChanged();
+    void implicitFooterWidthChanged();
+    void implicitFooterHeightChanged();
 
 protected:
     QQuickPage(QQuickPagePrivate &dd, QQuickItem *parent);
