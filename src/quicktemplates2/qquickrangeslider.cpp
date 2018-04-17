@@ -690,7 +690,8 @@ void QQuickRangeSlider::setTo(qreal to)
             \l {first.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
-        \li This property holds whether the first handle is pressed.
+        \li This property holds whether the first handle is pressed by either touch,
+            mouse, or keys.
     \row
         \li hovered
         \li This property holds whether the first handle is hovered.
@@ -747,7 +748,8 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
             \l {second.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
-        \li This property holds whether the second handle is pressed.
+        \li This property holds whether the second handle is pressed by either touch,
+            mouse, or keys.
     \row
         \li hovered
         \li This property holds whether the second handle is hovered.

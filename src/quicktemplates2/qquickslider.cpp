@@ -459,7 +459,8 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 /*!
     \qmlproperty bool QtQuick.Controls::Slider::pressed
 
-    This property holds whether the slider is pressed.
+    This property holds whether the slider is pressed by either touch, mouse,
+    or keys.
 */
 bool QQuickSlider::isPressed() const
 {
