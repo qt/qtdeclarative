@@ -67,6 +67,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickPane
 
 public:
     explicit QQuickPage(QQuickItem *parent = nullptr);
+    ~QQuickPage();
 
     QString title() const;
     void setTitle(const QString &title);
@@ -85,8 +86,6 @@ Q_SIGNALS:
 protected:
     void componentComplete() override;
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void spacingChange(qreal newSpacing, qreal oldSpacing) override;
 
 #if QT_CONFIG(accessibility)

@@ -36,7 +36,9 @@
 
 #include "qquickpage_p.h"
 #include "qquickpane_p_p.h"
-#include "qquickpagelayout_p_p.h"
+#include "qquicktabbar_p.h"
+#include "qquicktoolbar_p.h"
+#include "qquickdialogbuttonbox_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -84,20 +86,122 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
+static const QQuickItemPrivate::ChangeTypes LayoutChanges = QQuickItemPrivate::Geometry | QQuickItemPrivate::Visibility | QQuickItemPrivate::Destroyed
+                                                          | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
+
+namespace {
+    enum Position {
+        Header,
+        Footer
+    };
+
+    Q_STATIC_ASSERT(int(Header) == int(QQuickTabBar::Header));
+    Q_STATIC_ASSERT(int(Footer) == int(QQuickTabBar::Footer));
+
+    Q_STATIC_ASSERT(int(Header) == int(QQuickToolBar::Header));
+    Q_STATIC_ASSERT(int(Footer) == int(QQuickToolBar::Footer));
+
+    Q_STATIC_ASSERT(int(Header) == int(QQuickDialogButtonBox::Header));
+    Q_STATIC_ASSERT(int(Footer) == int(QQuickDialogButtonBox::Footer));
+
+    static void setPos(QQuickItem *item, Position position)
+    {
+        if (QQuickToolBar *toolBar = qobject_cast<QQuickToolBar *>(item))
+            toolBar->setPosition(static_cast<QQuickToolBar::Position>(position));
+        else if (QQuickTabBar *tabBar = qobject_cast<QQuickTabBar *>(item))
+            tabBar->setPosition(static_cast<QQuickTabBar::Position>(position));
+        else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(item))
+            buttonBox->setPosition(static_cast<QQuickDialogButtonBox::Position>(position));
+    }
+}
+
 class QQuickPagePrivate : public QQuickPanePrivate
 {
     Q_DECLARE_PUBLIC(QQuickPage)
 
 public:
+    void relayout();
+    void resizeContent() override;
+
+    void itemVisibilityChanged(QQuickItem *item) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff) override;
+    void itemDestroyed(QQuickItem *item) override;
+
     QString title;
-    QScopedPointer<QQuickPageLayout> layout;
+    QQuickItem *header = nullptr;
+    QQuickItem *footer = nullptr;
 };
+
+void QQuickPagePrivate::relayout()
+{
+    Q_Q(QQuickPage);
+    const qreal hh = header && header->isVisible() ? header->height() : 0;
+    const qreal fh = footer && footer->isVisible() ? footer->height() : 0;
+    const qreal hsp = hh > 0 ? spacing : 0;
+    const qreal fsp = fh > 0 ? spacing : 0;
+
+    if (contentItem) {
+        contentItem->setY(q->topPadding() + hh + hsp);
+        contentItem->setX(q->leftPadding());
+        contentItem->setWidth(q->availableWidth());
+        contentItem->setHeight(q->availableHeight() - hh - fh - hsp - fsp);
+    }
+
+    if (header)
+        header->setWidth(q->width());
+
+    if (footer) {
+        footer->setY(q->height() - footer->height());
+        footer->setWidth(q->width());
+    }
+}
+
+void QQuickPagePrivate::resizeContent()
+{
+    relayout();
+}
+
+void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
+{
+    QQuickPanePrivate::itemVisibilityChanged(item);
+    if (item == header || item == footer)
+        relayout();
+}
+
+void QQuickPagePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff)
+{
+    QQuickPanePrivate::itemGeometryChanged(item, change, diff);
+    if (item == header || item == footer)
+        relayout();
+}
+
+void QQuickPagePrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickPage);
+    QQuickPanePrivate::itemDestroyed(item);
+    if (item == header) {
+        header = nullptr;
+        relayout();
+        emit q->headerChanged();
+    } else if (item == footer) {
+        footer = nullptr;
+        relayout();
+        emit q->footerChanged();
+    }
+}
 
 QQuickPage::QQuickPage(QQuickItem *parent)
     : QQuickPane(*(new QQuickPagePrivate), parent)
 {
+}
+
+QQuickPage::~QQuickPage()
+{
     Q_D(QQuickPage);
-    d->layout.reset(new QQuickPageLayout(this));
+    if (d->header)
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, LayoutChanges);
+    if (d->footer)
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, LayoutChanges);
 }
 
 /*!
@@ -168,16 +272,29 @@ void QQuickPage::setTitle(const QString &title)
 QQuickItem *QQuickPage::header() const
 {
     Q_D(const QQuickPage);
-    return d->layout->header();
+    return d->header;
 }
 
 void QQuickPage::setHeader(QQuickItem *header)
 {
     Q_D(QQuickPage);
-    if (!d->layout->setHeader(header))
+    if (d->header == header)
         return;
+
+    if (d->header) {
+        QQuickItemPrivate::get(d->header)->removeItemChangeListener(d, LayoutChanges);
+        d->header->setParentItem(nullptr);
+    }
+    d->header = header;
+    if (header) {
+        header->setParentItem(this);
+        QQuickItemPrivate::get(header)->addItemChangeListener(d, LayoutChanges);
+        if (qFuzzyIsNull(header->z()))
+            header->setZ(1);
+        setPos(header, Header);
+    }
     if (isComponentComplete())
-        d->layout->update();
+        d->relayout();
     emit headerChanged();
 }
 
@@ -196,16 +313,29 @@ void QQuickPage::setHeader(QQuickItem *header)
 QQuickItem *QQuickPage::footer() const
 {
     Q_D(const QQuickPage);
-    return d->layout->footer();
+    return d->footer;
 }
 
 void QQuickPage::setFooter(QQuickItem *footer)
 {
     Q_D(QQuickPage);
-    if (!d->layout->setFooter(footer))
+    if (d->footer == footer)
         return;
+
+    if (d->footer) {
+        QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, LayoutChanges);
+        footer->setParentItem(nullptr);
+    }
+    d->footer = footer;
+    if (footer) {
+        footer->setParentItem(this);
+        QQuickItemPrivate::get(footer)->addItemChangeListener(d, LayoutChanges);
+        if (qFuzzyIsNull(footer->z()))
+            footer->setZ(1);
+        setPos(footer, Footer);
+    }
     if (isComponentComplete())
-        d->layout->update();
+        d->relayout();
     emit footerChanged();
 }
 
@@ -213,28 +343,14 @@ void QQuickPage::componentComplete()
 {
     Q_D(QQuickPage);
     QQuickPane::componentComplete();
-    d->layout->update();
-}
-
-void QQuickPage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_D(QQuickPage);
-    QQuickPane::geometryChanged(newGeometry, oldGeometry);
-    d->layout->update();
-}
-
-void QQuickPage::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
-{
-    Q_D(QQuickPage);
-    QQuickPane::paddingChange(newPadding, oldPadding);
-    d->layout->update();
+    d->relayout();
 }
 
 void QQuickPage::spacingChange(qreal newSpacing, qreal oldSpacing)
 {
     Q_D(QQuickPage);
     QQuickPane::spacingChange(newSpacing, oldSpacing);
-    d->layout->update();
+    d->relayout();
 }
 
 #if QT_CONFIG(accessibility)
