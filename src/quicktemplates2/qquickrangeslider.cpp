@@ -792,6 +792,9 @@ void QQuickRangeSlider::setStepSize(qreal step)
 
     This property holds the snap mode.
 
+    The snap mode determines how the slider handles behave with
+    regards to the \l stepSize.
+
     Possible values:
     \value RangeSlider.NoSnap The slider does not snap (default).
     \value RangeSlider.SnapAlways The slider snaps while the handle is dragged.
