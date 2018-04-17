@@ -35,7 +35,7 @@
 ****************************************************************************/
 
 #include "qquickpage_p.h"
-#include "qquickpane_p_p.h"
+#include "qquickpage_p_p.h"
 #include "qquicktabbar_p.h"
 #include "qquicktoolbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
@@ -115,23 +115,6 @@ namespace {
     }
 }
 
-class QQuickPagePrivate : public QQuickPanePrivate
-{
-    Q_DECLARE_PUBLIC(QQuickPage)
-
-public:
-    void relayout();
-    void resizeContent() override;
-
-    void itemVisibilityChanged(QQuickItem *item) override;
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff) override;
-    void itemDestroyed(QQuickItem *item) override;
-
-    QString title;
-    QQuickItem *header = nullptr;
-    QQuickItem *footer = nullptr;
-};
-
 void QQuickPagePrivate::relayout()
 {
     Q_Q(QQuickPage);
@@ -192,6 +175,11 @@ void QQuickPagePrivate::itemDestroyed(QQuickItem *item)
 
 QQuickPage::QQuickPage(QQuickItem *parent)
     : QQuickPane(*(new QQuickPagePrivate), parent)
+{
+}
+
+QQuickPage::QQuickPage(QQuickPagePrivate &dd, QQuickItem *parent)
+    : QQuickPane(dd, parent)
 {
 }
 

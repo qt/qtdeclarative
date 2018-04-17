@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPAGE_P_H
-#define QQUICKPAGE_P_H
+#ifndef QQUICKPAGE_P_P_H
+#define QQUICKPAGE_P_P_H
 
 //
 //  W A R N I N G
@@ -48,60 +48,29 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickpane_p.h>
-#include <QtQml/qqmllist.h>
+#include <QtQuickTemplates2/private/qquickpane_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPagePrivate;
+class QQuickPane;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPage : public QQuickPane
+class QQuickPagePrivate : public QQuickPanePrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
-    Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
-    Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    // 2.1 (Qt 5.8)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL REVISION 1)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL REVISION 1)
+    Q_DECLARE_PUBLIC(QQuickPage)
 
 public:
-    explicit QQuickPage(QQuickItem *parent = nullptr);
-    ~QQuickPage();
+    void relayout();
+    void resizeContent() override;
 
-    QString title() const;
-    void setTitle(const QString &title);
+    void itemVisibilityChanged(QQuickItem *item) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF & diff) override;
+    void itemDestroyed(QQuickItem *item) override;
 
-    QQuickItem *header() const;
-    void setHeader(QQuickItem *header);
-
-    QQuickItem *footer() const;
-    void setFooter(QQuickItem *footer);
-
-Q_SIGNALS:
-    void titleChanged();
-    void headerChanged();
-    void footerChanged();
-
-protected:
-    QQuickPage(QQuickPagePrivate &dd, QQuickItem *parent);
-
-    void componentComplete() override;
-
-    void spacingChange(qreal newSpacing, qreal oldSpacing) override;
-
-#if QT_CONFIG(accessibility)
-    QAccessible::Role accessibleRole() const override;
-    void accessibilityActiveChanged(bool active) override;
-#endif
-
-private:
-    Q_DISABLE_COPY(QQuickPage)
-    Q_DECLARE_PRIVATE(QQuickPage)
+    QString title;
+    QQuickItem *header = nullptr;
+    QQuickItem *footer = nullptr;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPage)
-
-#endif // QQUICKPAGE_P_H
+#endif // QQUICKPAGE_P_P_H

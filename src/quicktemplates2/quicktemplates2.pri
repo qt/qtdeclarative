@@ -48,6 +48,7 @@ HEADERS += \
     $$PWD/qquickoverlay_p.h \
     $$PWD/qquickoverlay_p_p.h \
     $$PWD/qquickpage_p.h \
+    $$PWD/qquickpage_p_p.h \
     $$PWD/qquickpageindicator_p.h \
     $$PWD/qquickpagelayout_p_p.h \
     $$PWD/qquickpalette_p.h \
