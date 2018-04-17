@@ -30,55 +30,37 @@
 #include <QtTest/QtTest>
 #include <QProcess>
 #include <QLibraryInfo>
+#include <qjstest/test262runner.h>
 
 class tst_EcmaScriptTests : public QObject
 {
     Q_OBJECT
-
-    void runTests(bool interpret);
 
 private slots:
     void runInterpreted();
     void runJitted();
 };
 
-void tst_EcmaScriptTests::runTests(bool interpret)
-{
-#if defined(Q_OS_LINUX) && defined(Q_PROCESSOR_X86_64)
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    if (interpret)
-        env.insert("QV4_FORCE_INTERPRETER", "1");
-    else
-        env.insert("QV4_JIT_CALL_THRESHOLD", "0");
-
-    QProcess process;
-    process.setProcessChannelMode(QProcess::ForwardedChannels);
-    process.setWorkingDirectory(QLatin1String(SRCDIR));
-    process.setProgram("python");
-    process.setProcessEnvironment(env);
-    process.setArguments(QStringList() << "test262.py" << "--command=" + QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmljs" << "--parallel" << "--with-test-expectations");
-
-    qDebug() << "Going to run" << process.program() << process.arguments() << "in" << process.workingDirectory();
-
-    process.start();
-    QVERIFY(process.waitForStarted());
-    const int timeoutInMSecs = 20 * 60 * 1000;
-    QVERIFY2(process.waitForFinished(timeoutInMSecs), "Tests did not terminate in time -- see output above for details");
-    QVERIFY2(process.exitStatus() == QProcess::NormalExit, "Running the test harness failed -- see output above for details");
-    QVERIFY2(process.exitCode() == 0, "Tests failed -- see output above for details");
-#else
-    QSKIP("Currently the ecmascript tests are only run on Linux/x86-64");
-#endif
-}
-
 void tst_EcmaScriptTests::runInterpreted()
 {
-    runTests(true);
+#if defined(Q_PROCESSOR_X86_64)
+    QDir::setCurrent(QLatin1String(SRCDIR));
+    Test262Runner runner(QString(), "test262");
+    runner.setFlags(Test262Runner::ForceBytecode|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    bool result = runner.run();
+    QVERIFY(result);
+#endif
 }
 
 void tst_EcmaScriptTests::runJitted()
 {
-    runTests(false);
+#if defined(Q_PROCESSOR_X86_64)
+    QDir::setCurrent(QLatin1String(SRCDIR));
+    Test262Runner runner(QString(), "test262");
+    runner.setFlags(Test262Runner::ForceJIT|Test262Runner::WithTestExpectations|Test262Runner::Parallel|Test262Runner::Verbose);
+    bool result = runner.run();
+    QVERIFY(result);
+#endif
 }
 
 QTEST_GUILESS_MAIN(tst_EcmaScriptTests)
