@@ -784,9 +784,10 @@ bool Codegen::visit(BinaryExpression *ast)
         left = left.asLValue();
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        expression(ast->right).loadInAccumulator();
+        Reference r = expression(ast->right);
         if (hasError)
             return false;
+        r.loadInAccumulator();
         if (_expr.accept(nx))
             _expr.setResult(left.storeConsumeAccumulator());
         else

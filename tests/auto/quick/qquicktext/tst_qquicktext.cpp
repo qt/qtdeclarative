@@ -38,6 +38,7 @@
 #include <QFontMetrics>
 #include <qmath.h>
 #include <QtQuick/QQuickView>
+#include <QtQuick/qquickitemgrabresult.h>
 #include <private/qguiapplication_p.h>
 #include <limits.h>
 #include <QtGui/QMouseEvent>
@@ -64,6 +65,7 @@ private slots:
     void width();
     void wrap();
     void elide();
+    void elideParentChanged();
     void multilineElide_data();
     void multilineElide();
     void implicitElide_data();
@@ -552,6 +554,45 @@ void tst_qquicktext::elide()
             delete textObject;
         }
     }
+}
+
+// QTBUG-60328
+// Tests that text with elide set is rendered after
+// having its parent cleared and then set again.
+void tst_qquicktext::elideParentChanged()
+{
+    QQuickView window;
+    window.setSource(testFileUrl("elideParentChanged.qml"));
+    QTRY_COMPARE(window.status(), QQuickView::Ready);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QCOMPARE(root->childItems().size(), 1);
+
+    // Store a snapshot of the scene so that we can compare it later.
+    QSharedPointer<QQuickItemGrabResult> grabResult = root->grabToImage();
+    QTRY_VERIFY(!grabResult->image().isNull());
+    const QImage expectedItemImageGrab(grabResult->image());
+
+    // Clear the text's parent. It shouldn't render anything.
+    QQuickItem *text = root->childItems().first();
+    text->setParentItem(nullptr);
+    QCOMPARE(text->width(), 0.0);
+    QCOMPARE(text->height(), 0.0);
+
+    // Set the parent back to what it was. The text should
+    // be rendered identically to how it was before.
+    text->setParentItem(root);
+    QCOMPARE(text->width(), 100.0);
+    QCOMPARE(text->height(), 30.0);
+
+    grabResult = root->grabToImage();
+    QTRY_VERIFY(!grabResult->image().isNull());
+    const QImage actualItemImageGrab(grabResult->image());
+    QCOMPARE(actualItemImageGrab, expectedItemImageGrab);
 }
 
 void tst_qquicktext::multilineElide_data()

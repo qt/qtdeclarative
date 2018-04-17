@@ -116,8 +116,7 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
-    QQmlSourceLocation sourceLocation() const;
-    void setSourceLocation(const QQmlSourceLocation &location);
+    virtual QQmlSourceLocation sourceLocation() const;
 
     bool isValid() const { return context() != nullptr; }
 
@@ -188,7 +187,6 @@ private:
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     QV4::Function *m_v4Function;
-    QQmlSourceLocation *m_sourceLocation; // used for Qt.binding() created functions
 };
 
 class QQmlPropertyCapture

@@ -80,8 +80,11 @@ struct ConsoleObject : Object {
     void init();
 };
 
-struct QQmlBindingFunction : FunctionObject {
-    void init(const QV4::FunctionObject *originalFunction);
+#define QQmlBindingFunctionMembers(class, Member) \
+    Member(class, Pointer, FunctionObject *, bindingFunction)
+DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
+    DECLARE_MARKOBJECTS(QQmlBindingFunction)
+    void init(const QV4::FunctionObject *bindingFunction);
 };
 
 }
@@ -181,6 +184,7 @@ struct QQmlBindingFunction : public QV4::FunctionObject
 {
     V4_OBJECT2(QQmlBindingFunction, FunctionObject)
 
+    Heap::FunctionObject *bindingFunction() const { return d()->bindingFunction; }
     QQmlSourceLocation currentLocation() const; // from caller stack trace
 };
 

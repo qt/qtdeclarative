@@ -96,7 +96,6 @@ void Heap::ArrayBuffer::init(size_t length)
     Object::init();
     data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
-        data = nullptr;
         internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
@@ -113,7 +112,7 @@ void Heap::ArrayBuffer::init(const QByteArray& array)
 
 void Heap::ArrayBuffer::destroy()
 {
-    if (!data->ref.deref())
+    if (data && !data->ref.deref())
         QTypedArrayData<char>::deallocate(data);
     Object::destroy();
 }

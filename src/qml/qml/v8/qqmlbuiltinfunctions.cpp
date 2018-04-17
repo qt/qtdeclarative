@@ -1350,11 +1350,12 @@ ReturnedValue QtObject::method_locale(const FunctionObject *b, const Value *, co
 }
 #endif
 
-void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *originalFunction)
+void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *bindingFunction)
 {
-    Scope scope(originalFunction->engine());
-    ScopedContext context(scope, originalFunction->scope());
-    FunctionObject::init(context, originalFunction->function());
+    Scope scope(bindingFunction->engine());
+    ScopedContext context(scope, bindingFunction->scope());
+    FunctionObject::init(context, bindingFunction->function());
+    this->bindingFunction.set(internalClass->engine, bindingFunction->d());
 }
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const

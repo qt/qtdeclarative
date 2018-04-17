@@ -1271,7 +1271,9 @@ QV4::ReturnedValue Runtime::method_createUnmappedArgumentsObject(ExecutionEngine
 
 ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
 {
-    return engine->qmlContext()->asReturnedValue();
+    Heap::QmlContext *ctx = engine->qmlContext();
+    Q_ASSERT(ctx);
+    return ctx->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)

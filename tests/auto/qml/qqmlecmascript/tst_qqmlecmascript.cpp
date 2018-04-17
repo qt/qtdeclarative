@@ -289,6 +289,7 @@ private slots:
     void withStatement();
     void tryStatement();
     void replaceBinding();
+    void bindingBoundFunctions();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -5562,17 +5563,18 @@ void tst_qqmlecmascript::sequenceConversionArray()
     // ensure that in JS the returned sequences act just like normal JS Arrays.
     QUrl qmlFile = testFileUrl("sequenceConversion.array.qml");
     QQmlComponent component(&engine, qmlFile);
-    QObject *object = component.create();
+    QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-    QMetaObject::invokeMethod(object, "indexedAccess");
+    QMetaObject::invokeMethod(object.data(), "indexedAccess");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "arrayOperations");
+    QMetaObject::invokeMethod(object.data(), "arrayOperations");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "testEqualitySemantics");
+    QMetaObject::invokeMethod(object.data(), "testEqualitySemantics");
     QVERIFY(object->property("success").toBool());
-    QMetaObject::invokeMethod(object, "testReferenceDeletion");
+    QMetaObject::invokeMethod(object.data(), "testReferenceDeletion");
     QCOMPARE(object->property("referenceDeletion").toBool(), true);
-    delete object;
+    QMetaObject::invokeMethod(object.data(), "jsonConversion");
+    QVERIFY(object->property("success").toBool());
 }
 
 
@@ -7239,6 +7241,17 @@ void tst_qqmlecmascript::replaceBinding()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("replaceBinding.qml"));
+    QObject *obj = c.create();
+    QVERIFY(obj != nullptr);
+
+    QVERIFY(obj->property("success").toBool());
+    delete obj;
+}
+
+void tst_qqmlecmascript::bindingBoundFunctions()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingBoundFunctions.qml"));
     QObject *obj = c.create();
     QVERIFY(obj != nullptr);
 

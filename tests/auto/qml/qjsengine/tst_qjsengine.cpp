@@ -129,6 +129,7 @@ private slots:
     void arraySort();
     void lookupOnDisappearingProperty();
     void arrayConcat();
+    void recursiveBoundFunctions();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -3023,6 +3024,18 @@ void tst_QJSEngine::arrayConcat()
                               "   x.push(i);"
                               "x.toString();");
     QCOMPARE(v.toString(), QString::fromLatin1("6,10,11,12"));
+}
+
+void tst_QJSEngine::recursiveBoundFunctions()
+{
+
+    QJSEngine eng;
+    QJSValue v = eng.evaluate("function foo(x, y, z)"
+                              "{ return this + x + y + z; }"
+                              "var bar = foo.bind(-1, 10);"
+                              "var baz = bar.bind(-2, 20);"
+                              "baz(30)");
+    QCOMPARE(v.toInt(), 59);
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }

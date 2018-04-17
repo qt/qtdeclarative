@@ -135,6 +135,48 @@ QQuickImagePrivate::QQuickImagePrivate()
 
     \clearfloat
 
+    \section1 OpenGL Texture Files
+
+    When the default OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in
+    use, images can also be supplied in compressed texture files. The content
+    must be a simple RGB(A) format 2D texture. Supported compression schemes
+    are only limited by the underlying OpenGL driver and GPU. The following
+    container file formats are supported:
+
+    \list
+    \li \c PKM (since Qt 5.10)
+    \li \c KTX (since Qt 5.11)
+    \endlist
+
+    \note Semi-transparent original images require alpha pre-multiplication
+    prior to texture compression in order to be correctly displayed in Qt
+    Quick. This can be done with the following ImageMagick command
+    line:
+    \badcode
+    convert MYORIGIMAGE \( +clone -alpha Extract \) -channel RGB -compose Multiply -composite MYPMIMAGE
+    \endcode
+
+    \section1 Automatic Detection of File Extension
+
+    If the \l source URL indicates a non-existing local file or resource, the
+    Image element attempts to auto-detect the file extension. If an existing
+    file can be found by appending any of the supported image file extensions
+    to the \l source URL, then that file will be loaded.
+
+    If the OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in use, the
+    file search the attempts the OpenGL texture file extensions first. If the
+    search is unsuccessful, it attempts to search with the file extensions for
+    the \l{QImageReader::supportedImageFormats()}{conventional image file
+    types}. For example:
+
+    \snippet qml/image-ext.qml ext
+
+    This functionality facilitates deploying different image asset file types
+    on different target platforms. This can be useful in order to tune
+    application performance and adapt to different graphics hardware.
+
+    This functionality was introduced in Qt 5.11.
+
     \section1 Performance
 
     By default, locally available images are loaded immediately, and the user interface
@@ -154,7 +196,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     size bounded via the \l sourceSize property. This is especially important for content
     that is loaded from external sources or provided by the user.
 
-    \sa {Qt Quick Examples - Image Elements}, QQuickImageProvider
+    \sa {Qt Quick Examples - Image Elements}, QQuickImageProvider, QImageReader::setAutoDetectImageFormat()
 */
 
 QQuickImage::QQuickImage(QQuickItem *parent)
@@ -461,7 +503,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQuickImageProvider
+    \sa QQuickImageProvider {OpenGL Texture Files} {Automatic Detection of File Extension}
 */
 
 /*!

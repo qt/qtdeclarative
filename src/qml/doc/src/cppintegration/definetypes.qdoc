@@ -297,6 +297,8 @@ qmlRegisterRevision<BaseType,1>("MyTypes", 1, 1);
 This is useful when deriving from base classes provided by other authors,
 e.g. when extending classes from the Qt Quick module.
 
+\note The QML engine does not support revisions for properties or signals of
+grouped and attached property objects.
 
 \section2 Registering Extension Objects
 
