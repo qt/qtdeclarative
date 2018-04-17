@@ -110,10 +110,6 @@ Q_SIGNALS:
     Q_REVISION(3) void resultChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
-    void spacingChange(qreal newSpacing, qreal oldSpacing) override;
-
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
     void accessibilityActiveChanged(bool active) override;

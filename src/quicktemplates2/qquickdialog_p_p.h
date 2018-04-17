@@ -50,7 +50,6 @@
 
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
-#include <QtQuickTemplates2/private/qquickpagelayout_p_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
 QT_BEGIN_NAMESPACE
@@ -75,9 +74,7 @@ public:
     void handleClick(QQuickAbstractButton *button);
 
     int result;
-    QString title;
     QQuickDialogButtonBox *buttonBox;
-    QScopedPointer<QQuickPageLayout> layout;
     QPlatformDialogHelper::StandardButtons standardButtons;
 };
 

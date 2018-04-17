@@ -183,7 +183,9 @@ QQuickDialog::QQuickDialog(QObject *parent)
     : QQuickPopup(*(new QQuickDialogPrivate), parent)
 {
     Q_D(QQuickDialog);
-    d->layout.reset(new QQuickPageLayout(d->popupItem));
+    connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
+    connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
+    connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
 }
 
 /*!
@@ -206,18 +208,14 @@ QQuickDialog::QQuickDialog(QObject *parent)
 QString QQuickDialog::title() const
 {
     Q_D(const QQuickDialog);
-    return d->title;
+    return d->popupItem->title();
 }
 
 void QQuickDialog::setTitle(const QString &title)
 {
     Q_D(QQuickDialog);
-    if (d->title == title)
-        return;
-
-    d->title = title;
+    d->popupItem->setTitle(title);
     setAccessibleName(title);
-    emit titleChanged();
 }
 
 /*!
@@ -239,14 +237,14 @@ void QQuickDialog::setTitle(const QString &title)
 QQuickItem *QQuickDialog::header() const
 {
     Q_D(const QQuickDialog);
-    return d->layout->header();
+    return d->popupItem->header();
 }
 
 void QQuickDialog::setHeader(QQuickItem *header)
 {
     Q_D(QQuickDialog);
-    QQuickItem *oldHeader = d->layout->header();
-    if (!d->layout->setHeader(header))
+    QQuickItem *oldHeader = d->popupItem->header();
+    if (oldHeader == header)
         return;
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldHeader)) {
@@ -256,6 +254,7 @@ void QQuickDialog::setHeader(QQuickItem *header)
         if (d->buttonBox == buttonBox)
             d->buttonBox = nullptr;
     }
+
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header)) {
         connect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
         connect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
@@ -264,9 +263,7 @@ void QQuickDialog::setHeader(QQuickItem *header)
         buttonBox->setStandardButtons(d->standardButtons);
     }
 
-    if (isComponentComplete())
-        d->layout->update();
-    emit headerChanged();
+    d->popupItem->setHeader(header);
 }
 
 /*!
@@ -288,14 +285,14 @@ void QQuickDialog::setHeader(QQuickItem *header)
 QQuickItem *QQuickDialog::footer() const
 {
     Q_D(const QQuickDialog);
-    return d->layout->footer();
+    return d->popupItem->footer();
 }
 
 void QQuickDialog::setFooter(QQuickItem *footer)
 {
     Q_D(QQuickDialog);
-    QQuickItem *oldFooter = d->layout->footer();
-    if (!d->layout->setFooter(footer))
+    QQuickItem *oldFooter = d->popupItem->footer();
+    if (oldFooter == footer)
         return;
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldFooter)) {
@@ -313,9 +310,7 @@ void QQuickDialog::setFooter(QQuickItem *footer)
         buttonBox->setStandardButtons(d->standardButtons);
     }
 
-    if (isComponentComplete())
-        d->layout->update();
-    emit footerChanged();
+    d->popupItem->setFooter(footer);
 }
 
 /*!
@@ -457,27 +452,6 @@ void QQuickDialog::done(int result)
         emit rejected();
 }
 
-void QQuickDialog::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    Q_D(QQuickDialog);
-    QQuickPopup::geometryChanged(newGeometry, oldGeometry);
-    d->layout->update();
-}
-
-void QQuickDialog::paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding)
-{
-    Q_D(QQuickDialog);
-    QQuickPopup::paddingChange(newPadding, oldPadding);
-    d->layout->update();
-}
-
-void QQuickDialog::spacingChange(qreal newSpacing, qreal oldSpacing)
-{
-    Q_D(QQuickDialog);
-    QQuickPopup::spacingChange(newSpacing, oldSpacing);
-    d->layout->update();
-}
-
 #if QT_CONFIG(accessibility)
 QAccessible::Role QQuickDialog::accessibleRole() const
 {
@@ -490,7 +464,7 @@ void QQuickDialog::accessibilityActiveChanged(bool active)
     QQuickPopup::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->title);
+        setAccessibleName(d->popupItem->title());
 }
 #endif
 

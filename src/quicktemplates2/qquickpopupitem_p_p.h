@@ -48,14 +48,13 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickpane_p.h>
+#include <QtQuickTemplates2/private/qquickpage_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPopup;
 class QQuickPopupItemPrivate;
-
-class QQuickPopupItem : public QQuickPane
+class QQuickPopupItem : public QQuickPage
 {
     Q_OBJECT
 
