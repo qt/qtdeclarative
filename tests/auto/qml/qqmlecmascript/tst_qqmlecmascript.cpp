@@ -5784,6 +5784,16 @@ void tst_qqmlecmascript::assignSequenceTypes()
     QCOMPARE(msco5->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html")) << QUrl(testFileUrl("example2.html"))));
     delete object;
     }
+
+    {
+    QQmlComponent component(&engine, testFileUrl("assignSequenceTypes.8.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QVariant result;
+    QMetaObject::invokeMethod(object.data(), "tryWritingReadOnlySequence", Q_RETURN_ARG(QVariant, result));
+    QVERIFY(result.type() == QVariant::Bool);
+    QVERIFY(result.toBool());
+    }
 }
 
 // Test that assigning a null object works

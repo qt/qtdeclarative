@@ -227,7 +227,7 @@ namespace Heap {
 template <typename Container>
 struct QQmlSequence : Object {
     void init(const Container &container);
-    void init(QObject *object, int propertyIndex);
+    void init(QObject *object, int propertyIndex, bool readOnly);
     void destroy() {
         delete container;
         object.destroy();
@@ -237,7 +237,8 @@ struct QQmlSequence : Object {
     mutable Container *container;
     QQmlQPointer<QObject> object;
     int propertyIndex;
-    bool isReference;
+    bool isReference : 1;
+    bool isReadOnly : 1;
 };
 
 }
@@ -293,6 +294,9 @@ public:
             generateWarning(engine(), QLatin1String("Index out of range during indexed set"));
             return false;
         }
+
+        if (d()->isReadOnly)
+            return false;
 
         if (d()->isReference) {
             if (!d()->object)
@@ -366,6 +370,8 @@ public:
         /* Qt containers have int (rather than uint) allowable indexes. */
         if (index > INT_MAX)
             return false;
+        if (d()->isReadOnly)
+            return false;
         if (d()->isReference) {
             if (!d()->object)
                 return false;
@@ -432,11 +438,13 @@ public:
         const QV4::Value *m_compareFn;
     };
 
-    void sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
+    bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
     {
+        if (d()->isReadOnly)
+            return false;
         if (d()->isReference) {
             if (!d()->object)
-                return;
+                return false;
             loadReference();
         }
 
@@ -450,6 +458,8 @@ public:
 
         if (d()->isReference)
             storeReference();
+
+        return true;
     }
 
     static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -480,6 +490,10 @@ public:
             generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
             RETURN_UNDEFINED();
         }
+
+        if (This->d()->isReadOnly)
+            THROW_TYPE_ERROR();
+
         /* Read the sequence from the QObject property if we're a reference */
         if (This->d()->isReference) {
             if (!This->d()->object)
@@ -572,6 +586,7 @@ void Heap::QQmlSequence<Container>::init(const Container &container)
     this->container = new Container(container);
     propertyIndex = -1;
     isReference = false;
+    isReadOnly = false;
     object.init();
 
     QV4::Scope scope(internalClass->engine);
@@ -581,12 +596,13 @@ void Heap::QQmlSequence<Container>::init(const Container &container)
 }
 
 template <typename Container>
-void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex)
+void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex, bool readOnly)
 {
     Object::init();
     this->container = new Container;
     this->propertyIndex = propertyIndex;
     isReference = true;
+    this->isReadOnly = readOnly;
     this->object.init(object);
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
@@ -668,7 +684,8 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
         if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
-            s->sort(b, thisObject, argv, argc); \
+            if (!s->sort(b, thisObject, argv, argc)) \
+                THROW_TYPE_ERROR(); \
         } else
 
         FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
@@ -691,11 +708,11 @@ bool SequencePrototype::isSequenceType(int sequenceTypeId)
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(object, propertyIndex)); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(object, propertyIndex, readOnly)); \
         return obj.asReturnedValue(); \
     } else
 
-ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool *succeeded)
+ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool readOnly, bool *succeeded)
 {
     QV4::Scope scope(engine);
     // This function is called when the property is a QObject Q_PROPERTY of

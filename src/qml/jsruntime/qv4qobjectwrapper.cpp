@@ -188,7 +188,7 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
 #if QT_CONFIG(qml_sequence_object)
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType(), object, property.coreIndex(), &succeeded));
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType(), object, property.coreIndex(), !property.isWritable(), &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
 #endif

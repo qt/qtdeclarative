@@ -74,7 +74,7 @@ struct SequencePrototype : public QV4::Object
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static bool isSequenceType(int sequenceTypeId);
-    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool *succeeded);
+    static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool readOnly, bool *succeeded);
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
     static int metaTypeForSequence(const Object *object);
     static QVariant toVariant(Object *object);
