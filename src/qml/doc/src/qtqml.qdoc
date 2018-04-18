@@ -58,7 +58,7 @@ following directive:
 The QML types in Qt QML are available through the \c QtQML import. To use the
 types, add the following import statement to your .qml file:
 \code
-import QtQml 2.0
+import QtQml 2.11
 \endcode
 
 
