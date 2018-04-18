@@ -120,6 +120,9 @@ public:
     void cancelHandle();
     void executeHandle(bool complete = false);
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+
     qreal from;
     qreal to;
     qreal value;
@@ -264,6 +267,22 @@ void QQuickSliderPrivate::executeHandle(bool complete)
         quickCompleteDeferred(q, handleName(), handle);
 }
 
+void QQuickSliderPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickSlider);
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == handle)
+        emit q->implicitHandleWidthChanged();
+}
+
+void QQuickSliderPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickSlider);
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == handle)
+        emit q->implicitHandleHeightChanged();
+}
+
 QQuickSlider::QQuickSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickSliderPrivate), parent)
 {
@@ -273,6 +292,12 @@ QQuickSlider::QQuickSlider(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
+}
+
+QQuickSlider::~QQuickSlider()
+{
+    Q_D(QQuickSlider);
+    d->removeImplicitSizeListener(d->handle);
 }
 
 /*!
@@ -561,10 +586,23 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     if (!d->handle.isExecuting())
         d->cancelHandle();
 
+    const qreal oldImplicitHandleWidth = implicitHandleWidth();
+    const qreal oldImplicitHandleHeight = implicitHandleHeight();
+
+    d->removeImplicitSizeListener(d->handle);
     delete d->handle;
     d->handle = handle;
-    if (handle && !handle->parentItem())
-        handle->setParentItem(this);
+
+    if (handle) {
+        if (!handle->parentItem())
+            handle->setParentItem(this);
+        d->addImplicitSizeListener(handle);
+    }
+
+    if (!qFuzzyCompare(oldImplicitHandleWidth, implicitHandleWidth()))
+        emit implicitHandleWidthChanged();
+    if (!qFuzzyCompare(oldImplicitHandleHeight, implicitHandleHeight()))
+        emit implicitHandleHeightChanged();
     if (!d->handle.isExecuting())
         emit handleChanged();
 }
@@ -670,6 +708,50 @@ void QQuickSlider::setTouchDragThreshold(qreal touchDragThreshold)
 void QQuickSlider::resetTouchDragThreshold()
 {
     setTouchDragThreshold(-1);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Slider::implicitHandleWidth
+    \readonly
+
+    This property holds the implicit handle width.
+
+    The value is equal to \c {handle ? handle.implicitWidth : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentWidth} and
+    \l {Control::}{implicitBackgroundWidth}, to calculate the \l {Item::}{implicitWidth}.
+
+    \sa implicitHandleHeight
+*/
+qreal QQuickSlider::implicitHandleWidth() const
+{
+    Q_D(const QQuickSlider);
+    if (!d->handle)
+        return 0;
+    return d->handle->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Slider::implicitHandleHeight
+    \readonly
+
+    This property holds the implicit handle height.
+
+    The value is equal to \c {handle ? handle.implicitHeight : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentHeight} and
+    \l {Control::}{implicitBackgroundHeight}, to calculate the \l {Item::}{implicitHeight}.
+
+    \sa implicitHandleWidth
+*/
+qreal QQuickSlider::implicitHandleHeight() const
+{
+    Q_D(const QQuickSlider);
+    if (!d->handle)
+        return 0;
+    return d->handle->implicitHeight();
 }
 
 void QQuickSlider::keyPressEvent(QKeyEvent *event)

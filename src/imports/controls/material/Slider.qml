@@ -43,9 +43,9 @@ T.Slider {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                           (handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
+                            implicitHandleWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                            (handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
+                             implicitHandleHeight + topPadding + bottomPadding)
 
     padding: 6
 

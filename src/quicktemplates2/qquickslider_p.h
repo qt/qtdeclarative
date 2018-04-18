@@ -71,11 +71,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSlider : public QQuickControl
     // 2.3 (Qt 5.10)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
-    Q_CLASSINFO("DeferredPropertyNames", "background,handle")
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION 5)
+    Q_CLASSINFO("DeferredPropertyNames", "background,handle")
+
 public:
     explicit QQuickSlider(QQuickItem *parent = nullptr);
+    ~QQuickSlider();
 
     qreal from() const;
     void setFrom(qreal from);
@@ -127,6 +131,9 @@ public:
     void setTouchDragThreshold(qreal touchDragThreshold);
     void resetTouchDragThreshold();
 
+    qreal implicitHandleWidth() const;
+    qreal implicitHandleHeight() const;
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -147,6 +154,8 @@ Q_SIGNALS:
     Q_REVISION(2) void liveChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void touchDragThresholdChanged();
+    Q_REVISION(5) void implicitHandleWidthChanged();
+    Q_REVISION(5) void implicitHandleHeightChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
