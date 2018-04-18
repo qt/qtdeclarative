@@ -350,6 +350,17 @@ void QQuickPlatformSystemTrayIcon::setMenu(QQuickPlatformMenu *menu)
 }
 
 /*!
+    \since Qt.labs.platform 1.1 (Qt 5.12)
+    \qmlproperty rect Qt.labs.platform::SystemTrayIcon::geometry
+
+    This property holds the geometry of the system tray icon.
+*/
+QRect QQuickPlatformSystemTrayIcon::geometry() const
+{
+    return m_handle ? m_handle->geometry() : QRect();
+}
+
+/*!
     \qmlmethod void Qt.labs.platform::SystemTrayIcon::show()
 
     Shows the system tray icon.
@@ -435,7 +446,12 @@ void QQuickPlatformSystemTrayIcon::updateIcon()
     if (!m_handle || !m_iconLoader)
         return;
 
+    const QRect oldGeometry = m_handle->geometry();
+
     m_handle->updateIcon(m_iconLoader->icon());
+
+    if (oldGeometry != m_handle->geometry())
+        emit geometryChanged();
 }
 
 QT_END_NAMESPACE

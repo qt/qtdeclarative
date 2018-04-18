@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule Qt.labs.platform 1.0
+    \qmlmodule Qt.labs.platform 1.1
     \title Qt Labs Platform QML Types
     \ingroup qmlmodules
     \brief Provides QML types for native platform extensions.
@@ -39,7 +39,7 @@
     following import statement in your .qml file:
 
     \badcode
-    import Qt.labs.platform 1.0
+    import Qt.labs.platform 1.1
     \endcode
 
     \section1 QML Types

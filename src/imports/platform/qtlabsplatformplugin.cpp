@@ -108,6 +108,7 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
 
 #if QT_CONFIG(systemtrayicon)
     qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
+    qmlRegisterType<QQuickPlatformSystemTrayIcon, 1>(uri, 1, 1, "SystemTrayIcon");
     qRegisterMetaType<QPlatformSystemTrayIcon::ActivationReason>();
     qRegisterMetaType<QPlatformSystemTrayIcon::MessageIcon>();
 #endif
