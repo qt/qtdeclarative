@@ -67,6 +67,8 @@ QtObject {
         console.log(1, "pong!", new Object);
         console.log(1, ["ping","pong"], new Object, 2);
 
+        console.log(contextStringListProperty);
+
         try {
             console.log(exception);
         } catch (e) {

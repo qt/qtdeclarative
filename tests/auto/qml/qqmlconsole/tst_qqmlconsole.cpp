@@ -29,6 +29,7 @@
 #include <QDebug>
 #include <QQmlEngine>
 #include <QQmlComponent>
+#include <QQmlContext>
 #include <QLoggingCategory>
 #include "../../shared/util.h"
 
@@ -81,11 +82,15 @@ void tst_qqmlconsole::logging()
 //    QTest::ignoreMessage(QtDebugMsg, "[object Object]");
     QTest::ignoreMessage(QtDebugMsg, "1 pong! [object Object]");
     QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] [object Object] 2");
+    QTest::ignoreMessage(QtDebugMsg, "[Hello,World]");
+
+    QScopedPointer<QQmlContext> loggingContext(new QQmlContext(engine.rootContext()));
+    QStringList stringList; stringList << QStringLiteral("Hello") << QStringLiteral("World");
+    loggingContext->setContextProperty("contextStringListProperty", stringList);
 
     QQmlComponent component(&engine, testUrl);
-    QObject *object = component.create();
+    QScopedPointer<QObject> object(component.create(loggingContext.data()));
     QVERIFY(object != nullptr);
-    delete object;
 }
 
 void tst_qqmlconsole::categorized_logging()

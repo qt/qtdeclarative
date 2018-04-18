@@ -743,7 +743,7 @@ QString Stringify::Str(const QString &key, const Value &v)
     o = value->asReturnedValue();
     if (o) {
         if (!o->as<FunctionObject>()) {
-            if (o->as<ArrayObject>() || o->isListType()) {
+            if (o->isArrayLike()) {
                 return JA(o.getPointer());
             } else {
                 return JO(o);

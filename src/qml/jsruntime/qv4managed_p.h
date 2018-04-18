@@ -212,6 +212,7 @@ public:
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
     bool isListType() const { return d()->internalClass->vtable->type == Type_QmlSequence; }
+    bool isArrayLike() const { return isArrayObject() || isListType(); }
 
     bool isArrayObject() const { return d()->internalClass->vtable->type == Type_ArrayObject; }
     bool isStringObject() const { return d()->internalClass->vtable->type == Type_StringObject; }

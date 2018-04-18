@@ -1554,7 +1554,7 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, cons
         if (i != start)
             result.append(QLatin1Char(' '));
 
-        if (argv[i].as<ArrayObject>())
+        if (argv[i].isManaged() && argv[i].managed()->isArrayLike())
             result += QLatin1Char('[') + argv[i].toQStringNoThrow() + QLatin1Char(']');
         else
             result.append(argv[i].toQStringNoThrow());
