@@ -701,8 +701,7 @@ struct Unit
         StaticData = 0x4, // Unit data persistent in memory?
         IsSingleton = 0x8,
         IsSharedLibrary = 0x10, // .pragma shared?
-        ContainsMachineCode = 0x20, // used to determine if we need to mmap with execute permissions
-        PendingTypeCompilation = 0x40 // the QML data structures present are incomplete and require type compilation
+        PendingTypeCompilation = 0x20 // the QML data structures present are incomplete and require type compilation
     };
     quint32_le flags;
     quint32_le stringTableSize;
