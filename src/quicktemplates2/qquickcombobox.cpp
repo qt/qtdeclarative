@@ -263,6 +263,9 @@ public:
     void cancelPopup();
     void executePopup(bool complete = false);
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+
     bool flat;
     bool down;
     bool hasDown;
@@ -751,6 +754,22 @@ void QQuickComboBoxPrivate::executePopup(bool complete)
         quickCompleteDeferred(q, popupName(), popup);
 }
 
+void QQuickComboBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickComboBox);
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == indicator)
+        emit q->implicitIndicatorWidthChanged();
+}
+
+void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickComboBox);
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == indicator)
+        emit q->implicitIndicatorHeightChanged();
+}
+
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
@@ -766,6 +785,7 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 QQuickComboBox::~QQuickComboBox()
 {
     Q_D(QQuickComboBox);
+    d->removeImplicitSizeListener(d->indicator);
     if (d->popup) {
         // Disconnect visibleChanged() to avoid a spurious highlightedIndexChanged() signal
         // emission during the destruction of the (visible) popup. (QTBUG-57650)
@@ -1072,12 +1092,22 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     if (!d->indicator.isExecuting())
         d->cancelIndicator();
 
+    const qreal oldImplicitIndicatorWidth = implicitIndicatorWidth();
+    const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
+
+    d->removeImplicitSizeListener(d->indicator);
     delete d->indicator;
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
             indicator->setParentItem(this);
+        d->addImplicitSizeListener(indicator);
     }
+
+    if (!qFuzzyCompare(oldImplicitIndicatorWidth, implicitIndicatorWidth()))
+        emit implicitIndicatorWidthChanged();
+    if (!qFuzzyCompare(oldImplicitIndicatorHeight, implicitIndicatorHeight()))
+        emit implicitIndicatorHeightChanged();
     if (!d->indicator.isExecuting())
         emit indicatorChanged();
 }
@@ -1386,6 +1416,50 @@ bool QQuickComboBox::hasAcceptableInput() const
 {
     Q_D(const QQuickComboBox);
     return d->contentItem && d->contentItem->property("acceptableInput").toBool();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::ComboBox::implicitIndicatorWidth
+    \readonly
+
+    This property holds the implicit indicator width.
+
+    The value is equal to \c {indicator ? indicator.implicitWidth : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentWidth} and
+    \l {Control::}{implicitBackgroundWidth}, to calculate the \l {Item::}{implicitWidth}.
+
+    \sa implicitIndicatorHeight
+*/
+qreal QQuickComboBox::implicitIndicatorWidth() const
+{
+    Q_D(const QQuickComboBox);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::ComboBox::implicitIndicatorHeight
+    \readonly
+
+    This property holds the implicit indicator height.
+
+    The value is equal to \c {indicator ? indicator.implicitHeight : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentHeight} and
+    \l {Control::}{implicitBackgroundHeight}, to calculate the \l {Item::}{implicitHeight}.
+
+    \sa implicitIndicatorWidth
+*/
+qreal QQuickComboBox::implicitIndicatorHeight() const
+{
+    Q_D(const QQuickComboBox);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitHeight();
 }
 
 /*!

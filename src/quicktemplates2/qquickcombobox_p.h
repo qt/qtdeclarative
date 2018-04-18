@@ -82,6 +82,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
     Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged FINAL REVISION 2)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator,popup")
 
 public:
@@ -148,6 +151,10 @@ public:
     bool isInputMethodComposing() const;
     bool hasAcceptableInput() const;
 
+    // 2.5 (Qt 5.12)
+    qreal implicitIndicatorWidth() const;
+    qreal implicitIndicatorHeight() const;
+
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
@@ -179,6 +186,9 @@ Q_SIGNALS:
     Q_REVISION(2) void inputMethodHintsChanged();
     Q_REVISION(2) void inputMethodComposingChanged();
     Q_REVISION(2) void acceptableInputChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void implicitIndicatorWidthChanged();
+    Q_REVISION(5) void implicitIndicatorHeightChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
