@@ -316,10 +316,10 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
 
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
     if (!item) {
+        // The model could not provide an QQuickItem for the
+        // given index, so we create a placeholder instead.
         qWarning() << "TableView: delegate is not an item:" << modelIndex;
-        delete object;
-        // The model cannot provide an item for the given
-        // index, so we create a placeholder instead.
+        model->release(object);
         item = new QQuickItem();
         ownItem = true;
     }
