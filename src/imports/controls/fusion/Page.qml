@@ -45,9 +45,9 @@ T.Page {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            Math.max(contentWidth,
-                                     header && header.visible ? header.implicitWidth : 0,
-                                     footer && footer.visible ? footer.implicitWidth : 0) + leftPadding + rightPadding)
+                            contentWidth + leftPadding + rightPadding,
+                            header && header.visible ? header.implicitWidth : 0,
+                            footer && footer.visible ? footer.implicitWidth : 0)
     implicitHeight: Math.max(implicitBackgroundHeight,
                              contentHeight + topPadding + bottomPadding
                              + (header && header.visible ? header.implicitHeight + spacing : 0)

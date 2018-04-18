@@ -241,10 +241,13 @@ TestCase {
                                       + control.header.implicitHeight + control.footer.implicitHeight + 2 * control.spacing)
 
         control.header.implicitWidth = 150
-        compare(control.implicitWidth, control.header.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitWidth, control.header.implicitWidth)
 
         control.footer.implicitWidth = 160
-        compare(control.implicitWidth, control.footer.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitWidth, control.footer.implicitWidth)
+
+        control.contentItem.implicitWidth = 170
+        compare(control.implicitWidth, control.contentItem.implicitWidth + control.leftPadding + control.rightPadding)
     }
 
     function test_spacing_data() {
