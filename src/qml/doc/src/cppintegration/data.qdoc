@@ -262,8 +262,8 @@ local timezone will be used ignoring any DST complications it may have.
 
 \section2 Sequence Type to JavaScript Array
 
-Certain C++ sequence types are supported transparently in QML as JavaScript
-\c Array types.
+Certain C++ sequence types are supported transparently in QML to behave like
+JavaScript \c Array types.
 
 In particular, QML currently supports:
 \list
