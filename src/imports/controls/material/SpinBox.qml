@@ -44,12 +44,12 @@ T.SpinBox {
 
     implicitWidth: Math.max(implicitBackgroundWidth,
                             contentItem.implicitWidth +
-                            (up.indicator ? up.indicator.implicitWidth : 0) +
-                            (down.indicator ? down.indicator.implicitWidth : 0))
+                            up.implicitIndicatorWidth +
+                            down.implicitIndicatorWidth)
     implicitHeight: Math.max(implicitContentHeight + topPadding + bottomPadding,
                              implicitBackgroundHeight,
-                             up.indicator ? up.indicator.implicitHeight : 0,
-                             down.indicator ? down.indicator.implicitHeight : 0)
+                             up.implicitIndicatorHeight,
+                             down.implicitIndicatorHeight)
 
     spacing: 6
     topPadding: 8

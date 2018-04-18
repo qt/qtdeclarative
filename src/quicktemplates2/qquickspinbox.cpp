@@ -151,6 +151,9 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+
     bool editable;
     bool wrap;
     int from;
@@ -426,6 +429,24 @@ void QQuickSpinBoxPrivate::handleUngrab()
     stopPressRepeat();
 }
 
+void QQuickSpinBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == up->indicator())
+        emit up->implicitIndicatorWidthChanged();
+    else if (item == down->indicator())
+        emit down->implicitIndicatorWidthChanged();
+}
+
+void QQuickSpinBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == up->indicator())
+        emit up->implicitIndicatorHeightChanged();
+    else if (item == down->indicator())
+        emit down->implicitIndicatorHeightChanged();
+}
+
 QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickSpinBoxPrivate), parent)
 {
@@ -439,6 +460,13 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
+}
+
+QQuickSpinBox::~QQuickSpinBox()
+{
+    Q_D(QQuickSpinBox);
+    d->removeImplicitSizeListener(d->up->indicator());
+    d->removeImplicitSizeListener(d->down->indicator());
 }
 
 /*!
@@ -711,9 +739,13 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
     \qmlproperty bool QtQuick.Controls::SpinBox::up.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::up.indicator
     \qmlproperty bool QtQuick.Controls::SpinBox::up.hovered
+    \qmlproperty real QtQuick.Controls::SpinBox::up.implicitIndicatorWidth
+    \qmlproperty real QtQuick.Controls::SpinBox::up.implicitIndicatorHeight
 
     These properties hold the up indicator item and whether it is pressed or
-    hovered. The \c up.hovered property was introduced in QtQuick.Controls 2.1.
+    hovered. The \c up.hovered property was introduced in QtQuick.Controls 2.1,
+    and the \c up.implicitIndicatorWidth and \c up.implicitIndicatorHeight
+    properties were introduced in QtQuick.Controls 2.5.
 
     \sa increase()
 */
@@ -728,9 +760,13 @@ QQuickSpinButton *QQuickSpinBox::up() const
     \qmlproperty bool QtQuick.Controls::SpinBox::down.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::down.indicator
     \qmlproperty bool QtQuick.Controls::SpinBox::down.hovered
+    \qmlproperty real QtQuick.Controls::SpinBox::down.implicitIndicatorWidth
+    \qmlproperty real QtQuick.Controls::SpinBox::down.implicitIndicatorHeight
 
     These properties hold the down indicator item and whether it is pressed or
-    hovered. The \c down.hovered property was introduced in QtQuick.Controls 2.1.
+    hovered. The \c down.hovered property was introduced in QtQuick.Controls 2.1,
+    and the \c down.implicitIndicatorWidth and \c down.implicitIndicatorHeight
+    properties were introduced in QtQuick.Controls 2.5.
 
     \sa decrease()
 */
@@ -1105,13 +1141,24 @@ void QQuickSpinButton::setIndicator(QQuickItem *indicator)
     if (!d->indicator.isExecuting())
         d->cancelIndicator();
 
+    const qreal oldImplicitIndicatorWidth = implicitIndicatorWidth();
+    const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
+
+    QQuickSpinBox *spinBox = static_cast<QQuickSpinBox *>(parent());
+    QQuickSpinBoxPrivate::get(spinBox)->removeImplicitSizeListener(d->indicator);
     delete d->indicator;
     d->indicator = indicator;
 
     if (indicator) {
         if (!indicator->parentItem())
-            indicator->setParentItem(static_cast<QQuickItem *>(parent()));
+            indicator->setParentItem(spinBox);
+        QQuickSpinBoxPrivate::get(spinBox)->addImplicitSizeListener(indicator);
     }
+
+    if (!qFuzzyCompare(oldImplicitIndicatorWidth, implicitIndicatorWidth()))
+        emit implicitIndicatorWidthChanged();
+    if (!qFuzzyCompare(oldImplicitIndicatorHeight, implicitIndicatorHeight()))
+        emit implicitIndicatorHeightChanged();
     if (!d->indicator.isExecuting())
         emit indicatorChanged();
 }
@@ -1130,6 +1177,22 @@ void QQuickSpinButton::setHovered(bool hovered)
 
     d->hovered = hovered;
     emit hoveredChanged();
+}
+
+qreal QQuickSpinButton::implicitIndicatorWidth() const
+{
+    Q_D(const QQuickSpinButton);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitWidth();
+}
+
+qreal QQuickSpinButton::implicitIndicatorHeight() const
+{
+    Q_D(const QQuickSpinButton);
+    if (!d->indicator)
+        return 0;
+    return d->indicator->implicitHeight();
 }
 
 QT_END_NAMESPACE
