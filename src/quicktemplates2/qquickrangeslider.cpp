@@ -270,8 +270,13 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
     if (!d->handle.isExecuting())
         d->cancelHandle();
 
+    const qreal oldImplicitHandleWidth = implicitHandleWidth();
+    const qreal oldImplicitHandleHeight = implicitHandleHeight();
+
+    QQuickControlPrivate::get(d->slider)->removeImplicitSizeListener(d->handle);
     delete d->handle;
     d->handle = handle;
+
     if (handle) {
         if (!handle->parentItem())
             handle->setParentItem(d->slider);
@@ -295,7 +300,13 @@ void QQuickRangeSliderNode::setHandle(QQuickItem *handle)
         }
 
         handle->setActiveFocusOnTab(true);
+        QQuickControlPrivate::get(d->slider)->addImplicitSizeListener(handle);
     }
+
+    if (!qFuzzyCompare(oldImplicitHandleWidth, implicitHandleWidth()))
+        emit implicitHandleWidthChanged();
+    if (!qFuzzyCompare(oldImplicitHandleHeight, implicitHandleHeight()))
+        emit implicitHandleHeightChanged();
     if (!d->handle.isExecuting())
         emit handleChanged();
 }
@@ -331,6 +342,22 @@ void QQuickRangeSliderNode::setHovered(bool hovered)
 
     d->hovered = hovered;
     emit hoveredChanged();
+}
+
+qreal QQuickRangeSliderNode::implicitHandleWidth() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    if (!d->handle)
+        return 0;
+    return d->handle->implicitWidth();
+}
+
+qreal QQuickRangeSliderNode::implicitHandleHeight() const
+{
+    Q_D(const QQuickRangeSliderNode);
+    if (!d->handle)
+        return 0;
+    return d->handle->implicitHeight();
 }
 
 void QQuickRangeSliderNode::increase()
@@ -379,6 +406,9 @@ public:
     void handleUngrab() override;
 
     void updateHover(const QPointF &pos);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     bool live;
     qreal from;
@@ -588,6 +618,24 @@ void QQuickRangeSliderPrivate::updateHover(const QPointF &pos)
     second->setHovered(secondHandle && secondHandle->isEnabled() && secondHandle->contains(q->mapToItem(secondHandle, pos)));
 }
 
+void QQuickRangeSliderPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == first->handle())
+        emit first->implicitHandleWidthChanged();
+    else if (item == second->handle())
+        emit second->implicitHandleWidthChanged();
+}
+
+void QQuickRangeSliderPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == first->handle())
+        emit first->implicitHandleHeightChanged();
+    else if (item == second->handle())
+        emit second->implicitHandleHeightChanged();
+}
+
 QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickRangeSliderPrivate), parent)
 {
@@ -600,6 +648,13 @@ QQuickRangeSlider::QQuickRangeSlider(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
+}
+
+QQuickRangeSlider::~QQuickRangeSlider()
+{
+    Q_D(QQuickRangeSlider);
+    d->removeImplicitSizeListener(d->first->handle());
+    d->removeImplicitSizeListener(d->second->handle());
 }
 
 /*!
@@ -715,6 +770,8 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
     \qmlproperty Item QtQuick.Controls::RangeSlider::first.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.pressed
     \qmlproperty bool QtQuick.Controls::RangeSlider::first.hovered
+    \qmlproperty real QtQuick.Controls::RangeSlider::first.implicitHandleWidth
+    \qmlproperty real QtQuick.Controls::RangeSlider::first.implicitHandleHeight
     \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
@@ -756,6 +813,14 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
         \li This property holds whether the first handle is hovered.
             This property was introduced in QtQuick.Controls 2.1.
     \row
+        \li implicitHandleWidth
+        \li This property holds the implicit width of the first handle.
+            This property was introduced in QtQuick.Controls 2.5.
+    \row
+        \li implicitHandleHeight
+        \li This property holds the implicit height of the first handle.
+            This property was introduced in QtQuick.Controls 2.5.
+    \row
         \li moved()
         \li This signal is emitted when the first handle has been interactively moved
             by the user by either touch, mouse, or keys.
@@ -779,6 +844,8 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
     \qmlproperty Item QtQuick.Controls::RangeSlider::second.handle
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.pressed
     \qmlproperty bool QtQuick.Controls::RangeSlider::second.hovered
+    \qmlproperty real QtQuick.Controls::RangeSlider::second.implicitHandleWidth
+    \qmlproperty real QtQuick.Controls::RangeSlider::second.implicitHandleHeight
     \qmlsignal void QtQuick.Controls::RangeSlider::moved()
 
     \table
@@ -819,6 +886,14 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
         \li hovered
         \li This property holds whether the second handle is hovered.
             This property was introduced in QtQuick.Controls 2.1.
+    \row
+        \li implicitHandleWidth
+        \li This property holds the implicit width of the second handle.
+            This property was introduced in QtQuick.Controls 2.5.
+    \row
+        \li implicitHandleHeight
+        \li This property holds the implicit height of the second handle.
+            This property was introduced in QtQuick.Controls 2.5.
     \row
         \li moved()
         \li This signal is emitted when the second handle has been interactively moved

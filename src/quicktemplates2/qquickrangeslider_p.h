@@ -75,6 +75,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
 
 public:
     explicit QQuickRangeSlider(QQuickItem *parent = nullptr);
+    ~QQuickRangeSlider();
 
     qreal from() const;
     void setFrom(qreal from);
@@ -166,6 +167,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSliderNode : public QObject
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     // 2.1 (Qt 5.8)
     Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "handle")
 
 public:
@@ -188,6 +192,10 @@ public:
     bool isHovered() const;
     void setHovered(bool hovered);
 
+    // 2.5 (Qt 5.12)
+    qreal implicitHandleWidth() const;
+    qreal implicitHandleHeight() const;
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -202,6 +210,8 @@ Q_SIGNALS:
     Q_REVISION(1) void hoveredChanged();
     // 2.5 (Qt 5.12)
     /*Q_REVISION(5)*/ void moved();
+    /*Q_REVISION(5)*/ void implicitHandleWidthChanged();
+    /*Q_REVISION(5)*/ void implicitHandleHeightChanged();
 
 private:
     Q_DISABLE_COPY(QQuickRangeSliderNode)
