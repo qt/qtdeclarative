@@ -72,7 +72,7 @@ typedef QPair<int, int> QQuickXmlListRange;
 #define XMLLISTMODEL_CLEAR_ID 0
 
 /*!
-    \qmlmodule QtQuick.XmlListModel 2
+    \qmlmodule QtQuick.XmlListModel 2.11
     \title Qt Quick XmlListModel QML Types
     \ingroup qmlmodules
     \brief Provides QML types for creating models from XML data
@@ -82,7 +82,7 @@ typedef QPair<int, int> QQuickXmlListRange;
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQuick.XmlListModel 2.0
+    import QtQuick.XmlListModel 2.11
     \endcode
 */
 
