@@ -613,6 +613,7 @@ void QQuickPlatformMenu::setFont(const QFont& font)
     \qmlpropertygroup Qt.labs.platform::MenuItem::icon
     \qmlproperty url Qt.labs.platform::MenuItem::icon.source
     \qmlproperty string Qt.labs.platform::MenuItem::icon.name
+    \qmlproperty bool Qt.labs.platform::MenuItem::icon.mask
 
     This property holds the menu item's icon.
 */

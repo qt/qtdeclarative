@@ -65,7 +65,9 @@ void QQuickPlatformIconLoader::setEnabled(bool enabled)
 QIcon QQuickPlatformIconLoader::toQIcon() const
 {
     QIcon fallback = QPixmap::fromImage(image());
-    return QIcon::fromTheme(m_icon.name(), fallback);
+    QIcon icon = QIcon::fromTheme(m_icon.name(), fallback);
+    icon.setIsMask(m_icon.isMask());
+    return icon;
 }
 
 QQuickPlatformIcon QQuickPlatformIconLoader::icon() const

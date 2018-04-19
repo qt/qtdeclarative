@@ -359,11 +359,13 @@ QRect QQuickPlatformSystemTrayIcon::geometry() const
     \qmlpropertygroup Qt.labs.platform::SystemTrayIcon::icon
     \qmlproperty url Qt.labs.platform::SystemTrayIcon::icon.source
     \qmlproperty string Qt.labs.platform::SystemTrayIcon::icon.name
+    \qmlproperty bool Qt.labs.platform::MenuItem::icon.mask
 
     This property holds the system tray icon.
 
     \code
     SystemTrayIcon {
+        icon.mask: true
         icon.source: "qrc:/images/tray-icon.png"
     }
     \endcode

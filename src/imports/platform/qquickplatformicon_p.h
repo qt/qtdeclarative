@@ -60,6 +60,7 @@ class QQuickPlatformIcon
     Q_GADGET
     Q_PROPERTY(QUrl source READ source WRITE setSource)
     Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(bool mask READ isMask WRITE setMask)
 
 public:
     QUrl source() const;
@@ -68,10 +69,14 @@ public:
     QString name() const;
     void setName(const QString &name);
 
+    bool isMask() const;
+    void setMask(bool mask);
+
     bool operator==(const QQuickPlatformIcon &other) const;
     bool operator!=(const QQuickPlatformIcon &other) const;
 
 private:
+    bool m_mask = false;
     QUrl m_source;
     QString m_name;
 };
