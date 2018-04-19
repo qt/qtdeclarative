@@ -47,7 +47,8 @@ T.MenuBarItem {
     implicitWidth: Math.max(implicitBackgroundWidth,
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             implicitContentHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
     padding: 16
     verticalPadding: 12

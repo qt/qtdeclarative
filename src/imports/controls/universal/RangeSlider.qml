@@ -42,11 +42,11 @@ T.RangeSlider {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-        Math.max(first.implicitHandleWidth,
-                 second.implicitHandleWidth) + leftPadding + rightPadding)
+                            first.implicitHandleWidth + leftPadding + rightPadding,
+                            second.implicitHandleWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-        Math.max(first.implicitHandleHeight,
-                 second.implicitHandleHeight) + topPadding + bottomPadding)
+                             first.implicitHandleHeight + topPadding + bottomPadding,
+                             second.implicitHandleHeight + topPadding + bottomPadding)
 
     padding: 6
 

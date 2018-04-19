@@ -41,8 +41,10 @@ import QtQuick.Controls.Universal 2.5
 T.Frame {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             contentHeight + topPadding + bottomPadding)
 
     padding: 12
 

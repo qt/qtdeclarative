@@ -43,9 +43,9 @@ T.Popup {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            contentWidth > 0 ? contentWidth + leftPadding + rightPadding : 0)
+                            contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             contentHeight > 0 ? contentHeight + topPadding + bottomPadding : 0)
+                             contentHeight + topPadding + bottomPadding)
 
     topPadding: background ? background.topPadding : undefined
     leftPadding: background ? background.leftPadding : undefined

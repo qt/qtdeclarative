@@ -45,9 +45,9 @@ T.ProgressBar {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            contentItem ? implicitContentWidth + leftPadding + rightPadding : 0)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             contentItem ? implicitContentHeight + topPadding + bottomPadding : 0)
+                             implicitContentHeight + topPadding + bottomPadding)
 
     contentItem: Item {
         implicitWidth: 120

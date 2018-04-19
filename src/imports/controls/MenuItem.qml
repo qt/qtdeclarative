@@ -45,8 +45,8 @@ T.MenuItem {
     implicitWidth: Math.max(implicitBackgroundWidth,
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight,
-                             Math.max(implicitContentHeight,
-                                      implicitIndicatorHeight) + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
     padding: 6
     spacing: 6

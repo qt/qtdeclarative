@@ -41,8 +41,10 @@ import QtQuick.Controls.Universal 2.5
 T.ToolBar {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             contentHeight + topPadding + bottomPadding)
 
     background: Rectangle {
         implicitHeight: 48 // AppBarThemeCompactHeight

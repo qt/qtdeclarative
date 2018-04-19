@@ -44,8 +44,10 @@ T.ToolBar {
 
     Material.elevation: 4
 
-    implicitWidth: Math.max(implicitBackgroundWidth, contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            contentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             contentHeight + topPadding + bottomPadding)
 
     Material.foreground: Material.toolTextColor
 

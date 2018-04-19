@@ -42,8 +42,10 @@ import QtQuick.Templates 2.5 as T
 T.ToolSeparator {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth, implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight, implicitContentHeight + topPadding + bottomPadding)
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding)
 
     padding: vertical ? 6 : 2
     verticalPadding: vertical ? 2 : 6
