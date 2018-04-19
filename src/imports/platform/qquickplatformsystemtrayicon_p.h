@@ -54,6 +54,8 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 
+#include "qquickplatformicon_p.h"
+
 QT_REQUIRE_CONFIG(systemtrayicon);
 
 QT_BEGIN_NAMESPACE
@@ -73,6 +75,7 @@ class QQuickPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString tooltip READ tooltip WRITE setTooltip NOTIFY tooltipChanged FINAL)
     Q_PROPERTY(QQuickPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION 1)
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
     Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason QPlatformSystemTrayIcon::MessageIcon)
 
 public:
@@ -101,6 +104,9 @@ public:
 
     QRect geometry() const;
 
+    QQuickPlatformIcon icon() const;
+    void setIcon(const QQuickPlatformIcon &icon);
+
 public Q_SLOTS:
     void show();
     void hide();
@@ -117,6 +123,7 @@ Q_SIGNALS:
     void tooltipChanged();
     void menuChanged();
     Q_REVISION(1) void geometryChanged();
+    Q_REVISION(1) void iconChanged();
 
 protected:
     void init();

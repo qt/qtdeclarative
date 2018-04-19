@@ -55,6 +55,8 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 
+#include "qquickplatformicon_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class QPlatformMenuItem;
@@ -80,6 +82,7 @@ class QQuickPlatformMenuItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString iconName READ iconName WRITE setIconName NOTIFY iconNameChanged FINAL)
     Q_PROPERTY(QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
     Q_ENUMS(QPlatformMenuItem::MenuRole)
 
 public:
@@ -132,6 +135,9 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
+    QQuickPlatformIcon icon() const;
+    void setIcon(const QQuickPlatformIcon &icon);
+
 public Q_SLOTS:
     void toggle();
 
@@ -153,6 +159,7 @@ Q_SIGNALS:
     void iconNameChanged();
     void shortcutChanged();
     void fontChanged();
+    Q_REVISION(1) void iconChanged();
 
 protected:
     void classBegin() override;

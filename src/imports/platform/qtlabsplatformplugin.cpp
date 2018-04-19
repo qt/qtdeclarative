@@ -56,6 +56,8 @@
 # include "qquickplatformsystemtrayicon_p.h"
 #endif
 
+#include "qquickplatformicon_p.h"
+
 static inline void initResources()
 {
 #ifdef QT_STATIC
@@ -112,6 +114,9 @@ void QtLabsPlatformPlugin::registerTypes(const char *uri)
     qRegisterMetaType<QPlatformSystemTrayIcon::ActivationReason>();
     qRegisterMetaType<QPlatformSystemTrayIcon::MessageIcon>();
 #endif
+
+    qmlRegisterType<QQuickPlatformIcon>();
+    qRegisterMetaType<QQuickPlatformIcon>();
 }
 
 QT_END_NAMESPACE

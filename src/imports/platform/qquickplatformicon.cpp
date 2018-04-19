@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -34,66 +34,38 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformiconloader_p.h"
-
-#include <QtCore/qobject.h>
-#include <QtCore/qmetaobject.h>
-#include <QtQml/qqml.h>
+#include "qquickplatformicon_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QQuickPlatformIconLoader::QQuickPlatformIconLoader(int slot, QObject *parent)
-    : m_parent(parent),
-      m_slot(slot),
-      m_enabled(false)
+QUrl QQuickPlatformIcon::source() const
 {
-    Q_ASSERT(slot != -1 && parent);
+    return m_source;
 }
 
-bool QQuickPlatformIconLoader::isEnabled() const
+void QQuickPlatformIcon::setSource(const QUrl& source)
 {
-    return m_enabled;
+    m_source = source;
 }
 
-void QQuickPlatformIconLoader::setEnabled(bool enabled)
+QString QQuickPlatformIcon::name() const
 {
-    m_enabled = enabled;
-    if (m_enabled)
-        loadIcon();
+    return m_name;
 }
 
-QIcon QQuickPlatformIconLoader::toQIcon() const
+void QQuickPlatformIcon::setName(const QString& name)
 {
-    QIcon fallback = QPixmap::fromImage(image());
-    return QIcon::fromTheme(m_icon.name(), fallback);
+    m_name = name;
 }
 
-QQuickPlatformIcon QQuickPlatformIconLoader::icon() const
+bool QQuickPlatformIcon::operator==(const QQuickPlatformIcon &other) const
 {
-    return m_icon;
+    return m_source == other.m_source && m_name == other.m_name;
 }
 
-void QQuickPlatformIconLoader::setIcon(const QQuickPlatformIcon& icon)
+bool QQuickPlatformIcon::operator!=(const QQuickPlatformIcon &other) const
 {
-    m_icon = icon;
-    if (m_enabled)
-        loadIcon();
-}
-
-void QQuickPlatformIconLoader::loadIcon()
-{
-    if (m_icon.source().isEmpty()) {
-        clear(m_parent);
-    } else {
-        load(qmlEngine(m_parent), m_icon.source());
-        if (m_slot != -1 && isLoading()) {
-            connectFinished(m_parent, m_slot);
-            m_slot = -1;
-        }
-    }
-
-    if (!isLoading())
-        m_parent->metaObject()->method(m_slot).invoke(m_parent);
+    return !(*this == other);
 }
 
 QT_END_NAMESPACE

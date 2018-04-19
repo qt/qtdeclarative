@@ -543,57 +543,48 @@ void QQuickPlatformMenu::setTitle(const QString &title)
 
 /*!
     \qmlproperty url Qt.labs.platform::Menu::iconSource
-
-    This property holds the url of the menu's icon.
-
-    \sa iconName
+    \deprecated Use icon.source instead
 */
 QUrl QQuickPlatformMenu::iconSource() const
 {
-    if (!m_iconLoader)
-        return QUrl();
-
-    return m_iconLoader->iconSource();
+    return icon().source();
 }
 
 void QQuickPlatformMenu::setIconSource(const QUrl& source)
 {
-    if (source == iconSource())
+    QQuickPlatformIcon newIcon = icon();
+    if (source == newIcon.source())
         return;
 
     if (m_menuItem)
         m_menuItem->setIconSource(source);
 
-    iconLoader()->setIconSource(source);
+    newIcon.setSource(source);
+    iconLoader()->setIcon(newIcon);
     emit iconSourceChanged();
 }
 
 /*!
     \qmlproperty string Qt.labs.platform::Menu::iconName
-
-    This property holds the theme name of the menu's icon.
-
-    \sa iconSource, QIcon::fromTheme()
+    \deprecated Use icon.name instead
 */
 QString QQuickPlatformMenu::iconName() const
 {
-    if (!m_iconLoader)
-        return QString();
-
-    return m_iconLoader->iconName();
+    return icon().name();
 }
 
 void QQuickPlatformMenu::setIconName(const QString& name)
 {
-    if (name == iconName())
+    QQuickPlatformIcon newIcon = icon();
+    if (name == newIcon.name())
         return;
 
     if (m_menuItem)
         m_menuItem->setIconName(name);
 
-    iconLoader()->setIconName(name);
-    emit iconNameChanged();
-}
+    newIcon.setName(name);
+    iconLoader()->setIcon(newIcon);
+    emit iconNameChanged();}
 
 /*!
     \qmlproperty font Qt.labs.platform::Menu::font
@@ -615,6 +606,34 @@ void QQuickPlatformMenu::setFont(const QFont& font)
     m_font = font;
     sync();
     emit fontChanged();
+}
+
+/*!
+    \since Qt.labs.platform 1.1 (Qt 5.12)
+    \qmlpropertygroup Qt.labs.platform::MenuItem::icon
+    \qmlproperty url Qt.labs.platform::MenuItem::icon.source
+    \qmlproperty string Qt.labs.platform::MenuItem::icon.name
+
+    This property holds the menu item's icon.
+*/
+QQuickPlatformIcon QQuickPlatformMenu::icon() const
+{
+    if (!m_iconLoader)
+        return QQuickPlatformIcon();
+
+    return iconLoader()->icon();
+}
+
+void QQuickPlatformMenu::setIcon(const QQuickPlatformIcon &icon)
+{
+    if (iconLoader()->icon() == icon)
+        return;
+
+    if (m_menuItem)
+        m_menuItem->setIcon(icon);
+
+    iconLoader()->setIcon(icon);
+    emit iconChanged();
 }
 
 /*!
@@ -913,7 +932,7 @@ void QQuickPlatformMenu::updateIcon()
     if (!m_handle || !m_iconLoader)
         return;
 
-    m_handle->setIcon(m_iconLoader->icon());
+    m_handle->setIcon(m_iconLoader->toQIcon());
     sync();
 }
 

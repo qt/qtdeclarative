@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     \code
     SystemTrayIcon {
         visible: true
-        iconSource: "qrc:/images/tray-icon.png"
+        icon.source: "qrc:/images/tray-icon.png"
 
         onActivated: {
             window.show()
@@ -88,7 +88,7 @@ QT_BEGIN_NAMESPACE
     \code
     SystemTrayIcon {
         visible: true
-        iconSource: "qrc:/images/tray-icon.png"
+        icon.source: "qrc:/images/tray-icon.png"
 
         menu: Menu {
             MenuItem {
@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
     \code
     SystemTrayIcon {
         visible: true
-        iconSource: "qrc:/images/tray-icon.png"
+        icon.source: "qrc:/images/tray-icon.png"
 
         onMessageClicked: console.log("Message clicked")
         Component.onCompleted: showMessage("Message title", "Something important came up. Click this to know more.")
@@ -254,49 +254,43 @@ void QQuickPlatformSystemTrayIcon::setVisible(bool visible)
 
 /*!
     \qmlproperty url Qt.labs.platform::SystemTrayIcon::iconSource
-
-    This property holds the url of the system tray icon.
-
-    \sa iconName
+    \deprecated Use icon.source instead.
+    \sa icon
 */
 QUrl QQuickPlatformSystemTrayIcon::iconSource() const
 {
-    if (!m_iconLoader)
-        return QUrl();
-
-    return m_iconLoader->iconSource();
+    return icon().source();
 }
 
 void QQuickPlatformSystemTrayIcon::setIconSource(const QUrl& source)
 {
-    if (source == iconSource())
+    QQuickPlatformIcon newIcon = icon();
+    if (source == newIcon.source())
         return;
 
-    iconLoader()->setIconSource(source);
+    newIcon.setSource(source);
+    iconLoader()->setIcon(newIcon);
     emit iconSourceChanged();
 }
 
 /*!
     \qmlproperty string Qt.labs.platform::SystemTrayIcon::iconName
-
-    This property holds the theme name of the system tray icon.
-
-    \sa iconSource, QIcon::fromTheme()
+    \deprecated Use icon.name instead.
+    \sa icon
 */
 QString QQuickPlatformSystemTrayIcon::iconName() const
 {
-    if (!m_iconLoader)
-        return QString();
-
-    return m_iconLoader->iconName();
+    return icon().name();
 }
 
 void QQuickPlatformSystemTrayIcon::setIconName(const QString& name)
 {
-    if (name == iconName())
+    QQuickPlatformIcon newIcon = icon();
+    if (name == newIcon.name())
         return;
 
-    iconLoader()->setIconName(name);
+    newIcon.setName(name);
+    iconLoader()->setIcon(newIcon);
     emit iconNameChanged();
 }
 
@@ -358,6 +352,37 @@ void QQuickPlatformSystemTrayIcon::setMenu(QQuickPlatformMenu *menu)
 QRect QQuickPlatformSystemTrayIcon::geometry() const
 {
     return m_handle ? m_handle->geometry() : QRect();
+}
+
+/*!
+    \since Qt.labs.platform 1.1 (Qt 5.12)
+    \qmlpropertygroup Qt.labs.platform::SystemTrayIcon::icon
+    \qmlproperty url Qt.labs.platform::SystemTrayIcon::icon.source
+    \qmlproperty string Qt.labs.platform::SystemTrayIcon::icon.name
+
+    This property holds the system tray icon.
+
+    \code
+    SystemTrayIcon {
+        icon.source: "qrc:/images/tray-icon.png"
+    }
+    \endcode
+*/
+QQuickPlatformIcon QQuickPlatformSystemTrayIcon::icon() const
+{
+    if (!m_iconLoader)
+        return QQuickPlatformIcon();
+
+    return m_iconLoader->icon();
+}
+
+void QQuickPlatformSystemTrayIcon::setIcon(const QQuickPlatformIcon &icon)
+{
+    if (iconLoader()->icon() == icon)
+        return;
+
+    iconLoader()->setIcon(icon);
+    emit iconChanged();
 }
 
 /*!
@@ -448,7 +473,7 @@ void QQuickPlatformSystemTrayIcon::updateIcon()
 
     const QRect oldGeometry = m_handle->geometry();
 
-    m_handle->updateIcon(m_iconLoader->icon());
+    m_handle->updateIcon(m_iconLoader->toQIcon());
 
     if (oldGeometry != m_handle->geometry())
         emit geometryChanged();

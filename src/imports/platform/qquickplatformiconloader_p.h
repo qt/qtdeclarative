@@ -53,6 +53,8 @@
 #include <QtGui/qicon.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
+#include "qquickplatformicon_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -65,13 +67,10 @@ public:
     bool isEnabled() const;
     void setEnabled(bool enabled);
 
-    QIcon icon() const;
+    QIcon toQIcon() const;
 
-    QUrl iconSource() const;
-    void setIconSource(const QUrl &source);
-
-    QString iconName() const;
-    void setIconName(const QString &name);
+    QQuickPlatformIcon icon() const;
+    void setIcon(const QQuickPlatformIcon &icon);
 
 private:
     void loadIcon();
@@ -79,9 +78,7 @@ private:
     QObject *m_parent;
     int m_slot;
     bool m_enabled;
-    QIcon m_icon;
-    QUrl m_iconSource;
-    QString m_iconName;
+    QQuickPlatformIcon m_icon;
 };
 
 QT_END_NAMESPACE

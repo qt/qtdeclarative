@@ -56,6 +56,8 @@
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqml.h>
 
+#include "qquickplatformicon_p.h"
+
 QT_BEGIN_NAMESPACE
 
 class QIcon;
@@ -86,6 +88,7 @@ class QQuickPlatformMenu : public QObject, public QQmlParserStatus
     Q_PROPERTY(QUrl iconSource READ iconSource WRITE setIconSource NOTIFY iconSourceChanged FINAL)
     Q_PROPERTY(QString iconName READ iconName WRITE setIconName NOTIFY iconNameChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
     Q_ENUMS(QPlatformMenu::MenuType)
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -136,6 +139,9 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
+    QQuickPlatformIcon icon() const;
+    void setIcon(const QQuickPlatformIcon &icon);
+
     Q_INVOKABLE void addItem(QQuickPlatformMenuItem *item);
     Q_INVOKABLE void insertItem(int index, QQuickPlatformMenuItem *item);
     Q_INVOKABLE void removeItem(QQuickPlatformMenuItem *item);
@@ -166,6 +172,7 @@ Q_SIGNALS:
     void minimumWidthChanged();
     void fontChanged();
     void typeChanged();
+    Q_REVISION(1) void iconChanged();
 
 protected:
     void classBegin() override;

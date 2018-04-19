@@ -443,63 +443,41 @@ void QQuickPlatformMenuItem::setText(const QString &text)
 
 /*!
     \qmlproperty url Qt.labs.platform::MenuItem::iconSource
-
-    This property holds the url of the menu item's icon.
-
-    \code
-    MenuItem {
-        iconName: "edit-undo"
-        iconSource: "qrc:/images/undo.png"
-    }
-    \endcode
-
-    \sa iconName
+    \deprecated Use icon.source instead
 */
 QUrl QQuickPlatformMenuItem::iconSource() const
 {
-    if (!m_iconLoader)
-        return QUrl();
-
-    return m_iconLoader->iconSource();
+    return icon().source();
 }
 
 void QQuickPlatformMenuItem::setIconSource(const QUrl& source)
 {
-    if (source == iconSource())
+    QQuickPlatformIcon newIcon = icon();
+    if (source == newIcon.source())
         return;
 
-    iconLoader()->setIconSource(source);
+    newIcon.setSource(source);
+    iconLoader()->setIcon(newIcon);
     emit iconSourceChanged();
 }
 
 /*!
     \qmlproperty string Qt.labs.platform::MenuItem::iconName
-
-    This property holds the theme name of the menu item's icon.
-
-    \code
-    MenuItem {
-        iconName: "edit-undo"
-        iconSource: "qrc:/images/undo.png"
-    }
-    \endcode
-
-    \sa iconSource, QIcon::fromTheme()
+    \deprecated Use icon.name instead
 */
 QString QQuickPlatformMenuItem::iconName() const
 {
-    if (!m_iconLoader)
-        return QString();
-
-    return m_iconLoader->iconName();
+    return icon().name();
 }
 
 void QQuickPlatformMenuItem::setIconName(const QString& name)
 {
-    if (name == iconName())
+    QQuickPlatformIcon newIcon = icon();
+    if (name == newIcon.name())
         return;
 
-    iconLoader()->setIconName(name);
+    newIcon.setName(name);
+    iconLoader()->setIcon(newIcon);
     emit iconNameChanged();
 }
 
@@ -560,6 +538,40 @@ void QQuickPlatformMenuItem::setFont(const QFont& font)
 }
 
 /*!
+    \since Qt.labs.platform 1.1 (Qt 5.12)
+    \qmlpropertygroup Qt.labs.platform::MenuItem::icon
+    \qmlproperty url Qt.labs.platform::MenuItem::icon.source
+    \qmlproperty string Qt.labs.platform::MenuItem::icon.name
+
+    This property holds the menu item's icon.
+
+    \code
+    MenuItem {
+        icon.name: "edit-undo"
+        icon.source: "qrc:/images/undo.png"
+    }
+    \endcode
+
+    \sa QIcon::fromTheme()
+*/
+QQuickPlatformIcon QQuickPlatformMenuItem::icon() const
+{
+    if (!m_iconLoader)
+        return QQuickPlatformIcon();
+
+    return m_iconLoader->icon();
+}
+
+void QQuickPlatformMenuItem::setIcon(const QQuickPlatformIcon &icon)
+{
+    if (iconLoader()->icon() == icon)
+        return;
+
+    iconLoader()->setIcon(icon);
+    emit iconChanged();
+}
+
+/*!
     \qmlmethod void Qt.labs.platform::MenuItem::toggle()
 
     Toggles the \l checked state to its opposite state.
@@ -604,7 +616,7 @@ void QQuickPlatformMenuItem::updateIcon()
     if (!m_handle || !m_iconLoader)
         return;
 
-    m_handle->setIcon(m_iconLoader->icon());
+    m_handle->setIcon(m_iconLoader->toQIcon());
     sync();
 }
 

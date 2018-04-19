@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -34,66 +34,48 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformiconloader_p.h"
+#ifndef QQUICKPLATFORMICON_P_H
+#define QQUICKPLATFORMICON_P_H
 
-#include <QtCore/qobject.h>
-#include <QtCore/qmetaobject.h>
-#include <QtQml/qqml.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qurl.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickPlatformIconLoader::QQuickPlatformIconLoader(int slot, QObject *parent)
-    : m_parent(parent),
-      m_slot(slot),
-      m_enabled(false)
-{
-    Q_ASSERT(slot != -1 && parent);
-}
+class QObject;
 
-bool QQuickPlatformIconLoader::isEnabled() const
+class QQuickPlatformIcon
 {
-    return m_enabled;
-}
+    Q_GADGET
+    Q_PROPERTY(QUrl source READ source WRITE setSource)
+    Q_PROPERTY(QString name READ name WRITE setName)
 
-void QQuickPlatformIconLoader::setEnabled(bool enabled)
-{
-    m_enabled = enabled;
-    if (m_enabled)
-        loadIcon();
-}
+public:
+    QUrl source() const;
+    void setSource(const QUrl &source);
 
-QIcon QQuickPlatformIconLoader::toQIcon() const
-{
-    QIcon fallback = QPixmap::fromImage(image());
-    return QIcon::fromTheme(m_icon.name(), fallback);
-}
+    QString name() const;
+    void setName(const QString &name);
 
-QQuickPlatformIcon QQuickPlatformIconLoader::icon() const
-{
-    return m_icon;
-}
+    bool operator==(const QQuickPlatformIcon &other) const;
+    bool operator!=(const QQuickPlatformIcon &other) const;
 
-void QQuickPlatformIconLoader::setIcon(const QQuickPlatformIcon& icon)
-{
-    m_icon = icon;
-    if (m_enabled)
-        loadIcon();
-}
-
-void QQuickPlatformIconLoader::loadIcon()
-{
-    if (m_icon.source().isEmpty()) {
-        clear(m_parent);
-    } else {
-        load(qmlEngine(m_parent), m_icon.source());
-        if (m_slot != -1 && isLoading()) {
-            connectFinished(m_parent, m_slot);
-            m_slot = -1;
-        }
-    }
-
-    if (!isLoading())
-        m_parent->metaObject()->method(m_slot).invoke(m_parent);
-}
+private:
+    QUrl m_source;
+    QString m_name;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQUICKPLATFORMICON_P_H
