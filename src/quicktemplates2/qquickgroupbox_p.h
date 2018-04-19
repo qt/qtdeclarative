@@ -59,10 +59,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickGroupBox : public QQuickFrame
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitLabelWidth READ implicitLabelWidth NOTIFY implicitLabelWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitLabelHeight READ implicitLabelHeight NOTIFY implicitLabelHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,label")
 
 public:
     explicit QQuickGroupBox(QQuickItem *parent = nullptr);
+    ~QQuickGroupBox();
 
     QString title() const;
     void setTitle(const QString &title);
@@ -70,9 +74,16 @@ public:
     QQuickItem *label() const;
     void setLabel(QQuickItem *label);
 
+    // 2.5 (Qt 5.12)
+    qreal implicitLabelWidth() const;
+    qreal implicitLabelHeight() const;
+
 Q_SIGNALS:
     void titleChanged();
     void labelChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void implicitLabelWidthChanged();
+    Q_REVISION(5) void implicitLabelHeightChanged();
 
 protected:
     void componentComplete() override;

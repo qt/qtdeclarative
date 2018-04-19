@@ -42,13 +42,13 @@ T.GroupBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth,
-                            label ? label.implicitWidth + leftPadding + rightPadding : 0,
+                            implicitLabelWidth + leftPadding + rightPadding,
                             contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight, contentHeight + topPadding + bottomPadding)
 
     spacing: 12
     padding: 12
-    topPadding: padding + (label && label.implicitWidth > 0 ? label.implicitHeight + spacing : 0)
+    topPadding: padding + (implicitLabelWidth > 0 ? implicitLabelHeight + spacing : 0)
 
     label: Text {
         x: control.leftPadding
