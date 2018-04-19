@@ -110,14 +110,42 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols2-popup.png
 
     The \l implicitWidth and \l implicitHeight of a popup are typically based
-    on the implicit sizes of the background and the content item plus any
-    \l padding. These properties determine how large the popup will be when no
+    on the implicit sizes of the background and the content item plus any insets
+    and paddings. These properties determine how large the popup will be when no
     explicit \l width or \l height is specified.
 
-    The \l background item fills the entire width and height of the popup,
-    unless an explicit size has been given for it.
+    The geometry of the \l contentItem is determined by the padding. The following
+    example reserves 10px padding between the boundaries of the popup and its content:
 
-    The geometry of the \l contentItem is determined by the \l padding.
+    \code
+    Popup {
+        padding: 10
+
+        contentItem: Text {
+            text: "Content"
+        }
+    }
+    \endcode
+
+    The \l background item fills the entire width and height of the popup,
+    unless insets or an explicit size have been given for it.
+
+    Negative insets can be used to make the background larger than the popup.
+    The following example uses negative insets to place a shadow outside the
+    popup's boundaries:
+
+    \code
+    Popup {
+        topInset: -2
+        leftInset: -2
+        rightInset: -6
+        bottomInset: -6
+
+        background: BorderImage {
+            source: ":/images/shadowed-background.png"
+        }
+    }
+    \endcode
 
     \section1 Popup Sizing
 
@@ -2258,6 +2286,110 @@ qreal QQuickPopup::implicitBackgroundHeight() const
     return d->popupItem->implicitBackgroundHeight();
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::topInset
+
+    This property holds the top inset for the background.
+
+    \sa {Popup Layout}, bottomInset
+*/
+qreal QQuickPopup::topInset() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->topInset();
+}
+
+void QQuickPopup::setTopInset(qreal inset)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setTopInset(inset);
+}
+
+void QQuickPopup::resetTopInset()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetTopInset();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::leftInset
+
+    This property holds the left inset for the background.
+
+    \sa {Popup Layout}, rightInset
+*/
+qreal QQuickPopup::leftInset() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->leftInset();
+}
+
+void QQuickPopup::setLeftInset(qreal inset)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setLeftInset(inset);
+}
+
+void QQuickPopup::resetLeftInset()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetLeftInset();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::rightInset
+
+    This property holds the right inset for the background.
+
+    \sa {Popup Layout}, leftInset
+*/
+qreal QQuickPopup::rightInset() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->rightInset();
+}
+
+void QQuickPopup::setRightInset(qreal inset)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setRightInset(inset);
+}
+
+void QQuickPopup::resetRightInset()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetRightInset();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Popup::bottomInset
+
+    This property holds the bottom inset for the background.
+
+    \sa {Popup Layout}, topInset
+*/
+qreal QQuickPopup::bottomInset() const
+{
+    Q_D(const QQuickPopup);
+    return d->popupItem->bottomInset();
+}
+
+void QQuickPopup::setBottomInset(qreal inset)
+{
+    Q_D(QQuickPopup);
+    d->popupItem->setBottomInset(inset);
+}
+
+void QQuickPopup::resetBottomInset()
+{
+    Q_D(QQuickPopup);
+    d->popupItem->resetBottomInset();
+}
+
 bool QQuickPopup::filtersChildMouseEvents() const
 {
     Q_D(const QQuickPopup);
@@ -2538,6 +2670,18 @@ void QQuickPopup::spacingChange(qreal newSpacing, qreal oldSpacing)
     Q_UNUSED(newSpacing);
     Q_UNUSED(oldSpacing);
     emit spacingChanged();
+}
+
+void QQuickPopup::insetChange(const QMarginsF &newInset, const QMarginsF &oldInset)
+{
+    if (!qFuzzyCompare(newInset.top(), oldInset.top()))
+        emit topInsetChanged();
+    if (!qFuzzyCompare(newInset.left(), oldInset.left()))
+        emit leftInsetChanged();
+    if (!qFuzzyCompare(newInset.right(), oldInset.right()))
+        emit rightInsetChanged();
+    if (!qFuzzyCompare(newInset.bottom(), oldInset.bottom()))
+        emit bottomInsetChanged();
 }
 
 QFont QQuickPopup::defaultFont() const
