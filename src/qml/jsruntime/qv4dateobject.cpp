@@ -1470,7 +1470,7 @@ ReturnedValue DatePrototype::method_toISOString(const FunctionObject *b, const V
     int year = (int)YearFromTime(t);
     if (year < 0 || year > 9999) {
         if (qAbs(year) >= 1000000)
-            RETURN_RESULT(v4->newString(QStringLiteral("Invalid Date")));
+            RETURN_RESULT(v4->throwRangeError(*thisObject));
         result += year < 0 ? QLatin1Char('-') : QLatin1Char('+');
         year = qAbs(year);
         addZeroPrefixedInt(result, year, 6);
