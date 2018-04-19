@@ -43,9 +43,9 @@ import QtQuick.Templates 2.5 as T
 T.ComboBox {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 

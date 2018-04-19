@@ -44,9 +44,9 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.ComboBox {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentItem.implicitWidth + background ? (background.leftPadding + background.rightPadding) : 0)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              Math.max(implicitContentHeight,
                                       implicitIndicatorHeight) + background ? (background.topPadding + background.bottomPadding) : 0)
 

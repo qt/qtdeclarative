@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.TabBar {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
     spacing: -1

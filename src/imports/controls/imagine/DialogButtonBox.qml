@@ -43,9 +43,9 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.DialogButtonBox {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             (control.count === 1 ? contentWidth * 2 : contentWidth) + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
     topPadding: background ? background.topPadding : 0

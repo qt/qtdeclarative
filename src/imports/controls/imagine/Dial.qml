@@ -42,9 +42,9 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.Dial {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                            (handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                             (handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     topPadding: background ? background.topPadding : 0

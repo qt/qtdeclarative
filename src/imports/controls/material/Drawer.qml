@@ -44,9 +44,9 @@ T.Drawer {
 
     parent: T.Overlay.overlay
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
     topPadding: !dim && edge === Qt.BottomEdge && Material.elevation === 0

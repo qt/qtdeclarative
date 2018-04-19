@@ -44,10 +44,10 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.RangeSlider {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             Math.max(first.implicitHandleWidth,
                                      second.implicitHandleWidth) + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              Math.max(first.implicitHandleHeight,
                                       second.implicitHandleHeight) + topPadding + bottomPadding)
 

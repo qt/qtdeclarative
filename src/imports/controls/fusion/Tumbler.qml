@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.Tumbler {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding) || 60 // ### remove 60 in Qt 6
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding) || 200 // ### remove 200 in Qt 6
 
     delegate: Text {

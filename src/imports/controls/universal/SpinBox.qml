@@ -43,7 +43,7 @@ import QtQuick.Controls.Universal 2.5
 T.SpinBox {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentItem.implicitWidth + 16 +
                             up.implicitIndicatorWidth +
                             down.implicitIndicatorWidth)

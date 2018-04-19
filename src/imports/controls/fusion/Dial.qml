@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.Dial {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth,
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding) || 100 // ### remove 100 in Qt 6
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding) || 100 // ### remove 100 in Qt 6
 
     background: DialImpl {
