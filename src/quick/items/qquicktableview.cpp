@@ -329,6 +329,7 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
     FxTableItem *fxTableItem = new FxTableItem(item, q, ownItem);
     fxTableItem->setVisible(false);
     fxTableItem->cell = cell;
+    fxTableItem->index = modelIndex;
     return fxTableItem;
 }
 
