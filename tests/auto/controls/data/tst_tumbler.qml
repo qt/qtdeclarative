@@ -1035,8 +1035,8 @@ TestCase {
         if (data.bottom !== undefined)
             tumbler.bottomPadding = data.bottom;
 
-        compare(tumbler.availableWidth, implicitTumblerWidth - tumbler.leftPadding - tumbler.rightPadding);
-        compare(tumbler.availableHeight, implicitTumblerHeight - tumbler.topPadding - tumbler.bottomPadding);
+        compare(tumbler.availableWidth, tumbler.implicitWidth - tumbler.leftPadding - tumbler.rightPadding);
+        compare(tumbler.availableHeight, tumbler.implicitHeight - tumbler.topPadding - tumbler.bottomPadding);
         compare(tumbler.contentItem.x, tumbler.leftPadding);
         compare(tumbler.contentItem.y, tumbler.topPadding);
 

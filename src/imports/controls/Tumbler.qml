@@ -41,8 +41,11 @@ import QtQuick.Templates 2.5 as T
 
 T.Tumbler {
     id: control
-    implicitWidth: 60
-    implicitHeight: 200
+
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding) || 60 // ### remove 60 in Qt 6
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding) || 200 // ### remove 200 in Qt 6
 
     delegate: Text {
         text: modelData
@@ -54,6 +57,8 @@ T.Tumbler {
     }
 
     contentItem: TumblerView {
+        implicitWidth: 60
+        implicitHeight: 200
         model: control.model
         delegate: control.delegate
         path: Path {
