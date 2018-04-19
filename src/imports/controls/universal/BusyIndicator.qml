@@ -42,8 +42,10 @@ import QtQuick.Controls.Universal.impl 2.5
 T.BusyIndicator {
     id: control
 
-    implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    implicitHeight: implicitContentHeight + topPadding + bottomPadding
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding)
 
     contentItem: BusyIndicatorImpl {
         implicitWidth: 20

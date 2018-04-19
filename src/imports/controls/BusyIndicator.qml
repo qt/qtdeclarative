@@ -42,8 +42,10 @@ import QtQuick.Templates 2.5 as T
 T.BusyIndicator {
     id: control
 
-    implicitWidth: implicitContentWidth + leftPadding + rightPadding
-    implicitHeight: implicitContentHeight + topPadding + bottomPadding
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding)
 
     padding: 6
 
