@@ -112,6 +112,13 @@ namespace QQmlJS {
 
 namespace AST {
 
+enum class VariableScope {
+    NoScope,
+    Var,
+    Let,
+    Const
+};
+
 template <typename T1, typename T2>
 T1 cast(T2 *ast)
 {
@@ -671,6 +678,9 @@ public:
     PatternElementList *elementList() const { ArrayPattern *a = cast<ArrayPattern *>(bindingPattern); return a ? a->elements : nullptr; }
     PatternPropertyList *propertyList() const { ObjectPattern *o = cast<ObjectPattern *>(bindingPattern); return o ? o->properties : nullptr;  }
 
+    bool isVariableDeclaration() const { return scope != VariableScope::NoScope; }
+    bool isLexicallyScoped() const { return scope == VariableScope::Let || scope == VariableScope::Const; }
+
     virtual void boundNames(QStringList *names);
 
 // attributes
@@ -679,6 +689,8 @@ public:
     Pattern *bindingPattern = nullptr;
     ExpressionNode *initializer = nullptr;
     Type type = Literal;
+    // when used in a VariableDeclarationList
+    VariableScope scope = VariableScope::NoScope;
 };
 
 class QML_PARSER_EXPORT PatternElementList : public Node
@@ -1408,50 +1420,17 @@ public:
     StatementList *next;
 };
 
-class QML_PARSER_EXPORT VariableDeclaration: public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(VariableDeclaration)
-
-    enum VariableScope {
-        UnknownScope,
-        FunctionScope,
-        BlockScope, // let
-        ReadOnlyBlockScope // const
-    };
-
-    VariableDeclaration(const QStringRef &n, ExpressionNode *e)
-        : name(n), expression(e)
-    { kind = K; }
-
-    bool isLexicallyScoped() const { return scope != FunctionScope; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return identifierToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return expression ? expression->lastSourceLocation() : identifierToken; }
-
-// attributes
-    QStringRef name;
-    ExpressionNode *expression;
-    SourceLocation identifierToken;
-    VariableScope scope = UnknownScope;
-};
-
 class QML_PARSER_EXPORT VariableDeclarationList: public Node
 {
 public:
     QQMLJS_DECLARE_AST_NODE(VariableDeclarationList)
 
-    VariableDeclarationList(VariableDeclaration *decl):
-        declaration (decl), next (this)
-        { kind = K; }
+    VariableDeclarationList(PatternElement *decl)
+        : declaration(decl), next(this)
+    { kind = K; }
 
-    VariableDeclarationList(VariableDeclarationList *previous, VariableDeclaration *decl):
-        declaration (decl)
+    VariableDeclarationList(VariableDeclarationList *previous, PatternElement *decl)
+        : declaration(decl)
     {
         kind = K;
         next = previous->next;
@@ -1470,7 +1449,7 @@ public:
         return declaration->lastSourceLocation();
     }
 
-    inline VariableDeclarationList *finish(VariableDeclaration::VariableScope s)
+    inline VariableDeclarationList *finish(VariableScope s)
     {
         VariableDeclarationList *front = next;
         next = nullptr;
@@ -1482,7 +1461,7 @@ public:
     }
 
 // attributes
-    VariableDeclaration *declaration;
+    PatternElement *declaration;
     VariableDeclarationList *next;
     SourceLocation commaToken;
 };
@@ -1724,7 +1703,7 @@ class QML_PARSER_EXPORT LocalForEachStatement: public Statement
 public:
     QQMLJS_DECLARE_AST_NODE(LocalForEachStatement)
 
-    LocalForEachStatement(VariableDeclaration *v, ExpressionNode *e, Statement *stmt):
+    LocalForEachStatement(PatternElement *v, ExpressionNode *e, Statement *stmt):
         declaration (v), expression (e), statement (stmt)
         { kind = K; }
 
@@ -1737,7 +1716,7 @@ public:
     { return statement->lastSourceLocation(); }
 
 // attributes
-    VariableDeclaration *declaration;
+    PatternElement *declaration;
     ExpressionNode *expression;
     Statement *statement;
     SourceLocation forToken;

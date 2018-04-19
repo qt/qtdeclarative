@@ -508,7 +508,7 @@ protected:
 
     void program(AST::Program *ast);
     void statementList(AST::StatementList *ast);
-    void variableDeclaration(AST::VariableDeclaration *ast);
+    void variableDeclaration(AST::PatternElement *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef);
@@ -545,7 +545,6 @@ protected:
     bool visit(AST::UiProgram *ast) override;
     bool visit(AST::UiQualifiedId *ast) override;
     bool visit(AST::UiQualifiedPragmaId *ast) override;
-    bool visit(AST::VariableDeclaration *ast) override;
     bool visit(AST::VariableDeclarationList *ast) override;
 
     bool visit(AST::PatternElement *ast) override;

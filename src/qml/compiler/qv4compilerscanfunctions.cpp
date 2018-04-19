@@ -191,20 +191,22 @@ bool ScanFunctions::visit(ArrayPattern *ast)
     return true;
 }
 
-bool ScanFunctions::visit(VariableDeclaration *ast)
+bool ScanFunctions::visit(PatternElement *ast)
 {
-    if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
+    if (!ast->isVariableDeclaration())
+        return true;
+
+    if (_context->isStrict && (ast->bindingIdentifier == QLatin1String("eval") || ast->bindingIdentifier == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-    checkName(ast->name, ast->identifierToken);
-    if (ast->name == QLatin1String("arguments"))
+    checkName(QStringRef(&ast->bindingIdentifier), ast->identifierToken);
+    if (ast->bindingIdentifier == QLatin1String("arguments"))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-    if (ast->scope == AST::VariableDeclaration::VariableScope::ReadOnlyBlockScope && !ast->expression) {
+    if (ast->scope == VariableScope::Const && !ast->initializer) {
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
         return false;
     }
-    QString name = ast->name.toString();
-    if (!_context->addLocalVar(ast->name.toString(), ast->expression ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
-        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
+    if (!_context->addLocalVar(ast->bindingIdentifier, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(ast->bindingIdentifier));
         return false;
     }
     return true;
@@ -396,11 +398,11 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
         outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
         if (enterName) {
-            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, VariableDeclaration::FunctionScope, expr)) {
+            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, VariableScope::Var, expr)) {
                 _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
                 return false;
             }
-            outerContext->addLocalVar(name, Context::FunctionDefinition, VariableDeclaration::FunctionScope, expr);
+            outerContext->addLocalVar(name, Context::FunctionDefinition, VariableScope::Var, expr);
         }
         if (name == QLatin1String("arguments"))
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
@@ -417,7 +419,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
 
     if (!name.isEmpty() && !formals->containsName(name))
-        _context->addLocalVar(name, Context::ThisFunctionName, QQmlJS::AST::VariableDeclaration::FunctionScope);
+        _context->addLocalVar(name, Context::ThisFunctionName, VariableScope::Var);
     _context->formals = formals;
 
     if (body && !_context->isStrict)
@@ -444,7 +446,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             }
         }
         if (!_context->arguments.contains(arg))
-            _context->addLocalVar(arg, Context::VariableDefinition, QQmlJS::AST::VariableDeclaration::FunctionScope);
+            _context->addLocalVar(arg, Context::VariableDefinition, VariableScope::Var);
     }
     return true;
 }

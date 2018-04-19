@@ -483,15 +483,6 @@ void VariableDeclarationList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void VariableDeclaration::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(expression, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
 void EmptyStatement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {

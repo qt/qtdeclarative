@@ -118,11 +118,11 @@ struct Context {
     struct Member {
         MemberType type = UndefinedMember;
         int index = -1;
-        QQmlJS::AST::VariableDeclaration::VariableScope scope = QQmlJS::AST::VariableDeclaration::FunctionScope;
+        QQmlJS::AST::VariableScope scope = QQmlJS::AST::VariableScope::Var;
         mutable bool canEscape = false;
         QQmlJS::AST::FunctionExpression *function = nullptr;
 
-        bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableDeclaration::FunctionScope; }
+        bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableScope::Var; }
     };
     typedef QMap<QString, Member> MemberMap;
 
@@ -259,18 +259,18 @@ struct Context {
         usedVariables.insert(name);
     }
 
-    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
+    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
     {
         if (name.isEmpty())
             return true;
 
         if (type != FunctionDefinition) {
             if (formals->containsName(name))
-                return (scope == QQmlJS::AST::VariableDeclaration::FunctionScope);
+                return (scope == QQmlJS::AST::VariableScope::Var);
         }
         MemberMap::iterator it = members.find(name);
         if (it != members.end()) {
-            if (scope != QQmlJS::AST::VariableDeclaration::FunctionScope || (*it).scope != QQmlJS::AST::VariableDeclaration::FunctionScope)
+            if (scope != QQmlJS::AST::VariableScope::Var || (*it).scope != QQmlJS::AST::VariableScope::Var)
                 return false;
             if ((*it).type <= type) {
                 (*it).type = type;

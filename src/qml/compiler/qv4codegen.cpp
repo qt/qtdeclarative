@@ -374,17 +374,17 @@ void Codegen::statementList(StatementList *ast)
     requiresReturnValue = _requiresReturnValue;
 }
 
-void Codegen::variableDeclaration(VariableDeclaration *ast)
+void Codegen::variableDeclaration(PatternElement *ast)
 {
     RegisterScope scope(this);
 
-    if (!ast->expression)
+    if (!ast->initializer)
         return;
-    Reference rhs = expression(ast->expression);
+    Reference rhs = expression(ast->initializer);
     if (hasError)
         return;
 
-    Reference lhs = referenceForName(ast->name.toString(), true);
+    Reference lhs = referenceForName(ast->bindingIdentifier, true);
     //### if lhs is a temp, this won't generate a temp-to-temp move. Same for when rhs is a const
     rhs.loadInAccumulator();
     lhs.storeConsumeAccumulator();
@@ -622,12 +622,6 @@ bool Codegen::visit(UiQualifiedId *)
 }
 
 bool Codegen::visit(UiQualifiedPragmaId *)
-{
-    Q_UNREACHABLE();
-    return false;
-}
-
-bool Codegen::visit(VariableDeclaration *)
 {
     Q_UNREACHABLE();
     return false;
@@ -2350,7 +2344,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (!_context->parent || _context->usesArgumentsObject == Context::ArgumentsObjectUnknown)
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed)
-        _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
+        _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableScope::Var);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
     if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
@@ -2787,7 +2781,7 @@ bool Codegen::visit(LocalForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference it = referenceForName(ast->declaration->name.toString(), true).asLValue();
+    Reference it = referenceForName(ast->declaration->bindingIdentifier, true).asLValue();
 
     nextIterObj.loadInAccumulator();
     it.storeConsumeAccumulator();

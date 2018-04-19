@@ -133,7 +133,6 @@ class Block;
 class StatementList;
 class VariableStatement;
 class VariableDeclarationList;
-class VariableDeclaration;
 class EmptyStatement;
 class ExpressionStatement;
 class IfStatement;

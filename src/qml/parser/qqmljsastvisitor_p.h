@@ -248,9 +248,6 @@ public:
     virtual bool visit(VariableDeclarationList *) { return true; }
     virtual void endVisit(VariableDeclarationList *) {}
 
-    virtual bool visit(VariableDeclaration *) { return true; }
-    virtual void endVisit(VariableDeclaration *) {}
-
     virtual bool visit(EmptyStatement *) { return true; }
     virtual void endVisit(EmptyStatement *) {}
 

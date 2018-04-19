@@ -105,7 +105,7 @@ protected:
     bool visit(AST::CallExpression *ast) override;
     bool visit(AST::NewMemberExpression *ast) override;
     bool visit(AST::ArrayPattern *ast) override;
-    bool visit(AST::VariableDeclaration *ast) override;
+    bool visit(AST::PatternElement *ast) override;
     bool visit(AST::IdentifierExpression *ast) override;
     bool visit(AST::ExpressionStatement *ast) override;
     bool visit(AST::FunctionExpression *ast) override;

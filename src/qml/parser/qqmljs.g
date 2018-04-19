@@ -261,6 +261,7 @@ public:
     union Value {
       int ival;
       double dval;
+      AST::VariableScope scope;
       AST::ArgumentList *ArgumentList;
       AST::CaseBlock *CaseBlock;
       AST::CaseClause *CaseClause;
@@ -278,7 +279,6 @@ public:
       AST::Statement *Statement;
       AST::StatementList *StatementList;
       AST::Block *Block;
-      AST::VariableDeclaration *VariableDeclaration;
       AST::VariableDeclarationList *VariableDeclarationList;
       AST::Pattern *Pattern;
       AST::PatternElement *PatternElement;
@@ -2737,20 +2737,20 @@ StatementListOpt: StatementList;
 LetOrConst: T_LET;
 /.
     case $rule_number: {
-        sym(1).ival = AST::VariableDeclaration::BlockScope;
+        sym(1).scope = AST::VariableScope::Let;
     } break;
 ./
 LetOrConst: T_CONST;
 /.
     case $rule_number: {
-        sym(1).ival = AST::VariableDeclaration::ReadOnlyBlockScope;
+        sym(1).scope = AST::VariableScope::Const;
     } break;
 ./
 
 Var: T_VAR;
 /.
     case $rule_number: {
-        sym(1).ival = AST::VariableDeclaration::FunctionScope;
+        sym(1).scope = AST::VariableScope::Var;
     } break;
 ./
 
@@ -2763,8 +2763,7 @@ VarDeclaration: Var VariableDeclarationList;
 VarDeclaration_In: Var VariableDeclarationList_In;
 /.
     case $rule_number: {
-        AST::VariableDeclaration::VariableScope s = AST::VariableDeclaration::VariableScope(sym(1).ival);
-        AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(s));
+        AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(sym(1).scope));
         node->declarationKindToken = loc(1);
         sym(1).Node = node;
     } break;
@@ -2782,7 +2781,7 @@ VariableDeclarationList: VariableDeclaration;
 VariableDeclarationList_In: VariableDeclaration_In;
 /.
     case $rule_number: {
-  sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclaration);
+  sym(1).Node = new (pool) AST::VariableDeclarationList(sym(1).PatternElement);
     } break;
 ./
 
@@ -2795,7 +2794,7 @@ VariableDeclarationList: VariableDeclarationList T_COMMA VariableDeclaration;
 VariableDeclarationList_In: VariableDeclarationList_In T_COMMA VariableDeclaration_In;
 /.
     case $rule_number: {
-        AST::VariableDeclarationList *node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclarationList, sym(3).VariableDeclaration);
+        AST::VariableDeclarationList *node = new (pool) AST::VariableDeclarationList(sym(1).VariableDeclarationList, sym(3).PatternElement);
         node->commaToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -2810,7 +2809,7 @@ VariableDeclaration: BindingIdentifier InitializerOpt;
 VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
 /.
     case $rule_number: {
-        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(1), sym(2).Expression);
+        auto *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
         node->identifierToken = loc(1);
         sym(1).Node = node;
     } break;
@@ -2823,7 +2822,14 @@ LexicalBinding_In: BindingPattern Initializer_In;
 VariableDeclaration: BindingPattern Initializer;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 VariableDeclaration_In: BindingPattern Initializer_In;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+    UNIMPLEMENTED;
+        auto *node = new (pool) AST::PatternElement(sym(1).Pattern, sym(2).Expression);
+        node->identifierToken = loc(1);
+        sym(1).Node = node;
+    } break;
+./
 
 BindingPattern:  T_LBRACE ObjectBindingPattern T_RBRACE;
 /.
@@ -3125,7 +3131,7 @@ IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_IN Expression_In T_R
 IterationStatement: T_FOR T_LPAREN ForDeclaration T_IN Expression_In T_RPAREN Statement;
 /.
     case $rule_number: {
-        AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(sym(3).VariableDeclaration, sym(5).Expression, sym(7).Statement);
+        AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(sym(3).PatternElement, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
         node->varToken = loc(3);
@@ -3146,9 +3152,9 @@ ForDeclaration: LetOrConst ForBinding;
 ForDeclaration: Var ForBinding;
 /.
     case $rule_number: {
-        AST::VariableDeclaration *node = new (pool) AST::VariableDeclaration(stringRef(2), nullptr);
-        node->scope = AST::VariableDeclaration::VariableScope(sym(1).ival);
+        auto *node = new (pool) AST::PatternElement(stringRef(2), nullptr);
         node->identifierToken = loc(2);
+        node->scope = sym(1).scope;
         sym(1).Node = node;
     } break;
 ./
