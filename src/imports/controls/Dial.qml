@@ -42,12 +42,14 @@ import QtQuick.Templates 2.5 as T
 T.Dial {
     id: control
 
-    implicitWidth: 184
-    implicitHeight: 184
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding) || 184 // ### remove 184 in Qt 6
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding) || 184 // ### remove 184 in Qt 6
 
     background: DialImpl {
-        width: control.availableWidth
-        height: control.availableHeight
+        implicitWidth: 184
+        implicitHeight: 184
         color: control.visualFocus ? control.palette.highlight : control.palette.dark
         progress: control.position
         opacity: control.enabled ? 1 : 0.3

@@ -44,10 +44,14 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.Dial {
     id: control
 
-    implicitWidth: 100
-    implicitHeight: 100
+    implicitWidth: Math.max(implicitBackgroundWidth,
+                            implicitContentWidth + leftPadding + rightPadding) || 100 // ### remove 100 in Qt 6
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             implicitContentHeight + topPadding + bottomPadding) || 100 // ### remove 100 in Qt 6
 
     background: DialImpl {
+        implicitWidth: 100
+        implicitHeight: 100
         palette: control.palette
         highlight: control.visualFocus
     }
