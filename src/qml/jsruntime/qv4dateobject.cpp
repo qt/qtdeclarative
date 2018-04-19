@@ -533,7 +533,7 @@ static inline double ParseString(const QString &s, double localTZA)
         else if (seenT) // No zone specified, treat date-time as local time
             t = UTC(t, localTZA);
         // else: treat plain date as already in UTC
-        return t;
+        return TimeClip(t);
     }
 
     QDateTime dt = QDateTime::fromString(s, Qt::TextDate);
@@ -603,7 +603,7 @@ static inline double ParseString(const QString &s, double localTZA)
     }
     if (!dt.isValid())
         return qt_qnan();
-    return dt.toMSecsSinceEpoch();
+    return TimeClip(dt.toMSecsSinceEpoch());
 }
 
 /*!
@@ -703,7 +703,7 @@ DEFINE_OBJECT_VTABLE(DateObject);
 void Heap::DateObject::init(const QDateTime &date)
 {
     Object::init();
-    this->date = date.isValid() ? date.toMSecsSinceEpoch() : qt_qnan();
+    this->date = date.isValid() ? TimeClip(date.toMSecsSinceEpoch()) : qt_qnan();
 }
 
 void Heap::DateObject::init(const QTime &time)
