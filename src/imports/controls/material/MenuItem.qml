@@ -65,6 +65,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
         visible: control.checkable
         control: control
+        checkState: control.checked ? Qt.Checked : Qt.Unchecked
     }
 
     arrow: ColorImage {
