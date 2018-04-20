@@ -43,14 +43,6 @@
 #include "qquickimaginetheme_p.h"
 #include "qquickninepatchimage_p.h"
 
-static inline void initResources()
-{
-    Q_INIT_RESOURCE(qmake_qtquickcontrols2imaginestyle);
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_2_Imagine);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQtQuickControlsImagine, "qt.quick.controls.imagine")
@@ -71,7 +63,6 @@ public:
 
 QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    initResources();
 }
 
 void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)

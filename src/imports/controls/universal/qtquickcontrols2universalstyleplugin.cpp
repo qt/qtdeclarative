@@ -42,14 +42,6 @@
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
 
-static inline void initResources()
-{
-    Q_INIT_RESOURCE(qtquickcontrols2universalstyleplugin);
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_2_Universal);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2UniversalStylePlugin: public QQuickStylePlugin
@@ -68,7 +60,6 @@ public:
 
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    initResources();
     QQuickUniversalStyle::initGlobals();
 }
 

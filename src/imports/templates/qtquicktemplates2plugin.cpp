@@ -100,13 +100,6 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p.h>
 #endif
 
-static inline void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Templates_2);
-#endif
-}
-
 #if QT_CONFIG(shortcut)
 // qtdeclarative/src/quick/util/qquickshortcut.cpp
 typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
@@ -147,8 +140,6 @@ private:
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
     : QQmlExtensionPlugin(parent), registered(false)
 {
-    initResources();
-
 #if QT_CONFIG(shortcut)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
     qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);

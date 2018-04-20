@@ -43,14 +43,6 @@
 #include "qquickfusionstyle_p.h"
 #include "qquickfusiontheme_p.h"
 
-static inline void initResources()
-{
-    Q_INIT_RESOURCE(qtquickcontrols2fusionstyle);
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_2_Fusion);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
@@ -76,7 +68,6 @@ public:
 
 QtQuickControls2FusionStylePlugin::QtQuickControls2FusionStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    initResources();
 }
 
 void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)

@@ -58,13 +58,6 @@
 
 #include "qquickplatformicon_p.h"
 
-static inline void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_platform);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
@@ -83,7 +76,6 @@ public:
 
 QtLabsPlatformPlugin::QtLabsPlatformPlugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
-    initResources();
 }
 
 void QtLabsPlatformPlugin::registerTypes(const char *uri)

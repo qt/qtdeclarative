@@ -45,14 +45,6 @@
 #include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
 
-static inline void initResources()
-{
-    Q_INIT_RESOURCE(qtquickcontrols2materialstyleplugin);
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_2_Material);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2MaterialStylePlugin : public QQuickStylePlugin
@@ -71,7 +63,6 @@ public:
 
 QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    initResources();
     QQuickMaterialStyle::initGlobals();
 }
 

@@ -60,14 +60,6 @@
 #include "qquickdefaultstyle_p.h"
 #include "qquickdefaulttheme_p.h"
 
-static inline void initResources()
-{
-    Q_INIT_RESOURCE(qtquickcontrols2plugin);
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Controls_2);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2Plugin: public QQuickStylePlugin
@@ -87,7 +79,6 @@ public:
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    initResources();
 }
 
 QtQuickControls2Plugin::~QtQuickControls2Plugin()
