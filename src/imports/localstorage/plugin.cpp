@@ -523,7 +523,7 @@ through the data.
 
 
 /*!
-    \qmlmodule QtQuick.LocalStorage 2
+    \qmlmodule QtQuick.LocalStorage 2.11
     \title Qt Quick Local Storage QML Types
     \ingroup qmlmodules
     \brief Provides a JavaScript object singleton type for accessing a local
