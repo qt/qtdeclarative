@@ -211,7 +211,7 @@ void tst_MptaInterop::touchesThenPinch()
             pinchStoleGrab = i;
     }
     qCDebug(lcPointerTests) << "pinch started after" << pinchStoleGrab << "moves; ended with scale" << pinch->scale() << "rot" << pinch->rotation();
-    QTRY_VERIFY(pinch->rotation() > 8);
+    QTRY_VERIFY(pinch->rotation() > 4);
     QVERIFY(pinch->scale() > 1);
 
     // Press one more point (pinkie finger)
