@@ -4,7 +4,8 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
-    labsmodels
+    labsmodels \
+    wavefrontmesh
 
 qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
