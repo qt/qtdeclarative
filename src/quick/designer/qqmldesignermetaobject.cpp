@@ -83,7 +83,7 @@ static QQmlPropertyCache *cacheForObject(QObject *object, QQmlEngine *engine)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
     if (metaObject)
-        return metaObject->cache;
+        return metaObject->cache.data();
 
     return QQmlEnginePrivate::get(engine)->cache(object);
 }
@@ -139,7 +139,7 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
         cache->setParent(ddata->propertyCache);
         cache->invalidate(engine, this);
         ddata->propertyCache->release();
-        ddata->propertyCache = cache;
+        ddata->propertyCache = cache.data();
         ddata->propertyCache->addref();
     }
 

@@ -949,7 +949,7 @@ public:
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
-    QQmlPropertyCache *rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
+    QQmlRefPointer<QQmlPropertyCache> rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 
@@ -1045,8 +1045,8 @@ struct ResolvedTypeReference
     // therefore cannot have a property cache installed when instantiated.
     bool isFullyDynamicType;
 
-    QQmlPropertyCache *propertyCache() const;
-    QQmlPropertyCache *createPropertyCache(QQmlEngine *);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
+    QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QQmlEngine *);
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
 
     void doDynamicTypeCheck();

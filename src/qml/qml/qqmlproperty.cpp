@@ -255,7 +255,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 {
     if (!obj) return;
 
-    QQmlTypeNameCache *typeNameCache = context?context->imports:nullptr;
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context?context->imports:nullptr;
 
     QObject *currentObject = obj;
     QVector<QStringRef> path;

@@ -211,8 +211,8 @@ public:
         m_errors += component.errors();
 
         if (component.isReady()) {
-            CompilationUnit *rootCompilationUnit = QQmlComponentPrivate::get(&component)->compilationUnit;
-            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit);
+            QQmlRefPointer<CompilationUnit> rootCompilationUnit = QQmlComponentPrivate::get(&component)->compilationUnit;
+            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit.data());
             m_testCases = result.testCases + result.finalizedPartialTestCases();
             m_errors += result.errors;
         }
@@ -274,7 +274,7 @@ private:
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
 
-        if (CompilationUnit *superTypeUnit = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)->compilationUnit) {
+        if (CompilationUnit *superTypeUnit = compilationUnit->resolvedTypes.value(object->inheritedTypeNameIndex)->compilationUnit.data()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;

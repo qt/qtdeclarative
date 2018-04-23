@@ -162,7 +162,7 @@ protected:
     }
 
     void setupFunction(QV4::ExecutionContext *qmlContext, QV4::Function *f);
-    void setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit);
+    void setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
 
     // We store some flag bits in the following flag pointers.
     //    activeGuards:flag1  - notifyOnValueChanged

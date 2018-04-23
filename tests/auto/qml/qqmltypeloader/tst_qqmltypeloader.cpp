@@ -85,7 +85,7 @@ void tst_QQMLTypeLoader::trimCache()
         QUrl url = testFileUrl("trim_cache.qml");
         url.setQuery(QString::number(i));
 
-        QQmlTypeData *data = loader.getType(url);
+        QQmlTypeData *data = loader.getType(url).take();
         // Run an event loop to receive the callback that release()es.
         QTRY_COMPARE(data->count(), 2);
 

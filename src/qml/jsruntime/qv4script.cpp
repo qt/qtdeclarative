@@ -60,7 +60,7 @@
 
 using namespace QV4;
 
-Script::Script(ExecutionEngine *v4, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit)
+Script::Script(ExecutionEngine *v4, QmlContext *qml, const QQmlRefPointer<CompiledData::CompilationUnit> &compilationUnit)
     : line(1), column(0), context(v4->rootContext()), strictMode(false), inheritContext(true), parsed(false)
     , compilationUnit(compilationUnit), vmFunction(nullptr), parseAsBinding(true)
 {

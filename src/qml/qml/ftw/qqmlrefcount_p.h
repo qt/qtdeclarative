@@ -93,10 +93,12 @@ public:
 
     inline T* operator->() const { return o; }
     inline T& operator*() const { return *o; }
-    inline operator T*() const { return o; }
+    explicit inline operator bool() const { return o != nullptr; }
     inline T* data() const { return o; }
 
     inline QQmlRefPointer<T> &adopt(T *);
+
+    inline T* take() { T *res = o; o = nullptr; return res; }
 
 private:
     T *o;

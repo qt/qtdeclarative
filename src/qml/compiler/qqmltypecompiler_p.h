@@ -92,7 +92,7 @@ public:
     QV4::CompiledData::ResolvedTypeReferenceMap resolvedTypes;
     // ---
 
-    QV4::CompiledData::CompilationUnit *compile();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(QQmlError error);

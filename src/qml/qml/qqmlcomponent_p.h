@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : typeData(nullptr), progress(0.), start(-1), engine(nullptr), creationContext(nullptr), depthIncreased(false) {}
+        : progress(0.), start(-1), engine(nullptr), creationContext(nullptr), depthIncreased(false) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -95,11 +95,11 @@ public:
             QQmlContextData *context,
             QQmlContextData *forContext);
 
-    QQmlTypeData *typeData;
+    QQmlRefPointer<QQmlTypeData> typeData;
     void typeDataReady(QQmlTypeData *) override;
     void typeDataProgress(QQmlTypeData *, qreal) override;
 
-    void fromTypeData(QQmlTypeData *data);
+    void fromTypeData(const QQmlRefPointer<QQmlTypeData> &data);
 
     QUrl url;
     qreal progress;

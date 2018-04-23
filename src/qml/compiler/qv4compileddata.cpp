@@ -643,7 +643,7 @@ QString Binding::valueAsScriptString(const Unit *unit) const
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */
-QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
+QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
 {
     if (type.isValid())
         return typePropertyCache;
@@ -654,7 +654,7 @@ QQmlPropertyCache *ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlPropertyCache *ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
 {
     if (typePropertyCache) {
         return typePropertyCache;

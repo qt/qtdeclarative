@@ -235,7 +235,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message))
+        if (!saveFunction(irDocument.javaScriptCompilationUnit.data(), &error->message))
             return false;
 
         free(unit);
@@ -322,7 +322,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message)) {
+        if (!saveFunction(irDocument.javaScriptCompilationUnit.data(), &error->message)) {
             engine->setDirectives(oldDirs);
             return false;
         }

@@ -232,7 +232,7 @@ public:
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     QVector<DeferredData *> deferredData;
 
-    void deferData(int objectIndex, QV4::CompiledData::CompilationUnit *, QQmlContextData *);
+    void deferData(int objectIndex, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, QQmlContextData *);
     void releaseDeferredData();
 
     QV4::WeakValue jsWrapper;

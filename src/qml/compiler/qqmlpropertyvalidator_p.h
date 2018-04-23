@@ -58,7 +58,7 @@ class QQmlPropertyValidator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, QV4::CompiledData::CompilationUnit *compilationUnit);
+    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
 
     QVector<QQmlCompileError> validate();
 
@@ -74,6 +74,7 @@ private:
     QString stringAt(int index) const { return qmlUnit->stringAt(index); }
 
     QQmlEnginePrivate *enginePrivate;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     const QQmlImports &imports;
     const QV4::CompiledData::Unit *qmlUnit;
     const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;

@@ -95,7 +95,7 @@ Q_SIGNALS:
     void signalB();
 };
 
-QQmlPropertyData *cacheProperty(QQmlPropertyCache *cache, const char *name)
+QQmlPropertyData *cacheProperty(const QQmlRefPointer<QQmlPropertyCache> &cache, const char *name)
 {
     return cache->property(QLatin1String(name), nullptr, nullptr);
 }

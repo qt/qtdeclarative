@@ -979,13 +979,13 @@ public:
 
     void append(QQmlPropertyCache *cache) { cache->addref(); data.append(cache); }
     QQmlPropertyCache *at(int index) const { return data.at(index).data(); }
-    void set(int index, QQmlPropertyCache *replacement) {
+    void set(int index, const QQmlRefPointer<QQmlPropertyCache> &replacement) {
         if (QQmlPropertyCache *oldCache = data.at(index).data()) {
-            if (replacement == oldCache)
+            if (replacement.data() == oldCache)
                 return;
             oldCache->release();
         }
-        data[index] = replacement;
+        data[index] = replacement.data();
         replacement->addref();
     }
 

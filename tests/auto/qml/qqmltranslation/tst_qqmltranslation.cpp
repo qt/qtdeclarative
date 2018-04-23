@@ -76,7 +76,7 @@ void tst_qqmltranslation::translation()
     if (verifyCompiledData) {
         QQmlContext *context = qmlContext(object);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
-        QQmlTypeData *typeData = engine->typeLoader.getType(context->baseUrl());
+        QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QV4::CompiledData::CompilationUnit *compilationUnit = typeData->compilationUnit();
         QVERIFY(compilationUnit);
 
@@ -136,7 +136,7 @@ void tst_qqmltranslation::idTranslation()
     {
         QQmlContext *context = qmlContext(object);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(context->engine());
-        QQmlTypeData *typeData = engine->typeLoader.getType(context->baseUrl());
+        QQmlRefPointer<QQmlTypeData> typeData = engine->typeLoader.getType(context->baseUrl());
         QV4::CompiledData::CompilationUnit *compilationUnit = typeData->compilationUnit();
         QVERIFY(compilationUnit);
 

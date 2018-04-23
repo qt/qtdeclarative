@@ -45,8 +45,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, QV4::CompiledData::CompilationUnit *compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
+    , compilationUnit(compilationUnit)
     , imports(imports)
     , qmlUnit(compilationUnit->data)
     , resolvedTypes(compilationUnit->resolvedTypes)
@@ -629,7 +630,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
 
         const QV4::CompiledData::Object *targetObject = qmlUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex)) {
-            QQmlPropertyCache *cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+            QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
             const QMetaObject *mo = cache->firstCppMetaObject();
             QQmlType qmlType;
             while (mo && !qmlType.isValid()) {

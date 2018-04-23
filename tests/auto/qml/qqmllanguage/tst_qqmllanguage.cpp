@@ -2193,7 +2193,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
     QUrl url = testFileUrl("scriptString7.qml");
     {
         QQmlEnginePrivate *eng = QQmlEnginePrivate::get(&engine);
-        QQmlTypeData *td = eng->typeLoader.getType(url);
+        QQmlRefPointer<QQmlTypeData> td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
         const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->data;

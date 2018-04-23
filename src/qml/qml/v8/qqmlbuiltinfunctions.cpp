@@ -1156,7 +1156,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
     if (!parentArg)
         THROW_GENERIC_ERROR("Qt.createQmlObject(): Missing parent object");
 
-    QQmlTypeData *typeData = QQmlEnginePrivate::get(engine)->typeLoader.getType(
+    QQmlRefPointer<QQmlTypeData> typeData = QQmlEnginePrivate::get(engine)->typeLoader.getType(
                 qml.toUtf8(), url, QQmlTypeLoader::Synchronous);
     Q_ASSERT(typeData->isCompleteOrError());
     QQmlComponent component(engine);

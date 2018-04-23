@@ -1706,7 +1706,7 @@ void QQmlData::NotifyList::layout()
     todo = nullptr;
 }
 
-void QQmlData::deferData(int objectIndex, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *context)
+void QQmlData::deferData(int objectIndex, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlContextData *context)
 {
     QQmlData::DeferredData *deferData = new QQmlData::DeferredData;
     deferData->deferredIdx = objectIndex;
@@ -2273,7 +2273,7 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->rootPropertyCache());
+        return QQmlMetaObject((*iter)->rootPropertyCache().data());
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type.baseMetaObject());
@@ -2285,7 +2285,7 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return QQmlMetaObject((*iter)->rootPropertyCache());
+        return QQmlMetaObject((*iter)->rootPropertyCache().data());
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         return QQmlMetaObject(type.metaObject());
@@ -2297,7 +2297,7 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->rootPropertyCache();
+        return (*iter)->rootPropertyCache().data();
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();
@@ -2310,7 +2310,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVe
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
     if (iter != m_compositeTypes.cend()) {
-        return (*iter)->rootPropertyCache();
+        return (*iter)->rootPropertyCache().data();
     } else {
         QQmlType type = QQmlMetaType::qmlType(t);
         locker.unlock();

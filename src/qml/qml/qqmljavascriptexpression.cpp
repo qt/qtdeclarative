@@ -458,7 +458,7 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
     setCompilationUnit(m_v4Function->compilationUnit);
 }
 
-void QQmlJavaScriptExpression::setCompilationUnit(QV4::CompiledData::CompilationUnit *compilationUnit)
+void QQmlJavaScriptExpression::setCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {
     m_compilationUnit = compilationUnit;
 }

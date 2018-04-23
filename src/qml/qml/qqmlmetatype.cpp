@@ -576,7 +576,7 @@ QQmlType QQmlType::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
     Q_ASSERT(isComposite());
     if (!engine || !d)
         return QQmlType();
-    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()), QQmlRefPointer<QQmlTypeData>::Adopt);
+    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return QQmlType();
     QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
@@ -590,11 +590,11 @@ QQmlPropertyCache *QQmlType::compositePropertyCache(QQmlEnginePrivate *engine) c
     Q_ASSERT(isComposite());
     if (!engine)
         return nullptr;
-    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()), QQmlRefPointer<QQmlTypeData>::Adopt);
+    QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return nullptr;
     QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
-    return compilationUnit->rootPropertyCache();
+    return compilationUnit->rootPropertyCache().data();
 }
 
 static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
@@ -841,7 +841,7 @@ QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersio
 {
     for (int i = 0; i < propertyCaches.count(); ++i)
         if (propertyCaches.at(i).minorVersion == minorVersion)
-            return propertyCaches.at(i).cache;
+            return propertyCaches.at(i).cache.data();
     return nullptr;
 }
 

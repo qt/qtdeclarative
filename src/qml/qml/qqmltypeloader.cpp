@@ -505,7 +505,7 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
         m_waitingFor.contains(blob))
         return;
 
-    blob->addref();
+    blob->addref(); // balanced in notifyComplete
 
     m_data.setStatus(WaitingForDependencies);
 
@@ -1653,7 +1653,7 @@ QQmlImportDatabase *QQmlTypeLoader::importDatabase() const
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
+QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 {
     Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
@@ -1694,8 +1694,6 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
         }
     }
 
-    typeData->addref();
-
     return typeData;
 }
 
@@ -1703,14 +1701,14 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
 Returns a QQmlTypeData for the given \a data with the provided base \a url.  The
 QQmlTypeData will not be cached.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Mode mode)
+QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Mode mode)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlTypeData *typeData = new QQmlTypeData(url, this);
     QQmlTypeLoader::loadWithStaticData(typeData, data, mode);
 
-    return typeData;
+    return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
 }
 
 /*!
@@ -2068,15 +2066,8 @@ QQmlTypeData::~QQmlTypeData()
 {
     for (int ii = 0; ii < m_scripts.count(); ++ii)
         m_scripts.at(ii).script->release();
-    for (int ii = 0; ii < m_compositeSingletons.count(); ++ii) {
-        if (QQmlTypeData *tdata = m_compositeSingletons.at(ii).typeData)
-            tdata->release();
-    }
-    for (auto it = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd();
-         it != end; ++it) {
-        if (QQmlTypeData *tdata = it->typeData)
-            tdata->release();
-    }
+    m_compositeSingletons.clear();
+    m_resolvedTypes.clear();
 }
 
 const QList<QQmlTypeData::ScriptReference> &QQmlTypeData::resolvedScripts() const
@@ -2194,7 +2185,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
     {
         QQmlPropertyCacheCreator<QV4::CompiledData::CompilationUnit> propertyCacheCreator(&m_compiledData->propertyCaches,
                                                                                           &pendingGroupPropertyBindings,
-                                                                                          engine, m_compiledData, &m_importCache);
+                                                                                          engine, m_compiledData.data(), &m_importCache);
         QQmlCompileError error = propertyCacheCreator.buildMetaObjects();
         if (error.isSet()) {
             setError(error);
@@ -2202,7 +2193,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeName
         }
     }
 
-    QQmlPropertyCacheAliasCreator<QV4::CompiledData::CompilationUnit> aliasCreator(&m_compiledData->propertyCaches, m_compiledData);
+    QQmlPropertyCacheAliasCreator<QV4::CompiledData::CompilationUnit> aliasCreator(&m_compiledData->propertyCaches, m_compiledData.data());
     aliasCreator.appendAliasPropertiesToMetaObjects();
 
     pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_compiledData->propertyCaches);
@@ -2674,7 +2665,7 @@ void QQmlTypeData::resolveTypes()
                 // TODO: give an error message? If so, we should record and show the path of the cycle.
                 continue;
             }
-            addDependency(ref.typeData);
+            addDependency(ref.typeData.data());
             ref.prefix = csRef.prefix;
 
             m_compositeSingletons << ref;
@@ -2704,7 +2695,7 @@ void QQmlTypeData::resolveTypes()
 
         if (ref.type.isComposite()) {
             ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
-            addDependency(ref.typeData);
+            addDependency(ref.typeData.data());
         }
         ref.majorVersion = majorVersion;
         ref.minorVersion = minorVersion;
@@ -2736,7 +2727,7 @@ QQmlCompileError QQmlTypeData::buildTypeResolutionCaches(
     for (const QQmlTypeData::TypeReference &singleton: m_compositeSingletons)
         (*typeNameCache)->add(singleton.type.qmlTypeName(), singleton.type.sourceUrl(), singleton.prefix);
 
-    m_importCache.populateCache(*typeNameCache);
+    m_importCache.populateCache(typeNameCache->data());
 
     QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
 

@@ -76,7 +76,7 @@ struct Q_QML_EXPORT Script {
         if (qml)
             qmlContext.set(engine, *qml);
     }
-    Script(ExecutionEngine *engine, QmlContext *qml, CompiledData::CompilationUnit *compilationUnit);
+    Script(ExecutionEngine *engine, QmlContext *qml, const QQmlRefPointer<CompiledData::CompilationUnit> &compilationUnit);
     ~Script();
     QString sourceFile;
     int line;

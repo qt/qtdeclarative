@@ -94,7 +94,7 @@ public:
 class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache);
+    QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache);
     ~QQmlInterceptorMetaObject() override;
 
     void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
@@ -104,7 +104,7 @@ public:
     QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o) override;
 
     // Used by auto-tests for inspection
-    QQmlPropertyCache *propertyCache() const { return cache; }
+    QQmlPropertyCache *propertyCache() const { return cache.data(); }
 
     bool intercepts(QQmlPropertyIndex propertyIndex) const
     {
@@ -146,7 +146,7 @@ class QQmlVMEMetaObjectEndpoint;
 class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
-    QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj, QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId);
+    QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlCompilationUnit, int qmlObjectId);
     ~QQmlVMEMetaObject() override;
 
     bool aliasTarget(int index, QObject **target, int *coreIndex, int *valueTypeIndex) const;

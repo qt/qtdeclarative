@@ -120,7 +120,7 @@ ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, 
 
 // Returns a type wrapper for importNamespace (of t) on o.  This allows nested resolution of a type in a
 // namespace.
-ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, QQmlTypeNameCache *t, const QQmlImportRef *importNamespace,
+ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlTypeNameCache> &t, const QQmlImportRef *importNamespace,
                                      Heap::QQmlTypeWrapper::TypeNameMode mode)
 {
     Q_ASSERT(t);
@@ -128,7 +128,7 @@ ReturnedValue QQmlTypeWrapper::create(QV4::ExecutionEngine *engine, QObject *o, 
     Scope scope(engine);
 
     Scoped<QQmlTypeWrapper> w(scope, engine->memoryManager->allocate<QQmlTypeWrapper>());
-    w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t; w->d()->importNamespace = importNamespace;
+    w->d()->mode = mode; w->d()->object = o; w->d()->typeNamespace = t.data(); w->d()->importNamespace = importNamespace;
     t->addref();
     return w.asReturnedValue();
 }
@@ -385,10 +385,9 @@ ReturnedValue QQmlTypeWrapper::instanceOf(const Object *typeObject, const Value 
         if (!theirDData->compilationUnit)
             return Encode(false);
 
-        QQmlTypeData *td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
+        QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         CompiledData::CompilationUnit *cu = td->compilationUnit();
         myQmlType = qenginepriv->metaObjectForType(cu->metaTypeId);
-        td->release();
     } else {
         myQmlType = qenginepriv->metaObjectForType(myTypeId);
     }

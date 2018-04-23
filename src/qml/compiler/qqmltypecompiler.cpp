@@ -67,7 +67,7 @@ QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *type
 {
 }
 
-QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
 {
     // Build property caches and VME meta object data
 
@@ -147,7 +147,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine,
-                                         document->program, typeNameCache, &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
+                                         document->program, typeNameCache.data(), &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
         v4CodeGenerator.setUseFastLookups(false);
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
@@ -165,7 +165,7 @@ QV4::CompiledData::CompilationUnit *QQmlTypeCompiler::compile()
     // The js unit owns the data and will free the qml unit.
     document->javaScriptCompilationUnit->data = qmlUnit;
 
-    QV4::CompiledData::CompilationUnit *compilationUnit = document->javaScriptCompilationUnit;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit->typeNameCache = typeNameCache;
     compilationUnit->resolvedTypes = resolvedTypes;
@@ -339,14 +339,12 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             if (!type.isValid()) {
                 if (imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr)) {
                     if (type.isComposite()) {
-                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(type.sourceUrl());
+                        QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(type.sourceUrl());
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
                         auto compilationUnit = tdata->compilationUnit();
                         type = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
-
-                        tdata->release();
                     }
                 }
             }

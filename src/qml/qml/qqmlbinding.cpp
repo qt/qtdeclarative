@@ -337,7 +337,7 @@ protected:
 
 class QQmlTranslationBinding : public GenericBinding<QMetaType::QString> {
 public:
-    QQmlTranslationBinding(QV4::CompiledData::CompilationUnit *compilationUnit, const QV4::CompiledData::Binding *binding)
+    QQmlTranslationBinding(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
     {
         setCompilationUnit(compilationUnit);
         m_binding = binding;
@@ -378,7 +378,7 @@ private:
     const QV4::CompiledData::Binding *m_binding;
 };
 
-QQmlBinding *QQmlBinding::createTranslationBinding(QV4::CompiledData::CompilationUnit *unit, const QV4::CompiledData::Binding *binding, QObject *obj, QQmlContextData *ctxt)
+QQmlBinding *QQmlBinding::createTranslationBinding(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, const QV4::CompiledData::Binding *binding, QObject *obj, QQmlContextData *ctxt)
 {
     QQmlTranslationBinding *b = new QQmlTranslationBinding(unit, binding);
 

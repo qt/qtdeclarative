@@ -305,8 +305,8 @@ public:
 
     QQmlImportDatabase *importDatabase() const;
 
-    QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
-    QQmlTypeData *getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
+    QQmlRefPointer<QQmlTypeData> getType(const QUrl &url, Mode mode = PreferSynchronous);
+    QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
     QQmlScriptBlob *getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
@@ -422,13 +422,13 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : majorVersion(0), minorVersion(0), typeData(nullptr), needsCreation(true) {}
+        TypeReference() : majorVersion(0), minorVersion(0), needsCreation(true) {}
 
         QV4::CompiledData::Location location;
         QQmlType type;
         int majorVersion;
         int minorVersion;
-        QQmlTypeData *typeData;
+        QQmlRefPointer<QQmlTypeData> typeData;
         QString prefix; // used by CompositeSingleton types
         QString qualifiedName() const;
         bool needsCreation;

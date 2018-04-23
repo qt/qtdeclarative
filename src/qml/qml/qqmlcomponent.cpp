@@ -334,7 +334,7 @@ void QQmlComponentPrivate::typeDataProgress(QQmlTypeData *, qreal p)
     emit q->progressChanged(p);
 }
 
-void QQmlComponentPrivate::fromTypeData(QQmlTypeData *data)
+void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data)
 {
     url = data->finalUrl();
     compilationUnit = data->compilationUnit();
@@ -343,15 +343,12 @@ void QQmlComponentPrivate::fromTypeData(QQmlTypeData *data)
         Q_ASSERT(data->isError());
         state.errors = data->errors();
     }
-
-    data->release();
 }
 
 void QQmlComponentPrivate::clear()
 {
     if (typeData) {
         typeData->unregisterCallback(this);
-        typeData->release();
         typeData = nullptr;
     }
 
@@ -387,7 +384,7 @@ QQmlComponent::~QQmlComponent()
 
     if (d->typeData) {
         d->typeData->unregisterCallback(d);
-        d->typeData->release();
+        d->typeData = nullptr;
     }
 }
 
@@ -580,7 +577,7 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 
     d->url = url;
 
-    QQmlTypeData *typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
+    QQmlRefPointer<QQmlTypeData> typeData = QQmlEnginePrivate::get(d->engine)->typeLoader.getType(data, url);
 
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
@@ -667,7 +664,7 @@ void QQmlComponentPrivate::loadUrl(const QUrl &newUrl, QQmlComponent::Compilatio
             ? QQmlTypeLoader::Asynchronous
             : QQmlTypeLoader::PreferSynchronous;
 
-    QQmlTypeData *data = QQmlEnginePrivate::get(engine)->typeLoader.getType(url, loaderMode);
+    QQmlRefPointer<QQmlTypeData> data = QQmlEnginePrivate::get(engine)->typeLoader.getType(url, loaderMode);
 
     if (data->isCompleteOrError()) {
         fromTypeData(data);

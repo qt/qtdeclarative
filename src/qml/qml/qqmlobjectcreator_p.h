@@ -85,7 +85,7 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
-    QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = nullptr);
+    QQmlObjectCreator(QQmlContextData *parentContext, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlContextData *creationContext, QQmlIncubatorPrivate  *incubator = nullptr);
     ~QQmlObjectCreator();
 
     QObject *create(int subComponentIndex = -1, QObject *parent = nullptr, QQmlInstantiationInterrupt *interrupt = nullptr);
@@ -104,7 +104,7 @@ public:
     QFiniteStack<QPointer<QObject> > &allCreatedObjects() const { return sharedState->allCreatedObjects; }
 
 private:
-    QQmlObjectCreator(QQmlContextData *contextData, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);
+    QQmlObjectCreator(QQmlContextData *contextData, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState);
 
     void init(QQmlContextData *parentContext);
 

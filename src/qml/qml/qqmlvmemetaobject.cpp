@@ -176,7 +176,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
 }
 
 
-QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, QQmlPropertyCache *cache)
+QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache)
     : object(obj),
       cache(cache),
       interceptors(nullptr),
@@ -316,7 +316,7 @@ QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObje
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
                                      QObject *obj,
-                                     QQmlPropertyCache *cache, QV4::CompiledData::CompilationUnit *qmlCompilationUnit, int qmlObjectId)
+                                     const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
       engine(engine),
       ctxt(QQmlData::get(obj, true)->outerContext),

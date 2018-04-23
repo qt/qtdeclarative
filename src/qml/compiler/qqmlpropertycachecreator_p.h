@@ -99,8 +99,8 @@ public:
 
 protected:
     QQmlCompileError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context);
-    QQmlPropertyCache *propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
-    QQmlCompileError createMetaObject(int objectIndex, const CompiledObject *obj, QQmlPropertyCache *baseTypeCache);
+    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const;
+    QQmlCompileError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
 
     QString stringAt(int index) const { return objectContainer->stringAt(index); }
 
@@ -152,7 +152,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
-                        QQmlPropertyCache *baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+                        QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
                         QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
                         if (error.isSet())
                             return error;
@@ -166,7 +166,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
         }
     }
 
-    QQmlPropertyCache *baseTypeCache;
+    QQmlRefPointer<QQmlPropertyCache> baseTypeCache;
     {
         QQmlCompileError error;
         baseTypeCache = propertyCacheForObject(obj, context, &error);
@@ -209,7 +209,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
 }
 
 template <typename ObjectContainer>
-inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
+inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlCompileError *error) const
 {
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache(enginePrivate);
@@ -241,14 +241,12 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
             QString propertyName = stringAt(context.instantiatingBinding->propertyNameIndex);
             if (imports->resolveType(propertyName, &qmltype, nullptr, nullptr, nullptr)) {
                 if (qmltype.isComposite()) {
-                    QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                    QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                     Q_ASSERT(tdata);
                     Q_ASSERT(tdata->isComplete());
 
                     auto compilationUnit = tdata->compilationUnit();
                     qmltype = QQmlMetaType::qmlType(compilationUnit->metaTypeId);
-
-                    tdata->release();
                 }
             }
         }
@@ -264,7 +262,7 @@ inline QQmlPropertyCache *QQmlPropertyCacheCreator<ObjectContainer>::propertyCac
 }
 
 template <typename ObjectContainer>
-inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, QQmlPropertyCache *baseTypeCache)
+inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
 {
     QQmlRefPointer<QQmlPropertyCache> cache;
     cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
@@ -314,7 +312,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
         }
     }
     if (newClassName.isEmpty()) {
-        newClassName = QQmlMetaObject(baseTypeCache).className();
+        newClassName = QQmlMetaObject(baseTypeCache.data()).className();
         newClassName.append("_QML_");
         newClassName.append(QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1)));
     }
@@ -354,7 +352,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
     // and throw an error if there is a signal/method defined as an override.
     QSet<QString> seenSignals;
     seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
-    QQmlPropertyCache *parentCache = cache;
+    QQmlPropertyCache *parentCache = cache.data();
     while ((parentCache = parentCache->parent())) {
         if (int pSigCount = parentCache->signalCount()) {
             int pSigOffset = parentCache->signalOffset();
@@ -440,15 +438,13 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
                         return QQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
                     if (qmltype.isComposite()) {
-                        QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                        QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                         Q_ASSERT(tdata);
                         Q_ASSERT(tdata->isComplete());
 
                         auto compilationUnit = tdata->compilationUnit();
 
                         paramTypes[i + 1] = compilationUnit->metaTypeId;
-
-                        tdata->release();
                     } else {
                         paramTypes[i + 1] = qmltype.typeId();
                     }
@@ -523,7 +519,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
 
             Q_ASSERT(qmltype.isValid());
             if (qmltype.isComposite()) {
-                QQmlTypeData *tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                QQmlRefPointer<QQmlTypeData> tdata = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
                 Q_ASSERT(tdata);
                 Q_ASSERT(tdata->isComplete());
 
@@ -534,8 +530,6 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObj
                 } else {
                     propertyType = compilationUnit->listMetaTypeId;
                 }
-
-                tdata->release();
             } else {
                 if (p->type == QV4::CompiledData::Property::Custom) {
                     propertyType = qmltype.typeId();

@@ -108,7 +108,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
 
     static ReturnedValue create(ExecutionEngine *, QObject *, const QQmlType &,
                                 Heap::QQmlTypeWrapper::TypeNameMode = Heap::QQmlTypeWrapper::IncludeEnums);
-    static ReturnedValue create(ExecutionEngine *, QObject *, QQmlTypeNameCache *, const QQmlImportRef *,
+    static ReturnedValue create(ExecutionEngine *, QObject *, const QQmlRefPointer<QQmlTypeNameCache> &, const QQmlImportRef *,
                                 Heap::QQmlTypeWrapper::TypeNameMode = Heap::QQmlTypeWrapper::IncludeEnums);
 
 

@@ -71,7 +71,7 @@ struct ActiveOCRestorer
 };
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlContextData *creationContext,
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlContextData *creationContext,
                                      QQmlIncubatorPrivate *incubator)
     : phase(Startup)
     , compilationUnit(compilationUnit)
@@ -99,7 +99,7 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::Compil
     }
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, QV4::CompiledData::CompilationUnit *compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState)
+QQmlObjectCreator::QQmlObjectCreator(QQmlContextData *parentContext, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, QQmlObjectCreatorSharedState *inheritedSharedState)
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , resolvedTypes(compilationUnit->resolvedTypes)
@@ -1144,9 +1144,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         isComponent = true;
-        QQmlComponent *component = new QQmlComponent(engine, compilationUnit, index, parent);
+        QQmlComponent *component = new QQmlComponent(engine, compilationUnit.data(), index, parent);
         Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                             compilationUnit, obj, QStringLiteral("<component>"), context->url()));
+                         compilationUnit.data(), obj, QStringLiteral("<component>"), context->url()));
         QQmlComponentPrivate::get(component)->creationContext = context;
         instance = component;
         ddata = QQmlData::get(instance, /*create*/true);
@@ -1157,7 +1157,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         QQmlType type = typeRef->type;
         if (type.isValid()) {
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                                 compilationUnit, obj, type.qmlTypeName(), context->url()));
+                             compilationUnit.data(), obj, type.qmlTypeName(), context->url()));
 
             void *ddataMemory = nullptr;
             type.create(&instance, &ddataMemory, sizeof(QQmlData));
@@ -1190,8 +1190,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         } else {
             Q_ASSERT(typeRef->compilationUnit);
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
-                                 compilationUnit, obj, typeRef->compilationUnit->fileName(),
-                                 context->url()));
+                             compilationUnit.data(), obj, typeRef->compilationUnit->fileName(),
+                             context->url()));
             if (typeRef->compilationUnit->data->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
@@ -1254,7 +1254,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (customParser && obj->flags & QV4::CompiledData::Object::HasCustomParserBindings) {
         customParser->engine = QQmlEnginePrivate::get(engine);
-        customParser->imports = compilationUnit->typeNameCache;
+        customParser->imports = compilationUnit->typeNameCache.data();
 
         QList<const QV4::CompiledData::Binding *> bindings;
         const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
@@ -1264,7 +1264,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 bindings << binding;
             }
         }
-        customParser->applyBindings(instance, compilationUnit, bindings);
+        customParser->applyBindings(instance, compilationUnit.data(), bindings);
 
         customParser->engine = nullptr;
         customParser->imports = (QQmlTypeNameCache*)nullptr;
@@ -1280,7 +1280,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     if (installPropertyCache) {
         if (ddata->propertyCache)
             ddata->propertyCache->release();;
-        ddata->propertyCache = cache;
+        ddata->propertyCache = cache.data();
         ddata->propertyCache->addref();
     }
 
@@ -1436,7 +1436,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         vmeMetaObject = new QQmlVMEMetaObject(v4, _qobject, cache, compilationUnit, _compiledObjectIndex);
         if (_ddata->propertyCache)
             _ddata->propertyCache->release();
-        _ddata->propertyCache = cache;
+        _ddata->propertyCache = cache.data();
         _ddata->propertyCache->addref();
         scopeObjectProtector = _ddata->jsWrapper.value();
     } else {

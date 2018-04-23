@@ -576,7 +576,7 @@ private:
 #ifndef V4_BOOTSTRAP
 struct Q_QML_EXPORT PropertyResolver
 {
-    PropertyResolver(const QQmlPropertyCache *cache)
+    PropertyResolver(const QQmlRefPointer<QQmlPropertyCache> &cache)
         : cache(cache)
     {}
 
@@ -595,7 +595,7 @@ struct Q_QML_EXPORT PropertyResolver
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
     QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
 
-    const QQmlPropertyCache *cache;
+    QQmlRefPointer<QQmlPropertyCache> cache;
 };
 #endif
 
