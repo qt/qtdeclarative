@@ -362,13 +362,15 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
         BoundFunction *bound = static_cast<BoundFunction *>(target.getPointer());
         Scoped<MemberData> oldArgs(scope, bound->boundArgs());
         boundThis = bound->boundThis();
-        int oldSize = oldArgs->size();
-        boundArgs = MemberData::allocate(scope.engine, oldSize + nArgs);
-        boundArgs->d()->values.size = oldSize + nArgs;
-        for (uint i = 0; i < static_cast<uint>(oldSize); ++i)
-            boundArgs->set(scope.engine, i, oldArgs->data()[i]);
-        for (uint i = 0; i < static_cast<uint>(nArgs); ++i)
-            boundArgs->set(scope.engine, oldSize + i, argv[i + 1]);
+        int oldSize = !oldArgs ? 0 : oldArgs->size();
+        if (oldSize + nArgs) {
+            boundArgs = MemberData::allocate(scope.engine, oldSize + nArgs);
+            boundArgs->d()->values.size = oldSize + nArgs;
+            for (uint i = 0; i < static_cast<uint>(oldSize); ++i)
+                boundArgs->set(scope.engine, i, oldArgs->data()[i]);
+            for (uint i = 0; i < static_cast<uint>(nArgs); ++i)
+                boundArgs->set(scope.engine, oldSize + i, argv[i + 1]);
+        }
         target = bound->target();
     } else if (nArgs) {
         boundArgs = MemberData::allocate(scope.engine, nArgs);
