@@ -278,8 +278,9 @@ void QQuickTumblerPrivate::itemChildRemoved(QQuickItem *, QQuickItem *)
     _q_updateItemHeights();
 }
 
-void QQuickTumblerPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
+void QQuickTumblerPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
+    QQuickControlPrivate::itemGeometryChanged(item, change, diff);
     if (change.sizeChange())
         calculateDisplacements();
 }

@@ -237,8 +237,9 @@ qreal QQuickTabBarPrivate::getContentHeight() const
     return maxHeight;
 }
 
-void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &)
+void QQuickTabBarPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
+    QQuickContainerPrivate::itemGeometryChanged(item, change, diff);
     if (!updatingLayout) {
         if (change.sizeChange())
             updateImplicitContentSize();

@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow, Container
 */
 
-static const QQuickItemPrivate::ChangeTypes ImplicitSizeChanges = QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed;
+const QQuickItemPrivate::ChangeTypes QQuickControlPrivate::ImplicitSizeChanges = QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed;
 
 static bool isKeyFocusReason(Qt::FocusReason reason)
 {
@@ -147,6 +147,8 @@ QQuickControlPrivate::ExtraData::ExtraData()
       hasLeftInset(false),
       hasRightInset(false),
       hasBottomInset(false),
+      hasBackgroundWidth(false),
+      hasBackgroundHeight(false),
       topPadding(0),
       leftPadding(0),
       rightPadding(0),
@@ -167,6 +169,7 @@ QQuickControlPrivate::QQuickControlPrivate()
       hovered(false),
       explicitHoverEnabled(false),
 #endif
+      resizingBackground(false),
       touchId(-1),
       padding(0),
       horizontalPadding(0),
@@ -400,19 +403,21 @@ void QQuickControlPrivate::resizeBackground()
     if (!background)
         return;
 
+    resizingBackground = true;
+
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-    if ((!p->widthValid && qFuzzyIsNull(background->x()))
+    if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
         background->setX(getLeftInset());
         background->setWidth(width - getLeftInset() - getRightInset());
-        p->widthValid = false;
     }
-    if ((!p->heightValid && qFuzzyIsNull(background->y()))
+    if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
         background->setY(getTopInset());
         background->setHeight(height - getTopInset() - getBottomInset());
-        p->heightValid = false;
     }
+
+    resizingBackground = false;
 }
 
 void QQuickControlPrivate::resizeContent()
@@ -872,18 +877,18 @@ void QQuickControlPrivate::updateBaselineOffset()
         q->QQuickItem::setBaselineOffset(getTopPadding() + contentItem->baselineOffset());
 }
 
-void QQuickControlPrivate::addImplicitSizeListener(QQuickItem *item)
+void QQuickControlPrivate::addImplicitSizeListener(QQuickItem *item, ChangeTypes changes)
 {
     if (!item)
         return;
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, ImplicitSizeChanges);
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, changes);
 }
 
-void QQuickControlPrivate::removeImplicitSizeListener(QQuickItem *item)
+void QQuickControlPrivate::removeImplicitSizeListener(QQuickItem *item, ChangeTypes changes)
 {
     if (!item)
         return;
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, ImplicitSizeChanges);
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, changes);
 }
 
 void QQuickControlPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -902,6 +907,18 @@ void QQuickControlPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit q->implicitBackgroundHeightChanged();
     else if (item == contentItem)
         updateImplicitContentHeight();
+}
+
+void QQuickControlPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
+{
+    Q_UNUSED(diff);
+    if (resizingBackground || item != background || !change.sizeChange())
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    extra.value().hasBackgroundWidth = p->widthValid;
+    extra.value().hasBackgroundHeight = p->heightValid;
+    resizeBackground();
 }
 
 void QQuickControlPrivate::itemDestroyed(QQuickItem *item)
@@ -934,7 +951,7 @@ QQuickControl::QQuickControl(QQuickControlPrivate &dd, QQuickItem *parent)
 QQuickControl::~QQuickControl()
 {
     Q_D(QQuickControl);
-    d->removeImplicitSizeListener(d->background);
+    d->removeImplicitSizeListener(d->background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     d->removeImplicitSizeListener(d->contentItem);
 }
 
@@ -1559,7 +1576,12 @@ void QQuickControl::setBackground(QQuickItem *background)
     const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
     const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
 
-    d->removeImplicitSizeListener(d->background);
+    if (d->extra.isAllocated()) {
+        d->extra.value().hasBackgroundWidth = false;
+        d->extra.value().hasBackgroundHeight = false;
+    }
+
+    d->removeImplicitSizeListener(d->background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     delete d->background;
     d->background = background;
 
@@ -1567,9 +1589,14 @@ void QQuickControl::setBackground(QQuickItem *background)
         background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (p->widthValid || p->heightValid) {
+            d->extra.value().hasBackgroundWidth = p->widthValid;
+            d->extra.value().hasBackgroundHeight = p->heightValid;
+        }
         if (isComponentComplete())
             d->resizeBackground();
-        d->addImplicitSizeListener(background);
+        d->addImplicitSizeListener(background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     }
 
     if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))

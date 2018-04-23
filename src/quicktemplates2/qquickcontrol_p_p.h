@@ -170,11 +170,14 @@ public:
 
     void updateBaselineOffset();
 
-    void addImplicitSizeListener(QQuickItem *item);
-    void removeImplicitSizeListener(QQuickItem *item);
+    static const ChangeTypes ImplicitSizeChanges;
+
+    void addImplicitSizeListener(QQuickItem *item, ChangeTypes changes = ImplicitSizeChanges);
+    void removeImplicitSizeListener(QQuickItem *item, ChangeTypes changes = ImplicitSizeChanges);
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemDestroyed(QQuickItem *item) override;
 
     virtual qreal getContentWidth() const;
@@ -195,6 +198,8 @@ public:
         bool hasLeftInset;
         bool hasRightInset;
         bool hasBottomInset;
+        bool hasBackgroundWidth;
+        bool hasBackgroundHeight;
         qreal topPadding;
         qreal leftPadding;
         qreal rightPadding;
@@ -216,6 +221,7 @@ public:
     bool hovered;
     bool explicitHoverEnabled;
 #endif
+    bool resizingBackground;
     int touchId;
     qreal padding;
     qreal horizontalPadding;

@@ -465,6 +465,12 @@ TestCase {
         compare(control.background.height, control.height)
         control.height = 240
 
+        // change implicit size (QTBUG-66455)
+        control.background.implicitWidth = 160
+        control.background.implicitHeight = 120
+        compare(control.background.width, control.width)
+        compare(control.background.height, control.height)
+
         // has width => width does not follow
         control.background.width /= 2
         control.width += 20
