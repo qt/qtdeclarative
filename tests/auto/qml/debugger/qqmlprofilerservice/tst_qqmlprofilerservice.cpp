@@ -34,7 +34,6 @@
 #include <private/qqmldebugconnection_p.h>
 
 #include <QtTest/qtest.h>
-#include <private/qtestresult_p.h>
 #include <QtCore/qlibraryinfo.h>
 
 #include <QtGui/private/qguiapplication_p.h>
