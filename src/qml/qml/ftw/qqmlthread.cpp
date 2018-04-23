@@ -323,14 +323,14 @@ void QQmlThread::internalCallMethodInThread(Message *message)
     bool wasEmpty = d->threadList.isEmpty();
     d->threadList.append(message);
 
-#ifdef Q_OS_HTML5
+#ifdef QT_NO_THREAD
     d->mainSync = message;
 #endif
     if (wasEmpty && d->m_threadProcessing == false)
         d->triggerThreadEvent();
 
 
-#ifndef Q_OS_HTML5
+#ifndef QT_NO_THREAD
     d->m_mainThreadWaiting = true;
     do {
         if (d->mainSync) {
@@ -407,7 +407,7 @@ void QQmlThread::waitForNextMessage()
     d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
 
-#ifdef Q_OS_HTML5
+#ifdef QT_NO_THREAD
             d->triggerThreadEvent();
 #endif
     d->m_mainThreadWaiting = true;

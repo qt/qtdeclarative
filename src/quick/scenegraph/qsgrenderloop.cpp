@@ -201,12 +201,9 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 loopType = ThreadedRenderLoop;
             else
                 loopType = WindowsRenderLoop;
-#elif defined(Q_OS_HTML5)
-            loopType = BasicRenderLoop;
-#else
+#endif
             if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
                 loopType = ThreadedRenderLoop;
-#endif
 
             if (qmlNoThreadedRenderer())
                 loopType = BasicRenderLoop;
@@ -222,6 +219,11 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 else if (loopName == "threaded")
                     loopType = ThreadedRenderLoop;
             }
+
+#ifdef QT_NO_THREAD
+            if (loopType == ThreadedRenderLoop)
+                loopType = BasicRenderLoop;
+#endif
 
             switch (loopType) {
             case ThreadedRenderLoop:
