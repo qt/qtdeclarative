@@ -40,7 +40,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
-class QQmlProfilerTestClient : public QQmlProfilerEventReceiver, public QQmlProfilerDefinitions
+class QQmlProfilerTestClient : public QQmlProfilerEventReceiver
 {
     Q_OBJECT
 
@@ -229,8 +229,8 @@ private:
     bool m_isComplete = false;
 
     // Don't use ({...}) here as MSVC will interpret that as the "QVector(int size)" ctor.
-    const QVector<qint64> m_rangeStart = (QVector<qint64>() << QQmlProfilerDefinitions::RangeStart);
-    const QVector<qint64> m_rangeEnd = (QVector<qint64>() << QQmlProfilerDefinitions::RangeEnd);
+    const QVector<qint64> m_rangeStart = (QVector<qint64>() << RangeStart);
+    const QVector<qint64> m_rangeEnd = (QVector<qint64>() << RangeEnd);
 };
 
 #define VERIFY(type, position, expected, checks, numbers) \
@@ -247,7 +247,7 @@ QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
     // ### Still using qmlscene due to QTBUG-33377
     return QQmlDebugTest::connect(
                 QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
-                restrictServices ? QQmlDebuggingEnabler::profilerServices().join(',') : QString(),
+                restrictServices ? "CanvasFrameRate,EngineControl,DebugMessages" : QString(),
                 testFile(file), block);
 }
 
@@ -272,15 +272,11 @@ void tst_QQmlProfilerService::checkTraceReceived()
     QVector<qint64> numbers;
 
     // must start with "StartTrace"
-    QQmlProfilerEventType expected(QQmlProfilerDefinitions::Event,
-                                   QQmlProfilerDefinitions::MaximumRangeType,
-                                   QQmlProfilerDefinitions::StartTrace);
+    QQmlProfilerEventType expected(Event, MaximumRangeType, StartTrace);
     VERIFY(MessageListAsynchronous, 0, expected, CheckMessageType | CheckDetailType, numbers);
 
     // must end with "EndTrace"
-    expected = QQmlProfilerEventType(QQmlProfilerDefinitions::Event,
-                                     QQmlProfilerDefinitions::MaximumRangeType,
-                                     QQmlProfilerDefinitions::EndTrace);
+    expected = QQmlProfilerEventType(Event, MaximumRangeType, EndTrace);
     VERIFY(MessageListAsynchronous, m_client->asynchronousMessages.length() - 1, expected,
            CheckMessageType | CheckDetailType, numbers);
 }
@@ -299,15 +295,15 @@ void tst_QQmlProfilerService::checkJsHeap()
         const qint64 amount = message.number<qint64>(0);
         const QQmlProfilerEventType &type = m_client->types.at(message.typeIndex());
         switch (type.detailType()) {
-        case QV4::Profiling::HeapPage:
+        case HeapPage:
             allocated += amount;
             seen_alloc = true;
             break;
-        case QV4::Profiling::SmallItem:
+        case SmallItem:
             used += amount;
             seen_small = true;
             break;
-        case QV4::Profiling::LargeItem:
+        case LargeItem:
             allocated += amount;
             used += amount;
             seen_large = true;
@@ -548,28 +544,27 @@ void tst_QQmlProfilerService::pixmapCacheData()
     checkTraceReceived();
     checkJsHeap();
 
-    auto createType = [](QQmlProfilerDefinitions::PixmapEventType type) {
-        return QQmlProfilerEventType(QQmlProfilerDefinitions::PixmapCacheEvent,
-                                     QQmlProfilerDefinitions::MaximumRangeType, type);
+    auto createType = [](PixmapEventType type) {
+        return QQmlProfilerEventType(PixmapCacheEvent, MaximumRangeType, type);
     };
 
     QVector<qint64> numbers;
 
     // image starting to load
-    VERIFY(MessageListPixmap, 0, createType(QQmlProfilerDefinitions::PixmapLoadingStarted),
+    VERIFY(MessageListPixmap, 0, createType(PixmapLoadingStarted),
            CheckMessageType | CheckDetailType, numbers);
 
     // image size
     numbers = QVector<qint64>({2, 2, 1});
-    VERIFY(MessageListPixmap, 1, createType(QQmlProfilerDefinitions::PixmapSizeKnown),
+    VERIFY(MessageListPixmap, 1, createType(PixmapSizeKnown),
            CheckMessageType | CheckDetailType | CheckNumbers, numbers);
 
     // image loaded
-    VERIFY(MessageListPixmap, 2, createType(QQmlProfilerDefinitions::PixmapLoadingFinished),
+    VERIFY(MessageListPixmap, 2, createType(PixmapLoadingFinished),
            CheckMessageType | CheckDetailType, numbers);
 
     // cache size
-    VERIFY(MessageListPixmap, 3, createType(QQmlProfilerDefinitions::PixmapCacheCountChanged),
+    VERIFY(MessageListPixmap, 3, createType(PixmapCacheCountChanged),
            CheckMessageType | CheckDetailType, numbers);
 }
 
@@ -597,8 +592,8 @@ void tst_QQmlProfilerService::scenegraphData()
     if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
         foreach (const QQmlProfilerEvent &msg, m_client->asynchronousMessages) {
             const QQmlProfilerEventType &type = m_client->types.at(msg.typeIndex());
-            if (type.message() == QQmlProfilerDefinitions::SceneGraphFrame) {
-                if (type.detailType() == QQmlProfilerDefinitions::SceneGraphContextFrame) {
+            if (type.message() == SceneGraphFrame) {
+                if (type.detailType() == SceneGraphContextFrame) {
                     contextFrameTime = msg.timestamp();
                     break;
                 }
@@ -610,7 +605,7 @@ void tst_QQmlProfilerService::scenegraphData()
 #endif
     foreach (const QQmlProfilerEvent &msg, m_client->asynchronousMessages) {
         const QQmlProfilerEventType &type = m_client->types.at(msg.typeIndex());
-        if (type.detailType() == QQmlProfilerDefinitions::SceneGraphRendererFrame) {
+        if (type.detailType() == SceneGraphRendererFrame) {
             QVERIFY(msg.timestamp() >= contextFrameTime);
             renderFrameTime = msg.timestamp();
             break;
@@ -621,7 +616,7 @@ void tst_QQmlProfilerService::scenegraphData()
 
     foreach (const QQmlProfilerEvent &msg, m_client->asynchronousMessages) {
         const QQmlProfilerEventType &type = m_client->types.at(msg.typeIndex());
-        if (type.detailType() == QQmlProfilerDefinitions::SceneGraphRenderLoopFrame) {
+        if (type.detailType() == SceneGraphRenderLoopFrame) {
             if (msg.timestamp() >= contextFrameTime) {
                 // Make sure SceneGraphRenderLoopFrame is not between SceneGraphContextFrame and
                 // SceneGraphRendererFrame. A SceneGraphRenderLoopFrame before everything else is
@@ -664,8 +659,7 @@ void tst_QQmlProfilerService::signalSourceLocation()
 
     auto createType = [](int line, int column) {
         return QQmlProfilerEventType(
-                    QQmlProfilerDefinitions::MaximumMessage,
-                    QQmlProfilerDefinitions::HandlingSignal, -1,
+                    MaximumMessage, HandlingSignal, -1,
                     QQmlProfilerEventLocation(QLatin1String("signalSourceLocation.qml"), line,
                                               column));
     };
@@ -684,23 +678,21 @@ void tst_QQmlProfilerService::javascript()
     checkTraceReceived();
     checkJsHeap();
 
-    VERIFY(MessageListJavaScript, 2, QQmlProfilerEventType(QQmlProfilerDefinitions::MaximumMessage,
-                                                           QQmlProfilerDefinitions::Javascript),
+    VERIFY(MessageListJavaScript, 2, QQmlProfilerEventType(MaximumMessage, Javascript),
            CheckMessageType | CheckDetailType | CheckNumbers, m_rangeStart);
 
     VERIFY(MessageListJavaScript, 3,
-           QQmlProfilerEventType(QQmlProfilerDefinitions::MaximumMessage,
-                         QQmlProfilerDefinitions::Javascript, -1,
-                         QQmlProfilerEventLocation(QLatin1String("javascript.qml"), 4, 5)),
+           QQmlProfilerEventType(
+               MaximumMessage, Javascript, -1,
+               QQmlProfilerEventLocation(QLatin1String("javascript.qml"), 4, 5)),
            CheckType | CheckNumbers, m_rangeStart);
 
     VERIFY(MessageListJavaScript, 4, QQmlProfilerEventType(
-               QQmlProfilerDefinitions::MaximumMessage, QQmlProfilerDefinitions::Javascript, -1,
+               MaximumMessage, Javascript, -1,
                QQmlProfilerEventLocation(), QLatin1String("something")),
            CheckMessageType | CheckDetailType | CheckDataEndsWith | CheckNumbers, m_rangeStart);
 
-    VERIFY(MessageListJavaScript, 10, QQmlProfilerEventType(QQmlProfilerDefinitions::MaximumMessage,
-                                                            QQmlProfilerDefinitions::Javascript),
+    VERIFY(MessageListJavaScript, 10, QQmlProfilerEventType(MaximumMessage, Javascript),
            CheckMessageType | CheckDetailType | CheckNumbers, m_rangeEnd);
 }
 
@@ -726,8 +718,7 @@ void tst_QQmlProfilerService::translationBinding()
     checkTraceReceived();
     checkJsHeap();
 
-    const QQmlProfilerEventType type(QQmlProfilerDefinitions::MaximumMessage,
-                                     QQmlProfilerDefinitions::Binding);
+    const QQmlProfilerEventType type(MaximumMessage, Binding);
 
     VERIFY(MessageListQML, 4, type, CheckDetailType | CheckMessageType | CheckNumbers,
            m_rangeStart);
@@ -746,7 +737,7 @@ void tst_QQmlProfilerService::memory()
     int smallItems = 0;
     for (auto message : m_client->jsHeapMessages) {
         const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
-        if (type.detailType() == QV4::Profiling::SmallItem)
+        if (type.detailType() == SmallItem)
             ++smallItems;
     }
 
@@ -756,8 +747,7 @@ void tst_QQmlProfilerService::memory()
 static bool hasCompileEvents(const QVector<QQmlProfilerEventType> &types)
 {
     for (const QQmlProfilerEventType &type : types) {
-        if (type.message() == QQmlProfilerDefinitions::MaximumMessage
-                && type.rangeType() == QQmlProfilerDefinitions::Compiling)
+        if (type.message() == MaximumMessage && type.rangeType() == Compiling)
             return true;
     }
     return false;
@@ -776,29 +766,29 @@ void tst_QQmlProfilerService::compile()
     checkTraceReceived();
     checkJsHeap();
 
-    QQmlProfilerDefinitions::Message rangeStage = QQmlProfilerDefinitions::MaximumMessage;
+    Message rangeStage = MaximumMessage;
     for (auto message : m_client->qmlMessages) {
         const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
-        if (type.rangeType() == QQmlProfilerDefinitions::Compiling) {
+        if (type.rangeType() == Compiling) {
             switch (rangeStage) {
-            case QQmlProfilerDefinitions::MaximumMessage:
-                QCOMPARE(message.rangeStage(), QQmlProfilerDefinitions::RangeStart);
+            case MaximumMessage:
+                QCOMPARE(message.rangeStage(), RangeStart);
                 break;
-            case QQmlProfilerDefinitions::RangeStart:
-                QCOMPARE(message.rangeStage(), QQmlProfilerDefinitions::RangeEnd);
+            case RangeStart:
+                QCOMPARE(message.rangeStage(), RangeEnd);
                 break;
             default:
                 QFAIL("Wrong range stage");
             }
             rangeStage = message.rangeStage();
-            QCOMPARE(type.message(), QQmlProfilerDefinitions::MaximumMessage);
+            QCOMPARE(type.message(), MaximumMessage);
             QCOMPARE(type.location().filename(), testFileUrl("test.qml").toString());
             QCOMPARE(type.location().line(), 0);
             QCOMPARE(type.location().column(), 0);
         }
     }
 
-    QCOMPARE(rangeStage, QQmlProfilerDefinitions::RangeEnd);
+    QCOMPARE(rangeStage, RangeEnd);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

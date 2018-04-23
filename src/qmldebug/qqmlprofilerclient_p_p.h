@@ -45,10 +45,10 @@
 #include "qqmlenginecontrolclient_p.h"
 #include "qqmlprofilerclient_p.h"
 #include "qqmlprofilertypedevent_p.h"
-
-#include <private/qqmlprofilerdefinitions_p.h>
+#include "qqmlprofilerclientdefinitions_p.h"
 
 #include <QtCore/qqueue.h>
+#include <QtCore/qstack.h>
 
 //
 //  W A R N I N G
@@ -63,7 +63,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerClientPrivate : public QQmlDebugClientPrivate, public QQmlProfilerDefinitions {
+class QQmlProfilerClientPrivate : public QQmlDebugClientPrivate {
     Q_DECLARE_PUBLIC(QQmlProfilerClient)
 public:
     QQmlProfilerClientPrivate(QQmlDebugConnection *connection,

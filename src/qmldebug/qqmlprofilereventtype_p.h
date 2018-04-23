@@ -41,8 +41,7 @@
 #define QQMLPROFILEREVENTTYPE_P_H
 
 #include "qqmlprofilereventlocation_p.h"
-
-#include <private/qqmlprofilerdefinitions_p.h>
+#include "qqmlprofilerclientdefinitions_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qmetatype.h>
@@ -61,7 +60,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlProfilerEventType : public QQmlProfilerDefinitions {
+class QQmlProfilerEventType {
 public:
     QQmlProfilerEventType(Message message = MaximumMessage, RangeType rangeType = MaximumRangeType,
                           int detailType = -1,
