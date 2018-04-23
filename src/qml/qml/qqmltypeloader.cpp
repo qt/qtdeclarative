@@ -1375,8 +1375,8 @@ bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::Compile
         const auto qmldirScripts = qmldir.scripts();
         for (const QQmlDirParser::Script &script : qmldirScripts) {
             QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
-            QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
-            addDependency(blob);
+            QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
+            addDependency(blob.data());
 
             scriptImported(blob, import->location, script.nameSpace, importQualifier);
         }
@@ -1395,8 +1395,8 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
     const QString &importQualifier = stringAt(import->qualifierIndex);
     if (import->type == QV4::CompiledData::Import::ImportScript) {
         QUrl scriptUrl = finalUrl().resolved(QUrl(importUri));
-        QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
-        addDependency(blob);
+        QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
+        addDependency(blob.data());
 
         scriptImported(blob, import->location, importQualifier, QString());
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
@@ -1423,8 +1423,8 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
                 const auto qmldirScripts = qmldir.scripts();
                 for (const QQmlDirParser::Script &script : qmldirScripts) {
                     QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
-                    QQmlScriptBlob *blob = typeLoader()->getScript(scriptUrl);
-                    addDependency(blob);
+                    QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl);
+                    addDependency(blob.data());
 
                     scriptImported(blob, import->location, script.nameSpace, importQualifier);
                 }
@@ -1714,7 +1714,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
 /*!
 Return a QQmlScriptBlob for \a url.  The QQmlScriptData may be cached.
 */
-QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
+QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &url)
 {
     Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
@@ -1736,8 +1736,6 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
             QQmlTypeLoader::load(scriptBlob);
         }
     }
-
-    scriptBlob->addref();
 
     return scriptBlob;
 }
@@ -2064,8 +2062,7 @@ QQmlTypeData::QQmlTypeData(const QUrl &url, QQmlTypeLoader *manager)
 
 QQmlTypeData::~QQmlTypeData()
 {
-    for (int ii = 0; ii < m_scripts.count(); ++ii)
-        m_scripts.at(ii).script->release();
+    m_scripts.clear();
     m_compositeSingletons.clear();
     m_resolvedTypes.clear();
 }
@@ -2621,8 +2618,8 @@ void QQmlTypeData::resolveTypes()
     // Add any imported scripts to our resolved set
     const auto resolvedScripts = m_importCache.resolvedScripts();
     for (const QQmlImports::ScriptReference &script : resolvedScripts) {
-        QQmlScriptBlob *blob = typeLoader()->getScript(script.location);
-        addDependency(blob);
+        QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(script.location);
+        addDependency(blob.data());
 
         ScriptReference ref;
         //ref.location = ...
@@ -2817,7 +2814,7 @@ bool QQmlTypeData::resolveType(const QString &typeName, int &majorVersion, int &
     return true;
 }
 
-void QQmlTypeData::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &/*nameSpace*/)
+void QQmlTypeData::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &/*nameSpace*/)
 {
     ScriptReference ref;
     ref.script = blob;
@@ -2943,8 +2940,6 @@ void QQmlScriptData::clear()
         typeNameCache = nullptr;
     }
 
-    for (int ii = 0; ii < scripts.count(); ++ii)
-        scripts.at(ii)->release();
     scripts.clear();
 
     // An addref() was made when the QQmlCleanup was added to the engine.
@@ -3082,6 +3077,7 @@ void QQmlScriptBlob::done()
         }
         m_scriptData->typeNameCache->add(script.qualifier, scriptIndex, script.nameSpace);
     }
+    m_scripts.clear();
 
     m_importCache.populateCache(m_scriptData->typeNameCache);
 }
@@ -3091,7 +3087,7 @@ QString QQmlScriptBlob::stringAt(int index) const
     return m_scriptData->m_precompiledScript->data->stringAt(index);
 }
 
-void QQmlScriptBlob::scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace)
+void QQmlScriptBlob::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace)
 {
     ScriptReference ref;
     ref.script = blob;

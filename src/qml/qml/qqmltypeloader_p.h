@@ -284,7 +284,7 @@ public:
     private:
         virtual bool qmldirDataAvailable(QQmlQmldirData *, QList<QQmlError> *);
 
-        virtual void scriptImported(QQmlScriptBlob *, const QV4::CompiledData::Location &, const QString &, const QString &) {}
+        virtual void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &, const QV4::CompiledData::Location &, const QString &, const QString &) {}
 
         void dependencyError(QQmlDataBlob *) override;
         void dependencyComplete(QQmlDataBlob *) override;
@@ -308,7 +308,7 @@ public:
     QQmlRefPointer<QQmlTypeData> getType(const QUrl &url, Mode mode = PreferSynchronous);
     QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
-    QQmlScriptBlob *getScript(const QUrl &);
+    QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &);
     QQmlQmldirData *getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);
@@ -436,11 +436,9 @@ public:
 
     struct ScriptReference
     {
-        ScriptReference() : script(nullptr) {}
-
         QV4::CompiledData::Location location;
         QString qualifier;
-        QQmlScriptBlob *script;
+        QQmlRefPointer<QQmlScriptBlob> script;
     };
 
 private:
@@ -493,7 +491,7 @@ private:
                      bool reportErrors = true,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType);
 
-    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
+    void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
 
 
     SourceCodeData m_backupSourceCode; // used when cache verification fails.
@@ -539,7 +537,7 @@ public:
     QUrl url;
     QString urlString;
     QQmlTypeNameCache *typeNameCache;
-    QList<QQmlScriptBlob *> scripts;
+    QVector<QQmlRefPointer<QQmlScriptBlob>> scripts;
 
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
@@ -569,12 +567,10 @@ public:
 
     struct ScriptReference
     {
-        ScriptReference() : script(nullptr) {}
-
         QV4::CompiledData::Location location;
         QString qualifier;
         QString nameSpace;
-        QQmlScriptBlob *script;
+        QQmlRefPointer<QQmlScriptBlob> script;
     };
 
     QQmlScriptData *scriptData() const;
@@ -587,7 +583,7 @@ protected:
     QString stringAt(int index) const override;
 
 private:
-    void scriptImported(QQmlScriptBlob *blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
+    void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace) override;
     void initializeFromCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
 
     QList<ScriptReference> m_scripts;
