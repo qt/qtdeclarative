@@ -755,6 +755,12 @@ TestCase {
         control.x = testCase.width - control.width / 2
         compare(control.x, testCase.width - control.width / 2)
         compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2)
+
+        // close the popup when hidden (QTBUG-67684)
+        control.popup.open()
+        tryCompare(control.popup, "opened", true)
+        control.visible = false
+        tryCompare(control.popup, "visible", false)
     }
 
     function test_mouse() {

@@ -1666,6 +1666,16 @@ void QQuickComboBox::componentComplete()
     }
 }
 
+void QQuickComboBox::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::itemChange(change, value);
+    if (change == ItemVisibleHasChanged && !value.boolValue) {
+        d->hidePopup(false);
+        setPressed(false);
+    }
+}
+
 void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickComboBox);
