@@ -573,7 +573,7 @@ public:
         QQmlRefPointer<QQmlScriptBlob> script;
     };
 
-    QQmlScriptData *scriptData() const;
+    QQmlRefPointer<QQmlScriptData> scriptData() const;
 
 protected:
     void dataReceived(const SourceCodeData &) override;
@@ -587,7 +587,7 @@ private:
     void initializeFromCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
 
     QList<ScriptReference> m_scripts;
-    QQmlScriptData *m_scriptData;
+    QQmlRefPointer<QQmlScriptData> m_scriptData;
 };
 
 class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob

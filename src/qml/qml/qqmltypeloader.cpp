@@ -2374,8 +2374,7 @@ void QQmlTypeData::done()
             }
 
             m_compiledData->typeNameCache->add(qualifier.toString(), scriptIndex, enclosingNamespace);
-            QQmlScriptData *scriptData = script.script->scriptData();
-            scriptData->addref();
+            QQmlRefPointer<QQmlScriptData> scriptData = script.script->scriptData();
             m_compiledData->dependentScripts << scriptData;
         }
     }
@@ -2947,19 +2946,15 @@ void QQmlScriptData::clear()
 }
 
 QQmlScriptBlob::QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *loader)
-: QQmlTypeLoader::Blob(url, JavaScriptFile, loader), m_scriptData(nullptr)
+: QQmlTypeLoader::Blob(url, JavaScriptFile, loader)
 {
 }
 
 QQmlScriptBlob::~QQmlScriptBlob()
 {
-    if (m_scriptData) {
-        m_scriptData->release();
-        m_scriptData = nullptr;
-    }
 }
 
-QQmlScriptData *QQmlScriptBlob::scriptData() const
+QQmlRefPointer<QQmlScriptData> QQmlScriptBlob::scriptData() const
 {
     return m_scriptData;
 }
@@ -3101,7 +3096,7 @@ void QQmlScriptBlob::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, 
 void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
 {
     Q_ASSERT(!m_scriptData);
-    m_scriptData = new QQmlScriptData();
+    m_scriptData.adopt(new QQmlScriptData());
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
     m_scriptData->m_precompiledScript = unit;

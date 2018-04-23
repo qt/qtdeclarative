@@ -969,7 +969,7 @@ public:
     int totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
     int totalObjectCount = 0; // Number of objects explicitly instantiated
 
-    QVector<QQmlScriptData *> dependentScripts;
+    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
 
     bool verifyChecksum(const DependentTypesHasher &dependencyHasher) const;

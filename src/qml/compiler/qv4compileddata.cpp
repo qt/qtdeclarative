@@ -216,8 +216,6 @@ void CompilationUnit::unlink()
 
     propertyCaches.clear();
 
-    for (int ii = 0; ii < dependentScripts.count(); ++ii)
-        dependentScripts.at(ii)->release();
     dependentScripts.clear();
 
     typeNameCache = nullptr;

@@ -193,7 +193,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         context->importedScripts.set(v4, scripts);
         QV4::ScopedValue v(scope);
         for (int i = 0; i < compilationUnit->dependentScripts.count(); ++i) {
-            QQmlScriptData *s = compilationUnit->dependentScripts.at(i);
+            QQmlRefPointer<QQmlScriptData> s = compilationUnit->dependentScripts.at(i);
             scripts->putIndexed(i, (v = s->scriptValueForContext(context)));
         }
     } else if (sharedState->creationContext) {
