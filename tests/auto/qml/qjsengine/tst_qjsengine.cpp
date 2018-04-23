@@ -212,6 +212,9 @@ private slots:
 
     void deleteInsideForIn();
 
+    void functionToString_data();
+    void functionToString();
+
 signals:
     void testSignal();
 };
@@ -4218,6 +4221,30 @@ void tst_QJSEngine::deleteInsideForIn()
                               "count");
     QVERIFY(iterationCount.isNumber());
     QCOMPARE(iterationCount.toInt(), 4);
+}
+
+void tst_QJSEngine::functionToString_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<QString>("expectedString");
+
+    QTest::newRow("named function") << QString::fromLatin1("function f() {}; f.toString()")
+        << QString::fromLatin1("function f() { [code] }");
+    QTest::newRow("anonymous function") << QString::fromLatin1("(function() {}).toString()")
+        << QString::fromLatin1("function() { [code] }");
+}
+
+// Tests that function.toString() prints the function's name.
+void tst_QJSEngine::functionToString()
+{
+    QFETCH(QString, source);
+    QFETCH(QString, expectedString);
+
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::AllExtensions);
+    QJSValue evaluationResult = engine.evaluate(source);
+    QVERIFY(!evaluationResult.isError());
+    QCOMPARE(evaluationResult.toString(), expectedString);
 }
 
 QTEST_MAIN(tst_QJSEngine)

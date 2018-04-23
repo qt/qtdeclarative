@@ -311,7 +311,19 @@ ReturnedValue FunctionPrototype::method_toString(const FunctionObject *b, const 
     if (!fun)
         return v4->throwTypeError();
 
-    return Encode(v4->newString(QStringLiteral("function() { [code] }")));
+    const Scope scope(fun->engine());
+    const ScopedString scopedFunctionName(scope, fun->name());
+    const QString functionName(scopedFunctionName ? scopedFunctionName->toQString() : QString());
+    QString functionAsString = QStringLiteral("function");
+
+    // If fun->name() is empty, then there is no function name
+    // to append because the function is anonymous.
+    if (!functionName.isEmpty())
+        functionAsString.append(QLatin1Char(' ') + functionName);
+
+    functionAsString.append(QStringLiteral("() { [code] }"));
+
+    return Encode(v4->newString(functionAsString));
 }
 
 ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

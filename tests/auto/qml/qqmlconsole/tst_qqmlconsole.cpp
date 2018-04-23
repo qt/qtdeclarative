@@ -75,7 +75,7 @@ void tst_qqmlconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, "{\"a\":\"hello\",\"d\":1}");
     QTest::ignoreMessage(QtDebugMsg, "undefined");
     QTest::ignoreMessage(QtDebugMsg, "12");
-    QTest::ignoreMessage(QtDebugMsg, "function() { [code] }");
+    QTest::ignoreMessage(QtDebugMsg, "function e() { [code] }");
     QTest::ignoreMessage(QtDebugMsg, "true");
     // Printing QML object prints out the class/type of QML object with the memory address
 //    QTest::ignoreMessage(QtDebugMsg, "QtObject_QML_0(0xABCD..)");
