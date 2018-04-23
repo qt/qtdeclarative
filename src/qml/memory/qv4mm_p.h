@@ -306,6 +306,9 @@ public:
     bool gcStats = false;
     bool gcCollectorStats = false;
 
+    int allocationCount = 0;
+    size_t lastAllocRequestedSlots = 0;
+
     struct {
         size_t maxReservedMem = 0;
         size_t maxAllocatedMem = 0;

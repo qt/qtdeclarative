@@ -413,10 +413,6 @@ void Chunk::resetBlackBits()
     memset(blackBitmap, 0, sizeof(blackBitmap));
 }
 
-#ifdef MM_STATS
-static uint nGrayItems = 0;
-#endif
-
 void Chunk::collectGrayItems(MarkStack *markStack)
 {
     //    DEBUG << "sweeping chunk" << this << (*freeList);
@@ -439,10 +435,6 @@ void Chunk::collectGrayItems(MarkStack *markStack)
             Heap::Base *b = *itemToFree;
             Q_ASSERT(b->inUse());
             markStack->push(b);
-#ifdef MM_STATS
-            ++nGrayItems;
-//            qDebug() << "adding gray item" << b << "to mark stack";
-#endif
         }
         grayBitmap[i] = 0;
         o += Chunk::Bits;
@@ -460,7 +452,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
 #else
     const int start = 1;
 #endif
-#ifdef MM_STATS
+#ifndef QT_NO_DEBUG
     uint freeSlots = 0;
     uint allocatedSlots = 0;
 #endif
@@ -470,7 +462,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
         if (!i)
             usedSlots |= (static_cast<quintptr>(1) << (HeaderSize/SlotSize)) - 1;
 #endif
-#ifdef MM_STATS
+#ifndef QT_NO_DEBUG
         allocatedSlots += qPopulationCount(usedSlots);
 //        qDebug() << hex << "   i=" << i << "used=" << usedSlots;
 #endif
@@ -487,7 +479,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
                     break;
                 }
                 usedSlots = (objectBitmap[i]|extendsBitmap[i]);
-#ifdef MM_STATS
+#ifndef QT_NO_DEBUG
                 allocatedSlots += qPopulationCount(usedSlots);
 //                qDebug() << hex << "   i=" << i << "used=" << usedSlots;
 #endif
@@ -498,7 +490,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
             usedSlots |= (quintptr(1) << index) - 1;
             uint freeEnd = i*Bits + index;
             uint nSlots = freeEnd - freeStart;
-#ifdef MM_STATS
+#ifndef QT_NO_DEBUG
 //            qDebug() << hex << "   got free slots from" << freeStart << "to" << freeEnd << "n=" << nSlots << "usedSlots=" << usedSlots;
             freeSlots += nSlots;
 #endif
@@ -509,7 +501,7 @@ void Chunk::sortIntoBins(HeapItem **bins, uint nBins)
             bins[bin] = freeItem;
         }
     }
-#ifdef MM_STATS
+#ifndef QT_NO_DEBUG
     Q_ASSERT(freeSlots + allocatedSlots == (EntriesInBitmap - start) * 8 * sizeof(quintptr));
 #endif
 }
@@ -776,11 +768,6 @@ MemoryManager::MemoryManager(ExecutionEngine *engine)
     if (gcStats)
         blockAllocator.allocationStats = statistics.allocations;
 }
-
-#ifdef MM_STATS
-static int allocationCount = 0;
-static size_t lastAllocRequestedSlots = 0;
-#endif
 
 Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 {
@@ -1103,10 +1090,6 @@ void MemoryManager::runGC()
         qDebug(stats) << "Allocated" << totalMem << "bytes in" << oldChunks << "chunks";
         qDebug(stats) << "Fragmented memory before GC" << (totalMem - usedBefore);
         dumpBins(&blockAllocator);
-
-#ifdef MM_STATS
-        nGrayItems = 0;
-#endif
 
         QElapsedTimer t;
         t.start();
