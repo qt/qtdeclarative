@@ -56,6 +56,8 @@
 #include <private/qqmlprofilerdefinitions_p.h>
 #include <private/qqmlabstractprofileradapter_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmetaobject.h>
@@ -70,6 +72,7 @@
 QT_BEGIN_NAMESPACE
 
 class QUrl;
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 class QQmlProfilerServiceImpl :
         public QQmlConfigurableDebugService<QQmlProfilerService>,

@@ -45,7 +45,7 @@
 #include <private/qv4function_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv8engine_p.h>
-#include <private/qqmldebugpacket_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -69,6 +69,8 @@ QT_BEGIN_NAMESPACE
 
 class V8CommandHandler;
 class UnknownV8CommandHandler;
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 int QV4DebugServiceImpl::sequence = 0;
 
