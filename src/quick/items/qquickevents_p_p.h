@@ -510,6 +510,8 @@ public:
     QTouchEvent *asTouchEvent() const;
 
 private:
+    Qt::TouchPointStates touchPointStates() const;
+
     int m_pointCount = 0;
     QVector<QQuickEventTouchPoint *> m_touchPoints;
     mutable QMouseEvent m_synthMouseEvent;
