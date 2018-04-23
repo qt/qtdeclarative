@@ -187,7 +187,7 @@ QtObject {
                 anchors.margins: defaultSpacing
                 text: "X"
                 width: 30
-                onClicked: testWindow.visible = false
+                onClicked: testWindow.close()
             }
         }
     }
