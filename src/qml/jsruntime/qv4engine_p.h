@@ -540,6 +540,7 @@ public:
 
     QV4::ReturnedValue global();
 
+    double localTZA = 0.0; // local timezone, initialized at startup
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;

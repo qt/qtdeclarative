@@ -170,7 +170,7 @@ struct DatePrototype: Object
     static ReturnedValue method_toISOString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toJSON(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static void timezoneUpdated();
+    static void timezoneUpdated(ExecutionEngine *e);
 };
 
 }

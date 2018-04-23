@@ -350,7 +350,7 @@ ReturnedValue QQmlDateExtension::method_timeZoneUpdated(const QV4::FunctionObjec
     if (argc != 0)
         THROW_ERROR("Locale: Date.timeZoneUpdated(): Invalid arguments");
 
-    QV4::DatePrototype::timezoneUpdated();
+    QV4::DatePrototype::timezoneUpdated(scope.engine);
 
     RETURN_UNDEFINED();
 }
