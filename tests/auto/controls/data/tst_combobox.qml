@@ -1600,4 +1600,75 @@ TestCase {
         tryCompare(control.popup, "visible", true)
         compare(control.popup.height, control.popup.topPadding + control.popup.bottomPadding)
     }
+
+    Component {
+        id: keysMonitor
+        Item {
+            property int pressedKeys: 0
+            property int releasedKeys: 0
+            property int lastPressedKey: 0
+            property int lastReleasedKey: 0
+            property alias comboBox: comboBox
+
+            width: 200
+            height: 200
+
+            Keys.onPressed: { ++pressedKeys; lastPressedKey = event.key }
+            Keys.onReleased: { ++releasedKeys; lastReleasedKey = event.key }
+
+            ComboBox {
+                id: comboBox
+            }
+        }
+    }
+
+    function test_keyClose_data() {
+        return [
+            { tag: "Escape", key: Qt.Key_Escape },
+            { tag: "Back", key: Qt.Key_Back }
+        ]
+    }
+
+    function test_keyClose(data) {
+        var container = createTemporaryObject(keysMonitor, testCase)
+        verify(container)
+
+        var control = comboBox.createObject(container)
+        verify(control)
+
+        control.forceActiveFocus()
+        verify(control.activeFocus)
+
+        // popup not visible -> propagates
+        keyPress(data.key)
+        compare(container.pressedKeys, 1)
+        compare(container.lastPressedKey, data.key)
+
+        keyRelease(data.key)
+        compare(container.releasedKeys, 1)
+        compare(container.lastReleasedKey, data.key)
+
+        verify(control.activeFocus)
+
+        // popup visible -> handled -> does not propagate
+        control.popup.open()
+        tryCompare(control.popup, "opened", true)
+
+        keyPress(data.key)
+        compare(container.pressedKeys, 1)
+
+        keyRelease(data.key)
+        compare(container.releasedKeys, 2) // ### TODO: should Popup block the key release?
+
+        verify(control.activeFocus)
+
+        // popup not visible -> propagates
+        keyPress(data.key)
+        compare(container.pressedKeys, 2)
+        compare(container.lastPressedKey, data.key)
+
+        keyRelease(data.key)
+        compare(container.releasedKeys, 3)
+        compare(container.lastReleasedKey, data.key)
+    }
 }
