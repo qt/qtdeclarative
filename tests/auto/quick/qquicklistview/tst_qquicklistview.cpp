@@ -176,6 +176,7 @@ private slots:
     void creationContext();
     void snapToItem_data();
     void snapToItem();
+    void snapToItemWithSpacing_QTBUG_59852();
     void snapOneItemResize_QTBUG_43555();
     void snapOneItem_data();
     void snapOneItem();
@@ -5194,6 +5195,31 @@ void tst_QQuickListView::snapToItem()
         QCOMPARE(listview->contentY(), startExtent);
     else
         QCOMPARE(listview->contentX(), startExtent);
+
+    releaseView(window);
+}
+void tst_QQuickListView::snapToItemWithSpacing_QTBUG_59852()
+{
+    QQuickView *window = getView();
+
+    window->setSource(testFileUrl("snapToItemWithSpacing.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *listView = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listView);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listView)->polishScheduled, false);
+
+    // each item in the list is 100 pixels tall, and the spacing is 100
+
+    listView->setContentY(110); // this is right below the first item
+    listView->returnToBounds();
+    QCOMPARE(listView->contentY(), 200); // the position of the second item
+
+    listView->setContentY(60); // this is right below the middle of the first item
+    listView->returnToBounds();
+    QCOMPARE(listView->contentY(), 0); // it's farther to go to the next item, so snaps to the first
 
     releaseView(window);
 }
