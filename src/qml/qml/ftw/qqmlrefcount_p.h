@@ -85,9 +85,11 @@ public:
     inline QQmlRefPointer();
     inline QQmlRefPointer(T *, Mode m = AddRef);
     inline QQmlRefPointer(const QQmlRefPointer<T> &);
+    inline QQmlRefPointer(QQmlRefPointer<T> &&);
     inline ~QQmlRefPointer();
 
     inline QQmlRefPointer<T> &operator=(const QQmlRefPointer<T> &o);
+    inline QQmlRefPointer<T> &operator=(QQmlRefPointer<T> &&o);
 
     inline bool isNull() const { return !o; }
 
@@ -158,6 +160,12 @@ QQmlRefPointer<T>::QQmlRefPointer(const QQmlRefPointer<T> &other)
     if (o) o->addref();
 }
 
+template <class T>
+QQmlRefPointer<T>::QQmlRefPointer(QQmlRefPointer<T> &&other)
+    : o(other.take())
+{
+}
+
 template<class T>
 QQmlRefPointer<T>::~QQmlRefPointer()
 {
@@ -170,6 +178,14 @@ QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(const QQmlRefPointer<T> &other)
     if (other.o) other.o->addref();
     if (o) o->release();
     o = other.o;
+    return *this;
+}
+
+template <class T>
+QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(QQmlRefPointer<T> &&other)
+{
+    QQmlRefPointer<T> m(std::move(other));
+    qSwap(o, m.o);
     return *this;
 }
 
