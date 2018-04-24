@@ -1328,20 +1328,17 @@ QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoa
 
 QQmlTypeLoader::Blob::~Blob()
 {
-    for (int ii = 0; ii < m_qmldirs.count(); ++ii)
-        m_qmldirs.at(ii)->release();
 }
 
 bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, const QV4::CompiledData::Import *import, int priority, QList<QQmlError> *errors)
 {
-    QQmlQmldirData *data = typeLoader()->getQmldir(url);
+    QQmlRefPointer<QQmlQmldirData> data = typeLoader()->getQmldir(url);
 
     data->setImport(this, import);
     data->setPriority(this, priority);
 
     if (data->status() == Error) {
         // This qmldir must not exist - which is not an error
-        data->release();
         return true;
     } else if (data->status() == Complete) {
         // This data is already available
@@ -1349,11 +1346,11 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, const QV4::CompiledData:
     }
 
     // Wait for this data to become available
-    addDependency(data);
+    addDependency(data.data());
     return true;
 }
 
-bool QQmlTypeLoader::Blob::updateQmldir(QQmlQmldirData *data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors)
 {
     QString qmldirIdentifier = data->urlString();
     QString qmldirUrl = qmldirIdentifier.left(qmldirIdentifier.lastIndexOf(QLatin1Char('/')) + 1);
@@ -1500,14 +1497,6 @@ bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QL
     return true;
 }
 
-void QQmlTypeLoader::Blob::dependencyError(QQmlDataBlob *blob)
-{
-    if (blob->type() == QQmlDataBlob::QmldirFile) {
-        QQmlQmldirData *data = static_cast<QQmlQmldirData *>(blob);
-        data->release();
-    }
-}
-
 void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 {
     if (blob->type() == QQmlDataBlob::QmldirFile) {
@@ -1533,7 +1522,7 @@ bool QQmlTypeLoader::Blob::isDebugging() const
     return typeLoader()->engine()->handle()->debugger() != nullptr;
 }
 
-bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
 {
     bool resolve = true;
 
@@ -1553,7 +1542,6 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
         if (resolve) {
             // This is the (current) best resolution for this import
             if (!updateQmldir(data, import, errors)) {
-                data->release();
                 return false;
             }
 
@@ -1563,7 +1551,6 @@ bool QQmlTypeLoader::Blob::qmldirDataAvailable(QQmlQmldirData *data, QList<QQmlE
         }
     }
 
-    data->release();
     return true;
 }
 
@@ -1747,7 +1734,7 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &url)
 /*!
 Returns a QQmlQmldirData for \a url.  The QQmlQmldirData may be cached.
 */
-QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
+QQmlRefPointer<QQmlQmldirData> QQmlTypeLoader::getQmldir(const QUrl &url)
 {
     Q_ASSERT(!url.isRelative() &&
             (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
@@ -1762,8 +1749,6 @@ QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
         m_qmldirCache.insert(url, qmldirData);
         QQmlTypeLoader::load(qmldirData);
     }
-
-    qmldirData->addref();
 
     return qmldirData;
 }

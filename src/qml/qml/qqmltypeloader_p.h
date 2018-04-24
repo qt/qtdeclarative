@@ -279,14 +279,13 @@ public:
         bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, const QV4::CompiledData::Import *import, int priority, QList<QQmlError> *errors);
-        bool updateQmldir(QQmlQmldirData *data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
+        bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
 
     private:
-        virtual bool qmldirDataAvailable(QQmlQmldirData *, QList<QQmlError> *);
+        virtual bool qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &, QList<QQmlError> *);
 
         virtual void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &, const QV4::CompiledData::Location &, const QString &, const QString &) {}
 
-        void dependencyError(QQmlDataBlob *) override;
         void dependencyComplete(QQmlDataBlob *) override;
 
     protected:
@@ -296,7 +295,7 @@ public:
 
         QQmlImports m_importCache;
         QHash<const QV4::CompiledData::Import*, int> m_unresolvedImports;
-        QList<QQmlQmldirData *> m_qmldirs;
+        QVector<QQmlRefPointer<QQmlQmldirData>> m_qmldirs;
         QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;
     };
 
@@ -309,7 +308,7 @@ public:
     QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
     QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &);
-    QQmlQmldirData *getQmldir(const QUrl &);
+    QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);
     bool directoryExists(const QString &path);
