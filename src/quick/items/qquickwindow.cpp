@@ -256,14 +256,16 @@ void QQuickWindow::hideEvent(QHideEvent *)
 void QQuickWindow::focusOutEvent(QFocusEvent *ev)
 {
     Q_D(QQuickWindow);
-    d->contentItem->setFocus(false, ev->reason());
+    if (d->contentItem)
+        d->contentItem->setFocus(false, ev->reason());
 }
 
 /*! \reimp */
 void QQuickWindow::focusInEvent(QFocusEvent *ev)
 {
     Q_D(QQuickWindow);
-    d->contentItem->setFocus(true, ev->reason());
+    if (d->contentItem)
+        d->contentItem->setFocus(true, ev->reason());
     d->updateFocusItemTransform();
 }
 
@@ -1315,7 +1317,9 @@ QQuickWindow::~QQuickWindow()
 #if QT_CONFIG(draganddrop)
     delete d->dragGrabber; d->dragGrabber = nullptr;
 #endif
-    delete d->contentItem; d->contentItem = nullptr;
+    QQuickRootItem *root = d->contentItem;
+    d->contentItem = nullptr;
+    delete root;
     qDeleteAll(d->pointerEventInstances);
     d->pointerEventInstances.clear();
 
@@ -1571,6 +1575,8 @@ bool QQuickWindow::event(QEvent *e)
         return d->deliverTouchCancelEvent(static_cast<QTouchEvent*>(e));
         break;
     case QEvent::Enter: {
+        if (!d->contentItem)
+            return false;
         QEnterEvent *enter = static_cast<QEnterEvent*>(e);
         bool accepted = enter->isAccepted();
         bool delivered = d->deliverHoverEvent(d->contentItem, enter->windowPos(), d->lastMousePosition,
@@ -1592,7 +1598,8 @@ bool QQuickWindow::event(QEvent *e)
         break;
 #endif
     case QEvent::WindowDeactivate:
-        contentItem()->windowDeactivateEvent();
+        if (d->contentItem)
+            d->contentItem->windowDeactivateEvent();
         break;
     case QEvent::Close: {
         // TOOD Qt 6 (binary incompatible)
@@ -1617,7 +1624,8 @@ bool QQuickWindow::event(QEvent *e)
     }
 #if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
-        d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
+        if (d->contentItem)
+            d->deliverNativeGestureEvent(d->contentItem, static_cast<QNativeGestureEvent*>(e));
         break;
 #endif
     case QEvent::ShortcutOverride:
@@ -1937,7 +1945,8 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
         return;
 
     event->ignore();
-    d->deliverWheelEvent(d->contentItem, event);
+    if (d->contentItem)
+        d->deliverWheelEvent(d->contentItem, event);
     d->lastWheelEventAccepted = event->isAccepted();
 }
 #endif // wheelevent
