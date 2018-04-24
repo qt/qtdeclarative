@@ -501,11 +501,12 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 
     if (!blob ||
         blob->status() == Error || blob->status() == Complete ||
-        status() == Error || status() == Complete || m_isDone ||
-        m_waitingFor.contains(blob))
+        status() == Error || status() == Complete || m_isDone)
         return;
 
-    blob->addref(); // balanced in notifyComplete
+    for (auto existingDep: qAsConst(m_waitingFor))
+        if (existingDep.data() == blob)
+            return;
 
     m_data.setStatus(WaitingForDependencies);
 
@@ -688,13 +689,11 @@ void QQmlDataBlob::tryDone()
 void QQmlDataBlob::cancelAllWaitingFor()
 {
     while (m_waitingFor.count()) {
-        QQmlDataBlob *blob = m_waitingFor.takeLast();
+        QQmlRefPointer<QQmlDataBlob> blob = m_waitingFor.takeLast();
 
         Q_ASSERT(blob->m_waitingOnMe.contains(this));
 
         blob->m_waitingOnMe.removeOne(this);
-
-        blob->release();
     }
 }
 
@@ -703,7 +702,8 @@ void QQmlDataBlob::notifyAllWaitingOnMe()
     while (m_waitingOnMe.count()) {
         QQmlDataBlob *blob = m_waitingOnMe.takeLast();
 
-        Q_ASSERT(blob->m_waitingFor.contains(this));
+        Q_ASSERT(std::any_of(blob->m_waitingFor.constBegin(), blob->m_waitingFor.constEnd(),
+                             [this](const QQmlRefPointer<QQmlDataBlob> &waiting) { return waiting.data() == this; }));
 
         blob->notifyComplete(this);
     }
@@ -711,21 +711,25 @@ void QQmlDataBlob::notifyAllWaitingOnMe()
 
 void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
 {
-    Q_ASSERT(m_waitingFor.contains(blob));
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
     QQmlCompilingProfiler prof(typeLoader()->profiler(), blob);
 
     m_inCallback = true;
 
-    m_waitingFor.removeOne(blob);
+    QQmlRefPointer<QQmlDataBlob> blobRef;
+    for (int i = 0; i < m_waitingFor.count(); ++i) {
+        if (m_waitingFor.at(i).data() == blob) {
+            blobRef = m_waitingFor.takeAt(i);
+            break;
+        }
+    }
+    Q_ASSERT(blobRef);
 
     if (blob->status() == Error) {
         dependencyError(blob);
     } else if (blob->status() == Complete) {
         dependencyComplete(blob);
     }
-
-    blob->release();
 
     if (!isError() && m_waitingFor.isEmpty())
         allDependenciesDone();
