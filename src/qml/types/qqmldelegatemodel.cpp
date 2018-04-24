@@ -874,7 +874,6 @@ void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 
 void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status)
 {
-    Q_Q(QQmlDelegateModel);
     if (!isDoneIncubating(status))
         return;
 
@@ -891,7 +890,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
             emitCreatedItem(incubationTask, cacheItem->object);
         cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
-        qmlWarning(q, m_delegate->errors()) << "Error creating delegate";
+        qmlWarning(m_delegate, m_delegate->errors()) << "Error creating delegate";
     }
 
     if (!cacheItem->isObjectReferenced()) {
