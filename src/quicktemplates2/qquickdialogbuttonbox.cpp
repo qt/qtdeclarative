@@ -204,6 +204,7 @@ QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
       buttonLayout(platformButtonLayout()),
       delegate(nullptr)
 {
+    changeTypes |= ImplicitWidth | ImplicitHeight;
 }
 
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -268,7 +269,8 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     const int valign = alignment & Qt::AlignVertical_Mask;
 
     QVector<QQuickAbstractButton *> buttons;
-    const qreal itemWidth = (contentWidth - qMax(0, count - 1) * spacing) / count;
+    const qreal cw = (alignment & Qt::AlignHorizontal_Mask) == 0 ? q->availableWidth() : contentWidth;
+    const qreal itemWidth = (cw - qMax(0, count - 1) * spacing) / count;
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);

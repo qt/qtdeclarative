@@ -248,4 +248,31 @@ TestCase {
         verify(implicitContentWidth > control.leftPadding + control.rightPadding)
         verify(control.implicitWidth >= implicitContentWidth, qsTr("implicit width (%1) is less than content width (%2)").arg(control.implicitWidth).arg(implicitContentWidth))
     }
+
+    Component {
+        id: okCancelBox
+        DialogButtonBox {
+            Button {
+                text: qsTr("OK")
+            }
+            Button {
+                text: qsTr("Cancel")
+            }
+        }
+    }
+
+    function test_buttonSize() {
+        var control = createTemporaryObject(okCancelBox, testCase)
+        verify(control)
+
+        var okButton = control.itemAt(0)
+        verify(okButton)
+        verify(okButton.width > 0)
+
+        var cancelButton = control.itemAt(1)
+        verify(cancelButton)
+        verify(cancelButton.width > 0)
+
+        compare(okButton.width + cancelButton.width, control.availableWidth - control.spacing)
+    }
 }
