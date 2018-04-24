@@ -77,6 +77,7 @@ private slots:
     void testGCCorruption();
     void testGroupedPropertyRevisions();
     void componentFromEval();
+    void qrcUrls();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -895,6 +896,32 @@ void tst_qqmlengine::componentFromEval()
     QVERIFY(!component.isNull());
     QScopedPointer<QObject> item(component->create());
     QVERIFY(!item.isNull());
+}
+
+void tst_qqmlengine::qrcUrls()
+{
+    QQmlEngine engine;
+    QQmlEnginePrivate *pEngine = QQmlEnginePrivate::get(&engine);
+
+    {
+        QQmlRefPointer<QQmlTypeData> oneQml(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.qml")),
+                                            QQmlRefPointer<QQmlTypeData>::Adopt);
+        QVERIFY(oneQml != nullptr);
+        QQmlRefPointer<QQmlTypeData> twoQml(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.qml")),
+                                            QQmlRefPointer<QQmlTypeData>::Adopt);
+        QVERIFY(twoQml != nullptr);
+        QCOMPARE(oneQml, twoQml);
+    }
+
+    {
+        QQmlRefPointer<QQmlTypeData> oneJS(pEngine->typeLoader.getType(QUrl("qrc:/qrcurls.js")),
+                                           QQmlRefPointer<QQmlTypeData>::Adopt);
+        QVERIFY(oneJS != nullptr);
+        QQmlRefPointer<QQmlTypeData> twoJS(pEngine->typeLoader.getType(QUrl("qrc:///qrcurls.js")),
+                                           QQmlRefPointer<QQmlTypeData>::Adopt);
+        QVERIFY(twoJS != nullptr);
+        QCOMPARE(oneJS, twoJS);
+    }
 }
 
 QTEST_MAIN(tst_qqmlengine)

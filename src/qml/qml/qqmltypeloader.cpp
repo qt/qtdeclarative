@@ -1650,14 +1650,24 @@ QQmlImportDatabase *QQmlTypeLoader::importDatabase() const
     return &QQmlEnginePrivate::get(engine())->importDatabase;
 }
 
+QUrl QQmlTypeLoader::normalize(const QUrl &unNormalizedUrl)
+{
+    QUrl normalized(unNormalizedUrl);
+    if (normalized.scheme() == QLatin1String("qrc"))
+        normalized.setHost(QString()); // map qrc:///a.qml to qrc:/a.qml
+    return normalized;
+}
+
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
+QQmlTypeData *QQmlTypeLoader::getType(const QUrl &unNormalizedUrl, Mode mode)
 {
-    Q_ASSERT(!url.isRelative() &&
-            (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
-             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
+    Q_ASSERT(!unNormalizedUrl.isRelative() &&
+            (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
+             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
+
+    QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
@@ -1716,11 +1726,13 @@ QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, M
 /*!
 Return a QQmlScriptBlob for \a url.  The QQmlScriptData may be cached.
 */
-QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
+QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &unNormalizedUrl)
 {
-    Q_ASSERT(!url.isRelative() &&
-            (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
-             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
+    Q_ASSERT(!unNormalizedUrl.isRelative() &&
+            (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
+             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
+
+    QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 

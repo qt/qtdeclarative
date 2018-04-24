@@ -305,10 +305,12 @@ public:
 
     QQmlImportDatabase *importDatabase() const;
 
-    QQmlTypeData *getType(const QUrl &url, Mode mode = PreferSynchronous);
+    static QUrl normalize(const QUrl &unNormalizedUrl);
+
+    QQmlTypeData *getType(const QUrl &unNormalizedUrl, Mode mode = PreferSynchronous);
     QQmlTypeData *getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
-    QQmlScriptBlob *getScript(const QUrl &);
+    QQmlScriptBlob *getScript(const QUrl &unNormalizedUrl);
     QQmlQmldirData *getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);
