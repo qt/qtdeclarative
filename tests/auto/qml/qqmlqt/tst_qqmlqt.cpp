@@ -505,8 +505,14 @@ void tst_qqmlqt::font()
     QObject *object = component.create();
     QVERIFY(object != nullptr);
 
-    QCOMPARE(qvariant_cast<QFont>(object->property("test1")), QFont("Arial", 22));
-    QCOMPARE(qvariant_cast<QFont>(object->property("test2")), QFont("Arial", 20, QFont::DemiBold, true));
+    QFont f;
+    f.setFamily("Arial");
+    f.setPointSize(22);
+    QCOMPARE(qvariant_cast<QFont>(object->property("test1")), f);
+    f.setPointSize(20);
+    f.setWeight(QFont::DemiBold);
+    f.setItalic(true);
+    QCOMPARE(qvariant_cast<QFont>(object->property("test2")), f);
     QCOMPARE(qvariant_cast<QFont>(object->property("test3")), QFont());
     QCOMPARE(qvariant_cast<QFont>(object->property("test4")), QFont());
 
