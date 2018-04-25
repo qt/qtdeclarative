@@ -901,7 +901,7 @@ void QQuickEventPoint::setGrabberPointerHandler(QQuickPointerHandler *grabber, b
             if (grabber) {
                 grabber->onGrabChanged(grabber, GrabExclusive, this);
                 for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers) {
-                    if (passiveGrabber != grabber)
+                    if (!passiveGrabber.isNull() && passiveGrabber != grabber)
                         passiveGrabber->onGrabChanged(grabber, OverrideGrabPassive, this);
                 }
             }
