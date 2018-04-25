@@ -41,13 +41,6 @@
 
 #include <private/qquickwindowmodule_p.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Window_2);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -72,7 +65,7 @@ class QtQuick2WindowPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuick2WindowPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Window"));

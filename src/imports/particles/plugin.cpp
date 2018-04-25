@@ -42,13 +42,6 @@
 
 #include <private/qquickparticlesmodule_p.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Particles_2);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -57,7 +50,7 @@ class QtQuick2ParticlesPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Particles"));

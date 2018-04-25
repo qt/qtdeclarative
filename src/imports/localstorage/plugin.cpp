@@ -61,13 +61,6 @@
 #include <private/qv4jscall_p.h>
 #include <private/qv4objectiterator_p.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_LocalStorage);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 #define V4THROW_SQL(error, desc) { \
@@ -814,7 +807,6 @@ class QQmlLocalStoragePlugin : public QQmlExtensionPlugin
 public:
     QQmlLocalStoragePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
     {
-        initResources();
     }
     void registerTypes(const char *uri) override
     {

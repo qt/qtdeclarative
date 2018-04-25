@@ -47,13 +47,6 @@
 #include <QQmlExtensionPlugin>
 #include <qqml.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQml_StateMachine);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
@@ -62,7 +55,7 @@ class QtQmlStateMachinePlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQmlStateMachinePlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         qmlRegisterType<State>(uri, 1, 0, "State");

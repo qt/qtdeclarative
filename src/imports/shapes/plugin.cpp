@@ -42,14 +42,6 @@
 
 #include "qquickshape_p.h"
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Shapes);
-#endif
-    Q_INIT_RESOURCE(qtquickshapesplugin);
-}
-
 QT_BEGIN_NAMESPACE
 
 class QmlShapesPlugin : public QQmlExtensionPlugin
@@ -58,7 +50,7 @@ class QmlShapesPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QmlShapesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QmlShapesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("QtQuick.Shapes"));

@@ -42,13 +42,6 @@
 
 #include "qqmlxmllistmodel_p.h"
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_XmlListModel);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QmlXmlListModelPlugin : public QQmlExtensionPlugin
@@ -57,7 +50,7 @@ class QmlXmlListModelPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QmlXmlListModelPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { initResources(); }
+    QmlXmlListModelPlugin(QObject *parent = 0) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.XmlListModel"));

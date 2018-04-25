@@ -42,13 +42,6 @@
 #include "qquicklinearlayout_p.h"
 #include "qquickstacklayout_p.h"
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_QtQuick_Layouts);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -59,7 +52,6 @@ class QtQuickLayoutsPlugin : public QQmlExtensionPlugin
 public:
     QtQuickLayoutsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
     {
-        initResources();
     }
     void registerTypes(const char *uri) override
     {

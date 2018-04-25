@@ -41,13 +41,6 @@
 
 #include <private/qquickhandlersmodule_p.h>
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_handlers);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -56,7 +49,7 @@ class QtQuickHandlersPlugin : public QQmlExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuickHandlersPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QtQuickHandlersPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.handlers"));

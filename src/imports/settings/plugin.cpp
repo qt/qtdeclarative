@@ -42,13 +42,6 @@
 
 #include "qqmlsettings_p.h"
 
-static void initResources()
-{
-#ifdef QT_STATIC
-    Q_INIT_RESOURCE(qmake_Qt_labs_settings);
-#endif
-}
-
 QT_BEGIN_NAMESPACE
 
 class QmlSettingsPlugin : public QQmlExtensionPlugin
@@ -57,7 +50,7 @@ class QmlSettingsPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    QmlSettingsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { initResources(); }
+    QmlSettingsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.settings"));
