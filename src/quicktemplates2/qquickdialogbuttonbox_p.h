@@ -127,6 +127,8 @@ Q_SIGNALS:
     Q_REVISION(3) void applied();
     Q_REVISION(3) void reset();
     Q_REVISION(3) void discarded();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void buttonLayoutChanged();
 
 protected:
     void updatePolish() override;

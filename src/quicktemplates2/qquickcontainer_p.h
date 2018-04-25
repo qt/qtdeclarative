@@ -111,7 +111,6 @@ Q_SIGNALS:
     void currentIndexChanged();
     void currentItemChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void buttonLayoutChanged();
     Q_REVISION(5) void contentWidthChanged();
     Q_REVISION(5) void contentHeightChanged();
 
