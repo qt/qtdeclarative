@@ -98,7 +98,7 @@ T.ComboBox {
 
     background: Rectangle {
         implicitWidth: 120
-        implicitHeight: control.Material.buttonHeight
+        implicitHeight: control.Material.touchTarget
 
         // external vertical padding is 6 (to increase touch area)
         y: 6

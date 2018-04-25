@@ -50,8 +50,8 @@ T.BusyIndicator {
     padding: 6
 
     contentItem: BusyIndicatorImpl {
-        implicitWidth: control.Material.buttonHeight
-        implicitHeight: control.Material.buttonHeight
+        implicitWidth: control.Material.touchTarget
+        implicitHeight: control.Material.touchTarget
         color: control.Material.accentColor
 
         running: control.running

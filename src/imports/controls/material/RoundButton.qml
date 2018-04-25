@@ -78,8 +78,8 @@ T.RoundButton {
 
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
-        implicitWidth: control.Material.buttonHeight
-        implicitHeight: control.Material.buttonHeight
+        implicitWidth: control.Material.touchTarget
+        implicitHeight: control.Material.touchTarget
 
         // external vertical padding is 6 (to increase touch area)
         x: 6

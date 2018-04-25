@@ -1139,7 +1139,7 @@ QColor QQuickMaterialStyle::shade(const QColor &color, Shade shade) const
     }
 }
 
-int QQuickMaterialStyle::buttonHeight() const
+int QQuickMaterialStyle::touchTarget() const
 {
     // https://material.io/guidelines/components/buttons.html#buttons-style
     return globalVariant == Dense ? 44 : 48;

@@ -68,7 +68,7 @@ T.TabButton {
     }
 
     background: Ripple {
-        implicitHeight: control.Material.buttonHeight
+        implicitHeight: control.Material.touchTarget
 
         clip: true
         pressed: control.pressed
