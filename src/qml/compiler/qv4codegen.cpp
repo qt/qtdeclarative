@@ -2104,9 +2104,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
-    if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode &&
-                (_context->compilationMode != EvalCode || _context->isStrict))) {
+    bool needsCallContext = false;
+    const QLatin1String exprForOn("expression for on");
+    if (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict))
+        needsCallContext = true;
+    else if (_context->compilationMode == QmlBinding && name.length() > exprForOn.size() && name.startsWith(exprForOn) && name.at(exprForOn.size()).isUpper())
+        // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
+        needsCallContext = true;
+    if (needsCallContext) {
         Instruction::CreateCallContext createContext;
         bytecodeGenerator->addInstruction(createContext);
     }
