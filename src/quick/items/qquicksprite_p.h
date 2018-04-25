@@ -168,6 +168,16 @@ public:
         return m_frameSync;
     }
 
+    void setDevicePixelRatio(qreal dpr)
+    {
+        m_devicePixelRatio = dpr;
+    }
+
+    qreal devicePixelRatio() const
+    {
+        return m_devicePixelRatio;
+    }
+
 Q_SIGNALS:
 
     void sourceChanged(QUrl arg);
@@ -308,6 +318,7 @@ private:
     friend class QQuickAnimatedSprite;
     friend class QQuickSpriteEngine;
     friend class QQuickStochasticEngine;
+
     int m_generatedCount;
     int m_framesPerRow;
     int m_rowY;
@@ -325,6 +336,7 @@ private:
     int m_frameDuration;
     int m_frameDurationVariation;
     bool m_frameSync;
+    qreal m_devicePixelRatio;
     QQuickPixmap m_pix;
 };
 
