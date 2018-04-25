@@ -428,8 +428,8 @@ public: // helpers for C++ only (during event delivery)
     virtual bool allPointsAccepted() const = 0;
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
-    bool isAccepted() { return m_event->isAccepted(); }
-    void setAccepted(bool accepted) { m_event->setAccepted(accepted); }
+    bool isAccepted() { return m_event ? m_event->isAccepted() : false; }
+    void setAccepted(bool accepted) { if (m_event) m_event->setAccepted(accepted); }
     QVector<QPointF> unacceptedPressedPointScenePositions() const;
 
     virtual int pointCount() const = 0;
@@ -439,7 +439,7 @@ public: // helpers for C++ only (during event delivery)
     virtual void clearGrabbers() const = 0;
     virtual bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const = 0;
 
-    ulong timestamp() const { return m_event->timestamp(); }
+    ulong timestamp() const { return m_event ? m_event->timestamp() : 0; }
 
 protected:
     QQuickPointerDevice *m_device;
