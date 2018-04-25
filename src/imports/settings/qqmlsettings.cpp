@@ -302,6 +302,10 @@ void QQmlSettingsPrivate::load()
     const int offset = mo->propertyOffset();
     const int count = mo->propertyCount();
 
+    // don't save built-in properties if there aren't any qml properties
+    if (offset == 1)
+        return;
+
     for (int i = offset; i < count; ++i) {
         QMetaProperty property = mo->property(i);
 
