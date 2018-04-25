@@ -55,6 +55,7 @@ public:
     {
         Q_ASSERT(QByteArray(uri) == QByteArray("Qt.labs.settings"));
         qmlRegisterType<QQmlSettings>(uri, 1, 0, "Settings");
+        qmlRegisterType<QQmlSettings,1>(uri, 1, 1, "Settings");
     }
 };
 

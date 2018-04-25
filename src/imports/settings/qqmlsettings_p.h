@@ -65,6 +65,7 @@ class QQmlSettings : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QString category READ category WRITE setCategory FINAL)
+    Q_PROPERTY(QString fileName READ fileName WRITE setFileName FINAL REVISION 1)
 
 public:
     explicit QQmlSettings(QObject *parent = 0);
@@ -72,6 +73,9 @@ public:
 
     QString category() const;
     void setCategory(const QString &category);
+
+    QString fileName() const;
+    void setFileName(const QString &fileName);
 
 protected:
     void timerEvent(QTimerEvent *event) override;

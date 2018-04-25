@@ -156,7 +156,8 @@ QT_BEGIN_NAMESPACE
     Application specific settings are identified by providing application
     \l {QCoreApplication::applicationName}{name},
     \l {QCoreApplication::organizationName}{organization} and
-    \l {QCoreApplication::organizationDomain}{domain}.
+    \l {QCoreApplication::organizationDomain}{domain}, or by specifying
+    \l fileName.
 
     \code
     #include <QGuiApplication>
@@ -258,6 +259,7 @@ public:
     int timerId = 0;
     bool initialized = false;
     QString category;
+    QString fileName;
     mutable QPointer<QSettings> settings;
     QHash<const char *, QVariant> changedProperties;
 };
@@ -268,7 +270,7 @@ QSettings *QQmlSettingsPrivate::instance() const
 {
     if (!settings) {
         QQmlSettings *q = const_cast<QQmlSettings*>(q_func());
-        settings = new QSettings(q);
+        settings = fileName.isEmpty() ? new QSettings(q) : new QSettings(fileName, QSettings::IniFormat, q);
         if (!category.isEmpty())
             settings->beginGroup(category);
         if (initialized)
@@ -299,6 +301,7 @@ void QQmlSettingsPrivate::load()
     const QMetaObject *mo = q->metaObject();
     const int offset = mo->propertyOffset();
     const int count = mo->propertyCount();
+
     for (int i = offset; i < count; ++i) {
         QMetaProperty property = mo->property(i);
 
@@ -393,6 +396,33 @@ void QQmlSettings::setCategory(const QString &category)
     if (d->category != category) {
         d->reset();
         d->category = category;
+        if (d->initialized)
+            d->load();
+    }
+}
+
+/*!
+    \qmlproperty string Settings::fileName
+
+    This property holds the path to the settings file. If the file doesn't
+    already exist, it is created.
+
+    \sa QSettings::fileName, QSettings::IniFormat
+
+    \since Qt.labs.settings 1.1
+*/
+QString QQmlSettings::fileName() const
+{
+    Q_D(const QQmlSettings);
+    return d->fileName;
+}
+
+void QQmlSettings::setFileName(const QString &fileName)
+{
+    Q_D(QQmlSettings);
+    if (d->fileName != fileName) {
+        d->reset();
+        d->fileName = fileName;
         if (d->initialized)
             d->load();
     }
