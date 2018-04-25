@@ -171,6 +171,11 @@
 #define WTF_CPU_ARM64 1
 #endif
 
+/* CPU(ARM64) - INTEGRITY */
+#if (defined(__ARM64__))
+#define WTF_CPU_ARM64 1
+#endif
+
 /* CPU(ARM) - ARM, any version*/
 #define WTF_ARM_ARCH_AT_LEAST(N) (CPU(ARM) && WTF_ARM_ARCH_VERSION >= N)
 
