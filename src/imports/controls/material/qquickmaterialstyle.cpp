@@ -1145,6 +1145,12 @@ int QQuickMaterialStyle::touchTarget() const
     return globalVariant == Dense ? 44 : 48;
 }
 
+int QQuickMaterialStyle::buttonHeight() const
+{
+    // https://material.io/guidelines/components/buttons.html#buttons-style
+    return globalVariant == Dense ? 32 : 36;
+}
+
 int QQuickMaterialStyle::delegateHeight() const
 {
     // https://material.io/guidelines/components/lists.html#lists-specs

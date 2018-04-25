@@ -49,9 +49,10 @@ T.DelayButton {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    // external vertical padding is 6 (to increase touch area)
+    topInset: 6
+    bottomInset: 6
     padding: 12
-    verticalPadding: padding - 4
+    horizontalPadding: padding - 4
 
     Material.elevation: control.down ? 8 : 2
 
@@ -73,12 +74,8 @@ T.DelayButton {
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
-        implicitHeight: control.Material.touchTarget
+        implicitHeight: control.Material.buttonHeight
 
-        // external vertical padding is 6 (to increase touch area)
-        y: 6
-        width: parent.width
-        height: parent.height - 12
         radius: 2
         color: !control.enabled ? control.Material.buttonDisabledColor : control.Material.buttonColor
 

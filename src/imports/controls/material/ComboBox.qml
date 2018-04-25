@@ -51,6 +51,9 @@ T.ComboBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
+    topInset: 6
+    bottomInset: 6
+
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
@@ -98,11 +101,8 @@ T.ComboBox {
 
     background: Rectangle {
         implicitWidth: 120
-        implicitHeight: control.Material.touchTarget
+        implicitHeight: control.Material.buttonHeight
 
-        // external vertical padding is 6 (to increase touch area)
-        y: 6
-        height: parent.height - 12
         radius: control.flat ? 0 : 2
         color: !control.editable ? control.Material.dialogColor : "transparent"
 
