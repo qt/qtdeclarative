@@ -200,7 +200,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
 }
 
-static Heap::String *thisAsString(ExecutionEngine *v4, const Value *thisObject)
+static Heap::String *thisAsString(ExecutionEngine *v4, const QV4::Value *thisObject)
 {
     if (String *s = thisObject->stringValue())
         return s->d();
@@ -209,7 +209,7 @@ static Heap::String *thisAsString(ExecutionEngine *v4, const Value *thisObject)
     return thisObject->toString(v4);
 }
 
-static QString getThisString(ExecutionEngine *v4, const Value *thisObject)
+static QString getThisString(ExecutionEngine *v4, const QV4::Value *thisObject)
 {
     if (String *s = thisObject->stringValue())
         return s->toQString();

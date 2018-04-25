@@ -3101,40 +3101,22 @@ private:
     }
 
     template<int datasize>
-    ALWAYS_INLINE void loadUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
-    {
-        m_assembler.ldr<datasize>(rt, rn, pimm);
-    }
+    void loadUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm);
 
     template<int datasize>
-    ALWAYS_INLINE void loadUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
-    {
-        m_assembler.ldur<datasize>(rt, rn, simm);
-    }
+    void loadUnscaledImmediate(RegisterID rt, RegisterID rn, int simm);
 
     template<int datasize>
-    ALWAYS_INLINE void loadSignedAddressedByUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
-    {
-        loadUnsignedImmediate<datasize>(rt, rn, pimm);
-    }
+    void loadSignedAddressedByUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm);
 
     template<int datasize>
-    ALWAYS_INLINE void loadSignedAddressedByUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
-    {
-        loadUnscaledImmediate<datasize>(rt, rn, simm);
-    }
+    void loadSignedAddressedByUnscaledImmediate(RegisterID rt, RegisterID rn, int simm);
 
     template<int datasize>
-    ALWAYS_INLINE void storeUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
-    {
-        m_assembler.str<datasize>(rt, rn, pimm);
-    }
+    void storeUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm);
 
     template<int datasize>
-    ALWAYS_INLINE void storeUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
-    {
-        m_assembler.stur<datasize>(rt, rn, simm);
-    }
+    void storeUnscaledImmediate(RegisterID rt, RegisterID rn, int simm);
 
     void moveWithFixedWidth(TrustedImm32 imm, RegisterID dest)
     {
@@ -3299,74 +3281,19 @@ private:
     }
 
     template<int datasize>
-    ALWAYS_INLINE bool tryLoadWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
-    {
-        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
-            loadUnscaledImmediate<datasize>(rt, rn, offset);
-            return true;
-        }
-        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
-            loadUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
-            return true;
-        }
-        return false;
-    }
+    bool tryLoadWithOffset(RegisterID rt, RegisterID rn, int32_t offset);
 
     template<int datasize>
-    ALWAYS_INLINE bool tryLoadSignedWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
-    {
-        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
-            loadSignedAddressedByUnscaledImmediate<datasize>(rt, rn, offset);
-            return true;
-        }
-        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
-            loadSignedAddressedByUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
-            return true;
-        }
-        return false;
-    }
+    bool tryLoadSignedWithOffset(RegisterID rt, RegisterID rn, int32_t offset);
 
     template<int datasize>
-    ALWAYS_INLINE bool tryLoadWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset)
-    {
-        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
-            m_assembler.ldur<datasize>(rt, rn, offset);
-            return true;
-        }
-        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
-            m_assembler.ldr<datasize>(rt, rn, static_cast<unsigned>(offset));
-            return true;
-        }
-        return false;
-    }
+    bool tryLoadWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset);
 
     template<int datasize>
-    ALWAYS_INLINE bool tryStoreWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
-    {
-        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
-            storeUnscaledImmediate<datasize>(rt, rn, offset);
-            return true;
-        }
-        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
-            storeUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
-            return true;
-        }
-        return false;
-    }
+    bool tryStoreWithOffset(RegisterID rt, RegisterID rn, int32_t offset);
 
     template<int datasize>
-    ALWAYS_INLINE bool tryStoreWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset)
-    {
-        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
-            m_assembler.stur<datasize>(rt, rn, offset);
-            return true;
-        }
-        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
-            m_assembler.str<datasize>(rt, rn, static_cast<unsigned>(offset));
-            return true;
-        }
-        return false;
-    }
+    bool tryStoreWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset);
 
     Jump jumpAfterFloatingPointCompare(DoubleCondition cond)
     {
@@ -3412,6 +3339,43 @@ private:
     bool m_makeJumpPatchable;
     bool m_allowScratchRegister = true;
 };
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::loadUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
+{
+    m_assembler.ldr<datasize>(rt, rn, pimm);
+}
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::loadUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
+{
+    m_assembler.ldur<datasize>(rt, rn, simm);
+}
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::loadSignedAddressedByUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
+{
+    loadUnsignedImmediate<datasize>(rt, rn, pimm);
+}
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::loadSignedAddressedByUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
+{
+    loadUnscaledImmediate<datasize>(rt, rn, simm);
+}
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::storeUnsignedImmediate(RegisterID rt, RegisterID rn, unsigned pimm)
+{
+    m_assembler.str<datasize>(rt, rn, pimm);
+}
+
+template<int datasize>
+ALWAYS_INLINE void MacroAssemblerARM64::storeUnscaledImmediate(RegisterID rt, RegisterID rn, int simm)
+{
+    m_assembler.stur<datasize>(rt, rn, simm);
+}
+
 
 // Extend the {load,store}{Unsigned,Unscaled}Immediate templated general register methods to cover all load/store sizes
 template<>
@@ -3485,6 +3449,77 @@ ALWAYS_INLINE void MacroAssemblerARM64::storeUnscaledImmediate<16>(RegisterID rt
 {
     m_assembler.sturh(rt, rn, simm);
 }
+
+template<int datasize>
+ALWAYS_INLINE bool MacroAssemblerARM64::tryLoadSignedWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
+{
+    if (ARM64Assembler::canEncodeSImmOffset(offset)) {
+        loadSignedAddressedByUnscaledImmediate<datasize>(rt, rn, offset);
+        return true;
+    }
+    if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
+        loadSignedAddressedByUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
+        return true;
+    }
+    return false;
+}
+
+template<int datasize>
+ALWAYS_INLINE bool MacroAssemblerARM64::tryStoreWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
+{
+    if (ARM64Assembler::canEncodeSImmOffset(offset)) {
+        storeUnscaledImmediate<datasize>(rt, rn, offset);
+        return true;
+    }
+    if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
+        storeUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
+        return true;
+    }
+    return false;
+}
+
+template<int datasize>
+ALWAYS_INLINE bool MacroAssemblerARM64::tryStoreWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset)
+{
+    if (ARM64Assembler::canEncodeSImmOffset(offset)) {
+        m_assembler.stur<datasize>(rt, rn, offset);
+        return true;
+    }
+    if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
+        m_assembler.str<datasize>(rt, rn, static_cast<unsigned>(offset));
+        return true;
+    }
+    return false;
+}
+
+
+template<int datasize>
+ALWAYS_INLINE bool MacroAssemblerARM64::tryLoadWithOffset(RegisterID rt, RegisterID rn, int32_t offset)
+{
+    if (ARM64Assembler::canEncodeSImmOffset(offset)) {
+        loadUnscaledImmediate<datasize>(rt, rn, offset);
+        return true;
+    }
+    if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
+        loadUnsignedImmediate<datasize>(rt, rn, static_cast<unsigned>(offset));
+        return true;
+    }
+    return false;
+}
+
+template<int datasize>
+ALWAYS_INLINE bool MacroAssemblerARM64::tryLoadWithOffset(FPRegisterID rt, RegisterID rn, int32_t offset)
+    {
+        if (ARM64Assembler::canEncodeSImmOffset(offset)) {
+            m_assembler.ldur<datasize>(rt, rn, offset);
+            return true;
+        }
+        if (ARM64Assembler::canEncodePImmOffset<datasize>(offset)) {
+            m_assembler.ldr<datasize>(rt, rn, static_cast<unsigned>(offset));
+            return true;
+        }
+        return false;
+    }
 
 } // namespace JSC
 
