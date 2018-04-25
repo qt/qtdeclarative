@@ -432,6 +432,39 @@ void QQmlSettings::setFileName(const QString &fileName)
     }
 }
 
+/*!
+   \qmlmethod var Settings::value(string key, var defaultValue)
+
+   Returns the value for setting \a key. If the setting doesn't exist,
+   returns \a defaultValue.
+
+   \sa QSettings::value
+
+   \since Qt.labs.settings 1.1
+*/
+QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) const
+{
+    Q_D(const QQmlSettings);
+    return d->instance()->value(key, defaultValue);
+}
+
+/*!
+   \qmlmethod Settings::setValue(string key, var value)
+
+   Sets the value of setting key to value. If the key already exists,
+   the previous value is overwritten.
+
+   \sa QSettings::setValue
+
+   \since Qt.labs.settings 1.1
+*/
+void QQmlSettings::setValue(const QString &key, const QVariant &value)
+{
+    Q_D(const QQmlSettings);
+    d->instance()->setValue(key, value);
+    qCDebug(lcSettings) << "QQmlSettings: setValue" << key << ":" << value;
+}
+
 void QQmlSettings::classBegin()
 {
 }

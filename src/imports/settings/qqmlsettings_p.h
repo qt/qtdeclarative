@@ -77,6 +77,9 @@ public:
     QString fileName() const;
     void setFileName(const QString &fileName);
 
+    Q_REVISION(1) Q_INVOKABLE QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+    Q_REVISION(1) Q_INVOKABLE void setValue(const QString &key, const QVariant &value);
+
 protected:
     void timerEvent(QTimerEvent *event) override;
 
