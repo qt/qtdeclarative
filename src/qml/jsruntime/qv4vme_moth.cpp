@@ -1174,14 +1174,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     MOTH_END_INSTR(CmpIn)
 
     MOTH_BEGIN_INSTR(CmpInstanceOf)
-        // 11.8.6, 5: rval must be an Object
-        if (Q_UNLIKELY(!Primitive::fromReturnedValue(acc).isObject())) {
-           acc = engine->throwTypeError();
-           goto catchException;
-        }
-
-        // 11.8.6, 7: call "HasInstance", which we term instanceOf, and return the result.
-        acc = Primitive::fromReturnedValue(acc).objectValue()->instanceOf(STACK_VALUE(lhs));
+        STORE_ACC();
+        acc = Runtime::method_instanceof(engine, STACK_VALUE(lhs), ACC);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CmpInstanceOf)
 

@@ -61,6 +61,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include "qv4qobjectwrapper_p.h"
+#include "qv4symbol_p.h"
 #include <private/qv8engine_p.h>
 #endif
 
@@ -361,8 +362,16 @@ QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Val
     if (!rhs)
        return engine->throwTypeError();
 
-    // 11.8.6, 7: call "HasInstance", which we term instanceOf, and return the result.
-    return rhs->instanceOf(lval);
+    Scope scope(engine);
+    ScopedValue hasInstance(scope, rhs->get(engine->symbol_hasInstance()));
+    if (hasInstance->isUndefined())
+        return rhs->instanceOf(lval);
+    FunctionObject *f = hasInstance->as<FunctionObject>();
+    if (!f)
+        return engine->throwTypeError();
+
+    ScopedValue result(scope, f->call(&rval, &lval, 1));
+    return Encode(result->toBoolean());
 }
 
 QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left, const Value &right)

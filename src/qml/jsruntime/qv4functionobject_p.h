@@ -205,6 +205,7 @@ struct FunctionPrototype: FunctionObject
     static ReturnedValue method_apply(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_bind(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hasInstance(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct IndexedBuiltinFunction : FunctionObject

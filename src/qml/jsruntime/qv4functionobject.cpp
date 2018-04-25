@@ -41,6 +41,7 @@
 #include "qv4objectproto_p.h"
 #include "qv4stringobject_p.h"
 #include "qv4function_p.h"
+#include "qv4symbol_p.h"
 #include <private/qv4mm_p.h>
 
 #include "qv4arrayobject_p.h"
@@ -277,6 +278,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("apply"), method_apply, 2);
     defineDefaultProperty(QStringLiteral("call"), method_call, 1);
     defineDefaultProperty(QStringLiteral("bind"), method_bind, 1);
+    defineDefaultProperty(engine->symbol_hasInstance(), method_hasInstance, 1, Attr_ReadOnly);
 }
 
 ReturnedValue FunctionPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -383,6 +385,17 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
     Heap::BoundFunction *bound = BoundFunction::create(ctx, target, boundThis, boundArgs);
     bound->setFunction(target->function());
     return bound->asReturnedValue();
+}
+
+ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    if (!argc)
+        return false;
+    const Object *o = thisObject->as<Object>();
+    if (!o)
+        return f->engine()->throwTypeError();
+
+    return Object::instanceOf(o, argv[0]);
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);

@@ -583,16 +583,10 @@ built-ins/Function/length/S15.3.5.1_A2_T1.js fails
 built-ins/Function/length/S15.3.5.1_A2_T2.js fails
 built-ins/Function/length/S15.3.5.1_A2_T3.js fails
 built-ins/Function/proto-from-ctor-realm.js fails
-built-ins/Function/prototype/Symbol.hasInstance/length.js fails
-built-ins/Function/prototype/Symbol.hasInstance/name.js fails
-built-ins/Function/prototype/Symbol.hasInstance/prop-desc.js fails
-built-ins/Function/prototype/Symbol.hasInstance/this-val-bound-target.js fails
 built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js fails
 built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js fails
 built-ins/Function/prototype/Symbol.hasInstance/value-get-prototype-of-err.js fails
-built-ins/Function/prototype/Symbol.hasInstance/value-negative.js fails
 built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js fails
-built-ins/Function/prototype/Symbol.hasInstance/value-positive.js fails
 built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js fails
 built-ins/Function/prototype/bind/get-fn-realm.js fails
 built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js fails
@@ -4795,9 +4789,6 @@ language/expressions/generators/yield-spread-arr-single.js fails
 language/expressions/generators/yield-star-before-newline.js fails
 language/expressions/instanceof/prototype-getter-with-object-throws.js fails
 language/expressions/instanceof/prototype-getter-with-object.js fails
-language/expressions/instanceof/symbol-hasinstance-get-err.js fails
-language/expressions/instanceof/symbol-hasinstance-invocation.js fails
-language/expressions/instanceof/symbol-hasinstance-to-boolean.js fails
 language/expressions/logical-and/tco-right.js strictFails
 language/expressions/logical-or/tco-right.js strictFails
 language/expressions/new.target/asi.js fails
