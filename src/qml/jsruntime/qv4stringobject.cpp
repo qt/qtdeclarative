@@ -47,6 +47,7 @@
 #include "qv4symbol_p.h"
 #include "qv4alloca_p.h"
 #include "qv4jscall_p.h"
+#include "qv4stringiterator_p.h"
 #include <QtCore/QDateTime>
 #include <QtCore/QDebug>
 #include <QtCore/QStringList>
@@ -206,6 +207,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("toUpperCase"), method_toUpperCase);
     defineDefaultProperty(QStringLiteral("toLocaleUpperCase"), method_toLocaleUpperCase);
     defineDefaultProperty(QStringLiteral("trim"), method_trim);
+    defineDefaultProperty(engine->symbol_iterator(), method_iterator);
 }
 
 static Heap::String *thisAsString(ExecutionEngine *v4, const QV4::Value *thisObject)
@@ -927,4 +929,17 @@ ReturnedValue StringPrototype::method_trim(const FunctionObject *b, const Value 
     }
 
     return Encode(v4->newString(QString(chars + start, end - start + 1)));
+}
+
+
+
+ReturnedValue StringPrototype::method_iterator(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    ScopedString s(scope, thisObject->toString(scope.engine));
+    if (!s || thisObject->isNullOrUndefined())
+        return scope.engine->throwTypeError();
+
+    Scoped<StringIteratorObject> si(scope, scope.engine->memoryManager->allocate<StringIteratorObject>(s->d(), scope.engine));
+    return si->asReturnedValue();
 }

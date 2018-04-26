@@ -2164,10 +2164,6 @@ built-ins/String/fromCodePoint/number-is-out-of-range.js fails
 built-ins/String/fromCodePoint/return-string-value.js fails
 built-ins/String/fromCodePoint/to-number-conversions.js fails
 built-ins/String/proto-from-ctor-realm.js fails
-built-ins/String/prototype/Symbol.iterator/length.js fails
-built-ins/String/prototype/Symbol.iterator/name.js fails
-built-ins/String/prototype/Symbol.iterator/prop-desc.js fails
-built-ins/String/prototype/Symbol.iterator/this-val-to-str-err.js fails
 built-ins/String/prototype/codePointAt/codePointAt.js fails
 built-ins/String/prototype/codePointAt/length.js fails
 built-ins/String/prototype/codePointAt/name.js fails
@@ -2254,13 +2250,6 @@ built-ins/String/raw/template-length-throws.js fails
 built-ins/String/raw/template-raw-throws.js fails
 built-ins/String/raw/template-substitutions-are-appended-on-same-index.js fails
 built-ins/String/raw/zero-literal-segments.js fails
-built-ins/StringIteratorPrototype/Symbol.toStringTag.js fails
-built-ins/StringIteratorPrototype/ancestry.js fails
-built-ins/StringIteratorPrototype/next/length.js fails
-built-ins/StringIteratorPrototype/next/name.js fails
-built-ins/StringIteratorPrototype/next/next-iteration-surrogate-pairs.js fails
-built-ins/StringIteratorPrototype/next/next-iteration.js fails
-built-ins/StringIteratorPrototype/next/next-missing-internal-slots.js fails
 built-ins/Symbol/for/cross-realm.js fails
 built-ins/Symbol/hasInstance/cross-realm.js fails
 built-ins/Symbol/isConcatSpreadable/cross-realm.js fails

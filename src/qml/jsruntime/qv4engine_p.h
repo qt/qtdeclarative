@@ -188,6 +188,7 @@ public:
         SignalHandlerProto,
         IteratorProto,
         ArrayIteratorProto,
+        StringIteratorProto,
 
         Object_Ctor,
         String_Ctor,
@@ -268,6 +269,7 @@ public:
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
     Object *iteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + IteratorProto); }
     Object *arrayIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayIteratorProto); }
+    Object *stringIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringIteratorProto); }
 
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }

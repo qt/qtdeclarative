@@ -66,6 +66,7 @@
 #include "qv4profiling_p.h"
 #include "qv4executableallocator_p.h"
 #include "qv4iterator_p.h"
+#include "qv4stringiterator_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -407,6 +408,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
     jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
+    jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype()));
 
     static_cast<ObjectPrototype *>(objectPrototype())->init(this, objectCtor());
     static_cast<StringPrototype *>(stringPrototype())->init(this, stringCtor());
@@ -428,6 +430,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
     static_cast<ArrayIteratorPrototype *>(arrayIteratorPrototype())->init(this);
+    static_cast<StringIteratorPrototype *>(stringIteratorPrototype())->init(this);
+
     static_cast<VariantPrototype *>(variantPrototype())->init();
 
 #if QT_CONFIG(qml_sequence_object)

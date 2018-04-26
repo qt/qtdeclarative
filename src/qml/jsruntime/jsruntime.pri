@@ -31,6 +31,7 @@ SOURCES += \
     $$PWD/qv4objectproto.cpp \
     $$PWD/qv4qmlcontext.cpp \
     $$PWD/qv4regexpobject.cpp \
+    $$PWD/qv4stringiterator.cpp \
     $$PWD/qv4stringobject.cpp \
     $$PWD/qv4variantobject.cpp \
     $$PWD/qv4objectiterator.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     $$PWD/qv4qmlcontext_p.h \
     $$PWD/qv4regexpobject_p.h \
     $$PWD/qv4runtimecodegen_p.h \
+    $$PWD/qv4stringiterator_p.h \
     $$PWD/qv4stringobject_p.h \
     $$PWD/qv4variantobject_p.h \
     $$PWD/qv4property_p.h \

@@ -139,6 +139,7 @@ struct StringPrototype: StringObject
     static ReturnedValue method_toLocaleUpperCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_trim(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_iterator(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }
