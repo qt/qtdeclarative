@@ -989,7 +989,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             if (QQmlAdaptorModelProxyInterface *proxy
                     = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
                 ctxt = new QQmlContextData;
-                ctxt->setParent(cacheItem->contextData);
+                ctxt->setParent(cacheItem->contextData, /*stronglyReferencedByParent*/true);
                 ctxt->contextObject = proxy->proxiedObject();
             }
         }
