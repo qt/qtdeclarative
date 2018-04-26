@@ -125,7 +125,7 @@ public:
     QQmlContextData *parent = nullptr;
     QQmlEngine *engine;
 
-    void setParent(QQmlContextData *);
+    void setParent(QQmlContextData *, bool stronglyReferencedByParent = false);
     void refreshExpressions();
 
     void addObject(QObject *);
@@ -143,7 +143,8 @@ public:
     quint32 unresolvedNames:1; // True if expressions in this context failed to resolve a toplevel name
     quint32 hasEmittedDestruction:1;
     quint32 isRootObjectInCreation:1;
-    quint32 dummy:26;
+    quint32 stronglyReferencedByParent:1;
+    quint32 dummy:25;
     QQmlContext *publicContext;
 
     // The incubator that is constructing this context if any
