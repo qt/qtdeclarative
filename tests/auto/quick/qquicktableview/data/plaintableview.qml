@@ -61,6 +61,7 @@ Item {
     Component {
         id: tableViewDelegate
         Rectangle {
+            objectName: "tableViewDelegate"
             implicitWidth: 100
             implicitHeight: 50
             color: "lightgray"
