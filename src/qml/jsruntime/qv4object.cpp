@@ -156,34 +156,26 @@ void Object::defineDefaultProperty(const QString &name, const Value &value)
     defineDefaultProperty(s, value);
 }
 
-void Object::defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+void Object::defineDefaultProperty(const QString &name, jsCallFunction code,
                                    int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    ExecutionContext *global = e->rootContext();
-    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, s, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(e, s, code, argumentCount));
     defineDefaultProperty(s, function, attributes);
 }
 
-void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, jsCallFunction code,
                                    int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
-    ExecutionContext *global = e->rootContext();
-    ScopedString name(scope, nameOrSymbol);
-    if (!name)
-        name = e->newString(QChar::fromLatin1('[') + nameOrSymbol->toQString().midRef(1) + QChar::fromLatin1(']'));
-    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(global, name, code));
-    function->defineReadonlyConfigurableProperty(e->id_length(), Primitive::fromInt32(argumentCount));
+    ScopedFunctionObject function(scope, FunctionObject::createBuiltinFunction(e, nameOrSymbol, code, argumentCount));
     defineDefaultProperty(nameOrSymbol, function, attributes);
 }
 
-void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
-                                    ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int))
+void Object::defineAccessorProperty(const QString &name, jsCallFunction getter, jsCallFunction setter)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -191,15 +183,13 @@ void Object::defineAccessorProperty(const QString &name, ReturnedValue (*getter)
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
-                                    ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int))
+void Object::defineAccessorProperty(StringOrSymbol *name, jsCallFunction getter, jsCallFunction setter)
 {
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);
     ScopedProperty p(scope);
-    ExecutionContext *global = v4->rootContext();
-    p->setGetter(ScopedFunctionObject(scope, (getter ? FunctionObject::createBuiltinFunction(global, name, getter) : nullptr)));
-    p->setSetter(ScopedFunctionObject(scope, (setter ? FunctionObject::createBuiltinFunction(global, name, setter) : nullptr)));
+    p->setGetter(ScopedFunctionObject(scope, (getter ? FunctionObject::createBuiltinFunction(v4, name, getter, 0) : nullptr)));
+    p->setSetter(ScopedFunctionObject(scope, (setter ? FunctionObject::createBuiltinFunction(v4, name, setter, 1) : nullptr)));
     insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
 }
 

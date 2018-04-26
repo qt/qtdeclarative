@@ -119,11 +119,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     defineDefaultProperty(QStringLiteral("__defineGetter__"), method_defineGetter, 2);
     defineDefaultProperty(QStringLiteral("__defineSetter__"), method_defineSetter, 2);
 
-    ExecutionContext *global = v4->rootContext();
-    ScopedProperty p(scope);
-    p->value = FunctionObject::createBuiltinFunction(global, v4->id___proto__(), method_get_proto);
-    p->set = FunctionObject::createBuiltinFunction(global, v4->id___proto__(), method_set_proto);
-    insertMember(v4->id___proto__(), p, Attr_Accessor|Attr_NotEnumerable);
+    defineAccessorProperty(v4->id___proto__(), method_get_proto, method_set_proto);
 }
 
 ReturnedValue ObjectPrototype::method_getPrototypeOf(const FunctionObject *b, const Value *, const Value *argv, int argc)

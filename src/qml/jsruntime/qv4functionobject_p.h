@@ -64,9 +64,6 @@ namespace QV4 {
 struct IndexedBuiltinFunction;
 struct JSCallData;
 
-typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
-
 namespace Heap {
 
 
@@ -168,11 +165,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
-    static Heap::FunctionObject *createBuiltinFunction(ExecutionContext *scope, String *name,
-                                                       ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc))
-    {
-        return scope->engine()->memoryManager->allocate<FunctionObject>(scope, name, code);
-    }
+    static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;

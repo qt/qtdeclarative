@@ -366,8 +366,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_ErrorProto] = ic->addMember(id_name()->identifier(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Name);
 
-    jsObjects[GetStack_Function] = FunctionObject::createBuiltinFunction(rootContext(), str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack);
-    getStackFunction()->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
+    jsObjects[GetStack_Function] = FunctionObject::createBuiltinFunction(this, str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack, 0);
 
     jsObjects[ErrorProto] = memoryManager->allocObject<ErrorPrototype>(classes[Class_ErrorProto]);
     ic = classes[Class_ErrorProto]->changePrototype(errorPrototype()->d());
@@ -500,11 +499,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         Scope scope(this);
         ScopedString pi(scope, newIdentifier(piString));
         ScopedString pf(scope, newIdentifier(pfString));
-        ExecutionContext *global = rootContext();
-        ScopedFunctionObject parseIntFn(scope, FunctionObject::createBuiltinFunction(global, pi, GlobalFunctions::method_parseInt));
-        ScopedFunctionObject parseFloatFn(scope, FunctionObject::createBuiltinFunction(global, pf, GlobalFunctions::method_parseFloat));
-        parseIntFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(2));
-        parseFloatFn->defineReadonlyConfigurableProperty(id_length(), Primitive::fromInt32(1));
+        ScopedFunctionObject parseIntFn(scope, FunctionObject::createBuiltinFunction(this, pi, GlobalFunctions::method_parseInt, 2));
+        ScopedFunctionObject parseFloatFn(scope, FunctionObject::createBuiltinFunction(this, pf, GlobalFunctions::method_parseFloat, 1));
         globalObject->defineDefaultProperty(piString, parseIntFn);
         globalObject->defineDefaultProperty(pfString, parseFloatFn);
         numberObject->defineDefaultProperty(piString, parseIntFn);
@@ -521,7 +517,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     ScopedString name(scope, newString(QStringLiteral("thrower")));
-    jsObjects[ThrowerObject] = FunctionObject::createBuiltinFunction(global, name, ::throwTypeError);
+    jsObjects[ThrowerObject] = FunctionObject::createBuiltinFunction(this, name, ::throwTypeError, 0);
 
     ScopedProperty pd(scope);
     pd->value = thrower();

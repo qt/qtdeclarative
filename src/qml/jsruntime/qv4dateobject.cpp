@@ -852,9 +852,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
         QString toGmtString(QStringLiteral("toGMTString"));
         ScopedString us(scope, engine->newIdentifier(toUtcString));
         ScopedString gs(scope, engine->newIdentifier(toGmtString));
-        ExecutionContext *global = engine->rootContext();
-        ScopedFunctionObject toUtcGmtStringFn(scope, FunctionObject::createBuiltinFunction(global, us, method_toUTCString));
-        toUtcGmtStringFn->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+        ScopedFunctionObject toUtcGmtStringFn(scope, FunctionObject::createBuiltinFunction(engine, us, method_toUTCString, 0));
         defineDefaultProperty(us, toUtcGmtStringFn);
         defineDefaultProperty(gs, toUtcGmtStringFn);
     }

@@ -179,6 +179,18 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
+Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount)
+{
+    Scope scope(engine);
+    ScopedString name(scope, nameOrSymbol);
+    if (!name)
+        name = engine->newString(QChar::fromLatin1('[') + nameOrSymbol->toQString().midRef(1) + QChar::fromLatin1(']'));
+
+    ScopedFunctionObject function(scope, engine->memoryManager->allocate<FunctionObject>(engine->rootContext(), name, code));
+    function->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(argumentCount));
+    return function->d();
+}
+
 bool FunctionObject::isBinding() const
 {
     return d()->vtable() == QQmlBindingFunction::staticVTable();

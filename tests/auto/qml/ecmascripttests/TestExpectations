@@ -243,7 +243,6 @@ built-ins/ArrayBuffer/proto-from-ctor-realm.js fails
 built-ins/ArrayBuffer/prototype-from-newtarget.js fails
 built-ins/ArrayBuffer/prototype/Symbol.toStringTag.js fails
 built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js fails
-built-ins/ArrayBuffer/prototype/byteLength/length.js fails
 built-ins/ArrayBuffer/prototype/byteLength/name.js fails
 built-ins/ArrayBuffer/prototype/byteLength/prop-desc.js fails
 built-ins/ArrayBuffer/prototype/slice/end-default-if-absent.js fails
@@ -378,15 +377,12 @@ built-ins/DataView/newtarget-undefined-throws.js fails
 built-ins/DataView/proto-from-ctor-realm.js fails
 built-ins/DataView/prototype/Symbol.toStringTag.js fails
 built-ins/DataView/prototype/buffer/detached-buffer.js fails
-built-ins/DataView/prototype/buffer/length.js fails
 built-ins/DataView/prototype/buffer/name.js fails
 built-ins/DataView/prototype/buffer/prop-desc.js fails
 built-ins/DataView/prototype/byteLength/detached-buffer.js fails
-built-ins/DataView/prototype/byteLength/length.js fails
 built-ins/DataView/prototype/byteLength/name.js fails
 built-ins/DataView/prototype/byteLength/prop-desc.js fails
 built-ins/DataView/prototype/byteOffset/detached-buffer.js fails
-built-ins/DataView/prototype/byteOffset/length.js fails
 built-ins/DataView/prototype/byteOffset/name.js fails
 built-ins/DataView/prototype/byteOffset/prop-desc.js fails
 built-ins/DataView/prototype/getFloat32/detached-buffer-after-toindex-byteoffset.js fails

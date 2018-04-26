@@ -64,6 +64,9 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
+
 namespace Heap {
 
 #define ObjectMembers(class, Member) \
@@ -275,14 +278,12 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(name, value, attributes);
     }
     void defineDefaultProperty(const QString &name, const Value &value);
-    void defineDefaultProperty(const QString &name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+    void defineDefaultProperty(const QString &name, jsCallFunction code,
                                int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
-    void defineDefaultProperty(StringOrSymbol *name, ReturnedValue (*code)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc),
+    void defineDefaultProperty(StringOrSymbol *name, jsCallFunction code,
                                int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
-    void defineAccessorProperty(const QString &name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
-                                ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
-    void defineAccessorProperty(String *name, ReturnedValue (*getter)(const FunctionObject *, const Value *, const Value *, int),
-                                ReturnedValue (*setter)(const FunctionObject *, const Value *, const Value *, int));
+    void defineAccessorProperty(const QString &name, jsCallFunction getter, jsCallFunction setter);
+    void defineAccessorProperty(StringOrSymbol *name, jsCallFunction getter, jsCallFunction setter);
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);
