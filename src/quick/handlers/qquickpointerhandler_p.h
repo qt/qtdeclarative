@@ -110,7 +110,7 @@ Q_SIGNALS:
     void enabledChanged();
     void activeChanged();
     void targetChanged();
-    void grabChanged(QQuickEventPoint *point);
+    void grabChanged(QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
     void grabPermissionChanged();
     void canceled(QQuickEventPoint *point);
 

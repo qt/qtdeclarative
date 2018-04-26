@@ -124,8 +124,7 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
         }
         if (wasCanceled)
             emit canceled(point);
-        else
-            emit grabChanged(point);
+        emit grabChanged(stateChange, point);
     }
 }
 
@@ -456,10 +455,13 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 */
 
 /*!
-    \qmlsignal QtQuick::PointerHandler::grabChanged(EventPoint point)
+    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabState stateChange, EventPoint point)
 
-    This signal is emitted when this handler has acquired or relinquished a
-    passive or exclusive grab of the given \a point.
+    This signal is emitted when the grab has changed in some way which is
+    relevant to this handler.
+
+    The \a stateChange (verb) tells what happened.
+    The \a point (object) is the point that was grabbed or ungrabbed.
 */
 
 /*!
