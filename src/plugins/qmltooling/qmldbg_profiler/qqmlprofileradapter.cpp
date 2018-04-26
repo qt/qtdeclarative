@@ -38,8 +38,8 @@
 ****************************************************************************/
 
 #include "qqmlprofileradapter.h"
+#include "qqmlprofilerservice.h"
 
-#include <private/qqmldebugpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_BEGIN_NAMESPACE

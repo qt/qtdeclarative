@@ -1,5 +1,5 @@
 TARGET    =  QtQmlDebug
-QT        =  core-private network packetprotocol-private qml-private
+QT        =  core-private network packetprotocol-private
 CONFIG    += static internal_module
 
 load(qt_module)
@@ -28,4 +28,5 @@ HEADERS += \
     qqmlprofilereventlocation_p.h \
     qqmlprofilereventreceiver_p.h \
     qqmlprofilereventtype_p.h \
-    qqmlprofilertypedevent_p.h
+    qqmlprofilertypedevent_p.h \
+    qqmlprofilerclientdefinitions_p.h

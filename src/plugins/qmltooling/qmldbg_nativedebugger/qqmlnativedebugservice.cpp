@@ -49,7 +49,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4runtime_p.h>
-#include <private/qqmldebugpacket_p.h>
+#include <private/qversionedpacket_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 
 #include <QtQml/qjsengine.h>
@@ -64,6 +64,8 @@
 #define TRACE_PROTOCOL(s)
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 class BreakPoint
 {

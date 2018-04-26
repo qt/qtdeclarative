@@ -29,6 +29,7 @@
 #include <qdir.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonarray.h>
@@ -332,6 +333,29 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
     VERIFY_ERRORS(0);
 }
 
+static QByteArray msgComponentError(const QQmlComponent &c, const QQmlEngine *engine /* = 0 */)
+{
+    QString result;
+    const QList<QQmlError> errors = c.errors();
+    QTextStream str(&result);
+    str << "Component '" << c.url().toString() << "' has " << errors.size() << " errors: '";
+    for (int i = 0; i < errors.size(); ++i) {
+        if (i)
+            str << ", '";
+        str << errors.at(i).toString() << '\'';
+    }
+    if (!engine) {
+        if (QQmlContext *context = c.creationContext())
+            engine = context->engine();
+    }
+    if (engine) {
+        str << " Import paths: (" << engine->importPathList().join(QStringLiteral(", "))
+            << ") Plugin paths: (" << engine->pluginPathList().join(QStringLiteral(", "))
+            << ')';
+    }
+    return result.toLocal8Bit();
+}
+
 // QTBUG-17324
 
 void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
@@ -345,7 +369,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != nullptr, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     delete o;
     }
@@ -354,7 +378,7 @@ void tst_qqmlmoduleplugin::importsMixedQmlCppPlugin()
     QQmlComponent component(&engine, testFileUrl(QStringLiteral("importsMixedQmlCppPlugin.2.qml")));
 
     QObject *o = component.create();
-    QVERIFY2(o != nullptr, QQmlDataTest::msgComponentError(component, &engine));
+    QVERIFY2(o != nullptr, msgComponentError(component, &engine));
     QCOMPARE(o->property("test").toBool(), true);
     QCOMPARE(o->property("test2").toBool(), true);
     delete o;

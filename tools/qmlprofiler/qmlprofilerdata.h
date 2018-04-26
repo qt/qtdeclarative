@@ -29,7 +29,7 @@
 #ifndef QMLPROFILERDATA_H
 #define QMLPROFILERDATA_H
 
-#include <private/qqmlprofilerdefinitions_p.h>
+#include <private/qqmlprofilerclientdefinitions_p.h>
 #include <private/qqmlprofilereventlocation_p.h>
 #include <private/qqmlprofilereventreceiver_p.h>
 
@@ -55,8 +55,8 @@ public:
     void addEvent(const QQmlProfilerEvent &event) override;
 
     static QString getHashStringForQmlEvent(const QQmlProfilerEventLocation &location, int eventType);
-    static QString qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type);
-    static QString qmlMessageAsString(QQmlProfilerDefinitions::Message type);
+    static QString qmlRangeTypeAsString(RangeType type);
+    static QString qmlMessageAsString(Message type);
 
     qint64 traceStartTime() const;
     qint64 traceEndTime() const;

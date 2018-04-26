@@ -31,8 +31,6 @@
 
 #include <private/qqmldebugconnection_p.h>
 
-#include <QtQml/qqmldebug.h>
-
 #include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
 
@@ -52,15 +50,23 @@ bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int tim
 QList<QQmlDebugClient *> QQmlDebugTest::createOtherClients(QQmlDebugConnection *connection)
 {
     QList<QQmlDebugClient *> ret;
-    foreach (const QString &service, QQmlDebuggingEnabler::debuggerServices()) {
+
+    static const auto debuggerServices
+            = QStringList({"V8Debugger", "QmlDebugger", "DebugMessages"});
+    static const auto inspectorServices
+            = QStringList({"QmlInspector"});
+    static const auto profilerServices
+            = QStringList({"CanvasFrameRate", "EngineControl", "DebugMessages"});
+
+    for (const QString &service : debuggerServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }
-    foreach (const QString &service, QQmlDebuggingEnabler::inspectorServices()) {
+    for (const QString &service : inspectorServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }
-    foreach (const QString &service, QQmlDebuggingEnabler::profilerServices()) {
+    for (const QString &service : profilerServices) {
         if (!connection->client(service))
             ret << new QQmlDebugClient(service, connection);
     }

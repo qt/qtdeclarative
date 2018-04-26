@@ -96,11 +96,6 @@ struct QQmlProfilerDefinitions {
         MaximumRangeType
     };
 
-    enum BindingType {
-        QmlBinding,
-        MaximumBindingType
-    };
-
     enum PixmapEventType {
         PixmapSizeKnown,
         PixmapReferenceCountChanged,
@@ -128,8 +123,6 @@ struct QQmlProfilerDefinitions {
         NumRenderThreadFrameTypes = SceneGraphPolishAndSync,
         NumGUIThreadFrameTypes = MaximumSceneGraphFrameType - NumRenderThreadFrameTypes
     };
-
-    typedef QV4::Profiling::MemoryType MemoryType;
 
     enum ProfileFeature {
         ProfileJavaScript,
@@ -162,26 +155,6 @@ struct QQmlProfilerDefinitions {
 
         MaximumInputEventType
     };
-
-    static ProfileFeature featureFromRangeType(RangeType range)
-    {
-        switch (range) {
-            case Painting:
-                return ProfilePainting;
-            case Compiling:
-                return ProfileCompiling;
-            case Creating:
-                return ProfileCreating;
-            case Binding:
-                return ProfileBinding;
-            case HandlingSignal:
-                return ProfileHandlingSignal;
-            case Javascript:
-                return ProfileJavaScript;
-            default:
-                return MaximumProfileFeature;
-        }
-    }
 };
 
 QT_END_NAMESPACE
