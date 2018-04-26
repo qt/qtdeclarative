@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlprofilereventtype_p.h"
+#include "qqmlprofilerclientdefinitions_p.h"
 
 #include <QtCore/qdatastream.h>
 
@@ -49,8 +50,8 @@ QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventType &type)
     quint8 rangeType;
     stream >> type.m_displayName >> type.m_data >> type.m_location >> message >> rangeType
            >> type.m_detailType;
-    type.m_message = static_cast<QQmlProfilerDefinitions::Message>(message);
-    type.m_rangeType = static_cast<QQmlProfilerDefinitions::RangeType>(rangeType);
+    type.m_message = static_cast<Message>(message);
+    type.m_rangeType = static_cast<RangeType>(rangeType);
     return stream;
 }
 
@@ -61,7 +62,7 @@ QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventType &type)
                   << type.m_detailType;
 }
 
-QQmlProfilerDefinitions::ProfileFeature QQmlProfilerEventType::feature() const
+ProfileFeature QQmlProfilerEventType::feature() const
 {
     switch (m_message) {
     case Event: {
@@ -84,7 +85,24 @@ QQmlProfilerDefinitions::ProfileFeature QQmlProfilerEventType::feature() const
     case DebugMessage:
         return ProfileDebugMessages;
     default:
-        return featureFromRangeType(m_rangeType);
+        break;
+    }
+
+    switch (m_rangeType) {
+        case Painting:
+            return ProfilePainting;
+        case Compiling:
+            return ProfileCompiling;
+        case Creating:
+            return ProfileCreating;
+        case Binding:
+            return ProfileBinding;
+        case HandlingSignal:
+            return ProfileHandlingSignal;
+        case Javascript:
+            return ProfileJavaScript;
+        default:
+            return MaximumProfileFeature;
     }
 }
 

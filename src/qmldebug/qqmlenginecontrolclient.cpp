@@ -41,7 +41,6 @@
 #include "qqmlenginecontrolclient_p_p.h"
 #include "qqmldebugconnection_p.h"
 
-#include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacket_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -142,7 +141,7 @@ void QQmlEngineControlClient::messageReceived(const QByteArray &data)
 }
 
 QQmlEngineControlClientPrivate::QQmlEngineControlClientPrivate(QQmlDebugConnection *connection) :
-    QQmlDebugClientPrivate(QQmlEngineControlService::s_key, connection)
+    QQmlDebugClientPrivate(QLatin1String("EngineControl"), connection)
 {
 }
 

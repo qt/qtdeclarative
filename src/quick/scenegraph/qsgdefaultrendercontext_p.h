@@ -95,6 +95,7 @@ public:
 
     bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
     int maxTextureSize() const override { return m_maxTextureSize; }
+    bool separateIndexBuffer() const;
 
 protected:
     static QString fontKey(const QRawFont &font);
@@ -106,8 +107,6 @@ protected:
     bool m_serializedRender;
     bool m_attachToGLContext;
     QSGAtlasTexture::Manager *m_atlasManager;
-
-
 };
 
 QT_END_NAMESPACE

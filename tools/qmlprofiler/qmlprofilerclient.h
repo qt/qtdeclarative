@@ -30,7 +30,7 @@
 #define QMLPROFILERCLIENT_H
 
 #include <private/qqmlprofilerclient_p.h>
-#include <private/qqmlprofilerdefinitions_p.h>
+#include <private/qqmlprofilerclientdefinitions_p.h>
 #include <private/qqmlprofilereventlocation_p.h>
 
 class QmlProfilerData;

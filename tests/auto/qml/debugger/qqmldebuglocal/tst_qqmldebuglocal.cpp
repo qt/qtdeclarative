@@ -32,7 +32,6 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugconnection_p.h>
 
-#include <QtQml/qqmldebug.h>
 #include <QtQml/qqmlengine.h>
 
 #include <QtTest/qtest.h>

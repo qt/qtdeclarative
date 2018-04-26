@@ -8,7 +8,7 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-QT += core qml testlib testlib-private gui-private core-private
+QT += testlib gui-private
 
 OTHER_FILES += \
     data/pixmapCacheTest.qml \

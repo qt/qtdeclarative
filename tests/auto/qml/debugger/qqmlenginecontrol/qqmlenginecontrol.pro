@@ -8,7 +8,7 @@ include(../shared/debugutil.pri)
 
 TESTDATA = data/*
 
-QT += core qml testlib gui-private core-private
+QT += core testlib gui-private core-private
 
 OTHER_FILES += \
     data/test.qml \

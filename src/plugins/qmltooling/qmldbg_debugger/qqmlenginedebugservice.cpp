@@ -56,9 +56,12 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qfileinfo.h>
 #include <private/qmetaobject_p.h>
-#include <private/qqmldebugpacket_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
     QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(nullptr)

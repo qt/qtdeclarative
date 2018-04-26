@@ -70,8 +70,7 @@ static const char *features[] = {
     "debugmessages"
 };
 
-Q_STATIC_ASSERT(sizeof(features) ==
-                QQmlProfilerDefinitions::MaximumProfileFeature * sizeof(char *));
+Q_STATIC_ASSERT(sizeof(features) == MaximumProfileFeature * sizeof(char *));
 
 QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),
@@ -168,7 +167,7 @@ void QmlProfilerApplication::parseArguments()
     parser.addOption(record);
 
     QStringList featureList;
-    for (int i = 0; i < QQmlProfilerDefinitions::MaximumProfileFeature; ++i)
+    for (int i = 0; i < MaximumProfileFeature; ++i)
         featureList << QLatin1String(features[i]);
 
     QCommandLineOption include(QLatin1String("include"),

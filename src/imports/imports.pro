@@ -20,9 +20,7 @@ qtHaveModule(quick) {
         window \
         tableview
 
-    qtConfig(testlib): \
-        SUBDIRS += testlib
-
+    qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
     qtConfig(quick-particles): \
         SUBDIRS += particles

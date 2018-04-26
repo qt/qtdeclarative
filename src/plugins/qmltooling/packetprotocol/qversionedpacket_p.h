@@ -37,13 +37,10 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGPACKET_P_H
-#define QQMLDEBUGPACKET_P_H
+#ifndef QVERSIONEDPACKET_P_H
+#define QVERSIONEDPACKET_P_H
 
 #include "qpacket_p.h"
-
-#include <QtCore/qbuffer.h>
-#include <QtQml/private/qqmldebugconnector_p.h>
 
 //
 //  W A R N I N G
@@ -58,14 +55,15 @@
 
 QT_BEGIN_NAMESPACE
 
-// QPacket with a fixed data stream version, centrally set by QQmlDebugServer
-class QQmlDebugPacket : public QPacket
+// QPacket with a fixed data stream version, centrally set by some Connector
+template<class Connector>
+class QVersionedPacket : public QPacket
 {
 public:
-    QQmlDebugPacket() : QPacket(QQmlDebugConnector::dataStreamVersion()) {}
-    QQmlDebugPacket(const QByteArray &ba) : QPacket(QQmlDebugConnector::dataStreamVersion(), ba) {}
+    QVersionedPacket(const QByteArray &ba) : QPacket(Connector::dataStreamVersion(), ba) {}
+    QVersionedPacket() : QPacket(Connector::dataStreamVersion()) {}
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGPACKET_P_H
+#endif // QVERSIONEDPACKET_P_H

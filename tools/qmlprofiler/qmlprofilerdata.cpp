@@ -50,8 +50,7 @@ static const char *RANGE_TYPE_STRINGS[] = {
     "Javascript"
 };
 
-Q_STATIC_ASSERT(sizeof(RANGE_TYPE_STRINGS) ==
-                QQmlProfilerDefinitions::MaximumRangeType * sizeof(const char *));
+Q_STATIC_ASSERT(sizeof(RANGE_TYPE_STRINGS) == MaximumRangeType * sizeof(const char *));
 
 static const char *MESSAGE_STRINGS[] = {
     "Event",
@@ -66,8 +65,7 @@ static const char *MESSAGE_STRINGS[] = {
     "DebugMessage"
 };
 
-Q_STATIC_ASSERT(sizeof(MESSAGE_STRINGS) ==
-                QQmlProfilerDefinitions::MaximumMessage * sizeof(const char *));
+Q_STATIC_ASSERT(sizeof(MESSAGE_STRINGS) == MaximumMessage * sizeof(const char *));
 
 /////////////////////////////////////////////////////////////////
 class QmlProfilerDataPrivate
@@ -113,7 +111,7 @@ void QmlProfilerData::clear()
     setState(Empty);
 }
 
-QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType type)
+QString QmlProfilerData::qmlRangeTypeAsString(RangeType type)
 {
     if (type * sizeof(char *) < sizeof(RANGE_TYPE_STRINGS))
         return QLatin1String(RANGE_TYPE_STRINGS[type]);
@@ -121,7 +119,7 @@ QString QmlProfilerData::qmlRangeTypeAsString(QQmlProfilerDefinitions::RangeType
         return QString::number(type);
 }
 
-QString QmlProfilerData::qmlMessageAsString(QQmlProfilerDefinitions::Message type)
+QString QmlProfilerData::qmlMessageAsString(Message type)
 {
     if (type * sizeof(char *) < sizeof(MESSAGE_STRINGS))
         return QLatin1String(MESSAGE_STRINGS[type]);
@@ -178,13 +176,13 @@ void QmlProfilerData::addEventType(const QQmlProfilerEventType &type)
 
     QString displayName;
     switch (type.message()) {
-    case QQmlProfilerDefinitions::Event: {
+    case Event: {
         switch (type.detailType()) {
-        case QQmlProfilerDefinitions::Mouse:
-        case QQmlProfilerDefinitions::Key:
+        case Mouse:
+        case Key:
             displayName = QString::fromLatin1("Input:%1").arg(type.detailType());
             break;
-        case QQmlProfilerDefinitions::AnimationFrame:
+        case AnimationFrame:
             displayName = QString::fromLatin1("AnimationFrame");
             break;
         default:
@@ -192,29 +190,29 @@ void QmlProfilerData::addEventType(const QQmlProfilerEventType &type)
         }
         break;
     }
-    case QQmlProfilerDefinitions::RangeStart:
-    case QQmlProfilerDefinitions::RangeData:
-    case QQmlProfilerDefinitions::RangeLocation:
-    case QQmlProfilerDefinitions::RangeEnd:
-    case QQmlProfilerDefinitions::Complete:
+    case RangeStart:
+    case RangeData:
+    case RangeLocation:
+    case RangeEnd:
+    case Complete:
         Q_UNREACHABLE();
         break;
-    case QQmlProfilerDefinitions::PixmapCacheEvent: {
+    case PixmapCacheEvent: {
         const QString filePath = QUrl(type.location().filename()).path();
         displayName = filePath.midRef(filePath.lastIndexOf(QLatin1Char('/')) + 1)
                 + QLatin1Char(':') + QString::number(type.detailType());
         break;
     }
-    case QQmlProfilerDefinitions::SceneGraphFrame:
+    case SceneGraphFrame:
         displayName = QString::fromLatin1("SceneGraph:%1").arg(type.detailType());
         break;
-    case QQmlProfilerDefinitions::MemoryAllocation:
+    case MemoryAllocation:
         displayName = QString::fromLatin1("MemoryAllocation:%1").arg(type.detailType());
         break;
-    case QQmlProfilerDefinitions::DebugMessage:
+    case DebugMessage:
         displayName = QString::fromLatin1("DebugMessage:%1").arg(type.detailType());
         break;
-    case QQmlProfilerDefinitions::MaximumMessage: {
+    case MaximumMessage: {
         const QQmlProfilerEventLocation eventLocation = type.location();
         // generate hash
         if (eventLocation.filename().isEmpty()) {
@@ -241,21 +239,21 @@ void QmlProfilerData::computeQmlTime()
 
     for (const QQmlProfilerEvent &event : qAsConst(d->events)) {
         const QQmlProfilerEventType &type = d->eventTypes.at(event.typeIndex());
-        if (type.message() != QQmlProfilerDefinitions::MaximumMessage)
+        if (type.message() != MaximumMessage)
             continue;
 
         switch (type.rangeType()) {
-        case QQmlProfilerDefinitions::Compiling:
-        case QQmlProfilerDefinitions::Creating:
-        case QQmlProfilerDefinitions::Binding:
-        case QQmlProfilerDefinitions::HandlingSignal:
-        case QQmlProfilerDefinitions::Javascript:
+        case Compiling:
+        case Creating:
+        case Binding:
+        case HandlingSignal:
+        case Javascript:
             switch (event.rangeStage()) {
-            case QQmlProfilerDefinitions::RangeStart:
+            case RangeStart:
                 if (level++ == 0)
                     level0Start = event.timestamp();
                 break;
-            case QQmlProfilerDefinitions::RangeEnd:
+            case RangeEnd:
                 if (--level == 0)
                     d->qmlMeasuredTime += event.timestamp() - level0Start;
                 break;
@@ -430,8 +428,7 @@ bool QmlProfilerData::save(const QString &filename)
         if (!eventData.displayName().isEmpty())
             stream.writeTextElement("displayname", eventData.displayName());
 
-        stream.writeTextElement("type",
-                                eventData.rangeType() == QQmlProfilerDefinitions::MaximumRangeType
+        stream.writeTextElement("type", eventData.rangeType() == MaximumRangeType
                                 ? qmlMessageAsString(eventData.message())
                                 : qmlRangeTypeAsString(eventData.rangeType()));
 
@@ -444,25 +441,25 @@ bool QmlProfilerData::save(const QString &filename)
             stream.writeTextElement("column", location.column());
         if (!eventData.data().isEmpty())
             stream.writeTextElement("details", eventData.data());
-        if (eventData.rangeType() == QQmlProfilerDefinitions::Binding)
+        if (eventData.rangeType() == Binding)
             stream.writeTextElement("bindingType", eventData.detailType());
-        else if (eventData.message() == QQmlProfilerDefinitions::Event) {
+        else if (eventData.message() == Event) {
             switch (eventData.detailType()) {
-            case QQmlProfilerDefinitions::AnimationFrame:
+            case AnimationFrame:
                 stream.writeTextElement("animationFrame", eventData.detailType());
                 break;
-            case QQmlProfilerDefinitions::Key:
+            case Key:
                 stream.writeTextElement("keyEvent", eventData.detailType());
                 break;
-            case QQmlProfilerDefinitions::Mouse:
+            case Mouse:
                 stream.writeTextElement("mouseEvent", eventData.detailType());
                 break;
             }
-        } else if (eventData.message() == QQmlProfilerDefinitions::PixmapCacheEvent)
+        } else if (eventData.message() == PixmapCacheEvent)
             stream.writeTextElement("cacheEventType", eventData.detailType());
-        else if (eventData.message() == QQmlProfilerDefinitions::SceneGraphFrame)
+        else if (eventData.message() == SceneGraphFrame)
             stream.writeTextElement("sgEventType", eventData.detailType());
-        else if (eventData.message() == QQmlProfilerDefinitions::MemoryAllocation)
+        else if (eventData.message() == MemoryAllocation)
             stream.writeTextElement("memoryEventType", eventData.detailType());
         stream.writeEndElement();
     }
@@ -477,50 +474,49 @@ bool QmlProfilerData::save(const QString &filename)
         if (duration != 0)
             stream.writeAttribute("duration", duration);
         stream.writeAttribute("eventIndex", event.typeIndex());
-        if (type.message() == QQmlProfilerDefinitions::Event) {
-            if (type.detailType() == QQmlProfilerDefinitions::AnimationFrame) {
+        if (type.message() == Event) {
+            if (type.detailType() == AnimationFrame) {
                 // special: animation frame
                 stream.writeAttribute("framerate", event, 0);
                 stream.writeAttribute("animationcount", event, 1);
                 stream.writeAttribute("thread", event, 2);
-            } else if (type.detailType() == QQmlProfilerDefinitions::Key ||
-                       type.detailType() == QQmlProfilerDefinitions::Mouse) {
+            } else if (type.detailType() == Key || type.detailType() == Mouse) {
                 // numerical value here, to keep the format a bit more compact
                 stream.writeAttribute("type", event, 0);
                 stream.writeAttribute("data1", event, 1);
                 stream.writeAttribute("data2", event, 2);
             }
-        } else if (type.message() == QQmlProfilerDefinitions::PixmapCacheEvent) {
+        } else if (type.message() == PixmapCacheEvent) {
             // special: pixmap cache event
-            if (type.detailType() == QQmlProfilerDefinitions::PixmapSizeKnown) {
+            if (type.detailType() == PixmapSizeKnown) {
                 stream.writeAttribute("width", event, 0);
                 stream.writeAttribute("height", event, 1);
-            } else if (type.detailType() == QQmlProfilerDefinitions::PixmapReferenceCountChanged
-                       || type.detailType() == QQmlProfilerDefinitions::PixmapCacheCountChanged) {
+            } else if (type.detailType() == PixmapReferenceCountChanged
+                       || type.detailType() == PixmapCacheCountChanged) {
                 stream.writeAttribute("refCount", event, 1);
             }
-        } else if (type.message() == QQmlProfilerDefinitions::SceneGraphFrame) {
+        } else if (type.message() == SceneGraphFrame) {
             stream.writeAttribute("timing1", event, 0, false);
             stream.writeAttribute("timing2", event, 1, false);
             stream.writeAttribute("timing3", event, 2, false);
             stream.writeAttribute("timing4", event, 3, false);
             stream.writeAttribute("timing5", event, 4, false);
-        } else if (type.message() == QQmlProfilerDefinitions::MemoryAllocation) {
+        } else if (type.message() == MemoryAllocation) {
             stream.writeAttribute("amount", event, 0);
         }
         stream.writeEndElement();
     };
 
     QQueue<QQmlProfilerEvent> pointEvents;
-    QQueue<QQmlProfilerEvent> rangeStarts[QQmlProfilerDefinitions::MaximumRangeType];
-    QStack<qint64> rangeEnds[QQmlProfilerDefinitions::MaximumRangeType];
+    QQueue<QQmlProfilerEvent> rangeStarts[MaximumRangeType];
+    QStack<qint64> rangeEnds[MaximumRangeType];
     int level = 0;
 
     auto sendPending = [&]() {
         forever {
-            int minimum = QQmlProfilerDefinitions::MaximumRangeType;
+            int minimum = MaximumRangeType;
             qint64 minimumTime = std::numeric_limits<qint64>::max();
-            for (int i = 0; i < QQmlProfilerDefinitions::MaximumRangeType; ++i) {
+            for (int i = 0; i < MaximumRangeType; ++i) {
                 const QQueue<QQmlProfilerEvent> &starts = rangeStarts[i];
                 if (starts.isEmpty())
                     continue;
@@ -529,7 +525,7 @@ bool QmlProfilerData::save(const QString &filename)
                     minimum = i;
                 }
             }
-            if (minimum == QQmlProfilerDefinitions::MaximumRangeType)
+            if (minimum == MaximumRangeType)
                 break;
 
             while (!pointEvents.isEmpty() && pointEvents.front().timestamp() < minimumTime)
@@ -543,15 +539,15 @@ bool QmlProfilerData::save(const QString &filename)
     for (const QQmlProfilerEvent &event : qAsConst(d->events)) {
         const QQmlProfilerEventType &type = d->eventTypes.at(event.typeIndex());
 
-        if (type.rangeType() != QQmlProfilerDefinitions::MaximumRangeType) {
+        if (type.rangeType() != MaximumRangeType) {
             QQueue<QQmlProfilerEvent> &starts = rangeStarts[type.rangeType()];
             switch (event.rangeStage()) {
-            case QQmlProfilerDefinitions::RangeStart: {
+            case RangeStart: {
                 ++level;
                 starts.enqueue(event);
                 break;
             }
-            case QQmlProfilerDefinitions::RangeEnd: {
+            case RangeEnd: {
                 QStack<qint64> &ends = rangeEnds[type.rangeType()];
                 if (starts.length() > ends.length()) {
                     ends.push(event.timestamp());
@@ -571,7 +567,7 @@ bool QmlProfilerData::save(const QString &filename)
         }
     }
 
-    for (int i = 0; i < QQmlProfilerDefinitions::MaximumRangeType; ++i) {
+    for (int i = 0; i < MaximumRangeType; ++i) {
         while (rangeEnds[i].length() < rangeStarts[i].length()) {
             rangeEnds[i].push(d->traceEndTime);
             --level;
