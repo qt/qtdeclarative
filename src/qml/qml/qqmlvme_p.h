@@ -124,6 +124,10 @@ private:
 // Used to check that a QQmlVME that is interrupted mid-execution
 // is still valid.  Checks all the objects and contexts have not been
 // deleted.
+//
+// VME stands for Virtual Machine Execution. QML files used to
+// be compiled to a byte code data structure that a virtual machine executed
+// (for constructing the tree of QObjects and setting properties).
 class QQmlVMEGuard
 {
 public:
