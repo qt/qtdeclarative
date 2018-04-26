@@ -106,10 +106,10 @@ QPair<QObject *, int> QObjectMethod::extractQtMethod(const QV4::FunctionObject *
     return qMakePair((QObject *)nullptr, -1);
 }
 
-static QPair<QObject *, int> extractQtSignal(const Value &value)
+static QPair<QObject *, int> extractQtSignal(const QV4::Value &value)
 {
     if (value.isObject()) {
-        QV4::ExecutionEngine *v4 = value.as<Object>()->engine();
+        QV4::ExecutionEngine *v4 = value.as<QV4::Object>()->engine();
         QV4::Scope scope(v4);
         QV4::ScopedFunctionObject function(scope, value);
         if (function)
@@ -1112,7 +1112,7 @@ struct CallArgument {
     inline void *dataPtr();
 
     inline void initAsType(int type);
-    inline void fromValue(int type, ExecutionEngine *, const Value &);
+    inline void fromValue(int type, ExecutionEngine *, const QV4::Value &);
     inline ReturnedValue toValue(ExecutionEngine *);
 
 private:
@@ -1310,7 +1310,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
                 return 10;
         }
         }
-    } else if (const Object *obj = actual.as<Object>()) {
+    } else if (const QV4::Object *obj = actual.as<QV4::Object>()) {
         if (obj->as<QV4::VariantObject>()) {
             if (conversionType == qMetaTypeId<QVariant>())
                 return 0;
@@ -1729,7 +1729,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
                || callType == qMetaTypeId<std::vector<QUrl>>()
                || callType == qMetaTypeId<std::vector<QModelIndex>>()) {
         queryEngine = true;
-        const QV4::Object* object = value.as<Object>();
+        const QV4::Object* object = value.as<QV4::Object>();
         if (callType == qMetaTypeId<std::vector<int>>()) {
             stdVectorIntPtr = nullptr;
             fromContainerValue<std::vector<int>>(object, callType, &CallArgument::stdVectorIntPtr, queryEngine);

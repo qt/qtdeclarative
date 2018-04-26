@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquicksprite_p.h"
+#include "qquickimagebase_p.h"
 #include <qqml.h>
 #include <QDebug>
 #include <QRandomGenerator>
@@ -222,6 +223,7 @@ QQuickSprite::QQuickSprite(QObject *parent)
     , m_frameDuration(unsetDuration)
     , m_frameDurationVariation(0)
     , m_frameSync(false)
+    , m_devicePixelRatio(1.0)
 {
 }
 
@@ -265,7 +267,10 @@ void QQuickSprite::startImageLoading()
             if (!e)
                 qWarning() << "QQuickSprite: Cannot find QQmlEngine - this class is only for use in QML and may not work";
         }
-        m_pix.load(e, m_source);
+        QUrl loadUrl = m_source;
+        QQuickImageBase::resolve2xLocalFile(m_source, m_devicePixelRatio, &loadUrl, &m_devicePixelRatio);
+
+        m_pix.load(e, loadUrl);
     }
 }
 

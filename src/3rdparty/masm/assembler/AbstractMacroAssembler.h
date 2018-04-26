@@ -327,7 +327,13 @@ public:
         template<class TemplateAssemblerType>
         friend class AbstractMacroAssembler;
         friend struct DFG::OSRExit;
+
+#if CPU(ARM_THUMB2) || CPU(ARM64) || defined(V4_BOOTSTRAP)
+        using Jump = typename AssemblerType::template Jump<Label>;
+        friend Jump;
+#else
         friend class Jump;
+#endif
         friend class JumpReplacementWatchpoint;
         friend class MacroAssemblerCodeRef;
         template <typename, template <typename> class> friend class LinkBufferBase;

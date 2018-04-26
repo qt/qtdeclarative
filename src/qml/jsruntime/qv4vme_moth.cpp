@@ -345,7 +345,7 @@ static struct InstrCount {
     if (engine->hasException) \
         goto catchException
 
-static inline Heap::CallContext *getScope(Value *stack, int level)
+static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
 {
     Heap::ExecutionContext *scope = static_cast<ExecutionContext &>(stack[CallData::Context]).d();
     while (level > 0) {
@@ -362,7 +362,7 @@ static inline const QV4::Value &constant(Function *function, int index)
 }
 
 
-static bool compareEqual(Value lhs, Value rhs)
+static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
 {
   redo:
     if (lhs.asReturnedValue() == rhs.asReturnedValue())
@@ -376,22 +376,22 @@ static bool compareEqual(Value lhs, Value rhs)
     }
 
     switch (lt) {
-    case Value::QT_ManagedOrUndefined:
+    case QV4::Value::QT_ManagedOrUndefined:
         if (lhs.isUndefined())
             return rhs.isNullOrUndefined();
         Q_FALLTHROUGH();
-    case Value::QT_ManagedOrUndefined1:
-    case Value::QT_ManagedOrUndefined2:
-    case Value::QT_ManagedOrUndefined3:
+    case QV4::Value::QT_ManagedOrUndefined1:
+    case QV4::Value::QT_ManagedOrUndefined2:
+    case QV4::Value::QT_ManagedOrUndefined3:
         // LHS: Managed
         switch (rt) {
-        case Value::QT_ManagedOrUndefined:
+        case QV4::Value::QT_ManagedOrUndefined:
             if (rhs.isUndefined())
                 return false;
             Q_FALLTHROUGH();
-        case Value::QT_ManagedOrUndefined1:
-        case Value::QT_ManagedOrUndefined2:
-        case Value::QT_ManagedOrUndefined3: {
+        case QV4::Value::QT_ManagedOrUndefined1:
+        case QV4::Value::QT_ManagedOrUndefined2:
+        case QV4::Value::QT_ManagedOrUndefined3: {
             // RHS: Managed
             Heap::Base *l = lhs.m();
             Heap::Base *r = rhs.m();
@@ -409,12 +409,12 @@ static bool compareEqual(Value lhs, Value rhs)
             }
             return false;
         }
-        case Value::QT_Empty:
+        case QV4::Value::QT_Empty:
             Q_UNREACHABLE();
-        case Value::QT_Null:
+        case QV4::Value::QT_Null:
             return false;
-        case Value::QT_Bool:
-        case Value::QT_Int:
+        case QV4::Value::QT_Bool:
+        case QV4::Value::QT_Int:
             rhs = Primitive::fromDouble(rhs.int_32());
             // fall through
         default: // double
@@ -424,22 +424,22 @@ static bool compareEqual(Value lhs, Value rhs)
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
         }
         goto redo;
-    case Value::QT_Empty:
+    case QV4::Value::QT_Empty:
         Q_UNREACHABLE();
-    case Value::QT_Null:
+    case QV4::Value::QT_Null:
         return rhs.isNull();
-    case Value::QT_Bool:
-    case Value::QT_Int:
+    case QV4::Value::QT_Bool:
+    case QV4::Value::QT_Int:
         switch (rt) {
-        case Value::QT_ManagedOrUndefined:
-        case Value::QT_ManagedOrUndefined1:
-        case Value::QT_ManagedOrUndefined2:
-        case Value::QT_ManagedOrUndefined3:
-        case Value::QT_Empty:
-        case Value::QT_Null:
+        case QV4::Value::QT_ManagedOrUndefined:
+        case QV4::Value::QT_ManagedOrUndefined1:
+        case QV4::Value::QT_ManagedOrUndefined2:
+        case QV4::Value::QT_ManagedOrUndefined3:
+        case QV4::Value::QT_Empty:
+        case QV4::Value::QT_Null:
             Q_UNREACHABLE();
-        case Value::QT_Bool:
-        case Value::QT_Int:
+        case QV4::Value::QT_Bool:
+        case QV4::Value::QT_Int:
             return lhs.int_32() == rhs.int_32();
         default: // double
             return lhs.int_32() == rhs.doubleValue();
@@ -450,29 +450,29 @@ static bool compareEqual(Value lhs, Value rhs)
     }
 }
 
-static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
+static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 {
   redo:
     switch (lhs.quickType()) {
-    case Value::QT_ManagedOrUndefined:
+    case QV4::Value::QT_ManagedOrUndefined:
         if (lhs.isUndefined())
             return false;
         Q_FALLTHROUGH();
-    case Value::QT_ManagedOrUndefined1:
-    case Value::QT_ManagedOrUndefined2:
-    case Value::QT_ManagedOrUndefined3:
+    case QV4::Value::QT_ManagedOrUndefined1:
+    case QV4::Value::QT_ManagedOrUndefined2:
+    case QV4::Value::QT_ManagedOrUndefined3:
         // LHS: Managed
         if (lhs.m()->internalClass->vtable->isString)
             return RuntimeHelpers::stringToNumber(static_cast<String &>(lhs).toQString()) == rhs;
         accumulator = lhs;
         lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
         goto redo;
-    case Value::QT_Empty:
+    case QV4::Value::QT_Empty:
         Q_UNREACHABLE();
-    case Value::QT_Null:
+    case QV4::Value::QT_Null:
         return false;
-    case Value::QT_Bool:
-    case Value::QT_Int:
+    case QV4::Value::QT_Bool:
+    case QV4::Value::QT_Int:
         return lhs.int_32() == rhs;
     default: // double
         return lhs.doubleValue() == rhs;
@@ -500,11 +500,11 @@ static bool compareEqualInt(Value &accumulator, Value lhs, int rhs)
         } \
     } while (false)
 
-QV4::ReturnedValue VME::exec(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
     qt_v4ResolvePendingBreakpointsHook();
     ExecutionEngine *engine;
-    Value *stack;
+    QV4::Value *stack;
     CppStackFrame frame;
     frame.originalArguments = argv;
     frame.originalArgumentsCount = argc;

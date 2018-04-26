@@ -1572,6 +1572,13 @@ void QQuickPointerTouchEvent::clearGrabbers() const {
     }
 }
 
+Qt::TouchPointStates QQuickPointerTouchEvent::touchPointStates() const
+{
+    return m_event
+        ? static_cast<QTouchEvent*>(m_event)->touchPointStates()
+        : Qt::TouchPointStates();
+}
+
 /*!
     Returns whether the given \a handler is the exclusive grabber of any
     touchpoint within this event.
@@ -1586,17 +1593,17 @@ bool QQuickPointerTouchEvent::hasExclusiveGrabber(const QQuickPointerHandler *ha
 
 bool QQuickPointerTouchEvent::isPressEvent() const
 {
-    return static_cast<QTouchEvent*>(m_event)->touchPointStates() & Qt::TouchPointPressed;
+    return touchPointStates() & Qt::TouchPointPressed;
 }
 
 bool QQuickPointerTouchEvent::isUpdateEvent() const
 {
-    return static_cast<QTouchEvent*>(m_event)->touchPointStates() & (Qt::TouchPointMoved | Qt::TouchPointStationary);
+    return touchPointStates() & (Qt::TouchPointMoved | Qt::TouchPointStationary);
 }
 
 bool QQuickPointerTouchEvent::isReleaseEvent() const
 {
-    return static_cast<QTouchEvent*>(m_event)->touchPointStates() & Qt::TouchPointReleased;
+    return touchPointStates() & Qt::TouchPointReleased;
 }
 
 QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() const

@@ -409,7 +409,7 @@ bool QJSValue::isObject() const
     QV4::Value *val = QJSValuePrivate::getValue(this);
     if (!val)
         return false;
-    return val->as<Object>();
+    return val->as<QV4::Object>();
 }
 
 /*!
@@ -649,7 +649,7 @@ QVariant QJSValue::toVariant() const
     QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
     Q_ASSERT(val);
 
-    if (Object *o = val->as<Object>())
+    if (QV4::Object *o = val->as<QV4::Object>())
         return o->engine()->toVariant(*val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
 
     if (String *s = val->stringValue())
@@ -849,7 +849,7 @@ QJSValue QJSValue::prototype() const
     if (!engine)
         return QJSValue();
     QV4::Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this)->as<Object>());
+    ScopedObject o(scope, QJSValuePrivate::getValue(this)->as<QV4::Object>());
     if (!o)
         return QJSValue();
     ScopedObject p(scope, o->prototype());
@@ -931,7 +931,7 @@ static bool js_equal(const QString &string, const QV4::Value &value)
         return RuntimeHelpers::stringToNumber(string) == value.asDouble();
     if (value.isBoolean())
         return RuntimeHelpers::stringToNumber(string) == double(value.booleanValue());
-    if (Object *o = value.objectValue()) {
+    if (QV4::Object *o = value.objectValue()) {
         Scope scope(o->engine());
         ScopedValue p(scope, RuntimeHelpers::toPrimitive(value, PREFERREDTYPE_HINT));
         return js_equal(string, p);

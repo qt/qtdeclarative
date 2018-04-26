@@ -98,7 +98,7 @@ public:
     virtual void setAutoTransform(bool transform);
     bool autoTransform() const;
 
-    void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
+    static void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
     // Use a virtual rather than a signal->signal to avoid the huge
     // connect/conneciton overhead for this rare case.

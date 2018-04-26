@@ -123,6 +123,12 @@ Error setAttributes(MemoryRegion mr, bool writable, bool executable)
     return SetMemoryRegionAttributes(mr, attributes);
 }
 
+void OSAllocator::setMemoryAttributes(void* addr, bool writable, bool executable)
+{
+     const MRPair* pair = memoryRegionsContainer.getMRPair((Address)addr);
+     CheckSuccess(setAttributes(pair->vmr, writable, executable));
+}
+
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable)
 {
     MemoryRegion VMR;
@@ -229,4 +235,10 @@ void OSAllocator::releaseDecommitted(void* address, size_t bytes)
         memoryRegionsContainer.deleteMRPair(pair);
     }
 }
+
+bool OSAllocator::canAllocateExecutableMemory()
+{
+    return true;
+}
+
 } // namespace WTF

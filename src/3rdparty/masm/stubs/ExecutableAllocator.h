@@ -45,6 +45,10 @@
 
 #include <private/qv4executableallocator_p.h>
 
+#if OS(INTEGRITY)
+#include "OSAllocator.h"
+#endif
+
 #if OS(WINDOWS)
 #include <windows.h>
 #else
@@ -118,6 +122,8 @@ struct ExecutableAllocator {
             Q_UNREACHABLE();
         }
 #    endif
+#  elif OS(INTEGRITY)
+         OSAllocator::setMemoryAttributes(addr, /*writable*/ true, /*executable*/ false);
 #  else
         int mode = PROT_READ | PROT_WRITE;
         if (mprotect(addr, size, mode) != 0) {
@@ -152,6 +158,8 @@ struct ExecutableAllocator {
             Q_UNREACHABLE();
         }
 #    endif
+#  elif OS(INTEGRITY)
+        OSAllocator::setMemoryAttributes(addr, /*writable*/ false, /*executable*/ true);
 #  else
         int mode = PROT_READ | PROT_EXEC;
         if (mprotect(addr, size, mode) != 0) {

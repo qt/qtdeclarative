@@ -537,6 +537,8 @@ void QQuickAnimatedSprite::setSource(QUrl arg)
     Q_D(QQuickAnimatedSprite);
 
     if (d->m_sprite->m_source != arg) {
+        const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
+        d->m_sprite->setDevicePixelRatio(targetDevicePixelRatio);
         d->m_sprite->setSource(arg);
         Q_EMIT sourceChanged(arg);
         reloadImage();
@@ -723,7 +725,7 @@ QSGSpriteNode* QQuickAnimatedSprite::initNode()
 
     QSGSpriteNode *node = d->sceneGraphContext()->createSpriteNode();
 
-    d->m_sheetSize = QSize(image.size());
+    d->m_sheetSize = QSize(image.size() / image.devicePixelRatioF());
     node->setTexture(window()->createTextureFromImage(image));
     d->m_spriteEngine->start(0);
     node->setTime(0.0f);
