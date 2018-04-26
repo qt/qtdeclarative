@@ -59,7 +59,6 @@ built-ins/Array/of/return-abrupt-from-data-property-using-proxy.js fails
 built-ins/Array/of/return-abrupt-from-setting-length.js fails
 built-ins/Array/of/sets-length.js fails
 built-ins/Array/proto-from-ctor-realm.js fails
-built-ins/Array/prototype/Symbol.iterator.js fails
 built-ins/Array/prototype/Symbol.unscopables/prop-desc.js fails
 built-ins/Array/prototype/Symbol.unscopables/value.js fails
 built-ins/Array/prototype/concat/Array.prototype.concat_array-like-length-to-string-throws.js fails
@@ -263,14 +262,6 @@ built-ins/ArrayBuffer/prototype/slice/start-exceeds-length.js fails
 built-ins/ArrayBuffer/prototype/slice/tointeger-conversion-end.js fails
 built-ins/ArrayBuffer/prototype/slice/tointeger-conversion-start.js fails
 built-ins/ArrayBuffer/undefined-newtarget-throws.js fails
-built-ins/ArrayIteratorPrototype/next/args-mapped-expansion-after-exhaustion.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-mapped-expansion-before-exhaustion.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-mapped-iteration.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-mapped-truncation-before-exhaustion.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-unmapped-expansion-after-exhaustion.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-unmapped-expansion-before-exhaustion.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-unmapped-iteration.js sloppyFails
-built-ins/ArrayIteratorPrototype/next/args-unmapped-truncation-before-exhaustion.js sloppyFails
 built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js fails
 built-ins/AsyncFunction/AsyncFunction-construct.js fails
 built-ins/AsyncFunction/AsyncFunction-is-extensible.js fails
@@ -3209,7 +3200,6 @@ language/arguments-object/gen-meth-args-trailing-comma-multiple.js fails
 language/arguments-object/gen-meth-args-trailing-comma-null.js fails
 language/arguments-object/gen-meth-args-trailing-comma-single-args.js fails
 language/arguments-object/gen-meth-args-trailing-comma-undefined.js fails
-language/arguments-object/mapped/Symbol.iterator.js sloppyFails
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-2.js sloppyFails
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-3.js sloppyFails
 language/arguments-object/mapped/mapped-arguments-nonconfigurable-4.js sloppyFails
@@ -3234,7 +3224,6 @@ language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descr
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-arguments.js sloppyFails
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js sloppyFails
 language/arguments-object/mapped/nonwritable-nonconfigurable-descriptors-set-by-arguments.js sloppyFails
-language/arguments-object/unmapped/Symbol.iterator.js sloppyFails
 language/block-scope/syntax/for-in/mixed-values-in-iteration.js fails
 language/computed-property-names/basics/string.js fails
 language/computed-property-names/basics/symbol.js fails

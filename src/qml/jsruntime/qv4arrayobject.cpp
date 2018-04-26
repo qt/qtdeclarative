@@ -120,8 +120,11 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("filter"), method_filter, 1);
     defineDefaultProperty(QStringLiteral("reduce"), method_reduce, 1);
     defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
-    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
-    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
+    ScopedString valuesString(scope, engine->newIdentifier(QStringLiteral("values")));
+    ScopedObject values(scope, FunctionObject::createBuiltinFunction(engine, valuesString, method_values, 0));
+    engine->jsObjects[ExecutionEngine::ArrayProtoValues] = values;
+    defineDefaultProperty(QStringLiteral("values"), values);
+    defineDefaultProperty(engine->symbol_iterator(), values);
 }
 
 ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value *, const Value *argv, int argc)

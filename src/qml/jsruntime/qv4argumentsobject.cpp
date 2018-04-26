@@ -37,11 +37,13 @@
 **
 ****************************************************************************/
 #include <qv4argumentsobject_p.h>
+#include <qv4arrayobject_p.h>
 #include <qv4alloca_p.h>
 #include <qv4scopedvalue_p.h>
 #include <qv4string_p.h>
 #include <qv4function_p.h>
 #include <qv4jscall_p.h>
+#include <qv4symbol_p.h>
 
 using namespace QV4;
 
@@ -65,6 +67,8 @@ void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
     setProperty(v4, CalleePropertyIndex, context->d()->function);
     Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->identifier()));
     setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
+    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->identifier()));
+    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
 }
 
 void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
@@ -75,6 +79,8 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     Object::init();
 
     Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->identifier()));
+    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->identifier()));
+    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
     setProperty(v4, CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
     setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
 

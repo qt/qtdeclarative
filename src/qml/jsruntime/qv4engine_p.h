@@ -163,6 +163,7 @@ public:
         ObjectProto,
         SymbolProto,
         ArrayProto,
+        ArrayProtoValues,
         PropertyListProto,
         StringProto,
         NumberProto,
@@ -239,6 +240,7 @@ public:
     Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
     Object *symbolPrototype() const { return reinterpret_cast<Object *>(jsObjects + SymbolProto); }
     Object *arrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayProto); }
+    Object *arrayProtoValues() const { return reinterpret_cast<Object *>(jsObjects + ArrayProtoValues); }
     Object *propertyListPrototype() const { return reinterpret_cast<Object *>(jsObjects + PropertyListProto); }
     Object *stringPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringProto); }
     Object *numberPrototype() const { return reinterpret_cast<Object *>(jsObjects + NumberProto); }

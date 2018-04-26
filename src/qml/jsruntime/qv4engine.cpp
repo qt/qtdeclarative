@@ -290,9 +290,11 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Scoped<InternalClass> argsClass(scope);
     argsClass = newInternalClass(ArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length()->identifier(), Attr_NotEnumerable);
+    argsClass = argsClass->addMember(symbol_iterator()->identifier(), Attr_Data|Attr_NotEnumerable);
     classes[Class_ArgumentsObject] = argsClass->addMember(id_callee()->identifier(), Attr_Data|Attr_NotEnumerable);
     argsClass = newInternalClass(StrictArgumentsObject::staticVTable(), objectPrototype());
     argsClass = argsClass->addMember(id_length()->identifier(), Attr_NotEnumerable);
+    argsClass = argsClass->addMember(symbol_iterator()->identifier(), Attr_Data|Attr_NotEnumerable);
     classes[Class_StrictArgumentsObject] = argsClass->addMember(id_callee()->identifier(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 
     *static_cast<Value *>(globalObject) = newObject();
