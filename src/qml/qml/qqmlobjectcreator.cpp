@@ -1217,9 +1217,9 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         }
 
         ddata = QQmlData::get(instance, /*create*/true);
-        ddata->lineNumber = obj->location.line;
-        ddata->columnNumber = obj->location.column;
     }
+    ddata->lineNumber = obj->location.line;
+    ddata->columnNumber = obj->location.column;
 
     ddata->setImplicitDestructible();
     if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation) {
