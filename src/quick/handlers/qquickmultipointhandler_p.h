@@ -63,7 +63,6 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHand
     Q_OBJECT
     Q_PROPERTY(int minimumPointCount READ minimumPointCount WRITE setMinimumPointCount NOTIFY minimumPointCountChanged)
     Q_PROPERTY(int maximumPointCount READ maximumPointCount WRITE setMaximumPointCount NOTIFY maximumPointCountChanged)
-    Q_PROPERTY(qreal pointDistanceThreshold READ pointDistanceThreshold WRITE setPointDistanceThreshold NOTIFY pointDistanceThresholdChanged)
     Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged)
 
 public:
@@ -75,9 +74,6 @@ public:
 
     int maximumPointCount() const { return m_maximumPointCount >= 0 ? m_maximumPointCount : m_minimumPointCount; }
     void setMaximumPointCount(int maximumPointCount);
-
-    qreal pointDistanceThreshold() const { return m_pointDistanceThreshold; }
-    void setPointDistanceThreshold(qreal pointDistanceThreshold);
 
     QQuickHandlerPoint centroid() const { return m_centroid; }
 
@@ -114,7 +110,6 @@ protected:
     QQuickHandlerPoint m_centroid;
     int m_minimumPointCount;
     int m_maximumPointCount;
-    qreal m_pointDistanceThreshold;
 };
 
 QT_END_NAMESPACE

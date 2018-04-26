@@ -582,6 +582,7 @@ public:
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
 
+    bool anyPointerHandlerWants(QQuickEventPoint *point) const;
     virtual bool handlePointerEvent(QQuickPointerEvent *, bool avoidExclusiveGrabber = false);
 
     virtual void setVisible(bool visible);

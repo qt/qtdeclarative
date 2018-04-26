@@ -5140,6 +5140,17 @@ void QQuickItemPrivate::deliverShortcutOverrideEvent(QKeyEvent *event)
     }
 }
 
+bool QQuickItemPrivate::anyPointerHandlerWants(QQuickEventPoint *point) const
+{
+    if (!hasPointerHandlers())
+        return false;
+    for (QQuickPointerHandler *handler : extra->pointerHandlers) {
+        if (handler->wantsEventPoint(point))
+            return true;
+    }
+    return false;
+}
+
 /*!
     \internal
     Deliver the \a event to all PointerHandlers which are in the pre-determined

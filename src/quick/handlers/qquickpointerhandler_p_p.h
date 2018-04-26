@@ -71,6 +71,7 @@ public:
 
     QQuickPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;
+    qreal m_margin = 0;
     uint8_t grabPermissions : 8;
     bool enabled : 1;
     bool active : 1;

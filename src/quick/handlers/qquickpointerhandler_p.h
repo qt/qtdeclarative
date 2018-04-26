@@ -70,6 +70,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
     Q_PROPERTY(QQuickItem * parent READ parentItem CONSTANT)
     Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged)
+    Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
 
 public:
     explicit QQuickPointerHandler(QObject *parent = nullptr);
@@ -106,10 +107,14 @@ public:
     GrabPermissions grabPermissions() const;
     void setGrabPermissions(GrabPermissions grabPermissions);
 
+    qreal margin() const;
+    void setMargin(qreal pointDistanceThreshold);
+
 Q_SIGNALS:
     void enabledChanged();
     void activeChanged();
     void targetChanged();
+    void marginChanged();
     void grabChanged(QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
     void grabPermissionChanged();
     void canceled(QQuickEventPoint *point);
@@ -137,6 +142,7 @@ protected:
     bool parentContains(const QQuickEventPoint *point) const;
 
     friend class QQuickEventPoint;
+    friend class QQuickItemPrivate;
     friend class QQuickWindowPrivate;
 
     Q_DECLARE_PRIVATE(QQuickPointerHandler)

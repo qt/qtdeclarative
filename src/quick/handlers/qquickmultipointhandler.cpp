@@ -63,7 +63,6 @@ QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int minimumPoi
     : QQuickPointerDeviceHandler(parent)
     , m_minimumPointCount(minimumPointCount)
     , m_maximumPointCount(-1)
-    , m_pointDistanceThreshold(0)
 {
 }
 
@@ -109,8 +108,6 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
 {
     QVector<QQuickEventPoint *> ret;
     int c = event->pointCount();
-    QRectF parentBounds = parentItem()->mapRectToScene(parentItem()->boundingRect())
-            .marginsAdded(QMarginsF(m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold, m_pointDistanceThreshold));
     // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
     // In other cases however, do not steal the grab: that is, if a point has a grabber,
     // it's not a candidate for this handler.
@@ -122,7 +119,7 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
             if (exclusiveGrabber && exclusiveGrabber != this)
                 continue;
         }
-        if (p->state() != QQuickEventPoint::Released && parentBounds.contains(p->scenePosition()))
+        if (p->state() != QQuickEventPoint::Released && wantsEventPoint(p))
             ret << p;
     }
     return ret;
@@ -174,29 +171,6 @@ void QQuickMultiPointHandler::setMaximumPointCount(int maximumPointCount)
 
     m_maximumPointCount = maximumPointCount;
     emit maximumPointCountChanged();
-}
-
-/*!
-     \qmlproperty real MultiPointHandler::pointDistanceThreshold
-
-     The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
-     item within which a touch point can activate this handler. For example, on
-     a PinchHandler where the \l {PointerHandler::target}{target} is also the
-     \c parent, it's useful to set this to a distance at least half the width
-     of a typical user's finger, so that if the \c parent has been scaled down
-     to a very small size, the pinch gesture is still possible.
-
-     The default value is 0.
-
-     \image pointDistanceThreshold.png
-*/
-void QQuickMultiPointHandler::setPointDistanceThreshold(qreal pointDistanceThreshold)
-{
-    if (m_pointDistanceThreshold == pointDistanceThreshold)
-        return;
-
-    m_pointDistanceThreshold = pointDistanceThreshold;
-    emit pointDistanceThresholdChanged();
 }
 
 bool QQuickMultiPointHandler::hasCurrentPoints(QQuickPointerEvent *event)

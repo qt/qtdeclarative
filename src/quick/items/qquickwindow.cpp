@@ -1789,7 +1789,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
 
             // If some points weren't grabbed, deliver to non-grabber PointerHandlers in reverse paint order
             if (!pointerEvent->allPointsGrabbed() && pointerEvent->buttons()) {
-                QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
+                QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point, false, false);
                 for (QQuickItem *item : targetItems) {
                     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
                     if (!itemPrivate->extra.isAllocated() || itemPrivate->extra->pointerHandlers.isEmpty())
@@ -1924,7 +1924,7 @@ bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEven
 {
     Q_ASSERT(event->pointCount() == 1);
     QQuickEventPoint *point = event->point(0);
-    QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point->scenePosition(), false, false);
+    QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point, false, false);
 
     for (QQuickItem *item : targetItems) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -2340,16 +2340,16 @@ void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
     --pointerEventRecursionGuard;
 }
 
-// check if item or any of its child items contain the point
+// check if item or any of its child items contain the point, or if any pointer handler "wants" the point
 // FIXME: should this be iterative instead of recursive?
 // If checkMouseButtons is true, it means we are finding targets for a mouse event, so no item for which acceptedMouseButtons() is NoButton will be added.
 // If checkAcceptsTouch is true, it means we are finding targets for a touch event, so either acceptTouchEvents() must return true OR
 // it must accept a synth. mouse event, thus if acceptTouchEvents() returns false but acceptedMouseButtons() is true, gets added; if not, it doesn't.
-QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, const QPointF &scenePos, bool checkMouseButtons, bool checkAcceptsTouch) const
+QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, QQuickEventPoint *point, bool checkMouseButtons, bool checkAcceptsTouch) const
 {
     QVector<QQuickItem *> targets;
     auto itemPrivate = QQuickItemPrivate::get(item);
-    QPointF itemPos = item->mapFromScene(scenePos);
+    QPointF itemPos = item->mapFromScene(point->scenePosition());
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
         if (!item->contains(itemPos))
@@ -2363,11 +2363,15 @@ QVector<QQuickItem *> QQuickWindowPrivate::pointerTargets(QQuickItem *item, cons
         auto childPrivate = QQuickItemPrivate::get(child);
         if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
             continue;
-        targets << pointerTargets(child, scenePos, checkMouseButtons, checkAcceptsTouch);
+        targets << pointerTargets(child, point, checkMouseButtons, checkAcceptsTouch);
     }
 
     bool relevant = item->contains(itemPos);
-    if (!(itemPrivate->hasPointerHandlers())) {
+    if (itemPrivate->hasPointerHandlers()) {
+        if (!relevant)
+            if (itemPrivate->anyPointerHandlerWants(point))
+                relevant = true;
+    } else {
         if (relevant && checkMouseButtons && item->acceptedMouseButtons() == Qt::NoButton)
             relevant = false;
         if (relevant && checkAcceptsTouch && !(item->acceptTouchEvents() || item->acceptedMouseButtons()))
@@ -2477,7 +2481,7 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             QQuickEventPoint *point = event->point(i);
             if (point->state() == QQuickEventPoint::Pressed)
                 continue; // presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints
-            QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePosition(), false, false);
+            QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point, false, false);
             if (targetItems.count()) {
                 targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
             } else {
@@ -2507,7 +2511,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         point->setAccepted(false); // because otherwise touchEventForItem will ignore it
         if (point->grabberPointerHandler() && point->state() == QQuickEventPoint::Released)
             point->setGrabberPointerHandler(nullptr, true);
-        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point->scenePosition(), !isTouchEvent, isTouchEvent);
+        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, point, !isTouchEvent, isTouchEvent);
         if (targetItems.count()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
         } else {
@@ -2567,7 +2571,6 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
             // synthetic events - flickable sends one when setPressDelay is used.
             auto oldMouseGrabber = q->mouseGrabberItem();
             QPointF localPos = item->mapFromScene(point->scenePosition());
-            Q_ASSERT(item->contains(localPos)); // transform is checked already
             QMouseEvent *me = event->asMouseEvent(localPos);
             me->accept();
             QCoreApplication::sendEvent(item, me);

@@ -81,6 +81,39 @@ QQuickPointerHandler::~QQuickPointerHandler()
 }
 
 /*!
+     \qmlproperty real PointerHandler::margin
+
+     The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+     item within which an event point can activate this handler. For example, on
+     a PinchHandler where the \l {PointerHandler::target}{target} is also the
+     \c parent, it's useful to set this to a distance at least half the width
+     of a typical user's finger, so that if the \c parent has been scaled down
+     to a very small size, the pinch gesture is still possible.  Or, if a
+     TapHandler-based button is placed near the screen edge, it can be used
+     to comply with Fitts's Law: react to mouse clicks at the screen edge
+     even though the button is visually spaced away from the edge by a few pixels.
+
+     The default value is 0.
+
+     \image pointDistanceThreshold.png
+*/
+qreal QQuickPointerHandler::margin() const
+{
+    Q_D(const QQuickPointerHandler);
+    return d->m_margin;
+}
+
+void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
+{
+    Q_D(QQuickPointerHandler);
+    if (d->m_margin == pointDistanceThreshold)
+        return;
+
+    d->m_margin = pointDistanceThreshold;
+    emit marginChanged();
+}
+
+/*!
     Notification that the grab has changed in some way which is relevant to this handler.
     The \a grabber (subject) will be the PointerHandler whose state is changing,
     or null if the state change regards an Item.
@@ -318,7 +351,11 @@ bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
             if (!par->window()->geometry().contains(screenPosition))
                 return false;
         }
-        return par->contains(par->mapFromScene(point->scenePosition()));
+        QPointF p = par->mapFromScene(point->scenePosition());
+        qreal m = margin();
+        if (m > 0)
+            return p.x() >= -m && p.y() >= -m && p.x() <= par->width() + m && p.y() <= par->height() + m;
+        return par->contains(p);
     }
     return false;
 }
