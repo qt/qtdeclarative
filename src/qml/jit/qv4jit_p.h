@@ -54,35 +54,9 @@
 #include <private/qv4global_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4instr_moth_p.h>
+#include <private/qv4bytecodehandler_p.h>
 
 //QT_REQUIRE_CONFIG(qml_jit);
-
-#define JIT_DEFINE_ARGS(nargs, ...) \
-    MOTH_EXPAND_FOR_MSVC(JIT_DEFINE_ARGS##nargs(__VA_ARGS__))
-
-#define JIT_DEFINE_ARGS0()
-#define JIT_DEFINE_ARGS1(arg) \
-    int arg
-#define JIT_DEFINE_ARGS2(arg1, arg2) \
-    int arg1, \
-    int arg2
-#define JIT_DEFINE_ARGS3(arg1, arg2, arg3) \
-    int arg1, \
-    int arg2, \
-    int arg3
-#define JIT_DEFINE_ARGS4(arg1, arg2, arg3, arg4) \
-    int arg1, \
-    int arg2, \
-    int arg3, \
-    int arg4
-
-#define JIT_DEFINE_VIRTUAL_BYTECODE_HANDLER_INSTRUCTION(name, nargs, ...) \
-    virtual void generate_##name( \
-    JIT_DEFINE_ARGS(nargs, __VA_ARGS__) \
-    ) = 0;
-
-#define JIT_DEFINE_VIRTUAL_BYTECODE_HANDLER(instr) \
-    INSTR_##instr(JIT_DEFINE_VIRTUAL_BYTECODE_HANDLER)
 
 QT_BEGIN_NAMESPACE
 
@@ -91,31 +65,12 @@ namespace JIT {
 
 class Assembler;
 
-class ByteCodeHandler
-{
-public:
-    virtual ~ByteCodeHandler();
-
-    void decode(const char *code, uint len);
-
-    int instructionOffset() const { return _offset; }
-
-protected:
-    FOR_EACH_MOTH_INSTR(JIT_DEFINE_VIRTUAL_BYTECODE_HANDLER)
-
-    virtual void startInstruction(Moth::Instr::Type instr) = 0;
-    virtual void endInstruction(Moth::Instr::Type instr) = 0;
-
-private:
-    int _offset = 0;
-};
-
 #ifdef V4_ENABLE_JIT
-class BaselineJIT final: public ByteCodeHandler
+class BaselineJIT final: public Moth::ByteCodeHandler
 {
 public:
     BaselineJIT(QV4::Function *);
-    virtual ~BaselineJIT();
+    virtual ~BaselineJIT() Q_DECL_OVERRIDE;
 
     void generate();
 
@@ -261,9 +216,6 @@ public:
 protected:
     bool hasLabel() const
     { return std::find(labels.cbegin(), labels.cend(), instructionOffset()) != labels.cend(); }
-
-private:
-    void collectLabelsInBytecode();
 
 private:
     QV4::Function *function;

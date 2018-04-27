@@ -11,7 +11,8 @@ HEADERS += \
     $$PWD/qv4codegen_p.h \
     $$PWD/qqmlirbuilder_p.h \
     $$PWD/qqmltypecompiler_p.h \
-    $$PWD/qv4instr_moth_p.h
+    $$PWD/qv4instr_moth_p.h \
+    $$PWD/qv4bytecodehandler_p.h
 
 SOURCES += \
     $$PWD/qv4bytecodegenerator.cpp \
@@ -21,7 +22,8 @@ SOURCES += \
     $$PWD/qv4compilerscanfunctions.cpp \
     $$PWD/qv4codegen.cpp \
     $$PWD/qqmlirbuilder.cpp \
-    $$PWD/qv4instr_moth.cpp
+    $$PWD/qv4instr_moth.cpp \
+    $$PWD/qv4bytecodehandler.cpp
 
 !qmldevtools_build {
 

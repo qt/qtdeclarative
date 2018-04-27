@@ -53,6 +53,8 @@
 #include <private/qv4global_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4runtime_p.h>
+#include <private/qv4compileddata_p.h> // for CompiledData::CodeOffsetToLine used by the dumper
+#include <qendian.h>
 
 QT_BEGIN_NAMESPACE
 
