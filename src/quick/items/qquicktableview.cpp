@@ -617,21 +617,31 @@ void QQuickTableViewPrivate::calculateTableSize()
 qreal QQuickTableViewPrivate::columnWidth(int column)
 {
     if (!columnWidths.isEmpty()) {
-        // Find the ColumnRowSize assignment before, or at, column
-        auto iter = std::lower_bound(columnWidths.constBegin(), columnWidths.constEnd(),
+        // Find the first ColumnRowSize with a column before, or at, the given column
+        auto iter = std::upper_bound(columnWidths.constBegin(), columnWidths.constEnd(),
                                      ColumnRowSize{column, -1}, ColumnRowSize::lessThan);
 
-        // First check if we got an explicit assignment
-        if (iter->index == column)
-            return iter->size;
+        if (iter == columnWidths.constEnd()) {
+            // If the table is not a list, return the size
+            // of the last recorded ColumnRowSize.
+            if (tableSize.height() > 1)
+                return columnWidths.last().size;
+        } else {
+            // Check if we got an explicit assignment for this column
+            if (iter->index == column)
+                return iter->size;
 
-        // If the table is not a list, return the size of
-        // ColumnRowSize element found before column.
-        if (tableSize.height() > 1)
-            return (iter - 1)->size;
+            // If the table is not a list, return the size of
+            // ColumnRowSize element found before column. Since there
+            // is always an element stored for column 0, this is safe.
+            // Otherwise we continue, and return the size of the delegate
+            // item at the given column instead.
+            if (tableSize.height() > 1)
+                return (iter - 1)->size;
+        }
     }
 
-    // if we have an item loaded at column, return the width of the item.
+    // If we have an item loaded at column, return the width of the item.
     if (column >= loadedTable.left() && column <= loadedTable.right())
         return loadedTableItem(QPoint(column, 0))->geometry().width();
 
@@ -645,17 +655,27 @@ qreal QQuickTableViewPrivate::rowHeight(int row)
         auto iter = std::lower_bound(rowHeights.constBegin(), rowHeights.constEnd(),
                                      ColumnRowSize{row, -1}, ColumnRowSize::lessThan);
 
-        // First check if we got an explicit assignment
-        if (iter->index == row)
-            return iter->size;
+        if (iter == rowHeights.constEnd()) {
+            // If the table is not a list, return the size
+            // of the last recorded ColumnRowSize.
+            if (tableSize.width() > 1)
+                return rowHeights.last().size;
+        } else {
+            // Check if we got an explicit assignment for this row
+            if (iter->index == row)
+                return iter->size;
 
-        // If the table is not a list, return the size of
-        // ColumnRowSize element found before column.
-        if (q_func()->columns() > 1)
-            return (iter - 1)->size;
+            // If the table is not a list, return the size of
+            // ColumnRowSize element found before row. Since there
+            // is always an element stored for row 0, this is safe.
+            // Otherwise we continue, and return the size of the delegate
+            // item at the given row instead.
+            if (tableSize.width() > 1)
+                return (iter - 1)->size;
+        }
     }
 
-    // if we have an item loaded at row, return the height of the item.
+    // If we have an item loaded at row, return the height of the item.
     if (row >= loadedTable.top() && row <= loadedTable.bottom())
         return loadedTableItem(QPoint(0, row))->geometry().height();
 

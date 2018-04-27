@@ -72,6 +72,8 @@ class tst_QQuickTableView : public QQmlDataTest
 public:
     tst_QQuickTableView();
 
+    QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
+
 private slots:
     void initTestCase() override;
 
@@ -81,6 +83,8 @@ private slots:
     void emptyModel();
     void countDelegateItems_data();
     void countDelegateItems();
+    void checkLayoutOfEqualSizedDelegateItems_data();
+    void checkLayoutOfEqualSizedDelegateItems();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -91,6 +95,12 @@ void tst_QQuickTableView::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<TestModel>("TestModel", 0, 1, "TestModel");
+}
+
+QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *object) const
+{
+    QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
+    return static_cast<QQuickTableViewAttached *>(attachedObject);
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -170,6 +180,57 @@ void tst_QQuickTableView::countDelegateItems()
     // Check that this also matches the items found in the view
     auto foundItems = findItems<QQuickItem>(tableView, kDelegateObjectName);
     QCOMPARE(foundItems.count(), count);
+}
+
+void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems_data()
+{
+    QTest::addColumn<QVariant>("model");
+    QTest::addColumn<QSize>("tableSize");
+    QTest::addColumn<QSizeF>("spacing");
+
+    QTest::newRow("QAIM 1x1 1,1") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1);
+    QTest::newRow("QAIM 5x5 0,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 0);
+    QTest::newRow("QAIM 5x5 1,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(1, 0);
+    QTest::newRow("QAIM 5x5 0,1") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 1);
+}
+
+void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
+{
+    // Check that the geometry of the delegate items are correct
+    QFETCH(QVariant, model);
+    QFETCH(QSize, tableSize);
+    QFETCH(QSizeF, spacing);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    tableView->setModel(model);
+    tableView->setRowSpacing(spacing.height());
+    tableView->setColumnSpacing(spacing.width());
+
+    WAIT_UNTIL_POLISHED;
+
+    auto const items = tableViewPrivate->loadedItems;
+    QVERIFY(!items.isEmpty());
+    const QQuickItem *firstItem = items[0]->item;
+
+    qreal expectedWidth = firstItem->width();
+    qreal expectedHeight = firstItem->height();
+    int expectedItemCount = tableSize.width() * tableSize.height();
+
+    for (int i = 0; i < expectedItemCount; ++i) {
+        const QQuickItem *item = items[i]->item;
+        QVERIFY(item);
+        QCOMPARE(item->parentItem(), tableView->contentItem());
+
+        auto attached = getAttachedObject(item);
+        int row = attached->row();
+        int column = attached->column();
+        qreal expectedX = column * (expectedWidth + spacing.width());
+        qreal expectedY = row * (expectedHeight + spacing.height());
+        QCOMPARE(item->x(), expectedX);
+        QCOMPARE(item->y(), expectedY);
+        QCOMPARE(item->width(), expectedWidth);
+        QCOMPARE(item->height(), expectedHeight);
+    }
 }
 
 QTEST_MAIN(tst_QQuickTableView)
