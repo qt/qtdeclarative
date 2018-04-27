@@ -406,7 +406,7 @@ protected:
     Value *sym_stack = nullptr;
     int *state_stack = nullptr;
     AST::SourceLocation *location_stack = nullptr;
-    QStringRef *string_stack = nullptr;
+    QVector<QStringRef> string_stack;
 
     AST::Node *program = nullptr;
 
@@ -483,7 +483,7 @@ void Parser::reallocateStack()
     sym_stack = reinterpret_cast<Value*> (realloc(sym_stack, stack_size * sizeof(Value)));
     state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
     location_stack = reinterpret_cast<AST::SourceLocation*> (realloc(location_stack, stack_size * sizeof(AST::SourceLocation)));
-    string_stack = reinterpret_cast<QStringRef*> (realloc(string_stack, stack_size * sizeof(QStringRef)));
+    string_stack.resize(stack_size);
 }
 
 Parser::Parser(Engine *engine):
@@ -498,7 +498,6 @@ Parser::~Parser()
         free(sym_stack);
         free(state_stack);
         free(location_stack);
-        free(string_stack);
     }
 }
 
