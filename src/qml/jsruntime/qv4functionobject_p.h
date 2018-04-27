@@ -186,6 +186,12 @@ struct FunctionCtor: FunctionObject
 
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+protected:
+    enum Type {
+        Type_Function,
+        Type_Generator
+    };
+    static QQmlRefPointer<CompiledData::CompilationUnit> parse(ExecutionEngine *engine, const Value *argv, int argc, Type t = Type_Function);
 };
 
 struct FunctionPrototype: FunctionObject

@@ -96,6 +96,8 @@ struct Q_QML_EXPORT CppStackFrame {
     const Value *originalArguments;
     int originalArgumentsCount;
     int instructionPointer;
+    const uchar *yield;
+    const uchar *exceptionHandler;
 
     QString source() const;
     QString function() const;
@@ -170,6 +172,7 @@ public:
         BooleanProto,
         DateProto,
         FunctionProto,
+        GeneratorProto,
         RegExpProto,
         ErrorProto,
         EvalErrorProto,
@@ -197,6 +200,7 @@ public:
         Boolean_Ctor,
         Array_Ctor,
         Function_Ctor,
+        GeneratorFunction_Ctor,
         Date_Ctor,
         RegExp_Ctor,
         Error_Ctor,
@@ -225,6 +229,7 @@ public:
     FunctionObject *booleanCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Boolean_Ctor); }
     FunctionObject *arrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Array_Ctor); }
     FunctionObject *functionCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Function_Ctor); }
+    FunctionObject *generatorFunctionCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + GeneratorFunction_Ctor); }
     FunctionObject *dateCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Date_Ctor); }
     FunctionObject *regExpCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + RegExp_Ctor); }
     FunctionObject *errorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Error_Ctor); }
@@ -248,6 +253,7 @@ public:
     Object *booleanPrototype() const { return reinterpret_cast<Object *>(jsObjects + BooleanProto); }
     Object *datePrototype() const { return reinterpret_cast<Object *>(jsObjects + DateProto); }
     Object *functionPrototype() const { return reinterpret_cast<Object *>(jsObjects + FunctionProto); }
+    Object *generatorPrototype() const { return reinterpret_cast<Object *>(jsObjects + GeneratorProto); }
     Object *regExpPrototype() const { return reinterpret_cast<Object *>(jsObjects + RegExpProto); }
     Object *errorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ErrorProto); }
     Object *evalErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + EvalErrorProto); }
@@ -539,7 +545,7 @@ public:
         if (!m_canAllocateExecutableMemory)
             return false;
         if (f)
-            return f->interpreterCallCount >= jitCallCountThreshold;
+            return !f->isGenerator() && f->interpreterCallCount >= jitCallCountThreshold;
         return true;
 #else
         Q_UNUSED(f);

@@ -100,6 +100,7 @@ struct Q_QML_EXPORT Function {
 
     inline bool isStrict() const { return compiledFunction->flags & CompiledData::Function::IsStrict; }
     inline bool isArrowFunction() const { return compiledFunction->flags & CompiledData::Function::IsArrowFunction; }
+    inline bool isGenerator() const { return compiledFunction->flags & CompiledData::Function::IsGenerator; }
 
     QQmlSourceLocation sourceLocation() const
     {

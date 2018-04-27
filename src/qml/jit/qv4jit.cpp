@@ -40,6 +40,7 @@
 #include "qv4jit_p.h"
 #include "qv4assembler_p.h"
 #include <private/qv4lookup_p.h>
+#include <private/qv4generatorobject_p.h>
 
 #ifdef V4_ENABLE_JIT
 
@@ -460,6 +461,18 @@ void BaselineJIT::generate_LoadIdObject(int index, int base)
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlIdObject, Assembler::ResultInAccumulator);
     as->checkException();
+}
+
+void BaselineJIT::generate_Yield()
+{
+    // #####
+    Q_UNREACHABLE();
+}
+
+void BaselineJIT::generate_Resume(int)
+{
+    // #####
+    Q_UNREACHABLE();
 }
 
 void BaselineJIT::generate_CallValue(int name, int argc, int argv)
@@ -1145,6 +1158,12 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(LoadIdObject)
         MOTH_END_INSTR(LoadIdObject)
+
+        MOTH_BEGIN_INSTR(Yield)
+        MOTH_END_INSTR(Yield)
+
+        MOTH_BEGIN_INSTR(Resume)
+        MOTH_END_INSTR(Resume)
 
         MOTH_BEGIN_INSTR(CallValue)
         MOTH_END_INSTR(CallValue)

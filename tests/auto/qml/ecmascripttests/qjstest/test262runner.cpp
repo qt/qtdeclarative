@@ -577,7 +577,9 @@ void Test262Runner::addResult(TestCase result)
         ;
     } else if (result.strictResult == TestCase::Crashes) {
         qDebug() << "FAIL:" << test << "crashed in strict mode!";
-    } else if ((result.strictResult == TestCase::Fails) == (result.strictExpectation == TestCase::Fails)) {
+    } else if ((result.strictResult == TestCase::Fails) && (result.strictExpectation == TestCase::Fails)) {
+        qDebug() << "PASS:" << test << "failed in strict mode as expected";
+    } else if ((result.strictResult == TestCase::Passes) == (result.strictExpectation == TestCase::Passes)) {
         qDebug() << "PASS:" << test << "passed in strict mode";
     } else if (!(result.strictExpectation == TestCase::Fails)) {
         qDebug() << "FAIL:" << test << "failed in strict mode";
@@ -589,7 +591,9 @@ void Test262Runner::addResult(TestCase result)
         ;
     } else if (result.sloppyResult == TestCase::Crashes) {
         qDebug() << "FAIL:" << test << "crashed in sloppy mode!";
-    } else if ((result.sloppyResult == TestCase::Fails) == (result.sloppyExpectation == TestCase::Fails)) {
+    } else if ((result.sloppyResult == TestCase::Fails) && (result.sloppyExpectation == TestCase::Fails)) {
+        qDebug() << "PASS:" << test << "failed in sloppy mode as expected";
+    } else if ((result.sloppyResult == TestCase::Passes) == (result.sloppyExpectation == TestCase::Passes)) {
         qDebug() << "PASS:" << test << "passed in sloppy mode";
     } else if (!(result.sloppyExpectation == TestCase::Fails)) {
         qDebug() << "FAIL:" << test << "failed in sloppy mode";

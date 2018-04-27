@@ -91,6 +91,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadScopeObjectProperty(op) INSTRUCTION(op, LoadScopeObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadContextObjectProperty(op) INSTRUCTION(op, LoadContextObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
+#define INSTR_Yield(op) INSTRUCTION(op, Yield, 0)
+#define INSTR_Resume(op) INSTRUCTION(op, Resume, 1, offset)
 #define INSTR_StoreProperty(op) INSTRUCTION(op, StoreProperty, 2, name, base)
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
 #define INSTR_StoreScopeObjectProperty(op) INSTRUCTION(op, StoreScopeObjectProperty, 2, base, propertyIndex)
@@ -220,6 +222,8 @@ QT_BEGIN_NAMESPACE
     F(LoadScopeObjectProperty) \
     F(LoadContextObjectProperty) \
     F(LoadIdObject) \
+    F(Yield) \
+    F(Resume) \
     F(CallValue) \
     F(CallProperty) \
     F(CallPropertyLookup) \

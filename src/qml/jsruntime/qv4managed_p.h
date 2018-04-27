@@ -185,6 +185,7 @@ public:
         Type_Symbol,
         Type_ArrayObject,
         Type_FunctionObject,
+        Type_GeneratorObject,
         Type_BooleanObject,
         Type_NumberObject,
         Type_StringObject,

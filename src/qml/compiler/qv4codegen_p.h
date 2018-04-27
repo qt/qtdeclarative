@@ -521,6 +521,8 @@ protected:
     virtual Reference fallbackNameLookup(const QString &name);
     virtual void beginFunctionBodyHook() {}
 
+    void emitReturn(const Reference &expr);
+
     // nodes
     bool visit(AST::ArgumentList *ast) override;
     bool visit(AST::CaseBlock *ast) override;
@@ -670,6 +672,7 @@ protected:
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;
+    bool inFormalParameterList = false;
     ControlFlow *controlFlow = nullptr;
 
     bool _fileNameIsUrl;

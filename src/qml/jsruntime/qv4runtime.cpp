@@ -62,6 +62,7 @@
 #include <private/qqmljavascriptexpression_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
+#include "qv4generatorobject_p.h"
 #include <private/qv8engine_p.h>
 #endif
 
@@ -315,6 +316,8 @@ ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
     QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
     Q_ASSERT(clos);
     ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
+    if (clos->isGenerator())
+        return GeneratorFunction::create(current, clos)->asReturnedValue();
     return FunctionObject::createScriptFunction(current, clos)->asReturnedValue();
 }
 

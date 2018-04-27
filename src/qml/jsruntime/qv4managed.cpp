@@ -88,6 +88,9 @@ QString Managed::className() const
     case Type_FunctionObject:
         s = "Function";
         break;
+    case Type_GeneratorObject:
+        s = "Generator";
+        break;
     case Type_BooleanObject:
         s = "Boolean";
         break;

@@ -21,6 +21,7 @@ SOURCES += \
     $$PWD/qv4errorobject.cpp \
     $$PWD/qv4function.cpp \
     $$PWD/qv4functionobject.cpp \
+    $$PWD/qv4generatorobject.cpp \
     $$PWD/qv4globalobject.cpp \
     $$PWD/qv4iterator.cpp \
     $$PWD/qv4jsonobject.cpp \
@@ -74,6 +75,7 @@ HEADERS += \
     $$PWD/qv4errorobject_p.h \
     $$PWD/qv4function_p.h \
     $$PWD/qv4functionobject_p.h \
+    $$PWD/qv4generatorobject_p.h \
     $$PWD/qv4globalobject_p.h \
     $$PWD/qv4iterator_p.h \
     $$PWD/qv4jsonobject_p.h \

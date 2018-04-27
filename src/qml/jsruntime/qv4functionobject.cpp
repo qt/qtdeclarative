@@ -214,10 +214,8 @@ void Heap::FunctionCtor::init(QV4::ExecutionContext *scope)
 }
 
 // 15.3.2
-ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngine *engine, const Value *argv, int argc, Type t)
 {
-    Scope scope(f->engine());
-
     QString arguments;
     QString body;
     if (argc > 0) {
@@ -228,38 +226,51 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
         }
         body = argv[argc - 1].toQString();
     }
-    if (scope.engine->hasException)
-        return Encode::undefined();
+    if (engine->hasException)
+        return nullptr;
 
-    QString function = QLatin1String("function(") + arguments + QLatin1String("){") + body + QLatin1Char('}');
+    QString function = (t == Type_Function ? QLatin1String("function(") : QLatin1String("function*(")) + arguments + QLatin1String("){") + body + QLatin1Char('}');
 
-    QQmlJS::Engine ee, *engine = &ee;
-    QQmlJS::Lexer lexer(engine);
+    QQmlJS::Engine ee;
+    QQmlJS::Lexer lexer(&ee);
     lexer.setCode(function, 1, false);
-    QQmlJS::Parser parser(engine);
+    QQmlJS::Parser parser(&ee);
 
     const bool parsed = parser.parseExpression();
 
-    if (!parsed)
-        return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
+    if (!parsed) {
+        engine->throwSyntaxError(QLatin1String("Parse error"));
+        return nullptr;
+    }
 
     QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(parser.rootNode());
-    if (!fe)
-        return scope.engine->throwSyntaxError(QLatin1String("Parse error"));
+    if (!fe) {
+        engine->throwSyntaxError(QLatin1String("Parse error"));
+        return nullptr;
+    }
 
-    Compiler::Module module(scope.engine->debugger() != nullptr);
+    Compiler::Module module(engine->debugger() != nullptr);
 
     Compiler::JSUnitGenerator jsGenerator(&module);
-    RuntimeCodegen cg(scope.engine, &jsGenerator, false);
+    RuntimeCodegen cg(engine, &jsGenerator, false);
     cg.generateFromFunctionExpression(QString(), function, fe, &module);
 
-    if (scope.hasException())
+    if (engine->hasException)
+        return nullptr;
+
+    return cg.generateCompilationUnit();
+}
+
+ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+{
+    ExecutionEngine *engine = f->engine();
+
+    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = parse(engine, argv, argc, Type_Function);
+    if (engine->hasException)
         return Encode::undefined();
 
-    QQmlRefPointer<CompiledData::CompilationUnit> compilationUnit = cg.generateCompilationUnit();
-    Function *vmf = compilationUnit->linkToEngine(scope.engine);
-
-    ExecutionContext *global = scope.engine->rootContext();
+    Function *vmf = compilationUnit->linkToEngine(engine);
+    ExecutionContext *global = engine->rootContext();
     return Encode(FunctionObject::createScriptFunction(global, vmf));
 }
 

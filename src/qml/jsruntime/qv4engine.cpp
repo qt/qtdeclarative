@@ -67,6 +67,7 @@
 #include "qv4executableallocator_p.h"
 #include "qv4iterator_p.h"
 #include "qv4stringiterator_p.h"
+#include "qv4generatorobject_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -325,10 +326,16 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember(id_name()->identifier(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
     ic = ic->changeVTable(ScriptFunction::staticVTable());
-    classes[Class_ScriptFunction] = ic->addMember(id_length()->identifier(), Attr_ReadOnly, &index);
+    ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
+    classes[Class_ScriptFunction] = ic->d();
+    ic = ic->changeVTable(GeneratorFunction::staticVTable());
+    classes[Class_GeneratorFunction] = ic->d();
     classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->identifier(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
+
+    jsObjects[GeneratorProto] = memoryManager->allocObject<GeneratorPrototype>(classes[Class_Object]);
+    classes[Class_GeneratorObject] = newInternalClass(QV4::GeneratorObject::staticVTable(), generatorPrototype());
 
     ScopedString str(scope);
     classes[Class_RegExp] = classes[Class_Empty]->changeVTable(QV4::RegExp::staticVTable());
@@ -397,6 +404,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[Boolean_Ctor] = memoryManager->allocate<BooleanCtor>(global);
     jsObjects[Array_Ctor] = memoryManager->allocate<ArrayCtor>(global);
     jsObjects[Function_Ctor] = memoryManager->allocate<FunctionCtor>(global);
+    jsObjects[GeneratorFunction_Ctor] = memoryManager->allocate<GeneratorFunctionCtor>(global);
     jsObjects[Date_Ctor] = memoryManager->allocate<DateCtor>(global);
     jsObjects[RegExp_Ctor] = memoryManager->allocate<RegExpCtor>(global);
     jsObjects[Error_Ctor] = memoryManager->allocate<ErrorCtor>(global);
@@ -419,6 +427,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<PropertyListPrototype *>(propertyListPrototype())->init(this);
     static_cast<DatePrototype *>(datePrototype())->init(this, dateCtor());
     static_cast<FunctionPrototype *>(functionPrototype())->init(this, functionCtor());
+    static_cast<GeneratorPrototype *>(generatorPrototype())->init(this, generatorFunctionCtor());
     static_cast<RegExpPrototype *>(regExpPrototype())->init(this, regExpCtor());
     static_cast<ErrorPrototype *>(errorPrototype())->init(this, errorCtor());
     static_cast<EvalErrorPrototype *>(evalErrorPrototype())->init(this, evalErrorCtor());

@@ -2271,7 +2271,28 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
 bool Codegen::visit(YieldExpression *ast)
 {
-    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for 'yield' unimplemented."));
+    if (ast->isYieldStar) {
+        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield* is not currently supported"));
+        return false;
+    }
+    if (inFormalParameterList) {
+        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield is not allowed inside parameter lists"));
+        return false;
+    }
+
+
+    Reference result = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
+    if (hasError)
+        return false;
+    result.loadInAccumulator();
+    Instruction::Yield yield;
+    bytecodeGenerator->addInstruction(yield);
+    Instruction::Resume resume;
+    BytecodeGenerator::Jump jump = bytecodeGenerator->addJumpInstruction(resume);
+    Reference acc = Reference::fromAccumulator(this);
+    emitReturn(acc);
+    jump.link();
+    _expr.setResult(acc);
     return false;
 }
 
@@ -2309,10 +2330,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 {
     enterContext(ast);
 
-    if (_context->isGenerator) {
-        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for generator functions unimplemented."));
-    }
-
     if (_context->functionIndex >= 0)
         // already defined
         return leaveContext();
@@ -2345,6 +2362,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // reserve the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
+    bool _inFormalParameterList = false;
+    qSwap(_inFormalParameterList, inFormalParameterList);
+
     int returnAddress = -1;
     bool _requiresReturnValue = _context->requiresImplicitReturnValue();
     qSwap(requiresReturnValue, _requiresReturnValue);
@@ -2355,6 +2375,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     RegisterScope registerScope(this);
     _context->emitBlockHeader(this);
 
+    inFormalParameterList = true;
     int argc = 0;
     while (formals) {
         PatternElement *e = formals->element;
@@ -2381,6 +2402,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
         formals = formals->next;
         ++argc;
+    }
+    inFormalParameterList = false;
+
+    if (_context->isGenerator) {
+        Instruction::Yield yield;
+        bytecodeGenerator->addInstruction(yield);
     }
 
     beginFunctionBodyHook();
@@ -2415,6 +2442,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     qSwap(_returnAddress, returnAddress);
     qSwap(requiresReturnValue, _requiresReturnValue);
+    qSwap(_inFormalParameterList, inFormalParameterList);
     bytecodeGenerator = savedBytecodeGenerator;
     controlFlow = savedControlFlow;
     _functionContext = savedFunctionContext;
@@ -2781,6 +2809,21 @@ bool Codegen::visit(LocalForStatement *ast)
     return false;
 }
 
+void Codegen::emitReturn(const Reference &expr)
+{
+    if (controlFlow && controlFlow->returnRequiresUnwind()) {
+        if (_returnAddress >= 0)
+            (void) expr.storeOnStack(_returnAddress);
+        else
+            expr.loadInAccumulator();
+        ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Return);
+        controlFlow->jumpToHandler(h);
+    } else {
+        expr.loadInAccumulator();
+        bytecodeGenerator->addInstruction(Instruction::Ret());
+    }
+}
+
 bool Codegen::visit(ReturnStatement *ast)
 {
     if (hasError)
@@ -2799,17 +2842,8 @@ bool Codegen::visit(ReturnStatement *ast)
         expr = Reference::fromConst(this, Encode::undefined());
     }
 
-    if (controlFlow && controlFlow->returnRequiresUnwind()) {
-        if (_returnAddress >= 0)
-            (void) expr.storeOnStack(_returnAddress);
-        else
-            expr.loadInAccumulator();
-        ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Return);
-        controlFlow->jumpToHandler(h);
-    } else {
-        expr.loadInAccumulator();
-        bytecodeGenerator->addInstruction(Instruction::Ret());
-    }
+    emitReturn(expr);
+
     return false;
 }
 

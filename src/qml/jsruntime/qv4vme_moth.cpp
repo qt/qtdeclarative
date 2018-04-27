@@ -55,6 +55,7 @@
 #include <private/qv4string_p.h>
 #include <private/qv4profiling_p.h>
 #include <private/qv4jscall_p.h>
+#include <private/qv4generatorobject_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <iostream>
 
@@ -508,6 +509,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     CppStackFrame frame;
     frame.originalArguments = argv;
     frame.originalArgumentsCount = argc;
+    frame.yield = nullptr;
+    frame.exceptionHandler = nullptr;
     Function *function;
 
     {
@@ -586,10 +589,9 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
 {
     QV4::Function *function = frame.v4Function;
     QV4::Value &accumulator = frame.jsFrame->accumulator;
-    QV4::ReturnedValue acc = Encode::undefined();
+    QV4::ReturnedValue acc = accumulator.asReturnedValue();
     Value *stack = reinterpret_cast<Value *>(frame.jsFrame);
     ExecutionEngine *engine = function->internalClass->engine;
-    const uchar *exceptionHandler = nullptr;
 
     MOTH_JUMP_TABLE;
 
@@ -798,6 +800,24 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadIdObject)
 
+    MOTH_BEGIN_INSTR(Yield)
+        frame.yield = code;
+        return acc;
+    MOTH_END_INSTR(Yield)
+
+    MOTH_BEGIN_INSTR(Resume)
+        // check exception, in case the generator was called with throw() or return()
+        if (engine->hasException) {
+            // an empty value indicates that the generator was called with return()
+            if (engine->exceptionValue->asReturnedValue() != Primitive::emptyValue().asReturnedValue())
+                goto catchException;
+            engine->hasException = false;
+            *engine->exceptionValue = Primitive::undefinedValue();
+    } else {
+        code += offset;
+    }
+    MOTH_END_INSTR(Resume)
+
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();
         Value func = STACK_VALUE(name);
@@ -867,7 +887,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
     MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(SetExceptionHandler)
-        exceptionHandler = offset ? code + offset : nullptr;
+        frame.exceptionHandler = offset ? code + offset : nullptr;
     MOTH_END_INSTR(SetExceptionHandler)
 
     MOTH_BEGIN_INSTR(ThrowException)
@@ -1406,10 +1426,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
 
     catchException:
         Q_ASSERT(engine->hasException);
-        if (!exceptionHandler) {
+        if (!frame.exceptionHandler) {
             acc = Encode::undefined();
             return acc;
         }
-        code = exceptionHandler;
+        code = frame.exceptionHandler;
     }
 }

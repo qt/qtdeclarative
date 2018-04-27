@@ -161,6 +161,9 @@ public:
     void generate_LoadContextObjectProperty(int propertyIndex, int base,
                                             int captureRequired) override;
     void generate_LoadIdObject(int index, int base) override;
+    void generate_Yield() override;
+    void generate_Resume(int) override;
+
     void generate_CallValue(int name, int argc, int argv) override;
     void generate_CallProperty(int name, int base, int argc, int argv) override;
     void generate_CallPropertyLookup(int lookupIndex, int base, int argc, int argv) override;
