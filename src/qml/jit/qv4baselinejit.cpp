@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qv4jit_p.h"
+#include "qv4baselinejit_p.h"
 #include "qv4assembler_p.h"
 #include <private/qv4lookup_p.h>
 #include <private/qv4generatorobject_p.h>

@@ -61,7 +61,7 @@
 
 #include "qv4alloca_p.h"
 
-#include <private/qv4jit_p.h>
+#include <private/qv4baselinejit_p.h>
 
 #undef COUNT_INSTRUCTIONS
 
