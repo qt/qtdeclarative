@@ -72,6 +72,7 @@ public:
         return exec(reinterpret_cast<const FunctionObject *>(d), thisObject, argv, argc);
     }
     static QV4::ReturnedValue exec(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
+    static QV4::ReturnedValue interpret(CppStackFrame &frame, const uchar *codeEntry);
 };
 
 } // namespace Moth

@@ -197,6 +197,7 @@ namespace Heap {
     template <typename T, size_t> struct Pointer;
 }
 
+struct CppStackFrame;
 class MemoryManager;
 class ExecutableAllocator;
 struct StringOrSymbol;

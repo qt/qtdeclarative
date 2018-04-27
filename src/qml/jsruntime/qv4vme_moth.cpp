@@ -479,7 +479,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
     }
 }
 
-#define STORE_IP() frame.instructionPointer = int(code - codeStart);
+#define STORE_IP() frame.instructionPointer = int(code - function->codeData);
 #define STORE_ACC() accumulator = acc;
 #define ACC Primitive::fromReturnedValue(acc)
 #define VALUE_TO_INT(i, val) \
@@ -553,10 +553,6 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
 
     Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
     QV4::Debugging::Debugger *debugger = engine->debugger();
-    const uchar *exceptionHandler = nullptr;
-
-    QV4::Value &accumulator = frame.jsFrame->accumulator;
-    QV4::ReturnedValue acc = Encode::undefined();
 
 #ifdef V4_ENABLE_JIT
     if (function->jittedCode == nullptr && debugger == nullptr) {
@@ -570,12 +566,30 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     if (debugger)
         debugger->enteringFunction();
 
+    ReturnedValue result;
     if (function->jittedCode != nullptr && debugger == nullptr) {
-        acc = function->jittedCode(&frame, engine);
+        result = function->jittedCode(&frame, engine);
     } else {
     // interpreter
-    const uchar *code = function->codeData;
-    const uchar *codeStart = code;
+        result = interpret(frame, function->codeData);
+    }
+
+    if (QV4::Debugging::Debugger *debugger = engine->debugger())
+        debugger->leavingFunction(result);
+    engine->currentStackFrame = frame.parent;
+    engine->jsStackTop = stack;
+
+    return result;
+}
+
+QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
+{
+    QV4::Function *function = frame.v4Function;
+    QV4::Value &accumulator = frame.jsFrame->accumulator;
+    QV4::ReturnedValue acc = Encode::undefined();
+    Value *stack = reinterpret_cast<Value *>(frame.jsFrame);
+    ExecutionEngine *engine = function->internalClass->engine;
+    const uchar *exceptionHandler = nullptr;
 
     MOTH_JUMP_TABLE;
 
@@ -1372,7 +1386,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     MOTH_END_INSTR(ShlConst)
 
     MOTH_BEGIN_INSTR(Ret)
-        goto functionExit;
+        return acc;
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(Debug)
@@ -1394,17 +1408,8 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
         Q_ASSERT(engine->hasException);
         if (!exceptionHandler) {
             acc = Encode::undefined();
-            goto functionExit;
+            return acc;
         }
         code = exceptionHandler;
     }
-    }
-
-functionExit:
-    if (QV4::Debugging::Debugger *debugger = engine->debugger())
-        debugger->leavingFunction(ACC.asReturnedValue());
-    engine->currentStackFrame = frame.parent;
-    engine->jsStackTop = stack;
-
-    return acc;
 }
