@@ -170,19 +170,16 @@ Function *Script::function()
     return vmFunction;
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
                                                                       const QString &fileName, const QString &finalUrl, const QString &source,
-                                                                      QList<QQmlError> *reportedErrors, Directives *directivesCollector)
+                                                                      QList<QQmlError> *reportedErrors)
 {
     using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
 
-    Engine ee;
-    if (directivesCollector)
-        ee.setDirectives(directivesCollector);
-    Lexer lexer(&ee);
+    Lexer lexer(jsEngine);
     lexer.setCode(source, /*line*/1, /*qml mode*/false);
-    Parser parser(&ee);
+    Parser parser(jsEngine);
 
     parser.parseProgram();
 

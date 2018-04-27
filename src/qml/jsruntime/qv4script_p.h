@@ -62,6 +62,10 @@ QT_BEGIN_NAMESPACE
 
 class QQmlContextData;
 
+namespace QQmlJS {
+class Engine;
+}
+
 namespace QV4 {
 
 struct Q_QML_EXPORT Script {
@@ -97,10 +101,9 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(
-            QV4::Compiler::Module *module, Compiler::JSUnitGenerator *unitGenerator,
+    static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
             const QString &fileName, const QString &finalUrl, const QString &source,
-            QList<QQmlError> *reportedErrors = nullptr, QQmlJS::Directives *directivesCollector = nullptr);
+            QList<QQmlError> *reportedErrors = nullptr);
     static Script *createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);

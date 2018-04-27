@@ -2980,11 +2980,12 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     }
 
     QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
+    irUnit.jsParserEngine.setDirectives(&collector);
 
     QList<QQmlError> errors;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(
-                &irUnit.jsModule, &irUnit.jsGenerator, urlString(), finalUrlString(),
-                source, &errors, &collector);
+                &irUnit.jsModule, &irUnit.jsParserEngine, &irUnit.jsGenerator, urlString(), finalUrlString(),
+                source, &errors);
     // No need to addref on unit, it's initial refcount is 1
     source.clear();
     if (!errors.isEmpty()) {
