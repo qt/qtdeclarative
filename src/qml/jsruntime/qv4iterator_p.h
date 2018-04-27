@@ -65,7 +65,7 @@ struct IteratorPrototype : Object
 
     static ReturnedValue method_iterator(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
-    static Heap::Object *createIterResultObject(ExecutionEngine *engine, const Value &value, const Value &done);
+    static ReturnedValue createIterResultObject(ExecutionEngine *engine, const Value &value, bool done);
 };
 
 }

@@ -53,11 +53,11 @@ ReturnedValue IteratorPrototype::method_iterator(const FunctionObject *, const V
 }
 
 
-Heap::Object *IteratorPrototype::createIterResultObject(ExecutionEngine *engine, const Value &value, const Value &done)
+ReturnedValue IteratorPrototype::createIterResultObject(ExecutionEngine *engine, const Value &value, bool done)
 {
     Scope scope(engine);
     ScopedObject obj(scope, engine->newObject());
     obj->set(ScopedString(scope, engine->newString(QStringLiteral("value"))), value, Object::DoNotThrow);
-    obj->set(ScopedString(scope, engine->newString(QStringLiteral("done"))), done, Object::DoNotThrow);
-    return obj->d();
+    obj->set(ScopedString(scope, engine->newString(QStringLiteral("done"))), Primitive::fromBoolean(done), Object::DoNotThrow);
+    return obj->asReturnedValue();
 }

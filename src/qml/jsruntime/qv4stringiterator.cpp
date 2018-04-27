@@ -65,7 +65,7 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
     ScopedString s(scope, thisObject->d()->iteratedString);
     if (!s) {
         QV4::Value undefined = Primitive::undefinedValue();
-        return IteratorPrototype::createIterResultObject(scope.engine, undefined, ScopedValue(scope, true);
+        return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
     quint32 index = thisObject->d()->nextIndex;
@@ -76,7 +76,7 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
     if (index >= len) {
         thisObject->d()->iteratedString.set(scope.engine, nullptr);
         QV4::Value undefined = Primitive::undefinedValue();
-        return IteratorPrototype::createIterResultObject(scope.engine, undefined, ScopedValue(scope, true);
+        return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
     QChar ch = str.at(index);
@@ -90,6 +90,6 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
     thisObject->d()->nextIndex += num;
 
     ScopedString resultString(scope, scope.engine->newString(s->toQString().mid(index, num)));
-    return IteratorPrototype::createIterResultObject(scope.engine, resultString, ScopedValue(scope, false);
+    return IteratorPrototype::createIterResultObject(scope.engine, resultString, false);
 }
 

@@ -66,7 +66,7 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
     ScopedObject a(scope, thisObject->d()->iteratedObject);
     if (!a) {
         QV4::Value undefined = Primitive::undefinedValue();
-        return IteratorPrototype::createIterResultObject(scope.engine, undefined, ScopedValue(scope, Primitive::fromBoolean(true)))->asReturnedValue();
+        return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
     quint32 index = thisObject->d()->nextIndex;
@@ -78,19 +78,19 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
     if (index >= len) {
         thisObject->d()->iteratedObject.set(scope.engine, nullptr);
         QV4::Value undefined = Primitive::undefinedValue();
-        return IteratorPrototype::createIterResultObject(scope.engine, undefined, ScopedValue(scope, Primitive::fromBoolean(true)))->asReturnedValue();
+        return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
     thisObject->d()->nextIndex = index + 1;
     if (itemKind == KeyIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Primitive::fromInt32(index), ScopedValue(scope, Primitive::fromBoolean(false)))->asReturnedValue();
+        return IteratorPrototype::createIterResultObject(scope.engine, Primitive::fromInt32(index), false);
     }
 
     ReturnedValue elementValue = a->getIndexed(index);
     CHECK_EXCEPTION();
 
     if (itemKind == ValueIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Value::fromReturnedValue(elementValue), ScopedValue(scope, Primitive::fromBoolean(false)))->asReturnedValue();
+        return IteratorPrototype::createIterResultObject(scope.engine, Value::fromReturnedValue(elementValue), false);
     } else {
         Q_ASSERT(itemKind == KeyValueIteratorKind);
 
@@ -100,7 +100,7 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
         resultArray->arrayPut(1, Value::fromReturnedValue(elementValue));
         resultArray->setArrayLengthUnchecked(2);
 
-        return IteratorPrototype::createIterResultObject(scope.engine, resultArray, ScopedValue(scope, Primitive::fromBoolean(false)))->asReturnedValue();
+        return IteratorPrototype::createIterResultObject(scope.engine, resultArray, false);
     }
 }
 
