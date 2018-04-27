@@ -148,12 +148,12 @@ bool Object::putValue(uint memberIndex, const Value &value)
     return true;
 }
 
-void Object::defineDefaultProperty(const QString &name, const Value &value)
+void Object::defineDefaultProperty(const QString &name, const Value &value, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
     ScopedString s(scope, e->newIdentifier(name));
-    defineDefaultProperty(s, value);
+    defineDefaultProperty(s, value, attributes);
 }
 
 void Object::defineDefaultProperty(const QString &name, jsCallFunction code,

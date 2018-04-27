@@ -277,7 +277,7 @@ struct Q_QML_EXPORT Object: Managed {
     void defineDefaultProperty(StringOrSymbol *name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable) {
         insertMember(name, value, attributes);
     }
-    void defineDefaultProperty(const QString &name, const Value &value);
+    void defineDefaultProperty(const QString &name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
     void defineDefaultProperty(const QString &name, jsCallFunction code,
                                int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
     void defineDefaultProperty(StringOrSymbol *name, jsCallFunction code,
