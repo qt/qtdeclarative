@@ -264,20 +264,16 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
     }
 }
 
-IdentifierHash CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
+IdentifierHash CompilationUnit::createNamedObjectsPerComponent(int componentObjectIndex)
 {
-    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
-    if (it == namedObjectsPerComponentCache.end()) {
-        IdentifierHash namedObjectCache(engine);
-        const CompiledData::Object *component = data->objectAt(componentObjectIndex);
-        const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
-        for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
-            const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
-            namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
-        }
-        it = namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
+    IdentifierHash namedObjectCache(engine);
+    const CompiledData::Object *component = data->objectAt(componentObjectIndex);
+    const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
+    for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
+        const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
+        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
     }
-    return *it;
+    return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
 void CompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine)

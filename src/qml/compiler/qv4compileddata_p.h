@@ -1053,7 +1053,7 @@ public:
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
-    IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
+    inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
     void finalizeCompositeType(QQmlEnginePrivate *qmlEngine);
 
@@ -1112,6 +1112,8 @@ private:
 
     QAtomicInt refCount = 1;
 
+    Q_NEVER_INLINE IdentifierHash createNamedObjectsPerComponent(int componentObjectIndex);
+
 public:
 #if defined(V4_BOOTSTRAP)
     bool saveToDisk(const QString &outputFileName, QString *errorString);
@@ -1145,11 +1147,18 @@ struct ResolvedTypeReference
 
     void doDynamicTypeCheck();
 };
-#endif
 
+IdentifierHash CompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
+{
+    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
+    if (Q_UNLIKELY(it == namedObjectsPerComponentCache.end()))
+        return createNamedObjectsPerComponent(componentObjectIndex);
+    return *it;
 }
+#endif // V4_BOOTSTRAP
 
-}
+} // CompiledData namespace
+} // QV4 namespace
 
 Q_DECLARE_TYPEINFO(QV4::CompiledData::JSClassMember, Q_PRIMITIVE_TYPE);
 
