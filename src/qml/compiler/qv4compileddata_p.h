@@ -856,9 +856,7 @@ struct TypeReferenceMap : QHash<int, TypeReference>
         auto propEnd = obj->propertiesEnd();
         for ( ; prop != propEnd; ++prop) {
             if (prop->type >= QV4::CompiledData::Property::Custom) {
-                // ### FIXME: We could report the more accurate location here by using prop->location, but the old
-                // compiler can't and the tests expect it to be the object location right now.
-                TypeReference &r = this->add(prop->customTypeNameIndex, obj->location);
+                TypeReference &r = this->add(prop->customTypeNameIndex, prop->location);
                 r.errorWhenNotFound = true;
             }
         }
