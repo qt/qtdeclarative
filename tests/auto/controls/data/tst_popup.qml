@@ -1358,7 +1358,7 @@ TestCase {
 
                 Shortcut {
                     id: shortcut
-                    sequence: "Tab"
+                    sequence: "A"
                     onActivated: popup.visible = !popup.visible
                 }
             }
@@ -1376,11 +1376,11 @@ TestCase {
         verify(shortcutActivatedSpy.valid)
 
         waitForRendering(window.contentItem)
-        keyClick(Qt.Key_Tab)
+        keyClick(Qt.Key_A)
         compare(shortcutActivatedSpy.count, 1)
         tryCompare(control, "visible", true)
 
-        keyClick(Qt.Key_Tab)
+        keyClick(Qt.Key_A)
         compare(shortcutActivatedSpy.count, 2)
         tryCompare(control, "visible", false)
     }

@@ -204,6 +204,7 @@ protected:
 #endif
 
     void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
 

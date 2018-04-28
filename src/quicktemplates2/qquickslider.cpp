@@ -448,6 +448,9 @@ void QQuickSlider::setStepSize(qreal step)
 
     This property holds the snap mode.
 
+    The snap mode determines how the slider handle behaves with
+    regards to the \l stepSize.
+
     Possible values:
     \value Slider.NoSnap The slider does not snap (default).
     \value Slider.SnapAlways The slider snaps while the handle is dragged.
@@ -486,7 +489,8 @@ void QQuickSlider::setSnapMode(SnapMode mode)
 /*!
     \qmlproperty bool QtQuick.Controls::Slider::pressed
 
-    This property holds whether the slider is pressed.
+    This property holds whether the slider is pressed by either touch, mouse,
+    or keys.
 */
 bool QQuickSlider::isPressed() const
 {

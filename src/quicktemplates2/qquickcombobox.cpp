@@ -1698,9 +1698,11 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
         break;
     case Qt::Key_Escape:
     case Qt::Key_Back:
-        d->hidePopup(false);
-        setPressed(false);
-        event->accept();
+        if (d->isPopupVisible()) {
+            d->hidePopup(false);
+            setPressed(false);
+            event->accept();
+        }
         break;
     default:
         break;
@@ -1737,6 +1739,16 @@ void QQuickComboBox::componentComplete()
             setCurrentIndex(0);
         else
             d->updateCurrentText();
+    }
+}
+
+void QQuickComboBox::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    Q_D(QQuickComboBox);
+    QQuickControl::itemChange(change, value);
+    if (change == ItemVisibleHasChanged && !value.boolValue) {
+        d->hidePopup(false);
+        setPressed(false);
     }
 }
 

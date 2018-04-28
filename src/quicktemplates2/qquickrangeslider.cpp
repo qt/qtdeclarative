@@ -807,7 +807,8 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
             \l {first.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
-        \li This property holds whether the first handle is pressed.
+        \li This property holds whether the first handle is pressed by either touch,
+            mouse, or keys.
     \row
         \li hovered
         \li This property holds whether the first handle is hovered.
@@ -881,7 +882,8 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
             \l {second.visualPosition}{visualPosition} should be used instead.
     \row
         \li pressed
-        \li This property holds whether the second handle is pressed.
+        \li This property holds whether the second handle is pressed by either touch,
+            mouse, or keys.
     \row
         \li hovered
         \li This property holds whether the second handle is hovered.
@@ -937,6 +939,9 @@ void QQuickRangeSlider::setStepSize(qreal step)
     \qmlproperty enumeration QtQuick.Controls::RangeSlider::snapMode
 
     This property holds the snap mode.
+
+    The snap mode determines how the slider handles behave with
+    regards to the \l stepSize.
 
     Possible values:
     \value RangeSlider.NoSnap The slider does not snap (default).
