@@ -265,7 +265,7 @@ struct Context {
             return true;
 
         if (type != FunctionDefinition) {
-            if (formals->containsName(name))
+            if (formals && formals->containsName(name))
                 return (scope == QQmlJS::AST::VariableScope::Var);
         }
         MemberMap::iterator it = members.find(name);

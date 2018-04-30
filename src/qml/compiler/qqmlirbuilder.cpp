@@ -983,7 +983,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
-        const QStringList formals = funDecl->formals->formals();
+        const QStringList formals = funDecl->formals ? funDecl->formals->formals() : QStringList();
         int formalsCount = formals.size();
         f->formals.allocate(pool, formalsCount);
 

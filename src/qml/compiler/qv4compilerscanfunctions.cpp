@@ -420,7 +420,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
             outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
 
-    if (formals->containsName(QStringLiteral("arguments")))
+    if (formals && formals->containsName(QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     if (expr) {
         if (expr->isArrowFunction)
@@ -430,18 +430,18 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     }
 
 
-    if (!name.isEmpty() && !formals->containsName(name))
+    if (!name.isEmpty() && (!formals || !formals->containsName(name)))
         _context->addLocalVar(name, Context::ThisFunctionName, VariableScope::Var);
     _context->formals = formals;
 
     if (body && !_context->isStrict)
         checkDirectivePrologue(body);
 
-    bool isSimpleParameterList = formals->isSimpleParameterList();
+    bool isSimpleParameterList = formals && formals->isSimpleParameterList();
 
-    _context->arguments = formals->formals();
+    _context->arguments = formals ? formals->formals() : QStringList();
 
-    const QStringList boundNames = formals->boundNames();
+    const QStringList boundNames = formals ? formals->boundNames() : QStringList();
     for (int i = 0; i < boundNames.size(); ++i) {
         const QString &arg = boundNames.at(i);
         if (_context->isStrict || !isSimpleParameterList) {

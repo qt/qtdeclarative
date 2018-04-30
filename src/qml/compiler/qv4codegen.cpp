@@ -2425,7 +2425,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         }
     }
     if (_context->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-        if (_context->isStrict || !formals->isSimpleParameterList()) {
+        if (_context->isStrict || (formals && !formals->isSimpleParameterList())) {
             Instruction::CreateUnmappedArgumentsObject setup;
             bytecodeGenerator->addInstruction(setup);
         } else {
