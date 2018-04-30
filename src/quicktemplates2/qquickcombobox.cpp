@@ -900,6 +900,8 @@ int QQuickComboBox::highlightedIndex() const
 
     This property holds the index of the current item in the combo box.
 
+    The default value is \c -1 when \l count is \c 0, and \c 0 otherwise.
+
     \sa activated(), currentText, highlightedIndex
 */
 int QQuickComboBox::currentIndex() const
