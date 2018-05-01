@@ -85,5 +85,3 @@ private:
     int m_columns = 0;
     QSet<int> selectedCells;
 };
-
-#define TestModelAsVariant(...) QVariant::fromValue(QSharedPointer<TestModel>(new TestModel(__VA_ARGS__)))
