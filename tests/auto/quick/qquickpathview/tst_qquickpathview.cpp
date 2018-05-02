@@ -366,6 +366,10 @@ void tst_QQuickPathView::insertModel_data()
 
 void tst_QQuickPathView::insertModel()
 {
+#ifdef Q_OS_MACOS
+    QSKIP("this test currently crashes on MacOS. See QTBUG-68048");
+#endif
+
     QFETCH(int, mode);
     QFETCH(int, idx);
     QFETCH(int, count);
