@@ -314,7 +314,6 @@ void QQuickPopupPrivate::init()
     QObject::connect(popupItem, &QQuickControl::implicitContentHeightChanged, q, &QQuickPopup::implicitContentHeightChanged);
     QObject::connect(popupItem, &QQuickControl::implicitBackgroundWidthChanged, q, &QQuickPopup::implicitBackgroundWidthChanged);
     QObject::connect(popupItem, &QQuickControl::implicitBackgroundHeightChanged, q, &QQuickPopup::implicitBackgroundHeightChanged);
-    positioner = new QQuickPopupPositioner(q);
 }
 
 void QQuickPopupPrivate::closeOrReject()
@@ -484,7 +483,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         visible = true;
         transitionState = EnterTransition;
         popupItem->setVisible(true);
-        positioner->setParentItem(parentItem);
+        getPositioner()->setParentItem(parentItem);
         emit q->visibleChanged();
     }
     return true;
@@ -523,7 +522,7 @@ void QQuickPopupPrivate::finalizeEnterTransition()
 void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
-    positioner->setParentItem(nullptr);
+    getPositioner()->setParentItem(nullptr);
     popupItem->setParentItem(nullptr);
     popupItem->setVisible(false);
     destroyOverlay();
@@ -650,6 +649,14 @@ QQuickPopupAnchors *QQuickPopupPrivate::getAnchors()
     return anchors;
 }
 
+QQuickPopupPositioner *QQuickPopupPrivate::getPositioner()
+{
+    Q_Q(QQuickPopup);
+    if (!positioner)
+        positioner = new QQuickPopupPositioner(q);
+    return positioner;
+}
+
 void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
 {
     Q_Q(QQuickPopup);
@@ -691,7 +698,7 @@ void QQuickPopupPrivate::itemDestroyed(QQuickItem *item)
 
 void QQuickPopupPrivate::reposition()
 {
-    positioner->reposition();
+    getPositioner()->reposition();
 }
 
 static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQuickItem *parent)
@@ -1643,8 +1650,9 @@ void QQuickPopup::setParentItem(QQuickItem *parent)
         QQuickItemPrivate::get(d->parentItem)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed);
     }
     d->parentItem = parent;
-    if (d->positioner->parentItem())
-        d->positioner->setParentItem(parent);
+    QQuickPopupPositioner *positioner = d->getPositioner();
+    if (positioner->parentItem())
+        positioner->setParentItem(parent);
     if (parent) {
         QObjectPrivate::connect(parent, &QQuickItem::windowChanged, d, &QQuickPopupPrivate::setWindow);
         QQuickItemPrivate::get(d->parentItem)->addItemChangeListener(d, QQuickItemPrivate::Destroyed);

@@ -140,6 +140,7 @@ public:
     void setBottomMargin(qreal value, bool reset = false);
 
     QQuickPopupAnchors *getAnchors();
+    virtual QQuickPopupPositioner *getPositioner();
 
     void setWindow(QQuickWindow *window);
     void itemDestroyed(QQuickItem *item) override;

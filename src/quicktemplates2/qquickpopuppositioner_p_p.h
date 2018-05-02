@@ -61,6 +61,8 @@ public:
     explicit QQuickPopupPositioner(QQuickPopup *popup);
     ~QQuickPopupPositioner();
 
+    QQuickPopup *popup() const;
+
     QQuickItem *parentItem() const;
     void setParentItem(QQuickItem *parent);
 

@@ -67,6 +67,11 @@ QQuickPopupPositioner::~QQuickPopupPositioner()
     }
 }
 
+QQuickPopup *QQuickPopupPositioner::popup() const
+{
+    return m_popup;
+}
+
 QQuickItem *QQuickPopupPositioner::parentItem() const
 {
     return m_parentItem;
