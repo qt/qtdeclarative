@@ -772,6 +772,10 @@ void tst_QQuickPathView::path()
 
 void tst_QQuickPathView::dataModel()
 {
+#ifdef Q_OS_MACOS
+    QSKIP("this test currently crashes on MacOS. See QTBUG-68047");
+#endif
+
     QScopedPointer<QQuickView> window(createView());
     window->show();
 

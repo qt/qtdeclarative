@@ -1000,6 +1000,9 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
+#ifdef Q_OS_MACOS
+    QSKIP("this test currently crashes on MacOS. See QTBUG-68047");
+#endif
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
