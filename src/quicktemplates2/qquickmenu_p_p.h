@@ -93,7 +93,7 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
 
-    void reposition() override;
+    QQuickPopupPositioner *getPositioner() override;
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
     bool blockInput(QQuickItem *item, const QPointF &point) const override;

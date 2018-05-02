@@ -40,6 +40,7 @@
 #include "qquickmenubaritem_p.h"
 #include "qquickmenubar_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopuppositioner_p_p.h"
 #include "qquickaction_p.h"
 
 #include <QtGui/qevent.h>
@@ -182,6 +183,14 @@ static bool shouldCascade()
     return false;
 #endif
 }
+
+class QQuickMenuPositioner : public QQuickPopupPositioner
+{
+public:
+    QQuickMenuPositioner(QQuickMenu *menu) : QQuickPopupPositioner(menu) { }
+
+    void reposition() override;
+};
 
 QQuickMenuPrivate::QQuickMenuPrivate()
     : cascade(shouldCascade()),
@@ -361,21 +370,30 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, 
         resizeItems();
 }
 
-void QQuickMenuPrivate::reposition()
+QQuickPopupPositioner *QQuickMenuPrivate::getPositioner()
 {
     Q_Q(QQuickMenu);
-    if (parentMenu) {
-        if (cascade) {
-            if (popupItem->isMirrored())
-                q->setPosition(QPointF(-q->width() - parentMenu->leftPadding() + q->overlap(), -q->topPadding()));
-            else if (parentItem)
-                q->setPosition(QPointF(parentItem->width() + parentMenu->rightPadding() - q->overlap(), -q->topPadding()));
+    if (!positioner)
+        positioner = new QQuickMenuPositioner(q);
+    return positioner;
+}
+
+void QQuickMenuPositioner::reposition()
+{
+    QQuickMenu *menu = static_cast<QQuickMenu *>(popup());
+    QQuickMenuPrivate *p = QQuickMenuPrivate::get(menu);
+    if (p->parentMenu) {
+        if (p->cascade) {
+            if (p->popupItem->isMirrored())
+                menu->setPosition(QPointF(-menu->width() - p->parentMenu->leftPadding() + menu->overlap(), -menu->topPadding()));
+            else if (p->parentItem)
+                menu->setPosition(QPointF(p->parentItem->width() + p->parentMenu->rightPadding() - menu->overlap(), -menu->topPadding()));
         } else {
-            q->setPosition(QPointF(parentMenu->x() + (parentMenu->width() - q->width()) / 2,
-                                   parentMenu->y() + (parentMenu->height() - q->height()) / 2));
+            menu->setPosition(QPointF(p->parentMenu->x() + (p->parentMenu->width() - menu->width()) / 2,
+                                      p->parentMenu->y() + (p->parentMenu->height() - menu->height()) / 2));
         }
     }
-    QQuickPopupPrivate::reposition();
+    QQuickPopupPositioner::reposition();
 }
 
 bool QQuickMenuPrivate::prepareEnterTransition()
