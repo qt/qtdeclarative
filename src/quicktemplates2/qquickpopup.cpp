@@ -644,10 +644,9 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
 */
 QQuickPopupAnchors *QQuickPopupPrivate::getAnchors()
 {
-    if (!anchors) {
-        Q_Q(QQuickPopup);
-        anchors = new QQuickPopupAnchors(positioner, q);
-    }
+    Q_Q(QQuickPopup);
+    if (!anchors)
+        anchors = new QQuickPopupAnchors(q);
     return anchors;
 }
 

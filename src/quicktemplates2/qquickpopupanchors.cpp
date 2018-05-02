@@ -36,33 +36,15 @@
 
 #include "qquickpopupanchors_p.h"
 #include "qquickpopupanchors_p_p.h"
-#include "qquickpopuppositioner_p_p.h"
-
-#include <QtQuick/qquickwindow.h>
+#include "qquickpopup_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
-QQuickPopupAnchorsPrivate::QQuickPopupAnchorsPrivate(QQuickPopupPositioner *positioner)
-    : positioner(positioner)
+QQuickPopupAnchors::QQuickPopupAnchors(QQuickPopup *popup)
+    : QObject(*(new QQuickPopupAnchorsPrivate), popup)
 {
-}
-
-QQuickPopupAnchorsPrivate::~QQuickPopupAnchorsPrivate()
-{
-}
-
-QQuickPopupAnchors::QQuickPopupAnchors(QQuickPopupPositioner *positioner, QObject *parent)
-    : QObject(*(new QQuickPopupAnchorsPrivate(positioner)), parent)
-{
-}
-
-QQuickPopupAnchors::QQuickPopupAnchors(QQuickPopupAnchorsPrivate &dd, QObject *parent)
-    : QObject(dd, parent)
-{
-}
-
-QQuickPopupAnchors::~QQuickPopupAnchors()
-{
+    Q_D(QQuickPopupAnchors);
+    d->popup = popup;
 }
 
 QQuickItem *QQuickPopupAnchors::centerIn() const
@@ -78,7 +60,7 @@ void QQuickPopupAnchors::setCenterIn(QQuickItem *item)
         return;
 
     d->centerIn = item;
-    d->positioner->reposition();
+    QQuickPopupPrivate::get(d->popup)->reposition();
     emit centerInChanged();
 }
 

@@ -49,26 +49,24 @@
 //
 
 #include <QtCore/private/qobject_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPopupAnchors;
-class QQuickPopupPositioner;
+class QQuickItem;
+class QQuickPopup;
 
 class QQuickPopupAnchorsPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupAnchors)
 
 public:
-    QQuickPopupAnchorsPrivate(QQuickPopupPositioner *positioner);
-    ~QQuickPopupAnchorsPrivate();
-
     static QQuickPopupAnchorsPrivate *get(QQuickPopupAnchors *popupAnchors)
     {
         return popupAnchors->d_func();
     }
 
-    QQuickPopupPositioner *positioner = nullptr;
+    QQuickPopup *popup = nullptr;
     QQuickItem *centerIn = nullptr;
 };
 

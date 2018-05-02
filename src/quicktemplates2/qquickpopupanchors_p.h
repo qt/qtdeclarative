@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickPopupAnchorsPrivate;
-class QQuickPopupPositioner;
+class QQuickPopup;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject
 {
@@ -64,8 +64,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
 
 public:
-    explicit QQuickPopupAnchors(QQuickPopupPositioner *positioner, QObject *parent);
-    ~QQuickPopupAnchors();
+    explicit QQuickPopupAnchors(QQuickPopup *popup);
 
     QQuickItem *centerIn() const;
     void setCenterIn(QQuickItem *item);
@@ -73,9 +72,6 @@ public:
 
 Q_SIGNALS:
     void centerInChanged();
-
-protected:
-    QQuickPopupAnchors(QQuickPopupAnchorsPrivate &dd, QObject *parent);
 
 private:
     Q_DISABLE_COPY(QQuickPopupAnchors)
