@@ -133,20 +133,74 @@ QQuickTextFieldPrivate::~QQuickTextFieldPrivate()
 #endif
 }
 
-void QQuickTextFieldPrivate::resizeBackground()
+void QQuickTextFieldPrivate::setTopInset(qreal value, bool reset)
 {
     Q_Q(QQuickTextField);
-    if (background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid && qFuzzyIsNull(background->x())) {
-            background->setWidth(q->width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid && qFuzzyIsNull(background->y())) {
-            background->setHeight(q->height());
-            p->heightValid = false;
-        }
+    const QMarginsF oldInset = getInset();
+    extra.value().topInset = value;
+    extra.value().hasTopInset = !reset;
+    if (!qFuzzyCompare(oldInset.top(), value)) {
+        emit q->topInsetChanged();
+        q->insetChange(getInset(), oldInset);
     }
+}
+
+void QQuickTextFieldPrivate::setLeftInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextField);
+    const QMarginsF oldInset = getInset();
+    extra.value().leftInset = value;
+    extra.value().hasLeftInset = !reset;
+    if (!qFuzzyCompare(oldInset.left(), value)) {
+        emit q->leftInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextFieldPrivate::setRightInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextField);
+    const QMarginsF oldInset = getInset();
+    extra.value().rightInset = value;
+    extra.value().hasRightInset = !reset;
+    if (!qFuzzyCompare(oldInset.right(), value)) {
+        emit q->rightInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextFieldPrivate::setBottomInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextField);
+    const QMarginsF oldInset = getInset();
+    extra.value().bottomInset = value;
+    extra.value().hasBottomInset = !reset;
+    if (!qFuzzyCompare(oldInset.bottom(), value)) {
+        emit q->bottomInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextFieldPrivate::resizeBackground()
+{
+    if (!background)
+        return;
+
+    resizingBackground = true;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+    if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
+            || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
+        background->setX(getLeftInset());
+        background->setWidth(width - getLeftInset() - getRightInset());
+    }
+    if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+            || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
+        background->setY(getTopInset());
+        background->setHeight(height - getTopInset() - getBottomInset());
+    }
+
+    resizingBackground = false;
 }
 
 /*!
@@ -332,6 +386,18 @@ void QQuickTextFieldPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+void QQuickTextFieldPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
+{
+    Q_UNUSED(diff);
+    if (resizingBackground || item != background || !change.sizeChange())
+        return;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+    extra.value().hasBackgroundWidth = p->widthValid;
+    extra.value().hasBackgroundHeight = p->heightValid;
+    resizeBackground();
+}
+
 void QQuickTextFieldPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_Q(QQuickTextField);
@@ -374,7 +440,7 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
 QQuickTextField::~QQuickTextField()
 {
     Q_D(QQuickTextField);
-    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
 }
 
 QFont QQuickTextField::font() const
@@ -421,7 +487,12 @@ void QQuickTextField::setBackground(QQuickItem *background)
     const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
     const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
 
-    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
+    if (d->extra.isAllocated()) {
+        d->extra.value().hasBackgroundWidth = false;
+        d->extra.value().hasBackgroundHeight = false;
+    }
+
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     delete d->background;
     d->background = background;
 
@@ -431,7 +502,12 @@ void QQuickTextField::setBackground(QQuickItem *background)
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
-        QQuickControlPrivate::addImplicitSizeListener(background, d);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (p->widthValid || p->heightValid) {
+            d->extra.value().hasBackgroundWidth = p->widthValid;
+            d->extra.value().hasBackgroundHeight = p->heightValid;
+        }
+        QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     }
 
     if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
@@ -667,6 +743,110 @@ qreal QQuickTextField::implicitBackgroundHeight() const
     return d->background->implicitHeight();
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::topInset
+
+    This property holds the top inset for the background.
+
+    \sa {Control Layout}, bottomInset
+*/
+qreal QQuickTextField::topInset() const
+{
+    Q_D(const QQuickTextField);
+    return d->getTopInset();
+}
+
+void QQuickTextField::setTopInset(qreal inset)
+{
+    Q_D(QQuickTextField);
+    d->setTopInset(inset);
+}
+
+void QQuickTextField::resetTopInset()
+{
+    Q_D(QQuickTextField);
+    d->setTopInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::leftInset
+
+    This property holds the left inset for the background.
+
+    \sa {Control Layout}, rightInset
+*/
+qreal QQuickTextField::leftInset() const
+{
+    Q_D(const QQuickTextField);
+    return d->getLeftInset();
+}
+
+void QQuickTextField::setLeftInset(qreal inset)
+{
+    Q_D(QQuickTextField);
+    d->setLeftInset(inset);
+}
+
+void QQuickTextField::resetLeftInset()
+{
+    Q_D(QQuickTextField);
+    d->setLeftInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::rightInset
+
+    This property holds the right inset for the background.
+
+    \sa {Control Layout}, leftInset
+*/
+qreal QQuickTextField::rightInset() const
+{
+    Q_D(const QQuickTextField);
+    return d->getRightInset();
+}
+
+void QQuickTextField::setRightInset(qreal inset)
+{
+    Q_D(QQuickTextField);
+    d->setRightInset(inset);
+}
+
+void QQuickTextField::resetRightInset()
+{
+    Q_D(QQuickTextField);
+    d->setRightInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::bottomInset
+
+    This property holds the bottom inset for the background.
+
+    \sa {Control Layout}, topInset
+*/
+qreal QQuickTextField::bottomInset() const
+{
+    Q_D(const QQuickTextField);
+    return d->getBottomInset();
+}
+
+void QQuickTextField::setBottomInset(qreal inset)
+{
+    Q_D(QQuickTextField);
+    d->setBottomInset(inset);
+}
+
+void QQuickTextField::resetBottomInset()
+{
+    Q_D(QQuickTextField);
+    d->setBottomInset(0, true);
+}
+
 void QQuickTextField::componentComplete()
 {
     Q_D(QQuickTextField);
@@ -714,6 +894,13 @@ void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &o
     d->resizeBackground();
 }
 
+void QQuickTextField::insetChange(const QMarginsF &newInset, const QMarginsF &oldInset)
+{
+    Q_D(QQuickTextField);
+    Q_UNUSED(newInset);
+    Q_UNUSED(oldInset);
+    d->resizeBackground();
+}
 QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     QQuickDefaultClipNode *clipNode = static_cast<QQuickDefaultClipNode *>(oldNode);

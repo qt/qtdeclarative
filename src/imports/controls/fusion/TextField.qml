@@ -44,9 +44,9 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.TextField {
     id: control
 
-    implicitWidth: implicitBackgroundWidth
+    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
                    || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
-    implicitHeight: Math.max(implicitBackgroundHeight,
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 

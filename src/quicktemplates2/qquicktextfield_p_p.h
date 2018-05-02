@@ -76,6 +76,17 @@ public:
     static QQuickTextFieldPrivate *get(QQuickTextField *item) {
         return static_cast<QQuickTextFieldPrivate *>(QObjectPrivate::get(item)); }
 
+    inline QMarginsF getInset() const { return QMarginsF(getLeftInset(), getTopInset(), getRightInset(), getBottomInset()); }
+    inline qreal getTopInset() const { return extra.isAllocated() ? extra->topInset : 0; }
+    inline qreal getLeftInset() const { return extra.isAllocated() ? extra->leftInset : 0; }
+    inline qreal getRightInset() const { return extra.isAllocated() ? extra->rightInset : 0; }
+    inline qreal getBottomInset() const { return extra.isAllocated() ? extra->bottomInset : 0; }
+
+    void setTopInset(qreal value, bool reset = false);
+    void setLeftInset(qreal value, bool reset = false);
+    void setRightInset(qreal value, bool reset = false);
+    void setBottomInset(qreal value, bool reset = false);
+
     void resizeBackground();
 
     void resolveFont();
@@ -117,6 +128,7 @@ public:
     void cancelBackground();
     void executeBackground(bool complete = false);
 
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
@@ -127,11 +139,22 @@ public:
 #endif
 
     struct ExtraData {
+        bool hasTopInset = false;
+        bool hasLeftInset = false;
+        bool hasRightInset = false;
+        bool hasBottomInset = false;
+        bool hasBackgroundWidth = false;
+        bool hasBackgroundHeight = false;
+        qreal topInset = 0;
+        qreal leftInset = 0;
+        qreal rightInset = 0;
+        qreal bottomInset = 0;
         QFont requestedFont;
         QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
+    bool resizingBackground = false;
     QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
