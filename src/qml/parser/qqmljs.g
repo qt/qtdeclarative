@@ -3439,7 +3439,7 @@ FunctionDeclaration: Function BindingIdentifier T_LPAREN FormalParameters T_RPAR
 
 
 FunctionDeclaration_Default: FunctionDeclaration;
-FunctionDeclaration_Default: T_FUNCTION T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+FunctionDeclaration_Default: Function T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
         AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
@@ -3696,7 +3696,7 @@ GeneratorRBrace: T_RBRACE;
     } break;
 ./
 
-GeneratorDeclaration: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+GeneratorDeclaration: Function T_STAR BindingIdentifier T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
         AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(3), sym(5).FormalParameterList, sym(8).StatementList);
@@ -3712,7 +3712,7 @@ GeneratorDeclaration: T_FUNCTION T_STAR BindingIdentifier T_LPAREN FormalParamet
 ./
 
 GeneratorDeclaration_Default: GeneratorDeclaration;
-GeneratorDeclaration_Default: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
+GeneratorDeclaration_Default: Function T_STAR T_LPAREN FormalParameters T_RPAREN GeneratorLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
         AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(4).FormalParameterList, sym(7).StatementList);
