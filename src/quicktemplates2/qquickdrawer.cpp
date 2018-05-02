@@ -37,6 +37,7 @@
 #include "qquickdrawer_p.h"
 #include "qquickdrawer_p_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopuppositioner_p_p.h"
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -171,6 +172,14 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
+class QQuickDrawerPositioner : public QQuickPopupPositioner
+{
+public:
+    QQuickDrawerPositioner(QQuickDrawer *drawer) : QQuickPopupPositioner(drawer) { }
+
+    void reposition() override;
+};
+
 QQuickDrawerPrivate::QQuickDrawerPrivate()
     : edge(Qt::LeftEdge),
       offset(0),
@@ -212,14 +221,24 @@ qreal QQuickDrawerPrivate::positionAt(const QPointF &point) const
     }
 }
 
-void QQuickDrawerPrivate::reposition()
+QQuickPopupPositioner *QQuickDrawerPrivate::getPositioner()
 {
     Q_Q(QQuickDrawer);
-    QQuickWindow *window = q->window();
+    if (!positioner)
+        positioner = new QQuickDrawerPositioner(q);
+    return positioner;
+}
+
+void QQuickDrawerPositioner::reposition()
+{
+    QQuickDrawer *drawer = static_cast<QQuickDrawer*>(popup());
+    QQuickWindow *window = drawer->window();
     if (!window)
         return;
 
-    switch (edge) {
+    const qreal position = drawer->position();
+    QQuickItem *popupItem = drawer->popupItem();
+    switch (drawer->edge()) {
     case Qt::LeftEdge:
         popupItem->setX((position - 1.0) * popupItem->width());
         break;
@@ -234,7 +253,7 @@ void QQuickDrawerPrivate::reposition()
         break;
     }
 
-    QQuickPopupPrivate::reposition();
+    QQuickPopupPositioner::reposition();
 }
 
 void QQuickDrawerPrivate::showOverlay()

@@ -69,7 +69,7 @@ public:
     qreal offsetAt(const QPointF &point) const;
     qreal positionAt(const QPointF &point) const;
 
-    void reposition() override;
+    QQuickPopupPositioner *getPositioner() override;
     void showOverlay() override;
     void hideOverlay() override;
     void resizeOverlay() override;
