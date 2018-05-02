@@ -5,8 +5,7 @@ SUBDIRS += \
     qmlimportscanner
 
 qtConfig(commandlineparser): SUBDIRS += qmlcachegen
-
-!android|android_app {
+!emscripten:!android|android_app {
     SUBDIRS += \
         qml \
         qmllint
@@ -26,7 +25,7 @@ qtConfig(commandlineparser): SUBDIRS += qmlcachegen
         }
         qtHaveModule(widgets): SUBDIRS += qmleasing
     }
-    !emscripten:qtHaveModule(qmltest): SUBDIRS += qmltestrunner
+    qtHaveModule(qmltest): SUBDIRS += qmltestrunner
     qtConfig(private_tests): SUBDIRS += qmljs
 }
 
