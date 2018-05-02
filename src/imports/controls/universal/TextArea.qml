@@ -44,10 +44,10 @@ T.TextArea {
     id: control
 
     implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
-                            implicitBackgroundWidth,
+                            implicitBackgroundWidth + leftInset + rightInset,
                             placeholder.implicitWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             implicitBackgroundHeight,
+                             implicitBackgroundHeight + topInset + bottomInset,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     // TextControlThemePadding + 2 (border)

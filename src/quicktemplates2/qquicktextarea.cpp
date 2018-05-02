@@ -153,26 +153,74 @@ QQuickTextAreaPrivate::~QQuickTextAreaPrivate()
 #endif
 }
 
-void QQuickTextAreaPrivate::resizeBackground()
+void QQuickTextAreaPrivate::setTopInset(qreal value, bool reset)
 {
     Q_Q(QQuickTextArea);
-    if (background) {
-        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid && qFuzzyIsNull(background->x())) {
-            if (flickable)
-                background->setWidth(flickable->width());
-            else
-                background->setWidth(q->width());
-            p->widthValid = false;
-        }
-        if (!p->heightValid && qFuzzyIsNull(background->y())) {
-            if (flickable)
-                background->setHeight(flickable->height());
-            else
-                background->setHeight(q->height());
-            p->heightValid = false;
-        }
+    const QMarginsF oldInset = getInset();
+    extra.value().topInset = value;
+    extra.value().hasTopInset = !reset;
+    if (!qFuzzyCompare(oldInset.top(), value)) {
+        emit q->topInsetChanged();
+        q->insetChange(getInset(), oldInset);
     }
+}
+
+void QQuickTextAreaPrivate::setLeftInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextArea);
+    const QMarginsF oldInset = getInset();
+    extra.value().leftInset = value;
+    extra.value().hasLeftInset = !reset;
+    if (!qFuzzyCompare(oldInset.left(), value)) {
+        emit q->leftInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextAreaPrivate::setRightInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextArea);
+    const QMarginsF oldInset = getInset();
+    extra.value().rightInset = value;
+    extra.value().hasRightInset = !reset;
+    if (!qFuzzyCompare(oldInset.right(), value)) {
+        emit q->rightInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextAreaPrivate::setBottomInset(qreal value, bool reset)
+{
+    Q_Q(QQuickTextArea);
+    const QMarginsF oldInset = getInset();
+    extra.value().bottomInset = value;
+    extra.value().hasBottomInset = !reset;
+    if (!qFuzzyCompare(oldInset.bottom(), value)) {
+        emit q->bottomInsetChanged();
+        q->insetChange(getInset(), oldInset);
+    }
+}
+
+void QQuickTextAreaPrivate::resizeBackground()
+{
+    if (!background)
+        return;
+
+    resizingBackground = true;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+    if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
+            || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
+        background->setX(getLeftInset());
+        background->setWidth(width - getLeftInset() - getRightInset());
+    }
+    if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+            || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
+        background->setY(getTopInset());
+        background->setHeight(height - getTopInset() - getBottomInset());
+    }
+
+    resizingBackground = false;
 }
 
 /*!
@@ -502,7 +550,7 @@ QQuickTextArea::~QQuickTextArea()
     Q_D(QQuickTextArea);
     if (d->flickable)
         d->detachFlickable();
-    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
@@ -554,7 +602,12 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
     const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
 
-    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
+    if (d->extra.isAllocated()) {
+        d->extra.value().hasBackgroundWidth = false;
+        d->extra.value().hasBackgroundHeight = false;
+    }
+
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     delete d->background;
     d->background = background;
 
@@ -567,7 +620,12 @@ void QQuickTextArea::setBackground(QQuickItem *background)
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
-        QQuickControlPrivate::addImplicitSizeListener(background, d);
+        QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+        if (p->widthValid || p->heightValid) {
+            d->extra.value().hasBackgroundWidth = p->widthValid;
+            d->extra.value().hasBackgroundHeight = p->heightValid;
+        }
+        QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     }
 
     if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
@@ -803,6 +861,110 @@ qreal QQuickTextArea::implicitBackgroundHeight() const
     return d->background->implicitHeight();
 }
 
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::topInset
+
+    This property holds the top inset for the background.
+
+    \sa {Control Layout}, bottomInset
+*/
+qreal QQuickTextArea::topInset() const
+{
+    Q_D(const QQuickTextArea);
+    return d->getTopInset();
+}
+
+void QQuickTextArea::setTopInset(qreal inset)
+{
+    Q_D(QQuickTextArea);
+    d->setTopInset(inset);
+}
+
+void QQuickTextArea::resetTopInset()
+{
+    Q_D(QQuickTextArea);
+    d->setTopInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::leftInset
+
+    This property holds the left inset for the background.
+
+    \sa {Control Layout}, rightInset
+*/
+qreal QQuickTextArea::leftInset() const
+{
+    Q_D(const QQuickTextArea);
+    return d->getLeftInset();
+}
+
+void QQuickTextArea::setLeftInset(qreal inset)
+{
+    Q_D(QQuickTextArea);
+    d->setLeftInset(inset);
+}
+
+void QQuickTextArea::resetLeftInset()
+{
+    Q_D(QQuickTextArea);
+    d->setLeftInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::rightInset
+
+    This property holds the right inset for the background.
+
+    \sa {Control Layout}, leftInset
+*/
+qreal QQuickTextArea::rightInset() const
+{
+    Q_D(const QQuickTextArea);
+    return d->getRightInset();
+}
+
+void QQuickTextArea::setRightInset(qreal inset)
+{
+    Q_D(QQuickTextArea);
+    d->setRightInset(inset);
+}
+
+void QQuickTextArea::resetRightInset()
+{
+    Q_D(QQuickTextArea);
+    d->setRightInset(0, true);
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::bottomInset
+
+    This property holds the bottom inset for the background.
+
+    \sa {Control Layout}, topInset
+*/
+qreal QQuickTextArea::bottomInset() const
+{
+    Q_D(const QQuickTextArea);
+    return d->getBottomInset();
+}
+
+void QQuickTextArea::setBottomInset(qreal inset)
+{
+    Q_D(QQuickTextArea);
+    d->setBottomInset(inset);
+}
+
+void QQuickTextArea::resetBottomInset()
+{
+    Q_D(QQuickTextArea);
+    d->setBottomInset(0, true);
+}
+
 void QQuickTextArea::classBegin()
 {
     Q_D(QQuickTextArea);
@@ -863,6 +1025,14 @@ void QQuickTextArea::geometryChanged(const QRectF &newGeometry, const QRectF &ol
 {
     Q_D(QQuickTextArea);
     QQuickTextEdit::geometryChanged(newGeometry, oldGeometry);
+    d->resizeBackground();
+}
+
+void QQuickTextArea::insetChange(const QMarginsF &newInset, const QMarginsF &oldInset)
+{
+    Q_D(QQuickTextArea);
+    Q_UNUSED(newInset);
+    Q_UNUSED(oldInset);
     d->resizeBackground();
 }
 
