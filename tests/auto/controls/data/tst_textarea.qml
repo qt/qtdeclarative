@@ -79,6 +79,11 @@ TestCase {
         SignalSpy { }
     }
 
+    Component {
+        id: rectangle
+        Rectangle { }
+    }
+
     function test_creation() {
         var control = createTemporaryObject(textArea, testCase)
         verify(control)
@@ -86,15 +91,69 @@ TestCase {
 
     function test_implicitSize() {
         var control = createTemporaryObject(textArea, testCase)
+        verify(control)
 
         var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
+        verify(implicitWidthSpy.valid)
+
         var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
-        control.background.implicitWidth = 400
-        control.background.implicitHeight = 200
+        verify(implicitHeightSpy.valid)
+
+        var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
+        verify(implicitBackgroundWidthSpy.valid)
+
+        var implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
+        verify(implicitBackgroundHeightSpy.valid)
+
+        var implicitWidthChanges = 0
+        var implicitHeightChanges = 0
+        var implicitBackgroundWidthChanges = 0
+        var implicitBackgroundHeightChanges = 0
+
+        verify(control.implicitWidth >= control.leftPadding + control.rightPadding)
+        verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+
+        control.background = rectangle.createObject(control, {implicitWidth: 400, implicitHeight: 200})
         compare(control.implicitWidth, 400)
         compare(control.implicitHeight, 200)
-        compare(implicitWidthSpy.count, 1)
-        compare(implicitHeightSpy.count, 1)
+        compare(control.implicitBackgroundWidth, 400)
+        compare(control.implicitBackgroundHeight, 200)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
+
+        control.background = null
+        compare(control.implicitWidth, control.leftPadding + control.rightPadding)
+        verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, ++implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, ++implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, ++implicitBackgroundHeightChanges)
+
+        control.text = "TextArea"
+        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+        compare(implicitWidthSpy.count, ++implicitWidthChanges)
+        compare(implicitHeightSpy.count, implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, implicitBackgroundHeightChanges)
+
+        control.placeholderText = "..."
+        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
+        verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
+        compare(control.implicitBackgroundWidth, 0)
+        compare(control.implicitBackgroundHeight, 0)
+        compare(implicitWidthSpy.count, implicitWidthChanges)
+        compare(implicitHeightSpy.count, implicitHeightChanges)
+        compare(implicitBackgroundWidthSpy.count, implicitBackgroundWidthChanges)
+        compare(implicitBackgroundHeightSpy.count, implicitBackgroundHeightChanges)
     }
 
     function test_alignment_data() {

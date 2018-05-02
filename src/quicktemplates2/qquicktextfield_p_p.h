@@ -50,6 +50,7 @@
 
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <QtQuick/private/qquicktextinput_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpresshandler_p_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
@@ -61,7 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickTextFieldPrivate : public QQuickTextInputPrivate
+class QQuickTextFieldPrivate : public QQuickTextInputPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -115,6 +116,10 @@ public:
 
     void cancelBackground();
     void executeBackground(bool complete = false);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered;

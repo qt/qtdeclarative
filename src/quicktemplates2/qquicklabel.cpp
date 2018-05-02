@@ -239,11 +239,41 @@ void QQuickLabelPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+void QQuickLabelPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickLabel);
+    if (item == background)
+        emit q->implicitBackgroundWidthChanged();
+}
+
+void QQuickLabelPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickLabel);
+    if (item == background)
+        emit q->implicitBackgroundHeightChanged();
+}
+
+void QQuickLabelPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickLabel);
+    if (item == background) {
+        background = nullptr;
+        emit q->implicitBackgroundWidthChanged();
+        emit q->implicitBackgroundHeightChanged();
+    }
+}
+
 QQuickLabel::QQuickLabel(QQuickItem *parent)
     : QQuickText(*(new QQuickLabelPrivate), parent)
 {
     Q_D(QQuickLabel);
     QObjectPrivate::connect(this, &QQuickText::textChanged, d, &QQuickLabelPrivate::textChanged);
+}
+
+QQuickLabel::~QQuickLabel()
+{
+    Q_D(QQuickLabel);
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
 }
 
 QFont QQuickLabel::font() const
@@ -289,15 +319,26 @@ void QQuickLabel::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
+    const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
+    const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
+
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
     delete d->background;
     d->background = background;
+
     if (background) {
         background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
+        QQuickControlPrivate::addImplicitSizeListener(background, d);
     }
+
+    if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
+        emit implicitBackgroundWidthChanged();
+    if (!qFuzzyCompare(oldImplicitBackgroundHeight, implicitBackgroundHeight()))
+        emit implicitBackgroundHeightChanged();
     if (!d->background.isExecuting())
         emit backgroundChanged();
 }
@@ -332,6 +373,44 @@ void QQuickLabel::setPalette(const QPalette &palette)
 void QQuickLabel::resetPalette()
 {
     setPalette(QPalette());
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Label::implicitBackgroundWidth
+    \readonly
+
+    This property holds the implicit background width.
+
+    The value is equal to \c {background ? background.implicitWidth : 0}.
+
+    \sa implicitBackgroundHeight
+*/
+qreal QQuickLabel::implicitBackgroundWidth() const
+{
+    Q_D(const QQuickLabel);
+    if (!d->background)
+        return 0;
+    return d->background->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::Label::implicitBackgroundHeight
+    \readonly
+
+    This property holds the implicit background height.
+
+    The value is equal to \c {background ? background.implicitHeight : 0}.
+
+    \sa implicitBackgroundWidth
+*/
+qreal QQuickLabel::implicitBackgroundHeight() const
+{
+    Q_D(const QQuickLabel);
+    if (!d->background)
+        return 0;
+    return d->background->implicitHeight();
 }
 
 void QQuickLabel::classBegin()

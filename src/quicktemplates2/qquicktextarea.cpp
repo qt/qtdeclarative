@@ -458,6 +458,30 @@ void QQuickTextAreaPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+void QQuickTextAreaPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickTextArea);
+    if (item == background)
+        emit q->implicitBackgroundWidthChanged();
+}
+
+void QQuickTextAreaPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickTextArea);
+    if (item == background)
+        emit q->implicitBackgroundHeightChanged();
+}
+
+void QQuickTextAreaPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickTextArea);
+    if (item == background) {
+        background = nullptr;
+        emit q->implicitBackgroundWidthChanged();
+        emit q->implicitBackgroundHeightChanged();
+    }
+}
+
 QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
@@ -478,6 +502,7 @@ QQuickTextArea::~QQuickTextArea()
     Q_D(QQuickTextArea);
     if (d->flickable)
         d->detachFlickable();
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
 }
 
 QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
@@ -526,8 +551,13 @@ void QQuickTextArea::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
+    const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
+    const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
+
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
     delete d->background;
     d->background = background;
+
     if (background) {
         if (d->flickable)
             background->setParentItem(d->flickable);
@@ -537,7 +567,13 @@ void QQuickTextArea::setBackground(QQuickItem *background)
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
+        QQuickControlPrivate::addImplicitSizeListener(background, d);
     }
+
+    if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
+        emit implicitBackgroundWidthChanged();
+    if (!qFuzzyCompare(oldImplicitBackgroundHeight, implicitBackgroundHeight()))
+        emit implicitBackgroundHeightChanged();
     if (!d->background.isExecuting())
         emit backgroundChanged();
 }
@@ -727,6 +763,44 @@ void QQuickTextArea::setPalette(const QPalette &palette)
 void QQuickTextArea::resetPalette()
 {
     setPalette(QPalette());
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::implicitBackgroundWidth
+    \readonly
+
+    This property holds the implicit background width.
+
+    The value is equal to \c {background ? background.implicitWidth : 0}.
+
+    \sa implicitBackgroundHeight
+*/
+qreal QQuickTextArea::implicitBackgroundWidth() const
+{
+    Q_D(const QQuickTextArea);
+    if (!d->background)
+        return 0;
+    return d->background->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextArea::implicitBackgroundHeight
+    \readonly
+
+    This property holds the implicit background height.
+
+    The value is equal to \c {background ? background.implicitHeight : 0}.
+
+    \sa implicitBackgroundWidth
+*/
+qreal QQuickTextArea::implicitBackgroundHeight() const
+{
+    Q_D(const QQuickTextArea);
+    if (!d->background)
+        return 0;
+    return d->background->implicitHeight();
 }
 
 void QQuickTextArea::classBegin()

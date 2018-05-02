@@ -44,11 +44,10 @@ import QtQuick.Controls.Fusion.impl 2.5
 T.TextField {
     id: control
 
-    implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            placeholderText ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
-                            || contentWidth + leftPadding + rightPadding
-    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
-                             background ? background.implicitHeight : 0,
+    implicitWidth: implicitBackgroundWidth
+                   || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
+    implicitHeight: Math.max(implicitBackgroundHeight,
+                             contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
     padding: 4

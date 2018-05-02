@@ -63,10 +63,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickLabel : public QQuickText
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
+    // 2.5 (Qt 5.12)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickLabel(QQuickItem *parent = nullptr);
+    ~QQuickLabel();
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -79,11 +83,18 @@ public:
     void setPalette(const QPalette &palette);
     void resetPalette();
 
+    // 2.5 (Qt 5.12)
+    qreal implicitBackgroundWidth() const;
+    qreal implicitBackgroundHeight() const;
+
 Q_SIGNALS:
     void fontChanged();
     void backgroundChanged();
     // 2.3 (Qt 5.10)
     Q_REVISION(3) void paletteChanged();
+    // 2.5 (Qt 5.12)
+    Q_REVISION(5) void implicitBackgroundWidthChanged();
+    Q_REVISION(5) void implicitBackgroundHeightChanged();
 
 protected:
     void classBegin() override;

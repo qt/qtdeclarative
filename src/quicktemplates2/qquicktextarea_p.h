@@ -76,6 +76,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
     Q_CLASSINFO("DeferredPropertyNames", "background")
     // 2.5 (Qt 5.12)
     Q_PROPERTY(QColor placeholderTextColor READ placeholderTextColor WRITE setPlaceholderTextColor NOTIFY placeholderTextColorChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
 
 public:
     explicit QQuickTextArea(QQuickItem *parent = nullptr);
@@ -114,6 +116,9 @@ public:
     QColor placeholderTextColor() const;
     void setPlaceholderTextColor(const QColor &color);
 
+    qreal implicitBackgroundWidth() const;
+    qreal implicitBackgroundHeight() const;
+
 Q_SIGNALS:
     void fontChanged();
     void implicitWidthChanged3();
@@ -131,6 +136,8 @@ Q_SIGNALS:
     Q_REVISION(3) void paletteChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void placeholderTextColorChanged();
+    Q_REVISION(5) void implicitBackgroundWidthChanged();
+    Q_REVISION(5) void implicitBackgroundHeightChanged();
 
 protected:
     void classBegin() override;

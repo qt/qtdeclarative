@@ -50,6 +50,7 @@
 
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
 
 #if QT_CONFIG(accessibility)
@@ -58,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickLabelPrivate : public QQuickTextPrivate
+class QQuickLabelPrivate : public QQuickTextPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -103,6 +104,10 @@ public:
 
     void cancelBackground();
     void executeBackground(bool complete = false);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     struct ExtraData {
         QFont requestedFont;

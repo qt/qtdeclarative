@@ -879,16 +879,26 @@ void QQuickControlPrivate::updateBaselineOffset()
 
 void QQuickControlPrivate::addImplicitSizeListener(QQuickItem *item, ChangeTypes changes)
 {
-    if (!item)
-        return;
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, changes);
+    addImplicitSizeListener(item, this, changes);
 }
 
 void QQuickControlPrivate::removeImplicitSizeListener(QQuickItem *item, ChangeTypes changes)
 {
-    if (!item)
+    removeImplicitSizeListener(item, this, changes);
+}
+
+void QQuickControlPrivate::addImplicitSizeListener(QQuickItem *item, QQuickItemChangeListener *listener, ChangeTypes changes)
+{
+    if (!item || !listener)
         return;
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, changes);
+    QQuickItemPrivate::get(item)->addItemChangeListener(listener, changes);
+}
+
+void QQuickControlPrivate::removeImplicitSizeListener(QQuickItem *item, QQuickItemChangeListener *listener, ChangeTypes changes)
+{
+    if (!item || !listener)
+        return;
+    QQuickItemPrivate::get(item)->removeItemChangeListener(listener, changes);
 }
 
 void QQuickControlPrivate::itemImplicitWidthChanged(QQuickItem *item)

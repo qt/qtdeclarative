@@ -332,6 +332,30 @@ void QQuickTextFieldPrivate::executeBackground(bool complete)
         quickCompleteDeferred(q, backgroundName(), background);
 }
 
+void QQuickTextFieldPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickTextField);
+    if (item == background)
+        emit q->implicitBackgroundWidthChanged();
+}
+
+void QQuickTextFieldPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickTextField);
+    if (item == background)
+        emit q->implicitBackgroundHeightChanged();
+}
+
+void QQuickTextFieldPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickTextField);
+    if (item == background) {
+        background = nullptr;
+        emit q->implicitBackgroundWidthChanged();
+        emit q->implicitBackgroundHeightChanged();
+    }
+}
+
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -345,6 +369,12 @@ QQuickTextField::QQuickTextField(QQuickItem *parent)
 #endif
     QObjectPrivate::connect(this, &QQuickTextInput::readOnlyChanged, d, &QQuickTextFieldPrivate::readOnlyChanged);
     QObjectPrivate::connect(this, &QQuickTextInput::echoModeChanged, d, &QQuickTextFieldPrivate::echoModeChanged);
+}
+
+QQuickTextField::~QQuickTextField()
+{
+    Q_D(QQuickTextField);
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
 }
 
 QFont QQuickTextField::font() const
@@ -388,15 +418,26 @@ void QQuickTextField::setBackground(QQuickItem *background)
     if (!d->background.isExecuting())
         d->cancelBackground();
 
+    const qreal oldImplicitBackgroundWidth = implicitBackgroundWidth();
+    const qreal oldImplicitBackgroundHeight = implicitBackgroundHeight();
+
+    QQuickControlPrivate::removeImplicitSizeListener(d->background, d);
     delete d->background;
     d->background = background;
+
     if (background) {
         background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         if (isComponentComplete())
             d->resizeBackground();
+        QQuickControlPrivate::addImplicitSizeListener(background, d);
     }
+
+    if (!qFuzzyCompare(oldImplicitBackgroundWidth, implicitBackgroundWidth()))
+        emit implicitBackgroundWidthChanged();
+    if (!qFuzzyCompare(oldImplicitBackgroundHeight, implicitBackgroundHeight()))
+        emit implicitBackgroundHeightChanged();
     if (!d->background.isExecuting())
         emit backgroundChanged();
 }
@@ -586,6 +627,44 @@ void QQuickTextField::classBegin()
     QQuickTextInput::classBegin();
     d->resolveFont();
     d->resolvePalette();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::implicitBackgroundWidth
+    \readonly
+
+    This property holds the implicit background width.
+
+    The value is equal to \c {background ? background.implicitWidth : 0}.
+
+    \sa implicitBackgroundHeight
+*/
+qreal QQuickTextField::implicitBackgroundWidth() const
+{
+    Q_D(const QQuickTextField);
+    if (!d->background)
+        return 0;
+    return d->background->implicitWidth();
+}
+
+/*!
+    \since QtQuick.Controls 2.5 (Qt 5.12)
+    \qmlproperty real QtQuick.Controls::TextField::implicitBackgroundHeight
+    \readonly
+
+    This property holds the implicit background height.
+
+    The value is equal to \c {background ? background.implicitHeight : 0}.
+
+    \sa implicitBackgroundWidth
+*/
+qreal QQuickTextField::implicitBackgroundHeight() const
+{
+    Q_D(const QQuickTextField);
+    if (!d->background)
+        return 0;
+    return d->background->implicitHeight();
 }
 
 void QQuickTextField::componentComplete()

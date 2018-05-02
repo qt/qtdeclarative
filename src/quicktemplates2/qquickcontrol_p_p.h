@@ -175,6 +175,9 @@ public:
     void addImplicitSizeListener(QQuickItem *item, ChangeTypes changes = ImplicitSizeChanges);
     void removeImplicitSizeListener(QQuickItem *item, ChangeTypes changes = ImplicitSizeChanges);
 
+    static void addImplicitSizeListener(QQuickItem *item, QQuickItemChangeListener *listener, ChangeTypes changes = ImplicitSizeChanges);
+    static void removeImplicitSizeListener(QQuickItem *item, QQuickItemChangeListener *listener, ChangeTypes changes = ImplicitSizeChanges);
+
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;

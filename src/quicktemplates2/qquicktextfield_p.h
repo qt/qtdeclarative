@@ -72,12 +72,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL REVISION 1)
     // 2.3 (Qt 5.10)
     Q_PROPERTY(QPalette palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged FINAL REVISION 3)
-    Q_CLASSINFO("DeferredPropertyNames", "background")
     // 2.5 (Qt 5.12)
     Q_PROPERTY(QColor placeholderTextColor READ placeholderTextColor WRITE setPlaceholderTextColor NOTIFY placeholderTextColorChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
+    Q_CLASSINFO("DeferredPropertyNames", "background")
 
 public:
     explicit QQuickTextField(QQuickItem *parent = nullptr);
+    ~QQuickTextField();
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -103,9 +106,13 @@ public:
     QPalette palette() const;
     void setPalette(const QPalette &palette);
     void resetPalette();
+
     // 2.5 (Qt 5.12)
     QColor placeholderTextColor() const;
     void setPlaceholderTextColor(const QColor &color);
+
+    qreal implicitBackgroundWidth() const;
+    qreal implicitBackgroundHeight() const;
 
 Q_SIGNALS:
     void fontChanged();
@@ -124,6 +131,8 @@ Q_SIGNALS:
     Q_REVISION(3) void paletteChanged();
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void placeholderTextColorChanged();
+    Q_REVISION(5) void implicitBackgroundWidthChanged();
+    Q_REVISION(5) void implicitBackgroundHeightChanged();
 
 protected:
     void classBegin() override;

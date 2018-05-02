@@ -128,6 +128,10 @@ public:
     void cancelBackground();
     void executeBackground(bool complete = false);
 
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
+
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered;
     bool explicitHoverEnabled;
