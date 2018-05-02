@@ -118,7 +118,7 @@ public:
     bool handleTouchEvent(QQuickItem *item, QTouchEvent *event);
 #endif
 
-    virtual void reposition();
+    void reposition();
 
     void createOverlay();
     void destroyOverlay();
