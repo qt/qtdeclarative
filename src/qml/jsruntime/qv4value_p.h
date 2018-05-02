@@ -402,6 +402,7 @@ public:
     inline int toInt32() const;
     inline unsigned int toUInt32() const;
     qint64 toLength() const;
+    inline qint64 toIndex() const;
 
     bool toBoolean() const {
         if (integerCompatible())
@@ -831,6 +832,19 @@ inline qint64 Value::toLength() const
     if (i > (static_cast<qint64>(1) << 53) - 1)
         return (static_cast<qint64>(1) << 53) - 1;
     return static_cast<qint64>(i);
+}
+
+inline qint64 Value::toIndex() const
+{
+    qint64 idx;
+    if (Q_LIKELY(integerCompatible())) {
+        idx = int_32();
+    } else {
+        idx = static_cast<qint64>(Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl()));
+    }
+    if (idx > (static_cast<qint64>(1) << 53) - 1)
+        idx = -1;
+    return idx;
 }
 
 inline double Value::toInteger() const

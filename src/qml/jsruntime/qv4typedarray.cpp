@@ -219,9 +219,12 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const V
 
     if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
-        double l = argc ? argv[0].toNumber() : 0;
+        qint64 l = argc ? argv[0].toIndex() : 0;
         if (scope.engine->hasException)
             return Encode::undefined();
+        // ### lift UINT_MAX restriction
+        if (l < 0 || l > UINT_MAX)
+            return scope.engine->throwRangeError(QLatin1String("Index out of range."));
         uint len = (uint)l;
         if (l != len)
             scope.engine->throwRangeError(QStringLiteral("Non integer length for typed array."));
@@ -315,7 +318,10 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const V
         return scope.engine->throwTypeError();
 
     uint elementSize = operations[that->d()->type].bytesPerElement;
-    Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(l * elementSize));
+    size_t bufferSize;
+    if (mul_overflow(size_t(l), size_t(elementSize), &bufferSize))
+        return scope.engine->throwRangeError(QLatin1String("new TypedArray: invalid length"));
+    Scoped<ArrayBuffer> newBuffer(scope, scope.engine->newArrayBuffer(bufferSize));
     if (scope.engine->hasException)
         return Encode::undefined();
 

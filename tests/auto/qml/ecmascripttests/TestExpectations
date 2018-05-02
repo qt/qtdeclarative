@@ -2819,7 +2819,6 @@ built-ins/TypedArrays/ctors/buffer-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/buffer-arg/use-default-proto-if-custom-proto-is-not-object.js fails
 built-ins/TypedArrays/ctors/length-arg/custom-proto-access-throws.js fails
 built-ins/TypedArrays/ctors/length-arg/proto-from-ctor-realm.js fails
-built-ins/TypedArrays/ctors/length-arg/toindex-length.js fails
 built-ins/TypedArrays/ctors/length-arg/undefined-newtarget-throws.js fails
 built-ins/TypedArrays/ctors/length-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/length-arg/use-default-proto-if-custom-proto-is-not-object.js fails

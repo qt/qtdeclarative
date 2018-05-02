@@ -94,7 +94,8 @@ ReturnedValue ArrayBufferCtor::method_isView(const FunctionObject *, const Value
 void Heap::ArrayBuffer::init(size_t length)
 {
     Object::init();
-    data = QTypedArrayData<char>::allocate(length + 1);
+    if (length < UINT_MAX)
+        data = QTypedArrayData<char>::allocate(length + 1);
     if (!data) {
         internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
