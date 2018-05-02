@@ -192,9 +192,6 @@ public:
     void updatePaddings(const QSizeF &size, const QVector<qreal> &horizontal, const QVector<qreal> &vertical);
     void updateInsets(const QVector<qreal> &horizontal, const QVector<qreal> &vertical);
 
-    qreal getImplicitWidth() const override;
-    qreal getImplicitHeight() const override;
-
     bool resetNode = false;
     qreal topPadding = 0;
     qreal leftPadding = 0;
@@ -330,18 +327,6 @@ void QQuickNinePatchImagePrivate::updateInsets(const QVector<qreal> &horizontal,
         emit q->leftInsetChanged();
     if (!qFuzzyCompare(oldRightInset, rightInset))
         emit q->rightInsetChanged();
-}
-
-qreal QQuickNinePatchImagePrivate::getImplicitWidth() const
-{
-    Q_Q(const QQuickNinePatchImage);
-    return implicitWidth - q->leftInset() - q->rightInset();
-}
-
-qreal QQuickNinePatchImagePrivate::getImplicitHeight() const
-{
-    Q_Q(const QQuickNinePatchImage);
-    return implicitHeight - q->topInset() - q->bottomInset();
 }
 
 QQuickNinePatchImage::QQuickNinePatchImage(QQuickItem *parent)

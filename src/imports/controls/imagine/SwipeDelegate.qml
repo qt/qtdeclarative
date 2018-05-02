@@ -57,6 +57,11 @@ T.SwipeDelegate {
     rightPadding: background ? background.rightPadding : 0
     bottomPadding: background ? background.bottomPadding : 0
 
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
+
     icon.width: 24
     icon.height: 24
     icon.color: control.palette.text
@@ -76,10 +81,6 @@ T.SwipeDelegate {
     }
 
     background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
-
         source: Imagine.url + "swipedelegate-background"
         NinePatchImageSelector on source {
             states: [

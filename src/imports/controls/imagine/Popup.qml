@@ -52,11 +52,12 @@ T.Popup {
     rightPadding: background ? background.rightPadding : undefined
     bottomPadding: background ? background.bottomPadding : undefined
 
-    background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
 
+    background: NinePatchImage {
         source: Imagine.url + "popup-background"
         NinePatchImageSelector on source {
             states: [

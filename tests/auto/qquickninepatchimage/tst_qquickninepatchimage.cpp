@@ -210,11 +210,20 @@ void tst_qquickninepatchimage::implicitSize_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QSizeF>("implicitSize");
 
-    const QStringList files = QStringList() << "foo.9.png" << "padding.9.png" << "inset-all.9.png" << "inset-topleft.9.png" << "inset-bottomright.9.png";
+    const struct TestFile {
+        QString name;
+        QSizeF sizeHint;
+    } testFiles [] = {
+        { "foo.9.png", QSizeF(40, 40) },
+        { "padding.9.png", QSizeF(40, 40) },
+        { "inset-all.9.png", QSizeF(45, 45) },
+        { "inset-topleft.9.png", QSizeF(42, 41) },
+        { "inset-bottomright.9.png", QSizeF(43, 44) }
+    };
 
-    for (const QString &file : files) {
+    for (const TestFile &file : testFiles) {
         for (int dpr = 1; dpr <= 4; ++dpr)
-            QTest::newRow(qPrintable(QString::fromLatin1("%1 DPR=%2").arg(file).arg(dpr))) << dpr << file << QSizeF(40, 40);
+            QTest::newRow(qPrintable(QString::fromLatin1("%1 DPR=%2").arg(file.name).arg(dpr))) << dpr << file.name << file.sizeHint;
     }
 }
 

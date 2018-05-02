@@ -52,6 +52,11 @@ T.MenuSeparator {
     rightPadding: background ? background.rightPadding : 0
     bottomPadding: background ? background.bottomPadding : 0
 
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
+
     contentItem: NinePatchImage {
         source: Imagine.url + "menuseparator-separator"
         NinePatchImageSelector on source {
@@ -63,10 +68,6 @@ T.MenuSeparator {
     }
 
     background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
-
         source: Imagine.url + "menuseparator-background"
         NinePatchImageSelector on source {
             states: [

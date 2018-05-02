@@ -42,14 +42,15 @@ import QtQuick.Controls.Imagine.impl 2.5
 T.Label {
     id: control
 
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
+
     color: control.palette.windowText
     linkColor: control.palette.link
 
     background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
-
         source: Imagine.url + "label-background"
         NinePatchImageSelector on source {
             states: [

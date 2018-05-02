@@ -53,6 +53,11 @@ T.ComboBox {
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
+
     delegate: ItemDelegate {
         width: parent.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
@@ -101,10 +106,6 @@ T.ComboBox {
     }
 
     background: NinePatchImage {
-        x: -leftInset; y: -topInset
-        width: control.width + leftInset + rightInset
-        height: control.height + topInset + bottomInset
-
         source: Imagine.url + "combobox-background"
         NinePatchImageSelector on source {
             states: [
@@ -132,6 +133,11 @@ T.ComboBox {
         rightPadding: background.rightPadding
         bottomPadding: background.bottomPadding
 
+        topInset: background ? -background.topInset || 0 : 0
+        leftInset: background ? -background.leftInset || 0 : 0
+        rightInset: background ? -background.rightInset || 0 : 0
+        bottomInset: background ? -background.bottomInset || 0 : 0
+
         palette.text: control.palette.text
         palette.highlight: control.palette.highlight
         palette.highlightedText: control.palette.highlightedText
@@ -149,10 +155,6 @@ T.ComboBox {
         }
 
         background: NinePatchImage {
-            x: -leftInset; y: -topInset
-            width: control.popup.width + leftInset + rightInset
-            height: control.popup.height + topInset + bottomInset
-
             source: Imagine.url + "combobox-popup"
             NinePatchImageSelector on source {
                 states: [
