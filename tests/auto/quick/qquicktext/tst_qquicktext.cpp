@@ -1004,7 +1004,7 @@ void tst_qquicktext::hAlignImplicitWidth()
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
     view.requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("textItem");
     QVERIFY(text != nullptr);
