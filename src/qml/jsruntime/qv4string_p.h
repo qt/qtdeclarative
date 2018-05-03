@@ -294,7 +294,7 @@ public:
         }
 
         if (subtype)
-            *subtype = (*ch == QLatin1Char('@')) ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
+            *subtype = (toUInt(ch) == '@') ? Heap::StringOrSymbol::StringType_Symbol : Heap::StringOrSymbol::StringType_Regular;
         return h;
     }
 };
