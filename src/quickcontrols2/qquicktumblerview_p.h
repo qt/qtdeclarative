@@ -96,12 +96,12 @@ private:
 
     void wrapChange();
 
-    QQuickTumbler *m_tumbler;
+    QQuickTumbler *m_tumbler = nullptr;
     QVariant m_model;
-    QQmlComponent *m_delegate;
-    QQuickPathView *m_pathView;
-    QQuickListView *m_listView;
-    QQuickPath *m_path;
+    QQmlComponent *m_delegate = nullptr;
+    QQuickPathView *m_pathView = nullptr;
+    QQuickListView *m_listView = nullptr;
+    QQuickPath *m_path = nullptr;
 };
 
 QT_END_NAMESPACE

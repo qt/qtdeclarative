@@ -91,7 +91,7 @@ public:
     QString standardButtonText(int button) const override;
 
 private:
-    QPlatformTheme *m_theme;
+    QPlatformTheme *m_theme = nullptr;
 };
 
 QT_END_NAMESPACE

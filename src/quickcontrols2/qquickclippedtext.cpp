@@ -41,13 +41,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickClippedText::QQuickClippedText(QQuickItem *parent)
-    : QQuickText(parent),
-      m_hasClipWidth(false),
-      m_hasClipHeight(false),
-      m_clipX(0),
-      m_clipY(0),
-      m_clipWidth(0),
-      m_clipHeight(0)
+    : QQuickText(parent)
 {
 }
 

@@ -98,13 +98,13 @@ private Q_SLOTS:
     void update();
 
 private:
-    bool m_running;
-    int m_duration;
-    int m_loopCount;
-    int m_currentTime;
-    int m_currentLoop;
+    bool m_running = false;
+    int m_duration = 0;
+    int m_loopCount = 1;
+    int m_currentTime = 0;
+    int m_currentLoop = 0;
     QElapsedTimer m_timer;
-    QQuickWindow *m_window;
+    QQuickWindow *m_window = nullptr;
 };
 
 QT_END_NAMESPACE

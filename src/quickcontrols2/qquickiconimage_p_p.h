@@ -59,19 +59,17 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconImagePrivate : public QQuickImag
     Q_DECLARE_PUBLIC(QQuickIconImage)
 
 public:
-    QQuickIconImagePrivate();
-
     void updateIcon();
     void updateFillMode();
     qreal calculateDevicePixelRatio() const;
     bool updateDevicePixelRatio(qreal targetDevicePixelRatio) override;
 
     QUrl source;
-    QColor color;
+    QColor color = Qt::transparent;
     QThemeIconInfo icon;
-    bool updatingIcon;
-    bool isThemeIcon;
-    bool updatingFillMode;
+    bool updatingIcon = false;
+    bool isThemeIcon = false;
+    bool updatingFillMode = false;
 };
 
 QT_END_NAMESPACE

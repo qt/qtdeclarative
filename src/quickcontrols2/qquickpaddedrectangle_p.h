@@ -101,15 +101,15 @@ private:
     void setRightPadding(qreal padding, bool has);
     void setBottomPadding(qreal padding, bool has);
 
-    qreal m_padding;
-    qreal m_topPadding;
-    qreal m_leftPadding;
-    qreal m_rightPadding;
-    qreal m_bottomPadding;
-    bool m_hasTopPadding;
-    bool m_hasLeftPadding;
-    bool m_hasRightPadding;
-    bool m_hasBottomPadding;
+    qreal m_padding = 0;
+    qreal m_topPadding = 0;
+    qreal m_leftPadding = 0;
+    qreal m_rightPadding = 0;
+    qreal m_bottomPadding = 0;
+    bool m_hasTopPadding = false;
+    bool m_hasLeftPadding = false;
+    bool m_hasRightPadding = false;
+    bool m_hasBottomPadding = false;
 };
 
 QT_END_NAMESPACE

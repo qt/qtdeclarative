@@ -44,12 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickAnimatedNode::QQuickAnimatedNode(QQuickItem *target)
-    : m_running(false),
-      m_duration(0),
-      m_loopCount(1),
-      m_currentTime(0),
-      m_currentLoop(0),
-      m_window(target->window())
+    : m_window(target->window())
 {
 }
 
