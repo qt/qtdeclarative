@@ -2609,7 +2609,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    nextIterObj.loadInAccumulator();
+    Reference::fromMember(nextIterObj, QStringLiteral("value")).loadInAccumulator();
     lhs.storeConsumeAccumulator();
 
     statement(ast->statement);
@@ -2617,13 +2617,15 @@ bool Codegen::visit(ForEachStatement *ast)
 
     in.link();
 
-    iterObj.loadInAccumulator();
-    Instruction::ForeachNextPropertyName nextPropInstr;
-    bytecodeGenerator->addInstruction(nextPropInstr);
+    Reference next = Reference::fromMember(iterObj, QStringLiteral("next"));
+    next.loadInAccumulator();
+    next = next.asLValue();
+    Codegen::Arguments args{0, 0};
+    handleCall(next, args);
     nextIterObj.storeConsumeAccumulator();
-
-    Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
-    bytecodeGenerator->jumpStrictNotEqual(nextIterObj.stackSlot(), body);
+    Reference done = Reference::fromMember(nextIterObj, QStringLiteral("done"));
+    done.loadInAccumulator();
+    bytecodeGenerator->jumpFalse().link(body);
 
     end.link();
 
