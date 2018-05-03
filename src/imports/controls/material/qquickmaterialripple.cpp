@@ -64,20 +64,16 @@ public:
     void sync(QQuickItem *item) override;
 
 private:
-    qreal m_from;
-    qreal m_to;
-    qreal m_value;
-    WavePhase m_phase;
+    qreal m_from = 0;
+    qreal m_to = 0;
+    qreal m_value = 0;
+    WavePhase m_phase = WaveEnter;
     QPointF m_anchor;
     QRectF m_bounds;
 };
 
 QQuickMaterialRippleWaveNode::QQuickMaterialRippleWaveNode(QQuickMaterialRipple *ripple)
-    : QQuickAnimatedNode(ripple),
-      m_from(0),
-      m_to(0),
-      m_value(0),
-      m_phase(WaveEnter)
+    : QQuickAnimatedNode(ripple)
 {
     start(qRound(1000.0 * qSqrt(ripple->diameter() / 2.0 / WAVE_TOUCH_DOWN_ACCELERATION)));
 
@@ -156,12 +152,11 @@ public:
     void sync(QQuickItem *item) override;
 
 private:
-    bool m_active;
+    bool m_active = false;
 };
 
 QQuickMaterialRippleBackgroundNode::QQuickMaterialRippleBackgroundNode(QQuickMaterialRipple *ripple)
-    : QQuickAnimatedNode(ripple),
-      m_active(false)
+    : QQuickAnimatedNode(ripple)
 {
     setDuration(OPACITY_ENTER_DURATION_FAST);
 
@@ -221,14 +216,7 @@ void QQuickMaterialRippleBackgroundNode::sync(QQuickItem *item)
 }
 
 QQuickMaterialRipple::QQuickMaterialRipple(QQuickItem *parent)
-    : QQuickItem(parent),
-      m_active(false),
-      m_pressed(false),
-      m_waves(0),
-      m_enterDelay(0),
-      m_trigger(Press),
-      m_clipRadius(0.0),
-      m_anchor(nullptr)
+    : QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }

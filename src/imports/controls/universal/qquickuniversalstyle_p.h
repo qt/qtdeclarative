@@ -217,21 +217,21 @@ private:
 
     // These reflect whether a color value was explicitly set on the specific
     // item that this attached style object represents.
-    bool m_explicitTheme;
-    bool m_explicitAccent;
-    bool m_explicitForeground;
-    bool m_explicitBackground;
+    bool m_explicitTheme = false;
+    bool m_explicitAccent = false;
+    bool m_explicitForeground = false;
+    bool m_explicitBackground = false;
     // These will be true when this item has an explicit or inherited foreground/background
     // color, or these colors were declared globally via settings (e.g. conf or env vars).
     // Some color properties of the style will return different values depending on whether
     // or not these are set.
-    bool m_hasForeground;
-    bool m_hasBackground;
+    bool m_hasForeground = false;
+    bool m_hasBackground = false;
     // The actual values for this item, whether explicit, inherited or globally set.
-    QQuickUniversalStyle::Theme m_theme;
-    QRgb m_accent;
-    QRgb m_foreground;
-    QRgb m_background;
+    Theme m_theme = Light;
+    QRgb m_accent = Qt::blue;
+    QRgb m_foreground = Qt::black;
+    QRgb m_background = Qt::white;
 };
 
 QT_END_NAMESPACE

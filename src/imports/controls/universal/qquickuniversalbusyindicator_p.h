@@ -75,9 +75,9 @@ protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
-    int m_count;
-    int m_elapsed;
-    QColor m_color;
+    int m_count = 5;
+    int m_elapsed = 0;
+    QColor m_color = Qt::black;
 };
 
 QT_END_NAMESPACE

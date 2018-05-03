@@ -110,12 +110,12 @@ protected:
     int calculateScore(const QStringList &states) const;
 
 private:
-    bool m_cache;
-    bool m_complete;
+    bool m_cache = false;
+    bool m_complete = false;
     QUrl m_source;
     QString m_path;
     QString m_name;
-    QString m_separator;
+    QString m_separator = QLatin1String("-");
     QVariantList m_allStates;
     QStringList m_activeStates;
     QQmlProperty m_property;

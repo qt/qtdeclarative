@@ -249,31 +249,31 @@ private:
 
     // These reflect whether a color value was explicitly set on the specific
     // item that this attached style object represents.
-    bool m_explicitTheme;
-    bool m_explicitPrimary;
-    bool m_explicitAccent;
-    bool m_explicitForeground;
-    bool m_explicitBackground;
+    bool m_explicitTheme = false;
+    bool m_explicitPrimary = false;
+    bool m_explicitAccent = false;
+    bool m_explicitForeground = false;
+    bool m_explicitBackground = false;
     // These reflect whether the color value that was either inherited or
     // explicitly set is in the form that QColor expects, rather than one of
     // our pre-defined color enum values.
-    bool m_customPrimary;
-    bool m_customAccent;
-    bool m_customForeground;
-    bool m_customBackground;
+    bool m_customPrimary = false;
+    bool m_customAccent = false;
+    bool m_customForeground = false;
+    bool m_customBackground = false;
     // These will be true when this item has an explicit or inherited foreground/background
     // color, or these colors were declared globally via settings (e.g. conf or env vars).
     // Some color properties of the style will return different values depending on whether
     // or not these are set.
-    bool m_hasForeground;
-    bool m_hasBackground;
+    bool m_hasForeground = false;
+    bool m_hasBackground = false;
     // The actual values for this item, whether explicit, inherited or globally set.
-    Theme m_theme;
-    uint m_primary;
-    uint m_accent;
-    uint m_foreground;
-    uint m_background;
-    int m_elevation;
+    Theme m_theme = Light;
+    uint m_primary = 0;
+    uint m_accent = 0;
+    uint m_foreground = 0;
+    uint m_background = 0;
+    int m_elevation = 0;
 };
 
 QT_END_NAMESPACE

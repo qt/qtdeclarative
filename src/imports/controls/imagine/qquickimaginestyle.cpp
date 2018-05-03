@@ -51,7 +51,6 @@ static const QString ensureSlash(const QString &path)
 
 QQuickImagineStyle::QQuickImagineStyle(QObject *parent)
     : QQuickAttachedObject(parent),
-      m_explicitPath(false),
       m_path(*GlobalPath())
 {
     init();

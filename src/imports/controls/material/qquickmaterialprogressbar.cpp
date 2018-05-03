@@ -62,14 +62,12 @@ public:
 private:
     void moveNode(QSGTransformNode *node, const QRectF &geometry, qreal progress);
 
-    bool m_indeterminate;
-    QEasingCurve m_easing;
+    bool m_indeterminate = false;
+    QEasingCurve m_easing = QEasingCurve::OutCubic;
 };
 
 QQuickMaterialProgressBarNode::QQuickMaterialProgressBarNode(QQuickMaterialProgressBar *item)
-    : QQuickAnimatedNode(item),
-      m_indeterminate(false),
-      m_easing(QEasingCurve::OutCubic)
+    : QQuickAnimatedNode(item)
 {
     setLoopCount(Infinite);
     setDuration(TotalDuration);
@@ -176,7 +174,7 @@ void QQuickMaterialProgressBarNode::moveNode(QSGTransformNode *transformNode, co
 }
 
 QQuickMaterialProgressBar::QQuickMaterialProgressBar(QQuickItem *parent)
-    : QQuickItem(parent), m_color(Qt::black), m_progress(0.0), m_indeterminate(false)
+    : QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }

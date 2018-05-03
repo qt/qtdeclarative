@@ -42,8 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickFusionDial::QQuickFusionDial(QQuickItem *parent)
-    : QQuickPaintedItem(parent),
-      m_highlight(false)
+    : QQuickPaintedItem(parent)
 {
 }
 

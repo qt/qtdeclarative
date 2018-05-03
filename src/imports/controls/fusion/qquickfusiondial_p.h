@@ -71,7 +71,7 @@ public:
     void paint(QPainter *painter) override;
 
 private:
-    bool m_highlight;
+    bool m_highlight = false;
     QPalette m_palette;
 };
 

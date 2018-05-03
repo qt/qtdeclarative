@@ -77,13 +77,12 @@ public:
     void sync(QQuickItem *item) override;
 
 private:
-    bool m_indeterminate;
-    qreal m_pixelsPerSecond;
+    bool m_indeterminate = false;
+    qreal m_pixelsPerSecond = 0;
 };
 
 QQuickDefaultProgressBarNode::QQuickDefaultProgressBarNode(QQuickDefaultProgressBar *item)
     : QQuickAnimatedNode(item),
-      m_indeterminate(false),
       m_pixelsPerSecond(item->width())
 {
     setLoopCount(Infinite);
@@ -209,9 +208,7 @@ void QQuickDefaultProgressBarNode::sync(QQuickItem *item)
 }
 
 QQuickDefaultProgressBar::QQuickDefaultProgressBar(QQuickItem *parent) :
-    QQuickItem(parent),
-    m_progress(0),
-    m_indeterminate(false)
+    QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }
