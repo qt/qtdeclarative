@@ -57,7 +57,7 @@ QJSValueIteratorPrivate::QJSValueIteratorPrivate(const QJSValue &v)
 
     QV4::Scope scope(e);
     QV4::ScopedObject o(scope, QJSValuePrivate::getValue(&v));
-    iterator.set(e, e->newForEachIteratorObject(o));
+    iterator.set(e, e->newForInIteratorObject(o));
 }
 
 
@@ -102,7 +102,7 @@ QJSValueIterator::QJSValueIterator(const QJSValue& object)
     if (!v4)
         return;
     QV4::Scope scope(v4);
-    QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
+    QV4::Scoped<QV4::ForInIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it().flags =  QV4::ObjectIterator::NoFlags;
     QV4::ScopedString nm(scope);
     QV4::Property nextProperty;
@@ -153,7 +153,7 @@ bool QJSValueIterator::next()
     if (!v4)
         return false;
     QV4::Scope scope(v4);
-    QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
+    QV4::Scoped<QV4::ForInIteratorObject> it(scope, d_ptr->iterator.value());
     QV4::ScopedString nm(scope);
     QV4::Property nextProperty;
     QV4::PropertyAttributes nextAttributes;
@@ -229,8 +229,8 @@ QJSValueIterator& QJSValueIterator::operator=(QJSValue& object)
 
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, QJSValuePrivate::getValue(&object));
-    d_ptr->iterator.set(v4, v4->newForEachIteratorObject(o));
-    QV4::Scoped<QV4::ForEachIteratorObject> it(scope, d_ptr->iterator.value());
+    d_ptr->iterator.set(v4, v4->newForInIteratorObject(o));
+    QV4::Scoped<QV4::ForInIteratorObject> it(scope, d_ptr->iterator.value());
     it->d()->it().flags =  QV4::ObjectIterator::NoFlags;
     QV4::ScopedString nm(scope);
     QV4::Property nextProperty;

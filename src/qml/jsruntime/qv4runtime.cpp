@@ -701,15 +701,15 @@ ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Val
     ScopedObject o(scope, (Object *)nullptr);
     if (!in.isNullOrUndefined())
         o = in.toObject(engine);
-    return engine->newForEachIteratorObject(o)->asReturnedValue();
+    return engine->newForInIteratorObject(o)->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_foreachNextPropertyName(const Value &foreach_iterator)
 {
     Q_ASSERT(foreach_iterator.isObject());
 
-    ForEachIteratorObject *it = static_cast<ForEachIteratorObject *>(foreach_iterator.objectValue());
-    Q_ASSERT(it->as<ForEachIteratorObject>());
+    ForInIteratorObject *it = static_cast<ForInIteratorObject *>(foreach_iterator.objectValue());
+    Q_ASSERT(it->as<ForInIteratorObject>());
 
     return it->nextPropertyName();
 }

@@ -42,8 +42,28 @@
 #include "qv4identifier_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4string_p.h"
+#include "qv4iterator_p.h"
 
 using namespace QV4;
+
+void ForInIteratorPrototype::init(ExecutionEngine *)
+{
+    defineDefaultProperty(QStringLiteral("next"), method_next, 0);
+}
+
+ReturnedValue ForInIteratorPrototype::method_next(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    const ForInIteratorObject *forIn = thisObject->as<ForInIteratorObject>();
+    Q_ASSERT(forIn);
+    Scope scope(b->engine());
+    ScopedValue n(scope, forIn->nextPropertyName());
+    bool done = false;
+    if (n->asReturnedValue() == Encode::null()) {
+        done = true;
+        n = Primitive::undefinedValue();
+    }
+    return IteratorPrototype::createIterResultObject(scope.engine, n, done);
+}
 
 void ObjectIterator::init(const Object *o)
 {
@@ -175,11 +195,11 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 }
 
 
-DEFINE_OBJECT_VTABLE(ForEachIteratorObject);
+DEFINE_OBJECT_VTABLE(ForInIteratorObject);
 
-void Heap::ForEachIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
+void Heap::ForInIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
-    ForEachIteratorObject *o = static_cast<ForEachIteratorObject *>(that);
+    ForInIteratorObject *o = static_cast<ForInIteratorObject *>(that);
     o->workArea[0].mark(markStack);
     o->workArea[1].mark(markStack);
     Object::markObjects(that, markStack);

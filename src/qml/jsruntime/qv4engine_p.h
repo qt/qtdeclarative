@@ -190,6 +190,7 @@ public:
         ValueTypeProto,
         SignalHandlerProto,
         IteratorProto,
+        ForInIteratorProto,
         ArrayIteratorProto,
         StringIteratorProto,
 
@@ -274,6 +275,7 @@ public:
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
     Object *iteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + IteratorProto); }
+    Object *forInIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ForInIteratorProto); }
     Object *arrayIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayIteratorProto); }
     Object *stringIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringIteratorProto); }
 
@@ -489,7 +491,7 @@ public:
 
     Heap::Object *newVariantObject(const QVariant &v);
 
-    Heap::Object *newForEachIteratorObject(Object *o);
+    Heap::Object *newForInIteratorObject(Object *o);
     Heap::Object *newArrayIteratorObject(Object *o);
 
     Heap::QmlContext *qmlContext() const;

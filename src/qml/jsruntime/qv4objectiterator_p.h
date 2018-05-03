@@ -111,7 +111,7 @@ private:
 };
 
 namespace Heap {
-struct ForEachIteratorObject : Object {
+struct ForInIteratorObject : Object {
     void init(QV4::Object *o);
     ObjectIterator &it() { return *reinterpret_cast<ObjectIterator*>(&itData); }
     Value workArea[2];
@@ -123,15 +123,24 @@ private:
 
 }
 
-struct ForEachIteratorObject: Object {
-    V4_OBJECT2(ForEachIteratorObject, Object)
-    Q_MANAGED_TYPE(ForeachIteratorObject)
+struct ForInIteratorPrototype : Object
+{
+    V4_PROTOTYPE(iteratorPrototype)
+    void init(ExecutionEngine *engine);
 
-    ReturnedValue nextPropertyName() { return d()->it().nextPropertyNameAsString(); }
+    static ReturnedValue method_next(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct ForInIteratorObject: Object {
+    V4_OBJECT2(ForInIteratorObject, Object)
+    Q_MANAGED_TYPE(ForeachIteratorObject)
+    V4_PROTOTYPE(forInIteratorPrototype)
+
+    ReturnedValue nextPropertyName() const { return d()->it().nextPropertyNameAsString(); }
 };
 
 inline
-void Heap::ForEachIteratorObject::init(QV4::Object *o)
+void Heap::ForInIteratorObject::init(QV4::Object *o)
 {
     Object::init();
     it() = ObjectIterator(internalClass->engine, workArea, workArea + 1, o,

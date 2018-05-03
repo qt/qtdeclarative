@@ -415,6 +415,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[TypeError_Ctor] = memoryManager->allocate<TypeErrorCtor>(global);
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
+    jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype()));
     jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
     jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype()));
 
@@ -438,6 +439,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
 
     static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
+    static_cast<ForInIteratorPrototype *>(forInIteratorPrototype())->init(this);
     static_cast<ArrayIteratorPrototype *>(arrayIteratorPrototype())->init(this);
     static_cast<StringIteratorPrototype *>(stringIteratorPrototype())->init(this);
 
@@ -790,10 +792,10 @@ Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
     return memoryManager->allocate<VariantObject>(v);
 }
 
-Heap::Object *ExecutionEngine::newForEachIteratorObject(Object *o)
+Heap::Object *ExecutionEngine::newForInIteratorObject(Object *o)
 {
     Scope scope(this);
-    ScopedObject obj(scope, memoryManager->allocate<ForEachIteratorObject>(o));
+    ScopedObject obj(scope, memoryManager->allocate<ForInIteratorObject>(o));
     return obj->d();
 }
 
