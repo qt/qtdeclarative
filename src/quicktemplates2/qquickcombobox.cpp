@@ -187,7 +187,7 @@ public:
     QString stringValue(int index, const QString &role) override;
 
 private:
-    QQuickComboBox *combo;
+    QQuickComboBox *combo = nullptr;
 };
 
 QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo)
@@ -220,8 +220,6 @@ class QQuickComboBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
 public:
-    QQuickComboBoxPrivate();
-
     bool isPopupVisible() const;
     void showPopup();
     void hidePopup(bool accept);
@@ -263,61 +261,36 @@ public:
     void cancelPopup();
     void executePopup(bool complete = false);
 
-    bool flat;
-    bool down;
-    bool hasDown;
-    bool pressed;
-    bool ownModel;
-    bool keyNavigating;
-    bool hasDisplayText;
-    bool hasCurrentIndex;
-    int highlightedIndex;
-    int currentIndex;
+    bool flat = false;
+    bool down = false;
+    bool hasDown = false;
+    bool pressed = false;
+    bool ownModel = false;
+    bool keyNavigating = false;
+    bool hasDisplayText = false;
+    bool hasCurrentIndex = false;
+    int highlightedIndex = -1;
+    int currentIndex = -1;
     QVariant model;
     QString textRole;
     QString currentText;
     QString displayText;
-    QQuickItem *pressedItem;
-    QQmlInstanceModel *delegateModel;
-    QQmlComponent *delegate;
+    QQuickItem *pressedItem = nullptr;
+    QQmlInstanceModel *delegateModel = nullptr;
+    QQmlComponent *delegate = nullptr;
     QQuickDeferredPointer<QQuickItem> indicator;
     QQuickDeferredPointer<QQuickPopup> popup;
 
     struct ExtraData {
-        ExtraData()
-            : editable(false),
-              accepting(false),
-              allowComplete(false),
-              inputMethodHints(Qt::ImhNone),
-              validator(nullptr) { }
-
-        bool editable;
-        bool accepting;
-        bool allowComplete;
-        Qt::InputMethodHints inputMethodHints;
+        bool editable = false;
+        bool accepting = false;
+        bool allowComplete = false;
+        Qt::InputMethodHints inputMethodHints = Qt::ImhNone;
         QString editText;
-        QValidator *validator;
+        QValidator *validator = nullptr;
     };
     QLazilyAllocated<ExtraData> extra;
 };
-
-QQuickComboBoxPrivate::QQuickComboBoxPrivate()
-    : flat(false),
-      down(false),
-      hasDown(false),
-      pressed(false),
-      ownModel(false),
-      keyNavigating(false),
-      hasDisplayText(false),
-      hasCurrentIndex(false),
-      highlightedIndex(-1),
-      currentIndex(-1),
-      delegateModel(nullptr),
-      delegate(nullptr),
-      indicator(nullptr),
-      popup(nullptr)
-{
-}
 
 bool QQuickComboBoxPrivate::isPopupVisible() const
 {

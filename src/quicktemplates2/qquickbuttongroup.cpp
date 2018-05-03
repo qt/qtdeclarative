@@ -154,14 +154,6 @@ class QQuickButtonGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
 public:
-    QQuickButtonGroupPrivate()
-        : complete(true),
-          exclusive(true),
-          settingCheckState(false),
-          checkState(Qt::Unchecked)
-    {
-    }
-
     void clear();
     void buttonClicked();
     void _q_updateCurrent();
@@ -173,10 +165,10 @@ public:
     static QQuickAbstractButton *buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, int index);
     static void buttons_clear(QQmlListProperty<QQuickAbstractButton> *prop);
 
-    bool complete;
-    bool exclusive;
-    bool settingCheckState;
-    Qt::CheckState checkState;
+    bool complete = true;
+    bool exclusive = true;
+    bool settingCheckState = false;
+    Qt::CheckState checkState = Qt::Unchecked;
     QPointer<QQuickAbstractButton> checkedButton;
     QVector<QQuickAbstractButton*> buttons;
 };
@@ -500,9 +492,7 @@ void QQuickButtonGroup::componentComplete()
 class QQuickButtonGroupAttachedPrivate : public QObjectPrivate
 {
 public:
-    QQuickButtonGroupAttachedPrivate() : group(nullptr) { }
-
-    QQuickButtonGroup *group;
+    QQuickButtonGroup *group = nullptr;
 };
 
 QQuickButtonGroupAttached::QQuickButtonGroupAttached(QObject *parent)

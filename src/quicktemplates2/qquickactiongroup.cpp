@@ -142,13 +142,6 @@ class QQuickActionGroupPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickActionGroup)
 
 public:
-    QQuickActionGroupPrivate()
-        : enabled(true),
-          exclusive(true),
-          checkedAction(nullptr)
-    {
-    }
-
     void clear();
     void actionTriggered();
     void _q_updateCurrent();
@@ -160,8 +153,8 @@ public:
     static QQuickAction *actions_at(QQmlListProperty<QQuickAction> *prop, int index);
     static void actions_clear(QQmlListProperty<QQuickAction> *prop);
 
-    bool enabled;
-    bool exclusive;
+    bool enabled = true;
+    bool exclusive = true;
     QPointer<QQuickAction> checkedAction;
     QVector<QQuickAction*> actions;
 };
@@ -423,9 +416,7 @@ void QQuickActionGroup::removeAction(QQuickAction *action)
 class QQuickActionGroupAttachedPrivate : public QObjectPrivate
 {
 public:
-    QQuickActionGroupAttachedPrivate() : group(nullptr) { }
-
-    QQuickActionGroup *group;
+    QQuickActionGroup *group = nullptr;
 };
 
 QQuickActionGroupAttached::QQuickActionGroupAttached(QObject *parent)

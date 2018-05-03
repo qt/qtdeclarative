@@ -96,21 +96,6 @@ class QQuickDialPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickDial)
 
 public:
-    QQuickDialPrivate()
-        : from(0),
-          to(1),
-          value(0),
-          position(0),
-          angle(startAngle),
-          stepSize(0),
-          pressed(false),
-          snapMode(QQuickDial::NoSnap),
-          wrap(false),
-          live(true),
-          handle(nullptr)
-    {
-    }
-
     qreal valueAt(qreal position) const;
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
@@ -126,17 +111,17 @@ public:
     void cancelHandle();
     void executeHandle(bool complete = false);
 
-    qreal from;
-    qreal to;
-    qreal value;
-    qreal position;
-    qreal angle;
-    qreal stepSize;
-    bool pressed;
+    qreal from = 0;
+    qreal to = 1;
+    qreal value = 0;
+    qreal position = 0;
+    qreal angle = startAngle;
+    qreal stepSize = 0;
+    bool pressed = false;
     QPointF pressPoint;
-    QQuickDial::SnapMode snapMode;
-    bool wrap;
-    bool live;
+    QQuickDial::SnapMode snapMode = QQuickDial::NoSnap;
+    bool wrap = false;
+    bool live = true;
     QQuickDeferredPointer<QQuickItem> handle;
 };
 

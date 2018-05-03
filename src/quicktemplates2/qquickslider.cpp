@@ -92,20 +92,6 @@ class QQuickSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSlider)
 
 public:
-    QQuickSliderPrivate()
-        : from(0),
-          to(1),
-          value(0),
-          position(0),
-          stepSize(0),
-          live(true),
-          pressed(false),
-          orientation(Qt::Horizontal),
-          snapMode(QQuickSlider::NoSnap),
-          handle(nullptr)
-    {
-    }
-
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
     void setPosition(qreal position);
@@ -119,16 +105,16 @@ public:
     void cancelHandle();
     void executeHandle(bool complete = false);
 
-    qreal from;
-    qreal to;
-    qreal value;
-    qreal position;
-    qreal stepSize;
-    bool live;
-    bool pressed;
+    qreal from = 0;
+    qreal to = 1;
+    qreal value = 0;
+    qreal position = 0;
+    qreal stepSize = 0;
+    bool live = true;
+    bool pressed = false;
     QPointF pressPoint;
-    Qt::Orientation orientation;
-    QQuickSlider::SnapMode snapMode;
+    Qt::Orientation orientation = Qt::Horizontal;
+    QQuickSlider::SnapMode snapMode = QQuickSlider::NoSnap;
     QQuickDeferredPointer<QQuickItem> handle;
 };
 

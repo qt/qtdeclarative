@@ -61,8 +61,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarPrivate : public QQuickConta
     Q_DECLARE_PUBLIC(QQuickMenuBar)
 
 public:
-    QQuickMenuBarPrivate();
-
     static QQuickMenuBarPrivate *get(QQuickMenuBar *menuBar)
     {
         return menuBar->d_func();
@@ -92,13 +90,13 @@ public:
     static QQuickMenu *menus_at(QQmlListProperty<QQuickMenu> *prop, int index);
     static void menus_clear(QQmlListProperty<QQuickMenu> *prop);
 
-    bool popupMode;
-    bool triggering;
-    bool hasContentWidth;
-    bool hasContentHeight;
-    qreal contentWidth;
-    qreal contentHeight;
-    QQmlComponent *delegate;
+    bool popupMode = false;
+    bool triggering = false;
+    bool hasContentWidth = false;
+    bool hasContentHeight = false;
+    qreal contentWidth = 0;
+    qreal contentHeight = 0;
+    QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
 };
 

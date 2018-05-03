@@ -58,12 +58,6 @@ QT_BEGIN_NAMESPACE
         doSomethingElse();
 */
 
-QQuickVelocityCalculator::QQuickVelocityCalculator()
-    : m_point1Timestamp(0),
-      m_point2Timestamp(0)
-{
-}
-
 void QQuickVelocityCalculator::startMeasuring(const QPointF &point1, qint64 timestamp)
 {
     m_point1 = point1;

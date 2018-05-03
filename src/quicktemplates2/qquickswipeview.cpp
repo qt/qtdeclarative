@@ -108,19 +108,13 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    QQuickSwipeViewPrivate()
-        : interactive(true),
-          orientation(Qt::Horizontal)
-    {
-    }
-
     void resizeItem(QQuickItem *item);
     void resizeItems();
 
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
 
-    bool interactive;
-    Qt::Orientation orientation;
+    bool interactive = true;
+    Qt::Orientation orientation = Qt::Horizontal;
 };
 
 class QQuickSwipeViewAttachedPrivate : public QObjectPrivate
@@ -128,13 +122,6 @@ class QQuickSwipeViewAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
 
 public:
-    QQuickSwipeViewAttachedPrivate()
-        : swipeView(nullptr),
-          index(-1),
-          currentIndex(-1)
-    {
-    }
-
     static QQuickSwipeViewAttachedPrivate *get(QQuickSwipeViewAttached *attached)
     {
         return attached->d_func();
@@ -144,9 +131,9 @@ public:
     void updateCurrentIndex();
     void setCurrentIndex(int i);
 
-    QQuickSwipeView *swipeView;
-    int index;
-    int currentIndex;
+    QQuickSwipeView *swipeView = nullptr;
+    int index = -1;
+    int currentIndex = -1;
 };
 
 void QQuickSwipeViewPrivate::resizeItems()

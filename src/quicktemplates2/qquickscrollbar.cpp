@@ -155,23 +155,6 @@ static const QQuickItemPrivate::ChangeTypes changeTypes = QQuickItemPrivate::Geo
 static const QQuickItemPrivate::ChangeTypes horizontalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitHeight;
 static const QQuickItemPrivate::ChangeTypes verticalChangeTypes = changeTypes | QQuickItemPrivate::ImplicitWidth;
 
-QQuickScrollBarPrivate::QQuickScrollBarPrivate()
-    : size(0),
-      position(0),
-      stepSize(0),
-      offset(0),
-      minimumSize(0),
-      active(false),
-      pressed(false),
-      moving(false),
-      interactive(true),
-      explicitInteractive(false),
-      orientation(Qt::Vertical),
-      snapMode(QQuickScrollBar::NoSnap),
-      policy(QQuickScrollBar::AsNeeded)
-{
-}
-
 QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
 {
     qreal visualPos = position;
@@ -750,13 +733,6 @@ QAccessible::Role QQuickScrollBar::accessibleRole() const
     return QAccessible::ScrollBar;
 }
 #endif
-
-QQuickScrollBarAttachedPrivate::QQuickScrollBarAttachedPrivate()
-    : flickable(nullptr),
-      horizontal(nullptr),
-      vertical(nullptr)
-{
-}
 
 void QQuickScrollBarAttachedPrivate::setFlickable(QQuickFlickable *item)
 {

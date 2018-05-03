@@ -135,32 +135,23 @@ class QQuickScrollIndicatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollIndicator)
 
 public:
-    QQuickScrollIndicatorPrivate()
-        : size(0),
-          minimumSize(0),
-          position(0),
-          active(false),
-          orientation(Qt::Vertical)
-    {
-    }
-
     struct VisualArea
     {
         VisualArea(qreal pos, qreal sz)
             : position(pos), size(sz) { }
-        qreal position;
-        qreal size;
+        qreal position = 0;
+        qreal size = 0;
     };
     VisualArea visualArea() const;
     void visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea);
 
     void resizeContent() override;
 
-    qreal size;
-    qreal minimumSize;
-    qreal position;
-    bool active;
-    Qt::Orientation orientation;
+    qreal size = 0;
+    qreal minimumSize = 0;
+    qreal position = 0;
+    bool active = false;
+    Qt::Orientation orientation = Qt::Vertical;
 };
 
 QQuickScrollIndicatorPrivate::VisualArea QQuickScrollIndicatorPrivate::visualArea() const
@@ -427,13 +418,6 @@ qreal QQuickScrollIndicator::visualPosition() const
 class QQuickScrollIndicatorAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollIndicatorAttachedPrivate()
-        : flickable(nullptr),
-          horizontal(nullptr),
-          vertical(nullptr)
-    {
-    }
-
     void activateHorizontal();
     void activateVertical();
 
@@ -445,9 +429,9 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
-    QQuickFlickable *flickable;
-    QQuickScrollIndicator *horizontal;
-    QQuickScrollIndicator *vertical;
+    QQuickFlickable *flickable = nullptr;
+    QQuickScrollIndicator *horizontal = nullptr;
+    QQuickScrollIndicator *vertical = nullptr;
 };
 
 void QQuickScrollIndicatorAttachedPrivate::activateHorizontal()

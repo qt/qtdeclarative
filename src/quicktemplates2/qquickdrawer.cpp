@@ -171,15 +171,6 @@ QT_BEGIN_NAMESPACE
     \sa SwipeView, {Customizing Drawer}, {Navigation Controls}, {Popup Controls}
 */
 
-QQuickDrawerPrivate::QQuickDrawerPrivate()
-    : edge(Qt::LeftEdge),
-      offset(0),
-      position(0),
-      dragMargin(QGuiApplication::styleHints()->startDragDistance())
-{
-    setEdge(Qt::LeftEdge);
-}
-
 qreal QQuickDrawerPrivate::offsetAt(const QPointF &point) const
 {
     qreal offset = positionAt(point) - position;
@@ -608,6 +599,10 @@ bool QQuickDrawerPrivate::setEdge(Qt::Edge e)
 QQuickDrawer::QQuickDrawer(QObject *parent)
     : QQuickPopup(*(new QQuickDrawerPrivate), parent)
 {
+    Q_D(QQuickDrawer);
+    d->dragMargin = QGuiApplication::styleHints()->startDragDistance();
+    d->setEdge(Qt::LeftEdge);
+
     setFocus(true);
     setModal(true);
     setFiltersChildMouseEvents(true);

@@ -63,8 +63,6 @@ class QQuickDialogPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickDialog)
 
 public:
-    QQuickDialogPrivate() : result(0), buttonBox(nullptr) { }
-
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {
         return dialog->d_func();
@@ -74,11 +72,11 @@ public:
 
     void handleClick(QQuickAbstractButton *button);
 
-    int result;
+    int result = 0;
     QString title;
-    QQuickDialogButtonBox *buttonBox;
+    QQuickDialogButtonBox *buttonBox = nullptr;
     QScopedPointer<QQuickPageLayout> layout;
-    QPlatformDialogHelper::StandardButtons standardButtons;
+    QPlatformDialogHelper::StandardButtons standardButtons = QPlatformDialogHelper::NoButton;
 };
 
 QT_END_NAMESPACE

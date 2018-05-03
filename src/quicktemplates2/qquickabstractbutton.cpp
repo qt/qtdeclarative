@@ -51,10 +51,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// copied from qabstractbutton.cpp
-static const int AUTO_REPEAT_DELAY = 300;
-static const int AUTO_REPEAT_INTERVAL = 100;
-
 /*!
     \qmltype AbstractButton
     \inherits Control
@@ -116,33 +112,6 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 
     This signal is emitted when the button is interactively double clicked by the user via touch or mouse.
 */
-
-QQuickAbstractButtonPrivate::QQuickAbstractButtonPrivate()
-    : explicitText(false),
-      down(false),
-      explicitDown(false),
-      pressed(false),
-      keepPressed(false),
-      checked(false),
-      checkable(false),
-      autoExclusive(false),
-      autoRepeat(false),
-      wasHeld(false),
-      holdTimer(0),
-      delayTimer(0),
-      repeatTimer(0),
-      repeatDelay(AUTO_REPEAT_DELAY),
-      repeatInterval(AUTO_REPEAT_INTERVAL),
-#if QT_CONFIG(shortcut)
-      shortcutId(0),
-#endif
-      pressButtons(Qt::NoButton),
-      indicator(nullptr),
-      group(nullptr),
-      display(QQuickAbstractButton::TextBesideIcon),
-      action(nullptr)
-{
-}
 
 void QQuickAbstractButtonPrivate::setPressPoint(const QPointF &point)
 {

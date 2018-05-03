@@ -44,16 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickPressHandler::QQuickPressHandler()
-    : control(nullptr),
-      longPress(false),
-      pressAndHoldSignalIndex(-1),
-      pressedSignalIndex(-1),
-      releasedSignalIndex(-1),
-      delayedMousePressEvent(nullptr)
-{
-}
-
 void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 {
     longPress = false;

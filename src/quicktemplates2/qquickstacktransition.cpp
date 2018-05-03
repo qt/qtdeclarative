@@ -44,23 +44,18 @@ static QQuickStackTransition exitTransition(QQuickStackView::Operation operation
 {
     QQuickStackTransition st;
     st.status = QQuickStackView::Deactivating;
-    st.transition = nullptr;
     st.element = element;
 
     const QQuickItemViewTransitioner *transitioner = QQuickStackViewPrivate::get(view)->transitioner;
 
     switch (operation) {
     case QQuickStackView::PushTransition:
-        st.target = false;
         st.type = QQuickItemViewTransitioner::AddTransition;
-        st.viewBounds = QRectF();
         if (transitioner)
             st.transition = transitioner->addDisplacedTransition;
         break;
     case QQuickStackView::ReplaceTransition:
-        st.target = false;
         st.type = QQuickItemViewTransitioner::MoveTransition;
-        st.viewBounds = QRectF();
         if (transitioner)
             st.transition = transitioner->moveDisplacedTransition;
         break;
@@ -83,7 +78,6 @@ static QQuickStackTransition enterTransition(QQuickStackView::Operation operatio
 {
     QQuickStackTransition st;
     st.status = QQuickStackView::Activating;
-    st.transition = nullptr;
     st.element = element;
 
     const QQuickItemViewTransitioner *transitioner = QQuickStackViewPrivate::get(view)->transitioner;
@@ -104,9 +98,7 @@ static QQuickStackTransition enterTransition(QQuickStackView::Operation operatio
             st.transition = transitioner->moveTransition;
         break;
     case QQuickStackView::PopTransition:
-        st.target = false;
         st.type = QQuickItemViewTransitioner::RemoveTransition;
-        st.viewBounds = QRectF();
         if (transitioner)
             st.transition = transitioner->removeDisplacedTransition;
         break;

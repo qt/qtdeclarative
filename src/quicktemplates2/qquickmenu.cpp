@@ -184,15 +184,9 @@ static bool shouldCascade()
 }
 
 QQuickMenuPrivate::QQuickMenuPrivate()
-    : cascade(shouldCascade()),
-      hoverTimer(0),
-      currentIndex(-1),
-      overlap(0),
-      contentItem(nullptr),
-      contentModel(nullptr),
-      delegate(nullptr)
 {
     Q_Q(QQuickMenu);
+    cascade = shouldCascade();
     contentModel = new QQmlObjectModel(q);
 }
 

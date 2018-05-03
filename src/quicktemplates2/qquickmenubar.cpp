@@ -76,18 +76,6 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
-QQuickMenuBarPrivate::QQuickMenuBarPrivate()
-    : popupMode(false),
-      triggering(false),
-      hasContentWidth(false),
-      hasContentHeight(false),
-      contentWidth(0),
-      contentHeight(0),
-      delegate(nullptr)
-{
-    changeTypes |= Geometry;
-}
-
 QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
 {
     Q_Q(QQuickMenuBar);
@@ -303,6 +291,8 @@ void QQuickMenuBarPrivate::menus_clear(QQmlListProperty<QQuickMenu> *prop)
 QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
     : QQuickContainer(*(new QQuickMenuBarPrivate), parent)
 {
+    Q_D(QQuickMenuBar);
+    d->changeTypes |= QQuickItemPrivate::Geometry;
     setFlag(ItemIsFocusScope);
     setFocusPolicy(Qt::ClickFocus);
 }

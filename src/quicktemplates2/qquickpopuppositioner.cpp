@@ -50,9 +50,7 @@ static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate:
                                                              | QQuickItemPrivate::Parent;
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopup *popup)
-    : m_positioning(false),
-      m_parentItem(nullptr),
-      m_popup(popup)
+    : m_popup(popup)
 {
 }
 

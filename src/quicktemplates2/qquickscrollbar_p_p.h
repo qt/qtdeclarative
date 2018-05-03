@@ -61,8 +61,6 @@ class QQuickScrollBarPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollBar)
 
 public:
-    QQuickScrollBarPrivate();
-
     static QQuickScrollBarPrivate *get(QQuickScrollBar *bar)
     {
         return bar->d_func();
@@ -72,8 +70,8 @@ public:
     {
         VisualArea(qreal pos, qreal sz)
             : position(pos), size(sz) { }
-        qreal position;
-        qreal size;
+        qreal position = 0;
+        qreal size = 0;
     };
     VisualArea visualArea() const;
 
@@ -92,26 +90,24 @@ public:
 
     void visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea);
 
-    qreal size;
-    qreal position;
-    qreal stepSize;
-    qreal offset;
-    qreal minimumSize;
-    bool active;
-    bool pressed;
-    bool moving;
-    bool interactive;
-    bool explicitInteractive;
-    Qt::Orientation orientation;
-    QQuickScrollBar::SnapMode snapMode;
-    QQuickScrollBar::Policy policy;
+    qreal size = 0;
+    qreal position = 0;
+    qreal stepSize = 0;
+    qreal offset = 0;
+    qreal minimumSize = 0;
+    bool active = false;
+    bool pressed = false;
+    bool moving = false;
+    bool interactive = true;
+    bool explicitInteractive = false;
+    Qt::Orientation orientation = Qt::Vertical;
+    QQuickScrollBar::SnapMode snapMode = QQuickScrollBar::NoSnap;
+    QQuickScrollBar::Policy policy = QQuickScrollBar::AsNeeded;
 };
 
 class QQuickScrollBarAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
 public:
-    QQuickScrollBarAttachedPrivate();
-
     static QQuickScrollBarAttachedPrivate *get(QQuickScrollBarAttached *attached)
     {
         return attached->d_func();
@@ -137,9 +133,9 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemDestroyed(QQuickItem *item) override;
 
-    QQuickFlickable *flickable;
-    QQuickScrollBar *horizontal;
-    QQuickScrollBar *vertical;
+    QQuickFlickable *flickable = nullptr;
+    QQuickScrollBar *horizontal = nullptr;
+    QQuickScrollBar *vertical = nullptr;
 };
 
 QT_END_NAMESPACE

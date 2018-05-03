@@ -106,8 +106,6 @@ class QQuickScrollViewPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickScrollView)
 
 public:
-    QQuickScrollViewPrivate();
-
     QQuickItem *getContentItem() override;
 
     QQuickFlickable *ensureFlickable(bool content);
@@ -131,20 +129,11 @@ public:
     static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
-    bool wasTouched;
-    qreal contentWidth;
-    qreal contentHeight;
-    QQuickFlickable *flickable;
+    bool wasTouched = false;
+    qreal contentWidth = -1;
+    qreal contentHeight = -1;
+    QQuickFlickable *flickable = nullptr;
 };
-
-QQuickScrollViewPrivate::QQuickScrollViewPrivate()
-    : wasTouched(false),
-      contentWidth(-1),
-      contentHeight(-1),
-      flickable(nullptr)
-{
-    wheelEnabled = true;
-}
 
 QQuickItem *QQuickScrollViewPrivate::getContentItem()
 {
@@ -359,6 +348,7 @@ QQuickScrollView::QQuickScrollView(QQuickItem *parent)
     setFlag(ItemIsFocusScope);
     setActiveFocusOnTab(true);
     setFiltersChildMouseEvents(true);
+    setWheelEnabled(true);
 }
 
 /*!

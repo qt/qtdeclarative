@@ -102,16 +102,10 @@ class QQuickCheckBoxPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickCheckBox)
 
 public:
-    QQuickCheckBoxPrivate()
-        : tristate(false),
-          checkState(Qt::Unchecked)
-    {
-    }
-
     void setNextCheckState(const QJSValue &callback);
 
-    bool tristate;
-    Qt::CheckState checkState;
+    bool tristate = false;
+    Qt::CheckState checkState = Qt::Unchecked;
     QJSValue nextCheckState;
 };
 

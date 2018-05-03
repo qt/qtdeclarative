@@ -66,12 +66,12 @@ struct QQuickStackTransition
     static QQuickStackTransition replaceExit(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
     static QQuickStackTransition replaceEnter(QQuickStackView::Operation operation, QQuickStackElement *element, QQuickStackView *view);
 
-    bool target;
-    QQuickStackView::Status status;
-    QQuickItemViewTransitioner::TransitionType type;
+    bool target = false;
+    QQuickStackView::Status status = QQuickStackView::Inactive;
+    QQuickItemViewTransitioner::TransitionType type = QQuickItemViewTransitioner::NoTransition;
     QRectF viewBounds;
-    QQuickStackElement *element;
-    QQuickTransition *transition;
+    QQuickStackElement *element = nullptr;
+    QQuickTransition *transition = nullptr;
 };
 
 QT_END_NAMESPACE

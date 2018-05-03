@@ -117,8 +117,8 @@ public:
     void executeBackground(bool complete = false);
 
 #if QT_CONFIG(quicktemplates2_hover)
-    bool hovered;
-    bool explicitHoverEnabled;
+    bool hovered = false;
+    bool explicitHoverEnabled = false;
 #endif
 
     struct ExtraData {
@@ -130,7 +130,7 @@ public:
     QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
-    Qt::FocusReason focusReason;
+    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickPressHandler pressHandler;
 };
 

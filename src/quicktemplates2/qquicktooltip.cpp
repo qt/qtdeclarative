@@ -124,20 +124,14 @@ class QQuickToolTipPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickToolTip)
 
 public:
-    QQuickToolTipPrivate()
-        : delay(0),
-          timeout(-1)
-    {
-    }
-
     void startDelay();
     void stopDelay();
 
     void startTimeout();
     void stopTimeout();
 
-    int delay;
-    int timeout;
+    int delay = 0;
+    int timeout = -1;
     QString text;
     QBasicTimer delayTimer;
     QBasicTimer timeoutTimer;
@@ -335,16 +329,10 @@ class QQuickToolTipAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickToolTipAttached)
 
 public:
-    QQuickToolTipAttachedPrivate()
-        : delay(0),
-          timeout(-1)
-    {
-    }
-
     QQuickToolTip *instance(bool create) const;
 
-    int delay;
-    int timeout;
+    int delay = 0;
+    int timeout = -1;
     QString text;
 };
 

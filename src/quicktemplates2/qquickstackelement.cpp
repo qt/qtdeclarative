@@ -72,18 +72,7 @@ private:
 };
 
 QQuickStackElement::QQuickStackElement()
-    : QQuickItemViewTransitionableItem(nullptr),
-      index(-1),
-      init(false),
-      removal(false),
-      ownItem(false),
-      ownComponent(false),
-      widthValid(false),
-      heightValid(false),
-      context(nullptr),
-      component(nullptr),
-      view(nullptr),
-      status(QQuickStackView::Inactive)
+    : QQuickItemViewTransitionableItem(nullptr)
 {
 }
 

@@ -59,9 +59,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerPrivate : public QQuickContr
     Q_DECLARE_PUBLIC(QQuickTumbler)
 
 public:
-    QQuickTumblerPrivate();
-    ~QQuickTumblerPrivate();
-
     enum ContentItemType {
         NoContentItem,
         UnsupportedContentItemType,
@@ -76,23 +73,23 @@ public:
     static QQuickTumblerPrivate *get(QQuickTumbler *tumbler);
 
     QVariant model;
-    QQmlComponent *delegate;
-    int visibleItemCount;
-    bool wrap;
-    bool explicitWrap;
-    bool ignoreWrapChanges;
-    QQuickItem *view;
-    QQuickItem *viewContentItem;
-    ContentItemType viewContentItemType;
+    QQmlComponent *delegate = nullptr;
+    int visibleItemCount = 5;
+    bool wrap = true;
+    bool explicitWrap = false;
+    bool ignoreWrapChanges = false;
+    QQuickItem *view = nullptr;
+    QQuickItem *viewContentItem = nullptr;
+    ContentItemType viewContentItemType = UnsupportedContentItemType;
     union {
         qreal viewOffset; // PathView
         qreal viewContentY; // ListView
     };
-    int currentIndex;
-    int pendingCurrentIndex;
-    bool ignoreCurrentIndexChanges;
-    int count;
-    bool ignoreSignals;
+    int currentIndex = -1;
+    int pendingCurrentIndex = -1;
+    bool ignoreCurrentIndexChanges = false;
+    int count = 0;
+    bool ignoreSignals = false;
 
     void _q_updateItemHeights();
     void _q_updateItemWidths();
@@ -123,8 +120,6 @@ class QQuickTumblerAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickTumblerAttached)
 
 public:
-    QQuickTumblerAttachedPrivate();
-
     static QQuickTumblerAttachedPrivate *get(QQuickTumblerAttached *attached)
     {
         return attached->d_func();
@@ -138,9 +133,9 @@ public:
     // The Tumbler that contains the delegate. Required to calculated the displacement.
     QPointer<QQuickTumbler> tumbler;
     // The index of the delegate. Used to calculate the displacement.
-    int index;
+    int index = -1;
     // The displacement for our delegate.
-    qreal displacement;
+    qreal displacement = 0;
 };
 
 QT_END_NAMESPACE

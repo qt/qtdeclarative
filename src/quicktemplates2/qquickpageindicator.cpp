@@ -89,15 +89,6 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate, public QQuickIte
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 
 public:
-    QQuickPageIndicatorPrivate()
-        : count(0),
-          currentIndex(0),
-          interactive(false),
-          delegate(nullptr),
-          pressedItem(nullptr)
-    {
-    }
-
     void handlePress(const QPointF &point) override;
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
@@ -109,11 +100,11 @@ public:
 
     void itemChildAdded(QQuickItem *, QQuickItem *child) override;
 
-    int count;
-    int currentIndex;
-    bool interactive;
-    QQmlComponent *delegate;
-    QQuickItem *pressedItem;
+    int count = 0;
+    int currentIndex = 0;
+    bool interactive = false;
+    QQmlComponent *delegate = nullptr;
+    QQuickItem *pressedItem = nullptr;
 };
 
 void QQuickPageIndicatorPrivate::handlePress(const QPointF &point)

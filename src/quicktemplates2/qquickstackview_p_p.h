@@ -66,8 +66,6 @@ class QQuickStackViewPrivate : public QQuickControlPrivate, public QQuickItemVie
     Q_DECLARE_PUBLIC(QQuickStackView)
 
 public:
-    QQuickStackViewPrivate();
-
     static QQuickStackViewPrivate *get(QQuickStackView *view)
     {
         return view->d_func();
@@ -94,14 +92,14 @@ public:
     void setBusy(bool busy);
     void depthChange(int newDepth, int oldDepth);
 
-    bool busy;
+    bool busy = false;
     QString operation;
     QJSValue initialItem;
-    QQuickItem *currentItem;
+    QQuickItem *currentItem = nullptr;
     QSet<QQuickStackElement*> removing;
     QList<QQuickStackElement*> removed;
     QStack<QQuickStackElement *> elements;
-    QQuickItemViewTransitioner *transitioner;
+    QQuickItemViewTransitioner *transitioner = nullptr;
 };
 
 class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemChangeListener
@@ -109,12 +107,6 @@ class QQuickStackViewAttachedPrivate : public QObjectPrivate, public QQuickItemC
     Q_DECLARE_PUBLIC(QQuickStackViewAttached)
 
 public:
-    QQuickStackViewAttachedPrivate()
-        : explicitVisible(false),
-          element(nullptr)
-    {
-    }
-
     static QQuickStackViewAttachedPrivate *get(QQuickStackViewAttached *attached)
     {
         return attached->d_func();
@@ -122,8 +114,8 @@ public:
 
     void itemParentChanged(QQuickItem *item, QQuickItem *parent);
 
-    bool explicitVisible;
-    QQuickStackElement *element;
+    bool explicitVisible = false;
+    QQuickStackElement *element = nullptr;
 };
 
 QT_END_NAMESPACE

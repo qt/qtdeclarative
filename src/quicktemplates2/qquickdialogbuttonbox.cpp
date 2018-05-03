@@ -192,14 +192,6 @@ QT_BEGIN_NAMESPACE
     \sa accepted(), rejected(), helpRequested()
 */
 
-QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
-    : alignment(0),
-      position(QQuickDialogButtonBox::Footer),
-      standardButtons(QPlatformDialogHelper::NoButton),
-      delegate(nullptr)
-{
-}
-
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_UNUSED(item);

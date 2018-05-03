@@ -89,21 +89,13 @@ class QQuickPagePrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickPage)
 
 public:
-    QQuickPagePrivate();
-
     QQuickItem *getContentItem() override;
 
-    qreal contentWidth;
-    qreal contentHeight;
+    qreal contentWidth = 0;
+    qreal contentHeight = 0;
     QString title;
     QScopedPointer<QQuickPageLayout> layout;
 };
-
-QQuickPagePrivate::QQuickPagePrivate()
-    : contentWidth(0),
-      contentHeight(0)
-{
-}
 
 QQuickItem *QQuickPagePrivate::getContentItem()
 {

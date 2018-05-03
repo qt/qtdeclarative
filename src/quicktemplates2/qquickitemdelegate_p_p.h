@@ -57,9 +57,7 @@ class QQuickItemDelegatePrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickItemDelegate)
 
 public:
-    QQuickItemDelegatePrivate();
-
-    bool highlighted;
+    bool highlighted = false;
 };
 
 QT_END_NAMESPACE

@@ -76,9 +76,9 @@ protected:
     void itemDestroyed(QQuickItem *item) override;
 
 private:
-    QQuickItem *m_header;
-    QQuickItem *m_footer;
-    QQuickControl *m_control;
+    QQuickItem *m_header = nullptr;
+    QQuickItem *m_footer = nullptr;
+    QQuickControl *m_control = nullptr;
 };
 
 QT_END_NAMESPACE

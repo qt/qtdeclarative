@@ -57,10 +57,8 @@ class QQuickButtonPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickButton)
 
 public:
-    QQuickButtonPrivate();
-
-    bool flat;
-    bool highlighted;
+    bool flat = false;
+    bool highlighted = false;
 };
 
 QT_END_NAMESPACE

@@ -60,8 +60,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainerPrivate : public QQuickCon
     Q_DECLARE_PUBLIC(QQuickContainer)
 
 public:
-    QQuickContainerPrivate();
-
     static QQuickContainerPrivate *get(QQuickContainer *container)
     {
         return container->d_func();
@@ -94,10 +92,10 @@ public:
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
     QObjectList contentData;
-    QQmlObjectModel *contentModel;
-    int currentIndex;
-    bool updatingCurrent;
-    QQuickItemPrivate::ChangeTypes changeTypes;
+    QQmlObjectModel *contentModel = nullptr;
+    int currentIndex = -1;
+    bool updatingCurrent = false;
+    QQuickItemPrivate::ChangeTypes changeTypes = Destroyed | Parent | SiblingOrder;
 };
 
 QT_END_NAMESPACE

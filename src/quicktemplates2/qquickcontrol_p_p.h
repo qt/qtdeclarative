@@ -72,7 +72,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemP
 
 public:
     QQuickControlPrivate();
-    virtual ~QQuickControlPrivate();
+    ~QQuickControlPrivate();
 
     static QQuickControlPrivate *get(QQuickControl *control)
     {
@@ -147,34 +147,33 @@ public:
     virtual void executeBackground(bool complete = false);
 
     struct ExtraData {
-        ExtraData();
         QFont requestedFont;
         QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
-    bool hasTopPadding;
-    bool hasLeftPadding;
-    bool hasRightPadding;
-    bool hasBottomPadding;
-    bool hasLocale;
-    bool wheelEnabled;
+    bool hasTopPadding = false;
+    bool hasLeftPadding = false;
+    bool hasRightPadding = false;
+    bool hasBottomPadding = false;
+    bool hasLocale = false;
+    bool wheelEnabled = false;
 #if QT_CONFIG(quicktemplates2_hover)
-    bool hovered;
-    bool explicitHoverEnabled;
+    bool hovered = false;
+    bool explicitHoverEnabled = false;
 #endif
-    int touchId;
-    qreal padding;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
-    qreal spacing;
+    int touchId = -1;
+    qreal padding = 0;
+    qreal topPadding = 0;
+    qreal leftPadding = 0;
+    qreal rightPadding = 0;
+    qreal bottomPadding = 0;
+    qreal spacing = 0;
     QLocale locale;
     QFont resolvedFont;
     QPalette resolvedPalette;
-    Qt::FocusPolicy focusPolicy;
-    Qt::FocusReason focusReason;
+    Qt::FocusPolicy focusPolicy = Qt::NoFocus;
+    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickDeferredPointer<QQuickItem> background;
     QQuickDeferredPointer<QQuickItem> contentItem;
 };
