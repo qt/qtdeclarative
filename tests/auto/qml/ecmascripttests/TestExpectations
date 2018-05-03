@@ -557,7 +557,6 @@ built-ins/Error/proto-from-ctor-realm.js fails
 built-ins/Error/prototype/S15.11.4_A2.js fails
 built-ins/Function/call-bind-this-realm-undef.js fails
 built-ins/Function/call-bind-this-realm-value.js fails
-built-ins/Function/instance-name.js fails
 built-ins/Function/internals/Call/class-ctor-realm.js fails
 built-ins/Function/internals/Call/class-ctor.js fails
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy-realm.js fails
@@ -630,7 +629,6 @@ built-ins/Function/prototype/toString/setter-class-statement.js fails
 built-ins/Function/prototype/toString/setter-object.js fails
 built-ins/Function/prototype/toString/symbol-named-builtins.js fails
 built-ins/Function/prototype/toString/unicode.js fails
-built-ins/GeneratorFunction/instance-name.js fails
 built-ins/GeneratorFunction/proto-from-ctor-realm.js fails
 built-ins/GeneratorPrototype/throw/try-finally-nested-try-catch-within-catch.js fails
 built-ins/JSON/Symbol.toStringTag.js fails
