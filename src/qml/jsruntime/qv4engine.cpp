@@ -326,7 +326,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember(id_name()->identifier(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
     ic = ic->changeVTable(ScriptFunction::staticVTable());
-    ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly, &index);
+    ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly_ButConfigurable, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
     classes[Class_ScriptFunction] = ic->d();
     ic = ic->changeVTable(GeneratorFunction::staticVTable());

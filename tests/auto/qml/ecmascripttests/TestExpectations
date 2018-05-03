@@ -566,9 +566,6 @@ built-ins/Function/internals/Construct/derived-return-val-realm.js fails
 built-ins/Function/internals/Construct/derived-return-val.js fails
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js fails
 built-ins/Function/internals/Construct/derived-this-uninitialized.js fails
-built-ins/Function/length/S15.3.5.1_A2_T1.js fails
-built-ins/Function/length/S15.3.5.1_A2_T2.js fails
-built-ins/Function/length/S15.3.5.1_A2_T3.js fails
 built-ins/Function/proto-from-ctor-realm.js fails
 built-ins/Function/prototype/Symbol.hasInstance/this-val-not-callable.js fails
 built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js fails
@@ -633,7 +630,6 @@ built-ins/Function/prototype/toString/setter-class-statement.js fails
 built-ins/Function/prototype/toString/setter-object.js fails
 built-ins/Function/prototype/toString/symbol-named-builtins.js fails
 built-ins/Function/prototype/toString/unicode.js fails
-built-ins/GeneratorFunction/instance-length.js fails
 built-ins/GeneratorFunction/instance-name.js fails
 built-ins/GeneratorFunction/proto-from-ctor-realm.js fails
 built-ins/GeneratorPrototype/throw/try-finally-nested-try-catch-within-catch.js fails
@@ -951,7 +947,6 @@ built-ins/Object/entries/primitive-symbols.js fails
 built-ins/Object/entries/symbols-omitted.js fails
 built-ins/Object/entries/tamper-with-global-object.js fails
 built-ins/Object/entries/tamper-with-object-keys.js fails
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-187.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-191.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-194.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-201.js fails
@@ -3297,7 +3292,6 @@ language/expressions/arrow-function/dstr-obj-ptrn-id-init-skipped.js fails
 language/expressions/arrow-function/dstr-obj-ptrn-id-init-throws.js fails
 language/expressions/arrow-function/dstr-obj-ptrn-id-init-unresolvable.js fails
 language/expressions/arrow-function/dstr-obj-ptrn-list-err.js fails
-language/expressions/arrow-function/length-dflt.js fails
 language/expressions/arrow-function/lexical-arguments.js fails
 language/expressions/arrow-function/lexical-new.target-closure-returned.js fails
 language/expressions/arrow-function/lexical-new.target.js fails
@@ -4419,7 +4413,6 @@ language/expressions/function/dstr-obj-ptrn-id-init-fn-name-class.js fails
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-cover.js fails
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-fn.js fails
 language/expressions/function/dstr-obj-ptrn-id-init-fn-name-gen.js fails
-language/expressions/function/length-dflt.js fails
 language/expressions/function/name.js fails
 language/expressions/function/param-dflt-yield-non-strict.js sloppyFails
 language/expressions/function/params-trailing-comma-multiple.js fails
@@ -4495,8 +4488,6 @@ language/expressions/generators/dstr-obj-ptrn-id-init-fn-name-cover.js fails
 language/expressions/generators/dstr-obj-ptrn-id-init-fn-name-fn.js fails
 language/expressions/generators/dstr-obj-ptrn-id-init-fn-name-gen.js fails
 language/expressions/generators/eval-body-proto-realm.js fails
-language/expressions/generators/length-dflt.js fails
-language/expressions/generators/length-property-descriptor.js fails
 language/expressions/generators/name.js fails
 language/expressions/generators/named-yield-identifier-non-strict.js sloppyFails
 language/expressions/generators/named-yield-spread-arr-multiple.js fails
@@ -4712,8 +4703,6 @@ language/expressions/object/method-definition/gen-meth-params-trailing-comma-sin
 language/expressions/object/method-definition/gen-yield-identifier-non-strict.js sloppyFails
 language/expressions/object/method-definition/gen-yield-spread-arr-multiple.js fails
 language/expressions/object/method-definition/gen-yield-spread-arr-single.js fails
-language/expressions/object/method-definition/generator-length-dflt.js fails
-language/expressions/object/method-definition/generator-length.js fails
 language/expressions/object/method-definition/generator-name-prop-symbol.js fails
 language/expressions/object/method-definition/generator-super-prop-body.js fails
 language/expressions/object/method-definition/generator-super-prop-param.js fails
@@ -4723,8 +4712,6 @@ language/expressions/object/method-definition/meth-dflt-params-trailing-comma.js
 language/expressions/object/method-definition/meth-params-trailing-comma-multiple.js fails
 language/expressions/object/method-definition/meth-params-trailing-comma-single.js fails
 language/expressions/object/method-definition/name-invoke-ctor.js fails
-language/expressions/object/method-definition/name-length-dflt.js fails
-language/expressions/object/method-definition/name-length.js fails
 language/expressions/object/method-definition/name-name-prop-symbol.js fails
 language/expressions/object/method-definition/name-prototype-prop.js fails
 language/expressions/object/method-definition/name-super-prop-body.js fails
@@ -4754,7 +4741,6 @@ language/expressions/object/scope-meth-param-rest-elem-var-open.js sloppyFails
 language/expressions/object/scope-meth-paramsbody-var-open.js fails
 language/expressions/object/scope-setter-body-lex-distinc.js sloppyFails
 language/expressions/object/scope-setter-paramsbody-var-open.js fails
-language/expressions/object/setter-length-dflt.js fails
 language/expressions/object/setter-super-prop.js fails
 language/expressions/postfix-decrement/S11.3.2_A5_T1.js sloppyFails
 language/expressions/postfix-decrement/S11.3.2_A5_T2.js sloppyFails
@@ -6707,7 +6693,6 @@ language/statements/for/tco-const-body.js strictFails
 language/statements/for/tco-let-body.js strictFails
 language/statements/for/tco-lhs-body.js strictFails
 language/statements/for/tco-var-body.js strictFails
-language/statements/function/13.2-15-1.js fails
 language/statements/function/13.2-30-s.js fails
 language/statements/function/S13_A15_T4.js sloppyFails
 language/statements/function/arguments-with-arguments-fn.js sloppyFails
@@ -6772,7 +6757,6 @@ language/statements/function/dstr-obj-ptrn-id-init-fn-name-class.js fails
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-cover.js fails
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/function/dstr-obj-ptrn-id-init-fn-name-gen.js fails
-language/statements/function/length-dflt.js fails
 language/statements/function/param-dflt-yield-non-strict.js sloppyFails
 language/statements/function/params-trailing-comma-multiple.js fails
 language/statements/function/params-trailing-comma-single.js fails
@@ -6845,8 +6829,6 @@ language/statements/generators/dstr-obj-ptrn-id-init-fn-name-class.js fails
 language/statements/generators/dstr-obj-ptrn-id-init-fn-name-cover.js fails
 language/statements/generators/dstr-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/generators/dstr-obj-ptrn-id-init-fn-name-gen.js fails
-language/statements/generators/length-dflt.js fails
-language/statements/generators/length-property-descriptor.js fails
 language/statements/generators/params-trailing-comma-multiple.js fails
 language/statements/generators/params-trailing-comma-single.js fails
 language/statements/generators/scope-body-lex-distinct.js sloppyFails
