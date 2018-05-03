@@ -376,7 +376,7 @@ QQuickOverlay *QQuickOverlay::overlay(QQuickWindow *window)
         QQuickItem *content = window->contentItem();
         // Do not re-create the overlay if the window is being destroyed
         // and thus, its content item no longer has a window associated.
-        if (content->window()) {
+        if (content && content->window()) {
             overlay = new QQuickOverlay(window->contentItem());
             window->setProperty(name, QVariant::fromValue(overlay));
         }
