@@ -119,7 +119,7 @@
 %token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
 
 --%left T_PLUS T_MINUS
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_YIELD T_OF T_STATIC T_FROM
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM
 %nonassoc REDUCE_HERE
 
 %start TopLevel
@@ -572,6 +572,7 @@ int Parser::lookaheadToken(Lexer *lexer)
     return yytoken;
 }
 
+//#define PARSER_DEBUG
 
 bool Parser::parse(int startToken)
 {
@@ -631,10 +632,13 @@ bool Parser::parse(int startToken)
         }
 
 #ifdef PARSER_DEBUG
-          qDebug() << "   current token" << yytoken << (yytoken >= 0 ? spell[yytoken] : "(null)");
+       qDebug() << "   in state" << action;
 #endif
 
         action = t_action(action, yytoken);
+#ifdef PARSER_DEBUG
+       qDebug() << "   current token" << yytoken << (yytoken >= 0 ? spell[yytoken] : "(null)") << "new state" << action;
+#endif
         if (action > 0) {
             if (action != ACCEPT_STATE) {
                 yytoken = -1;
@@ -650,7 +654,7 @@ bool Parser::parse(int startToken)
           tos -= rhs[r];
 
 #ifdef PARSER_DEBUG
-          qDebug() << "        reducing through rule " << r;
+          qDebug() << "        reducing through rule " << -action;
 #endif
 
           switch (r) {
@@ -2721,7 +2725,7 @@ StatementListItem: ExpressionStatementLookahead T_FORCE_DECLARATION Declaration 
     } break;
 ./
 
-StatementListOpt: ;
+StatementListOpt: ExpressionStatementLookahead;
 /.
     case $rule_number: {
         sym(1).Node = nullptr;
@@ -3758,8 +3762,9 @@ GeneratorExpression: T_FUNCTION T_STAR T_LPAREN FormalParameters T_RPAREN Genera
 
 GeneratorBody: FunctionBody;
 
-YieldExpression: T_YIELD T_AUTOMATIC_SEMICOLON;
-YieldExpression: T_YIELD T_SEMICOLON;
+YieldExpression: T_YIELD;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+YieldExpression_In: T_YIELD;
 /.
     case $rule_number: {
         AST::YieldExpression *node = new (pool) AST::YieldExpression();
@@ -4004,12 +4009,19 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         } // if
     } while (action != 0);
 
+#ifdef PARSER_DEBUG
+    qDebug() << "Done or error.";
+#endif
+
     if (first_token == last_token) {
         const int errorState = state_stack[tos];
 
         // automatic insertion of `;'
         if (yytoken != -1 && ((t_action(errorState, T_AUTOMATIC_SEMICOLON) && lexer->canInsertAutomaticSemicolon(yytoken))
                               || t_action(errorState, T_COMPATIBILITY_SEMICOLON))) {
+#ifdef PARSER_DEBUG
+            qDebug() << "Inserting automatic semicolon.";
+#endif
             SavedToken &tk = token_buffer[0];
             tk.token = yytoken;
             tk.dval = yylval;
