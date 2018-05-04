@@ -495,8 +495,8 @@ void QQuickTableViewPrivate::calculateColumnWidthsAfterRebuilding()
     for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
         qreal columnWidth = 0;
         for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
-            auto const item = loadedTableItem(QPoint(column, row));
-            columnWidth = qMax(columnWidth, item->geometry().width());
+            if (auto attached = getAttachedObject(loadedTableItem(QPoint(column, row))->item))
+                columnWidth = qMax(columnWidth, attached->cellWidth());
         }
 
         if (columnWidth <= 0)
@@ -522,8 +522,8 @@ void QQuickTableViewPrivate::calculateRowHeightsAfterRebuilding()
     for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
         qreal rowHeight = 0;
         for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
-            auto const item = loadedTableItem(QPoint(column, row));
-            rowHeight = qMax(rowHeight, item->geometry().height());
+            if (auto attached = getAttachedObject(loadedTableItem(QPoint(column, row))->item))
+                rowHeight = qMax(rowHeight, attached->cellHeight());
         }
 
         if (rowHeight <= 0)
@@ -553,8 +553,8 @@ void QQuickTableViewPrivate::calculateColumnWidth(int column)
 
     qreal columnWidth = 0;
     for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
-        auto const item = loadedTableItem(QPoint(column, row));
-        columnWidth = qMax(columnWidth, item->geometry().width());
+        if (auto attached = getAttachedObject(loadedTableItem(QPoint(column, row))->item))
+            columnWidth = qMax(columnWidth, attached->cellWidth());
     }
 
     if (columnWidth <= 0)
@@ -576,8 +576,8 @@ void QQuickTableViewPrivate::calculateRowHeight(int row)
 
     qreal rowHeight = 0;
     for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
-        auto const item = loadedTableItem(QPoint(column, row));
-        rowHeight = qMax(rowHeight, item->geometry().height());
+        if (auto attached = getAttachedObject(loadedTableItem(QPoint(column, row))->item))
+            rowHeight = qMax(rowHeight, attached->cellHeight());
     }
 
     if (rowHeight <= 0)
@@ -661,8 +661,10 @@ qreal QQuickTableViewPrivate::columnWidth(int column)
     }
 
     // If we have an item loaded at column, return the width of the item.
-    if (column >= loadedTable.left() && column <= loadedTable.right())
-        return loadedTableItem(QPoint(column, 0))->geometry().width();
+    if (column >= loadedTable.left() && column <= loadedTable.right()) {
+        if (auto attached = getAttachedObject(loadedTableItem(QPoint(column, 0))->item))
+            return attached->cellWidth();
+    }
 
     return -1;
 }
@@ -695,8 +697,10 @@ qreal QQuickTableViewPrivate::rowHeight(int row)
     }
 
     // If we have an item loaded at row, return the height of the item.
-    if (row >= loadedTable.top() && row <= loadedTable.bottom())
-        return loadedTableItem(QPoint(0, row))->geometry().height();
+    if (row >= loadedTable.top() && row <= loadedTable.bottom()) {
+        if (auto attached = getAttachedObject(loadedTableItem(QPoint(0, row))->item))
+            return attached->cellHeight();
+    }
 
     return -1;
 }
@@ -839,16 +843,24 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 void QQuickTableViewPrivate::layoutTopLeftItem()
 {
     // ###todo: support starting with other top-left items than 0,0
-    Q_TABLEVIEW_ASSERT(loadRequest.firstCell() == QPoint(0, 0), loadRequest.toString());
-    auto topLeftItem = loadedTableItem(QPoint(0, 0));
+    const QPoint cell = loadRequest.firstCell();
+    Q_TABLEVIEW_ASSERT(cell == QPoint(0, 0), loadRequest.toString());
+    auto topLeftItem = loadedTableItem(cell);
     auto item = topLeftItem->item;
 
-    if (item->width() <= 0)
-        item->setWidth(kDefaultColumnWidth);
-    if (item->height() <= 0)
-        item->setHeight(kDefaultRowHeight);
+    qreal width = 0;
+    qreal height = 0;
+    if (auto attached = getAttachedObject(loadedTableItem(cell)->item)) {
+        width = attached->cellWidth();
+        height = attached->cellHeight();
+    }
+    if (width <= 0)
+        width = kDefaultColumnWidth;
+    if (height <= 0)
+        height = kDefaultRowHeight;
 
     item->setPosition(QPoint(tableMargins.left(), tableMargins.top()));
+    item->setSize(QSizeF(width, height));
     topLeftItem->setVisible(true);
     qCDebug(lcTableViewDelegateLifecycle) << "geometry:" << topLeftItem->geometry();
 }

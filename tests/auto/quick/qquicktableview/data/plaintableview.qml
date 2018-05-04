@@ -66,8 +66,8 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: delegateWidth
-            implicitHeight: delegateHeight
+            TableView.cellWidth: delegateWidth
+            TableView.cellHeight: delegateHeight
             color: "lightgray"
             border.width: 1
             Text {

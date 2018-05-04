@@ -141,6 +141,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QQuickTableView *tableView READ tableView NOTIFY tableViewChanged)
+    Q_PROPERTY(qreal cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
+    Q_PROPERTY(qreal cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
     Q_PROPERTY(int row READ row NOTIFY rowChanged)
     Q_PROPERTY(int column READ column NOTIFY columnChanged)
 
@@ -154,6 +156,22 @@ public:
             return;
         m_tableview = newTableView;
         Q_EMIT tableViewChanged();
+    }
+
+    qreal cellWidth() const { return m_cellSize.width(); }
+    void setCellWidth(qreal newWidth) {
+        if (newWidth == m_cellSize.width())
+            return;
+        m_cellSize.setWidth(newWidth);
+        Q_EMIT cellWidthChanged();
+    }
+
+    qreal cellHeight() const { return m_cellSize.height(); }
+    void setCellHeight(qreal newHeight) {
+        if (newHeight == m_cellSize.height())
+            return;
+        m_cellSize.setHeight(newHeight);
+        Q_EMIT cellHeightChanged();
     }
 
     int row() const { return m_row; }
@@ -174,6 +192,8 @@ public:
 
 Q_SIGNALS:
     void tableViewChanged();
+    void cellWidthChanged();
+    void cellHeightChanged();
     void rowChanged();
     void columnChanged();
 
@@ -181,6 +201,7 @@ private:
     QPointer<QQuickTableView> m_tableview;
     int m_row = -1;
     int m_column = -1;
+    QSizeF m_cellSize;
 };
 
 QT_END_NAMESPACE

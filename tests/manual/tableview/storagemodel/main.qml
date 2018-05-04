@@ -60,8 +60,8 @@ Window {
         rowSpacing: 1
         delegate: Rectangle {
             id: tableDelegate
-            width: displayText.implicitWidth + 8
-            height: displayText.implicitHeight + 14
+            TableView.cellWidth: displayText.implicitWidth + 8
+            TableView.cellHeight: displayText.implicitHeight + 14
 
             Text {
                 id: displayText
