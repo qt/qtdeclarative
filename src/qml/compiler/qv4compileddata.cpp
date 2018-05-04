@@ -508,9 +508,11 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
             QQmlJS::AST::FormalParameterList *parameters = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(foe->node)->formals;
             changedSignalParameters << parameters;
 
-            const QStringList formals = parameters->formals();
-            for (const QString &arg : formals)
-                stringTable.registerString(arg);
+            if (parameters) {
+                const QStringList formals = parameters->formals();
+                for (const QString &arg : formals)
+                    stringTable.registerString(arg);
+            }
         }
     }
 
@@ -533,11 +535,13 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 
             function->formalsOffset = signalParameterNameTableOffset - jsUnit->functionOffsetTable()[functionIndex];
 
-            const QStringList formals = changedSignalParameters.at(i)->formals();
-            for (const QString &arg : formals)
-                signalParameterNameTable.append(stringTable.getStringId(arg));
+            if (QQmlJS::AST::FormalParameterList *parameters = changedSignalParameters.at(i)) {
+                const QStringList formals = parameters->formals();
+                for (const QString &arg : formals)
+                    signalParameterNameTable.append(stringTable.getStringId(arg));
 
-            function->nFormals = formals.size();
+                function->nFormals = formals.size();
+            }
             function->length = function->nFormals;
 
             signalParameterNameTableOffset += function->nFormals * sizeof(quint32);
