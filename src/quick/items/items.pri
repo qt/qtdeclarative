@@ -146,7 +146,8 @@ qtConfig(quick-listview) {
 
 qtConfig(quick-tableview) {
     HEADERS += \
-        $$PWD/qquicktableview_p.h
+        $$PWD/qquicktableview_p.h \
+        $$PWD/qquicktableview_p_p.h
     SOURCES += \
         $$PWD/qquicktableview.cpp
 }
