@@ -141,9 +141,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length)) \
     F(ReturnedValue, objectLiteral, (ExecutionEngine *engine, const Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)) \
     \
-    /* foreach */ \
-    F(ReturnedValue, foreachIterator, (ExecutionEngine *engine, const Value &in)) \
-    F(ReturnedValue, foreachNextPropertyName, (const Value &foreach_iterator)) \
+    /* for-in and for-of */ \
+    F(ReturnedValue, getIterator, (ExecutionEngine *engine, const Value &in, int iterator)) \
     \
     /* unary operators */ \
     F(ReturnedValue, uMinus, (const Value &value)) \

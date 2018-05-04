@@ -419,11 +419,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PopContext)
 
-        MOTH_BEGIN_INSTR(ForeachIteratorObject)
-        MOTH_END_INSTR(ForeachIteratorObject)
-
-        MOTH_BEGIN_INSTR(ForeachNextPropertyName)
-        MOTH_END_INSTR(ForeachNextPropertyName)
+        MOTH_BEGIN_INSTR(GetIterator)
+            d << iterator;
+        MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(DeleteMember)
             d << dumpRegister(base, nFormals) << "[" << member << "]";

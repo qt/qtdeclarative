@@ -938,17 +938,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         STACK_VALUE(CallData::Context) = STACK_VALUE(reg);
     MOTH_END_INSTR(PopContext)
 
-    MOTH_BEGIN_INSTR(ForeachIteratorObject)
+    MOTH_BEGIN_INSTR(GetIterator)
         STORE_ACC();
-        acc = Runtime::method_foreachIterator(engine, accumulator);
+        acc = Runtime::method_getIterator(engine, accumulator, iterator);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(ForeachIteratorObject)
-
-    MOTH_BEGIN_INSTR(ForeachNextPropertyName)
-        STORE_ACC();
-        acc = Runtime::method_foreachNextPropertyName(accumulator);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(ForeachNextPropertyName)
+    MOTH_END_INSTR(GetIterator)
 
     MOTH_BEGIN_INSTR(DeleteMember)
         if (!Runtime::method_deleteMember(engine, STACK_VALUE(base), member)) {

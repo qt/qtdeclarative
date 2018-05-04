@@ -262,6 +262,7 @@ public:
       int ival;
       double dval;
       AST::VariableScope scope;
+      AST::ForEachType forEachType;
       AST::ArgumentList *ArgumentList;
       AST::CaseBlock *CaseBlock;
       AST::CaseClause *CaseClause;
@@ -3125,36 +3126,46 @@ IterationStatement: T_FOR T_LPAREN LexicalDeclaration T_SEMICOLON ExpressionOpt_
     } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_IN Expression_In T_RPAREN Statement;
+InOrOf: T_IN;
+/.
+    case $rule_number: {
+        sym(1).forEachType = AST::ForEachType::In;
+    } break;
+./
+
+InOrOf: T_OF;
+/.
+    case $rule_number: {
+        sym(1).forEachType = AST::ForEachType::Of;
+    } break;
+./
+
+IterationStatement: T_FOR T_LPAREN LeftHandSideExpression InOrOf Expression_In T_RPAREN Statement;
 /.
     case $rule_number: {
         AST::ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).Expression, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
-        node->inToken = loc(4);
+        node->inOfToken = loc(4);
         node->rparenToken = loc(6);
+        node->type = sym(4).forEachType;
         sym(1).Node = node;
     } break;
 ./
 
-IterationStatement: T_FOR T_LPAREN ForDeclaration T_IN Expression_In T_RPAREN Statement;
+IterationStatement: T_FOR T_LPAREN ForDeclaration InOrOf Expression_In T_RPAREN Statement;
 /.
     case $rule_number: {
         AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(sym(3).PatternElement, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
         node->varToken = loc(3);
-        node->inToken = loc(4);
+        node->inOfToken = loc(4);
         node->rparenToken = loc(6);
+        node->type = sym(4).forEachType;
         sym(1).Node = node;
     } break;
 ./
-
-
-IterationStatement: T_FOR T_LPAREN LeftHandSideExpression T_OF AssignmentExpression_In T_RPAREN Statement; -- [lookahead ≠ let]
-/.  case $rule_number: { UNIMPLEMENTED; } ./
-IterationStatement: T_FOR T_LPAREN ForDeclaration T_OF Expression_In T_RPAREN Statement;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
 
 ForDeclaration: LetOrConst ForBinding;
 /.  case $rule_number: Q_FALLTHROUGH(); ./

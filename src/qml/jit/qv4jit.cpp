@@ -662,23 +662,14 @@ void BaselineJIT::generate_PushBlockContext(int reg, int index)
 
 void BaselineJIT::generate_PopContext(int reg) { as->popContext(reg); }
 
-void BaselineJIT::generate_ForeachIteratorObject()
+void BaselineJIT::generate_GetIterator(int iterator)
 {
     as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(2);
+    as->prepareCallWithArgCount(3);
+    as->passInt32AsArg(iterator, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_foreachIterator, Assembler::ResultInAccumulator);
-    as->checkException();
-}
-
-void BaselineJIT::generate_ForeachNextPropertyName()
-{
-    as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(1);
-    as->passAccumulatorAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_foreachNextPropertyName,
-                              Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_getIterator, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -1220,11 +1211,8 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(PopContext)
         MOTH_END_INSTR(PopContext)
 
-        MOTH_BEGIN_INSTR(ForeachIteratorObject)
-        MOTH_END_INSTR(ForeachIteratorObject)
-
-        MOTH_BEGIN_INSTR(ForeachNextPropertyName)
-        MOTH_END_INSTR(ForeachNextPropertyName)
+        MOTH_BEGIN_INSTR(GetIterator)
+        MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(DeleteMember)
         MOTH_END_INSTR(DeleteMember)

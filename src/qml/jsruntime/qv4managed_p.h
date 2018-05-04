@@ -201,7 +201,7 @@ public:
         Type_InternalClass,
         Type_ArrayIteratorObject,
         Type_StringIteratorObject,
-        Type_ForeachIteratorObject,
+        Type_ForInIterator,
         Type_RegExp,
 
         Type_QmlSequence

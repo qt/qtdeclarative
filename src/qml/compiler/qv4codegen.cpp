@@ -2593,11 +2593,20 @@ bool Codegen::visit(ForEachStatement *ast)
         return true;
 
     expr.loadInAccumulator();
-    Instruction::ForeachIteratorObject iteratorObjInstr;
+    Instruction::GetIterator iteratorObjInstr;
+    iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
-    Reference lhs = expression(ast->initialiser).asLValue();
+    Reference lhs = expression(ast->initialiser);
+    if (hasError)
+        return false;
+    if (!lhs.isLValue()) {
+        throwSyntaxError(ast->forToken, QLatin1String("Destructuring not supported with for-in and for-of loops."));
+        return false;
+    }
+
+    lhs = lhs.asLValue();
 
     foreachBody(lhs, ast->statement, ast->forToken, iterator);
     return false;
@@ -2618,7 +2627,8 @@ bool Codegen::visit(LocalForEachStatement *ast)
     variableDeclaration(ast->declaration);
 
     expr.loadInAccumulator();
-    Instruction::ForeachIteratorObject iteratorObjInstr;
+    Instruction::GetIterator iteratorObjInstr;
+    iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 

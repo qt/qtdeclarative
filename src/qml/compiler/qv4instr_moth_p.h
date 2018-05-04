@@ -118,8 +118,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
 #define INSTR_PushBlockContext(op) INSTRUCTION(op, PushBlockContext, 2, reg, index)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
-#define INSTR_ForeachIteratorObject(op) INSTRUCTION(op, ForeachIteratorObject, 0)
-#define INSTR_ForeachNextPropertyName(op) INSTRUCTION(op, ForeachNextPropertyName, 0)
+#define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
 #define INSTR_DeleteMember(op) INSTRUCTION(op, DeleteMember, 2, member, base)
 #define INSTR_DeleteSubscript(op) INSTRUCTION(op, DeleteSubscript, 2, base, index)
 #define INSTR_DeleteName(op) INSTRUCTION(op, DeleteName, 1, name)
@@ -242,8 +241,7 @@ QT_BEGIN_NAMESPACE
     F(PushWithContext) \
     F(PushBlockContext) \
     F(PopContext) \
-    F(ForeachIteratorObject) \
-    F(ForeachNextPropertyName) \
+    F(GetIterator) \
     F(DeleteMember) \
     F(DeleteSubscript) \
     F(DeleteName) \

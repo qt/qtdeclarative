@@ -695,25 +695,25 @@ bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
     return setElementFallback(engine, object, index, value);
 }
 
-ReturnedValue Runtime::method_foreachIterator(ExecutionEngine *engine, const Value &in)
+ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &in, int iterator)
 {
     Scope scope(engine);
     ScopedObject o(scope, (Object *)nullptr);
     if (!in.isNullOrUndefined())
         o = in.toObject(engine);
+    if (engine->hasException)
+        return Encode::undefined();
+    if (iterator) {
+        if (!o)
+            return engine->throwTypeError();
+        ScopedFunctionObject f(scope, o->get(engine->symbol_iterator()));
+        if (!f)
+            return engine->throwTypeError();
+        JSCallData cData(scope, 0, nullptr, o);
+        return f->call(cData);
+    }
     return engine->newForInIteratorObject(o)->asReturnedValue();
 }
-
-ReturnedValue Runtime::method_foreachNextPropertyName(const Value &foreach_iterator)
-{
-    Q_ASSERT(foreach_iterator.isObject());
-
-    ForInIteratorObject *it = static_cast<ForInIteratorObject *>(foreach_iterator.objectValue());
-    Q_ASSERT(it->as<ForInIteratorObject>());
-
-    return it->nextPropertyName();
-}
-
 
 void Runtime::method_storeNameSloppy(ExecutionEngine *engine, int nameIndex, const Value &value)
 {

@@ -1701,6 +1701,11 @@ public:
     SourceLocation rparenToken;
 };
 
+enum class ForEachType {
+    In,
+    Of
+};
+
 class QML_PARSER_EXPORT ForEachStatement: public Statement
 {
 public:
@@ -1724,8 +1729,9 @@ public:
     Statement *statement;
     SourceLocation forToken;
     SourceLocation lparenToken;
-    SourceLocation inToken;
+    SourceLocation inOfToken;
     SourceLocation rparenToken;
+    ForEachType type;
 };
 
 class QML_PARSER_EXPORT LocalForEachStatement: public Statement
@@ -1752,8 +1758,9 @@ public:
     SourceLocation forToken;
     SourceLocation lparenToken;
     SourceLocation varToken;
-    SourceLocation inToken;
+    SourceLocation inOfToken;
     SourceLocation rparenToken;
+    ForEachType type;
 };
 
 class QML_PARSER_EXPORT ContinueStatement: public Statement

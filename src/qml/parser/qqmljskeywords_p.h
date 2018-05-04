@@ -76,9 +76,12 @@ static inline int classify2(const QChar *s, int parseModeFlags) {
       return Lexer::T_IN;
     }
   }
-  else if ((parseModeFlags & Lexer::QmlMode) && s[0].unicode() == 'o') {
+  else if (s[0].unicode() == 'o') {
     if (s[1].unicode() == 'n') {
       return (parseModeFlags & Lexer::QmlMode) ? Lexer::T_ON : Lexer::T_IDENTIFIER;
+    }
+    else if (s[1].unicode() == 'f') {
+      return Lexer::T_OF;
     }
   }
   return Lexer::T_IDENTIFIER;

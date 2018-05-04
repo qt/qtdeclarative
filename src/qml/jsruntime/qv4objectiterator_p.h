@@ -133,7 +133,7 @@ struct ForInIteratorPrototype : Object
 
 struct ForInIteratorObject: Object {
     V4_OBJECT2(ForInIteratorObject, Object)
-    Q_MANAGED_TYPE(ForeachIteratorObject)
+    Q_MANAGED_TYPE(ForInIterator)
     V4_PROTOTYPE(forInIteratorPrototype)
 
     ReturnedValue nextPropertyName() const { return d()->it().nextPropertyNameAsString(); }

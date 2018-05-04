@@ -131,8 +131,8 @@ QString Managed::className() const
     case Type_StringIteratorObject:
         s = "String Iterator";
         break;
-    case Type_ForeachIteratorObject:
-        s = "__ForeachIterator";
+    case Type_ForInIterator:
+        s = "__ForIn Iterator";
         break;
     case Type_InternalClass:
         s = "__InternalClass";
