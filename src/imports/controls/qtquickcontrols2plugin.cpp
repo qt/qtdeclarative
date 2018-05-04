@@ -34,7 +34,14 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qdir.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
+#if !defined(QT_STATIC) && QT_CONFIG(library)
+#include <QtCore/qlibrary.h>
+#endif
 #include <QtCore/private/qfileselector_p.h>
+#include <QtQml/private/qqmldirparser_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickchecklabel_p.h>
 #include <QtQuickControls2/private/qquickcolor_p.h>
@@ -74,6 +81,11 @@ public:
 
     QString name() const override;
     QQuickTheme *createTheme() const override;
+
+#if !defined(QT_STATIC) && QT_CONFIG(library)
+private:
+    void loadStylePlugin();
+#endif
 };
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -101,6 +113,11 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
+
+#if !defined(QT_STATIC) && QT_CONFIG(library)
+    // load the style's plugin to get access to its resources
+    loadStylePlugin();
+#endif
 
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
@@ -216,6 +233,41 @@ QQuickTheme *QtQuickControls2Plugin::createTheme() const
 {
     return new QQuickDefaultTheme;
 }
+
+#if !defined(QT_STATIC) && QT_CONFIG(library)
+void QtQuickControls2Plugin::loadStylePlugin()
+{
+    QFileInfo fileInfo = resolvedUrl(QStringLiteral("qmldir")).toLocalFile();
+    if (!fileInfo.exists() || fileInfo.path() == baseUrl().toLocalFile())
+        return;
+
+    QFile file(fileInfo.filePath());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+
+    QQmlDirParser parser;
+    parser.parse(QString::fromUtf8(file.readAll()));
+    if (parser.hasError())
+        return;
+
+    QLibrary lib;
+    lib.setLoadHints(QLibrary::PreventUnloadHint);
+    const auto plugins = parser.plugins();
+    for (const QQmlDirParser::Plugin &plugin : plugins) {
+        QDir dir = fileInfo.dir();
+        if (!plugin.path.isEmpty() && !dir.cd(plugin.path))
+            continue;
+        QString filePath = dir.filePath(plugin.name);
+#if defined(Q_OS_MACOS) && defined(QT_DEBUG)
+        // Avoid mismatching plugins on macOS so that we don't end up loading both debug and
+        // release versions of the same Qt libraries (due to the plugin's dependencies).
+        filePath += QStringLiteral("_debug");
+#endif // Q_OS_MACOS && QT_DEBUG
+        lib.setFileName(filePath);
+        lib.load();
+    }
+}
+#endif // !QT_STATIC && QT_CONFIG(library)
 
 QT_END_NAMESPACE
 

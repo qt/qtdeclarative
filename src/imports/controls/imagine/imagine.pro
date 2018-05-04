@@ -22,7 +22,7 @@ qtquickcontrols2imaginestyle.files += \
     $$files($$PWD/images/*.webp)
 RESOURCES += qtquickcontrols2imaginestyle
 
-CONFIG += no_cxx_module
+CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-imagine))

@@ -19,8 +19,7 @@ SOURCES += \
 RESOURCES += \
     $$PWD/qtquickcontrols2universalstyleplugin.qrc
 
-!static: CONFIG += qmlcache
-CONFIG += no_cxx_module
+CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-universal))
