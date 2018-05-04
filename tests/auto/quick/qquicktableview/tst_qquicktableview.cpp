@@ -52,6 +52,8 @@ using namespace QQuickVisualTestUtil;
 static const char* kTableViewPropName = "tableView";
 static const char* kDelegateObjectName = "tableViewDelegate";
 
+Q_DECLARE_METATYPE(QMarginsF);
+
 #define LOAD_TABLEVIEW(fileName) \
     QScopedPointer<QQuickView> view(createView()); \
     view->setSource(testFileUrl(fileName)); \
@@ -73,6 +75,7 @@ public:
     tst_QQuickTableView();
 
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
+    FxTableItem *findFxTableItem(int row, int column, const QList<FxTableItem *> items) const;
 
 private slots:
     void initTestCase() override;
@@ -85,6 +88,8 @@ private slots:
     void countDelegateItems();
     void checkLayoutOfEqualSizedDelegateItems_data();
     void checkLayoutOfEqualSizedDelegateItems();
+    void checkTableMargins_data();
+    void checkTableMargins();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -101,6 +106,17 @@ QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *o
 {
     QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
     return static_cast<QQuickTableViewAttached *>(attachedObject);
+}
+
+FxTableItem *tst_QQuickTableView::findFxTableItem(int row, int column, const QList<FxTableItem *> items) const
+{
+    for (int i = 0; i < items.count(); ++i) {
+        FxTableItem *fxitem = items[i];
+        auto attached = getAttachedObject(fxitem->item);
+        if (row == attached->row() && column == attached->column())
+            return fxitem;
+    }
+    return nullptr;
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -187,11 +203,18 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems_data()
     QTest::addColumn<QVariant>("model");
     QTest::addColumn<QSize>("tableSize");
     QTest::addColumn<QSizeF>("spacing");
+    QTest::addColumn<QMarginsF>("margins");
 
-    QTest::newRow("QAIM 1x1 1,1") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1);
-    QTest::newRow("QAIM 5x5 0,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 0);
-    QTest::newRow("QAIM 5x5 1,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(1, 0);
-    QTest::newRow("QAIM 5x5 0,1") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 1);
+    // Check spacing together with different table setups
+    QTest::newRow("QAIM 1x1 1,1") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 5x5 0,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 5x5 1,0") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(1, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 5x5 0,1") << TestModelAsVariant(5, 5) << QSize(5, 5) << QSizeF(0, 1) << QMarginsF(0, 0, 0, 0);
+
+    // Check spacing together with margins
+    QTest::newRow("QAIM 1x1 1,1 5555") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
+    QTest::newRow("QAIM 4x4 0,0 3333") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
+    QTest::newRow("QAIM 4x4 2,2 1234") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
 }
 
 void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
@@ -200,11 +223,16 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
     QFETCH(QVariant, model);
     QFETCH(QSize, tableSize);
     QFETCH(QSizeF, spacing);
+    QFETCH(QMarginsF, margins);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     tableView->setModel(model);
     tableView->setRowSpacing(spacing.height());
     tableView->setColumnSpacing(spacing.width());
+    tableView->setLeftMargin(margins.left());
+    tableView->setTopMargin(margins.top());
+    tableView->setRightMargin(margins.right());
+    tableView->setBottomMargin(margins.bottom());
 
     WAIT_UNTIL_POLISHED;
 
@@ -224,13 +252,67 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         auto attached = getAttachedObject(item);
         int row = attached->row();
         int column = attached->column();
-        qreal expectedX = column * (expectedWidth + spacing.width());
-        qreal expectedY = row * (expectedHeight + spacing.height());
+        qreal expectedX = margins.left() + (column * (expectedWidth + spacing.width()));
+        qreal expectedY = margins.top() + (row * (expectedHeight + spacing.height()));
         QCOMPARE(item->x(), expectedX);
         QCOMPARE(item->y(), expectedY);
         QCOMPARE(item->width(), expectedWidth);
         QCOMPARE(item->height(), expectedHeight);
     }
+}
+
+void tst_QQuickTableView::checkTableMargins_data()
+{
+    QTest::addColumn<QVariant>("model");
+    QTest::addColumn<QSize>("tableSize");
+    QTest::addColumn<QSizeF>("spacing");
+    QTest::addColumn<QMarginsF>("margins");
+
+    QTest::newRow("QAIM 1x1 1,1 0000") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 4x4 1,1 0000") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 1x1 1,1 5555") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
+    QTest::newRow("QAIM 4x4 0,0 3333") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
+    QTest::newRow("QAIM 4x4 2,2 1234") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
+    QTest::newRow("QAIM 1x1 0,0 3210") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(0, 0) << QMarginsF(3, 2, 1, 0);
+}
+
+void tst_QQuickTableView::checkTableMargins()
+{
+    // Check that the space between the content view and
+    // the items matches the margins we set on the tableview.
+    QFETCH(QVariant, model);
+    QFETCH(QSize, tableSize);
+    QFETCH(QSizeF, spacing);
+    QFETCH(QMarginsF, margins);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    tableView->setModel(model);
+    tableView->setRowSpacing(spacing.height());
+    tableView->setColumnSpacing(spacing.width());
+    tableView->setLeftMargin(margins.left());
+    tableView->setTopMargin(margins.top());
+    tableView->setRightMargin(margins.right());
+    tableView->setBottomMargin(margins.bottom());
+
+    WAIT_UNTIL_POLISHED;
+
+    auto const items = tableViewPrivate->loadedItems;
+
+    auto const topLeftFxItem = findFxTableItem(0, 0, items);
+    auto const bottomRightFxItem = findFxTableItem(tableSize.height() - 1, tableSize.width() - 1, items);
+    QVERIFY(topLeftFxItem);
+    QVERIFY(bottomRightFxItem);
+
+    auto const topLeftItem = topLeftFxItem->item;
+    auto const bottomRightItem = bottomRightFxItem->item;
+    qreal leftSpace = topLeftItem->x();
+    qreal topSpace = topLeftItem->y();
+    qreal rightSpace = tableView->contentWidth() - (bottomRightItem->x() + bottomRightItem->width());
+    qreal bottomSpace = tableView->contentHeight() - (bottomRightItem->y() + bottomRightItem->height());
+    QCOMPARE(leftSpace, margins.left());
+    QCOMPARE(topSpace, margins.top());
+    QCOMPARE(rightSpace, margins.right());
+    QCOMPARE(bottomSpace, margins.bottom());
 }
 
 QTEST_MAIN(tst_QQuickTableView)

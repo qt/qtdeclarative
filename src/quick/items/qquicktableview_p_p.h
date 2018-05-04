@@ -202,6 +202,7 @@ public:
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
     QSizeF cellSpacing;
+    QMarginsF tableMargins;
 
     int cacheBuffer = kDefaultCacheBuffer;
     QTimer cacheBufferDelayTimer;
@@ -246,6 +247,7 @@ public:
 
     void layoutVerticalEdge(Qt::Edge tableEdge, bool adjustSize);
     void layoutHorizontalEdge(Qt::Edge tableEdge, bool adjustSize);
+    void layoutTopLeftItem();
     void layoutTableEdgeFromLoadRequest();
 
     void updateContentWidth();

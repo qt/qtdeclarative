@@ -173,6 +173,10 @@ void QQuickTableViewPrivate::updateContentWidth()
         qreal averageSize = averageCellSize + cellSpacing.width();
         qreal estimatedWith = (tableSize.width() * averageSize) - cellSpacing.width();
 
+        // loadedTableOuterRect has already been adjusted for left margin
+        currentWidth += tableMargins.right();
+        estimatedWith += tableMargins.right();
+
         if (currentRightColumn >= tableSize.width() - 1) {
             // We are at the last column, and can set the exact width
             if (currentWidth != q->implicitWidth())
@@ -204,6 +208,10 @@ void QQuickTableViewPrivate::updateContentHeight()
         qreal averageSize = averageCellSize + cellSpacing.height();
         qreal estimatedHeight = (tableSize.height() * averageSize) - cellSpacing.height();
 
+        // loadedTableOuterRect has already been adjusted for top margin
+        currentHeight += tableMargins.bottom();
+        estimatedHeight += tableMargins.bottom();
+
         if (currentBottomRow >= tableSize.height() - 1) {
             // We are at the last row, and can set the exact height
             if (currentHeight != q->implicitHeight())
@@ -229,23 +237,23 @@ void QQuickTableViewPrivate::enforceFirstRowColumnAtOrigo()
     bool layoutNeeded = false;
     const qreal flickMargin = 50;
 
-    if (loadedTable.x() == 0 && loadedTableOuterRect.x() != 0) {
+    if (loadedTable.x() == 0 && loadedTableOuterRect.x() != tableMargins.left()) {
         // The table is at the beginning, but not at the edge of the
         // content view. So move the table to origo.
-        loadedTableOuterRect.moveLeft(0);
+        loadedTableOuterRect.moveLeft(tableMargins.left());
         layoutNeeded = true;
     } else if (loadedTableOuterRect.x() < 0) {
         // The table is outside the beginning of the content view. Move
         // the whole table inside, and make some room for flicking.
-        loadedTableOuterRect.moveLeft(loadedTable.x() == 0 ? 0 : flickMargin);
+        loadedTableOuterRect.moveLeft(tableMargins.left() + loadedTable.x() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
-    if (loadedTable.y() == 0 && loadedTableOuterRect.y() != 0) {
-        loadedTableOuterRect.moveTop(0);
+    if (loadedTable.y() == 0 && loadedTableOuterRect.y() != tableMargins.top()) {
+        loadedTableOuterRect.moveTop(tableMargins.top());
         layoutNeeded = true;
     } else if (loadedTableOuterRect.y() < 0) {
-        loadedTableOuterRect.moveTop(loadedTable.y() == 0 ? 0 : flickMargin);
+        loadedTableOuterRect.moveTop(tableMargins.top() + loadedTable.y() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
@@ -815,6 +823,16 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge, bool adjus
     }
 }
 
+void QQuickTableViewPrivate::layoutTopLeftItem()
+{
+    // ###todo: support starting with other top-left items than 0,0
+    Q_TABLEVIEW_ASSERT(loadRequest.firstCell() == QPoint(0, 0), loadRequest.toString());
+    auto topLeftItem = loadedTableItem(QPoint(0, 0));
+    topLeftItem->item->setPosition(QPoint(tableMargins.left(), tableMargins.top()));
+    topLeftItem->setVisible(true);
+    qCDebug(lcTableViewDelegateLifecycle) << "geometry:" << topLeftItem->geometry();
+}
+
 void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
 {
     // If tableRebuilding is true, we avoid adjusting cell sizes until all items
@@ -837,11 +855,7 @@ void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
         layoutHorizontalEdge(loadRequest.edge(), adjustSize);
         break;
     default:
-        // Request loaded top-left item rather than an edge.
-        // ###todo: support starting with other top-left items than 0,0
-        Q_TABLEVIEW_ASSERT(loadRequest.firstCell() == QPoint(0, 0), loadRequest.toString());
-        loadedTableItem(QPoint(0, 0))->setVisible(true);
-        qCDebug(lcTableViewDelegateLifecycle) << "top-left item geometry:" << loadedTableItem(QPoint(0, 0))->geometry();
+        layoutTopLeftItem();
         break;
     }
 }
@@ -1199,6 +1213,78 @@ void QQuickTableView::setColumnSpacing(qreal spacing)
     d->cellSpacing.setWidth(spacing);
     d->invalidateColumnRowPositions();
     emit columnSpacingChanged();
+}
+
+qreal QQuickTableView::topMargin() const
+{
+    return d_func()->tableMargins.top();
+}
+
+void QQuickTableView::setTopMargin(qreal margin)
+{
+    Q_D(QQuickTableView);
+    if (qt_is_nan(margin))
+        return;
+    if (qFuzzyCompare(d->tableMargins.top(), margin))
+        return;
+
+    d->tableMargins.setTop(margin);
+    d->invalidateColumnRowPositions();
+    emit topMarginChanged();
+}
+
+qreal QQuickTableView::bottomMargin() const
+{
+    return d_func()->tableMargins.bottom();
+}
+
+void QQuickTableView::setBottomMargin(qreal margin)
+{
+    Q_D(QQuickTableView);
+    if (qt_is_nan(margin))
+        return;
+    if (qFuzzyCompare(d->tableMargins.bottom(), margin))
+        return;
+
+    d->tableMargins.setBottom(margin);
+    d->invalidateColumnRowPositions();
+    emit bottomMarginChanged();
+}
+
+qreal QQuickTableView::leftMargin() const
+{
+    return d_func()->tableMargins.left();
+}
+
+void QQuickTableView::setLeftMargin(qreal margin)
+{
+    Q_D(QQuickTableView);
+    if (qt_is_nan(margin))
+        return;
+    if (qFuzzyCompare(d->tableMargins.left(), margin))
+        return;
+
+    d->tableMargins.setLeft(margin);
+    d->invalidateColumnRowPositions();
+    emit leftMarginChanged();
+}
+
+qreal QQuickTableView::rightMargin() const
+{
+    return d_func()->tableMargins.right();
+}
+
+void QQuickTableView::setRightMargin(qreal margin)
+{
+    Q_D(QQuickTableView);
+    if (qt_is_nan(margin))
+        return;
+    if (qFuzzyCompare(d->tableMargins.right(), margin))
+        return;
+
+    d->tableMargins.setRight(margin);
+    d->invalidateColumnRowPositions();
+    emit rightMarginChanged();
 }
 
 int QQuickTableView::cacheBuffer() const
