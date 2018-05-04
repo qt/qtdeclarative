@@ -645,6 +645,9 @@ public:
     void handleTryCatch(AST::TryStatement *ast);
     void handleTryFinally(AST::TryStatement *ast);
 
+    void foreachBody(const Reference &lhs, AST::Statement *body, const AST::SourceLocation &forToken, const Reference &nextIterObj);
+
+
     Reference referenceForName(const QString &name, bool lhs);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);

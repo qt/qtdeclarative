@@ -2587,8 +2587,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
     RegisterScope scope(this);
 
-    Reference nextIterObj = Reference::fromStackSlot(this);
-    Reference iterObj = Reference::fromStackSlot(this);
+    Reference iterator = Reference::fromStackSlot(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return true;
@@ -2596,9 +2595,43 @@ bool Codegen::visit(ForEachStatement *ast)
     expr.loadInAccumulator();
     Instruction::ForeachIteratorObject iteratorObjInstr;
     bytecodeGenerator->addInstruction(iteratorObjInstr);
-    iterObj.storeConsumeAccumulator();
+    iterator.storeConsumeAccumulator();
 
     Reference lhs = expression(ast->initialiser).asLValue();
+
+    foreachBody(lhs, ast->statement, ast->forToken, iterator);
+    return false;
+}
+
+bool Codegen::visit(LocalForEachStatement *ast)
+{
+    if (hasError)
+        return true;
+
+    RegisterScope scope(this);
+
+    Reference iterator = Reference::fromStackSlot(this);
+    Reference expr = expression(ast->expression);
+    if (hasError)
+        return true;
+
+    variableDeclaration(ast->declaration);
+
+    expr.loadInAccumulator();
+    Instruction::ForeachIteratorObject iteratorObjInstr;
+    bytecodeGenerator->addInstruction(iteratorObjInstr);
+    iterator.storeConsumeAccumulator();
+
+    Reference lhs = referenceForName(ast->declaration->bindingIdentifier, true).asLValue();
+    foreachBody(lhs, ast->statement, ast->forToken, iterator);
+
+    return false;
+}
+
+void Codegen::foreachBody(const Reference &lhs, Statement *statements, const SourceLocation &forToken, const Reference &iterator)
+{
+    RegisterScope scope(this);
+    Reference nextIterObj = Reference::fromStackSlot(this);
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -2612,12 +2645,12 @@ bool Codegen::visit(ForEachStatement *ast)
     Reference::fromMember(nextIterObj, QStringLiteral("value")).loadInAccumulator();
     lhs.storeConsumeAccumulator();
 
-    statement(ast->statement);
-    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
+    statement(statements);
+    setJumpOutLocation(bytecodeGenerator, statements, forToken);
 
     in.link();
 
-    Reference next = Reference::fromMember(iterObj, QStringLiteral("next"));
+    Reference next = Reference::fromMember(iterator, QStringLiteral("next"));
     next.loadInAccumulator();
     next = next.asLValue();
     Codegen::Arguments args{0, 0};
@@ -2628,8 +2661,6 @@ bool Codegen::visit(ForEachStatement *ast)
     bytecodeGenerator->jumpFalse().link(body);
 
     end.link();
-
-    return false;
 }
 
 bool Codegen::visit(ForStatement *ast)
@@ -2726,57 +2757,6 @@ bool Codegen::visit(LabelledStatement *ast)
         statement(ast->statement);
         breakLabel.link();
     }
-
-    return false;
-}
-
-bool Codegen::visit(LocalForEachStatement *ast)
-{
-    if (hasError)
-        return true;
-
-    RegisterScope scope(this);
-
-    Reference nextIterObj = Reference::fromStackSlot(this);
-    Reference iterObj = Reference::fromStackSlot(this);
-    Reference expr = expression(ast->expression);
-    if (hasError)
-        return true;
-
-    variableDeclaration(ast->declaration);
-
-    expr.loadInAccumulator();
-    Instruction::ForeachIteratorObject iteratorObjInstr;
-    bytecodeGenerator->addInstruction(iteratorObjInstr);
-    iterObj.storeConsumeAccumulator();
-
-    BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
-    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-
-    bytecodeGenerator->jump().link(in);
-    ControlFlowLoop flow(this, &end, &in);
-
-    BytecodeGenerator::Label body = bytecodeGenerator->label();
-
-    Reference it = referenceForName(ast->declaration->bindingIdentifier, true).asLValue();
-
-    nextIterObj.loadInAccumulator();
-    it.storeConsumeAccumulator();
-
-    statement(ast->statement);
-    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
-
-    in.link();
-
-    iterObj.loadInAccumulator();
-    Instruction::ForeachNextPropertyName nextPropInstr;
-    bytecodeGenerator->addInstruction(nextPropInstr);
-    nextIterObj.storeConsumeAccumulator();
-
-    Reference::fromConst(this, QV4::Encode::null()).loadInAccumulator();
-    bytecodeGenerator->jumpStrictNotEqual(nextIterObj.stackSlot(), body);
-
-    end.link();
 
     return false;
 }
