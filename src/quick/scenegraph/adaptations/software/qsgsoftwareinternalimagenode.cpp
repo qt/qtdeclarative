@@ -68,6 +68,9 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
     QMargins sourceMargins = normalizedMargins(sourceMarginsIn);
     QMargins targetMargins = normalizedMargins(targetMarginsIn);
 
+    const qreal sourceDpr = pixmap.devicePixelRatioF();
+    sourceMargins *= sourceDpr;
+
     // source center
     const int sourceCenterTop = sourceRect.top() + sourceMargins.top();
     const int sourceCenterLeft = sourceRect.left() + sourceMargins.left();
@@ -89,9 +92,9 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
     int columns = 3;
     int rows = 3;
     if (rules.horizontal != Qt::StretchTile && sourceCenterWidth != 0)
-        columns = qMax(3, 2 + qCeil(targetCenterWidth / qreal(sourceCenterWidth)));
+        columns = qMax(3, 2 + qCeil((targetCenterWidth * sourceDpr) / qreal(sourceCenterWidth)));
     if (rules.vertical != Qt::StretchTile && sourceCenterHeight != 0)
-        rows = qMax(3, 2 + qCeil(targetCenterHeight / qreal(sourceCenterHeight)));
+        rows = qMax(3, 2 + qCeil((targetCenterHeight * sourceDpr) / qreal(sourceCenterHeight)));
 
     xTarget.resize(columns + 1);
     yTarget.resize(rows + 1);
@@ -121,7 +124,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
         dx = targetCenterWidth;
         break;
     case Qt::RepeatTile:
-        dx = sourceCenterWidth;
+        dx = sourceCenterWidth / sourceDpr;
         break;
     case Qt::RoundTile:
         dx = targetCenterWidth / qreal(columns - 2);
@@ -136,7 +139,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
         dy = targetCenterHeight;
         break;
     case Qt::RepeatTile:
-        dy = sourceCenterHeight;
+        dy = sourceCenterHeight / sourceDpr;
         break;
     case Qt::RoundTile:
         dy = targetCenterHeight / qreal(rows - 2);

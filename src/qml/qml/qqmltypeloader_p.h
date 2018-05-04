@@ -304,10 +304,12 @@ public:
 
     QQmlImportDatabase *importDatabase() const;
 
-    QQmlRefPointer<QQmlTypeData> getType(const QUrl &url, Mode mode = PreferSynchronous);
+    static QUrl normalize(const QUrl &unNormalizedUrl);
+
+    QQmlRefPointer<QQmlTypeData> getType(const QUrl &unNormalizedUrl, Mode mode = PreferSynchronous);
     QQmlRefPointer<QQmlTypeData> getType(const QByteArray &, const QUrl &url, Mode mode = PreferSynchronous);
 
-    QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &);
+    QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &unNormalizedUrl);
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);

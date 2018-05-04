@@ -903,9 +903,10 @@ void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 
 void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status)
 {
-    Q_Q(QQmlDelegateModel);
     if (!isDoneIncubating(status))
         return;
+
+    const QList<QQmlError> incubationTaskErrors = incubationTask->errors();
 
     QQmlDelegateModelItem *cacheItem = incubationTask->incubating;
     cacheItem->incubationTask = nullptr;
@@ -920,7 +921,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
             emitCreatedItem(incubationTask, cacheItem->object);
         cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
-        qmlWarning(q, m_delegate->errors()) << "Error creating delegate";
+        qmlWarning(m_delegate, incubationTaskErrors + m_delegate->errors()) << "Error creating delegate";
     }
 
     if (!cacheItem->isObjectReferenced()) {
@@ -1017,7 +1018,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             if (QQmlAdaptorModelProxyInterface *proxy
                     = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
                 ctxt = new QQmlContextData;
-                ctxt->setParent(cacheItem->contextData);
+                ctxt->setParent(cacheItem->contextData, /*stronglyReferencedByParent*/true);
                 ctxt->contextObject = proxy->proxiedObject();
             }
         }

@@ -8692,8 +8692,6 @@ void tst_QQuickListView::QTBUG_34576_velocityZero()
     QQuickView *window = new QQuickView(nullptr);
     window->setGeometry(0,0,240,320);
 
-    QQmlContext *ctxt = window->rootContext();
-
     QString filename(testFile("qtbug34576.qml"));
     window->setSource(QUrl::fromLocalFile(filename));
     window->show();

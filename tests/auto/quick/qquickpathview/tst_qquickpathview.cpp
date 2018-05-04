@@ -2470,9 +2470,11 @@ static void verify_offsets(QQuickPathView *pathview, int toidx, qreal fromoffset
     QTest::qWait(100);
     first = pathview->offset();
     while (1) {
+        if (first == 0)
+            first = pathview->offset();
         QTest::qWait(10); // highlightMoveDuration: 1000
         second = pathview->offset();
-        if (!started && second != first) { // animation started
+        if (!started && first != 0 && second != first) { // animation started
             started = true;
             break;
         }
