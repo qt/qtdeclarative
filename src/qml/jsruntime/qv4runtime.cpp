@@ -1070,7 +1070,8 @@ ReturnedValue Runtime::method_callProperty(ExecutionEngine *engine, Value *base,
             lookupObject = RuntimeHelpers::convertToObject(engine, *base);
             if (engine->hasException) // type error
                 return Encode::undefined();
-            base = lookupObject;
+            if (!engine->currentStackFrame->v4Function->isStrict())
+                base = lookupObject;
         }
     }
 
