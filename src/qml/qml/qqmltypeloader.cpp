@@ -1667,7 +1667,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &unNormalizedUrl, Mode mode)
             (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
 
-    QUrl url = normalize(unNormalizedUrl);
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
@@ -1732,7 +1732,7 @@ QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &unNormalizedUrl)
             (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
 
-    QUrl url = normalize(unNormalizedUrl);
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
