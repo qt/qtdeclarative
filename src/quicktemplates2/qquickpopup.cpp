@@ -775,6 +775,8 @@ QQuickPopup::~QQuickPopup()
     d->popupItem->ungrabShortcut();
     delete d->popupItem;
     d->popupItem = nullptr;
+    delete d->positioner;
+    d->positioner = nullptr;
 }
 
 /*!

@@ -248,7 +248,7 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
 
 void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
-    if (child->isAncestorOf(m_parentItem))
+    if (child == m_parentItem || child->isAncestorOf(m_parentItem))
         removeAncestorListeners(item);
 }
 
