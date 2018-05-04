@@ -70,6 +70,8 @@ DECLARE_HEAP_OBJECT(StringObject, Object) {
         LengthPropertyIndex = 0
     };
 
+    void init(bool /*don't init*/)
+    { Object::init(); }
     void init();
     void init(const QV4::String *string);
 

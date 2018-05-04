@@ -224,7 +224,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_QmlContextWrapper] = classes[Class_Object]->changeVTable(QV4::QQmlContextWrapper::staticVTable());
 
     ic = newInternalClass(QV4::StringObject::staticVTable(), objectPrototype());
-    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(ic->d());
+    jsObjects[StringProto] = memoryManager->allocObject<StringPrototype>(ic->d(), /*init =*/ false);
     classes[Class_String] = classes[Class_Empty]->changeVTable(QV4::String::staticVTable())->changePrototype(stringPrototype()->d());
     Q_ASSERT(stringPrototype()->d() && classes[Class_String]->prototype);
 

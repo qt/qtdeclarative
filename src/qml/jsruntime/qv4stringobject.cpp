@@ -177,6 +177,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     Heap::InternalClass *ic = scope.engine->classes[ExecutionEngine::Class_StringObject]->changePrototype(scope.engine->objectPrototype()->d());
     d()->internalClass.set(scope.engine, ic);
     d()->string.set(scope.engine, scope.engine->id_empty()->d());
+    setProperty(scope.engine, Heap::StringObject::LengthPropertyIndex, Primitive::fromInt32(0));
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
