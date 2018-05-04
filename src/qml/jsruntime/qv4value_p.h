@@ -892,7 +892,7 @@ struct ValueArray {
         WriteBarrier::write(e, base(), values[index].data_ptr(), v.asReturnedValue());
     }
     void set(EngineBase *e, uint index, Heap::Base *b) {
-        WriteBarrier::write(e, base(), values[index].data_ptr(), b->asReturnedValue());
+        WriteBarrier::write(e, base(), values[index].data_ptr(), Value::fromHeapObject(b).asReturnedValue());
     }
     inline const Value &operator[] (uint index) const {
         Q_ASSERT(index < alloc);
