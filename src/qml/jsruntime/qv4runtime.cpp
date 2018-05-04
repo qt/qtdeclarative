@@ -1230,6 +1230,22 @@ ReturnedValue Runtime::method_createBlockContext(ExecutionContext *parent, int i
     return parent->newBlockContext(e->currentStackFrame, index)->asReturnedValue();
 }
 
+ReturnedValue Runtime::method_createScriptContext(ExecutionEngine *engine, int index)
+{
+    Q_ASSERT(engine->currentStackFrame->context()->d()->type == Heap::ExecutionContext::Type_GlobalContext ||
+             engine->currentStackFrame->context()->d()->type == Heap::ExecutionContext::Type_QmlContext);
+    ReturnedValue c = ExecutionContext::newBlockContext(engine->currentStackFrame, index)->asReturnedValue();
+    engine->setScriptContext(c);
+    return c;
+}
+
+ReturnedValue Runtime::method_popScriptContext(ExecutionEngine *engine)
+{
+    ReturnedValue root = engine->rootContext()->asReturnedValue();
+    engine->setScriptContext(root);
+    return root;
+}
+
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {

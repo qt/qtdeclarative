@@ -117,6 +117,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 3, reg, index, name)
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
 #define INSTR_PushBlockContext(op) INSTRUCTION(op, PushBlockContext, 2, reg, index)
+#define INSTR_PushScriptContext(op) INSTRUCTION(op, PushScriptContext, 1, index)
+#define INSTR_PopScriptContext(op) INSTRUCTION(op, PopScriptContext, 0)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
 #define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
 #define INSTR_DeleteMember(op) INSTRUCTION(op, DeleteMember, 2, member, base)
@@ -240,6 +242,8 @@ QT_BEGIN_NAMESPACE
     F(PushCatchContext) \
     F(PushWithContext) \
     F(PushBlockContext) \
+    F(PushScriptContext) \
+    F(PopScriptContext) \
     F(PopContext) \
     F(GetIterator) \
     F(DeleteMember) \

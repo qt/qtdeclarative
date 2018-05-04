@@ -585,6 +585,7 @@ void ExecutionEngine::initRootContext()
     r->d_unchecked()->init(Heap::ExecutionContext::Type_GlobalContext);
     r->d()->activation.set(this, globalObject->d());
     jsObjects[RootContext] = r;
+    jsObjects[ScriptContext] = r;
     jsObjects[IntegerNull] = Encode((int)0);
 }
 

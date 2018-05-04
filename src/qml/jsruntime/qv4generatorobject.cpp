@@ -63,7 +63,7 @@ ReturnedValue GeneratorFunctionCtor::callAsConstructor(const FunctionObject *f, 
         return Encode::undefined();
 
     Function *vmf = compilationUnit->linkToEngine(engine);
-    ExecutionContext *global = engine->rootContext();
+    ExecutionContext *global = engine->scriptContext();
     return Encode(GeneratorFunction::create(global, vmf));
 }
 

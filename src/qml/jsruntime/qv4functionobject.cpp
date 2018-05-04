@@ -270,7 +270,7 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
         return Encode::undefined();
 
     Function *vmf = compilationUnit->linkToEngine(engine);
-    ExecutionContext *global = engine->rootContext();
+    ExecutionContext *global = engine->scriptContext();
     return Encode(FunctionObject::createScriptFunction(global, vmf));
 }
 

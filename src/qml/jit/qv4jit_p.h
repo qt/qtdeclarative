@@ -181,6 +181,8 @@ public:
     void generate_PushCatchContext(int reg, int index, int name) override;
     void generate_PushWithContext(int reg) override;
     void generate_PushBlockContext(int reg, int index) override;
+    void generate_PushScriptContext(int index) override;
+    void generate_PopScriptContext() override;
     void generate_PopContext(int reg) override;
     void generate_GetIterator(int iterator) override;
     void generate_DeleteMember(int member, int base) override;

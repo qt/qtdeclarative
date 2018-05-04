@@ -127,6 +127,8 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, createWithContext, (ExecutionContext *parent, const Value &o)) \
     F(ReturnedValue, createCatchContext, (ExecutionContext *parent, int blockIndex, int exceptionVarNameIndex)) \
     F(ReturnedValue, createBlockContext, (ExecutionContext *parent, int index)) \
+    F(ReturnedValue, createScriptContext, (ExecutionEngine *engine, int index)) \
+    F(ReturnedValue, popScriptContext, (ExecutionEngine *engine)) \
     \
     /* closures */ \
     F(ReturnedValue, closure, (ExecutionEngine *engine, int functionId)) \

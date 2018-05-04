@@ -253,7 +253,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
     m_runningJob = true;
 
     QV4::ExecutionContext *ctx = m_engine->currentStackFrame ? m_engine->currentContext()
-                                                             : m_engine->rootContext();
+                                                             : m_engine->scriptContext();
 
     QV4::Script script(ctx, QV4::Compiler::ContextType::Eval, expression);
     if (const QV4::Function *function = m_engine->currentStackFrame

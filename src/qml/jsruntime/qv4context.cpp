@@ -57,17 +57,17 @@ DEFINE_MANAGED_VTABLE(CallContext);
 Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int blockIndex)
 {
     Function *function = frame->v4Function;
-    Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
 
     Heap::InternalClass *ic = function->compilationUnit->runtimeBlocks.at(blockIndex);
     int nLocals = ic->size;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
 
-    ExecutionEngine *v4 = outer->internalClass->engine;
+    ExecutionEngine *v4 = function->internalClass->engine;
     Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, ic);
     c->init();
     c->type = Heap::ExecutionContext::Type_BlockContext;
 
+    Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
     c->outer.set(v4, outer);
     c->function.set(v4, static_cast<Heap::FunctionObject *>(frame->jsFrame->function.m()));
 
@@ -137,7 +137,6 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     ScopedContext ctx(scope, this);
     while (ctx) {
         switch (ctx->d()->type) {
-        case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext:
             if (!activation) {
                 Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx->d());
@@ -158,6 +157,8 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
                 activation = ctx->d()->activation;
             break;
         }
+        case Heap::ExecutionContext::Type_BlockContext:
+            // never create activation records on block contexts
         default:
             break;
         }
@@ -169,7 +170,8 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
     ScopedProperty desc(scope);
     PropertyAttributes attrs(Attr_Data);
     attrs.setConfigurable(deletable);
-    activation->__defineOwnProperty__(scope.engine, name, desc, attrs);
+    if (!activation->__defineOwnProperty__(scope.engine, name, desc, attrs))
+        scope.engine->throwTypeError();
 }
 
 bool ExecutionContext::deleteProperty(String *name)

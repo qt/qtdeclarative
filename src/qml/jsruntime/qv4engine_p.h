@@ -161,6 +161,7 @@ public:
 
     enum JSObjects {
         RootContext,
+        ScriptContext,
         IntegerNull, // Has to come after the RootContext to make the context stack safe
         ObjectProto,
         SymbolProto,
@@ -223,6 +224,8 @@ public:
     enum { NTypedArrayTypes = 9 }; // == TypedArray::NValues, avoid header dependency
 
     ExecutionContext *rootContext() const { return reinterpret_cast<ExecutionContext *>(jsObjects + RootContext); }
+    ExecutionContext *scriptContext() const { return reinterpret_cast<ExecutionContext *>(jsObjects + ScriptContext); }
+    void setScriptContext(ReturnedValue c) { jsObjects[ScriptContext] = c; }
     FunctionObject *objectCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Object_Ctor); }
     FunctionObject *stringCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + String_Ctor); }
     FunctionObject *symbolCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Symbol_Ctor); }

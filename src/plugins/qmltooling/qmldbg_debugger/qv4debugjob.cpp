@@ -65,7 +65,7 @@ void JavaScriptJob::run()
     QV4::Scope scope(engine);
 
     QV4::ScopedContext ctx(scope, engine->currentStackFrame ? engine->currentContext()
-                                                            : engine->rootContext());
+                                                            : engine->scriptContext());
     QObject scopeObject;
 
     QV4::CppStackFrame *frame = engine->currentStackFrame;

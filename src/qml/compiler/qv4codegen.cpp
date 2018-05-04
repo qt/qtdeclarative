@@ -2343,6 +2343,11 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     ControlFlow *savedControlFlow = controlFlow;
     controlFlow = nullptr;
 
+    if (_context->contextType == ContextType::Global) {
+        _module->blocks.append(_context);
+        _context->blockIndex = _module->blocks.count() - 1;
+    }
+
     _context->hasDirectEval |= (_context->contextType == ContextType::Eval || _context->contextType == ContextType::Global || _module->debugMode); // Conditional breakpoints are like eval in the function
 
     // When a user writes the following QML signal binding:
@@ -2371,6 +2376,12 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     if (requiresReturnValue)
         returnAddress = bytecodeGenerator->newRegister();
     qSwap(_returnAddress, returnAddress);
+
+    // register the lexical scope for global code
+    if (!_context->parent && _context->requiresExecutionContext) {
+        _module->blocks.append(_context);
+        _context->blockIndex = _module->blocks.count() - 1;
+    }
 
     RegisterScope registerScope(this);
     _context->emitBlockHeader(this);
@@ -2413,6 +2424,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     beginFunctionBodyHook();
 
     statementList(body);
+
+    _context->emitBlockFooter(this, -1);
 
     if (hasError || !endsWithReturn(_module, body)) {
         bytecodeGenerator->setLocation(ast->lastSourceLocation());

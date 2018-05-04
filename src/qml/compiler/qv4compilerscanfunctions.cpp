@@ -522,20 +522,19 @@ void ScanFunctions::calcEscapingVariables()
                 if (current->isWithBlock || current->contextType != ContextType::Block)
                     break;
             }
+            Q_ASSERT(c != inner);
             while (c) {
                 Context::MemberMap::const_iterator it = c->members.find(var);
                 if (it != c->members.end()) {
-                    if (c != inner) {
+                    if (c->parent || it->isLexicallyScoped()) {
                         it->canEscape = true;
                         c->requiresExecutionContext = true;
                     }
                     break;
                 }
                 if (c->findArgument(var) != -1) {
-                    if (c != inner) {
-                        c->argumentsCanEscape = true;
-                        c->requiresExecutionContext = true;
-                    }
+                    c->argumentsCanEscape = true;
+                    c->requiresExecutionContext = true;
                     break;
                 }
                 c = c->parent;
@@ -551,18 +550,21 @@ void ScanFunctions::calcEscapingVariables()
         bool allVarsEscape = c->hasDirectEval;
         if (allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             allVarsEscape = false;
-        if (m->debugMode)
+        if (!c->parent || m->debugMode)
             allVarsEscape = true;
         if (allVarsEscape) {
-            c->requiresExecutionContext = true;
-            c->argumentsCanEscape = true;
+            if (c->parent) {
+                c->requiresExecutionContext = true;
+                c->argumentsCanEscape = true;
+            } else {
+                for (const auto &m : qAsConst(c->members)) {
+                    if (m.isLexicallyScoped()) {
+                        c->requiresExecutionContext = true;
+                        break;
+                    }
+                }
+            }
         }
-        // ### for now until we have lexically scoped vars that'll require it
-        if (c->contextType == ContextType::Global)
-            c->requiresExecutionContext = false;
-        // ### Shouldn't be required, we could probably rather change the ContextType to FunctionCode for strict eval
-        if (c->contextType == ContextType::Eval && c->isStrict)
-            c->requiresExecutionContext = true;
         if (c->contextType == ContextType::Block && c->isCatchBlock) {
             c->requiresExecutionContext = true;
             auto m = c->members.find(c->catchedVariable);

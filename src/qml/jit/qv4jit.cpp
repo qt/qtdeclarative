@@ -659,6 +659,34 @@ void BaselineJIT::generate_PushBlockContext(int reg, int index)
     JIT_GENERATE_RUNTIME_CALL(pushBlockContextHelper, Assembler::IgnoreResult);
 }
 
+static void pushScriptContextHelper(QV4::Value *stack, ExecutionEngine *engine, int index)
+{
+    stack[CallData::Context] = Runtime::method_createScriptContext(engine, index);
+}
+
+void BaselineJIT::generate_PushScriptContext(int index)
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(3);
+    as->passInt32AsArg(index, 2);
+    as->passEngineAsArg(1);
+    as->passRegAsArg(0, 0);
+    JIT_GENERATE_RUNTIME_CALL(pushScriptContextHelper, Assembler::IgnoreResult);
+}
+
+static void popScriptContextHelper(QV4::Value *stack, ExecutionEngine *engine)
+{
+    stack[CallData::Context] = Runtime::method_popScriptContext(engine);
+}
+
+void BaselineJIT::generate_PopScriptContext()
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(2);
+    as->passEngineAsArg(1);
+    as->passRegAsArg(0, 0);
+    JIT_GENERATE_RUNTIME_CALL(popScriptContextHelper, Assembler::IgnoreResult);
+}
 
 void BaselineJIT::generate_PopContext(int reg) { as->popContext(reg); }
 
@@ -1207,6 +1235,12 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(PushBlockContext)
         MOTH_END_INSTR(PushBlockContext)
+
+        MOTH_BEGIN_INSTR(PushScriptContext)
+        MOTH_END_INSTR(PushScriptContext)
+
+        MOTH_BEGIN_INSTR(PopScriptContext)
+        MOTH_END_INSTR(PopScriptContext)
 
         MOTH_BEGIN_INSTR(PopContext)
         MOTH_END_INSTR(PopContext)

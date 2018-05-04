@@ -351,7 +351,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
 
     if (!directCall) {
         // the context for eval should be the global scope
-        ctx = v4->rootContext();
+        ctx = v4->scriptContext();
     }
 
     String *scode = argv[0].stringValue();
