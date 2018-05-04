@@ -181,7 +181,12 @@ public:
 public:
     QList<FxTableItem *> loadedItems;
 
+    // model, delegateModel and modelVariant all points to the same model. modelVariant
+    // is the model assigned by the user. And delegateModel is the wrapper model we create
+    // around it. But if the model is an instance model directly, we cannot wrap it, so
+    // we need a pointer for that case as well.
     QQmlInstanceModel* model = nullptr;
+    QPointer<QQmlDelegateModel> delegateModel = nullptr;
     QVariant modelVariant;
 
     // loadedTable describes the table cells that are currently loaded (from top left
@@ -226,7 +231,6 @@ public:
 #endif
 
 public:
-    inline QQmlDelegateModel *wrapperModel() const { return qobject_cast<QQmlDelegateModel*>(model); }
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
 
     int modelIndexAtCell(const QPoint &cell);
