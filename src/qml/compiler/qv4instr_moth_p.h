@@ -375,7 +375,9 @@ QT_BEGIN_NAMESPACE
     nargs,
 
 #define MOTH_DECODE_ARG(arg, type, nargs, offset) \
-    arg = qFromLittleEndian<type>(reinterpret_cast<const type *>(code)[-nargs + offset]);
+    arg = qFromLittleEndian<type>( \
+            static_cast<const void *>( \
+                &reinterpret_cast<const type *>(code)[-nargs + offset]));
 #define MOTH_ADJUST_CODE(type, nargs) \
     code += static_cast<quintptr>(nargs*sizeof(type) + 1)
 
