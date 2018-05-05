@@ -73,7 +73,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemP
 
 public:
     QQuickControlPrivate();
-    virtual ~QQuickControlPrivate();
+    ~QQuickControlPrivate();
 
     static QQuickControlPrivate *get(QQuickControl *control)
     {
@@ -191,52 +191,51 @@ public:
     void updateImplicitContentSize();
 
     struct ExtraData {
-        ExtraData();
-        bool hasTopPadding;
-        bool hasLeftPadding;
-        bool hasRightPadding;
-        bool hasBottomPadding;
-        bool hasBaselineOffset;
-        bool hasTopInset;
-        bool hasLeftInset;
-        bool hasRightInset;
-        bool hasBottomInset;
-        bool hasBackgroundWidth;
-        bool hasBackgroundHeight;
-        qreal topPadding;
-        qreal leftPadding;
-        qreal rightPadding;
-        qreal bottomPadding;
-        qreal topInset;
-        qreal leftInset;
-        qreal rightInset;
-        qreal bottomInset;
+        bool hasTopPadding = false;
+        bool hasLeftPadding = false;
+        bool hasRightPadding = false;
+        bool hasBottomPadding = false;
+        bool hasBaselineOffset = false;
+        bool hasTopInset = false;
+        bool hasLeftInset = false;
+        bool hasRightInset = false;
+        bool hasBottomInset = false;
+        bool hasBackgroundWidth = false;
+        bool hasBackgroundHeight = false;
+        qreal topPadding = 0;
+        qreal leftPadding = 0;
+        qreal rightPadding = 0;
+        qreal bottomPadding = 0;
+        qreal topInset = 0;
+        qreal leftInset = 0;
+        qreal rightInset = 0;
+        qreal bottomInset = 0;
         QFont requestedFont;
         QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
-    bool hasHorizontalPadding;
-    bool hasVerticalPadding;
-    bool hasLocale;
-    bool wheelEnabled;
+    bool hasHorizontalPadding = false;
+    bool hasVerticalPadding = false;
+    bool hasLocale = false;
+    bool wheelEnabled = false;
 #if QT_CONFIG(quicktemplates2_hover)
-    bool hovered;
-    bool explicitHoverEnabled;
+    bool hovered = false;
+    bool explicitHoverEnabled = false;
 #endif
-    bool resizingBackground;
-    int touchId;
-    qreal padding;
-    qreal horizontalPadding;
-    qreal verticalPadding;
-    qreal implicitContentWidth;
-    qreal implicitContentHeight;
-    qreal spacing;
+    bool resizingBackground = false;
+    int touchId = -1;
+    qreal padding = 0;
+    qreal horizontalPadding = 0;
+    qreal verticalPadding = 0;
+    qreal implicitContentWidth = 0;
+    qreal implicitContentHeight = 0;
+    qreal spacing = 0;
     QLocale locale;
     QFont resolvedFont;
     QPalette resolvedPalette;
-    Qt::FocusPolicy focusPolicy;
-    Qt::FocusReason focusReason;
+    Qt::FocusPolicy focusPolicy = Qt::NoFocus;
+    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickDeferredPointer<QQuickItem> background;
     QQuickDeferredPointer<QQuickItem> contentItem;
 };

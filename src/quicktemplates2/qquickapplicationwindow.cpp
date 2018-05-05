@@ -124,18 +124,6 @@ class QQuickApplicationWindowPrivate : public QQuickItemChangeListener
     Q_DECLARE_PUBLIC(QQuickApplicationWindow)
 
 public:
-    QQuickApplicationWindowPrivate()
-        : complete(true),
-          background(nullptr),
-          contentItem(nullptr),
-          menuBar(nullptr),
-          header(nullptr),
-          footer(nullptr),
-          overlay(nullptr),
-          activeFocusControl(nullptr)
-    {
-    }
-
     static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
     {
         return window->d_func();
@@ -174,18 +162,18 @@ public:
     void cancelBackground();
     void executeBackground(bool complete = false);
 
-    bool complete;
+    bool complete = true;
     QQuickDeferredPointer<QQuickItem> background;
-    QQuickItem *contentItem;
-    QQuickItem *menuBar;
-    QQuickItem *header;
-    QQuickItem *footer;
-    QQuickOverlay *overlay;
+    QQuickItem *contentItem = nullptr;
+    QQuickItem *menuBar = nullptr;
+    QQuickItem *header = nullptr;
+    QQuickItem *footer = nullptr;
+    QQuickOverlay *overlay = nullptr;
     QFont font;
     QLocale locale;
     QPalette palette;
-    QQuickItem *activeFocusControl;
-    QQuickApplicationWindow *q_ptr;
+    QQuickItem *activeFocusControl = nullptr;
+    QQuickApplicationWindow *q_ptr = nullptr;
 };
 
 static void layoutItem(QQuickItem *item, qreal y, qreal width)
@@ -866,17 +854,11 @@ class QQuickApplicationWindowAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickApplicationWindowAttached)
 
 public:
-    QQuickApplicationWindowAttachedPrivate()
-        : window(nullptr),
-          activeFocusControl(nullptr)
-    {
-    }
-
     void windowChange(QQuickWindow *wnd);
     void activeFocusChange();
 
-    QQuickWindow *window;
-    QQuickItem *activeFocusControl;
+    QQuickWindow *window = nullptr;
+    QQuickItem *activeFocusControl = nullptr;
 };
 
 void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)

@@ -80,7 +80,6 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickLabelPrivate::QQuickLabelPrivate()
-    : background(nullptr)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);

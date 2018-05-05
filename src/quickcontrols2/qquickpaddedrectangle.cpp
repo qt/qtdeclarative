@@ -41,9 +41,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickPaddedRectangle::QQuickPaddedRectangle(QQuickItem *parent) :
-    QQuickRectangle(parent), m_padding(0),
-    m_topPadding(0), m_leftPadding(0), m_rightPadding(0), m_bottomPadding(0),
-    m_hasTopPadding(false), m_hasLeftPadding(false), m_hasRightPadding(false), m_hasBottomPadding(false)
+    QQuickRectangle(parent)
 {
 }
 

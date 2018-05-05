@@ -84,12 +84,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Button}, {Button Controls}
 */
 
-QQuickButtonPrivate::QQuickButtonPrivate()
-    : flat(false),
-      highlighted(false)
-{
-}
-
 QQuickButton::QQuickButton(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickButtonPrivate), parent)
 {

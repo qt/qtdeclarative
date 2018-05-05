@@ -68,15 +68,13 @@ public:
     void cancelBackground() override;
     void executeBackground(bool complete = false) override;
 
-    int backId;
-    int escapeId;
-    QQuickPopup *popup;
+    int backId = 0;
+    int escapeId = 0;
+    QQuickPopup *popup = nullptr;
 };
 
 QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
-    : backId(0),
-      escapeId(0),
-      popup(popup)
+    : popup(popup)
 {
     isTabFence = true;
 }

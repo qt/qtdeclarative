@@ -152,7 +152,6 @@ static bool HasGlobalForeground = false;
 static bool HasGlobalBackground = false;
 
 QQuickUniversalStyle::QQuickUniversalStyle(QObject *parent) : QQuickAttachedObject(parent),
-    m_explicitTheme(false), m_explicitAccent(false), m_explicitForeground(false), m_explicitBackground(false),
     m_hasForeground(HasGlobalForeground), m_hasBackground(HasGlobalBackground), m_theme(GlobalTheme),
     m_accent(GlobalAccent), m_foreground(GlobalForeground), m_background(GlobalBackground)
 {

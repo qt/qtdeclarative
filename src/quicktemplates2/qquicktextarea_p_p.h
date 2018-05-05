@@ -144,8 +144,8 @@ public:
     void itemDestroyed(QQuickItem *item) override;
 
 #if QT_CONFIG(quicktemplates2_hover)
-    bool hovered;
-    bool explicitHoverEnabled;
+    bool hovered = false;
+    bool explicitHoverEnabled = false;
 #endif
 
     struct ExtraData {
@@ -169,9 +169,9 @@ public:
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     QColor placeholderColor;
-    Qt::FocusReason focusReason;
+    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickPressHandler pressHandler;
-    QQuickFlickable *flickable;
+    QQuickFlickable *flickable = nullptr;
 };
 
 QT_END_NAMESPACE

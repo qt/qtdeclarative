@@ -79,7 +79,7 @@ protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
-    int m_elapsed;
+    int m_elapsed = 0;
     QColor m_pen;
     QColor m_fill;
 };

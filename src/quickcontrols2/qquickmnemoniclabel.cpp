@@ -41,8 +41,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickMnemonicLabel::QQuickMnemonicLabel(QQuickItem *parent)
-    : QQuickText(parent),
-      m_mnemonicVisible(true)
+    : QQuickText(parent)
 {
 }
 

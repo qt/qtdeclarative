@@ -127,7 +127,7 @@ protected:
     void finished() override;
 
 private:
-    QQuickSwipe *m_swipe;
+    QQuickSwipe *m_swipe = nullptr;
 };
 
 class QQuickSwipePrivate : public QObjectPrivate
@@ -135,23 +135,7 @@ class QQuickSwipePrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSwipe)
 
 public:
-    QQuickSwipePrivate(QQuickSwipeDelegate *control)
-        : control(control),
-          positionBeforePress(0),
-          position(0),
-          wasComplete(false),
-          complete(false),
-          enabled(true),
-          left(nullptr),
-          behind(nullptr),
-          right(nullptr),
-          leftItem(nullptr),
-          behindItem(nullptr),
-          rightItem(nullptr),
-          transition(nullptr),
-          transitionManager(nullptr)
-    {
-    }
+    QQuickSwipePrivate(QQuickSwipeDelegate *control) : control(control) { }
 
     static QQuickSwipePrivate *get(QQuickSwipe *swipe);
 
@@ -175,24 +159,24 @@ public:
     void beginTransition(qreal position);
     void finishTransition();
 
-    QQuickSwipeDelegate *control;
+    QQuickSwipeDelegate *control = nullptr;
     // Same range as position, but is set before press events so that we can
     // keep track of which direction the user must swipe when using left and right delegates.
-    qreal positionBeforePress;
-    qreal position;
+    qreal positionBeforePress = 0;
+    qreal position = 0;
     // A "less strict" version of complete that is true if complete was true
     // before the last press event.
-    bool wasComplete;
-    bool complete;
-    bool enabled;
+    bool wasComplete = false;
+    bool complete = false;
+    bool enabled = true;
     QQuickVelocityCalculator velocityCalculator;
-    QQmlComponent *left;
-    QQmlComponent *behind;
-    QQmlComponent *right;
-    QQuickItem *leftItem;
-    QQuickItem *behindItem;
-    QQuickItem *rightItem;
-    QQuickTransition *transition;
+    QQmlComponent *left = nullptr;
+    QQmlComponent *behind = nullptr;
+    QQmlComponent *right = nullptr;
+    QQuickItem *leftItem = nullptr;
+    QQuickItem *behindItem = nullptr;
+    QQuickItem *rightItem = nullptr;
+    QQuickTransition *transition = nullptr;
     QScopedPointer<QQuickSwipeTransitionManager> transitionManager;
 };
 
@@ -1257,10 +1241,8 @@ class QQuickSwipeDelegateAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeDelegateAttached)
 
 public:
-    QQuickSwipeDelegateAttachedPrivate() : pressed(false) { }
-
     // True when left/right/behind is non-interactive and is pressed.
-    bool pressed;
+    bool pressed = false;
 };
 
 /*!

@@ -67,21 +67,20 @@ public:
 
 private:
     struct Phase {
-        Phase() : duration(0), from(0), to(0) { }
+        Phase() = default;
         Phase(int d, qreal f, qreal t) : duration(d), from(f), to(t) { }
-        int duration;
-        qreal from;
-        qreal to;
+        int duration = 0;
+        qreal from = 0;
+        qreal to = 0;
     };
 
-    bool m_indeterminate;
+    bool m_indeterminate = false;
     Phase m_borderPhases[PhaseCount];
     Phase m_ellipsePhases[PhaseCount];
 };
 
 QQuickUniversalProgressBarNode::QQuickUniversalProgressBarNode(QQuickUniversalProgressBar *item)
-    : QQuickAnimatedNode(item),
-      m_indeterminate(false)
+    : QQuickAnimatedNode(item)
 {
     setLoopCount(Infinite);
     setDuration(TotalDuration);
@@ -267,7 +266,7 @@ void QQuickUniversalProgressBarNode::sync(QQuickItem *item)
 }
 
 QQuickUniversalProgressBar::QQuickUniversalProgressBar(QQuickItem *parent)
-    : QQuickItem(parent), m_color(Qt::black), m_progress(0.0), m_indeterminate(false)
+    : QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }

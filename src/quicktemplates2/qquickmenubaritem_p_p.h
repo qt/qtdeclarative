@@ -61,13 +61,6 @@ class QQuickMenuBarItemPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickMenuBarItem)
 
 public:
-    QQuickMenuBarItemPrivate()
-        : highlighted(false),
-          menu(nullptr),
-          menuBar(nullptr)
-    {
-    }
-
     static QQuickMenuBarItemPrivate *get(QQuickMenuBarItem *item)
     {
         return item->d_func();
@@ -75,9 +68,9 @@ public:
 
     void setMenuBar(QQuickMenuBar *menuBar);
 
-    bool highlighted;
-    QQuickMenu *menu;
-    QQuickMenuBar *menuBar;
+    bool highlighted = false;
+    QQuickMenu *menu = nullptr;
+    QQuickMenuBar *menuBar = nullptr;
 };
 
 QT_END_NAMESPACE

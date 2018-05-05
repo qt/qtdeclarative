@@ -46,12 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickTumblerView::QQuickTumblerView(QQuickItem *parent) :
-    QQuickItem(parent),
-    m_tumbler(nullptr),
-    m_delegate(nullptr),
-    m_pathView(nullptr),
-    m_listView(nullptr),
-    m_path(nullptr)
+    QQuickItem(parent)
 {
     // We don't call createView() here because we don't know what the wrap flag is set to
     // yet, and we don't want to create a view that might never get used.

@@ -53,9 +53,7 @@ static const QQuickItemPrivate::ChangeTypes ItemChangeTypes = QQuickItemPrivate:
                                                              | QQuickItemPrivate::Parent;
 
 QQuickPopupPositioner::QQuickPopupPositioner(QQuickPopup *popup)
-    : m_positioning(false),
-      m_parentItem(nullptr),
-      m_popup(popup)
+    : m_popup(popup)
 {
 }
 
@@ -279,7 +277,7 @@ void QQuickPopupPositioner::itemParentChanged(QQuickItem *, QQuickItem *parent)
 
 void QQuickPopupPositioner::itemChildRemoved(QQuickItem *item, QQuickItem *child)
 {
-    if (child->isAncestorOf(m_parentItem))
+    if (child == m_parentItem || child->isAncestorOf(m_parentItem))
         removeAncestorListeners(item);
 }
 

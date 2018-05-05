@@ -64,11 +64,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing ItemDelegate}, {Delegate Controls}
 */
 
-QQuickItemDelegatePrivate::QQuickItemDelegatePrivate()
-    : highlighted(false)
-{
-}
-
 QQuickItemDelegate::QQuickItemDelegate(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickItemDelegatePrivate), parent)
 {

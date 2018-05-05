@@ -132,14 +132,6 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextAreaPrivate::QQuickTextAreaPrivate()
-    : QQuickTextEditPrivate(),
-#if QT_CONFIG(quicktemplates2_hover)
-      hovered(false),
-      explicitHoverEnabled(false),
-#endif
-      background(nullptr),
-      focusReason(Qt::OtherFocusReason),
-      flickable(nullptr)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);
@@ -1160,9 +1152,7 @@ void QQuickTextArea::timerEvent(QTimerEvent *event)
 class QQuickTextAreaAttachedPrivate : public QObjectPrivate
 {
 public:
-    QQuickTextAreaAttachedPrivate() : control(nullptr) { }
-
-    QQuickTextArea *control;
+    QQuickTextArea *control = nullptr;
 };
 
 QQuickTextAreaAttached::QQuickTextAreaAttached(QObject *parent)

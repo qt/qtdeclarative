@@ -47,13 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickStackViewPrivate::QQuickStackViewPrivate()
-    : busy(false),
-      currentItem(nullptr),
-      transitioner(nullptr)
-{
-}
-
 void QQuickStackViewPrivate::warn(const QString &error)
 {
     Q_Q(QQuickStackView);

@@ -65,19 +65,11 @@ class QQuickRoundButtonPrivate : public QQuickButtonPrivate
     Q_DECLARE_PUBLIC(QQuickRoundButton)
 
 public:
-    QQuickRoundButtonPrivate();
-
-    qreal radius;
-    bool explicitRadius;
-
     void setRadius(qreal newRadius = -1.0);
-};
 
-QQuickRoundButtonPrivate::QQuickRoundButtonPrivate()
-    : radius(0),
-      explicitRadius(false)
-{
-}
+    qreal radius = 0;
+    bool explicitRadius = false;
+};
 
 void QQuickRoundButtonPrivate::setRadius(qreal newRadius)
 {

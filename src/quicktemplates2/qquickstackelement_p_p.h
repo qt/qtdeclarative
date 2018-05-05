@@ -85,18 +85,18 @@ public:
 
     void itemDestroyed(QQuickItem *item) override;
 
-    int index;
-    bool init;
-    bool removal;
-    bool ownItem;
-    bool ownComponent;
-    bool widthValid;
-    bool heightValid;
-    QQmlContext *context;
-    QQmlComponent *component;
-    QQuickStackView *view;
+    int index = -1;
+    bool init = false;
+    bool removal = false;
+    bool ownItem = false;
+    bool ownComponent = false;
+    bool widthValid = false;
+    bool heightValid = false;
+    QQmlContext *context = nullptr;
+    QQmlComponent *component = nullptr;
+    QQuickStackView *view = nullptr;
     QPointer<QQuickItem> originalParent;
-    QQuickStackView::Status status;
+    QQuickStackView::Status status = QQuickStackView::Inactive;
     QV4::PersistentValue properties;
     QV4::PersistentValue qmlCallingContext;
 };

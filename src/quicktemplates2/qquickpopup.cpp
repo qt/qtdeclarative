@@ -247,56 +247,10 @@ QT_BEGIN_NAMESPACE
     \sa closed()
 */
 
-static const QQuickPopup::ClosePolicy DefaultClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
+const QQuickPopup::ClosePolicy QQuickPopupPrivate::DefaultClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutside;
 
 QQuickPopupPrivate::QQuickPopupPrivate()
-    : focus(false),
-      modal(false),
-      dim(false),
-      hasDim(false),
-      visible(false),
-      complete(true),
-      positioning(false),
-      hasWidth(false),
-      hasHeight(false),
-      hasTopMargin(false),
-      hasLeftMargin(false),
-      hasRightMargin(false),
-      hasBottomMargin(false),
-      allowVerticalFlip(false),
-      allowHorizontalFlip(false),
-      allowVerticalMove(true),
-      allowHorizontalMove(true),
-      allowVerticalResize(true),
-      allowHorizontalResize(true),
-      hadActiveFocusBeforeExitTransition(false),
-      interactive(true),
-      hasClosePolicy(false),
-      touchId(-1),
-      x(0),
-      y(0),
-      effectiveX(0),
-      effectiveY(0),
-      margins(-1),
-      topMargin(0),
-      leftMargin(0),
-      rightMargin(0),
-      bottomMargin(0),
-      transitionState(QQuickPopupPrivate::NoTransition),
-      closePolicy(DefaultClosePolicy),
-      parentItem(nullptr),
-      dimmer(nullptr),
-      window(nullptr),
-      enter(nullptr),
-      exit(nullptr),
-      popupItem(nullptr),
-      positioner(nullptr),
-      transitionManager(this),
-      anchors(nullptr)
-{
-}
-
-QQuickPopupPrivate::~QQuickPopupPrivate()
+    : transitionManager(this)
 {
 }
 
@@ -802,7 +756,7 @@ void QQuickPopupPrivate::resizeOverlay()
 }
 
 QQuickPopupTransitionManager::QQuickPopupTransitionManager(QQuickPopupPrivate *popup)
-    : QQuickTransitionManager(), popup(popup)
+    : popup(popup)
 {
 }
 
@@ -860,6 +814,8 @@ QQuickPopup::~QQuickPopup()
     d->popupItem->ungrabShortcut();
     delete d->popupItem;
     d->popupItem = nullptr;
+    delete d->positioner;
+    d->positioner = nullptr;
 }
 
 /*!
@@ -2073,7 +2029,7 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
 void QQuickPopup::resetClosePolicy()
 {
     Q_D(QQuickPopup);
-    setClosePolicy(DefaultClosePolicy);
+    setClosePolicy(QQuickPopupPrivate::DefaultClosePolicy);
     d->hasClosePolicy = false;
 }
 

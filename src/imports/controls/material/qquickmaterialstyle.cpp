@@ -431,11 +431,6 @@ static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme them
 }
 
 QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedObject(parent),
-    m_explicitTheme(false),
-    m_explicitPrimary(false),
-    m_explicitAccent(false),
-    m_explicitForeground(false),
-    m_explicitBackground(false),
     m_customPrimary(globalPrimaryCustom),
     m_customAccent(globalAccentCustom),
     m_customForeground(globalForegroundCustom),
@@ -446,8 +441,7 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedObject
     m_primary(globalPrimary),
     m_accent(globalAccent),
     m_foreground(globalForeground),
-    m_background(globalBackground),
-    m_elevation(0)
+    m_background(globalBackground)
 {
     QQuickAttachedObject::init();
 }

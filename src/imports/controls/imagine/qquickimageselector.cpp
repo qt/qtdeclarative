@@ -106,9 +106,7 @@ static QString findFile(const QDir &dir, const QString &baseName, const QStringL
 
 QQuickImageSelector::QQuickImageSelector(QObject *parent)
     : QObject(parent),
-      m_cache(cacheSize() > 0),
-      m_complete(false),
-      m_separator(QLatin1String("-"))
+      m_cache(cacheSize() > 0)
 {
 }
 

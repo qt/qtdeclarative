@@ -42,14 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickIconImagePrivate::QQuickIconImagePrivate()
-    : color(Qt::transparent),
-      updatingIcon(false),
-      isThemeIcon(false),
-      updatingFillMode(false)
-{
-}
-
 bool QQuickIconImagePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
 {
     if (isThemeIcon) {

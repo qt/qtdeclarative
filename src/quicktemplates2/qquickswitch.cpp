@@ -82,15 +82,13 @@ class QQuickSwitchPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickSwitch)
 
 public:
-    QQuickSwitchPrivate() : position(0) { }
-
     qreal positionAt(const QPointF &point) const;
 
     bool canDrag(const QPointF &movePoint) const;
     void handleMove(const QPointF &point) override;
     void handleRelease(const QPointF &point) override;
 
-    qreal position;
+    qreal position = 0;
 };
 
 qreal QQuickSwitchPrivate::positionAt(const QPointF &point) const

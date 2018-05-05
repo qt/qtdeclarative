@@ -97,12 +97,6 @@ void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChang
     updateGeometry();
 }
 
-QQuickOverlayPrivate::QQuickOverlayPrivate()
-    : modal(nullptr),
-      modeless(nullptr)
-{
-}
-
 bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
 {
     Q_Q(QQuickOverlay);
@@ -563,18 +557,11 @@ class QQuickOverlayAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickOverlayAttached)
 
 public:
-    QQuickOverlayAttachedPrivate()
-        : window(nullptr),
-          modal(nullptr),
-          modeless(nullptr)
-    {
-    }
-
     void setWindow(QQuickWindow *newWindow);
 
-    QQuickWindow *window;
-    QQmlComponent *modal;
-    QQmlComponent *modeless;
+    QQuickWindow *window = nullptr;
+    QQmlComponent *modal = nullptr;
+    QQmlComponent *modeless = nullptr;
 };
 
 void QQuickOverlayAttachedPrivate::setWindow(QQuickWindow *newWindow)

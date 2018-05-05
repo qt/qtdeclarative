@@ -59,8 +59,6 @@ class QQuickDrawerPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickDrawer)
 
 public:
-    QQuickDrawerPrivate();
-
     static QQuickDrawerPrivate *get(QQuickDrawer *drawer)
     {
         return drawer->d_func();
@@ -91,10 +89,10 @@ public:
 
     bool setEdge(Qt::Edge edge);
 
-    Qt::Edge edge;
-    qreal offset;
-    qreal position;
-    qreal dragMargin;
+    Qt::Edge edge = Qt::LeftEdge;
+    qreal offset = 0;
+    qreal position = 0;
+    qreal dragMargin = 0;
     QQuickVelocityCalculator velocityCalculator;
 };
 

@@ -63,8 +63,6 @@ class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeLi
     Q_DECLARE_PUBLIC(QQuickOverlay)
 
 public:
-    QQuickOverlayPrivate();
-
     static QQuickOverlayPrivate *get(QQuickOverlay *overlay)
     {
         return overlay->d_func();
@@ -91,8 +89,8 @@ public:
 
     void updateGeometry();
 
-    QQmlComponent *modal;
-    QQmlComponent *modeless;
+    QQmlComponent *modal = nullptr;
+    QQmlComponent *modeless = nullptr;
     QVector<QQuickPopup *> allPopups;
     QVector<QQuickDrawer *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;

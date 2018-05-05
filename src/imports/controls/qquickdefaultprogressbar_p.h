@@ -77,8 +77,8 @@ protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
-    qreal m_progress;
-    bool m_indeterminate;
+    qreal m_progress = 0;
+    bool m_indeterminate = false;
     QColor m_color;
 };
 

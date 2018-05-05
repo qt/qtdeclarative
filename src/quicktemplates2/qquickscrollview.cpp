@@ -106,8 +106,6 @@ class QQuickScrollViewPrivate : public QQuickPanePrivate
     Q_DECLARE_PUBLIC(QQuickScrollView)
 
 public:
-    QQuickScrollViewPrivate();
-
     QQmlListProperty<QObject> contentData() override;
     QQmlListProperty<QQuickItem> contentChildren() override;
     QList<QQuickItem *> contentChildItems() const override;
@@ -137,18 +135,9 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
 
-    bool wasTouched;
-    QQuickFlickable *flickable;
+    bool wasTouched = false;
+    QQuickFlickable *flickable = nullptr;
 };
-
-QQuickScrollViewPrivate::QQuickScrollViewPrivate()
-    : wasTouched(false),
-      flickable(nullptr)
-{
-    contentWidth = -1;
-    contentHeight = -1;
-    wheelEnabled = true;
-}
 
 QList<QQuickItem *> QQuickScrollViewPrivate::contentChildItems() const
 {
@@ -377,8 +366,12 @@ void QQuickScrollViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
 QQuickScrollView::QQuickScrollView(QQuickItem *parent)
     : QQuickPane(*(new QQuickScrollViewPrivate), parent)
 {
-    setActiveFocusOnTab(true);
+    Q_D(QQuickScrollView);
+    d->contentWidth = -1;
+    d->contentHeight = -1;
+
     setFiltersChildMouseEvents(true);
+    setWheelEnabled(true);
 }
 
 /*!

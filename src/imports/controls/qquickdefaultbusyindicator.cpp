@@ -138,7 +138,7 @@ void QQuickDefaultBusyIndicatorNode::sync(QQuickItem *item)
 }
 
 QQuickDefaultBusyIndicator::QQuickDefaultBusyIndicator(QQuickItem *parent) :
-    QQuickItem(parent), m_elapsed(0)
+    QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }

@@ -71,8 +71,8 @@ public:
     void paint(QPainter *painter) override;
 
 private:
-    qreal m_progress;
-    QColor m_color;
+    qreal m_progress = 0;
+    QColor m_color = Qt::black;
 };
 
 QT_END_NAMESPACE

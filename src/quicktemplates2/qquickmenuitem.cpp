@@ -89,14 +89,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Menu}, Menu, {Menu Controls}
 */
 
-QQuickMenuItemPrivate::QQuickMenuItemPrivate()
-    : highlighted(false),
-      arrow(nullptr),
-      menu(nullptr),
-      subMenu(nullptr)
-{
-}
-
 void QQuickMenuItemPrivate::setMenu(QQuickMenu *newMenu)
 {
     Q_Q(QQuickMenuItem);

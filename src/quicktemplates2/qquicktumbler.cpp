@@ -87,27 +87,6 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Tumbler}, {Input Controls}
 */
 
-QQuickTumblerPrivate::QQuickTumblerPrivate()
-    : delegate(nullptr),
-      visibleItemCount(5),
-      wrap(true),
-      explicitWrap(false),
-      ignoreWrapChanges(false),
-      view(nullptr),
-      viewContentItem(nullptr),
-      viewContentItemType(UnsupportedContentItemType),
-      currentIndex(-1),
-      pendingCurrentIndex(-1),
-      ignoreCurrentIndexChanges(false),
-      count(0),
-      ignoreSignals(false)
-{
-}
-
-QQuickTumblerPrivate::~QQuickTumblerPrivate()
-{
-}
-
 namespace {
     static inline qreal delegateHeight(const QQuickTumbler *tumbler)
     {
@@ -837,13 +816,6 @@ QFont QQuickTumbler::defaultFont() const
 QPalette QQuickTumbler::defaultPalette() const
 {
     return QQuickTheme::themePalette(QQuickTheme::Tumbler);
-}
-
-QQuickTumblerAttachedPrivate::QQuickTumblerAttachedPrivate()
-    : tumbler(nullptr),
-      index(-1),
-      displacement(0)
-{
 }
 
 void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)

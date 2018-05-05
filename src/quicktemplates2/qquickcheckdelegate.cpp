@@ -89,16 +89,10 @@ class QQuickCheckDelegatePrivate : public QQuickItemDelegatePrivate
     Q_DECLARE_PUBLIC(QQuickCheckDelegate)
 
 public:
-    QQuickCheckDelegatePrivate()
-        : tristate(false),
-          checkState(Qt::Unchecked)
-    {
-    }
-
     void setNextCheckState(const QJSValue &callback);
 
-    bool tristate;
-    Qt::CheckState checkState;
+    bool tristate = false;
+    Qt::CheckState checkState = Qt::Unchecked;
     QJSValue nextCheckState;
 };
 

@@ -71,7 +71,7 @@ public:
 private:
     void updateMnemonic();
 
-    bool m_mnemonicVisible;
+    bool m_mnemonicVisible = true;
     QString m_fullText;
 };
 

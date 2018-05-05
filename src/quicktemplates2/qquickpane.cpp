@@ -107,15 +107,6 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
-QQuickPanePrivate::QQuickPanePrivate()
-    : hasContentWidth(false),
-      hasContentHeight(false),
-      contentWidth(0),
-      contentHeight(0),
-      firstChild(nullptr)
-{
-}
-
 void QQuickPanePrivate::init()
 {
     Q_Q(QQuickPane);

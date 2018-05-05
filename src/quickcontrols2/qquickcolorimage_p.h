@@ -79,8 +79,8 @@ protected:
     void pixmapChange() override;
 
 private:
-    QColor m_color;
-    QColor m_defaultColor;
+    QColor m_color = Qt::transparent;
+    QColor m_defaultColor = Qt::transparent;
 };
 
 QT_END_NAMESPACE

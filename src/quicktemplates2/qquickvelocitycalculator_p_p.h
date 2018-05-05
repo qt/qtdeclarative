@@ -56,8 +56,6 @@ QT_BEGIN_NAMESPACE
 class QQuickVelocityCalculator
 {
 public:
-    QQuickVelocityCalculator();
-
     void startMeasuring(const QPointF &point1, qint64 timestamp = 0);
     void stopMeasuring(const QPointF &m_point2, qint64 timestamp = 0);
     void reset();
@@ -66,8 +64,8 @@ public:
 private:
     QPointF m_point1;
     QPointF m_point2;
-    qint64 m_point1Timestamp;
-    qint64 m_point2Timestamp;
+    qint64 m_point1Timestamp = 0;
+    qint64 m_point2Timestamp = 0;
     // When a timestamp isn't available, we must use a timer.
     // When stopMeasuring() has been called, we store the elapsed time in point2timestamp.
     QElapsedTimer m_timer;

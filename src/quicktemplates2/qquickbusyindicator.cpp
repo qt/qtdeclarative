@@ -79,9 +79,7 @@ QT_BEGIN_NAMESPACE
 class QQuickBusyIndicatorPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickBusyIndicatorPrivate() : running(true) { }
-
-    bool running;
+    bool running = true;
 };
 
 QQuickBusyIndicator::QQuickBusyIndicator(QQuickItem *parent)

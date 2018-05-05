@@ -101,14 +101,14 @@ protected:
     void exitWave();
 
 private:
-    bool m_active;
-    bool m_pressed;
-    int m_waves;
-    int m_enterDelay;
-    Trigger m_trigger;
-    qreal m_clipRadius;
+    bool m_active = false;
+    bool m_pressed = false;
+    int m_waves = 0;
+    int m_enterDelay = 0;
+    Trigger m_trigger = Press;
+    qreal m_clipRadius = 0.0;
     QColor m_color;
-    QQuickItem *m_anchor;
+    QQuickItem *m_anchor = nullptr;
 };
 
 QT_END_NAMESPACE

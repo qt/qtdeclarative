@@ -113,13 +113,6 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickTextFieldPrivate::QQuickTextFieldPrivate()
-    : QQuickTextInputPrivate(),
-#if QT_CONFIG(quicktemplates2_hover)
-      hovered(false),
-      explicitHoverEnabled(false),
-#endif
-      background(nullptr),
-      focusReason(Qt::OtherFocusReason)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);

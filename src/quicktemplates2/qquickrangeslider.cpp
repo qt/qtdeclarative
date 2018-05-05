@@ -98,14 +98,7 @@ class QQuickRangeSliderNodePrivate : public QObjectPrivate
 public:
     QQuickRangeSliderNodePrivate(qreal value, QQuickRangeSlider *slider)
         : value(value),
-          isPendingValue(false),
-          pendingValue(0),
-          position(0),
-          handle(nullptr),
-          slider(slider),
-          pressed(false),
-          hovered(false),
-          touchId(-1)
+          slider(slider)
     {
     }
 
@@ -119,15 +112,15 @@ public:
 
     static QQuickRangeSliderNodePrivate *get(QQuickRangeSliderNode *node);
 
-    qreal value;
-    bool isPendingValue;
-    qreal pendingValue;
-    qreal position;
+    qreal value = 0;
+    bool isPendingValue = false;
+    qreal pendingValue = 0;
+    qreal position = 0;
     QQuickDeferredPointer<QQuickItem> handle;
-    QQuickRangeSlider *slider;
-    bool pressed;
-    bool hovered;
-    int touchId;
+    QQuickRangeSlider *slider = nullptr;
+    bool pressed = false;
+    bool hovered = false;
+    int touchId = -1;
 };
 
 bool QQuickRangeSliderNodePrivate::isFirst() const
@@ -382,19 +375,6 @@ class QQuickRangeSliderPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickRangeSlider)
 
 public:
-    QQuickRangeSliderPrivate()
-        : live(true),
-          from(defaultFrom),
-          to(defaultTo),
-          stepSize(0),
-          touchDragThreshold(-1),
-          first(nullptr),
-          second(nullptr),
-          orientation(Qt::Horizontal),
-          snapMode(QQuickRangeSlider::NoSnap)
-    {
-    }
-
     QQuickRangeSliderNode *pressedNode(int touchId = -1) const;
 
 #if QT_CONFIG(quicktemplates2_multitouch)
@@ -410,16 +390,16 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    bool live;
-    qreal from;
-    qreal to;
-    qreal stepSize;
-    qreal touchDragThreshold;
-    QQuickRangeSliderNode *first;
-    QQuickRangeSliderNode *second;
+    bool live = true;
+    qreal from = defaultFrom;
+    qreal to = defaultTo;
+    qreal stepSize = 0;
+    qreal touchDragThreshold = -1;
+    QQuickRangeSliderNode *first = nullptr;
+    QQuickRangeSliderNode *second = nullptr;
     QPointF pressPoint;
-    Qt::Orientation orientation;
-    QQuickRangeSlider::SnapMode snapMode;
+    Qt::Orientation orientation = Qt::Horizontal;
+    QQuickRangeSlider::SnapMode snapMode = QQuickRangeSlider::NoSnap;
 };
 
 static qreal valueAt(const QQuickRangeSlider *slider, qreal position)

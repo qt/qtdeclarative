@@ -137,50 +137,7 @@ static bool isKeyFocusReason(Qt::FocusReason reason)
     return reason == Qt::TabFocusReason || reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason;
 }
 
-QQuickControlPrivate::ExtraData::ExtraData()
-    : hasTopPadding(false),
-      hasLeftPadding(false),
-      hasRightPadding(false),
-      hasBottomPadding(false),
-      hasBaselineOffset(false),
-      hasTopInset(false),
-      hasLeftInset(false),
-      hasRightInset(false),
-      hasBottomInset(false),
-      hasBackgroundWidth(false),
-      hasBackgroundHeight(false),
-      topPadding(0),
-      leftPadding(0),
-      rightPadding(0),
-      bottomPadding(0),
-      topInset(0),
-      leftInset(0),
-      rightInset(0),
-      bottomInset(0)
-{
-}
-
 QQuickControlPrivate::QQuickControlPrivate()
-    : hasHorizontalPadding(false),
-      hasVerticalPadding(false),
-      hasLocale(false),
-      wheelEnabled(false),
-#if QT_CONFIG(quicktemplates2_hover)
-      hovered(false),
-      explicitHoverEnabled(false),
-#endif
-      resizingBackground(false),
-      touchId(-1),
-      padding(0),
-      horizontalPadding(0),
-      verticalPadding(0),
-      implicitContentWidth(0),
-      implicitContentHeight(0),
-      spacing(0),
-      focusPolicy(Qt::NoFocus),
-      focusReason(Qt::OtherFocusReason),
-      background(nullptr),
-      contentItem(nullptr)
 {
 #if QT_CONFIG(accessibility)
     QAccessible::installActivationObserver(this);

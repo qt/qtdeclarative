@@ -62,8 +62,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQui
     Q_DECLARE_PUBLIC(QQuickAbstractButton)
 
 public:
-    QQuickAbstractButtonPrivate();
-
     static QQuickAbstractButtonPrivate *get(QQuickAbstractButton *button)
     {
         return button->d_func();
@@ -108,34 +106,38 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    QString text;
-    bool explicitText;
-    bool down;
-    bool explicitDown;
-    bool pressed;
-    bool keepPressed;
-    bool checked;
-    bool checkable;
-    bool autoExclusive;
-    bool autoRepeat;
-    bool wasHeld;
-    int holdTimer;
-    int delayTimer;
-    int repeatTimer;
-    int repeatDelay;
-    int repeatInterval;
+    // copied from qabstractbutton.cpp
+    static const int AUTO_REPEAT_DELAY = 300;
+    static const int AUTO_REPEAT_INTERVAL = 100;
+
+    bool explicitText = false;
+    bool down = false;
+    bool explicitDown = false;
+    bool pressed = false;
+    bool keepPressed = false;
+    bool checked = false;
+    bool checkable = false;
+    bool autoExclusive = false;
+    bool autoRepeat = false;
+    bool wasHeld = false;
+    int holdTimer = 0;
+    int delayTimer = 0;
+    int repeatTimer = 0;
+    int repeatDelay = AUTO_REPEAT_DELAY;
+    int repeatInterval = AUTO_REPEAT_INTERVAL;
 #if QT_CONFIG(shortcut)
-    int shortcutId;
+    int shortcutId = 0;
     QKeySequence shortcut;
 #endif
+    QString text;
     QQuickIcon icon;
     QQuickIcon effectiveIcon;
     QPointF pressPoint;
     QPointF movePoint;
-    Qt::MouseButtons pressButtons;
+    Qt::MouseButtons pressButtons = Qt::NoButton;
+    QQuickAbstractButton::Display display = QQuickAbstractButton::TextBesideIcon;
     QQuickDeferredPointer<QQuickItem> indicator;
-    QQuickButtonGroup *group;
-    QQuickAbstractButton::Display display;
+    QQuickButtonGroup *group = nullptr;
     QPointer<QQuickAction> action;
 };
 

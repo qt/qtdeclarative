@@ -108,22 +108,6 @@ class QQuickSpinBoxPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickSpinBox)
 
 public:
-    QQuickSpinBoxPrivate()
-        : editable(false),
-          wrap(false),
-          from(0),
-          to(99),
-          value(0),
-          stepSize(1),
-          delayTimer(0),
-          repeatTimer(0),
-          up(nullptr),
-          down(nullptr),
-          validator(nullptr),
-          inputMethodHints(Qt::ImhDigitsOnly)
-    {
-    }
-
     int boundValue(int value, bool wrap) const;
     void updateValue();
     bool setValue(int value, bool wrap, bool modified);
@@ -154,21 +138,21 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    bool editable;
-    bool wrap;
-    int from;
-    int to;
-    int value;
-    int stepSize;
-    int delayTimer;
-    int repeatTimer;
+    bool editable = false;
+    bool wrap = false;
+    int from = 0;
+    int to = 99;
+    int value = 0;
+    int stepSize = 1;
+    int delayTimer = 0;
+    int repeatTimer = 0;
     QString displayText;
-    QQuickSpinButton *up;
-    QQuickSpinButton *down;
-    QValidator *validator;
+    QQuickSpinButton *up = nullptr;
+    QQuickSpinButton *down = nullptr;
+    QValidator *validator = nullptr;
     mutable QJSValue textFromValue;
     mutable QJSValue valueFromText;
-    Qt::InputMethodHints inputMethodHints;
+    Qt::InputMethodHints inputMethodHints = Qt::ImhDigitsOnly;
 };
 
 class QQuickSpinButtonPrivate : public QObjectPrivate
@@ -176,13 +160,6 @@ class QQuickSpinButtonPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickSpinButton)
 
 public:
-    QQuickSpinButtonPrivate()
-        : pressed(false),
-          hovered(false),
-          indicator(nullptr)
-    {
-    }
-
     static QQuickSpinButtonPrivate *get(QQuickSpinButton *button)
     {
         return button->d_func();
@@ -191,8 +168,8 @@ public:
     void cancelIndicator();
     void executeIndicator(bool complete = false);
 
-    bool pressed;
-    bool hovered;
+    bool pressed = false;
+    bool hovered = false;
     QQuickDeferredPointer<QQuickItem> indicator;
 };
 

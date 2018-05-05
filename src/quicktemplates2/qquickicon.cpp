@@ -41,19 +41,11 @@ QT_BEGIN_NAMESPACE
 class QQuickIconPrivate : public QSharedData
 {
 public:
-    QQuickIconPrivate()
-        : width(0),
-          height(0),
-          color(Qt::transparent),
-          resolveMask(0)
-    {
-    }
-
     QString name;
     QUrl source;
-    int width;
-    int height;
-    QColor color;
+    int width = 0;
+    int height = 0;
+    QColor color = Qt::transparent;
 
     enum ResolveProperties {
         NameResolved = 0x0001,
@@ -65,7 +57,7 @@ public:
     };
 
     // This is based on QFont's resolve_mask.
-    int resolveMask;
+    int resolveMask = 0;
 };
 
 QQuickIcon::QQuickIcon()

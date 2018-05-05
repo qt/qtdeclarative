@@ -59,8 +59,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlP
     Q_DECLARE_PUBLIC(QQuickPane)
 
 public:
-    QQuickPanePrivate();
-
     void init();
 
     virtual QQmlListProperty<QObject> contentData();
@@ -80,11 +78,11 @@ public:
     void updateContentWidth();
     void updateContentHeight();
 
-    bool hasContentWidth;
-    bool hasContentHeight;
-    qreal contentWidth;
-    qreal contentHeight;
-    QQuickItem *firstChild;
+    bool hasContentWidth = false;
+    bool hasContentHeight = false;
+    qreal contentWidth = 0;
+    qreal contentHeight = 0;
+    QQuickItem *firstChild = nullptr;
 };
 
 QT_END_NAMESPACE

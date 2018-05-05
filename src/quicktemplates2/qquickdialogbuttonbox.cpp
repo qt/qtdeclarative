@@ -197,16 +197,6 @@ static QQuickDialogButtonBox::ButtonLayout platformButtonLayout()
     return QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).value<QQuickDialogButtonBox::ButtonLayout>();
 }
 
-QQuickDialogButtonBoxPrivate::QQuickDialogButtonBoxPrivate()
-    : alignment(0),
-      position(QQuickDialogButtonBox::Footer),
-      standardButtons(QPlatformDialogHelper::NoButton),
-      buttonLayout(platformButtonLayout()),
-      delegate(nullptr)
-{
-    changeTypes |= ImplicitWidth | ImplicitHeight;
-}
-
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     QQuickContainerPrivate::itemImplicitWidthChanged(item);
@@ -455,6 +445,9 @@ void QQuickDialogButtonBoxPrivate::removeStandardButtons()
 QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
     : QQuickContainer(*(new QQuickDialogButtonBoxPrivate), parent)
 {
+    Q_D(QQuickDialogButtonBox);
+    d->changeTypes |= QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
+    d->buttonLayout = platformButtonLayout();
 }
 
 QQuickDialogButtonBox::~QQuickDialogButtonBox()

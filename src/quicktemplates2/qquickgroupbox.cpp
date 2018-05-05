@@ -89,8 +89,6 @@ class QQuickGroupBoxPrivate : public QQuickFramePrivate
     Q_DECLARE_PUBLIC(QQuickGroupBox)
 
 public:
-    QQuickGroupBoxPrivate() : label(nullptr) { }
-
     void cancelLabel();
     void executeLabel(bool complete = false);
 

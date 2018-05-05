@@ -100,8 +100,6 @@ class QQuickTabBarPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
 public:
-    QQuickTabBarPrivate();
-
     void updateCurrentItem();
     void updateCurrentIndex();
     void updateLayout();
@@ -113,8 +111,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
-    bool updatingLayout;
-    QQuickTabBar::Position position;
+    bool updatingLayout = false;
+    QQuickTabBar::Position position = QQuickTabBar::Header;
 };
 
 class QQuickTabBarAttachedPrivate : public QObjectPrivate
@@ -122,12 +120,6 @@ class QQuickTabBarAttachedPrivate : public QObjectPrivate
     Q_DECLARE_PUBLIC(QQuickTabBarAttached)
 
 public:
-    QQuickTabBarAttachedPrivate()
-        : index(-1),
-          tabBar(nullptr)
-    {
-    }
-
     static QQuickTabBarAttachedPrivate *get(QQuickTabBarAttached *attached)
     {
         return attached->d_func();
@@ -135,16 +127,9 @@ public:
 
     void update(QQuickTabBar *tabBar, int index);
 
-    int index;
-    QQuickTabBar *tabBar;
+    int index = -1;
+    QQuickTabBar *tabBar = nullptr;
 };
-
-QQuickTabBarPrivate::QQuickTabBarPrivate()
-    : updatingLayout(false),
-      position(QQuickTabBar::Header)
-{
-    changeTypes |= Geometry | ImplicitWidth | ImplicitHeight;
-}
 
 void QQuickTabBarPrivate::updateCurrentItem()
 {
@@ -265,6 +250,7 @@ QQuickTabBar::QQuickTabBar(QQuickItem *parent)
     : QQuickContainer(*(new QQuickTabBarPrivate), parent)
 {
     Q_D(QQuickTabBar);
+    d->changeTypes |= QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
     setFlag(ItemIsFocusScope);
     QObjectPrivate::connect(this, &QQuickTabBar::currentIndexChanged, d, &QQuickTabBarPrivate::updateCurrentItem);
 }

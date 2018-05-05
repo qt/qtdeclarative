@@ -81,12 +81,12 @@ public:
 private:
     void markClipDirty();
 
-    bool m_hasClipWidth;
-    bool m_hasClipHeight;
-    qreal m_clipX;
-    qreal m_clipY;
-    qreal m_clipWidth;
-    qreal m_clipHeight;
+    bool m_hasClipWidth = false;
+    bool m_hasClipHeight = false;
+    qreal m_clipX = 0;
+    qreal m_clipY = 0;
+    qreal m_clipWidth = 0;
+    qreal m_clipHeight = 0;
 };
 
 QT_END_NAMESPACE

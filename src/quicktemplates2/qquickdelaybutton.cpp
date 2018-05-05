@@ -80,15 +80,13 @@ class QQuickDelayButtonPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickDelayButton)
 
 public:
-    QQuickDelayButtonPrivate();
-
     void beginTransition(qreal to);
     void finishTransition();
     void cancelTransition();
 
-    int delay;
-    qreal progress;
-    QQuickTransition *transition;
+    int delay = 300;
+    qreal progress = 0.0;
+    QQuickTransition *transition = nullptr;
     QScopedPointer<QQuickDelayTransitionManager> transitionManager;
 };
 
@@ -103,7 +101,7 @@ protected:
     void finished() override;
 
 private:
-    QQuickDelayButton *m_button;
+    QQuickDelayButton *m_button = nullptr;
 };
 
 void QQuickDelayTransitionManager::transition(QQuickTransition *transition, qreal progress)
@@ -127,13 +125,6 @@ void QQuickDelayTransitionManager::finished()
 {
     if (qFuzzyCompare(m_button->progress(), qreal(1.0)))
         emit m_button->activated();
-}
-
-QQuickDelayButtonPrivate::QQuickDelayButtonPrivate()
-    : delay(3000),
-      progress(0.0),
-      transition(nullptr)
-{
 }
 
 void QQuickDelayButtonPrivate::beginTransition(qreal to)

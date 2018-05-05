@@ -43,9 +43,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickDefaultDial::QQuickDefaultDial(QQuickItem *parent) :
-    QQuickPaintedItem(parent),
-    m_progress(0),
-    m_color(Qt::black)
+    QQuickPaintedItem(parent)
 {
 }
 

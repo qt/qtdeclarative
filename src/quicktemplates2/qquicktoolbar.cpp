@@ -99,9 +99,7 @@ QT_BEGIN_NAMESPACE
 class QQuickToolBarPrivate : public QQuickPanePrivate
 {
 public:
-    QQuickToolBarPrivate() : position(QQuickToolBar::Header) { }
-
-    QQuickToolBar::Position position;
+    QQuickToolBar::Position position = QQuickToolBar::Header;
 };
 
 QQuickToolBar::QQuickToolBar(QQuickItem *parent)

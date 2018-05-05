@@ -58,12 +58,12 @@ public:
 
 private:
     struct Phase {
-        Phase() : duration(0), from(0), to(0), curve(QEasingCurve::Linear) { }
+        Phase() = default;
         Phase(int d, qreal f, qreal t, QEasingCurve::Type c) : duration(d), from(f), to(t), curve(c) { }
-        int duration;
-        qreal from;
-        qreal to;
-        QEasingCurve curve;
+        int duration = 0;
+        qreal from = 0;
+        qreal to = 0;
+        QEasingCurve curve = QEasingCurve::Linear;
     };
 
     Phase m_phases[PhaseCount];
@@ -186,7 +186,7 @@ void QQuickUniversalBusyIndicatorNode::sync(QQuickItem *item)
 }
 
 QQuickUniversalBusyIndicator::QQuickUniversalBusyIndicator(QQuickItem *parent)
-    : QQuickItem(parent), m_count(5), m_elapsed(0), m_color(Qt::black)
+    : QQuickItem(parent)
 {
     setFlag(ItemHasContents);
 }

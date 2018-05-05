@@ -82,7 +82,7 @@ protected:
 private:
     void init();
 
-    bool m_explicitPath;
+    bool m_explicitPath = false;
     QString m_path;
 };
 

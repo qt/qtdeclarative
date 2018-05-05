@@ -59,8 +59,6 @@ class QTimerEvent;
 
 struct QQuickPressHandler
 {
-    QQuickPressHandler();
-
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -69,14 +67,14 @@ struct QQuickPressHandler
     void clearDelayedMouseEvent();
     bool isActive();
 
-    QQuickItem *control;
+    QQuickItem *control = nullptr;
     QBasicTimer timer;
     QPointF pressPos;
-    bool longPress;
-    int pressAndHoldSignalIndex;
-    int pressedSignalIndex;
-    int releasedSignalIndex;
-    QMouseEvent *delayedMousePressEvent;
+    bool longPress = false;
+    int pressAndHoldSignalIndex = -1;
+    int pressedSignalIndex = -1;
+    int releasedSignalIndex = -1;
+    QMouseEvent *delayedMousePressEvent = nullptr;
 };
 
 QT_END_NAMESPACE

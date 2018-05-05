@@ -89,18 +89,10 @@ QT_BEGIN_NAMESPACE
 class QQuickProgressBarPrivate : public QQuickControlPrivate
 {
 public:
-    QQuickProgressBarPrivate()
-        : from(0),
-          to(1.0),
-          value(0),
-          indeterminate(false)
-    {
-    }
-
-    qreal from;
-    qreal to;
-    qreal value;
-    bool indeterminate;
+    qreal from = 0;
+    qreal to = 1;
+    qreal value = 0;
+    bool indeterminate = false;
 };
 
 QQuickProgressBar::QQuickProgressBar(QQuickItem *parent)

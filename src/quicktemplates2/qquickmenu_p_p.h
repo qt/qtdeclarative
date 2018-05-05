@@ -120,16 +120,16 @@ public:
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
-    bool cascade;
-    int hoverTimer;
-    int currentIndex;
-    qreal overlap;
+    bool cascade = false;
+    int hoverTimer = 0;
+    int currentIndex = -1;
+    qreal overlap = 0;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
-    QQuickItem *contentItem; // TODO: cleanup
+    QQuickItem *contentItem = nullptr; // TODO: cleanup
     QVector<QObject *> contentData;
     QQmlObjectModel *contentModel;
-    QQmlComponent *delegate;
+    QQmlComponent *delegate = nullptr;
     QString title;
 };
 

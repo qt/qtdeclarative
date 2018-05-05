@@ -62,8 +62,6 @@ class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChange
     Q_DECLARE_PUBLIC(QQuickIconLabel)
 
 public:
-    explicit QQuickIconLabelPrivate();
-
     bool hasIcon() const;
     bool hasText() const;
 
@@ -92,20 +90,20 @@ public:
     void itemImplicitHeightChanged(QQuickItem *) override;
     void itemDestroyed(QQuickItem *item) override;
 
-    bool mirrored;
-    QQuickIconLabel::Display display;
-    Qt::Alignment alignment;
-    qreal spacing;
-    qreal topPadding;
-    qreal leftPadding;
-    qreal rightPadding;
-    qreal bottomPadding;
+    bool mirrored = false;
+    QQuickIconLabel::Display display = QQuickIconLabel::TextBesideIcon;
+    Qt::Alignment alignment = Qt::AlignCenter;
+    qreal spacing = 0;
+    qreal topPadding = 0;
+    qreal leftPadding = 0;
+    qreal rightPadding = 0;
+    qreal bottomPadding = 0;
     QFont font;
     QColor color;
     QString text;
     QQuickIcon icon;
-    QQuickIconImage *image;
-    QQuickMnemonicLabel *label;
+    QQuickIconImage *image = nullptr;
+    QQuickMnemonicLabel *label = nullptr;
 };
 
 QT_END_NAMESPACE

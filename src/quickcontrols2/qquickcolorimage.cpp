@@ -41,7 +41,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickColorImage::QQuickColorImage(QQuickItem *parent)
-    : QQuickImage(parent), m_color(Qt::transparent), m_defaultColor(Qt::transparent)
+    : QQuickImage(parent)
 {
 }
 

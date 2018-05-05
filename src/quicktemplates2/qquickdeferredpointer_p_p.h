@@ -79,7 +79,7 @@ public:
     inline QQuickDeferredPointer<T> &operator=(const QQuickDeferredPointer &o);
 
 private:
-    quintptr ptr_value;
+    quintptr ptr_value = 0;
 
     static const quintptr WasExecutedBit = 0x1;
     static const quintptr IsExecutingBit = 0x2;
@@ -88,7 +88,6 @@ private:
 
 template<typename T>
 QQuickDeferredPointer<T>::QQuickDeferredPointer()
-: ptr_value(0)
 {
 }
 

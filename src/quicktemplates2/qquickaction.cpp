@@ -121,8 +121,7 @@ static QKeySequence variantToKeySequence(const QVariant &var)
 }
 
 QQuickActionPrivate::ShortcutEntry::ShortcutEntry(QObject *target)
-    : m_shortcutId(0),
-      m_target(target)
+    : m_target(target)
 {
 }
 
@@ -168,16 +167,6 @@ void QQuickActionPrivate::ShortcutEntry::setEnabled(bool enabled)
         return;
 
     QGuiApplicationPrivate::instance()->shortcutMap.setShortcutEnabled(enabled, m_shortcutId, m_target);
-}
-
-QQuickActionPrivate::QQuickActionPrivate()
-    : explicitEnabled(false),
-      enabled(true),
-      checked(false),
-      checkable(false),
-      defaultShortcutEntry(nullptr),
-      group(nullptr)
-{
 }
 
 QVariant QQuickActionPrivate::shortcut() const

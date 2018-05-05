@@ -60,8 +60,6 @@ class QQuickMenuItemPrivate : public QQuickAbstractButtonPrivate
     Q_DECLARE_PUBLIC(QQuickMenuItem)
 
 public:
-    QQuickMenuItemPrivate();
-
     static QQuickMenuItemPrivate *get(QQuickMenuItem *item)
     {
         return item->d_func();
@@ -75,10 +73,10 @@ public:
     void cancelArrow();
     void executeArrow(bool complete = false);
 
-    bool highlighted;
+    bool highlighted = false;
     QQuickDeferredPointer<QQuickItem> arrow;
-    QQuickMenu *menu;
-    QQuickMenu *subMenu;
+    QQuickMenu *menu = nullptr;
+    QQuickMenu *subMenu = nullptr;
 };
 
 QT_END_NAMESPACE
