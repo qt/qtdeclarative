@@ -68,7 +68,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class QQmlAdaptorModel : public QQmlGuard<QObject>
+class QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
 {
 public:
     class Accessors

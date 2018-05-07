@@ -305,7 +305,7 @@ public:
 
     QQmlAdaptorModel m_adaptorModel;
     QQmlListCompositor m_compositor;
-    QQmlComponent *m_delegate;
+    QQmlStrongJSQObjectReference<QQmlComponent> m_delegate;
     QQmlDelegateModelItemMetaType *m_cacheMetaType;
     QPointer<QQmlContext> m_context;
     QQmlDelegateModelParts *m_parts;

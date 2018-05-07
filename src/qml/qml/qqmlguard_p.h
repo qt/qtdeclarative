@@ -106,6 +106,34 @@ protected:
     virtual void objectDestroyed(T *) {}
 };
 
+template <typename T>
+class QQmlStrongJSQObjectReference : public QQmlGuard<T>
+{
+public:
+    void setObject(T *o, QObject *parent) {
+        T *old = this->object();
+        if (o == old)
+            return;
+
+        if (m_jsOwnership && old && old->parent() == parent)
+            QQml_setParent_noEvent(old, nullptr);
+
+        this->QQmlGuard<T>::operator=(o);
+
+        if (o && !o->parent() && !QQmlData::keepAliveDuringGarbageCollection(o)) {
+            m_jsOwnership = true;
+            QQml_setParent_noEvent(o, parent);
+        } else {
+            m_jsOwnership = false;
+        }
+    }
+
+private:
+    using QQmlGuard<T>::setObject;
+    using QQmlGuard<T>::operator=;
+    bool m_jsOwnership = false;
+};
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQmlGuard<QObject>)

@@ -200,8 +200,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
-    : m_delegate(nullptr)
-    , m_cacheMetaType(nullptr)
+    : m_cacheMetaType(nullptr)
     , m_context(ctxt)
     , m_parts(nullptr)
     , m_filterGroup(QStringLiteral("items"))
@@ -263,6 +262,7 @@ QQmlDelegateModel::QQmlDelegateModel(QQmlContext *ctxt, QObject *parent)
 QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
+    d->m_adaptorModel.setObject(nullptr, this);
 
     for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {
@@ -409,7 +409,7 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
         return;
     }
     bool wasValid = d->m_delegate != nullptr;
-    d->m_delegate = delegate;
+    d->m_delegate.setObject(delegate, this);
     d->m_delegateValidated = false;
     if (wasValid && d->m_complete) {
         for (int i = 1; i < d->m_groupCount; ++i) {
