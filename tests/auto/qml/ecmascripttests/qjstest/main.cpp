@@ -29,6 +29,7 @@
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <qdebug.h>
+#include <stdlib.h>
 
 #include "test262runner.h"
 
@@ -106,5 +107,8 @@ int main(int argc, char **argv)
         flags |= Test262Runner::WriteTestExpectations;
     testRunner.setFlags(flags);
 
-    return testRunner.run();
+    if (testRunner.run())
+        return EXIT_SUCCESS;
+    else
+        return EXIT_FAILURE;
 }
