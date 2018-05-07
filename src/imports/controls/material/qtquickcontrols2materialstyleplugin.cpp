@@ -77,14 +77,14 @@ void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickMaterialBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
     qmlRegisterType<QQuickMaterialProgressBar>(import, 2, 0, "ProgressBarImpl");
     qmlRegisterType<QQuickMaterialRipple>(import, 2, 0, "Ripple");
-    qmlRegisterType(typeUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("CursorDelegate.qml")), import, 2, 0, "CursorDelegate");
-    qmlRegisterType(typeUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 0, "ElevationEffect");
-    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 0, "RectangularGlow");
-    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
+    qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("CursorDelegate.qml")), import, 2, 0, "CursorDelegate");
+    qmlRegisterType(resolvedUrl(QStringLiteral("ElevationEffect.qml")), import, 2, 0, "ElevationEffect");
+    qmlRegisterType(resolvedUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("RectangularGlow.qml")), import, 2, 0, "RectangularGlow");
+    qmlRegisterType(resolvedUrl(QStringLiteral("SliderHandle.qml")), import, 2, 0, "SliderHandle");
+    qmlRegisterType(resolvedUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QString QtQuickControls2MaterialStylePlugin::name() const

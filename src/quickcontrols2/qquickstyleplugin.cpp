@@ -37,6 +37,7 @@
 #include "qquickstyleplugin_p.h"
 #include "qquickstyle.h"
 #include "qquickstyle_p.h"
+#include "qquickstyleselector_p.h"
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qsettings.h>
@@ -184,20 +185,25 @@ QQuickTheme *QQuickStylePlugin::createTheme() const
     return nullptr;
 }
 
-/*
-    Returns either a file system path if Qt was built as shared libraries,
-    or a QRC path if Qt was built statically.
-*/
-QUrl QQuickStylePlugin::typeUrl(const QString &name) const
+QUrl QQuickStylePlugin::resolvedUrl(const QString &fileName) const
 {
-#ifdef QT_STATIC
-    QString url = QLatin1String("qrc") + baseUrl().path();
-#else
-    QString url = baseUrl().toString();
-#endif
-    if (!name.isEmpty())
-        url += QLatin1Char('/') + name;
-    return QUrl(url);
+    if (!m_selector) {
+        m_selector.reset(new QQuickStyleSelector);
+        const QString style = QQuickStyle::name();
+        if (!style.isEmpty())
+            m_selector->addSelector(style);
+
+        const QString fallback = QQuickStylePrivate::fallbackStyle();
+        if (!fallback.isEmpty() && fallback != style)
+            m_selector->addSelector(fallback);
+
+        const QString theme = name();
+        if (!theme.isEmpty() && theme != style)
+            m_selector->addSelector(theme);
+
+        m_selector->setPaths(QQuickStylePrivate::stylePaths(true));
+    }
+    return m_selector->select(fileName);
 }
 
 QT_END_NAMESPACE

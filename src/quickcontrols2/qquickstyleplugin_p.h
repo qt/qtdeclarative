@@ -54,6 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
+class QQuickStyleSelector;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
@@ -70,10 +71,11 @@ public:
     virtual QString name() const;
     virtual QQuickTheme *createTheme() const;
 
-    QUrl typeUrl(const QString &name = QString()) const;
+    QUrl resolvedUrl(const QString &fileName) const;
 
 private:
     QQuickTheme *m_theme = nullptr;
+    mutable QScopedPointer<QQuickStyleSelector> m_selector;
 };
 
 QT_END_NAMESPACE

@@ -84,12 +84,12 @@ void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickFusionDial>(import, 2, 3, "DialImpl");
     qmlRegisterType<QQuickFusionKnob>(import, 2, 3, "KnobImpl");
 
-    qmlRegisterType(typeUrl(QStringLiteral("ButtonPanel.qml")), import, 2, 3, "ButtonPanel");
-    qmlRegisterType(typeUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 3, "CheckIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 3, "RadioIndicator");
-    qmlRegisterType(typeUrl(QStringLiteral("SliderGroove.qml")), import, 2, 3, "SliderGroove");
-    qmlRegisterType(typeUrl(QStringLiteral("SliderHandle.qml")), import, 2, 3, "SliderHandle");
-    qmlRegisterType(typeUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 3, "SwitchIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("ButtonPanel.qml")), import, 2, 3, "ButtonPanel");
+    qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 3, "CheckIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 3, "RadioIndicator");
+    qmlRegisterType(resolvedUrl(QStringLiteral("SliderGroove.qml")), import, 2, 3, "SliderGroove");
+    qmlRegisterType(resolvedUrl(QStringLiteral("SliderHandle.qml")), import, 2, 3, "SliderHandle");
+    qmlRegisterType(resolvedUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 3, "SwitchIndicator");
 }
 
 QString QtQuickControls2FusionStylePlugin::name() const
