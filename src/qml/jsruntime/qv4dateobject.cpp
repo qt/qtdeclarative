@@ -55,7 +55,7 @@
 
 #include <wtf/MathExtras.h>
 
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX) && QT_CONFIG(timezone)
 /*
   See QTBUG-56899.  Although we don't (yet) have a proper way to reset the
   system zone, the code below, that uses QTimeZone::systemTimeZone(), works
