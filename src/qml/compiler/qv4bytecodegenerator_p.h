@@ -77,7 +77,9 @@ public:
         Label(BytecodeGenerator *generator, LinkMode mode = LinkNow)
             : generator(generator),
               index(generator->labels.size()) {
-            generator->labels.append(mode == LinkNow ? generator->instructions.size() : -1);
+            generator->labels.append(-1);
+            if (mode == LinkNow)
+                link();
         }
         static Label returnLabel() {
             Label l;
@@ -92,6 +94,7 @@ public:
             Q_ASSERT(index >= 0);
             Q_ASSERT(generator->labels[index] == -1);
             generator->labels[index] = generator->instructions.size();
+            generator->clearLastInstruction();
         }
 
         BytecodeGenerator *generator = nullptr;
@@ -261,6 +264,11 @@ public:
             addJumpInstruction(Instruction::JumpTrue()).link(*trueLabel);
     }
 
+    void clearLastInstruction()
+    {
+        lastInstrType = -1;
+    }
+
 private:
     friend struct Jump;
     friend struct Label;
@@ -292,6 +300,9 @@ private:
     int startLine = 0;
     int currentLine = 0;
     bool debugMode = false;
+
+    int lastInstrType = -1;
+    Moth::Instr lastInstr;
 };
 
 }

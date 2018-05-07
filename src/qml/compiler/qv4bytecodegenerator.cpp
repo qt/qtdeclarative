@@ -185,6 +185,25 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 }
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
+    if (lastInstrType == int(Instr::Type::StoreReg)) {
+        if (type == Instr::Type::LoadReg) {
+            if (i.LoadReg.reg == lastInstr.StoreReg.reg) {
+                // value is already in the accumulator
+                return -1;
+            }
+        }
+        if (type == Instr::Type::MoveReg) {
+            if (i.MoveReg.srcReg == lastInstr.StoreReg.reg) {
+                Instruction::StoreReg store;
+                store.reg = i.MoveReg.destReg;
+                addInstruction(store);
+                return -1;
+            }
+        }
+    }
+    lastInstrType = int(type);
+    lastInstr = i;
+
 #if QT_CONFIG(qml_debug)
     if (debugMode && type != Instr::Type::Debug) {
 QT_WARNING_PUSH
