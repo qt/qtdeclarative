@@ -7462,11 +7462,8 @@ void QQuickItem::grabMouse()
     auto point = fromTouch ?
         windowPriv->pointerEventInstance(windowPriv->touchMouseDevice)->pointById(windowPriv->touchMouseId) :
         windowPriv->pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0);
-    if (point) {
-        QQuickItem *oldGrabber = point->grabberItem();
+    if (point)
         point->setGrabberItem(this);
-        windowPriv->sendUngrabEvent(oldGrabber, fromTouch);
-    }
 }
 
 /*!
