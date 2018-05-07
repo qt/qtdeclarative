@@ -98,7 +98,7 @@ bool Test262Runner::run()
 
     if (flags & Parallel) {
         threadPool = new QThreadPool;
-        threadPool->setStackSize(8*1024*1024);
+        threadPool->setStackSize(16*1024*1024);
         if (flags & Verbose)
             qDebug() << "Running in parallel with" << QThread::idealThreadCount() << "threads.";
     }
