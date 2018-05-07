@@ -1,5 +1,2 @@
 [contains:hollow square: testing points inside]
 xcb
-
-[qtBug60123]
-offscreen
