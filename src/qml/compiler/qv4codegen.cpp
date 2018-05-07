@@ -358,10 +358,10 @@ void Codegen::statementList(StatementList *ast)
             it->next->statement->kind == Statement::Kind_ContinueStatement ||
             it->next->statement->kind == Statement::Kind_ReturnStatement)
                 requiresReturnValue = _requiresReturnValue;
-        if (FunctionDeclaration *decl = cast<FunctionDeclaration *>(it->statement))
-            statement(decl);
+        if (Statement *s = it->statement->statementCast())
+            statement(s);
         else
-            statement(static_cast<Statement *>(it->statement));
+            statement(static_cast<ExpressionNode *>(it->statement));
         requiresReturnValue = false;
         if (it->statement->kind == Statement::Kind_ThrowStatement ||
             it->statement->kind == Statement::Kind_BreakStatement ||
