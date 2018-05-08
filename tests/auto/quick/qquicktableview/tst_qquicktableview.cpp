@@ -98,6 +98,7 @@ private slots:
     void flick();
     void flickOvershoot_data();
     void flickOvershoot();
+    void checkRowColumnCount();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -641,6 +642,61 @@ void tst_QQuickTableView::flickOvershoot()
     QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
     QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
     QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+}
+
+void tst_QQuickTableView::checkRowColumnCount()
+{
+    // If we flick several columns (rows) at the same time, check that we don't
+    // end up with loading more delegate items into memory than necessary. We
+    // should free up columns as we go before loading new ones.
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    const char *maxDelegateCountProp = "maxDelegateCount";
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int tableViewCount = tableViewPrivate->loadedItems.count();
+    const int qmlCountAfterInit = view->rootObject()->property(maxDelegateCountProp).toInt();
+    QCOMPARE(tableViewCount, qmlCountAfterInit);
+
+    // Flick a long distance right
+    tableView->setContentX(tableView->width() * 2);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int qmlCountAfterRightFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
+    QCOMPARE(qmlCountAfterRightFlick, qmlCountAfterInit);
+
+    // Flick a long distance down
+    tableView->setContentX(tableView->height() * 2);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int qmlCountAfterDownFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
+    QCOMPARE(qmlCountAfterDownFlick, qmlCountAfterInit);
+
+    // Flick a long distance left
+    tableView->setContentX(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int qmlCountAfterLeftFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
+    QCOMPARE(qmlCountAfterLeftFlick, qmlCountAfterInit);
+
+    // Flick a long distance up
+    tableView->setContentY(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int qmlCountAfterUpFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
+    QCOMPARE(qmlCountAfterUpFlick, qmlCountAfterInit);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

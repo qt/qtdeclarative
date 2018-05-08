@@ -971,25 +971,19 @@ void QQuickTableViewPrivate::loadInitialTopLeftItem()
     processLoadRequest();
 }
 
-void QQuickTableViewPrivate::unloadEdgesOutsideRect(const QRectF &rect)
+void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
 {
-    while (Qt::Edge edge = nextEdgeToUnload(rect)) {
-        unloadItems(rectangleEdge(loadedTable, edge));
-        loadedTable = expandedRect(loadedTable, edge, -1);
-        syncLoadedTableRectFromLoadedTable();
-        qCDebug(lcTableViewDelegateLifecycle) << tableLayoutToString();
-    }
+    unloadItems(rectangleEdge(loadedTable, edge));
+    loadedTable = expandedRect(loadedTable, edge, -1);
+    syncLoadedTableRectFromLoadedTable();
+    qCDebug(lcTableViewDelegateLifecycle) << tableLayoutToString();
 }
 
-void QQuickTableViewPrivate::loadEdgesInsideRect(const QRectF &rect, QQmlIncubator::IncubationMode incubationMode)
+void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode)
 {
-    while (Qt::Edge edge = nextEdgeToLoad(rect)) {
-        QLine cellsToLoad = rectangleEdge(expandedRect(loadedTable, edge, 1), edge);
-        loadRequest.begin(cellsToLoad, edge, incubationMode);
-        processLoadRequest();
-        if (loadRequest.isActive())
-            return;
-    }
+    QLine cellsToLoad = rectangleEdge(expandedRect(loadedTable, edge, 1), edge);
+    loadRequest.begin(cellsToLoad, edge, incubationMode);
+    processLoadRequest();
 }
 
 void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
@@ -1018,8 +1012,25 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
         return;
     }
 
-    unloadEdgesOutsideRect(hasBufferedItems ? bufferRect() : viewportRect);
-    loadEdgesInsideRect(viewportRect, QQmlIncubator::AsynchronousIfNested);
+    const QRectF unloadRect = hasBufferedItems ? bufferRect() : viewportRect;
+    bool tableModified;
+
+    do {
+        tableModified = false;
+
+        if (Qt::Edge edge = nextEdgeToUnload(unloadRect)) {
+            tableModified = true;
+            unloadEdge(edge);
+        }
+
+        if (Qt::Edge edge = nextEdgeToLoad(viewportRect)) {
+            tableModified = true;
+            loadEdge(edge, QQmlIncubator::AsynchronousIfNested);
+            if (loadRequest.isActive())
+                return;
+        }
+    } while (tableModified);
+
 }
 
 void QQuickTableViewPrivate::loadBuffer()
@@ -1031,7 +1042,13 @@ void QQuickTableViewPrivate::loadBuffer()
         return;
 
     qCDebug(lcTableViewDelegateLifecycle());
-    loadEdgesInsideRect(bufferRect(), QQmlIncubator::Asynchronous);
+    const QRectF loadRect = bufferRect();
+    while (Qt::Edge edge = nextEdgeToLoad(loadRect)) {
+        loadEdge(edge, QQmlIncubator::Asynchronous);
+        if (loadRequest.isActive())
+            break;
+    }
+
     hasBufferedItems = true;
 }
 
@@ -1045,7 +1062,8 @@ void QQuickTableViewPrivate::unloadBuffer()
     cacheBufferDelayTimer.stop();
     if (loadRequest.isActive())
         cancelLoadRequest();
-    unloadEdgesOutsideRect(viewportRect);
+    while (Qt::Edge edge = nextEdgeToUnload(viewportRect))
+        unloadEdge(edge);
 }
 
 QRectF QQuickTableViewPrivate::bufferRect()

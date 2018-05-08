@@ -281,8 +281,8 @@ public:
     void unloadItems(const QLine &items);
 
     void loadInitialTopLeftItem();
-    void loadEdgesInsideRect(const QRectF &rect, QQmlIncubator::IncubationMode incubationMode);
-    void unloadEdgesOutsideRect(const QRectF &rect);
+    void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
+    void unloadEdge(Qt::Edge edge);
     void loadAndUnloadVisibleEdges();
     void cancelLoadRequest();
     void processLoadRequest();
