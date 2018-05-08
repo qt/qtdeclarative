@@ -1446,7 +1446,7 @@ void ModelNodeMetaObject::propertyWritten(int index)
         return;
 
     QString propName = QString::fromUtf8(name(index));
-    QVariant value = operator[](index);
+    const QVariant value = this->value(index);
 
     QV4::Scope scope(m_model->engine());
     QV4::ScopedValue v(scope, scope.engine->fromVariant(value));

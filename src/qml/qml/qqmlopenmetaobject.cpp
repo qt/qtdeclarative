@@ -184,31 +184,55 @@ public:
     QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q)
         : q(_q), parent(nullptr), type(nullptr), cacheProperties(false) {}
 
-    inline QPair<QVariant, bool> &getDataRef(int idx) {
-        while (data.count() <= idx)
-            data << QPair<QVariant, bool>(QVariant(), false);
-        return data[idx];
-    }
+    struct Property {
+    private:
+        QVariant m_value;
+    public:
+        bool valueSet = false;
 
-    inline QVariant &getData(int idx) {
-        QPair<QVariant, bool> &prop = getDataRef(idx);
-        if (!prop.second) {
-            prop.first = q->initialValue(idx);
-            prop.second = true;
+        const QVariant &value() const { return m_value; }
+        QVariant &valueRef() { return m_value; }
+        void setValue(const QVariant &v) {
+            m_value = v;
+            valueSet = true;
         }
-        return prop.first;
+    };
+
+    inline void setPropertyValue(int idx, const QVariant &value) {
+        if (data.count() <= idx)
+            data.resize(idx + 1);
+        data[idx].setValue(value);
     }
 
-    inline bool hasData(int idx) const {
+    inline Property &propertyRef(int idx) {
+        if (data.count() <= idx)
+            data.resize(idx + 1);
+        Property &prop = data[idx];
+        if (!prop.valueSet)
+            prop.setValue(q->initialValue(idx));
+        return prop;
+    }
+
+    inline QVariant propertyValue(int idx) {
+        auto &prop = propertyRef(idx);
+        return prop.value();
+    }
+
+    inline QVariant &propertyValueRef(int idx) {
+        auto &prop = propertyRef(idx);
+        return prop.valueRef();
+    }
+
+    inline bool hasProperty(int idx) const {
         if (idx >= data.count())
             return false;
-        return data[idx].second;
+        return data[idx].valueSet;
     }
 
     bool autoCreate;
     QQmlOpenMetaObject *q;
     QAbstractDynamicMetaObject *parent;
-    QList<QPair<QVariant, bool> > data;
+    QVector<Property> data;
     QObject *object;
     QQmlOpenMetaObjectType *type;
     bool cacheProperties;
@@ -276,13 +300,11 @@ int QQmlOpenMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void *
         int propId = id - d->type->d->propertyOffset;
         if (c == QMetaObject::ReadProperty) {
             propertyRead(propId);
-            *reinterpret_cast<QVariant *>(a[0]) = d->getData(propId);
+            *reinterpret_cast<QVariant *>(a[0]) = d->propertyValue(propId);
         } else if (c == QMetaObject::WriteProperty) {
-            if (propId >= d->data.count() || d->data.at(propId).first != *reinterpret_cast<QVariant *>(a[0]))  {
+            if (propId >= d->data.count() || d->data.at(propId).value() != *reinterpret_cast<QVariant *>(a[0]))  {
                 propertyWrite(propId);
-                QPair<QVariant, bool> &prop = d->getDataRef(propId);
-                prop.first = propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0]));
-                prop.second = true;
+                d->setPropertyValue(propId, propertyWriteValue(propId, *reinterpret_cast<QVariant *>(a[0])));
                 propertyWritten(propId);
                 activate(o, d->type->d->signalOffset + propId, nullptr);
             }
@@ -303,14 +325,12 @@ QAbstractDynamicMetaObject *QQmlOpenMetaObject::parent() const
 
 QVariant QQmlOpenMetaObject::value(int id) const
 {
-    return d->getData(id);
+    return d->propertyValue(id);
 }
 
 void QQmlOpenMetaObject::setValue(int id, const QVariant &value)
 {
-    QPair<QVariant, bool> &prop = d->getDataRef(id);
-    prop.first = propertyWriteValue(id, value);
-    prop.second = true;
+    d->setPropertyValue(id, propertyWriteValue(id, value));
     activate(d->object, id + d->type->d->signalOffset, nullptr);
 }
 
@@ -320,23 +340,18 @@ QVariant QQmlOpenMetaObject::value(const QByteArray &name) const
     if (iter == d->type->d->names.cend())
         return QVariant();
 
-    return d->getData(*iter);
+    return d->propertyValue(*iter);
 }
 
-QVariant &QQmlOpenMetaObject::operator[](const QByteArray &name)
+QVariant &QQmlOpenMetaObject::valueRef(const QByteArray &name)
 {
     QHash<QByteArray, int>::ConstIterator iter = d->type->d->names.constFind(name);
     Q_ASSERT(iter != d->type->d->names.cend());
 
-    return d->getData(*iter);
+    return d->propertyValueRef(*iter);
 }
 
-QVariant &QQmlOpenMetaObject::operator[](int id)
-{
-    return d->getData(id);
-}
-
-bool QQmlOpenMetaObject::setValue(const QByteArray &name, const QVariant &val)
+bool QQmlOpenMetaObject::setValue(const QByteArray &name, const QVariant &val, bool force)
 {
     QHash<QByteArray, int>::ConstIterator iter = d->type->d->names.constFind(name);
 
@@ -348,11 +363,10 @@ bool QQmlOpenMetaObject::setValue(const QByteArray &name, const QVariant &val)
     }
 
     if (id >= 0) {
-        QVariant &dataVal = d->getData(id);
-        if (dataVal == val)
+        if (!force && d->propertyValue(id) == val)
             return false;
 
-        dataVal = val;
+        d->setPropertyValue(id, val);
         activate(d->object, id + d->type->d->signalOffset, nullptr);
         return true;
     }
@@ -363,7 +377,7 @@ bool QQmlOpenMetaObject::setValue(const QByteArray &name, const QVariant &val)
 // returns true if this value has been initialized by a call to either value() or setValue()
 bool QQmlOpenMetaObject::hasValue(int id) const
 {
-    return d->hasData(id);
+    return d->hasProperty(id);
 }
 
 void QQmlOpenMetaObject::setCached(bool c)

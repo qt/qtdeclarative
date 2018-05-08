@@ -144,16 +144,6 @@ protected:
 
 private:
     using QQmlOpenMetaObject::setValue;
-    void setValue(const QByteArray &name, const QVariant &val, bool force)
-    {
-        if (force) {
-            QVariant existingValue = value(name);
-            if (existingValue.isValid()) {
-                (*this)[name] = QVariant();
-            }
-        }
-        setValue(name, val);
-    }
 
     void emitDirectNotifies(const int *changedRoles, int roleCount);
 

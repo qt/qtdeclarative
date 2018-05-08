@@ -100,11 +100,10 @@ public:
     ~QQmlOpenMetaObject() override;
 
     QVariant value(const QByteArray &) const;
-    bool setValue(const QByteArray &, const QVariant &);
+    bool setValue(const QByteArray &, const QVariant &, bool force = false);
     QVariant value(int) const;
     void setValue(int, const QVariant &);
-    QVariant &operator[](const QByteArray &);
-    QVariant &operator[](int);
+    QVariant &valueRef(const QByteArray &);
     bool hasValue(int) const;
 
     int count() const;
