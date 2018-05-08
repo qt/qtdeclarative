@@ -79,7 +79,6 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
     case Statement::Kind_ForEachStatement:
     case Statement::Kind_ForStatement:
     case Statement::Kind_IfStatement:
-    case Statement::Kind_LocalForEachStatement:
     case Statement::Kind_LocalForStatement:
     case Statement::Kind_WhileStatement:
         bytecodeGenerator->setLocation(fallback);
@@ -2611,7 +2610,16 @@ bool Codegen::visit(ForEachStatement *ast)
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
-    Reference lhs = expression(ast->initialiser);
+    Reference lhs;
+    if (ExpressionNode *e = ast->lhs->expressionCast()) {
+        lhs = expression(e);
+    } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
+        variableDeclaration(p);
+        lhs = referenceForName(p->bindingIdentifier, true).asLValue();
+    } else {
+        Q_UNREACHABLE();
+    }
+
     if (hasError)
         return false;
     if (!lhs.isLValue()) {
@@ -2622,32 +2630,6 @@ bool Codegen::visit(ForEachStatement *ast)
     lhs = lhs.asLValue();
 
     foreachBody(lhs, ast->statement, ast->forToken, iterator);
-    return false;
-}
-
-bool Codegen::visit(LocalForEachStatement *ast)
-{
-    if (hasError)
-        return true;
-
-    RegisterScope scope(this);
-
-    Reference iterator = Reference::fromStackSlot(this);
-    Reference expr = expression(ast->expression);
-    if (hasError)
-        return true;
-
-    variableDeclaration(ast->declaration);
-
-    expr.loadInAccumulator();
-    Instruction::GetIterator iteratorObjInstr;
-    iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
-    bytecodeGenerator->addInstruction(iteratorObjInstr);
-    iterator.storeConsumeAccumulator();
-
-    Reference lhs = referenceForName(ast->declaration->bindingIdentifier, true).asLValue();
-    foreachBody(lhs, ast->statement, ast->forToken, iterator);
-
     return false;
 }
 
@@ -2771,8 +2753,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::DoWhileStatement *>(ast->statement) ||
             AST::cast<AST::ForStatement *>(ast->statement) ||
             AST::cast<AST::ForEachStatement *>(ast->statement) ||
-            AST::cast<AST::LocalForStatement *>(ast->statement) ||
-            AST::cast<AST::LocalForEachStatement *>(ast->statement)) {
+            AST::cast<AST::LocalForStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
         BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();

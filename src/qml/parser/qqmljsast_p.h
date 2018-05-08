@@ -174,7 +174,6 @@ public:
         Kind_ComputedPropertyName,
         Kind_IfStatement,
         Kind_LabelledStatement,
-        Kind_LocalForEachStatement,
         Kind_LocalForStatement,
         Kind_NewExpression,
         Kind_NewMemberExpression,
@@ -1711,9 +1710,12 @@ class QML_PARSER_EXPORT ForEachStatement: public Statement
 public:
     QQMLJS_DECLARE_AST_NODE(ForEachStatement)
 
-    ForEachStatement(ExpressionNode *i, ExpressionNode *e, Statement *stmt):
-        initialiser (i), expression (e), statement (stmt)
-        { kind = K; }
+    ForEachStatement(ExpressionNode *i, ExpressionNode *e, Statement *stmt)
+        : lhs(i), expression(e), statement(stmt)
+    { kind = K; }
+    ForEachStatement(PatternElement *v, ExpressionNode *e, Statement *stmt)
+        : lhs(v), expression(e), statement(stmt)
+    { kind = K; }
 
     void accept0(Visitor *visitor) override;
 
@@ -1724,40 +1726,11 @@ public:
     { return statement->lastSourceLocation(); }
 
 // attributes
-    ExpressionNode *initialiser;
+    Node *lhs;
     ExpressionNode *expression;
     Statement *statement;
     SourceLocation forToken;
     SourceLocation lparenToken;
-    SourceLocation inOfToken;
-    SourceLocation rparenToken;
-    ForEachType type;
-};
-
-class QML_PARSER_EXPORT LocalForEachStatement: public Statement
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(LocalForEachStatement)
-
-    LocalForEachStatement(PatternElement *v, ExpressionNode *e, Statement *stmt):
-        declaration (v), expression (e), statement (stmt)
-        { kind = K; }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return forToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return statement->lastSourceLocation(); }
-
-// attributes
-    PatternElement *declaration;
-    ExpressionNode *expression;
-    Statement *statement;
-    SourceLocation forToken;
-    SourceLocation lparenToken;
-    SourceLocation varToken;
     SourceLocation inOfToken;
     SourceLocation rparenToken;
     ForEachType type;

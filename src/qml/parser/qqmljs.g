@@ -3143,6 +3143,15 @@ InOrOf: T_OF;
 IterationStatement: T_FOR T_LPAREN LeftHandSideExpression InOrOf Expression_In T_RPAREN Statement;
 /.
     case $rule_number: {
+        // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
+//        if (AST::Pattern *p = sym(3).Expression->patternCast()) {
+//            AST::SourceLocation errorLoc;
+//            QString errorMsg;
+//            if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
+//                syntaxError(errorLoc, errorMsg);
+//                return false;
+//            }
+//        }
         AST::ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).Expression, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
@@ -3156,10 +3165,9 @@ IterationStatement: T_FOR T_LPAREN LeftHandSideExpression InOrOf Expression_In T
 IterationStatement: T_FOR T_LPAREN ForDeclaration InOrOf Expression_In T_RPAREN Statement;
 /.
     case $rule_number: {
-        AST::LocalForEachStatement *node = new (pool) AST::LocalForEachStatement(sym(3).PatternElement, sym(5).Expression, sym(7).Statement);
+        AST::ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).PatternElement, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
-        node->varToken = loc(3);
         node->inOfToken = loc(4);
         node->rparenToken = loc(6);
         node->type = sym(4).forEachType;

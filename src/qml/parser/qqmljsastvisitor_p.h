@@ -272,9 +272,6 @@ public:
     virtual bool visit(ForEachStatement *) { return true; }
     virtual void endVisit(ForEachStatement *) {}
 
-    virtual bool visit(LocalForEachStatement *) { return true; }
-    virtual void endVisit(LocalForEachStatement *) {}
-
     virtual bool visit(ContinueStatement *) { return true; }
     virtual void endVisit(ContinueStatement *) {}
 

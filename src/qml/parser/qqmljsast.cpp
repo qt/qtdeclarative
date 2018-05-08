@@ -791,18 +791,7 @@ void LocalForStatement::accept0(Visitor *visitor)
 void ForEachStatement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(initialiser, visitor);
-        accept(expression, visitor);
-        accept(statement, visitor);
-    }
-
-    visitor->endVisit(this);
-}
-
-void LocalForEachStatement::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-        accept(declaration, visitor);
+        accept(lhs, visitor);
         accept(expression, visitor);
         accept(statement, visitor);
     }
