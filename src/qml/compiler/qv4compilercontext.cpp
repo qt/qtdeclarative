@@ -81,7 +81,7 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
         if (formals && formals->containsName(name))
             return (scope == VariableScope::Var);
     }
-    if (!isCatchBlock || name != catchedVariable) {
+    if (!isCatchBlock || name != caughtVariable) {
         MemberMap::iterator it = members.find(name);
         if (it != members.end()) {
             if (scope != VariableScope::Var || (*it).scope != VariableScope::Var)
@@ -178,7 +178,7 @@ int Context::emitBlockHeader(Codegen *codegen)
                 Instruction::PushCatchContext catchContext;
                 catchContext.index = blockIndex;
                 catchContext.reg = contextReg = bytecodeGenerator->newRegister();
-                catchContext.name = codegen->registerString(catchedVariable);
+                catchContext.name = codegen->registerString(caughtVariable);
                 bytecodeGenerator->addInstruction(catchContext);
             } else {
                 Instruction::PushBlockContext blockContext;

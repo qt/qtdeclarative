@@ -938,6 +938,7 @@ void TryStatement::accept0(Visitor *visitor)
 void Catch::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
+        accept(patternElement, visitor);
         accept(statement, visitor);
     }
 

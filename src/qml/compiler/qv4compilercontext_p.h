@@ -155,7 +155,7 @@ struct Context {
     bool requiresExecutionContext = false;
     bool isWithBlock = false;
     bool isCatchBlock = false;
-    QString catchedVariable;
+    QString caughtVariable;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,

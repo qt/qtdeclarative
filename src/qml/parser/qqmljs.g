@@ -3396,7 +3396,7 @@ TryStatement: T_TRY Block Catch Finally;
 Catch: T_CATCH T_LPAREN CatchParameter T_RPAREN Block;
 /.
     case $rule_number: {
-        AST::Catch *node = new (pool) AST::Catch(stringRef(3), sym(5).Block);
+        AST::Catch *node = new (pool) AST::Catch(sym(3).PatternElement, sym(5).Block);
         node->catchToken = loc(1);
         node->lparenToken = loc(2);
         node->identifierToken = loc(3);
@@ -3415,9 +3415,23 @@ Finally: T_FINALLY Block;
 ./
 
 CatchParameter: BindingIdentifier;
+/.
+    case $rule_number: {
+        AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(1));
+        node->identifierToken = loc(1);
+        node->scope = AST::VariableScope::Let;
+        sym(1).Node = node;
+    } break;
+./
 
 CatchParameter: BindingPattern;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.
+    case $rule_number: {
+        AST::PatternElement *node = new (pool) AST::PatternElement(sym(1).Pattern);
+        node->scope = AST::VariableScope::Let;
+        sym(1).Node = node;
+    } break;
+./
 
 DebuggerStatement: T_DEBUGGER T_AUTOMATIC_SEMICOLON; -- automatic semicolon
 DebuggerStatement: T_DEBUGGER T_SEMICOLON;

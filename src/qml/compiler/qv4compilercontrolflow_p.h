@@ -422,6 +422,10 @@ struct ControlFlowCatch : public ControlFlowUnwind
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
         generator()->setExceptionHandler(&catchUnwindLabel);
 
+        if (catchExpression->patternElement->bindingIdentifier.isEmpty())
+            // destructuring pattern
+            cg->initializeAndDestructureBindingElement(catchExpression->patternElement, Reference::fromName(cg, QStringLiteral("@caught")));
+        // skip the additional block
         cg->statementList(catchExpression->statement->statements);
 
         insideCatch = false;

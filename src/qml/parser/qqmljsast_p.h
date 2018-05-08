@@ -2063,9 +2063,9 @@ class QML_PARSER_EXPORT Catch: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(Catch)
 
-    Catch(const QStringRef &n, Block *stmt):
-        name (n), statement (stmt)
-        { kind = K; }
+    Catch(PatternElement *p, Block *stmt)
+        : patternElement(p), statement(stmt)
+    { kind = K; }
 
     void accept0(Visitor *visitor) override;
 
@@ -2076,7 +2076,7 @@ public:
     { return statement->lastSourceLocation(); }
 
 // attributes
-    QStringRef name;
+    PatternElement *patternElement;
     Block *statement;
     SourceLocation catchToken;
     SourceLocation lparenToken;

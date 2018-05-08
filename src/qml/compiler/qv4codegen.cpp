@@ -2954,12 +2954,6 @@ bool Codegen::visit(ThrowStatement *ast)
 void Codegen::handleTryCatch(TryStatement *ast)
 {
     Q_ASSERT(ast);
-    if (_context->isStrict &&
-        (ast->catchExpression->name == QLatin1String("eval") || ast->catchExpression->name == QLatin1String("arguments"))) {
-        throwSyntaxError(ast->catchExpression->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
-        return;
-    }
-
     RegisterScope scope(this);
     BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
     {

@@ -387,8 +387,19 @@ bool ScanFunctions::visit(Catch *ast)
     enterEnvironment(ast, ContextType::Block);
     _context->name = QLatin1String("CatchBlock");
     _context->isCatchBlock = true;
-    _context->catchedVariable = ast->name.toString();
-    _context->addLocalVar(ast->name.toString(), Context::MemberType::VariableDefinition, VariableScope::Let);
+    QString caughtVar = ast->patternElement->bindingIdentifier;
+    if (caughtVar.isEmpty())
+        caughtVar = QStringLiteral("@caught");
+    _context->addLocalVar(caughtVar, Context::MemberType::VariableDefinition, VariableScope::Let);
+
+    _context->caughtVariable = caughtVar;
+    if (_context->isStrict &&
+        (caughtVar == QLatin1String("eval") || caughtVar == QLatin1String("arguments"))) {
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Catch variable name may not be eval or arguments in strict mode"));
+        return false;
+    }
+    Node::accept(ast->patternElement, this);
+    // skip the block statement
     Node::accept(ast->statement->statements, this);
     return false;
 }
@@ -567,7 +578,7 @@ void ScanFunctions::calcEscapingVariables()
         }
         if (c->contextType == ContextType::Block && c->isCatchBlock) {
             c->requiresExecutionContext = true;
-            auto m = c->members.find(c->catchedVariable);
+            auto m = c->members.find(c->caughtVariable);
             m->canEscape = true;
         }
         if (allVarsEscape) {
