@@ -54,7 +54,7 @@ static const QQuickItemPrivate::ChangeTypes watchedChanges
     = QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
 
 QQuickLoaderPrivate::QQuickLoaderPrivate()
-    : item(nullptr), object(nullptr), component(nullptr), itemContext(nullptr), incubator(nullptr), updatingSize(false),
+    : item(nullptr), object(nullptr), itemContext(nullptr), incubator(nullptr), updatingSize(false),
       active(true), loadingFromSource(false), asynchronous(false)
 {
 }
@@ -111,9 +111,8 @@ void QQuickLoaderPrivate::clear()
         QObject::disconnect(component, SIGNAL(progressChanged(qreal)),
                 q, SIGNAL(progressChanged()));
         component->deleteLater();
-        component = nullptr;
+        component.setObject(nullptr, q);
     }
-    componentStrongReference.clear();
     source = QUrl();
 
     if (item) {
@@ -438,7 +437,7 @@ void QQuickLoader::loadFromSource()
 
     if (isComponentComplete()) {
         QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-        d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
+        d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
         d->load();
     }
 }
@@ -481,11 +480,7 @@ void QQuickLoader::setSourceComponent(QQmlComponent *comp)
 
     d->clear();
 
-    d->component = comp;
-    if (comp) {
-        if (QQmlData *ddata = QQmlData::get(comp))
-            d->componentStrongReference = ddata->jsWrapper;
-    }
+    d->component.setObject(comp, this);
     d->loadingFromSource = false;
 
     if (d->active)
@@ -828,7 +823,7 @@ void QQuickLoader::componentComplete()
     if (active()) {
         if (d->loadingFromSource) {
             QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-            d->component = new QQmlComponent(qmlEngine(this), d->source, mode, this);
+            d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
         }
         d->load();
     }

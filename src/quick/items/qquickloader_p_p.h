@@ -103,8 +103,7 @@ public:
     QUrl source;
     QQuickItem *item;
     QObject *object;
-    QQmlComponent *component;
-    QV4::PersistentValue componentStrongReference; // To ensure GC doesn't delete components created by Qt.createComponent
+    QQmlStrongJSQObjectReference<QQmlComponent> component;
     QQmlContext *itemContext;
     QQuickLoaderIncubator *incubator;
     QV4::PersistentValue initialPropertyValues;
