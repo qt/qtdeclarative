@@ -427,19 +427,19 @@ bool QQuickTableViewPrivate::canLoadTableEdge(Qt::Edge tableEdge, const QRectF f
     case Qt::LeftEdge:
         if (loadedTable.topLeft().x() == 0)
             return false;
-        return loadedTableOuterRect.left() > fillRect.left();
+        return loadedTableOuterRect.left() > fillRect.left() + cellSpacing.width();
     case Qt::RightEdge:
         if (loadedTable.bottomRight().x() >= tableSize.width() - 1)
             return false;
-        return loadedTableOuterRect.right() < fillRect.right();
+        return loadedTableOuterRect.right() < fillRect.right() - cellSpacing.width();
     case Qt::TopEdge:
         if (loadedTable.topLeft().y() == 0)
             return false;
-        return loadedTableOuterRect.top() > fillRect.top();
+        return loadedTableOuterRect.top() > fillRect.top() + cellSpacing.height();
     case Qt::BottomEdge:
         if (loadedTable.bottomRight().y() >= tableSize.height() - 1)
             return false;
-        return loadedTableOuterRect.bottom() < fillRect.bottom();
+        return loadedTableOuterRect.bottom() < fillRect.bottom() - cellSpacing.height();
     }
 
     return false;

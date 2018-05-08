@@ -76,6 +76,7 @@ public:
 
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
     FxTableItem *findFxTableItem(int row, int column, const QList<FxTableItem *> items) const;
+    FxTableItem *findLoadedBottomRightItem(const QList<FxTableItem *> items) const;
 
 private slots:
     void initTestCase() override;
@@ -90,6 +91,8 @@ private slots:
     void checkLayoutOfEqualSizedDelegateItems();
     void checkTableMargins_data();
     void checkTableMargins();
+    void fillTableViewButNothingMore_data();
+    void fillTableViewButNothingMore();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -117,6 +120,21 @@ FxTableItem *tst_QQuickTableView::findFxTableItem(int row, int column, const QLi
             return fxitem;
     }
     return nullptr;
+}
+
+FxTableItem *tst_QQuickTableView::findLoadedBottomRightItem(const QList<FxTableItem *> items) const
+{
+    FxTableItem *bottomRightItem = nullptr;
+    int bottomRightIndex = 0;
+
+    for (int i = items.count() - 1; i > 0; --i) {
+        FxTableItem *fxitem = items[i];
+        if (fxitem->index > bottomRightIndex) {
+            bottomRightItem = fxitem;
+            bottomRightIndex = fxitem->index;
+        }
+    }
+    return bottomRightItem;
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -313,6 +331,80 @@ void tst_QQuickTableView::checkTableMargins()
     QCOMPARE(topSpace, margins.top());
     QCOMPARE(rightSpace, margins.right());
     QCOMPARE(bottomSpace, margins.bottom());
+}
+
+void tst_QQuickTableView::fillTableViewButNothingMore_data()
+{
+    QTest::addColumn<QSizeF>("spacing");
+    QTest::addColumn<QMarginsF>("margins");
+
+    QTest::newRow("0 0,0 0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("0 10,10 0") << QSizeF(10, 10) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("100 10,10 0") << QSizeF(10, 10) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("0 0,0 100") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("0 10,10 100") << QSizeF(10, 10) << QMarginsF(100, 100, 100, 100);
+    QTest::newRow("100 10,10 100") << QSizeF(10, 10) << QMarginsF(100, 100, 100, 100);
+}
+
+void tst_QQuickTableView::fillTableViewButNothingMore()
+{
+    // Check that we end up filling the whole visible part of
+    // the tableview with cells, but nothing more.
+    QFETCH(QSizeF, spacing);
+    QFETCH(QMarginsF, margins);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int rows = 100;
+    const int columns = 100;
+    auto model = TestModelAsVariant(rows, columns);
+
+    tableView->setModel(model);
+    tableView->setRowSpacing(spacing.height());
+    tableView->setColumnSpacing(spacing.width());
+    tableView->setLeftMargin(margins.left());
+    tableView->setTopMargin(margins.top());
+    tableView->setRightMargin(margins.right());
+    tableView->setBottomMargin(margins.bottom());
+    tableView->setCacheBuffer(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto const items = tableViewPrivate->loadedItems;
+
+    auto const topLeftFxItem = findFxTableItem(0, 0, items);
+    QVERIFY(topLeftFxItem);
+    auto const topLeftItem = topLeftFxItem->item;
+
+    // Check that the top-left item are at the corner of the view
+    QCOMPARE(topLeftItem->x(), margins.left());
+    QCOMPARE(topLeftItem->y(), margins.top());
+
+    auto const bottomRightFxItem = findLoadedBottomRightItem(items);
+    QVERIFY(bottomRightFxItem);
+    auto const bottomRightItem = bottomRightFxItem->item;
+    auto bottomRightAttached = getAttachedObject(bottomRightItem);
+
+    // Check that the right-most item is overlapping the right edge of the view
+    QVERIFY(bottomRightItem->x() < tableView->width());
+    QVERIFY(bottomRightItem->x() + bottomRightItem->width() >= tableView->width() - spacing.width());
+
+    // Check that the actual number of columns matches what we expect
+    qreal cellWidth = bottomRightItem->width() + spacing.width();
+    qreal availableWidth = tableView->width() - margins.left();
+    int expectedColumns = qCeil(availableWidth / cellWidth);
+    int actualColumns = bottomRightAttached->column() + 1;
+    QCOMPARE(actualColumns, expectedColumns);
+
+    // Check that the bottom-most item is overlapping the bottom edge of the view
+    QVERIFY(bottomRightItem->y() < tableView->height());
+    QVERIFY(bottomRightItem->y() + bottomRightItem->height() >= tableView->height() - spacing.height());
+
+    // Check that the actual number of rows matches what we expect
+    qreal cellHeight = bottomRightItem->height() + spacing.height();
+    qreal availableHeight = tableView->height() - margins.top();
+    int expectedRows = qCeil(availableHeight / cellHeight);
+    int actualRows = bottomRightAttached->row() + 1;
+    QCOMPARE(actualRows, expectedRows);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
