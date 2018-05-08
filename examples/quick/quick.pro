@@ -21,12 +21,13 @@ SUBDIRS =   quick-accessibility \
             tutorials \
             customitems \
             imageprovider \
-            imageresponseprovider \
             window \
             particles \
             shapes \
             demos
-
+qtConfig(thread) {
+SUBDIRS =   imageresponseprovider
+}
 #OpenGL Support Required
 qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \

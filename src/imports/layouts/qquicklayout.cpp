@@ -781,7 +781,12 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
     if (change == ItemChildAddedChange) {
         Q_D(QQuickLayout);
         QQuickItem *item = value.item;
+#ifndef QT_NO_THREAD
         qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
+#else
+        // DirectConnection seems too quick for wasm here
+        QObject::connect(item, SIGNAL(baselineOffsetChanged(qreal)), this, SLOT(invalidateSenderItem()));
+#endif
         QQuickItemPrivate::get(item)->addItemChangeListener(this, changeTypes);
         d->m_hasItemChangeListeners = true;
         if (isReady())

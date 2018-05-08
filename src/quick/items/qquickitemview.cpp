@@ -331,9 +331,18 @@ void QQuickItemView::setModel(const QVariant &m)
 
     if (d->model) {
         d->bufferMode = QQuickItemViewPrivate::BufferBefore | QQuickItemViewPrivate::BufferAfter;
-        connect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
-        connect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
-        connect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
+
+        Qt::ConnectionType type = Qt::AutoConnection;
+#ifdef QT_NO_THREAD
+        // This is needed because the thread affinity of the receiving object
+        // will be different from the executing thread, when threads are not
+        // supported
+        type = Qt::DirectConnection;
+#endif
+        QObject::connect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)), type);
+        QObject::connect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)), type);
+        QObject::connect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)), type);
+
         if (isComponentComplete()) {
             d->updateSectionCriteria();
             d->refill();

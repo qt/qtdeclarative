@@ -495,9 +495,8 @@ The setError() method may only be called from within a QQmlDataBlob callback.
 */
 void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
 {
-#ifndef Q_OS_HTML5
     ASSERT_CALLBACK();
-#endif
+
     Q_ASSERT(status() != Null);
 
     if (!blob ||
@@ -1005,12 +1004,7 @@ struct StaticLoader {
 
     void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
-#ifdef QT_NO_THREAD
-        loader->m_thread->loadWithStaticDataAsync(blob, data);
-        return;
-#else
         loader->loadWithStaticDataThread(blob, data);
-#endif
     }
     void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
     {
@@ -1046,9 +1040,6 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->urlString()),
              m_thread->isThisThread()?"Compile":"Engine");
-#endif
-#ifdef QT_NO_THREAD
-    mode = Asynchronous;
 #endif
     if (m_thread->isThisThread()) {
         unlock();
@@ -1688,7 +1679,6 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
     } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
-#ifndef QT_NO_THREAD
         if (!m_thread->isThisThread()) {
             // this only works when called directly from the UI thread, but not
             // when recursively called on the QML thread via resolveTypes()
@@ -1699,7 +1689,6 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
                 lock();
             }
         }
-#endif
     }
 
     typeData->addref();
@@ -1713,9 +1702,6 @@ QQmlTypeData will not be cached.
 */
 QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, Mode mode)
 {
-#ifdef QT_NO_THREAD
-    mode = Asynchronous;
-#endif
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlTypeData *typeData = new QQmlTypeData(url, this);
