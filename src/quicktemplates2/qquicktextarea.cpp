@@ -610,13 +610,13 @@ void QQuickTextArea::setBackground(QQuickItem *background)
             background->setParentItem(this);
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
-        if (isComponentComplete())
-            d->resizeBackground();
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
         if (p->widthValid || p->heightValid) {
             d->extra.value().hasBackgroundWidth = p->widthValid;
             d->extra.value().hasBackgroundHeight = p->heightValid;
         }
+        if (isComponentComplete())
+            d->resizeBackground();
         QQuickControlPrivate::addImplicitSizeListener(background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     }
 
