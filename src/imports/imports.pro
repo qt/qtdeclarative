@@ -24,7 +24,7 @@ qtHaveModule(quick) {
     qtConfig(quick-particles): \
         SUBDIRS += particles
 
-    SUBDIRS += shapes
+    qtConfig(quick-path): SUBDIRS += shapes
 }
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel
