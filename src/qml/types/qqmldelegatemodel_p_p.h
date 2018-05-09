@@ -67,6 +67,7 @@ QT_BEGIN_NAMESPACE
 typedef QQmlListCompositor Compositor;
 
 class QQmlDelegateModelAttachedMetaObject;
+class QQmlAbstractDelegateComponent;
 
 class Q_QML_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
 {
@@ -303,6 +304,7 @@ public:
     void itemsChanged(const QVector<Compositor::Change> &changes);
     void emitChanges();
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
+    void delegateChanged(bool add = true, bool remove = true);
 
     bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
 
@@ -319,6 +321,8 @@ public:
     QQmlAdaptorModel m_adaptorModel;
     QQmlListCompositor m_compositor;
     QQmlStrongJSQObjectReference<QQmlComponent> m_delegate;
+    QQmlAbstractDelegateComponent *m_delegateChooser;
+    QMetaObject::Connection m_delegateChooserChanged;
     QQmlDelegateModelItemMetaType *m_cacheMetaType;
     QPointer<QQmlContext> m_context;
     QQmlDelegateModelParts *m_parts;

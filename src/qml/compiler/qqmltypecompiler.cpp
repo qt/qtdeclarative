@@ -44,6 +44,7 @@
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmldelegatecomponent_p.h>
 
 #define COMPILE_EXCEPTION(token, desc) \
     { \
@@ -804,13 +805,21 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         const QmlIR::Object *targetObject = qmlObjects->at(binding->value.objectIndex);
         auto *tr = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
         Q_ASSERT(tr);
-        if (tr->type.isValid()) {
-            if (tr->type.metaObject() == &QQmlComponent::staticMetaObject)
-                continue;
-        } else if (tr->compilationUnit) {
-            if (tr->compilationUnit->rootPropertyCache()->firstCppMetaObject() == &QQmlComponent::staticMetaObject)
-                continue;
-        }
+
+        const QMetaObject *firstMetaObject = nullptr;
+        if (tr->type.isValid())
+            firstMetaObject = tr->type.metaObject();
+        else if (tr->compilationUnit)
+            firstMetaObject = tr->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+        // 1: test for QQmlComponent
+        if (firstMetaObject && firstMetaObject == &QQmlComponent::staticMetaObject)
+            continue;
+        // 2: test for QQmlAbstractDelegateComponent
+        while (firstMetaObject && firstMetaObject != &QQmlAbstractDelegateComponent::staticMetaObject)
+            firstMetaObject = firstMetaObject->superClass();
+        if (firstMetaObject)
+            continue;
+        // if here, not a QQmlComponent or a QQmlAbstractDelegateComponent, so needs wrapping
 
         QQmlPropertyData *pd = nullptr;
         if (binding->propertyNameIndex != quint32(0)) {

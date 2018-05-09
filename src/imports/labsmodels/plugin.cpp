@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,44 +37,47 @@
 **
 ****************************************************************************/
 
-#include "qqmlmodelsmodule_p.h"
-#include <QtCore/qitemselectionmodel.h>
-#if QT_CONFIG(qml_list_model)
-#include <private/qqmllistmodel_p.h>
-#endif
-#if QT_CONFIG(qml_delegate_model)
-#include <private/qqmldelegatemodel_p.h>
-#include <private/qqmldelegatecomponent_p.h>
-#endif
-#include <private/qqmlobjectmodel_p.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
+
+#include <private/qqmlmodelsmodule_p.h>
 
 QT_BEGIN_NAMESPACE
 
-void QQmlModelsModule::defineModule()
+/*!
+    \qmlmodule Qt.labs.qmlmodels 1.0
+    \title Qt QML Models experimental QML Types
+    \ingroup qmlmodules
+    \brief Provides QML experimental types for data models
+    \since 5.12
+
+    This QML module contains experimental QML types related to data models.
+
+    To use the types in this module, import the module with the following line:
+
+    \code
+    import Qt.labs.qmlmodels 1.0
+    \endcode
+*/
+
+//![class decl]
+class QtQmlLabsModelsPlugin : public QQmlExtensionPlugin
 {
-    const char uri[] = "QtQml.Models";
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+public:
+    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
+        Q_UNUSED(uri);
+        QQmlModelsModule::defineLabsModule();
 
-#if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
-#endif
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
-    qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
-#endif
-    qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
-    qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
-
-    qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");
-}
-
-void QQmlModelsModule::defineLabsModule()
-{
-    const char uri[] = "Qt.labs.qmlmodels";
-
-    qmlRegisterUncreatableType<QQmlAbstractDelegateComponent>(uri, 1, 0, "AbstractDelegateComponent", QQmlAbstractDelegateComponent::tr("Cannot create instance of abstract class AbstractDelegateComponent."));
-    qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
-    qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
-}
+        qmlRegisterModule(uri, 1, 0);
+    }
+};
+//![class decl]
 
 QT_END_NAMESPACE
+
+#include "plugin.moc"

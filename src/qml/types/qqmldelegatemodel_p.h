@@ -67,7 +67,6 @@ QT_REQUIRE_CONFIG(qml_delegate_model);
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
-class QQmlComponent;
 class QQuickPackage;
 class QQmlV4Function;
 class QQmlDelegateModelGroup;

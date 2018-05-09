@@ -25,6 +25,7 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
+            delegatechooser \
             shapes
 
 #OpenGL Support Required
