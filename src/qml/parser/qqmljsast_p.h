@@ -1725,6 +1725,10 @@ public:
     SourceLocation lastSourceLocation() const override
     { return statement->lastSourceLocation(); }
 
+    PatternElement *declaration() const {
+        return AST::cast<PatternElement *>(lhs);
+    }
+
 // attributes
     Node *lhs;
     ExpressionNode *expression;

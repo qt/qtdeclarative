@@ -331,10 +331,10 @@ struct ControlFlowWith : public ControlFlowUnwind
 
 struct ControlFlowBlock : public ControlFlowUnwind
 {
-    ControlFlowBlock(Codegen *cg, Context *block)
-        : ControlFlowUnwind(cg, Block),
-          block(block)
+    ControlFlowBlock(Codegen *cg, AST::Node *ast)
+        : ControlFlowUnwind(cg, Block)
     {
+        block = cg->enterBlock(ast);
         savedContextRegister = block->emitBlockHeader(cg);
 
         if (savedContextRegister != -1) {
@@ -354,6 +354,7 @@ struct ControlFlowBlock : public ControlFlowUnwind
 
         if (savedContextRegister != -1)
             emitUnwindHandler();
+        cg->leaveBlock();
     }
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
         if (savedContextRegister == -1)
@@ -411,10 +412,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
         // exceptions inside the try block go here
         exceptionLabel.link();
 
-        cg->enterContext(catchExpression);
-        Context *block = cg->currentContext();
-        cg->_module->blocks.append(block);
-        block->blockIndex = cg->_module->blocks.count() - 1;
+        Context *block = cg->enterBlock(catchExpression);
 
         int savedContextReg = block->emitBlockHeader(cg);
 
@@ -434,7 +432,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
         catchUnwindLabel.link();
         block->emitBlockFooter(cg, savedContextReg);
 
-        cg->leaveContext();
+        cg->leaveBlock();
 
         // break/continue/return statements in try go here
         unwindLabel.link();

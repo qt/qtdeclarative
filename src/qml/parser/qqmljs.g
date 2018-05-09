@@ -3144,14 +3144,14 @@ IterationStatement: T_FOR T_LPAREN LeftHandSideExpression InOrOf Expression_In T
 /.
     case $rule_number: {
         // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
-//        if (AST::Pattern *p = sym(3).Expression->patternCast()) {
-//            AST::SourceLocation errorLoc;
-//            QString errorMsg;
-//            if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
-//                syntaxError(errorLoc, errorMsg);
-//                return false;
-//            }
-//        }
+        if (AST::Pattern *p = sym(3).Expression->patternCast()) {
+            AST::SourceLocation errorLoc;
+            QString errorMsg;
+            if (!p->convertLiteralToAssignmentPattern(pool, &errorLoc, &errorMsg)) {
+                syntaxError(errorLoc, errorMsg);
+                return false;
+            }
+        }
         AST::ForEachStatement *node = new (pool) AST::ForEachStatement(sym(3).Expression, sym(5).Expression, sym(7).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
@@ -3175,9 +3175,9 @@ IterationStatement: T_FOR T_LPAREN ForDeclaration InOrOf Expression_In T_RPAREN 
     } break;
 ./
 
-ForDeclaration: LetOrConst ForBinding;
+ForDeclaration: LetOrConst BindingIdentifier;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-ForDeclaration: Var ForBinding;
+ForDeclaration: Var BindingIdentifier;
 /.
     case $rule_number: {
         auto *node = new (pool) AST::PatternElement(stringRef(2), nullptr);
@@ -3187,10 +3187,17 @@ ForDeclaration: Var ForBinding;
     } break;
 ./
 
-ForBinding: BindingIdentifier;
-
-ForBinding: BindingPattern;
-/.  case $rule_number: UNIMPLEMENTED; ./
+ForDeclaration: LetOrConst BindingPattern;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+ForDeclaration: Var BindingPattern;
+/.
+    case $rule_number: {
+        auto *node = new (pool) AST::PatternElement(sym(2).Pattern, nullptr);
+        node->identifierToken = loc(2);
+        node->scope = sym(1).scope;
+        sym(1).Node = node;
+    } break;
+./
 
 ContinueStatement: T_CONTINUE T_AUTOMATIC_SEMICOLON;
 ContinueStatement: T_CONTINUE T_SEMICOLON;

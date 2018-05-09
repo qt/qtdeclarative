@@ -466,7 +466,10 @@ protected:
 
     void enterContext(AST::Node *node);
     int leaveContext();
-
+public:
+    Context *enterBlock(AST::Node *node);
+    int leaveBlock() { return leaveContext(); }
+protected:
     void leaveLoop();
 
     enum UnaryOperation {
@@ -513,9 +516,10 @@ protected:
     void variableDeclaration(AST::PatternElement *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
-    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef);
+    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef = Reference());
     void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
     void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
+    void destructurePattern(AST::Pattern *p, const Reference &rhs);
 
     // Hook provided to implement QML lookup semantics
     virtual Reference fallbackNameLookup(const QString &name);
@@ -644,8 +648,6 @@ public:
     void handleTryCatch(AST::TryStatement *ast);
     void handleTryFinally(AST::TryStatement *ast);
 
-    void foreachBody(const Reference &lhs, AST::Statement *body, const AST::SourceLocation &forToken, const Reference &nextIterObj);
-
 
     Reference referenceForName(const QString &name, bool lhs);
 
@@ -656,6 +658,8 @@ public:
     BytecodeGenerator *generator() const { return bytecodeGenerator; }
 
     void loadClosure(int index);
+
+    Module *module() const { return _module; }
 
 protected:
     friend class ScanFunctions;

@@ -141,6 +141,12 @@ int Codegen::leaveContext()
     return functionIndex;
 }
 
+Context *Codegen::enterBlock(Node *node)
+{
+    enterContext(node);
+    return _context;
+}
+
 Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
 {
     if (hasError)
@@ -388,7 +394,7 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
     }
 }
 
-void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Codegen::Reference &baseRef)
+void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef)
 {
     RegisterScope scope(this);
     Reference varToStore = e->bindingIdentifier.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->bindingIdentifier, true);
@@ -492,6 +498,17 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
         }
         ++index;
     }
+}
+
+void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
+{
+    RegisterScope scope(this);
+    if (auto *o = AST::cast<ObjectPattern *>(p))
+        destructurePropertyList(rhs, o->properties);
+    else if (auto *a = AST::cast<ArrayPattern *>(p))
+        destructureElementList(rhs, a->elements);
+    else
+        Q_UNREACHABLE();
 }
 
 
@@ -837,12 +854,7 @@ bool Codegen::visit(BinaryExpression *ast)
         if (AST::Pattern *p = ast->left->patternCast()) {
             RegisterScope scope(this);
             Reference right = expression(ast->right).storeOnStack();
-            if (auto *o = AST::cast<ObjectPattern *>(p))
-                destructurePropertyList(right, o->properties);
-            else if (auto *a = AST::cast<ArrayPattern *>(p))
-                destructureElementList(right, a->elements);
-            else
-                Q_UNREACHABLE();
+            destructurePattern(p, right);
             if (!_expr.accept(nx)) {
                 right.loadInAccumulator();
                 _expr.setResult(Reference::fromAccumulator(this));
@@ -2469,14 +2481,8 @@ bool Codegen::visit(Block *ast)
 
     RegisterScope scope(this);
 
-    enterContext(ast);
-    _module->blocks.append(_context);
-    _context->blockIndex = _module->blocks.count() - 1;
-    {
-        ControlFlowBlock controlFlow(this, _context);
-        statementList(ast->statements);
-    }
-    leaveContext();
+    ControlFlowBlock controlFlow(this, ast);
+    statementList(ast->statements);
     return false;
 }
 
@@ -2600,43 +2606,23 @@ bool Codegen::visit(ForEachStatement *ast)
     RegisterScope scope(this);
 
     Reference iterator = Reference::fromStackSlot(this);
-    Reference expr = expression(ast->expression);
-    if (hasError)
-        return true;
+    Reference lhsValue = Reference::fromStackSlot(this);
 
-    expr.loadInAccumulator();
-    Instruction::GetIterator iteratorObjInstr;
-    iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
-    bytecodeGenerator->addInstruction(iteratorObjInstr);
-    iterator.storeConsumeAccumulator();
+    // There should be a temporal block, so that variables declared in lhs shadow outside vars.
+    // This block should define a temporal dead zone for those variables, which is not yet implemented.
+    {
+        RegisterScope innerScope(this);
+        ControlFlowBlock controlFlow(this, ast);
+        Reference expr = expression(ast->expression);
+        if (hasError)
+            return true;
 
-    Reference lhs;
-    if (ExpressionNode *e = ast->lhs->expressionCast()) {
-        lhs = expression(e);
-    } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
-        variableDeclaration(p);
-        lhs = referenceForName(p->bindingIdentifier, true).asLValue();
-    } else {
-        Q_UNREACHABLE();
+        expr.loadInAccumulator();
+        Instruction::GetIterator iteratorObjInstr;
+        iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
+        bytecodeGenerator->addInstruction(iteratorObjInstr);
+        iterator.storeConsumeAccumulator();
     }
-
-    if (hasError)
-        return false;
-    if (!lhs.isLValue()) {
-        throwSyntaxError(ast->forToken, QLatin1String("Destructuring not supported with for-in and for-of loops."));
-        return false;
-    }
-
-    lhs = lhs.asLValue();
-
-    foreachBody(lhs, ast->statement, ast->forToken, iterator);
-    return false;
-}
-
-void Codegen::foreachBody(const Reference &lhs, Statement *statements, const SourceLocation &forToken, const Reference &iterator)
-{
-    RegisterScope scope(this);
-    Reference nextIterObj = Reference::fromStackSlot(this);
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -2647,25 +2633,52 @@ void Codegen::foreachBody(const Reference &lhs, Statement *statements, const Sou
 
     BytecodeGenerator::Label body = bytecodeGenerator->label();
 
-    Reference::fromMember(nextIterObj, QStringLiteral("value")).loadInAccumulator();
-    lhs.storeConsumeAccumulator();
+    // each iteration gets it's own context, as per spec
+    {
+        RegisterScope innerScope(this);
+        ControlFlowBlock controlFlow(this, ast);
 
-    statement(statements);
-    setJumpOutLocation(bytecodeGenerator, statements, forToken);
+        if (ExpressionNode *e = ast->lhs->expressionCast()) {
+            if (AST::Pattern *p = e->patternCast()) {
+                RegisterScope scope(this);
+                Reference right = Reference::fromMember(lhsValue, QStringLiteral("value")).storeOnStack();
+                destructurePattern(p, right);
+            } else {
+                Reference lhs = expression(e);
+                if (hasError)
+                    goto error;
+                lhs = lhs.asLValue();
+                Reference::fromMember(lhsValue, QStringLiteral("value")).loadInAccumulator();
+                lhs.storeConsumeAccumulator();
+            }
+        } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
+            Reference::fromMember(lhsValue, QStringLiteral("value")).loadInAccumulator();
+            initializeAndDestructureBindingElement(p, Reference::fromAccumulator(this));
+            if (hasError)
+                goto error;
+        } else {
+            Q_UNREACHABLE();
+        }
 
+        statement(ast->statement);
+        setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
+
+    }
+
+  error:
     in.link();
-
     Reference next = Reference::fromMember(iterator, QStringLiteral("next"));
     next.loadInAccumulator();
     next = next.asLValue();
     Codegen::Arguments args{0, 0};
     handleCall(next, args);
-    nextIterObj.storeConsumeAccumulator();
-    Reference done = Reference::fromMember(nextIterObj, QStringLiteral("done"));
+    lhsValue.storeConsumeAccumulator();
+    Reference done = Reference::fromMember(lhsValue, QStringLiteral("done"));
     done.loadInAccumulator();
     bytecodeGenerator->jumpFalse().link(body);
 
     end.link();
+    return false;
 }
 
 bool Codegen::visit(ForStatement *ast)

@@ -241,6 +241,7 @@ public:
     int newRegister();
     int newRegisterArray(int n);
     int registerCount() const { return regCount; }
+    int currentRegister() const { return currentReg; }
 
     void finalize(Compiler::Context *context);
 

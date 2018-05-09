@@ -167,6 +167,11 @@ int Context::emitBlockHeader(Codegen *codegen)
     setupFunctionIndices(bytecodeGenerator);
     int contextReg = -1;
 
+    if (requiresExecutionContext && blockIndex < 0) {
+        codegen->module()->blocks.append(this);
+        blockIndex = codegen->module()->blocks.count() - 1;
+    }
+
     if (requiresExecutionContext && contextType == ContextType::Global) {
         Instruction::PushScriptContext scriptContext;
         scriptContext.index = blockIndex;
@@ -268,9 +273,15 @@ QT_WARNING_POP
 
 void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
 {
+    if (registerOffset != -1) {
+        // already computed, check for consistency
+        Q_ASSERT(registerOffset == bytecodeGenerator->currentRegister());
+        bytecodeGenerator->newRegisterArray(nRegisters);
+        return;
+    }
     Q_ASSERT(locals.size() == 0);
     Q_ASSERT(nRegisters == 0);
-    registerOffset = bytecodeGenerator->registerCount();
+    registerOffset = bytecodeGenerator->currentRegister();
 
     switch (contextType) {
     case ContextType::Block:
@@ -304,7 +315,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         }
         break;
     }
-    nRegisters = bytecodeGenerator->registerCount() - registerOffset;
+    nRegisters = bytecodeGenerator->currentRegister() - registerOffset;
 }
 
 QT_END_NAMESPACE

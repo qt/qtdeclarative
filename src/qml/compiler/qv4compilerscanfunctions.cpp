@@ -342,6 +342,8 @@ bool ScanFunctions::visit(LocalForStatement *ast) {
 }
 
 bool ScanFunctions::visit(ForEachStatement *ast) {
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("Foreach");
     Node::accept(ast->lhs, this);
     Node::accept(ast->expression, this);
 
@@ -349,6 +351,11 @@ bool ScanFunctions::visit(ForEachStatement *ast) {
     Node::accept(ast->statement, this);
 
     return false;
+}
+
+void ScanFunctions::endVisit(ForEachStatement *)
+{
+    leaveEnvironment();
 }
 
 bool ScanFunctions::visit(ThisExpression *)
