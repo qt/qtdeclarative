@@ -424,7 +424,7 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
     d->version_min = type.versionMinor;
 
     d->extraData.sd->singletonInstanceInfo = new SingletonInstanceInfo;
-    d->extraData.sd->singletonInstanceInfo->url = type.url;
+    d->extraData.sd->singletonInstanceInfo->url = QQmlTypeLoader::normalize(type.url);
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
 }
 
@@ -477,7 +477,7 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
-    d->extraData.fd->url = type.url;
+    d->extraData.fd->url = QQmlTypeLoader::normalize(type.url);
 }
 
 QQmlType::QQmlType()
@@ -1710,7 +1710,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     addTypeToData(dtype.priv(), data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(type.url, dtype.priv());
+    files->insertMulti(QQmlTypeLoader::normalize(type.url), dtype.priv());
 
     return dtype;
 }
@@ -1731,7 +1731,7 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     addTypeToData(dtype.priv(), data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(type.url, dtype.priv());
+    files->insertMulti(QQmlTypeLoader::normalize(type.url), dtype.priv());
 
     return dtype;
 }
@@ -2253,8 +2253,9 @@ QQmlType QQmlMetaType::qmlType(int userType)
 
     Returns null if no such type is registered.
 */
-QQmlType QQmlMetaType::qmlType(const QUrl &url, bool includeNonFileImports /* = false */)
+QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports /* = false */)
 {
+    const QUrl url = QQmlTypeLoader::normalize(unNormalizedUrl);
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 

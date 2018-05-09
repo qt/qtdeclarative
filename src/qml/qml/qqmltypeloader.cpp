@@ -1658,7 +1658,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
             (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
 
-    QUrl url = normalize(unNormalizedUrl);
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
@@ -1721,7 +1721,7 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
             (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
 
-    QUrl url = normalize(unNormalizedUrl);
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
