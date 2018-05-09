@@ -476,6 +476,9 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     // Register the test object
     qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
 
+    QSet<QString> commandLineTestFunctions = QTest::testFunctions.toSet();
+    const bool filteringTestFunctions = !commandLineTestFunctions.isEmpty();
+
     // Scan through all of the "tst_*.qml" files and run each of them
     // in turn with a separate QQuickView (for test isolation).
     for (const QString &file : qAsConst(files)) {
@@ -508,10 +511,10 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             continue;
         }
 
-        static const QSet<QString> commandLineTestFunctions = QTest::testFunctions.toSet();
-        if (!commandLineTestFunctions.isEmpty() &&
-            !availableTestFunctions.toSet().intersects(commandLineTestFunctions))
+        const QSet<QString> availableTestSet = availableTestFunctions.toSet();
+        if (filteringTestFunctions && !availableTestSet.intersects(commandLineTestFunctions))
             continue;
+        commandLineTestFunctions.subtract(availableTestSet);
 
         QQuickView view(&engine, nullptr);
         view.setFlags(Qt::Window | Qt::WindowSystemMenuHint
@@ -583,6 +586,14 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     // Flush the current logging stream.
     QuickTestResult::setProgramName(nullptr);
     delete app;
+
+    // Check that all test functions passed on the command line were found
+    if (!commandLineTestFunctions.isEmpty()) {
+        qWarning() << "Could not find the following test functions:";
+        for (const QString &functionName : qAsConst(commandLineTestFunctions))
+            qWarning("    %s()", qUtf8Printable(functionName));
+        return commandLineTestFunctions.count();
+    }
 
     // Return the number of failures as the exit code.
     return QuickTestResult::exitCode();
