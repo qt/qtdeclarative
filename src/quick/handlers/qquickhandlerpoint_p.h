@@ -89,8 +89,11 @@ public:
     QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
 
-private:
     void reset();
+    void reset(const QQuickEventPoint *point);
+    void reset(const QVector<QQuickEventPoint *> &points);
+
+private:
     int m_id;
     QPointingDeviceUniqueId m_uniqueId;
     Qt::MouseButtons m_pressedButtons;

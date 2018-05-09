@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickhandlerpoint_p.h"
+#include "private/qquickevents_p_p.h"
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
@@ -91,6 +92,88 @@ void QQuickHandlerPoint::reset()
     m_pressure = 0;
     m_ellipseDiameters = QSizeF();
     m_pressedButtons = Qt::NoButton;
+}
+
+void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
+{
+    m_id = point->pointId();
+    const QQuickPointerEvent *event = point->pointerEvent();
+    switch (point->state()) {
+    case QQuickEventPoint::Pressed:
+        m_pressPosition = point->position();
+        m_scenePressPosition = point->scenePosition();
+        m_pressedButtons = event->buttons();
+        break;
+    case QQuickEventPoint::Released:
+        reset();
+        return;
+    default:
+        m_pressedButtons = event->buttons();
+        break;
+    }
+    if (event->asPointerTouchEvent()) {
+        const QQuickEventTouchPoint *tp = static_cast<const QQuickEventTouchPoint *>(point);
+        m_uniqueId = tp->uniqueId();
+        m_rotation = tp->rotation();
+        m_pressure = tp->pressure();
+        m_ellipseDiameters = tp->ellipseDiameters();
+    } else if (event->asPointerTabletEvent()) {
+        // TODO
+    } else {
+        m_uniqueId = event->device()->uniqueId();
+        m_rotation = 0;
+        m_pressure = event->buttons() ? 1 : 0;
+        m_ellipseDiameters = QSizeF();
+    }
+    m_position = point->position();
+    m_scenePosition = point->scenePosition();
+    if (point->state() == QQuickEventPoint::Updated)
+        m_velocity = point->velocity();
+}
+
+void QQuickHandlerPoint::reset(const QVector<QQuickEventPoint *> &points)
+{
+    if (points.isEmpty()) {
+        qWarning("reset: no points");
+        return;
+    }
+    if (points.count() == 1) {
+        reset(points.first());
+        return;
+    }
+    // all points are required to be from the same event
+    const QQuickPointerEvent *event = points.first()->pointerEvent();
+    QPointF posSum;
+    QPointF scenePosSum;
+    QVector2D velocitySum;
+    qreal pressureSum = 0;
+    QSizeF ellipseDiameterSum;
+    bool press = false;
+    const QQuickPointerTouchEvent *touchEvent = event->asPointerTouchEvent();
+    for (const QQuickEventPoint *point : qAsConst(points)) {
+        posSum += point->position();
+        scenePosSum += point->scenePosition();
+        velocitySum += point->velocity();
+        if (touchEvent) {
+            pressureSum += static_cast<const QQuickEventTouchPoint *>(point)->pressure();
+            ellipseDiameterSum += static_cast<const QQuickEventTouchPoint *>(point)->ellipseDiameters();
+        }
+        if (point->state() == QQuickEventPoint::Pressed)
+            press = true;
+    }
+    m_id = 0;
+    m_uniqueId = QPointingDeviceUniqueId();
+    m_pressedButtons = event->buttons();
+    m_position = posSum / points.size();
+    m_scenePosition = scenePosSum / points.size();
+    if (press) {
+        m_pressPosition = m_position;
+        m_scenePressPosition = m_scenePosition;
+    }
+    m_velocity = velocitySum / points.size();
+    m_rotation = 0; // averaging the rotations of all the points isn't very sensible
+    m_pressure = pressureSum / points.size();
+    m_ellipseDiameters = ellipseDiameterSum / points.size();
 }
 
 /*!

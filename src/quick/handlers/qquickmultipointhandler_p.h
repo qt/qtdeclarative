@@ -53,6 +53,7 @@
 
 #include "qquickitem.h"
 #include "qevent.h"
+#include "qquickhandlerpoint_p.h"
 #include "qquickpointerdevicehandler_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -63,6 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHand
     Q_PROPERTY(int minimumPointCount READ minimumPointCount WRITE setMinimumPointCount NOTIFY minimumPointCountChanged)
     Q_PROPERTY(int maximumPointCount READ maximumPointCount WRITE setMaximumPointCount NOTIFY maximumPointCountChanged)
     Q_PROPERTY(qreal pointDistanceThreshold READ pointDistanceThreshold WRITE setPointDistanceThreshold NOTIFY pointDistanceThresholdChanged)
+    Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged)
 
 public:
     explicit QQuickMultiPointHandler(QObject *parent = nullptr, int minimumPointCount = 2);
@@ -77,10 +79,13 @@ public:
     qreal pointDistanceThreshold() const { return m_pointDistanceThreshold; }
     void setPointDistanceThreshold(qreal pointDistanceThreshold);
 
+    QQuickHandlerPoint centroid() const { return m_centroid; }
+
 signals:
     void minimumPointCountChanged();
     void maximumPointCountChanged();
     void pointDistanceThresholdChanged();
+    void centroidChanged();
 
 protected:
     struct PointData {
@@ -91,10 +96,10 @@ protected:
     };
 
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
+    void handlePointerEventImpl(QQuickPointerEvent *event) override;
+    void onActiveChanged() override;
     bool sameAsCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
-    QPointF touchPointCentroid();
-    QVector2D touchPointCentroidVelocity();
     qreal averageTouchPointDistance(const QPointF &ref);
     qreal averageStartingDistance(const QPointF &ref);
     qreal averageTouchPointAngle(const QPointF &ref);
@@ -106,6 +111,7 @@ protected:
 
 protected:
     QVector<QQuickEventPoint *> m_currentPoints;
+    QQuickHandlerPoint m_centroid;
     int m_minimumPointCount;
     int m_maximumPointCount;
     qreal m_pointDistanceThreshold;

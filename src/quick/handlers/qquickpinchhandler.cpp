@@ -287,11 +287,11 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
 void QQuickPinchHandler::onActiveChanged()
 {
+    QQuickMultiPointHandler::onActiveChanged();
     if (active()) {
         m_startMatrix = QMatrix4x4();
-        m_startCentroid = touchPointCentroid();
-        m_startAngles = angles(m_startCentroid);
-        m_startDistance = averageTouchPointDistance(m_startCentroid);
+        m_startAngles = angles(m_centroid.sceneGrabPosition());
+        m_startDistance = averageTouchPointDistance(m_centroid.sceneGrabPosition());
         m_activeRotation = 0;
         m_activeTranslation = QVector2D();
         if (const QQuickItem *t = target()) {
@@ -319,6 +319,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         for (QQuickEventPoint *point : qAsConst(m_currentPoints))
             qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPosition() << "->" << point->scenePosition();
     }
+    QQuickMultiPointHandler::handlePointerEventImpl(event);
 
     qreal dist = 0;
 #if QT_CONFIG(gestures)
@@ -328,8 +329,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             m_activeScale = 1;
             m_activeRotation = 0;
             m_activeTranslation = QVector2D();
-            m_centroid = QPointF();
-            m_centroidVelocity = QVector2D();
+            m_centroid.reset();
             setActive(false);
             emit updated();
             return;
@@ -344,12 +344,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             return;
         }
         if (!active()) {
-            m_centroid = gesture->point(0)->scenePosition();
             setActive(true);
-            m_startCentroid = m_centroid;
             // Native gestures for 2-finger pinch do not allow dragging, so
             // the centroid won't move during the gesture, and translation stays at zero
-            m_centroidVelocity = QVector2D();
             m_activeTranslation = QVector2D();
         }
     } else
@@ -374,17 +371,15 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                 return;
         }
         // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
-        m_centroid = touchPointCentroid();
-        m_centroidVelocity = touchPointCentroidVelocity();
         // avoid mapping the minima and maxima, as they might have unmappable values
         // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
         // 1. scale
-        dist = averageTouchPointDistance(m_centroid);
+        dist = averageTouchPointDistance(m_centroid.scenePosition());
         m_activeScale = dist / m_startDistance;
         m_activeScale = qBound(m_minimumScale/m_startScale, m_activeScale, m_maximumScale/m_startScale);
 
         // 2. rotate
-        QVector<PointData> newAngles = angles(m_centroid);
+        QVector<PointData> newAngles = angles(m_centroid.scenePosition());
         const qreal angleDelta = averageAngleDelta(m_startAngles, newAngles);
         m_activeRotation += angleDelta;
         m_startAngles = std::move(newAngles);
@@ -396,7 +391,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     QPointF centroidParentPos;
     QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
     if (target() && target()->parentItem()) {
-        centroidParentPos = target()->parentItem()->mapFromScene(m_centroid);
+        centroidParentPos = target()->parentItem()->mapFromScene(m_centroid.scenePosition());
         centroidParentPos = QPointF(qBound(bounds.left(), centroidParentPos.x(), bounds.right()),
                                    qBound(bounds.top(), centroidParentPos.y(), bounds.bottom()));
     }
@@ -407,9 +402,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
-        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_startCentroid);
+        const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
-
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
 
@@ -432,10 +426,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
         // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
     } else {
-        m_activeTranslation = QVector2D(m_centroid - m_startCentroid);
+        m_activeTranslation = QVector2D(m_centroid.scenePosition() - m_centroid.scenePressPosition());
     }
 
-    qCDebug(lcPinchHandler) << "centroid" << m_startCentroid << "->"  << m_centroid
+    qCDebug(lcPinchHandler) << "centroid" << m_centroid.scenePressPosition() << "->"  << m_centroid.scenePosition()
                             << ", distance" << m_startDistance << "->" << dist
                             << ", startScale" << m_startScale << "->" << scale
                             << ", activeRotation" << m_activeRotation
@@ -452,15 +446,6 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     A point exactly in the middle of the currently-pressed touch points.
     If \l pinchOrigin is set to \c PinchCenter, the \l target will be rotated
     around this point.
-*/
-
-/*!
-    \readonly
-    \qmlproperty QVector2D QtQuick::PinchHandler::centroidVelocity
-
-    The average velocity of the \l centroid: a vector representing the speed
-    and direction of movement of the whole group of touchpoints, in logical
-    pixels per second.
 */
 
 /*!

@@ -130,38 +130,11 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     if (!m_pointInfo.m_id || !currentPoint->isAccepted()) {
         reset();
     } else {
-        if (event->asPointerTouchEvent()) {
-            QQuickEventTouchPoint *tp = static_cast<QQuickEventTouchPoint *>(currentPoint);
-            m_pointInfo.m_uniqueId = tp->uniqueId();
-            m_pointInfo.m_rotation = tp->rotation();
-            m_pointInfo.m_pressure = tp->pressure();
-            m_pointInfo.m_ellipseDiameters = tp->ellipseDiameters();
-        } else if (event->asPointerTabletEvent()) {
-            // TODO
-        } else {
-            m_pointInfo.m_uniqueId = event->device()->uniqueId();
-            m_pointInfo.m_rotation = 0;
-            m_pointInfo.m_pressure = event->buttons() ? 1 : 0;
-            m_pointInfo.m_ellipseDiameters = QSizeF();
-        }
-        m_pointInfo.m_position = currentPoint->position();
-        m_pointInfo.m_scenePosition = currentPoint->scenePosition();
-        if (currentPoint->state() == QQuickEventPoint::Updated)
-            m_pointInfo.m_velocity = currentPoint->velocity();
+        m_pointInfo.reset(currentPoint);
         handleEventPoint(currentPoint);
-        switch (currentPoint->state()) {
-        case QQuickEventPoint::Pressed:
-            m_pointInfo.m_pressPosition = currentPoint->position();
-            m_pointInfo.m_scenePressPosition = currentPoint->scenePosition();
-            m_pointInfo.m_pressedButtons = event->buttons();
-            break;
-        case QQuickEventPoint::Released:
+        if (currentPoint->state() == QQuickEventPoint::Released) {
             setExclusiveGrab(currentPoint, false);
             reset();
-            break;
-        default:
-            m_pointInfo.m_pressedButtons = event->buttons();
-            break;
         }
         emit pointChanged();
     }

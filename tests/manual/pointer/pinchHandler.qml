@@ -153,7 +153,7 @@ Rectangle {
                     maximumScale: 10
                     onActiveChanged: {
                         if (!active)
-                            anim.restart(centroidVelocity)
+                            anim.restart(centroid.velocity)
                     }
                 }
                 TapHandler { gesturePolicy: TapHandler.DragThreshold; onTapped: rect3.z = rect2.z + 1 }
@@ -164,8 +164,8 @@ Rectangle {
     Rectangle {
         id: centroidIndicator
         property QtObject pincher: activePincher()
-        x: pincher.centroid.x - radius
-        y: pincher.centroid.y - radius
+        x: pincher.centroid.scenePosition.x - radius
+        y: pincher.centroid.scenePosition.y - radius
         z: 1
         visible: pincher.active
         radius: width / 2

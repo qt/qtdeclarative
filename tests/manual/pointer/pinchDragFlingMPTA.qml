@@ -66,7 +66,7 @@ Rectangle {
                 minimumPointCount: 3
                 minimumScale: 0.1
                 maximumScale: 10
-                onActiveChanged: if (!active) fling.restart(centroidVelocity)
+                onActiveChanged: if (!active) fling.restart(centroid.velocity)
             }
             DragHandler {
                 id: dragHandler

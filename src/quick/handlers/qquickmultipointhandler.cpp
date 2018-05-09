@@ -91,6 +91,20 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     return ret;
 }
 
+void QQuickMultiPointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+{
+    QQuickPointerHandler::handlePointerEventImpl(event);
+    m_centroid.reset(m_currentPoints);
+    emit centroidChanged();
+}
+
+void QQuickMultiPointHandler::onActiveChanged()
+{
+    if (active()) {
+        m_centroid.m_sceneGrabPosition = m_centroid.m_scenePosition;
+    }
+}
+
 QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointerEvent *event)
 {
     QVector<QQuickEventPoint *> ret;
@@ -205,27 +219,6 @@ bool QQuickMultiPointHandler::sameAsCurrentPoints(QQuickPointerEvent *event)
             ret = false;
     }
     return ret;
-}
-
-// TODO make templates for these functions somehow?
-QPointF QQuickMultiPointHandler::touchPointCentroid()
-{
-    QPointF ret;
-    if (Q_UNLIKELY(m_currentPoints.size() == 0))
-        return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += point->scenePosition();
-    return ret / m_currentPoints.size();
-}
-
-QVector2D QQuickMultiPointHandler::touchPointCentroidVelocity()
-{
-    QVector2D ret;
-    if (Q_UNLIKELY(m_currentPoints.size() == 0))
-        return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += point->velocity();
-    return ret / m_currentPoints.size();
 }
 
 qreal QQuickMultiPointHandler::averageTouchPointDistance(const QPointF &ref)
