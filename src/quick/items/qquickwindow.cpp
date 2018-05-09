@@ -2225,8 +2225,10 @@ QQuickPointerEvent *QQuickWindowPrivate::queryPointerEventInstance(QQuickPointer
     for (QQuickPointerEvent *e : pointerEventInstances) {
         // If device can generate native gestures (e.g. a trackpad), there might be two QQuickPointerEvents:
         // QQuickPointerNativeGestureEvent and QQuickPointerTouchEvent.  Use eventType to disambiguate.
+#if QT_CONFIG(gestures)
         if (eventType == QEvent::NativeGesture && !qobject_cast<QQuickPointerNativeGestureEvent*>(e))
             continue;
+#endif
         // Otherwise we assume there's only one event type per device.
         // More disambiguation tests might need to be added above if that changes later.
         if (e->device() == device)
@@ -2250,9 +2252,11 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QQuickPointerDevic
         break;
     case QQuickPointerDevice::TouchPad:
     case QQuickPointerDevice::TouchScreen:
+#if QT_CONFIG(gestures)
         if (eventType == QEvent::NativeGesture)
             ev = new QQuickPointerNativeGestureEvent(q, device);
         else // assume QEvent::Type is one of TouchBegin/Update/End
+#endif
             ev = new QQuickPointerTouchEvent(q, device);
         break;
     default:
@@ -2287,9 +2291,11 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
         dev = QQuickPointerDevice::touchDevice(static_cast<QTouchEvent *>(event)->device());
         break;
     // TODO tablet event types
+#if QT_CONFIG(gestures)
     case QEvent::NativeGesture:
         dev = QQuickPointerDevice::touchDevice(static_cast<QNativeGestureEvent *>(event)->device());
         break;
+#endif
     default:
         break;
     }
