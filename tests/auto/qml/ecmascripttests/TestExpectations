@@ -1,3 +1,18 @@
+# ----- These are tests we will not fix
+
+# The tests below rely on the ES6 spec quirk that allows 'let' as an identifier. We've
+# always treated 'let' as a reserved keyword (without ever getting a bug report about it),
+# so we'll keep it that way. It also removes a huge headache in the parser.
+language/statements/for-in/let-block-with-newline.js sloppyFails
+language/statements/for-of/let-block-with-newline.js sloppyFails
+language/statements/for/let-block-with-newline.js sloppyFails
+language/statements/if/let-block-with-newline.js sloppyFails
+language/statements/labeled/let-block-with-newline.js sloppyFails
+language/statements/while/let-block-with-newline.js sloppyFails
+language/statements/with/let-block-with-newline.js sloppyFails
+
+
+# ----- test failures that should be fixed
 built-ins/Array/Symbol.species/length.js fails
 built-ins/Array/Symbol.species/return-value.js fails
 built-ins/Array/Symbol.species/symbol-species-name.js fails
@@ -5967,7 +5982,6 @@ language/statements/for-in/head-lhs-let.js sloppyFails
 language/statements/for-in/head-var-bound-names-dup.js fails
 language/statements/for-in/head-var-bound-names-let.js sloppyFails
 language/statements/for-in/identifier-let-allowed-as-lefthandside-expression-not-strict.js sloppyFails
-language/statements/for-in/let-block-with-newline.js sloppyFails
 language/statements/for-in/let-identifier-with-newline.js sloppyFails
 language/statements/for-in/scope-body-lex-boundary.js fails
 language/statements/for-in/scope-body-lex-close.js fails
@@ -6478,7 +6492,6 @@ language/statements/for-of/iterator-close-via-return.js fails
 language/statements/for-of/iterator-close-via-throw.js fails
 language/statements/for-of/iterator-next-reference.js fails
 language/statements/for-of/iterator-next-result-type.js fails
-language/statements/for-of/let-block-with-newline.js sloppyFails
 language/statements/for-of/let-identifier-with-newline.js sloppyFails
 language/statements/for-of/map-contract-expand.js fails
 language/statements/for-of/map-contract.js fails
@@ -6610,7 +6623,6 @@ language/statements/for/dstr-var-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/for/dstr-var-obj-ptrn-id-init-fn-name-gen.js fails
 language/statements/for/head-let-destructuring.js fails
 language/statements/for/head-lhs-let.js sloppyFails
-language/statements/for/let-block-with-newline.js sloppyFails
 language/statements/for/let-identifier-with-newline.js sloppyFails
 language/statements/for/scope-body-lex-boundary.js fails
 language/statements/for/scope-body-lex-open.js fails
@@ -6773,11 +6785,9 @@ language/statements/generators/yield-spread-arr-multiple.js fails
 language/statements/generators/yield-spread-arr-single.js fails
 language/statements/generators/yield-star-before-newline.js fails
 language/statements/if/cptn-no-else-true-abrupt-empty.js fails
-language/statements/if/let-block-with-newline.js sloppyFails
 language/statements/if/let-identifier-with-newline.js sloppyFails
 language/statements/if/tco-else-body.js strictFails
 language/statements/if/tco-if-body.js strictFails
-language/statements/labeled/let-block-with-newline.js sloppyFails
 language/statements/labeled/let-identifier-with-newline.js sloppyFails
 language/statements/labeled/tco.js strictFails
 language/statements/let/block-local-closure-get-before-initialization.js fails
@@ -6911,13 +6921,11 @@ language/statements/variable/dstr-obj-ptrn-id-init-fn-name-cover.js fails
 language/statements/variable/dstr-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/variable/dstr-obj-ptrn-id-init-fn-name-gen.js fails
 language/statements/variable/fn-name-class.js fails
-language/statements/while/let-block-with-newline.js sloppyFails
 language/statements/while/let-identifier-with-newline.js sloppyFails
 language/statements/while/tco-body.js strictFails
 language/statements/with/binding-blocked-by-unscopables.js sloppyFails
 language/statements/with/cptn-abrupt-empty.js sloppyFails
 language/statements/with/has-property-err.js sloppyFails
-language/statements/with/let-block-with-newline.js sloppyFails
 language/statements/with/let-identifier-with-newline.js sloppyFails
 language/statements/with/unscopables-inc-dec.js sloppyFails
 language/types/reference/get-value-prop-base-primitive-realm.js fails
