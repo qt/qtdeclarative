@@ -2687,6 +2687,8 @@ bool Codegen::visit(ForStatement *ast)
 
     RegisterScope scope(this);
 
+    ControlFlowBlock controlFlow(this, ast);
+
     if (ast->initialiser)
         statement(ast->initialiser);
     else if (ast->declarations)

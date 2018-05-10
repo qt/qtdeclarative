@@ -320,6 +320,8 @@ bool ScanFunctions::visit(DoWhileStatement *ast) {
 }
 
 bool ScanFunctions::visit(ForStatement *ast) {
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("For");
     Node::accept(ast->initialiser, this);
     Node::accept(ast->declarations, this);
     Node::accept(ast->condition, this);
@@ -329,6 +331,11 @@ bool ScanFunctions::visit(ForStatement *ast) {
     Node::accept(ast->statement, this);
 
     return false;
+}
+
+void ScanFunctions::endVisit(ForStatement *)
+{
+    leaveEnvironment();
 }
 
 bool ScanFunctions::visit(ForEachStatement *ast) {
