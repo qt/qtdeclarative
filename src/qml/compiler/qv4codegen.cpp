@@ -2827,6 +2827,8 @@ bool Codegen::visit(SwitchStatement *ast)
     RegisterScope scope(this);
 
     if (ast->block) {
+        ControlFlowBlock controlFlow(this, ast->block);
+
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
         Reference lhs = expression(ast->expression);

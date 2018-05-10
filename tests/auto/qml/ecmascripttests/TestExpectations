@@ -4897,8 +4897,6 @@ language/function-code/each-param-has-own-non-shared-eval-scope.js sloppyFails
 language/function-code/each-param-has-own-scope.js sloppyFails
 language/function-code/eval-param-env-with-computed-key.js sloppyFails
 language/function-code/eval-param-env-with-prop-initializer.js sloppyFails
-language/function-code/switch-case-decl-strict.js strictFails
-language/function-code/switch-dflt-decl-strict.js strictFails
 language/global-code/decl-lex-deletion.js sloppyFails
 language/global-code/decl-lex-restricted-global.js fails
 language/global-code/decl-lex.js fails
@@ -4914,8 +4912,6 @@ language/global-code/script-decl-lex.js fails
 language/global-code/script-decl-var-collision.js fails
 language/global-code/script-decl-var-err.js fails
 language/global-code/script-decl-var.js fails
-language/global-code/switch-case-decl-strict.js strictFails
-language/global-code/switch-dflt-decl-strict.js strictFails
 language/identifiers/other_id_continue.js fails
 language/identifiers/other_id_start-escaped.js fails
 language/identifiers/other_id_start.js fails
@@ -6631,8 +6627,6 @@ language/statements/let/syntax/let-iteration-variable-is-freshly-allocated-for-e
 language/statements/let/syntax/let-iteration-variable-is-freshly-allocated-for-each-iteration-single-let-binding.js fails
 language/statements/let/syntax/let.js fails
 language/statements/return/tco.js strictFails
-language/statements/switch/scope-lex-close-case.js fails
-language/statements/switch/scope-lex-close-dflt.js fails
 language/statements/switch/scope-lex-open-case.js fails
 language/statements/switch/scope-lex-open-dflt.js fails
 language/statements/switch/tco-case-body-dflt.js strictFails

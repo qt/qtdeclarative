@@ -134,6 +134,9 @@ protected:
     bool visit(AST::Block *ast) override;
     void endVisit(AST::Block *ast) override;
 
+    bool visit(AST::CaseBlock *ast) override;
+    void endVisit(AST::CaseBlock *ast) override;
+
     bool visit(AST::Catch *ast) override;
     void endVisit(AST::Catch *ast) override;
 

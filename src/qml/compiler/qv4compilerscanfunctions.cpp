@@ -375,6 +375,18 @@ void ScanFunctions::endVisit(Block *)
     leaveEnvironment();
 }
 
+bool ScanFunctions::visit(CaseBlock *ast)
+{
+    enterEnvironment(ast, ContextType::Block);
+    _context->name = QLatin1String("CaseBlock");
+    return true;
+}
+
+void ScanFunctions::endVisit(CaseBlock *)
+{
+    leaveEnvironment();
+}
+
 bool ScanFunctions::visit(Catch *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
