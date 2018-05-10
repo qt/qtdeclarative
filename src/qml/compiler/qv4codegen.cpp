@@ -79,7 +79,6 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
     case Statement::Kind_ForEachStatement:
     case Statement::Kind_ForStatement:
     case Statement::Kind_IfStatement:
-    case Statement::Kind_LocalForStatement:
     case Statement::Kind_WhileStatement:
         bytecodeGenerator->setLocation(fallback);
         break;
@@ -2688,7 +2687,10 @@ bool Codegen::visit(ForStatement *ast)
 
     RegisterScope scope(this);
 
-    statement(ast->initialiser);
+    if (ast->initialiser)
+        statement(ast->initialiser);
+    else if (ast->declarations)
+        variableDeclarationList(ast->declarations);
 
     BytecodeGenerator::Label cond = bytecodeGenerator->label();
     BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
@@ -2765,8 +2767,7 @@ bool Codegen::visit(LabelledStatement *ast)
             AST::cast<AST::WhileStatement *>(ast->statement) ||
             AST::cast<AST::DoWhileStatement *>(ast->statement) ||
             AST::cast<AST::ForStatement *>(ast->statement) ||
-            AST::cast<AST::ForEachStatement *>(ast->statement) ||
-            AST::cast<AST::LocalForStatement *>(ast->statement)) {
+            AST::cast<AST::ForEachStatement *>(ast->statement)) {
         statement(ast->statement); // labelledStatement will be associated with the ast->statement's loop.
     } else {
         BytecodeGenerator::Label breakLabel = bytecodeGenerator->newLabel();
@@ -2774,36 +2775,6 @@ bool Codegen::visit(LabelledStatement *ast)
         statement(ast->statement);
         breakLabel.link();
     }
-
-    return false;
-}
-
-bool Codegen::visit(LocalForStatement *ast)
-{
-    if (hasError)
-        return true;
-
-    RegisterScope scope(this);
-
-    variableDeclarationList(ast->declarations);
-
-    BytecodeGenerator::Label cond = bytecodeGenerator->label();
-    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
-    BytecodeGenerator::Label step = bytecodeGenerator->newLabel();
-    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-
-    ControlFlowLoop flow(this, &end, &step);
-
-    condition(ast->condition, &body, &end, true);
-
-    body.link();
-    statement(ast->statement);
-    setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
-
-    step.link();
-    statement(ast->expression);
-    bytecodeGenerator->jump().link(cond);
-    end.link();
 
     return false;
 }

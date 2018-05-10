@@ -321,16 +321,6 @@ bool ScanFunctions::visit(DoWhileStatement *ast) {
 
 bool ScanFunctions::visit(ForStatement *ast) {
     Node::accept(ast->initialiser, this);
-    Node::accept(ast->condition, this);
-    Node::accept(ast->expression, this);
-
-    TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, !_context->isStrict);
-    Node::accept(ast->statement, this);
-
-    return false;
-}
-
-bool ScanFunctions::visit(LocalForStatement *ast) {
     Node::accept(ast->declarations, this);
     Node::accept(ast->condition, this);
     Node::accept(ast->expression, this);

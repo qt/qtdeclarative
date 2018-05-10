@@ -607,7 +607,6 @@ protected:
     bool visit(AST::ForStatement *ast) override;
     bool visit(AST::IfStatement *ast) override;
     bool visit(AST::LabelledStatement *ast) override;
-    bool visit(AST::LocalForStatement *ast) override;
     bool visit(AST::ReturnStatement *ast) override;
     bool visit(AST::SwitchStatement *ast) override;
     bool visit(AST::ThrowStatement *ast) override;

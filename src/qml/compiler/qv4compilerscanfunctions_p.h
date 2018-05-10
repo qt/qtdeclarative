@@ -125,7 +125,6 @@ protected:
 
     bool visit(AST::DoWhileStatement *ast) override;
     bool visit(AST::ForStatement *ast) override;
-    bool visit(AST::LocalForStatement *ast) override;
     bool visit(AST::ForEachStatement *ast) override;
     void endVisit(AST::ForEachStatement *) override;
 

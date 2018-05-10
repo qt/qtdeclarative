@@ -3113,12 +3113,11 @@ IterationStatement: T_FOR T_LPAREN LexicalDeclaration T_SEMICOLON ExpressionOpt_
 /.
     case $rule_number: {
         // ### get rid of the static_cast!
-        AST::LocalForStatement *node = new (pool) AST::LocalForStatement(
+        AST::ForStatement *node = new (pool) AST::ForStatement(
           static_cast<AST::VariableStatement *>(sym(3).Node)->declarations, sym(5).Expression,
           sym(7).Expression, sym(9).Statement);
         node->forToken = loc(1);
         node->lparenToken = loc(2);
-        node->varToken = loc(3);
         node->firstSemicolonToken = loc(4);
         node->secondSemicolonToken = loc(6);
         node->rparenToken = loc(8);

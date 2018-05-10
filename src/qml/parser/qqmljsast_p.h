@@ -174,7 +174,6 @@ public:
         Kind_ComputedPropertyName,
         Kind_IfStatement,
         Kind_LabelledStatement,
-        Kind_LocalForStatement,
         Kind_NewExpression,
         Kind_NewMemberExpression,
         Kind_NotExpression,
@@ -1650,35 +1649,11 @@ public:
         initialiser (i), condition (c), expression (e), statement (stmt)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return forToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return statement->lastSourceLocation(); }
-
-// attributes
-    ExpressionNode *initialiser;
-    ExpressionNode *condition;
-    ExpressionNode *expression;
-    Statement *statement;
-    SourceLocation forToken;
-    SourceLocation lparenToken;
-    SourceLocation firstSemicolonToken;
-    SourceLocation secondSemicolonToken;
-    SourceLocation rparenToken;
-};
-
-class QML_PARSER_EXPORT LocalForStatement: public Statement
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(LocalForStatement)
-
-    LocalForStatement(VariableDeclarationList *vlist, ExpressionNode *c, ExpressionNode *e, Statement *stmt):
+    ForStatement(VariableDeclarationList *vlist, ExpressionNode *c, ExpressionNode *e, Statement *stmt):
         declarations (vlist), condition (c), expression (e), statement (stmt)
         { kind = K; }
 
+
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
@@ -1688,13 +1663,13 @@ public:
     { return statement->lastSourceLocation(); }
 
 // attributes
-    VariableDeclarationList *declarations;
+    ExpressionNode *initialiser = nullptr;
+    VariableDeclarationList *declarations = nullptr;
     ExpressionNode *condition;
     ExpressionNode *expression;
     Statement *statement;
     SourceLocation forToken;
     SourceLocation lparenToken;
-    SourceLocation varToken;
     SourceLocation firstSemicolonToken;
     SourceLocation secondSemicolonToken;
     SourceLocation rparenToken;

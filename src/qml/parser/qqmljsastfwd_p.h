@@ -140,7 +140,6 @@ class IfStatement;
 class DoWhileStatement;
 class WhileStatement;
 class ForStatement;
-class LocalForStatement;
 class ForEachStatement;
 class ContinueStatement;
 class BreakStatement;
