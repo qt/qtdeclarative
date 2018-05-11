@@ -327,6 +327,9 @@ public:
         String_byteOffset,
         String_buffer,
         String_lastIndex,
+        String_next,
+        String_done,
+
         NJSStrings
     };
     Value *jsStrings;
@@ -384,6 +387,8 @@ public:
     String *id_byteOffset() const { return reinterpret_cast<String *>(jsStrings + String_byteOffset); }
     String *id_buffer() const { return reinterpret_cast<String *>(jsStrings + String_buffer); }
     String *id_lastIndex() const { return reinterpret_cast<String *>(jsStrings + String_lastIndex); }
+    String *id_next() const { return reinterpret_cast<String *>(jsStrings + String_next); }
+    String *id_done() const { return reinterpret_cast<String *>(jsStrings + String_done); }
 
     Symbol *symbol_hasInstance() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_hasInstance); }
     Symbol *symbol_isConcatSpreadable() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_isConcatSpreadable); }

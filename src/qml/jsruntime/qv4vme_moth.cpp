@@ -959,6 +959,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetIterator)
 
+    MOTH_BEGIN_INSTR(IteratorNext)
+        STORE_ACC();
+        acc = Runtime::method_iteratorNext(engine, accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(IteratorNext)
+
     MOTH_BEGIN_INSTR(DeleteMember)
         if (!Runtime::method_deleteMember(engine, STACK_VALUE(base), member)) {
             if (function->isStrict()) {
@@ -1085,6 +1091,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         if (Q_LIKELY(acc != QV4::Encode::undefined()))
             code += offset;
     MOTH_END_INSTR(JumpNotUndefined)
+
+    MOTH_BEGIN_INSTR(JumpEmpty)
+        if (Q_UNLIKELY(acc == QV4::Primitive::emptyValue().asReturnedValue()))
+            code += offset;
+    MOTH_END_INSTR(JumpEmpty)
 
     MOTH_BEGIN_INSTR(CmpEqNull)
         acc = Encode(ACC.isNullOrUndefined());

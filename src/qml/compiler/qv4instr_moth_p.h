@@ -122,6 +122,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PopScriptContext(op) INSTRUCTION(op, PopScriptContext, 0)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
 #define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
+#define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 0)
 #define INSTR_DeleteMember(op) INSTRUCTION(op, DeleteMember, 2, member, base)
 #define INSTR_DeleteSubscript(op) INSTRUCTION(op, DeleteSubscript, 2, base, index)
 #define INSTR_DeleteName(op) INSTRUCTION(op, DeleteName, 1, name)
@@ -141,6 +142,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_JumpTrue(op) INSTRUCTION(op, JumpTrue, 1, offset)
 #define INSTR_JumpFalse(op) INSTRUCTION(op, JumpFalse, 1, offset)
 #define INSTR_JumpNotUndefined(op) INSTRUCTION(op, JumpNotUndefined, 1, offset)
+#define INSTR_JumpEmpty(op) INSTRUCTION(op, JumpEmpty, 1, offset)
 #define INSTR_CmpEqNull(op) INSTRUCTION(op, CmpEqNull, 0)
 #define INSTR_CmpNeNull(op) INSTRUCTION(op, CmpNeNull, 0)
 #define INSTR_CmpEqInt(op) INSTRUCTION(op, CmpEqInt, 1, lhs)
@@ -248,6 +250,7 @@ QT_BEGIN_NAMESPACE
     F(PopScriptContext) \
     F(PopContext) \
     F(GetIterator) \
+    F(IteratorNext) \
     F(DeleteMember) \
     F(DeleteSubscript) \
     F(DeleteName) \
@@ -266,6 +269,7 @@ QT_BEGIN_NAMESPACE
     F(JumpTrue) \
     F(JumpFalse) \
     F(JumpNotUndefined) \
+    F(JumpEmpty) \
     F(CmpEqNull) \
     F(CmpNeNull) \
     F(CmpEqInt) \

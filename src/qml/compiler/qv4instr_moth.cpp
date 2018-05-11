@@ -433,6 +433,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << iterator;
         MOTH_END_INSTR(GetIterator)
 
+        MOTH_BEGIN_INSTR(IteratorNext)
+        MOTH_END_INSTR(IteratorNext)
+
         MOTH_BEGIN_INSTR(DeleteMember)
             d << dumpRegister(base, nFormals) << "[" << member << "]";
         MOTH_END_INSTR(DeleteMember)
@@ -502,6 +505,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(JumpNotUndefined)
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpNotUndefined)
+
+        MOTH_BEGIN_INSTR(JumpEmpty)
+            d << ABSOLUTE_OFFSET();
+        MOTH_END_INSTR(JumpEmpty)
 
         MOTH_BEGIN_INSTR(CmpEqNull)
         MOTH_END_INSTR(CmpEqNull)

@@ -141,6 +141,7 @@ public:
     void jumpTrue(int offset);
     void jumpFalse(int offset);
     void jumpNotUndefined(int offset);
+    void jumpEmpty(int offset);
     void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset);
     void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset);
 

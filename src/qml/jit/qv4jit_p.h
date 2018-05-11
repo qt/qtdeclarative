@@ -186,6 +186,7 @@ public:
     void generate_PopScriptContext() override;
     void generate_PopContext(int reg) override;
     void generate_GetIterator(int iterator) override;
+    void generate_IteratorNext() override;
     void generate_DeleteMember(int member, int base) override;
     void generate_DeleteSubscript(int base, int index) override;
     void generate_DeleteName(int name) override;
@@ -206,6 +207,7 @@ public:
     void generate_JumpTrue(int offset) override;
     void generate_JumpFalse(int offset) override;
     void generate_JumpNotUndefined(int offset) override;
+    void generate_JumpEmpty(int offset) override;
     void generate_CmpEqNull() override;
     void generate_CmpNeNull() override;
     void generate_CmpEqInt(int lhs) override;

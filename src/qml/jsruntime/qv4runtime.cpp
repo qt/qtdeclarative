@@ -715,6 +715,24 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
     return engine->newForInIteratorObject(o)->asReturnedValue();
 }
 
+ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator)
+{
+    Q_ASSERT(iterator.isObject());
+
+    Scope scope(engine);
+    ScopedFunctionObject f(scope, static_cast<const Object &>(iterator).get(engine->id_next()));
+    if (!f)
+        return engine->throwTypeError();
+    JSCallData cData(scope, 0, nullptr, &iterator);
+    ScopedObject o(scope, f->call(cData));
+    if (!o)
+        return engine->throwTypeError();
+    ScopedValue v(scope, o->get(engine->id_done()));
+    if (v->toBoolean() == true)
+        return Primitive::emptyValue().asReturnedValue();
+    return o->get(engine->id_value());
+}
+
 void Runtime::method_storeNameSloppy(ExecutionEngine *engine, int nameIndex, const Value &value)
 {
     Scope scope(engine);

@@ -714,6 +714,17 @@ void BaselineJIT::generate_GetIterator(int iterator)
     as->checkException();
 }
 
+void BaselineJIT::generate_IteratorNext()
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+
 static ReturnedValue deleteMemberHelper(QV4::Function *function, const QV4::Value &base, int member)
 {
     auto engine = function->internalClass->engine;
@@ -907,6 +918,7 @@ void BaselineJIT::generate_Jump(int offset) { as->jump(instructionOffset() + off
 void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(instructionOffset() + offset); }
+void BaselineJIT::generate_JumpEmpty(int offset) { as->jumpEmpty(instructionOffset() + offset); }
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
@@ -1264,6 +1276,9 @@ void BaselineJIT::collectLabelsInBytecode()
         MOTH_BEGIN_INSTR(GetIterator)
         MOTH_END_INSTR(GetIterator)
 
+        MOTH_BEGIN_INSTR(IteratorNext)
+        MOTH_END_INSTR(IteratorNext)
+
         MOTH_BEGIN_INSTR(DeleteMember)
         MOTH_END_INSTR(DeleteMember)
 
@@ -1320,7 +1335,11 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(JumpNotUndefined)
             addLabel(code - start + offset);
-        MOTH_END_INSTR(JumpUndefined)
+        MOTH_END_INSTR(JumpNotUndefined)
+
+        MOTH_BEGIN_INSTR(JumpEmpty)
+            addLabel(code - start + offset);
+        MOTH_END_INSTR(JumpEmpty)
 
         MOTH_BEGIN_INSTR(CmpEqNull)
         MOTH_END_INSTR(CmpEqNull)

@@ -2640,19 +2640,17 @@ bool Codegen::visit(ForEachStatement *ast)
         if (ExpressionNode *e = ast->lhs->expressionCast()) {
             if (AST::Pattern *p = e->patternCast()) {
                 RegisterScope scope(this);
-                Reference right = Reference::fromMember(lhsValue, QStringLiteral("value")).storeOnStack();
-                destructurePattern(p, right);
+                destructurePattern(p, lhsValue);
             } else {
                 Reference lhs = expression(e);
                 if (hasError)
                     goto error;
                 lhs = lhs.asLValue();
-                Reference::fromMember(lhsValue, QStringLiteral("value")).loadInAccumulator();
+                lhsValue.loadInAccumulator();
                 lhs.storeConsumeAccumulator();
             }
         } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
-            Reference::fromMember(lhsValue, QStringLiteral("value")).loadInAccumulator();
-            initializeAndDestructureBindingElement(p, Reference::fromAccumulator(this));
+            initializeAndDestructureBindingElement(p, lhsValue);
             if (hasError)
                 goto error;
         } else {
@@ -2666,16 +2664,15 @@ bool Codegen::visit(ForEachStatement *ast)
 
   error:
     in.link();
-    Reference next = Reference::fromMember(iterator, QStringLiteral("next"));
-    next.loadInAccumulator();
-    next = next.asLValue();
-    Codegen::Arguments args{0, 0};
-    handleCall(next, args);
+    iterator.loadInAccumulator();
+    Instruction::IteratorNext next;
+    bytecodeGenerator->addInstruction(next);
+    Instruction::JumpEmpty jump;
+    BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(jump);
     lhsValue.storeConsumeAccumulator();
-    Reference done = Reference::fromMember(lhsValue, QStringLiteral("done"));
-    done.loadInAccumulator();
-    bytecodeGenerator->jumpFalse().link(body);
+    bytecodeGenerator->jump().link(body);
 
+    done.link();
     end.link();
     return false;
 }

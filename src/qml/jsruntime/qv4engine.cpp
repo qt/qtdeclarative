@@ -268,6 +268,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_byteOffset] = newIdentifier(QStringLiteral("byteOffset"));
     jsStrings[String_buffer] = newIdentifier(QStringLiteral("buffer"));
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
+    jsStrings[String_next] = newIdentifier(QStringLiteral("next"));
+    jsStrings[String_done] = newIdentifier(QStringLiteral("done"));
 
     jsSymbols[Symbol_hasInstance] = Symbol::create(this, QStringLiteral("@Symbol.hasInstance"));
     jsSymbols[Symbol_isConcatSpreadable] = Symbol::create(this, QStringLiteral("@Symbol.isConcatSpreadable"));
