@@ -117,6 +117,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PushCatchContext(op) INSTRUCTION(op, PushCatchContext, 3, reg, index, name)
 #define INSTR_PushWithContext(op) INSTRUCTION(op, PushWithContext, 1, reg)
 #define INSTR_PushBlockContext(op) INSTRUCTION(op, PushBlockContext, 2, reg, index)
+#define INSTR_CloneBlockContext(op) INSTRUCTION(op, CloneBlockContext, 0)
 #define INSTR_PushScriptContext(op) INSTRUCTION(op, PushScriptContext, 1, index)
 #define INSTR_PopScriptContext(op) INSTRUCTION(op, PopScriptContext, 0)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
@@ -242,6 +243,7 @@ QT_BEGIN_NAMESPACE
     F(PushCatchContext) \
     F(PushWithContext) \
     F(PushBlockContext) \
+    F(CloneBlockContext) \
     F(PushScriptContext) \
     F(PopScriptContext) \
     F(PopContext) \

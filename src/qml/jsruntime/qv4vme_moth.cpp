@@ -929,10 +929,17 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
     MOTH_END_INSTR(PushWithContext)
 
     MOTH_BEGIN_INSTR(PushBlockContext)
+        STORE_ACC();
         STACK_VALUE(reg) = STACK_VALUE(CallData::Context);
         ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
         STACK_VALUE(CallData::Context) = Runtime::method_createBlockContext(c, index);
     MOTH_END_INSTR(PushBlockContext)
+
+    MOTH_BEGIN_INSTR(CloneBlockContext)
+        STORE_ACC();
+        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
+        STACK_VALUE(CallData::Context) = Runtime::method_cloneBlockContext(c);
+    MOTH_END_INSTR(CloneBlockContext)
 
     MOTH_BEGIN_INSTR(PushScriptContext)
         STACK_VALUE(CallData::Context) = Runtime::method_createScriptContext(engine, index);

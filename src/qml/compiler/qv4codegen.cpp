@@ -2708,6 +2708,10 @@ bool Codegen::visit(ForStatement *ast)
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     step.link();
+    if (_context->requiresExecutionContext) {
+        Instruction::CloneBlockContext clone;
+        bytecodeGenerator->addInstruction(clone);
+    }
     statement(ast->expression);
     bytecodeGenerator->jump().link(cond);
 

@@ -415,6 +415,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(reg, nFormals) << ", " << index;
         MOTH_END_INSTR(PushBlockContext)
 
+        MOTH_BEGIN_INSTR(CloneBlockContext)
+        MOTH_END_INSTR(CloneBlockContext)
+
         MOTH_BEGIN_INSTR(PushScriptContext)
             d << index;
         MOTH_END_INSTR(PushScriptContext)

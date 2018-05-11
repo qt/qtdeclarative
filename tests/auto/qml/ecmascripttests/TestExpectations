@@ -6414,7 +6414,6 @@ language/statements/for/dstr-var-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/for/dstr-var-obj-ptrn-id-init-fn-name-gen.js fails
 language/statements/for/head-lhs-let.js sloppyFails
 language/statements/for/let-identifier-with-newline.js sloppyFails
-language/statements/for/scope-body-lex-boundary.js fails
 language/statements/for/scope-body-lex-open.js fails
 language/statements/for/tco-const-body.js strictFails
 language/statements/for/tco-let-body.js strictFails
@@ -6620,11 +6619,6 @@ language/statements/let/global-closure-get-before-initialization.js fails
 language/statements/let/global-closure-set-before-initialization.js fails
 language/statements/let/global-use-before-initialization-in-declaration-statement.js fails
 language/statements/let/global-use-before-initialization-in-prior-statement.js fails
-language/statements/let/syntax/let-closure-inside-condition.js fails
-language/statements/let/syntax/let-closure-inside-initialization.js fails
-language/statements/let/syntax/let-closure-inside-next-expression.js fails
-language/statements/let/syntax/let-iteration-variable-is-freshly-allocated-for-each-iteration-multi-let-binding.js fails
-language/statements/let/syntax/let-iteration-variable-is-freshly-allocated-for-each-iteration-single-let-binding.js fails
 language/statements/let/syntax/let.js fails
 language/statements/return/tco.js strictFails
 language/statements/switch/scope-lex-open-case.js fails

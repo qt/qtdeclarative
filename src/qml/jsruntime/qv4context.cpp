@@ -59,7 +59,7 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     Function *function = frame->v4Function;
 
     Heap::InternalClass *ic = function->compilationUnit->runtimeBlocks.at(blockIndex);
-    int nLocals = ic->size;
+    uint nLocals = ic->size;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
 
     ExecutionEngine *v4 = function->internalClass->engine;
@@ -75,6 +75,19 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     c->locals.alloc = nLocals;
 
     return c;
+}
+
+Heap::CallContext *ExecutionContext::cloneBlockContext(Heap::CallContext *context)
+{
+    uint nLocals = context->locals.alloc;
+    size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
+
+    ExecutionEngine *v4 = context->internalClass->engine;
+    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, context->internalClass);
+    memcpy(c, context, requiredMemory);
+
+    return c;
+
 }
 
 Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)

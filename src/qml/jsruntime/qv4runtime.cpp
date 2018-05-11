@@ -1230,6 +1230,12 @@ ReturnedValue Runtime::method_createBlockContext(ExecutionContext *parent, int i
     return parent->newBlockContext(e->currentStackFrame, index)->asReturnedValue();
 }
 
+ReturnedValue Runtime::method_cloneBlockContext(ExecutionContext *previous)
+{
+    return ExecutionContext::cloneBlockContext(static_cast<Heap::CallContext *>(previous->d()))->asReturnedValue();
+}
+
+
 ReturnedValue Runtime::method_createScriptContext(ExecutionEngine *engine, int index)
 {
     Q_ASSERT(engine->currentStackFrame->context()->d()->type == Heap::ExecutionContext::Type_GlobalContext ||

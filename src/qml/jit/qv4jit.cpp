@@ -659,6 +659,19 @@ void BaselineJIT::generate_PushBlockContext(int reg, int index)
     JIT_GENERATE_RUNTIME_CALL(pushBlockContextHelper, Assembler::IgnoreResult);
 }
 
+static void cloneBlockContextHelper(QV4::Value *contextSlot)
+{
+    *contextSlot = Runtime::method_cloneBlockContext(static_cast<QV4::ExecutionContext *>(contextSlot));
+}
+
+void BaselineJIT::generate_CloneBlockContext()
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(1);
+    as->passRegAsArg(CallData::Context, 0);
+    JIT_GENERATE_RUNTIME_CALL(cloneBlockContextHelper, Assembler::IgnoreResult);
+}
+
 static void pushScriptContextHelper(QV4::Value *stack, ExecutionEngine *engine, int index)
 {
     stack[CallData::Context] = Runtime::method_createScriptContext(engine, index);
@@ -1235,6 +1248,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(PushBlockContext)
         MOTH_END_INSTR(PushBlockContext)
+
+        MOTH_BEGIN_INSTR(CloneBlockContext)
+        MOTH_END_INSTR(CloneBlockContext)
 
         MOTH_BEGIN_INSTR(PushScriptContext)
         MOTH_END_INSTR(PushScriptContext)
