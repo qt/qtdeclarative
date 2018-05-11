@@ -357,7 +357,6 @@ private slots:
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(QQmlContextData *ctxt);
-    QQmlEngine engine;
 
     // When calling into JavaScript, the specific type of the return value can differ if that return
     // value is a number. This is not only the case for non-integral numbers, or numbers that do not
@@ -384,13 +383,11 @@ void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
     registerTypes();
-
-    QString dataDir(dataDirectory() + QLatin1Char('/') + QLatin1String("lib"));
-    engine.addImportPath(dataDir);
 }
 
 void tst_qqmlecmascript::assignBasicTypes()
 {
+    QQmlEngine engine;
     {
     QQmlComponent component(&engine, testFileUrl("assignBasicTypes.qml"));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
@@ -470,6 +467,7 @@ void tst_qqmlecmascript::assignDate()
     QFETCH(QUrl, source);
     QFETCH(int, timeOffset);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, source);
     QScopedPointer<QObject> obj(component.create());
     MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
@@ -550,6 +548,7 @@ void tst_qqmlecmascript::exportDate()
 
 void tst_qqmlecmascript::idShortcutInvalidates()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("idShortcutInvalidates.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -573,6 +572,7 @@ void tst_qqmlecmascript::idShortcutInvalidates()
 
 void tst_qqmlecmascript::boolPropertiesEvaluateAsBool()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("boolPropertiesEvaluateAsBool.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -591,6 +591,7 @@ void tst_qqmlecmascript::boolPropertiesEvaluateAsBool()
 
 void tst_qqmlecmascript::signalAssignment()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("signalAssignment.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -628,6 +629,7 @@ void tst_qqmlecmascript::signalAssignment()
 
 void tst_qqmlecmascript::signalArguments()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("signalArguments.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -653,6 +655,7 @@ void tst_qqmlecmascript::signalArguments()
 
 void tst_qqmlecmascript::methods()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("methods.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -706,6 +709,7 @@ void tst_qqmlecmascript::methods()
 
 void tst_qqmlecmascript::bindingLoop()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("bindingLoop.qml"));
     QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
@@ -747,6 +751,8 @@ void tst_qqmlecmascript::basicExpressions()
     QFETCH(QVariant, result);
     QFETCH(bool, nest);
 
+    QQmlEngine engine;
+
     MyQmlObject object1;
     MyQmlObject object2;
     MyQmlObject object3;
@@ -779,6 +785,7 @@ void tst_qqmlecmascript::arrayExpressions()
     QObject obj2;
     QObject obj3;
 
+    QQmlEngine engine;
     QQmlContext context(engine.rootContext());
     context.setContextProperty("a", &obj1);
     context.setContextProperty("b", &obj2);
@@ -798,6 +805,7 @@ void tst_qqmlecmascript::arrayExpressions()
 // Tests that modifying a context property will reevaluate expressions
 void tst_qqmlecmascript::contextPropertiesTriggerReeval()
 {
+    QQmlEngine engine;
     QQmlContext context(engine.rootContext());
     MyQmlObject object1;
     MyQmlObject object2;
@@ -861,6 +869,7 @@ void tst_qqmlecmascript::contextPropertiesTriggerReeval()
 
 void tst_qqmlecmascript::objectPropertiesTriggerReeval()
 {
+    QQmlEngine engine;
     QQmlContext context(engine.rootContext());
     MyQmlObject object1;
     MyQmlObject object2;
@@ -927,6 +936,7 @@ void tst_qqmlecmascript::dependenciesWithFunctions()
 
 void tst_qqmlecmascript::deferredProperties()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deferredProperties.qml"));
     MyDeferredObject *object =
         qobject_cast<MyDeferredObject *>(component.create());
@@ -950,6 +960,7 @@ void tst_qqmlecmascript::deferredProperties()
 // Check errors on deferred properties are correctly emitted
 void tst_qqmlecmascript::deferredPropertiesErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deferredPropertiesErrors.qml"));
     MyDeferredObject *object =
         qobject_cast<MyDeferredObject *>(component.create());
@@ -969,6 +980,7 @@ void tst_qqmlecmascript::deferredPropertiesErrors()
 void tst_qqmlecmascript::deferredPropertiesInComponents()
 {
     // Test that it works when the property is set inside and outside component
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deferredPropertiesInComponents.qml"));
     QObject *object = component.create();
     if (!object)
@@ -1002,6 +1014,7 @@ void tst_qqmlecmascript::deferredPropertiesInDestruction()
     //Test that the component does not get created at all if creation is deferred until the containing context is destroyed
     //Very specific operation ordering is needed for this to occur, currently accessing object from object destructor.
     //
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deferredPropertiesInDestruction.qml"));
     QObject *object = component.create();
     if (!object)
@@ -1012,6 +1025,7 @@ void tst_qqmlecmascript::deferredPropertiesInDestruction()
 
 void tst_qqmlecmascript::extensionObjects()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("extensionObjects.qml"));
     MyExtendedObject *object =
         qobject_cast<MyExtendedObject *>(component.create());
@@ -1037,6 +1051,7 @@ void tst_qqmlecmascript::extensionObjects()
 
 void tst_qqmlecmascript::overrideExtensionProperties()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("extensionObjectsPropertyOverride.qml"));
     OverrideDefaultPropertyObject *object =
         qobject_cast<OverrideDefaultPropertyObject *>(component.create());
@@ -1049,6 +1064,8 @@ void tst_qqmlecmascript::overrideExtensionProperties()
 
 void tst_qqmlecmascript::attachedProperties()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine, testFileUrl("attachedProperty.qml"));
         QObject *object = component.create();
@@ -1090,6 +1107,8 @@ void tst_qqmlecmascript::attachedProperties()
 
 void tst_qqmlecmascript::enums()
 {
+    QQmlEngine engine;
+
     // Existent enums
     {
     QQmlComponent component(&engine, testFileUrl("enums.1.qml"));
@@ -1196,6 +1215,7 @@ void tst_qqmlecmascript::enums()
 
 void tst_qqmlecmascript::valueTypeFunctions()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("valueTypeFunctions.qml"));
     MyTypeObject *obj = qobject_cast<MyTypeObject*>(component.create());
     QVERIFY(obj != nullptr);
@@ -1211,6 +1231,8 @@ binding.
 */
 void tst_qqmlecmascript::constantsOverrideBindings()
 {
+    QQmlEngine engine;
+
     // From ECMAScript
     {
         QQmlComponent component(&engine, testFileUrl("constantsOverrideBindings.1.qml"));
@@ -1288,6 +1310,7 @@ the original binding to be disabled.
 */
 void tst_qqmlecmascript::outerBindingOverridesInnerBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine,
                            testFileUrl("outerBindingOverridesInnerBinding.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -1317,6 +1340,7 @@ Tests for a regression where this used to crash.
 */
 void tst_qqmlecmascript::nonExistentAttachedObject()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonExistentAttachedObject.qml"));
 
     QString warning = component.url().toString() + ":4:5: Unable to assign [undefined] to QString";
@@ -1330,6 +1354,8 @@ void tst_qqmlecmascript::nonExistentAttachedObject()
 
 void tst_qqmlecmascript::scope()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine, testFileUrl("scope.qml"));
         QObject *object = component.create();
@@ -1420,6 +1446,7 @@ void tst_qqmlecmascript::scope()
 // importing context
 void tst_qqmlecmascript::importScope()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("importScope.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -1435,6 +1462,7 @@ is essentially a test of QQmlMetaType::copy()
 */
 void tst_qqmlecmascript::signalParameterTypes()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalParameterTypes.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(object != nullptr);
@@ -1462,6 +1490,7 @@ Test that two JS objects for the same QObject compare as equal.
 */
 void tst_qqmlecmascript::objectsCompareAsEqual()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectsCompareAsEqual.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -1482,6 +1511,7 @@ Tests for a regression where the binding would not reevaluate.
 */
 void tst_qqmlecmascript::aliasPropertyAndBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("aliasPropertyAndBinding.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -1503,6 +1533,7 @@ and that the aliased property is reset correctly if possible.
 */
 void tst_qqmlecmascript::aliasPropertyReset()
 {
+    QQmlEngine engine;
     QObject *object = nullptr;
 
     // test that a manual write (of undefined) to a resettable aliased property succeeds
@@ -1631,6 +1662,7 @@ void tst_qqmlecmascript::componentCreation()
     QFETCH(QString, creationError);
     QFETCH(QString, createdParent);
 
+    QQmlEngine engine;
     QUrl testUrl(testFileUrl("componentCreation.qml"));
 
     if (!creationError.isEmpty()) {
@@ -1677,6 +1709,7 @@ void tst_qqmlecmascript::dynamicCreation()
     QFETCH(QString, method);
     QFETCH(QString, createdName);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("dynamicCreation.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -1694,6 +1727,8 @@ void tst_qqmlecmascript::dynamicCreation()
 */
 void tst_qqmlecmascript::dynamicDestruction()
 {
+    QQmlEngine engine;
+
     {
     QQmlComponent component(&engine, testFileUrl("dynamicDeletion.qml"));
     QPointer<MyQmlObject> object = qobject_cast<MyQmlObject*>(component.create());
@@ -1777,6 +1812,7 @@ void tst_qqmlecmascript::dynamicDestruction()
 */
 void tst_qqmlecmascript::objectToString()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qmlToString.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -1797,6 +1833,7 @@ void tst_qqmlecmascript::objectHasOwnProperty()
     QString warning2 = url.toString() + ":64: TypeError: Cannot call method 'hasOwnProperty' of undefined";
     QString warning3 = url.toString() + ":69: TypeError: Cannot call method 'hasOwnProperty' of undefined";
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, url);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -1843,6 +1880,8 @@ This test is best run under valgrind to ensure no invalid memory access occur.
 */
 void tst_qqmlecmascript::selfDeletingBinding()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine, testFileUrl("selfDeletingBinding.qml"));
         QObject *object = component.create();
@@ -1869,6 +1908,7 @@ and no synthesiszed properties).
 */
 void tst_qqmlecmascript::extendedObjectPropertyLookup()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("extendedObjectPropertyLookup.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -1880,6 +1920,7 @@ Test that extended object properties can be accessed correctly.
 */
 void tst_qqmlecmascript::extendedObjectPropertyLookup2()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("extendedObjectPropertyLookup2.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -1896,6 +1937,7 @@ Test failure when trying to create and uncreatable extended type object.
  */
 void tst_qqmlecmascript::uncreatableExtendedObjectFailureCheck()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("uncreatableExtendedObjectFailureCheck.qml"));
 
     QObject *object = component.create();
@@ -1907,6 +1949,7 @@ Test that an subclass of an uncreatable extended object contains all the require
  */
 void tst_qqmlecmascript::extendedObjectPropertyLookup3()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("extendedObjectPropertyLookup3.qml"));
 
     QObject *object = component.create();
@@ -1927,6 +1970,7 @@ Test file/lineNumbers for binding/Script errors.
 */
 void tst_qqmlecmascript::scriptErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("scriptErrors.qml"));
     QString url = component.url().toString();
 
@@ -1964,6 +2008,7 @@ Test file/lineNumbers for inline functions.
 */
 void tst_qqmlecmascript::functionErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("functionErrors.qml"));
     QString url = component.url().toString();
 
@@ -1994,6 +2039,7 @@ Test various errors that can occur when assigning a property from script
 */
 void tst_qqmlecmascript::propertyAssignmentErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyAssignmentErrors.qml"));
 
     QString url = component.url().toString();
@@ -2013,6 +2059,7 @@ a signal script.
 */
 void tst_qqmlecmascript::signalTriggeredBindings()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalTriggeredBindings.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -2041,6 +2088,7 @@ Test that list properties can be iterated from ECMAScript
 */
 void tst_qqmlecmascript::listProperties()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("listProperties.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -2055,6 +2103,7 @@ void tst_qqmlecmascript::listProperties()
 
 void tst_qqmlecmascript::exceptionClearsOnReeval()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("exceptionClearsOnReeval.qml"));
     QString url = component.url().toString();
 
@@ -2078,6 +2127,7 @@ void tst_qqmlecmascript::exceptionClearsOnReeval()
 
 void tst_qqmlecmascript::exceptionSlotProducesWarning()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("exceptionProducesWarning.qml"));
     QString url = component.url().toString();
 
@@ -2091,6 +2141,7 @@ void tst_qqmlecmascript::exceptionSlotProducesWarning()
 
 void tst_qqmlecmascript::exceptionBindingProducesWarning()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("exceptionProducesWarning2.qml"));
     QString url = component.url().toString();
 
@@ -2105,6 +2156,7 @@ void tst_qqmlecmascript::exceptionBindingProducesWarning()
 void tst_qqmlecmascript::compileInvalidBinding()
 {
     // QTBUG-23387: ensure that invalid bindings don't cause a crash.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("v8bindingException.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -2114,6 +2166,8 @@ void tst_qqmlecmascript::compileInvalidBinding()
 // Check that transient binding errors are not displayed
 void tst_qqmlecmascript::transientErrors()
 {
+    QQmlEngine engine;
+
     {
     QQmlComponent component(&engine, testFileUrl("transientErrors.qml"));
 
@@ -2145,6 +2199,7 @@ void tst_qqmlecmascript::transientErrors()
 // Check that errors during shutdown are minimized
 void tst_qqmlecmascript::shutdownErrors()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("shutdownErrors.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -2158,6 +2213,7 @@ void tst_qqmlecmascript::shutdownErrors()
 
 void tst_qqmlecmascript::compositePropertyType()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("compositePropertyType.qml"));
 
     QTest::ignoreMessage(QtDebugMsg, "hello world");
@@ -2168,6 +2224,7 @@ void tst_qqmlecmascript::compositePropertyType()
 // QTBUG-5759
 void tst_qqmlecmascript::jsObject()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("jsObject.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -2179,6 +2236,8 @@ void tst_qqmlecmascript::jsObject()
 
 void tst_qqmlecmascript::undefinedResetsProperty()
 {
+    QQmlEngine engine;
+
     {
     QQmlComponent component(&engine, testFileUrl("undefinedResetsProperty.qml"));
     QObject *object = component.create();
@@ -2214,6 +2273,7 @@ void tst_qqmlecmascript::undefinedResetsProperty()
 // Aliases to variant properties should work
 void tst_qqmlecmascript::qtbug_22464()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_22464.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -2225,6 +2285,7 @@ void tst_qqmlecmascript::qtbug_22464()
 
 void tst_qqmlecmascript::qtbug_21580()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_21580.qml"));
 
     QObject *object = component.create();
@@ -2238,6 +2299,7 @@ void tst_qqmlecmascript::qtbug_21580()
 // Causes a v8 binding, but not all v8 bindings to be destroyed during evaluation
 void tst_qqmlecmascript::singleV8BindingDestroyedDuringEvaluation()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("singleV8BindingDestroyedDuringEvaluation.qml"));
 
     QObject *object = component.create();
@@ -2248,6 +2310,7 @@ void tst_qqmlecmascript::singleV8BindingDestroyedDuringEvaluation()
 // QTBUG-6781
 void tst_qqmlecmascript::bug1()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("bug.1.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -2268,6 +2331,7 @@ void tst_qqmlecmascript::bug1()
 #ifndef QT_NO_WIDGETS
 void tst_qqmlecmascript::bug2()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import Qt.test 1.0;\nQPlainTextEdit { width: 100 }", QUrl());
 
@@ -2281,6 +2345,7 @@ void tst_qqmlecmascript::bug2()
 // Don't crash in createObject when the component has errors.
 void tst_qqmlecmascript::dynamicCreationCrash()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("dynamicCreation.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -2331,6 +2396,8 @@ void tst_qqmlecmascript::dynamicCreationOwnership()
 
 void tst_qqmlecmascript::regExpBug()
 {
+    QQmlEngine engine;
+
     //QTBUG-9367
     {
         QQmlComponent component(&engine, testFileUrl("regExp.qml"));
@@ -3058,6 +3125,7 @@ void tst_qqmlecmascript::resolveClashingProperties()
 // QTBUG-13047 (check that you can pass registered object types as args)
 void tst_qqmlecmascript::invokableObjectArg()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("invokableObjectArg.qml"));
 
     QObject *o = component.create();
@@ -3072,6 +3140,7 @@ void tst_qqmlecmascript::invokableObjectArg()
 // QTBUG-13047 (check that you can return registered object types from methods)
 void tst_qqmlecmascript::invokableObjectRet()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("invokableObjectRet.qml"));
 
     QObject *o = component.create();
@@ -3082,6 +3151,7 @@ void tst_qqmlecmascript::invokableObjectRet()
 
 void tst_qqmlecmascript::invokableEnumRet()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("invokableEnumRet.qml"));
 
     QObject *o = component.create();
@@ -3093,6 +3163,7 @@ void tst_qqmlecmascript::invokableEnumRet()
 // QTBUG-5675
 void tst_qqmlecmascript::listToVariant()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("listToVariant.qml"));
 
     MyQmlContainer container;
@@ -3113,6 +3184,7 @@ void tst_qqmlecmascript::listToVariant()
 // QTBUG-16316
 void tst_qqmlecmascript::listAssignment()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("listAssignment.qml"));
     QObject *obj = component.create();
     QCOMPARE(obj->property("list1length").toInt(), 2);
@@ -3151,6 +3223,7 @@ void tst_qqmlecmascript::multiEngineObject()
 // Test that references to QObjects are cleanup when the object is destroyed
 void tst_qqmlecmascript::deletedObject()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deletedObject.qml"));
 
     QObject *object = component.create();
@@ -3165,6 +3238,7 @@ void tst_qqmlecmascript::deletedObject()
 
 void tst_qqmlecmascript::attachedPropertyScope()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("attachedPropertyScope.qml"));
 
     QObject *object = component.create();
@@ -3185,6 +3259,8 @@ void tst_qqmlecmascript::attachedPropertyScope()
 
 void tst_qqmlecmascript::scriptConnect()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine, testFileUrl("scriptConnect.1.qml"));
 
@@ -3266,6 +3342,8 @@ void tst_qqmlecmascript::scriptConnect()
 
 void tst_qqmlecmascript::scriptDisconnect()
 {
+    QQmlEngine engine;
+
     {
         QQmlComponent component(&engine, testFileUrl("scriptDisconnect.1.qml"));
 
@@ -3356,6 +3434,7 @@ public slots:
 
 void tst_qqmlecmascript::ownership()
 {
+    QQmlEngine engine;
     OwnershipObject own;
     QQmlContext *context = new QQmlContext(engine.rootContext());
     context->setContextObject(&own);
@@ -3453,6 +3532,7 @@ void tst_qqmlecmascript::cppOwnershipReturnValue()
 // QTBUG-15697
 void tst_qqmlecmascript::ownershipCustomReturnValue()
 {
+    QQmlEngine engine;
     CppOwnershipReturnValue source;
 
     {
@@ -3496,6 +3576,7 @@ public slots:
 
 void tst_qqmlecmascript::ownershipRootObject()
 {
+    QQmlEngine engine;
     OwnershipChangingObject own;
     QQmlContext *context = new QQmlContext(engine.rootContext());
     context->setContextObject(&own);
@@ -3517,6 +3598,7 @@ void tst_qqmlecmascript::ownershipRootObject()
 
 void tst_qqmlecmascript::ownershipConsistency()
 {
+    QQmlEngine engine;
     OwnershipChangingObject own;
     QQmlContext *context = new QQmlContext(engine.rootContext());
     context->setContextObject(&own);
@@ -3547,6 +3629,7 @@ void tst_qqmlecmascript::ownershipConsistency()
 
 void tst_qqmlecmascript::ownershipQmlIncubated()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("ownershipQmlIncubated.qml"));
     QObject *object = component.create();
     QVERIFY(object);
@@ -3586,6 +3669,7 @@ private:
 // Tests that returning a QList<QObject*> from a method works
 void tst_qqmlecmascript::qlistqobjectMethods()
 {
+    QQmlEngine engine;
     QListQObjectMethodsObject obj;
     QQmlContext *context = new QQmlContext(engine.rootContext());
     context->setContextObject(&obj);
@@ -3604,6 +3688,7 @@ void tst_qqmlecmascript::qlistqobjectMethods()
 // QTBUG-9205
 void tst_qqmlecmascript::strictlyEquals()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("strictlyEquals.qml"));
 
     QObject *object = component.create();
@@ -3623,6 +3708,7 @@ void tst_qqmlecmascript::strictlyEquals()
 
 void tst_qqmlecmascript::compiled()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("compiled.qml"));
 
     QObject *object = component.create();
@@ -3663,6 +3749,7 @@ void tst_qqmlecmascript::compiled()
 // Test that numbers assigned in bindings as strings work consistently
 void tst_qqmlecmascript::numberAssignment()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("numberAssignment.qml"));
 
     QObject *object = component.create();
@@ -3689,6 +3776,7 @@ void tst_qqmlecmascript::numberAssignment()
 
 void tst_qqmlecmascript::propertySplicing()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertySplicing.qml"));
 
     QObject *object = component.create();
@@ -3702,6 +3790,7 @@ void tst_qqmlecmascript::propertySplicing()
 // QTBUG-16683
 void tst_qqmlecmascript::signalWithUnknownTypes()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalWithUnknownTypes.qml"));
 
     MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -3755,6 +3844,7 @@ void tst_qqmlecmascript::signalWithJSValueInVariant()
     QFETCH(QString, expression);
     QFETCH(QString, compare);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalWithJSValueInVariant.qml"));
     QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
     QVERIFY(object != nullptr);
@@ -3779,6 +3869,7 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_twoEngines()
     QFETCH(QString, expression);
     QFETCH(QString, compare);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalWithJSValueInVariant.qml"));
     QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
     QVERIFY(object != nullptr);
@@ -3809,6 +3900,7 @@ void tst_qqmlecmascript::signalWithQJSValue()
     QFETCH(QString, expression);
     QFETCH(QString, compare);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalWithQJSValue.qml"));
     QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject *>(component.create()));
     QVERIFY(object != nullptr);
@@ -4029,6 +4121,7 @@ void tst_qqmlecmascript::singletonTypeCaching()
 
 void tst_qqmlecmascript::singletonTypeImportOrder()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeImportOrder.qml"));
     QObject *object = component.create();
     QVERIFY(object);
@@ -4038,6 +4131,7 @@ void tst_qqmlecmascript::singletonTypeImportOrder()
 
 void tst_qqmlecmascript::singletonTypeResolution()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeResolution.qml"));
     QObject *object = component.create();
     QVERIFY(object);
@@ -4181,7 +4275,7 @@ void tst_qqmlecmascript::importScripts_data()
             << QString()
             << QStringList()
             << (QStringList() << QLatin1String("testValue"))
-            << (QVariantList() << QVariant(18));
+            << (QVariantList() << QVariant(16));
 
     QTest::newRow("import singleton type into js import")
             << testFileUrl("jsimport/testImportSingletonType.qml")
@@ -4315,6 +4409,10 @@ void tst_qqmlecmascript::importScripts()
 
     ThreadedTestHTTPServer server(dataDirectory() + "/remote");
 
+    QQmlEngine engine;
+    QString dataDir(dataDirectory() + QLatin1Char('/') + QLatin1String("lib"));
+    engine.addImportPath(dataDir);
+
     QStringList importPathList = engine.importPathList();
 
     QString remotePath(server.urlString("/"));
@@ -4358,6 +4456,7 @@ void tst_qqmlecmascript::importScripts()
 
 void tst_qqmlecmascript::importCreationContext()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("jsimport/creationContext.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
@@ -4378,6 +4477,7 @@ void tst_qqmlecmascript::scarceResources_other()
     QPixmap origPixmap(100, 100);
     origPixmap.fill(Qt::blue);
     QString srp_name, expectedWarning;
+    QQmlEngine engine;
     QV4::ExecutionEngine *v4 = engine.handle();
     ScarceResourceObject *eo = nullptr;
     QObject *srsc = nullptr;
@@ -4749,6 +4849,7 @@ void tst_qqmlecmascript::scarceResources()
     QFETCH(QVariantList, expectedValues);
     QFETCH(QStringList, expectedErrors);
 
+    QQmlEngine engine;
     QV4::ExecutionEngine *v4 = engine.handle();
     ScarceResourceObject *eo = nullptr;
     QObject *object = nullptr;
@@ -4781,6 +4882,7 @@ void tst_qqmlecmascript::scarceResources()
 void tst_qqmlecmascript::propertyChangeSlots()
 {
     // ensure that allowable property names are allowed and onPropertyNameChanged slots are generated correctly.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("changeslots/propertyChangeSlots.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -4847,6 +4949,7 @@ void tst_qqmlecmascript::propertyVar()
 {
     QFETCH(QUrl, qmlFile);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -4886,6 +4989,7 @@ void tst_qqmlecmascript::propertyQJSValue()
 {
     QFETCH(QUrl, qmlFile);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -4903,6 +5007,7 @@ void tst_qqmlecmascript::propertyVarCpp()
     // ensure that writing to and reading from a var property from cpp works as required.
     // Literal values stored in var properties can be read and written as QVariants
     // of a specific type, whereas object values are read as QVariantMaps.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVarCpp.qml"));
     object = component.create();
     QVERIFY(object != nullptr);
@@ -4924,6 +5029,8 @@ void tst_qqmlecmascript::propertyVarCpp()
 
 void tst_qqmlecmascript::propertyVarOwnership()
 {
+    QQmlEngine engine;
+
     // Referenced JS objects are not collected
     {
     QQmlComponent component(&engine, testFileUrl("propertyVarOwnership.qml"));
@@ -5005,6 +5112,7 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
     // The childObject has a reference to a different QObject.  We want to ensure
     // that the different item will not be cleaned up until required.  IE, the childObject
     // has implicit ownership of the constructed QObject.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVarImplicitOwnership.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5032,6 +5140,7 @@ void tst_qqmlecmascript::propertyVarImplicitOwnership()
 void tst_qqmlecmascript::propertyVarReparent()
 {
     // ensure that nothing breaks if we re-parent objects
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.reparent.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5074,6 +5183,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
     // sometimes reparenting can cause problems
     // (eg, if the ctxt is collected, varproperties are no longer available)
     // this test ensures that no crash occurs in that situation.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.reparent.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5110,6 +5220,7 @@ void tst_qqmlecmascript::propertyVarReparentNullContext()
 void tst_qqmlecmascript::propertyVarCircular()
 {
     // enforce behaviour regarding circular references - ensure qdvmemo deletion.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5142,6 +5253,7 @@ void tst_qqmlecmascript::propertyVarCircular2()
 {
     // track deletion of JS-owned parent item with Cpp-owned child
     // where the child has a var property referencing its parent.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.2.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5170,6 +5282,7 @@ void tst_qqmlecmascript::propertyVarInheritance()
 {
     // enforce behaviour regarding element inheritance - ensure handle disposal.
     // The particular component under test here has a chain of references.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.inherit.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5215,6 +5328,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
 {
     // The particular component under test here does NOT have a chain of references; the
     // only link between rootObject and childObject is that rootObject is the parent of childObject.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyVar.circular.2.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5248,6 +5362,7 @@ void tst_qqmlecmascript::propertyVarInheritance2()
 // Ensure that QObject type conversion works on binding assignment
 void tst_qqmlecmascript::elementAssign()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("elementAssign.qml"));
 
     QObject *object = component.create();
@@ -5261,6 +5376,7 @@ void tst_qqmlecmascript::elementAssign()
 // QTBUG-12457
 void tst_qqmlecmascript::objectPassThroughSignals()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectsPassThroughSignals.qml"));
 
     QObject *object = component.create();
@@ -5274,6 +5390,7 @@ void tst_qqmlecmascript::objectPassThroughSignals()
 // QTBUG-21626
 void tst_qqmlecmascript::objectConversion()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectConversion.qml"));
 
     QObject *object = component.create();
@@ -5289,6 +5406,7 @@ void tst_qqmlecmascript::objectConversion()
 // QTBUG-20242
 void tst_qqmlecmascript::booleanConversion()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("booleanConversion.qml"));
 
     QObject *object = component.create();
@@ -5401,6 +5519,7 @@ void tst_qqmlecmascript::handleReferenceManagement()
 
 void tst_qqmlecmascript::stringArg()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("stringArg.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5417,6 +5536,7 @@ void tst_qqmlecmascript::stringArg()
 
 void tst_qqmlecmascript::readonlyDeclaration()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("readonlyDeclaration.qml"));
 
     QObject *object = component.create();
@@ -5434,6 +5554,8 @@ Q_DECLARE_METATYPE(QList<QString>)
 Q_DECLARE_METATYPE(QList<QUrl>)
 void tst_qqmlecmascript::sequenceConversionRead()
 {
+    QQmlEngine engine;
+
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.read.qml");
         QQmlComponent component(&engine, qmlFile);
@@ -5514,6 +5636,7 @@ void tst_qqmlecmascript::sequenceConversionRead()
 
 void tst_qqmlecmascript::sequenceConversionWrite()
 {
+    QQmlEngine engine;
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.write.qml");
         QQmlComponent component(&engine, qmlFile);
@@ -5562,6 +5685,7 @@ void tst_qqmlecmascript::sequenceConversionArray()
 {
     // ensure that in JS the returned sequences act just like normal JS Arrays.
     QUrl qmlFile = testFileUrl("sequenceConversion.array.qml");
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -5583,6 +5707,7 @@ void tst_qqmlecmascript::sequenceConversionIndexes()
     // ensure that we gracefully fail if unsupported index values are specified.
     // Qt container classes only support non-negative, signed integer index values.
     QUrl qmlFile = testFileUrl("sequenceConversion.indexes.qml");
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5604,6 +5729,7 @@ void tst_qqmlecmascript::sequenceConversionThreads()
     // ensure that sequence conversion operations work correctly in a worker thread
     // and that serialisation between the main and worker thread succeeds.
     QUrl qmlFile = testFileUrl("sequenceConversion.threads.qml");
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5641,6 +5767,7 @@ void tst_qqmlecmascript::sequenceConversionThreads()
 
 void tst_qqmlecmascript::sequenceConversionBindings()
 {
+    QQmlEngine engine;
     {
         QUrl qmlFile = testFileUrl("sequenceConversion.bindings.qml");
         QQmlComponent component(&engine, qmlFile);
@@ -5668,6 +5795,7 @@ void tst_qqmlecmascript::sequenceConversionBindings()
 void tst_qqmlecmascript::sequenceConversionCopy()
 {
     QUrl qmlFile = testFileUrl("sequenceConversion.copy.qml");
+    QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -5686,6 +5814,8 @@ void tst_qqmlecmascript::sequenceConversionCopy()
 
 void tst_qqmlecmascript::assignSequenceTypes()
 {
+    QQmlEngine engine;
+
     // test binding array to sequence type property
     {
     QQmlComponent component(&engine, testFileUrl("assignSequenceTypes.1.qml"));
@@ -5800,6 +5930,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
 // Regressed with: df1788b4dbbb2826ae63f26bdf166342595343f4
 void tst_qqmlecmascript::nullObjectBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nullObjectBinding.qml"));
 
     QObject *object = component.create();
@@ -5812,6 +5943,7 @@ void tst_qqmlecmascript::nullObjectBinding()
 
 void tst_qqmlecmascript::nullObjectInitializer()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("nullObjectInitializer.qml"));
         QScopedPointer<QObject> obj(component.create());
@@ -5879,6 +6011,7 @@ void tst_qqmlecmascript::deletedEngine()
 // Test the crashing part of QTBUG-9705
 void tst_qqmlecmascript::libraryScriptAssert()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("libraryScriptAssert.qml"));
 
     QObject *object = component.create();
@@ -5889,6 +6022,7 @@ void tst_qqmlecmascript::libraryScriptAssert()
 
 void tst_qqmlecmascript::variantsAssignedUndefined()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("variantsAssignedUndefined.qml"));
 
     QObject *object = component.create();
@@ -5908,6 +6042,7 @@ void tst_qqmlecmascript::variantsAssignedUndefined()
 
 void tst_qqmlecmascript::variants()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("variants.qml"));
 
     QObject *object = component.create();
@@ -5931,6 +6066,7 @@ void tst_qqmlecmascript::variants()
 
 void tst_qqmlecmascript::qtbug_9792()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_9792.qml"));
 
     QQmlContext *context = new QQmlContext(engine.rootContext());
@@ -5955,6 +6091,7 @@ void tst_qqmlecmascript::qtbug_9792()
 // Verifies that QPointer<>s used in the vmemetaobject are cleaned correctly
 void tst_qqmlecmascript::qtcreatorbug_1289()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtcreatorbug_1289.qml"));
 
     QObject *o = component.create();
@@ -5976,6 +6113,7 @@ void tst_qqmlecmascript::qtcreatorbug_1289()
 // Test that we shut down without stupid warnings
 void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
 {
+    QQmlEngine engine;
     {
     QQmlComponent component(&engine, testFileUrl("noSpuriousWarningsAtShutdown.qml"));
 
@@ -6004,6 +6142,7 @@ void tst_qqmlecmascript::noSpuriousWarningsAtShutdown()
 
 void tst_qqmlecmascript::canAssignNullToQObject()
 {
+    QQmlEngine engine;
     {
     QQmlComponent component(&engine, testFileUrl("canAssignNullToQObject.1.qml"));
 
@@ -6033,6 +6172,7 @@ void tst_qqmlecmascript::canAssignNullToQObject()
 
 void tst_qqmlecmascript::functionAssignment_fromBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("functionAssignment.1.qml"));
 
     QString url = component.url().toString();
@@ -6057,6 +6197,7 @@ void tst_qqmlecmascript::functionAssignment_fromJS()
 {
     QFETCH(QString, triggerProperty);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("functionAssignment.2.qml"));
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
 
@@ -6089,6 +6230,7 @@ void tst_qqmlecmascript::functionAssignment_fromJS_data()
 
 void tst_qqmlecmascript::functionAssignmentfromJS_invalid()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("functionAssignment.2.qml"));
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
 
@@ -6113,6 +6255,7 @@ void tst_qqmlecmascript::functionAssignmentfromJS_invalid()
 
 void tst_qqmlecmascript::functionAssignment_afterBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("functionAssignment.3.qml"));
 
     QString url = component.url().toString();
@@ -6129,6 +6272,7 @@ void tst_qqmlecmascript::functionAssignment_afterBinding()
 
 void tst_qqmlecmascript::eval()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("eval.qml"));
 
     QObject *o = component.create();
@@ -6145,6 +6289,7 @@ void tst_qqmlecmascript::eval()
 
 void tst_qqmlecmascript::function()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("function.qml"));
 
     QObject *o = component.create();
@@ -6160,6 +6305,7 @@ void tst_qqmlecmascript::function()
 // Test the "Qt.include" method
 void tst_qqmlecmascript::include()
 {
+    QQmlEngine engine;
     // Non-library relative include
     {
     QQmlComponent component(&engine, testFileUrl("include.qml"));
@@ -6264,6 +6410,7 @@ void tst_qqmlecmascript::includeRemoteSuccess()
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
     server.serveDirectory(dataDirectory());
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("include_remote.qml"));
     QObject *o = component.beginCreate(engine.rootContext());
     QVERIFY(o != nullptr);
@@ -6290,6 +6437,7 @@ void tst_qqmlecmascript::includeRemoteSuccess()
 
 void tst_qqmlecmascript::signalHandlers()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("signalHandlers.qml"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -6350,6 +6498,7 @@ void tst_qqmlecmascript::qtbug_37351()
 
 void tst_qqmlecmascript::qtbug_10696()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_10696.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6358,6 +6507,7 @@ void tst_qqmlecmascript::qtbug_10696()
 
 void tst_qqmlecmascript::qtbug_11606()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_11606.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6367,6 +6517,7 @@ void tst_qqmlecmascript::qtbug_11606()
 
 void tst_qqmlecmascript::qtbug_11600()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_11600.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6376,6 +6527,7 @@ void tst_qqmlecmascript::qtbug_11600()
 
 void tst_qqmlecmascript::qtbug_21864()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_21864.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6385,6 +6537,7 @@ void tst_qqmlecmascript::qtbug_21864()
 
 void tst_qqmlecmascript::rewriteMultiLineStrings()
 {
+    QQmlEngine engine;
     {
         // QTBUG-23387
         QQmlComponent component(&engine, testFileUrl("rewriteMultiLineStrings.qml"));
@@ -6405,6 +6558,7 @@ void tst_qqmlecmascript::rewriteMultiLineStrings()
 void tst_qqmlecmascript::qobjectConnectionListExceptionHandling()
 {
     // QTBUG-23375
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qobjectConnectionListExceptionHandling.qml"));
     QString warning = component.url().toString() + QLatin1String(":13: TypeError: Cannot read property 'undefined' of undefined");
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -6419,6 +6573,7 @@ void tst_qqmlecmascript::qobjectConnectionListExceptionHandling()
 // Reading and writing non-scriptable properties should fail
 void tst_qqmlecmascript::nonscriptable()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonscriptable.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6430,6 +6585,7 @@ void tst_qqmlecmascript::nonscriptable()
 // deleteLater() should not be callable from QML
 void tst_qqmlecmascript::deleteLater()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deleteLater.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6440,6 +6596,7 @@ void tst_qqmlecmascript::deleteLater()
 // objectNameChanged() should be usable from QML
 void tst_qqmlecmascript::objectNameChangedSignal()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectNameChangedSignal.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6452,6 +6609,7 @@ void tst_qqmlecmascript::objectNameChangedSignal()
 // destroyed() should not be usable from QML
 void tst_qqmlecmascript::destroyedSignal()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("destroyedSignal.qml"));
     QVERIFY(component.isError());
 
@@ -6461,6 +6619,7 @@ void tst_qqmlecmascript::destroyedSignal()
 
 void tst_qqmlecmascript::in()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("in.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6471,6 +6630,7 @@ void tst_qqmlecmascript::in()
 
 void tst_qqmlecmascript::typeOf()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("typeOf.qml"));
 
     QObject *o = component.create();
@@ -6491,6 +6651,7 @@ void tst_qqmlecmascript::typeOf()
 
 void tst_qqmlecmascript::qtbug_24448()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_24448.qml"));
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
@@ -6499,6 +6660,7 @@ void tst_qqmlecmascript::qtbug_24448()
 
 void tst_qqmlecmascript::sharedAttachedObject()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sharedAttachedObject.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6510,6 +6672,7 @@ void tst_qqmlecmascript::sharedAttachedObject()
 // QTBUG-13999
 void tst_qqmlecmascript::objectName()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectName.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6527,6 +6690,7 @@ void tst_qqmlecmascript::objectName()
 
 void tst_qqmlecmascript::writeRemovesBinding()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("writeRemovesBinding.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6539,6 +6703,7 @@ void tst_qqmlecmascript::writeRemovesBinding()
 // Test bindings assigned to alias properties actually assign to the alias' target
 void tst_qqmlecmascript::aliasBindingsAssignCorrectly()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("aliasBindingsAssignCorrectly.qml"));
     QObject *o = component.create();
     QVERIFY(o != nullptr);
@@ -6551,6 +6716,7 @@ void tst_qqmlecmascript::aliasBindingsAssignCorrectly()
 // Test bindings assigned to alias properties override a binding on the target (QTBUG-13719)
 void tst_qqmlecmascript::aliasBindingsOverrideTarget()
 {
+    QQmlEngine engine;
     {
     QQmlComponent component(&engine, testFileUrl("aliasBindingsOverrideTarget.qml"));
     QObject *o = component.create();
@@ -6585,6 +6751,7 @@ void tst_qqmlecmascript::aliasBindingsOverrideTarget()
 // Test that writes to alias properties override bindings on the alias target (QTBUG-13719)
 void tst_qqmlecmascript::aliasWritesOverrideBindings()
 {
+    QQmlEngine engine;
     {
     QQmlComponent component(&engine, testFileUrl("aliasWritesOverrideBindings.qml"));
     QObject *o = component.create();
@@ -6620,6 +6787,7 @@ void tst_qqmlecmascript::aliasWritesOverrideBindings()
 // QTBUG-20200
 void tst_qqmlecmascript::aliasToCompositeElement()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("aliasToCompositeElement.qml"));
 
     QObject *object = component.create();
@@ -6630,6 +6798,7 @@ void tst_qqmlecmascript::aliasToCompositeElement()
 
 void tst_qqmlecmascript::qtbug_20344()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_20344.qml"));
 
     QString warning = component.url().toString() + ":5: Error: Exception thrown from within QObject slot";
@@ -6643,6 +6812,7 @@ void tst_qqmlecmascript::qtbug_20344()
 
 void tst_qqmlecmascript::revisionErrors()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("metaobjectRevisionErrors.qml"));
         QString url = component.url().toString();
@@ -6700,6 +6870,7 @@ void tst_qqmlecmascript::revisionErrors()
 
 void tst_qqmlecmascript::revision()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("metaobjectRevision.qml"));
         QString url = component.url().toString();
@@ -6746,6 +6917,7 @@ void tst_qqmlecmascript::revision()
 
 void tst_qqmlecmascript::realToInt()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("realToInt.qml"));
     MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
     QVERIFY(object != nullptr);
@@ -6758,6 +6930,7 @@ void tst_qqmlecmascript::realToInt()
 
 void tst_qqmlecmascript::urlProperty()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("urlProperty.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
@@ -6772,6 +6945,7 @@ void tst_qqmlecmascript::urlProperty()
 
 void tst_qqmlecmascript::urlPropertyWithEncoding()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("urlProperty.2.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
@@ -6786,6 +6960,7 @@ void tst_qqmlecmascript::urlPropertyWithEncoding()
 
 void tst_qqmlecmascript::urlListPropertyWithEncoding()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("urlListProperty.qml"));
         QObject *object = component.create();
@@ -6806,6 +6981,7 @@ void tst_qqmlecmascript::urlListPropertyWithEncoding()
 
 void tst_qqmlecmascript::dynamicString()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("dynamicString.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6815,6 +6991,7 @@ void tst_qqmlecmascript::dynamicString()
 
 void tst_qqmlecmascript::deleteLaterObjectMethodCall()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deleteLaterObjectMethodCall.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6822,6 +6999,7 @@ void tst_qqmlecmascript::deleteLaterObjectMethodCall()
 
 void tst_qqmlecmascript::automaticSemicolon()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("automaticSemicolon.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6829,6 +7007,7 @@ void tst_qqmlecmascript::automaticSemicolon()
 
 void tst_qqmlecmascript::compatibilitySemicolon()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("compatibilitySemicolon.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6836,6 +7015,7 @@ void tst_qqmlecmascript::compatibilitySemicolon()
 
 void tst_qqmlecmascript::incrDecrSemicolon1()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon1.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6843,6 +7023,7 @@ void tst_qqmlecmascript::incrDecrSemicolon1()
 
 void tst_qqmlecmascript::incrDecrSemicolon2()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon2.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6850,6 +7031,7 @@ void tst_qqmlecmascript::incrDecrSemicolon2()
 
 void tst_qqmlecmascript::incrDecrSemicolon_error1()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("incrDecrSemicolon_error1.qml"));
     QObject *object = component.create();
     QVERIFY(!object);
@@ -6857,6 +7039,7 @@ void tst_qqmlecmascript::incrDecrSemicolon_error1()
 
 void tst_qqmlecmascript::unaryExpression()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("unaryExpression.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6865,6 +7048,7 @@ void tst_qqmlecmascript::unaryExpression()
 // Makes sure that a binding isn't double re-evaluated when it depends on the same variable twice
 void tst_qqmlecmascript::doubleEvaluate()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("doubleEvaluate.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6881,6 +7065,7 @@ void tst_qqmlecmascript::doubleEvaluate()
 
 void tst_qqmlecmascript::nonNotifyable()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonNotifyable.qml"));
 
     QQmlTestMessageHandler messageHandler;
@@ -6905,6 +7090,7 @@ void tst_qqmlecmascript::nonNotifyable()
 
 void tst_qqmlecmascript::nonNotifyableConstant()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nonNotifyableConstant.qml"));
     QQmlTestMessageHandler messageHandler;
 
@@ -6917,6 +7103,7 @@ void tst_qqmlecmascript::nonNotifyableConstant()
 
 void tst_qqmlecmascript::forInLoop()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("forInLoop.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6937,6 +7124,7 @@ void tst_qqmlecmascript::forInLoop()
 // An object the binding depends on is deleted while the binding is still running
 void tst_qqmlecmascript::deleteWhileBindingRunning()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("deleteWhileBindingRunning.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -6947,6 +7135,7 @@ void tst_qqmlecmascript::qtbug_22679()
 {
     MyQmlObject object;
     object.setStringProperty(QLatin1String("Please work correctly"));
+    QQmlEngine engine;
     engine.rootContext()->setContextProperty("contextProp", &object);
 
     QQmlComponent component(&engine, testFileUrl("qtbug_22679.qml"));
@@ -6976,6 +7165,7 @@ void tst_qqmlecmascript::qtbug_22843()
         fileName += QLatin1String(".library");
     fileName += QLatin1String(".qml");
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(fileName));
 
     QString url = component.url().toString();
@@ -6988,6 +7178,7 @@ void tst_qqmlecmascript::qtbug_22843()
 
 void tst_qqmlecmascript::switchStatement()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("switchStatement.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -7134,6 +7325,7 @@ void tst_qqmlecmascript::switchStatement()
 
 void tst_qqmlecmascript::withStatement()
 {
+    QQmlEngine engine;
     {
         QUrl url = testFileUrl("withStatement.1.qml");
         QQmlComponent component(&engine, url);
@@ -7146,6 +7338,7 @@ void tst_qqmlecmascript::withStatement()
 
 void tst_qqmlecmascript::tryStatement()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("tryStatement.1.qml"));
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
@@ -7221,6 +7414,7 @@ void tst_qqmlecmascript::invokableWithQObjectDerived()
 void tst_qqmlecmascript::realTypePrecision()
 {
     // Properties and signal parameters of type real should have double precision.
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("realTypePrecision.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -7271,8 +7465,8 @@ void tst_qqmlecmascript::bindingBoundFunctions()
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()
 {
-    {
     QQmlEngine engine;
+    {
     QQmlComponent c(&engine, testFileUrl("deleteRootObjectInCreation.qml"));
     QObject *obj = c.create();
     QVERIFY(obj != nullptr);
@@ -7485,6 +7679,7 @@ void tst_qqmlecmascript::signalEmitted()
 // QTBUG-25647
 void tst_qqmlecmascript::threadSignal()
 {
+    QQmlEngine engine;
     {
         QQmlComponent c(&engine, testFileUrl("threadSignal.qml"));
         QScopedPointer<QObject> object(c.create());
@@ -7503,6 +7698,7 @@ void tst_qqmlecmascript::threadSignal()
 // ensure that the qqmldata::destroyed() handler doesn't cause problems
 void tst_qqmlecmascript::qqmldataDestroyed()
 {
+    QQmlEngine engine;
     // gc cleans up a qobject, later the qqmldata destroyed handler will run.
     {
         QQmlComponent c(&engine, testFileUrl("qqmldataDestroyed.qml"));
@@ -7536,6 +7732,7 @@ void tst_qqmlecmascript::qqmldataDestroyed()
 
 void tst_qqmlecmascript::secondAlias()
 {
+    QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("secondAlias.qml"));
     QObject *object = c.create();
     QVERIFY(object != nullptr);
@@ -7546,6 +7743,7 @@ void tst_qqmlecmascript::secondAlias()
 // An alias to a var property works
 void tst_qqmlecmascript::varAlias()
 {
+    QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("varAlias.qml"));
     QObject *object = c.create();
     QVERIFY(object != nullptr);
@@ -7556,6 +7754,7 @@ void tst_qqmlecmascript::varAlias()
 // Used to trigger an assert in the lazy meta object creation stage
 void tst_qqmlecmascript::overrideDataAssert()
 {
+    QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("overrideDataAssert.qml"));
     QObject *object = c.create();
     QVERIFY(object != nullptr);
@@ -7581,6 +7780,7 @@ void tst_qqmlecmascript::fallbackBindings()
 {
     QFETCH(QString, source);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(source));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -7590,6 +7790,7 @@ void tst_qqmlecmascript::fallbackBindings()
 
 void tst_qqmlecmascript::propertyOverride()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("propertyOverride.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -7625,6 +7826,7 @@ void tst_qqmlecmascript::sequenceSort()
     QFETCH(QString, function);
     QFETCH(bool, useComparer);
 
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("sequenceSort.qml"));
 
     QObject *object = component.create();
@@ -7641,6 +7843,7 @@ void tst_qqmlecmascript::sequenceSort()
 
 void tst_qqmlecmascript::dateParse()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("date.qml"));
 
     QObject *object = component.create();
@@ -7661,6 +7864,7 @@ void tst_qqmlecmascript::dateParse()
 
 void tst_qqmlecmascript::utcDate()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("utcdate.qml"));
 
     QObject *object = component.create();
@@ -7676,6 +7880,7 @@ void tst_qqmlecmascript::utcDate()
 
 void tst_qqmlecmascript::negativeYear()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("negativeyear.qml"));
 
     QObject *object = component.create();
@@ -7697,6 +7902,7 @@ void tst_qqmlecmascript::negativeYear()
 
 void tst_qqmlecmascript::concatenatedStringPropertyAccess()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("concatenatedStringPropertyAccess.qml"));
     QObject *object = component.create();
     QVERIFY(object);
@@ -7742,6 +7948,7 @@ void tst_qqmlecmascript::updateCall()
     // documented it can be called from within QML. Make sure
     // we don't crash when calling it.
     QString file("updateCall.qml");
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(file));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
@@ -7749,6 +7956,7 @@ void tst_qqmlecmascript::updateCall()
 
 void tst_qqmlecmascript::numberParsing()
 {
+    QQmlEngine engine;
     for (int i = 1; i < 8; ++i) {
         QString file("numberParsing.%1.qml");
         file = file.arg(i);
@@ -7766,6 +7974,7 @@ void tst_qqmlecmascript::numberParsing()
 
 void tst_qqmlecmascript::stringParsing()
 {
+    QQmlEngine engine;
     for (int i = 1; i < 7; ++i) {
         QString file("stringParsing_error.%1.qml");
         file = file.arg(i);
@@ -7789,6 +7998,7 @@ void tst_qqmlecmascript::push_and_shift()
 
 void tst_qqmlecmascript::qtbug_32801()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_32801.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -7801,6 +8011,7 @@ void tst_qqmlecmascript::qtbug_32801()
 
 void tst_qqmlecmascript::thisObject()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("thisObject.qml"));
     QObject *object = component.create();
     QVERIFY(object);
@@ -7810,6 +8021,7 @@ void tst_qqmlecmascript::thisObject()
 
 void tst_qqmlecmascript::qtbug_33754()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_33754.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -7818,6 +8030,7 @@ void tst_qqmlecmascript::qtbug_33754()
 
 void tst_qqmlecmascript::qtbug_34493()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_34493.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -7833,6 +8046,7 @@ void tst_qqmlecmascript::qtbug_34493()
 // as its type*, it's parent type* and as QObject*
 void tst_qqmlecmascript::singletonFromQMLToCpp()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFile("singletonTest.qml"));
     QScopedPointer<QObject> obj(component.create());
     if (component.errors().size())
@@ -7850,6 +8064,7 @@ void tst_qqmlecmascript::singletonFromQMLToCpp()
 // and correctly compares to itself
 void tst_qqmlecmascript::singletonFromQMLAndBackAndCompare()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFile("singletonTest2.qml"));
     QScopedPointer<QObject> o(component.create());
     if (component.errors().size())
@@ -7874,6 +8089,7 @@ void tst_qqmlecmascript::singletonFromQMLAndBackAndCompare()
 
 void tst_qqmlecmascript::setPropertyOnInvalid()
 {
+    QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("setPropertyOnNull.qml"));
         QString warning = component.url().toString() + ":4: TypeError: Type error";
@@ -7895,6 +8111,7 @@ void tst_qqmlecmascript::setPropertyOnInvalid()
 
 void tst_qqmlecmascript::miscTypeTest()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("misctypetest.qml"));
 
     QObject *object = component.create();
@@ -7923,6 +8140,7 @@ void tst_qqmlecmascript::stackLimits()
 
 void tst_qqmlecmascript::idsAsLValues()
 {
+    QQmlEngine engine;
     QString err = QString(QLatin1String("%1:5 left-hand side of assignment operator is not an lvalue\n")).arg(testFileUrl("idAsLValue.qml").toString());
     QQmlComponent component(&engine, testFileUrl("idAsLValue.qml"));
     QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
@@ -7933,6 +8151,7 @@ void tst_qqmlecmascript::idsAsLValues()
 
 void tst_qqmlecmascript::qtbug_34792()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug34792.qml"));
 
     QObject *object = component.create();
@@ -7944,6 +8163,7 @@ void tst_qqmlecmascript::qtbug_34792()
 
 void tst_qqmlecmascript::noCaptureWhenWritingProperty()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("noCaptureWhenWritingProperty.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
@@ -7952,6 +8172,7 @@ void tst_qqmlecmascript::noCaptureWhenWritingProperty()
 
 void tst_qqmlecmascript::singletonWithEnum()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonWithEnum.qml"));
     QScopedPointer<QObject> obj(component.create());
     if (obj.isNull())
@@ -7973,48 +8194,53 @@ void tst_qqmlecmascript::singletonWithEnum()
 
 void tst_qqmlecmascript::lazyBindingEvaluation()
 {
-   QQmlComponent component(&engine, testFileUrl("lazyBindingEvaluation.qml"));
-   QScopedPointer<QObject> obj(component.create());
-   if (obj.isNull())
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("lazyBindingEvaluation.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
        qDebug() << component.errors().first().toString();
-   QVERIFY(!obj.isNull());
-   QVariant prop = obj->property("arrayLength");
-   QCOMPARE(prop.type(), QVariant::Int);
-   QCOMPARE(prop.toInt(), 2);
+    QVERIFY(!obj.isNull());
+    QVariant prop = obj->property("arrayLength");
+    QCOMPARE(prop.type(), QVariant::Int);
+    QCOMPARE(prop.toInt(), 2);
 }
 
 void tst_qqmlecmascript::varPropertyAccessOnObjectWithInvalidContext()
 {
-   QQmlComponent component(&engine, testFileUrl("varPropertyAccessOnObjectWithInvalidContext.qml"));
-   QScopedPointer<QObject> obj(component.create());
-   if (obj.isNull())
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("varPropertyAccessOnObjectWithInvalidContext.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
        qDebug() << component.errors().first().toString();
-   QVERIFY(!obj.isNull());
-   QVERIFY(obj->property("success").toBool());
+    QVERIFY(!obj.isNull());
+    QVERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::importedScriptsAccessOnObjectWithInvalidContext()
 {
-   QQmlComponent component(&engine, testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml"));
-   QScopedPointer<QObject> obj(component.create());
-   if (obj.isNull())
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("importedScriptsAccessOnObjectWithInvalidContext.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
        qDebug() << component.errors().first().toString();
-   QVERIFY(!obj.isNull());
-   QTRY_VERIFY(obj->property("success").toBool());
+    QVERIFY(!obj.isNull());
+    QTRY_VERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::importedScriptsWithoutQmlMode()
 {
-   QQmlComponent component(&engine, testFileUrl("importScriptsWithoutQmlMode.qml"));
-   QScopedPointer<QObject> obj(component.create());
-   if (obj.isNull())
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("importScriptsWithoutQmlMode.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    if (obj.isNull())
        qDebug() << component.errors().first().toString();
-   QVERIFY(!obj.isNull());
-   QTRY_VERIFY(obj->property("success").toBool());
+    QVERIFY(!obj.isNull());
+    QTRY_VERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmlecmascript::contextObjectOnLazyBindings()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("contextObjectOnLazyBindings.qml"));
     QScopedPointer<QObject> obj(component.create());
     if (obj.isNull())
@@ -8027,6 +8253,7 @@ void tst_qqmlecmascript::contextObjectOnLazyBindings()
 
 void tst_qqmlecmascript::garbageCollectionDuringCreation()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import Qt.test 1.0\n"
                       "QObjectContainerWithGCOnAppend {\n"
@@ -8054,6 +8281,7 @@ void tst_qqmlecmascript::garbageCollectionDuringCreation()
 
 void tst_qqmlecmascript::qtbug_39520()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0\n"
                       "Item {\n"
@@ -8175,6 +8403,7 @@ void tst_qqmlecmascript::switchExpression()
 
 void tst_qqmlecmascript::qtbug_46022()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_46022.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -8185,6 +8414,7 @@ void tst_qqmlecmascript::qtbug_46022()
 
 void tst_qqmlecmascript::qtbug_52340()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_52340.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
@@ -8196,6 +8426,7 @@ void tst_qqmlecmascript::qtbug_52340()
 
 void tst_qqmlecmascript::qtbug_54589()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_54589.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -8207,11 +8438,12 @@ void tst_qqmlecmascript::qtbug_54687()
 {
     QJSEngine e;
     // it's simple: this shouldn't crash.
-    engine.evaluate("12\n----12");
+    e.evaluate("12\n----12");
 }
 
 void tst_qqmlecmascript::stringify_qtbug_50592()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("stringify_qtbug_50592.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -8399,6 +8631,7 @@ void tst_qqmlecmascript::freeze_empty_object()
 
 void tst_qqmlecmascript::singleBlockLoops()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug_59012.qml"));
 
     QScopedPointer<QObject> obj(component.create());
@@ -8410,6 +8643,7 @@ void tst_qqmlecmascript::singleBlockLoops()
 // This fix ensures it looks up the right thing.
 void tst_qqmlecmascript::qtbug_60547()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("qtbug60547/main.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
@@ -8418,6 +8652,7 @@ void tst_qqmlecmascript::qtbug_60547()
 
 void tst_qqmlecmascript::anotherNaN()
 {
+    QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("nans.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
