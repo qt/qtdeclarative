@@ -587,6 +587,12 @@ void ScanFunctions::calcEscapingVariables()
             auto m = c->members.find(c->caughtVariable);
             m->canEscape = true;
         }
+        const QLatin1String exprForOn("expression for on");
+        if (c->contextType == ContextType::Binding && c->name.length() > exprForOn.size() &&
+            c->name.startsWith(exprForOn) && c->name.at(exprForOn.size()).isUpper())
+            // we don't really need this for bindings, but we do for signal handlers, and in this case,
+            // we don't know if the code is a signal handler or not.
+            c->requiresExecutionContext = true;
         if (allVarsEscape) {
             for (auto &m : c->members)
                 m.canEscape = true;
