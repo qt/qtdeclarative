@@ -12,4 +12,6 @@ RESOURCES += versionchecks.qml
 
 RESOURCES += trickypaths.qrc
 
+RESOURCES += jsimport.qml script.js library.js
+
 QT += core-private qml-private testlib

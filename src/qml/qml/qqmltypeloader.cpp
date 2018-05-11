@@ -3021,7 +3021,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
 
-    QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
+    QmlIR::ScriptDirectivesCollector collector(&irUnit);
 
     QList<QQmlError> errors;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(
@@ -3037,9 +3037,6 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         unit.adopt(new QV4::CompiledData::CompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
-    irUnit.imports = collector.imports;
-    if (collector.hasPragmaLibrary)
-        irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
