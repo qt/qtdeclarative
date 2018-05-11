@@ -1637,7 +1637,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createRadialGradient(const
         QV4::Scoped<QQuickContext2DStyle> gradient(scope, scope.engine->memoryManager->allocObject<QQuickContext2DStyle>());
         QV4::ScopedObject p(scope, ed->gradientProto.value());
         gradient->setPrototype(p);
-        *gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r0+r1, QPointF(x0, y0));
+        *gradient->d()->brush = QRadialGradient(QPointF(x1, y1), r1, QPointF(x0, y0), r0);
         RETURN_RESULT(*gradient);
     }
 
