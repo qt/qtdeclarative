@@ -181,8 +181,8 @@ void QQmlOpenMetaObjectTypePrivate::init(const QMetaObject *metaObj)
 class QQmlOpenMetaObjectPrivate
 {
 public:
-    QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q)
-        : q(_q), parent(nullptr), type(nullptr), cacheProperties(false) {}
+    QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q, bool _autoCreate, QObject *obj)
+        : q(_q), object(obj), autoCreate(_autoCreate) {}
 
     struct Property {
     private:
@@ -237,22 +237,19 @@ public:
         return data[idx].valueSet;
     }
 
-    bool autoCreate;
     QQmlOpenMetaObject *q;
-    QAbstractDynamicMetaObject *parent;
+    QAbstractDynamicMetaObject *parent = nullptr;
     QVector<Property> data;
     QObject *object;
-    QQmlOpenMetaObjectType *type;
-    bool cacheProperties;
+    QQmlRefPointer<QQmlOpenMetaObjectType> type;
+    bool autoCreate;
+    bool cacheProperties = false;
 };
 
 QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bool automatic)
-: d(new QQmlOpenMetaObjectPrivate(this))
+: d(new QQmlOpenMetaObjectPrivate(this, automatic, obj))
 {
-    d->autoCreate = automatic;
-    d->object = obj;
-
-    d->type = new QQmlOpenMetaObjectType(base ? base : obj->metaObject(), nullptr);
+    d->type.adopt(new QQmlOpenMetaObjectType(base ? base : obj->metaObject(), nullptr));
     d->type->d->referers.insert(this);
 
     QObjectPrivate *op = QObjectPrivate::get(obj);
@@ -262,13 +259,9 @@ QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bo
 }
 
 QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, QQmlOpenMetaObjectType *type, bool automatic)
-: d(new QQmlOpenMetaObjectPrivate(this))
+: d(new QQmlOpenMetaObjectPrivate(this, automatic, obj))
 {
-    d->autoCreate = automatic;
-    d->object = obj;
-
     d->type = type;
-    d->type->addref();
     d->type->d->referers.insert(this);
 
     QObjectPrivate *op = QObjectPrivate::get(obj);
@@ -282,13 +275,12 @@ QQmlOpenMetaObject::~QQmlOpenMetaObject()
     if (d->parent)
         delete d->parent;
     d->type->d->referers.remove(this);
-    d->type->release();
     delete d;
 }
 
 QQmlOpenMetaObjectType *QQmlOpenMetaObject::type() const
 {
-    return d->type;
+    return d->type.data();
 }
 
 void QQmlOpenMetaObject::emitPropertyNotification(const QByteArray &propertyName)
