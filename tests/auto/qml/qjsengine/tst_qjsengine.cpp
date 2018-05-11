@@ -210,6 +210,8 @@ private slots:
 
     void incrementAfterNewline();
 
+    void deleteInsideForIn();
+
 signals:
     void testSignal();
 };
@@ -4203,6 +4205,19 @@ void tst_QJSEngine::incrementAfterNewline()
     result = engine.evaluate("var x = 0; if (\n--x) x; else -x;");
     QVERIFY(result.isNumber());
     QVERIFY(result.toNumber() == -1);
+}
+
+void tst_QJSEngine::deleteInsideForIn()
+{
+    QJSEngine engine;
+
+    QJSValue iterationCount = engine.evaluate(
+                              "var o = { a: 1, b: 2, c: 3, d: 4};\n"
+                              "var count = 0;\n"
+                              "for (var prop in o) { count++; delete o[prop]; }\n"
+                              "count");
+    QVERIFY(iterationCount.isNumber());
+    QCOMPARE(iterationCount.toInt(), 4);
 }
 
 QTEST_MAIN(tst_QJSEngine)
