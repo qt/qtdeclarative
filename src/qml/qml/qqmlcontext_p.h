@@ -115,6 +115,7 @@ public:
     QQmlContextData(QQmlContext *);
     void emitDestruction();
     void clearContext();
+    void clearContextRecursively();
     void invalidate();
 
     inline bool isValid() const {

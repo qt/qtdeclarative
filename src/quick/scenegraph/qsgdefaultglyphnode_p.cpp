@@ -71,9 +71,9 @@ static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
     return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
 }
 
-static inline int qsg_device_pixel_ratio(QOpenGLContext *ctx)
+static inline qreal qsg_device_pixel_ratio(QOpenGLContext *ctx)
 {
-    int devicePixelRatio = 1;
+    qreal devicePixelRatio = 1;
     if (ctx->surface()->surfaceClass() == QSurface::Window) {
         QWindow *w = static_cast<QWindow *>(ctx->surface());
         if (QQuickWindow *qw = qobject_cast<QQuickWindow *>(w))

@@ -221,6 +221,7 @@ private slots:
     void flushInterval();
     void translationBinding();
     void memory();
+    void compile();
 
 private:
     bool m_recordFromStart = true;
@@ -525,6 +526,8 @@ void tst_QQmlProfilerService::connect()
 
     if (!traceEnabled)
         m_client->client->setRecording(true);
+
+    QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
     m_client->client->setRecording(false);
     checkTraceReceived();
     checkJsHeap();
@@ -643,6 +646,7 @@ void tst_QQmlProfilerService::controlFromJS()
 {
     QCOMPARE(connect(true, "controlFromJS.qml", false), ConnectSuccess);
 
+    QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
     m_client->client->setRecording(false);
     checkTraceReceived();
     checkJsHeap();
@@ -747,6 +751,54 @@ void tst_QQmlProfilerService::memory()
     }
 
     QVERIFY(smallItems > 5);
+}
+
+static bool hasCompileEvents(const QVector<QQmlProfilerEventType> &types)
+{
+    for (const QQmlProfilerEventType &type : types) {
+        if (type.message() == QQmlProfilerDefinitions::MaximumMessage
+                && type.rangeType() == QQmlProfilerDefinitions::Compiling)
+            return true;
+    }
+    return false;
+}
+
+void tst_QQmlProfilerService::compile()
+{
+    // Flush interval so that we actually get the events before we stop recording.
+    connect(true, "test.qml", true, 100);
+
+    // We need to check specifically for compile events as we can otherwise stop recording after the
+    // StartTrace has arrived, but before it compiles anything.
+    QTRY_VERIFY(hasCompileEvents(m_client->types));
+    m_client->client->setRecording(false);
+
+    checkTraceReceived();
+    checkJsHeap();
+
+    QQmlProfilerDefinitions::Message rangeStage = QQmlProfilerDefinitions::MaximumMessage;
+    for (auto message : m_client->qmlMessages) {
+        const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
+        if (type.rangeType() == QQmlProfilerDefinitions::Compiling) {
+            switch (rangeStage) {
+            case QQmlProfilerDefinitions::MaximumMessage:
+                QCOMPARE(message.rangeStage(), QQmlProfilerDefinitions::RangeStart);
+                break;
+            case QQmlProfilerDefinitions::RangeStart:
+                QCOMPARE(message.rangeStage(), QQmlProfilerDefinitions::RangeEnd);
+                break;
+            default:
+                QFAIL("Wrong range stage");
+            }
+            rangeStage = message.rangeStage();
+            QCOMPARE(type.message(), QQmlProfilerDefinitions::MaximumMessage);
+            QCOMPARE(type.location().filename(), testFileUrl("test.qml").toString());
+            QCOMPARE(type.location().line(), 0);
+            QCOMPARE(type.location().column(), 0);
+        }
+    }
+
+    QCOMPARE(rangeStage, QQmlProfilerDefinitions::RangeEnd);
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

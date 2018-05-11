@@ -44,3 +44,31 @@
     \externalpage https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
     \title Mozilla Developer Network Date Reference
 */
+/*!
+    \externalpage hhttps://www.froglogic.com/squish/gui-testing
+    \title Squish
+*/
+/*!
+    \externalpage http://doc.qt.io/GammaRay
+    \title GammaRay
+*/
+/*!
+    \externalpage http://doc.qt.io/QtQmlLive
+    \title QmlLive
+*/
+/*!
+    \externalpage http://doc.qt.io/qtcreator/creator-debugging-qml.html
+    \title QML Debugger
+*/
+/*!
+    \externalpage http://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
+    \title QML Profiler
+*/
+/*!
+    \externalpage http://doc.qt.io/qtcreator/index.html
+    \title Qt Creator Manual
+*/
+/*!
+    \externalpage https://fontawesome.com/
+    \title Font Awesome
+*/

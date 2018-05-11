@@ -144,6 +144,7 @@ struct Context {
     bool usesThis = false;
     bool hasTry = false;
     bool hasWith = false;
+    bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;
 
     enum UsesArgumentsObject {
@@ -256,29 +257,32 @@ struct Context {
         usedVariables.insert(name);
     }
 
-    void addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
+    bool addLocalVar(const QString &name, MemberType type, QQmlJS::AST::VariableDeclaration::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr)
     {
-        if (! name.isEmpty()) {
-            if (type != FunctionDefinition) {
-                for (QQmlJS::AST::FormalParameterList *it = formals; it; it = it->next)
-                    if (it->name == name)
-                        return;
-            }
-            MemberMap::iterator it = members.find(name);
-            if (it == members.end()) {
-                Member m;
-                m.type = type;
-                m.function = function;
-                m.scope = scope;
-                members.insert(name, m);
-            } else {
-                Q_ASSERT(scope == (*it).scope);
-                if ((*it).type <= type) {
-                    (*it).type = type;
-                    (*it).function = function;
-                }
-            }
+        if (name.isEmpty())
+            return true;
+
+        if (type != FunctionDefinition) {
+            for (QQmlJS::AST::FormalParameterList *it = formals; it; it = it->next)
+                if (it->name == name)
+                    return (scope == QQmlJS::AST::VariableDeclaration::FunctionScope);
         }
+        MemberMap::iterator it = members.find(name);
+        if (it != members.end()) {
+            if (scope != QQmlJS::AST::VariableDeclaration::FunctionScope || (*it).scope != QQmlJS::AST::VariableDeclaration::FunctionScope)
+                return false;
+            if ((*it).type <= type) {
+                (*it).type = type;
+                (*it).function = function;
+            }
+            return true;
+        }
+        Member m;
+        m.type = type;
+        m.function = function;
+        m.scope = scope;
+        members.insert(name, m);
+        return true;
     }
 };
 

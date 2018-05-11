@@ -441,7 +441,6 @@ public:
 
     Heap::QmlContext *qmlContext() const;
     QObject *qmlScopeObject() const;
-    ReturnedValue qmlSingletonWrapper(String *name);
     QQmlContextData *callingQmlContext() const;
 
 

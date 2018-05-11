@@ -73,13 +73,20 @@ void ScanFunctions::operator()(Node *node)
     calcEscapingVariables();
 }
 
+void ScanFunctions::enterGlobalEnvironment(CompilationMode compilationMode)
+{
+    enterEnvironment(astNodeForGlobalEnvironment, compilationMode);
+}
+
 void ScanFunctions::enterEnvironment(Node *node, CompilationMode compilationMode)
 {
-    Context *e = _cg->_module->newContext(node, _context, compilationMode);
-    if (!e->isStrict)
-        e->isStrict = _cg->_strictMode;
-    _contextStack.append(e);
-    _context = e;
+    Context *c = _cg->_module->contextMap.value(node);
+    if (!c)
+        c = _cg->_module->newContext(node, _context, compilationMode);
+    if (!c->isStrict)
+        c->isStrict = _cg->_strictMode;
+    _contextStack.append(c);
+    _context = c;
 }
 
 void ScanFunctions::leaveEnvironment()
@@ -208,14 +215,10 @@ bool ScanFunctions::visit(VariableDeclaration *ast)
         return false;
     }
     QString name = ast->name.toString();
-    const Context::Member *m = nullptr;
-    if (_context->memberInfo(name, &m)) {
-        if (m->isLexicallyScoped() || ast->isLexicallyScoped()) {
-            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
-            return false;
-        }
+    if (!_context->addLocalVar(ast->name.toString(), ast->expression ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
+        _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
+        return false;
     }
-    _context->addLocalVar(ast->name.toString(), ast->expression ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope);
     return true;
 }
 
@@ -390,16 +393,22 @@ bool ScanFunctions::visit(Block *ast) {
 
 void ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, FunctionBody *body, FunctionExpression *expr)
 {
-    if (_context) {
-        _context->hasNestedFunctions = true;
+    Context *outerContext = _context;
+    enterEnvironment(ast, FunctionCode);
+
+    if (outerContext) {
+        outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
-        if (expr)
-            _context->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr);
+        if (expr) {
+            if (!outerContext->addLocalVar(name, Context::FunctionDefinition, AST::VariableDeclaration::FunctionScope, expr)) {
+                _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
+                return;
+            }
+        }
         if (name == QLatin1String("arguments"))
-            _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
+            outerContext->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
 
-    enterEnvironment(ast, FunctionCode);
     if (formalsContainName(formals, QStringLiteral("arguments")))
         _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
 
@@ -440,7 +449,7 @@ void ScanFunctions::calcEscapingVariables()
 {
     Module *m = _cg->_module;
 
-    for (Context *inner : m->contextMap) {
+    for (Context *inner : qAsConst(m->contextMap)) {
         for (const QString &var : qAsConst(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
@@ -468,7 +477,7 @@ void ScanFunctions::calcEscapingVariables()
     static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
-        for (Context *c : m->contextMap) {
+        for (Context *c : qAsConst(m->contextMap)) {
             qDebug() << "Context" << c->name << ":";
             qDebug() << "    Arguments escape" << c->argumentsCanEscape;
             for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {

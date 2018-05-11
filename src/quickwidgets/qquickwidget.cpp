@@ -485,6 +485,12 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     compatible however and attempting to construct a QQuickWidget will lead to
     problems.
 
+    \section1 Tab Key Handling
+
+    On press of the \c[TAB] key, the item inside the QQuickWidget gets focus. If
+    this item can handle \c[TAB] key press, focus will change accordingly within
+    the item, otherwise the next widget in the focus chain gets focus.
+
     \sa {Exposing Attributes of C++ Types to QML}, {Qt Quick Widgets Example}, QQuickView
 */
 
@@ -1219,6 +1225,22 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     }
 
     d->render(needsSync);
+}
+
+/*! \reimp */
+bool QQuickWidget::focusNextPrevChild(bool next)
+{
+    Q_D(QQuickWidget);
+    QKeyEvent event(QEvent::KeyPress, next ? Qt::Key_Tab : Qt::Key_Backtab, Qt::NoModifier);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyPress, event.key(),
+                          Qt::NoModifier);
+    QCoreApplication::sendEvent(d->offscreenWindow, &event);
+
+    QKeyEvent releaseEvent(QEvent::KeyRelease, next ? Qt::Key_Tab : Qt::Key_Backtab, Qt::NoModifier);
+    Q_QUICK_INPUT_PROFILE(QQuickProfiler::Key, QQuickProfiler::InputKeyRelease, releaseEvent.key(),
+                          Qt::NoModifier);
+    QCoreApplication::sendEvent(d->offscreenWindow, &releaseEvent);
+    return event.isAccepted();
 }
 
 /*! \reimp */

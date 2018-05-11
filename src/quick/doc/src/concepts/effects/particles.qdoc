@@ -26,14 +26,14 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Particles 2
+    \qmlmodule QtQuick.Particles 2.11
     \title Qt Quick Particles QML Types
     \ingroup qmlmodules
     \brief Provides QML types for particle effects
 
   This QML module contains a particle system for Qt Quick. To use these types, import the module with the following line:
   \code
-  import QtQuick.Particles 2.0
+  import QtQuick.Particles 2.11
   \endcode
 
   For a simple overview of how the system can be used, see \l{Using the Qt Quick Particle System}.
@@ -50,7 +50,7 @@
 
   Note that to use types from the particles module, you will need to import the types with the following line:
   \code
-  import QtQuick.Particles 2.0
+  import QtQuick.Particles 2.11
   \endcode
 
     \section1 The ParticleSystem

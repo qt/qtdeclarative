@@ -656,6 +656,12 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     Q_Q(QQuickWindow);
     auto device = pointerEvent->device();
 
+    // A touch event from a trackpad is likely to be followed by a mouse or gesture event, so mouse event synth is redundant
+    if (device->type() == QQuickPointerDevice::TouchPad && device->capabilities().testFlag(QQuickPointerDevice::MouseEmulation)) {
+        qCDebug(DBG_TOUCH_TARGET) << "skipping delivery of synth-mouse event from" << device;
+        return false;
+    }
+
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
     Q_ASSERT(pointerEvent->asPointerTouchEvent());
     QScopedPointer<QTouchEvent> event(pointerEvent->asPointerTouchEvent()->touchEventForItem(item));
@@ -2833,7 +2839,11 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
             // In versions prior to Qt 6, we can't trust item->acceptTouchEvents() here, because it defaults to true.
             bool acceptsTouchEvents = false;
 #endif
-            if (acceptsTouchEvents || receiver->acceptedMouseButtons()) {
+            auto device = pte->device();
+            if (device->type() == QQuickPointerDevice::TouchPad &&
+                    device->capabilities().testFlag(QQuickPointerDevice::MouseEmulation)) {
+                qCDebug(DBG_TOUCH_TARGET) << "skipping filtering of synth-mouse event from" << device;
+            } else if (acceptsTouchEvents || receiver->acceptedMouseButtons()) {
                 // get a touch event customized for delivery to filteringParent
                 QScopedPointer<QTouchEvent> filteringParentTouchEvent(pte->touchEventForItem(receiver, true));
                 if (filteringParentTouchEvent) {

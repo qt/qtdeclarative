@@ -202,11 +202,20 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
 
 
     const QMetaObject *metaObject = object->metaObject();
+
+    QStringList deferredPropertyNames;
+    const int namesIndex = metaObject->indexOfClassInfo("DeferredPropertyNames");
+    if (namesIndex != -1) {
+        QMetaClassInfo classInfo = metaObject->classInfo(namesIndex);
+        deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+    }
+
     for (int index = 0; index < metaObject->propertyCount(); ++index) {
         QMetaProperty metaProperty = metaObject->property(index);
         QQmlProperty declarativeProperty(object, QString::fromUtf8(metaProperty.name()));
         if (declarativeProperty.isValid() && declarativeProperty.propertyTypeCategory() == QQmlProperty::Object) {
-            if (declarativeProperty.name() != QLatin1String("parent")) {
+            if (declarativeProperty.name() != QLatin1String("parent")
+                    && !deferredPropertyNames.contains(declarativeProperty.name())) {
                 QObject *childObject = QQmlMetaType::toQObject(declarativeProperty.read());
                 if (childObject)
                     propertyNameList.append(allPropertyNames(childObject,

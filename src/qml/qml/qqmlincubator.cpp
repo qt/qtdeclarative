@@ -367,10 +367,8 @@ finishIncubate:
         enginePriv->inProgressCreations--;
 
         if (0 == enginePriv->inProgressCreations) {
-            while (enginePriv->erroredBindings) {
-                enginePriv->warning(enginePriv->erroredBindings);
-                enginePriv->erroredBindings->removeError();
-            }
+            while (enginePriv->erroredBindings)
+                enginePriv->warning(enginePriv->erroredBindings->removeError());
         }
     } else if (!creator.isNull()) {
         vmeGuard.guard(creator.data());
@@ -575,10 +573,8 @@ void QQmlIncubator::clear()
 
         enginePriv->inProgressCreations--;
         if (0 == enginePriv->inProgressCreations) {
-            while (enginePriv->erroredBindings) {
-                enginePriv->warning(enginePriv->erroredBindings);
-                enginePriv->erroredBindings->removeError();
-            }
+            while (enginePriv->erroredBindings)
+                enginePriv->warning(enginePriv->erroredBindings->removeError());
         }
     }
 

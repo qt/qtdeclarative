@@ -10,6 +10,11 @@ Item {
         objectName: "msco"
     }
 
+    Component {
+        id: mscoComponent
+        MySequenceConversionObject { }
+    }
+
     property bool success: false
 
     property variant intList
@@ -251,5 +256,14 @@ Item {
         if (testSequence.toString() == prevString) referenceDeletion = false;
         if (testSequence.valueOf() == prevValueOf) referenceDeletion = false;
         if (testSequence.length == prevLength) referenceDeletion = false;
+    }
+
+    function jsonConversion() {
+        success = true
+        var msco = mscoComponent.createObject()
+        if (JSON.stringify(msco.intListProperty) != "[1,2,3,4]") success = false;
+        if (JSON.stringify(msco.qrealListProperty) != "[1.1,2.2,3.3,4.4]") success = false;
+        if (JSON.stringify(msco.boolListProperty) != "[true,false,true,false]") success = false;
+        if (JSON.stringify(msco.stringListProperty) != "[\"first\",\"second\",\"third\",\"fourth\"]") success = false;
     }
 }

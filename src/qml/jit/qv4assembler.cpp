@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QBuffer>
+#include <QFile>
 
 #include "qv4engine_p.h"
 #include "qv4assembler_p.h"
@@ -275,12 +276,16 @@ struct PlatformAssembler_X86_All : JSC::MacroAssembler<JSC::MacroAssemblerX86>
         push(JSStackFrameRegister);
         push(CppStackFrameRegister);
         push(EngineRegister);
+        // Ensure the stack is 16-byte aligned in order for compiler generated aligned SSE2
+        // instructions to be able to target the stack.
+        subPtr(TrustedImm32(8), StackPointerRegister);
         loadPtr(Address(FramePointerRegister, 2 * PointerSize), CppStackFrameRegister);
         loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
     }
 
     void generatePlatformFunctionExit()
     {
+        addPtr(TrustedImm32(8), StackPointerRegister);
         pop(EngineRegister);
         pop(CppStackFrameRegister);
         pop(JSStackFrameRegister);
@@ -1367,6 +1372,17 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
     qDebug("%s", processedOutput.constData());
 }
 
+static QByteArray functionName(Function *function)
+{
+    QByteArray name = function->name()->toQString().toUtf8();
+    if (name.isEmpty()) {
+        name = QByteArray::number(reinterpret_cast<quintptr>(function), 16);
+        name.prepend("QV4::Function(0x");
+        name.append(')');
+    }
+    return name;
+}
+
 void Assembler::link(Function *function)
 {
     for (const auto &jumpTarget : pasm()->patches)
@@ -1388,12 +1404,7 @@ void Assembler::link(Function *function)
         buf.open(QIODevice::WriteOnly);
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
-        QByteArray name = function->name()->toQString().toUtf8();
-        if (name.isEmpty()) {
-            name = QByteArray::number(quintptr(function), 16);
-            name.prepend("QV4::Function(0x");
-            name.append(')');
-        }
+        QByteArray name = functionName(function);
         codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.data());
 
         WTF::setDataFile(stderr);
@@ -1404,6 +1415,34 @@ void Assembler::link(Function *function)
 
     function->codeRef = new JSC::MacroAssemblerCodeRef(codeRef);
     function->jittedCode = reinterpret_cast<Function::JittedCode>(function->codeRef->code().executableAddress());
+
+#if defined(Q_OS_LINUX)
+    // This implements writing of JIT'd addresses so that perf can find the
+    // symbol names.
+    //
+    // Perf expects the mapping to be in a certain place and have certain
+    // content, for more information, see:
+    // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
+    static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
+    if (doProfile) {
+        static QFile perfMapFile(QString::fromLatin1("/tmp/perf-%1.map")
+                                 .arg(QCoreApplication::applicationPid()));
+        static const bool isOpen = perfMapFile.open(QIODevice::WriteOnly);
+        if (!isOpen) {
+            qWarning("QV4::JIT::Assembler: Cannot write perf map file.");
+            doProfile = false;
+        } else {
+            perfMapFile.write(QByteArray::number(reinterpret_cast<quintptr>(
+                                                     codeRef.code().executableAddress()), 16));
+            perfMapFile.putChar(' ');
+            perfMapFile.write(QByteArray::number(static_cast<qsizetype>(codeRef.size()), 16));
+            perfMapFile.putChar(' ');
+            perfMapFile.write(functionName(function));
+            perfMapFile.putChar('\n');
+            perfMapFile.flush();
+        }
+    }
+#endif
 }
 
 void Assembler::addLabel(int offset)

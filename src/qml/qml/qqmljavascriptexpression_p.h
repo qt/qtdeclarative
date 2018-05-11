@@ -63,16 +63,18 @@ class QQmlDelayedError
 {
 public:
     inline QQmlDelayedError() : nextError(nullptr), prevError(nullptr) {}
-    inline ~QQmlDelayedError() { removeError(); }
+    inline ~QQmlDelayedError() { (void)removeError(); }
 
     bool addError(QQmlEnginePrivate *);
 
-    inline void removeError() {
-        if (!prevError) return;
-        if (nextError) nextError->prevError = prevError;
-        *prevError = nextError;
-        nextError = nullptr;
-        prevError = nullptr;
+    Q_REQUIRED_RESULT inline QQmlError removeError() {
+        if (prevError) {
+            if (nextError) nextError->prevError = prevError;
+            *prevError = nextError;
+            nextError = nullptr;
+            prevError = nullptr;
+        }
+        return m_error;
     }
 
     inline bool isValid() const { return m_error.isValid(); }
@@ -114,8 +116,7 @@ public:
     inline QObject *scopeObject() const;
     inline void setScopeObject(QObject *v);
 
-    QQmlSourceLocation sourceLocation() const;
-    void setSourceLocation(const QQmlSourceLocation &location);
+    virtual QQmlSourceLocation sourceLocation() const;
 
     bool isValid() const { return context() != nullptr; }
 
@@ -186,7 +187,6 @@ private:
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     QV4::Function *m_v4Function;
-    QQmlSourceLocation *m_sourceLocation; // used for Qt.binding() created functions
 };
 
 class QQmlPropertyCapture

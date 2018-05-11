@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
 #include <private/qqmlmodelsmodule_p.h>
 
@@ -51,7 +52,7 @@ static void initResources()
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQml.Models 2.2
+    \qmlmodule QtQml.Models 2.11
     \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models
@@ -62,7 +63,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQml.Models 2.2
+    import QtQml.Models 2.11
     \endcode
 
     Note that QtQml.Models module started at version 2.1 to match the version
@@ -83,6 +84,9 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQml.Models"));
         Q_UNUSED(uri);
         QQmlModelsModule::defineModule();
+
+        // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+        qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
     }
 };
 //![class decl]

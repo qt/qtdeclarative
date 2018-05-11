@@ -784,9 +784,10 @@ bool Codegen::visit(BinaryExpression *ast)
         left = left.asLValue();
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
-        expression(ast->right).loadInAccumulator();
+        Reference r = expression(ast->right);
         if (hasError)
             return false;
+        r.loadInAccumulator();
         if (_expr.accept(nx))
             _expr.setResult(left.storeConsumeAccumulator());
         else
@@ -2075,6 +2076,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     _context->hasDirectEval |= (_context->compilationMode == EvalCode || _context->compilationMode == GlobalCode || _module->debugMode); // Conditional breakpoints are like eval in the function
 
+    // When a user writes the following QML signal binding:
+    //    onSignal: function() { doSomethingUsefull }
+    // we will generate a binding function that just returns the closure. However, that's not useful
+    // at all, because if the onSignal is a signal handler, the user is actually making it explicit
+    // that the binding is a function, so we should execute that. However, we don't know that during
+    // AOT compilation, so mark the surrounding function as only-returning-a-closure.
+    _context->returnsClosure = cast<ExpressionStatement *>(ast) && cast<FunctionExpression *>(cast<ExpressionStatement *>(ast)->expression);
+
     BytecodeGenerator bytecode(_context->line, _module->debugMode);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
@@ -2095,9 +2104,14 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->addLocalVar(QStringLiteral("arguments"), Context::VariableDeclaration, AST::VariableDeclaration::FunctionScope);
 
     bool allVarsEscape = _context->hasWith || _context->hasTry || _context->hasDirectEval;
-    if (_context->compilationMode == QmlBinding // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-            || (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode &&
-                (_context->compilationMode != EvalCode || _context->isStrict))) {
+    bool needsCallContext = false;
+    const QLatin1String exprForOn("expression for on");
+    if (!_context->canUseSimpleCall() && _context->compilationMode != GlobalCode && (_context->compilationMode != EvalCode || _context->isStrict))
+        needsCallContext = true;
+    else if (_context->compilationMode == QmlBinding && name.length() > exprForOn.size() && name.startsWith(exprForOn) && name.at(exprForOn.size()).isUpper())
+        // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
+        needsCallContext = true;
+    if (needsCallContext) {
         Instruction::CreateCallContext createContext;
         bytecodeGenerator->addInstruction(createContext);
     }

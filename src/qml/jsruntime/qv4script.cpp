@@ -90,6 +90,12 @@ void Script::parse()
 
     Module module(v4->debugger() != nullptr);
 
+    if (sourceCode.startsWith(QLatin1String("function("))) {
+        qWarning() << "Warning: Using function expressions as statements in scripts in not compliant with the ECMAScript specification at\n"
+                   << (sourceCode.leftRef(70) + QLatin1String("..."))
+                   << "\nThis will throw a  syntax error in Qt 5.12. If you want a function expression, surround it by parentheses.";
+    }
+
     Engine ee, *engine = &ee;
     Lexer lexer(engine);
     lexer.setCode(sourceCode, line, parseAsBinding);
@@ -136,7 +142,7 @@ void Script::parse()
     }
 }
 
-ReturnedValue Script::run()
+ReturnedValue Script::run(const QV4::Value *thisObject)
 {
     if (!parsed)
         parse();
@@ -149,10 +155,11 @@ ReturnedValue Script::run()
     if (qmlContext.isUndefined()) {
         TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
-        return vmFunction->call(engine->globalObject, nullptr, 0, context);
+        return vmFunction->call(thisObject ? thisObject : engine->globalObject, nullptr, 0,
+                                context);
     } else {
         Scoped<QmlContext> qml(valueScope, qmlContext.value());
-        return vmFunction->call(nullptr, nullptr, 0, qml);
+        return vmFunction->call(thisObject, nullptr, 0, qml);
     }
 }
 
@@ -222,17 +229,28 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
     return cg.generateCompilationUnit(/*generate unit data*/false);
 }
 
-Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl)
+Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error)
 {
-    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl)) {
+    if (error)
+        error->clear();
+
+    QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
+    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl, &cacheError)) {
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> jsUnit;
         jsUnit.adopt(new QV4::CompiledData::CompilationUnit(cachedUnit));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 
     QFile f(fileName);
-    if (!f.open(QIODevice::ReadOnly))
+    if (!f.open(QIODevice::ReadOnly)) {
+        if (error) {
+            if (cacheError == QQmlMetaType::CachedUnitLookupError::VersionMismatch)
+                *error = originalUrl.toString() + QString::fromUtf8(" was compiled ahead of time with an incompatible version of Qt and the original source code cannot be found. Please recompile");
+            else
+                *error = QString::fromUtf8("Error opening source file %1: %2").arg(originalUrl.toString()).arg(f.errorString());
+        }
         return nullptr;
+    }
 
     QByteArray data = f.readAll();
     QString sourceCode = QString::fromUtf8(data);

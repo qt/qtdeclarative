@@ -1019,7 +1019,7 @@ public:
                  Opened = 1, HeadersReceived = 2,
                  Loading = 3, Done = 4 };
 
-    QQmlXMLHttpRequest(QNetworkAccessManager *manager);
+    QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::ExecutionEngine *v4);
     virtual ~QQmlXMLHttpRequest();
 
     bool sendFlag() const;
@@ -1028,9 +1028,9 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    ReturnedValue open(Object *thisObject, QQmlContextData *context, const QString &, const QUrl &, LoadType);
+    ReturnedValue open(Object *thisObject, const QString &, const QUrl &, LoadType);
     ReturnedValue send(Object *thisObject, QQmlContextData *context, const QByteArray &);
-    ReturnedValue abort(Object *thisObject, QQmlContextData *context);
+    ReturnedValue abort(Object *thisObject);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name) const;
@@ -1078,9 +1078,10 @@ private:
 
     PersistentValue m_thisObject;
     QQmlContextDataRef m_qmlContext;
+    bool m_wasConstructedWithQmlContext = true;
 
-    static void dispatchCallback(Object *thisObj, QQmlContextData *context);
-    void dispatchCallback();
+    static void dispatchCallbackNow(Object *thisObj);
+    void dispatchCallbackSafely();
 
     int m_status;
     QString m_statusText;
@@ -1096,12 +1097,13 @@ private:
     QV4::PersistentValue m_parsedDocument;
 };
 
-QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager)
+QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::ExecutionEngine *v4)
     : m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
     , m_redirectCount(0), m_gotXml(false), m_textCodec(nullptr), m_network(nullptr), m_nam(manager)
     , m_responseType()
     , m_parsedDocument()
 {
+    m_wasConstructedWithQmlContext = v4->callingQmlContext() != nullptr;
 }
 
 QQmlXMLHttpRequest::~QQmlXMLHttpRequest()
@@ -1134,7 +1136,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-ReturnedValue QQmlXMLHttpRequest::open(Object *thisObject, QQmlContextData *context, const QString &method, const QUrl &url, LoadType loadType)
+ReturnedValue QQmlXMLHttpRequest::open(Object *thisObject, const QString &method, const QUrl &url, LoadType loadType)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1145,7 +1147,7 @@ ReturnedValue QQmlXMLHttpRequest::open(Object *thisObject, QQmlContextData *cont
     m_request.setAttribute(QNetworkRequest::SynchronousRequestAttribute, loadType == SynchronousLoad);
     m_state = Opened;
     m_addedHeaders.clear();
-    dispatchCallback(thisObject, context);
+    dispatchCallbackNow(thisObject);
     return Encode::undefined();
 }
 
@@ -1297,7 +1299,7 @@ ReturnedValue QQmlXMLHttpRequest::send(Object *thisObject, QQmlContextData *cont
     return Encode::undefined();
 }
 
-ReturnedValue QQmlXMLHttpRequest::abort(Object *thisObject, QQmlContextData *context)
+ReturnedValue QQmlXMLHttpRequest::abort(Object *thisObject)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1310,7 +1312,7 @@ ReturnedValue QQmlXMLHttpRequest::abort(Object *thisObject, QQmlContextData *con
 
         m_state = Done;
         m_sendFlag = false;
-        dispatchCallback(thisObject, context);
+        dispatchCallbackNow(thisObject);
     }
 
     m_state = Unsent;
@@ -1329,7 +1331,7 @@ void QQmlXMLHttpRequest::readyRead()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        dispatchCallback();
+        dispatchCallbackSafely();
     }
 
     bool wasEmpty = m_responseEntityBody.isEmpty();
@@ -1337,7 +1339,7 @@ void QQmlXMLHttpRequest::readyRead()
     if (wasEmpty && !m_responseEntityBody.isEmpty())
         m_state = Loading;
 
-    dispatchCallback();
+    dispatchCallbackSafely();
 }
 
 static const char *errorToString(QNetworkReply::NetworkError error)
@@ -1380,14 +1382,14 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ServiceUnavailableError ||
         error == QNetworkReply::UnknownServerError) {
         m_state = Loading;
-        dispatchCallback();
+        dispatchCallbackSafely();
     } else {
         m_errorFlag = true;
         m_responseEntityBody = QByteArray();
     }
 
     m_state = Done;
-    dispatchCallback();
+    dispatchCallbackSafely();
 }
 
 #define XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION 15
@@ -1419,7 +1421,7 @@ void QQmlXMLHttpRequest::finished()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        dispatchCallback();
+        dispatchCallbackSafely();
     }
     m_responseEntityBody.append(m_network->readAll());
     readEncoding();
@@ -1436,11 +1438,11 @@ void QQmlXMLHttpRequest::finished()
     destroyNetwork();
     if (m_state < Loading) {
         m_state = Loading;
-        dispatchCallback();
+        dispatchCallbackSafely();
     }
     m_state = Done;
 
-    dispatchCallback();
+    dispatchCallbackSafely();
 
     m_thisObject.clear();
     m_qmlContext.setContextData(nullptr);
@@ -1557,16 +1559,9 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *context)
+void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj)
 {
     Q_ASSERT(thisObj);
-
-    if (!context)
-        // if the calling context object is no longer valid, then it has been
-        // deleted explicitly (e.g., by a Loader deleting the itemContext when
-        // the source is changed).  We do nothing in this case, as the evaluation
-        // cannot succeed.
-        return;
 
     QV4::Scope scope(thisObj->engine());
     ScopedString s(scope, scope.engine->newString(QStringLiteral("onreadystatechange")));
@@ -1585,9 +1580,16 @@ void QQmlXMLHttpRequest::dispatchCallback(Object *thisObj, QQmlContextData *cont
     }
 }
 
-void QQmlXMLHttpRequest::dispatchCallback()
+void QQmlXMLHttpRequest::dispatchCallbackSafely()
 {
-    dispatchCallback(m_thisObject.as<Object>(), m_qmlContext.contextData());
+    if (m_wasConstructedWithQmlContext && !m_qmlContext.contextData())
+        // if the calling context object is no longer valid, then it has been
+        // deleted explicitly (e.g., by a Loader deleting the itemContext when
+        // the source is changed).  We do nothing in this case, as the evaluation
+        // cannot succeed.
+        return;
+
+    dispatchCallbackNow(m_thisObject.as<Object>());
 }
 
 void QQmlXMLHttpRequest::destroyNetwork()
@@ -1640,7 +1642,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         Scope scope(f->engine());
         const QQmlXMLHttpRequestCtor *ctor = static_cast<const QQmlXMLHttpRequestCtor *>(f);
 
-        QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager());
+        QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager(), scope.engine);
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocObject<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
         w->setPrototype(proto);
@@ -1778,7 +1780,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const FunctionObject *b, const
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(w, scope.engine->callingQmlContext(), method, url, async ? QQmlXMLHttpRequest::AsynchronousLoad : QQmlXMLHttpRequest::SynchronousLoad);
+    return r->open(w, method, url, async ? QQmlXMLHttpRequest::AsynchronousLoad : QQmlXMLHttpRequest::SynchronousLoad);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -1860,7 +1862,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(const FunctionObject *b, cons
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    return r->abort(w, scope.engine->callingQmlContext());
+    return r->abort(w);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

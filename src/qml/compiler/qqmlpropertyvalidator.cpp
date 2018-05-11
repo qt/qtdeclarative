@@ -653,7 +653,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         // Can only check at instantiation time if the created sub-object successfully casts to the
         // target interface.
         return noError;
-    } else if (property->propType() == QMetaType::QVariant) {
+    } else if (property->propType() == QMetaType::QVariant || property->propType() == qMetaTypeId<QJSValue>()) {
         // We can convert everything to QVariant :)
         return noError;
     } else if (property->isQList()) {

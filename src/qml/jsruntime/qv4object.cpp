@@ -1091,9 +1091,7 @@ bool Object::setArrayLength(uint newLen)
     uint oldLen = getLength();
     bool ok = true;
     if (newLen < oldLen) {
-        if (!arrayData()) {
-            Q_ASSERT(!newLen);
-        } else {
+        if (arrayData()) {
             uint l = arrayData()->vtable()->truncate(this, newLen);
             if (l != newLen)
                 ok = false;

@@ -607,6 +607,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
             break;
         default:
             Q_UNREACHABLE();
+            return;
         }
         n->activateMaterial(m_item->window(), gradMat);
         if (d->effectiveDirty & DirtyFillGradient) {

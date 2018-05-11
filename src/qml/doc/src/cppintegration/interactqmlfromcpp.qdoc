@@ -75,10 +75,25 @@ component, which is accessible via QQuickView::rootObject():
 \endtable
 
 This \c object is the instance of the \c MyItem.qml component that has been
-created. You can now modify the item's properties using QObject::setProperty()
-or QQmlProperty:
+created. You can now modify the item's properties using
+\l QObject::setProperty() or \l QQmlProperty::write():
 
 \snippet qml/qtbinding/loading/main.cpp properties
+
+The difference between \c QObject::setProperty() and \c QQmlProperty::write()
+is that the latter will also remove the binding in addition to setting the
+property value. For example, suppose the \c width assignment above had been a
+binding to \c height:
+
+\code
+    width: height
+\endcode
+
+If the \c height of the \c Item changed after the
+\c {object->setProperty("width", 500)} call, the \c width would be updated
+again, as the binding remains active. However, if the \c height changes after the
+\c {QQmlProperty(object, "width").write(500)} call, the \c width will not be
+changed, as the binding does not exist anymore.
 
 Alternatively, you can cast the object to its actual type and call methods with
 compile-time safety. In this case the base object of \c MyItem.qml is an

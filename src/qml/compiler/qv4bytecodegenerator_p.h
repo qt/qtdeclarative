@@ -102,14 +102,19 @@ public:
         Jump(BytecodeGenerator *generator, int instruction)
             : generator(generator),
               index(instruction)
-        {}
+        { Q_ASSERT(generator && index != -1); }
+
         ~Jump() {
-            Q_ASSERT(generator->instructions[index].linkedLabel != -1);
+            Q_ASSERT(index == -1 || generator->instructions[index].linkedLabel != -1); // make sure link() got called
         }
 
+        Jump(Jump &&j) {
+            std::swap(generator, j.generator);
+            std::swap(index, j.index);
+        }
 
-        BytecodeGenerator *generator;
-        int index;
+        BytecodeGenerator *generator = nullptr;
+        int index = -1;
 
         void link() {
             link(generator->label());
@@ -119,6 +124,12 @@ public:
             Q_ASSERT(generator->instructions[index].linkedLabel == -1);
             generator->instructions[index].linkedLabel = l.index;
         }
+
+    private:
+        // make this type move-only:
+        Q_DISABLE_COPY(Jump)
+        // we never move-assign this type anywhere, so disable it:
+        Jump &operator=(Jump &&) = delete;
     };
 
     struct ExceptionHandler : public Label {

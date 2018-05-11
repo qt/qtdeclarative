@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/directory with spaces">
+<file alias="file name with spaces.qml">trickypaths.qml</file>
+</qresource>
+</RCC>

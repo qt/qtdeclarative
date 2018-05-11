@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qquicklayoutsplugin
 TARGETPATH = QtQuick/Layouts
-IMPORT_VERSION = 1.2
+IMPORT_VERSION = 1.$$QT_MINOR_VERSION
 
 QT *= qml-private quick-private gui-private core-private
 

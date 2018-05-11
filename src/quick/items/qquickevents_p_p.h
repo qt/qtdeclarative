@@ -597,6 +597,7 @@ public:
         Area        = QTouchDevice::Area,
         Pressure    = QTouchDevice::Pressure,
         Velocity    = QTouchDevice::Velocity,
+        MouseEmulation = QTouchDevice::MouseEmulation,
         // some bits reserved in case we need more of QTouchDevice::Capabilities
         Scroll      = 0x0100, // mouse has a wheel, or there is OS-level scroll gesture recognition (dubious?)
         Hover       = 0x0200,

@@ -617,7 +617,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         uint toCopy = n;
         uint chunk = toCopy;
         if (chunk > os->values.alloc - os->offset)
-            chunk -= os->values.alloc - os->offset;
+            chunk = os->values.alloc - os->offset;
         obj->arrayPut(oldSize, os->values.data() + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)
@@ -662,14 +662,13 @@ void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
 class ArrayElementLessThan
 {
 public:
-    inline ArrayElementLessThan(ExecutionEngine *engine, Object *thisObject, const Value &comparefn)
-        : m_engine(engine), thisObject(thisObject), m_comparefn(comparefn) {}
+    inline ArrayElementLessThan(ExecutionEngine *engine, const Value &comparefn)
+        : m_engine(engine), m_comparefn(comparefn) {}
 
     bool operator()(Value v1, Value v2) const;
 
 private:
     ExecutionEngine *m_engine;
-    Object *thisObject;
     const Value &m_comparefn;
 };
 
@@ -842,7 +841,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     }
 
 
-    ArrayElementLessThan lessThan(engine, thisObject, static_cast<const FunctionObject &>(comparefn));
+    ArrayElementLessThan lessThan(engine, static_cast<const FunctionObject &>(comparefn));
 
     Value *begin = thisObject->arrayData()->values.values;
     sortHelper(begin, begin + len, *begin, lessThan);

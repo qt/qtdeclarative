@@ -62,6 +62,8 @@
 #include <private/qv8engine_p.h>
 #include <private/qqmlglobal_p.h>
 
+QT_REQUIRE_CONFIG(qml_delegate_model);
+
 QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;

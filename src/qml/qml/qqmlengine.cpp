@@ -88,7 +88,9 @@
 #include <private/qqmllistmodel_p.h>
 #include <private/qqmlplatform_p.h>
 #include <private/qquickpackage_p.h>
+#if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#endif
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquickworkerscript_p.h>
 #include <private/qqmlinstantiator_p.h>
@@ -108,12 +110,6 @@
 Q_DECLARE_METATYPE(QQmlProperty)
 
 QT_BEGIN_NAMESPACE
-
-typedef QQmlData::BindingBitsType BindingBitsType;
-enum {
-    BitsPerType = QQmlData::BitsPerType,
-    InlineBindingArraySize = QQmlData::InlineBindingArraySize
-};
 
 void qmlRegisterBaseTypes(const char *uri, int versionMajor, int versionMinor)
 {
@@ -240,8 +236,10 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
     qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+#if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
+#endif
     qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
 }
 
@@ -253,6 +251,9 @@ void QQmlEnginePrivate::defineQtQuick2Module()
     // register the QtQuick2 types which are implemented in the QtQml module.
     registerQtQuick2Types("QtQuick",2,0);
     qmlRegisterUncreatableType<QQmlLocale>("QtQuick", 2, 0, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
+
+    // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
+    qmlRegisterModule("QtQuick", 2, QT_VERSION_MINOR);
 }
 
 bool QQmlEnginePrivate::designerMode()
@@ -952,6 +953,9 @@ void QQmlEnginePrivate::init()
         registerBaseTypes("QtQml", 2, 0); // import which provides language building blocks.
         qmlRegisterUncreatableType<QQmlLocale>("QtQml", 2, 2, "Locale", QQmlEngine::tr("Locale cannot be instantiated.  Use Qt.locale()"));
 
+        // Auto-increment the import to stay in sync with ALL future QtQml minor versions from 5.11 onward
+        qmlRegisterModule("QtQml", 2, QT_VERSION_MINOR);
+
         QQmlData::init();
         baseModulesUninitialized = false;
     }
@@ -1104,7 +1108,9 @@ QQmlEngine::~QQmlEngine()
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
+    d->typeLoader.lock();
     d->typeLoader.clearCache();
+    d->typeLoader.unlock();
 }
 
 /*!
@@ -1884,66 +1890,27 @@ void QQmlData::parentChanged(QObject *object, QObject *parent)
     }
 }
 
-static void QQmlData_setBit(QQmlData *data, QObject *obj, int bit)
+QQmlData::BindingBitsType *QQmlData::growBits(QObject *obj, int bit)
 {
-    uint offset = QQmlData::offsetForBit(bit);
-    BindingBitsType *bits = (data->bindingBitsArraySize == InlineBindingArraySize) ? data->bindingBitsValue : data->bindingBits;
-    if (Q_UNLIKELY(data->bindingBitsArraySize <= offset)) {
-        int props = QQmlMetaObject(obj).propertyCount();
-        Q_ASSERT(bit < 2 * props);
+    BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize) ? bindingBitsValue : bindingBits;
+    int props = QQmlMetaObject(obj).propertyCount();
+    Q_ASSERT(bit < 2 * props);
+    Q_UNUSED(bit); // .. for Q_NO_DEBUG mode when the assert above expands to empty
 
-        uint arraySize = (2 * static_cast<uint>(props) + BitsPerType - 1) / BitsPerType;
-        Q_ASSERT(arraySize > InlineBindingArraySize && arraySize > data->bindingBitsArraySize);
+    uint arraySize = (2 * static_cast<uint>(props) + BitsPerType - 1) / BitsPerType;
+    Q_ASSERT(arraySize > 1);
+    Q_ASSERT(arraySize <= 0xffff); // max for bindingBitsArraySize
 
-        BindingBitsType *newBits = static_cast<BindingBitsType *>(malloc(arraySize*sizeof(BindingBitsType)));
-        memcpy(newBits, bits, data->bindingBitsArraySize * sizeof(BindingBitsType));
-        memset(newBits + data->bindingBitsArraySize, 0, sizeof(BindingBitsType) * (arraySize - data->bindingBitsArraySize));
+    BindingBitsType *newBits = static_cast<BindingBitsType *>(malloc(arraySize*sizeof(BindingBitsType)));
+    memcpy(newBits, bits, bindingBitsArraySize * sizeof(BindingBitsType));
+    memset(newBits + bindingBitsArraySize, 0, sizeof(BindingBitsType) * (arraySize - bindingBitsArraySize));
 
-        if (data->bindingBitsArraySize > InlineBindingArraySize)
-            free(bits);
-        data->bindingBits = newBits;
-        bits = newBits;
-        data->bindingBitsArraySize = arraySize;
-    }
-    Q_ASSERT(offset < data->bindingBitsArraySize);
-    bits[offset] |= QQmlData::bitFlagForBit(bit);
-}
-
-static void QQmlData_clearBit(QQmlData *data, int bit)
-{
-    uint offset = QQmlData::offsetForBit(bit);
-    if (data->bindingBitsArraySize > offset) {
-        BindingBitsType *bits = (data->bindingBitsArraySize == InlineBindingArraySize) ? data->bindingBitsValue : data->bindingBits;
-        bits[offset] &= ~QQmlData::bitFlagForBit(bit);
-    }
-}
-
-void QQmlData::clearBindingBit(int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_clearBit(this, coreIndex * 2);
-}
-
-void QQmlData::setBindingBit(QObject *obj, int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_setBit(this, obj, coreIndex * 2);
-}
-
-void QQmlData::clearPendingBindingBit(int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_clearBit(this, coreIndex * 2 + 1);
-}
-
-void QQmlData::setPendingBindingBit(QObject *obj, int coreIndex)
-{
-    Q_ASSERT(coreIndex >= 0);
-    Q_ASSERT(coreIndex <= 0xffff);
-    QQmlData_setBit(this, obj, coreIndex * 2 + 1);
+    if (bindingBitsArraySize > InlineBindingArraySize)
+        free(bits);
+    bindingBits = newBits;
+    bits = newBits;
+    bindingBitsArraySize = arraySize;
+    return bits;
 }
 
 QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
@@ -2029,11 +1996,6 @@ void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
         dumpwarning(errors);
 }
 
-void QQmlEnginePrivate::warning(QQmlDelayedError *error)
-{
-    warning(error->error());
-}
-
 void QQmlEnginePrivate::warning(QQmlEngine *engine, const QQmlError &error)
 {
     if (engine)
@@ -2048,14 +2010,6 @@ void QQmlEnginePrivate::warning(QQmlEngine *engine, const QList<QQmlError> &erro
         QQmlEnginePrivate::get(engine)->warning(error);
     else
         dumpwarning(error);
-}
-
-void QQmlEnginePrivate::warning(QQmlEngine *engine, QQmlDelayedError *error)
-{
-    if (engine)
-        QQmlEnginePrivate::get(engine)->warning(error);
-    else
-        dumpwarning(error->error());
 }
 
 void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QQmlError &error)

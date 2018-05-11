@@ -133,7 +133,17 @@ public:
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();
 
-    static const QV4::CompiledData::Unit *findCachedCompilationUnit(const QUrl &uri);
+    enum class CachedUnitLookupError {
+        NoError,
+        NoUnitFound,
+        VersionMismatch
+    };
+
+    static const QV4::CompiledData::Unit *findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status);
+
+    // used by tst_qqmlcachegen.cpp
+    static void prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
+    static void removeCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
 
     static bool namespaceContainsRegistrations(const QString &, int majorVersion);
 

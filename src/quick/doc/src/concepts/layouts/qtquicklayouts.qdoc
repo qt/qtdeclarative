@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Layouts 1.3
+    \qmlmodule QtQuick.Layouts 1.11
     \title Qt Quick Layouts QML Types
     \ingroup qmlmodules
     \brief Provides QML types for arranging QML items in a user interface.
@@ -40,7 +40,7 @@
     following import statement in your .qml file.
 
     \code
-    import QtQuick.Layouts 1.3
+    import QtQuick.Layouts 1.11
     \endcode
 
 */

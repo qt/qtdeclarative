@@ -51,6 +51,7 @@ QString symbolNamespaceForPath(const QString &relativePath)
     symbol.replace(QLatin1Char('.'), QLatin1Char('_'));
     symbol.replace(QLatin1Char('+'), QLatin1Char('_'));
     symbol.replace(QLatin1Char('-'), QLatin1Char('_'));
+    symbol.replace(QLatin1Char(' '), QLatin1Char('_'));
     return symbol;
 }
 
@@ -358,15 +359,23 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
                 originalResourceFile.truncate(mappingSplit);
             }
 
-            const QString function = QLatin1String("qInitResources_") + qtResourceNameForFile(originalResourceFile);
+            const QString suffix = qtResourceNameForFile(originalResourceFile);
+            const QString initFunction = QLatin1String("qInitResources_") + suffix;
 
-            stream << QStringLiteral("int QT_MANGLE_NAMESPACE(%1)() {\n").arg(function);
+            stream << QStringLiteral("int QT_MANGLE_NAMESPACE(%1)() {\n").arg(initFunction);
             stream << "    ::unitRegistry();\n";
             if (!newResourceFile.isEmpty())
                 stream << "    Q_INIT_RESOURCE(" << qtResourceNameForFile(newResourceFile) << ");\n";
             stream << "    return 1;\n";
             stream << "}\n";
-            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << function << "));\n";
+            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << initFunction << "));\n";
+
+            const QString cleanupFunction = QLatin1String("qCleanupResources_") + suffix;
+            stream << QStringLiteral("int QT_MANGLE_NAMESPACE(%1)() {\n").arg(cleanupFunction);
+            if (!newResourceFile.isEmpty())
+                stream << "    Q_CLEANUP_RESOURCE(" << qtResourceNameForFile(newResourceFile) << ");\n";
+            stream << "    return 1;\n";
+            stream << "}\n";
         }
     }
 

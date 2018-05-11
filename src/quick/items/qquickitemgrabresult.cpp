@@ -139,7 +139,7 @@ public:
  * This property holds the pixel results from a grab.
  *
  * If the grab is not yet complete or if it failed,
- * an empty image is returned.
+ * a null image is returned (\c {image.isNull()} will return \c true).
  */
 
 /*!

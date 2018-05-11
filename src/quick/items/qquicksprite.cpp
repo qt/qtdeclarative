@@ -51,8 +51,8 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-visual-utility
     \brief Specifies sprite animations
 
-    QQuickSprite renders sprites of one or more frames and animates them. The sprites
-    can be in the middle of an image file, or split along multiple rows, as long as they form
+    Sprite defines a series of one or more frames to be animated and rendered by SpriteSequence.
+    The sprites can be in the middle of an image file, or split along multiple rows, as long as they form
     a contiguous line wrapping to the next row of the file from the left edge of the file.
 
     For full details, see the \l{Sprite Animations} overview.

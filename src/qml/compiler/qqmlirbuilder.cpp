@@ -1809,8 +1809,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
     QVector<int> runtimeFunctionIndices(functions.size());
 
     QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::GlobalCode);
-    scan.enterEnvironment(nullptr, QV4::Compiler::QmlBinding);
-    scan.enterQmlScope(qmlRoot, QStringLiteral("context scope"));
+    scan.enterGlobalEnvironment(QV4::Compiler::QmlBinding);
     for (const CompiledFunctionOrExpression &f : functions) {
         Q_ASSERT(f.node != qmlRoot);
         QQmlJS::AST::FunctionDeclaration *function = QQmlJS::AST::cast<QQmlJS::AST::FunctionDeclaration*>(f.node);
@@ -1823,7 +1822,6 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         scan(function ? function->body : f.node);
         scan.leaveEnvironment();
     }
-    scan.leaveEnvironment();
     scan.leaveEnvironment();
 
     _context = nullptr;
@@ -2213,12 +2211,6 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
                 Reference imports = Reference::fromStackSlot(this, _importedScriptsSlot);
                 return Reference::fromSubscript(imports, Reference::fromConst(this, QV4::Encode(r.scriptIndex)));
             } else if (r.type.isValid()) {
-                if (r.type.isCompositeSingleton()) {
-                    Instruction::LoadQmlSingleton load;
-                    load.name = registerString(name);
-                    bytecodeGenerator->addInstruction(load);
-                    return Reference::fromAccumulator(this);
-                }
                 return Reference::fromName(this, name);
             } else {
                 Q_ASSERT(r.importNamespace);

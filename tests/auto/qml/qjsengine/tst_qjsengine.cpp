@@ -128,6 +128,8 @@ private slots:
     void JSONparse();
     void arraySort();
     void lookupOnDisappearingProperty();
+    void arrayConcat();
+    void recursiveBoundFunctions();
 
     void qRegExpInport_data();
     void qRegExpInport();
@@ -2995,7 +2997,7 @@ void tst_QJSEngine::arraySort()
 void tst_QJSEngine::lookupOnDisappearingProperty()
 {
     QJSEngine eng;
-    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"function(obj) { return obj.someProperty; }\")})()");
+    QJSValue func = eng.evaluate("(function(){\"use strict\"; return eval(\"(function(obj) { return obj.someProperty; })\")})()");
     QVERIFY(func.isCallable());
 
     QJSValue o = eng.newObject();
@@ -3006,6 +3008,31 @@ void tst_QJSEngine::lookupOnDisappearingProperty()
     o = eng.newObject();
     QVERIFY(func.call(QJSValueList()<< o).isUndefined());
     QVERIFY(func.call(QJSValueList()<< o).isUndefined());
+}
+
+void tst_QJSEngine::arrayConcat()
+{
+    QJSEngine eng;
+    QJSValue v = eng.evaluate("var x = [1, 2, 3, 4, 5, 6];"
+                              "var y = [];"
+                              "for (var i = 0; i < 5; ++i)"
+                              "    x.shift();"
+                              "for (var i = 10; i < 13; ++i)"
+                              "   x.push(i);"
+                              "x.toString();");
+    QCOMPARE(v.toString(), QString::fromLatin1("6,10,11,12"));
+}
+
+void tst_QJSEngine::recursiveBoundFunctions()
+{
+
+    QJSEngine eng;
+    QJSValue v = eng.evaluate("function foo(x, y, z)"
+                              "{ return this + x + y + z; }"
+                              "var bar = foo.bind(-1, 10);"
+                              "var baz = bar.bind(-2, 20);"
+                              "baz(30)");
+    QCOMPARE(v.toInt(), 59);
 }
 
 static QRegExp minimal(QRegExp r) { r.setMinimal(true); return r; }
@@ -3327,7 +3354,7 @@ void tst_QJSEngine::prototypeChainGc()
 
     QJSValue getProto = engine.evaluate("Object.getPrototypeOf");
 
-    QJSValue factory = engine.evaluate("function() { return Object.create(Object.create({})); }");
+    QJSValue factory = engine.evaluate("(function() { return Object.create(Object.create({})); })");
     QVERIFY(factory.isCallable());
     QJSValue obj = factory.call();
     engine.collectGarbage();

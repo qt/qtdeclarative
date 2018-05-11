@@ -1,5 +1,5 @@
 TARGETPATH = QtQml
-QML_FILES += plugins.qmltypes
+AUX_QML_FILES += plugins.qmltypes
 
 load(qml_module)
 

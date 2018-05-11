@@ -111,6 +111,8 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ig
         JSC::JSGlobalData dummy(internalClass->engine->regExpAllocator);
         JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, *jitCode);
     }
+#else
+    Q_UNUSED(engine)
 #endif
     if (hasValidJITCode()) {
         valid = true;

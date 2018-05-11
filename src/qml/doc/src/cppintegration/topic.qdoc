@@ -143,6 +143,12 @@ with a QML module that can then be imported and used by QML code in other applic
 \l{qtqml-modules-cppplugins.html}{Providing Types and Functionality in a C++ Plugin} for more
 information.
 
+\section1 Choosing the Correct Integration Method Between C++ and QML
+
+To quickly determine which integration method is appropriate for your situation, the following
+flowchart can be used:
+
+\image cpp-qml-integration-flowchart
 
 \section1 Exposing Attributes of C++ Classes to QML
 

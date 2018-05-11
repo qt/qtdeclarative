@@ -92,7 +92,8 @@ QV4Include::~QV4Include()
 #endif
 }
 
-QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status)
+QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status status,
+                                           const QString &statusText)
 {
     QV4::Scope scope(v4);
 
@@ -105,6 +106,8 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
     o->put((s = v4->newString(QStringLiteral("NETWORK_ERROR"))), (v = QV4::Primitive::fromInt32(NetworkError)));
     o->put((s = v4->newString(QStringLiteral("EXCEPTION"))), (v = QV4::Primitive::fromInt32(Exception)));
     o->put((s = v4->newString(QStringLiteral("status"))), (v = QV4::Primitive::fromInt32(status)));
+    if (!statusText.isEmpty())
+        o->put((s = v4->newString(QStringLiteral("statusText"))), (v = v4->newString(statusText)));
 
     return o.asReturnedValue();
 }
@@ -227,7 +230,8 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
 
     } else {
         QScopedPointer<QV4::Script> script;
-        script.reset(QV4::Script::createFromFileOrCache(scope.engine, qmlcontext, localFile, url));
+        QString error;
+        script.reset(QV4::Script::createFromFileOrCache(scope.engine, qmlcontext, localFile, url, &error));
 
         if (!script.isNull()) {
             script->parse();
@@ -242,7 +246,7 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
                 result = resultValue(scope.engine, Ok);
             }
         } else {
-            result = resultValue(scope.engine, NetworkError);
+            result = resultValue(scope.engine, NetworkError, error);
         }
 
         callback(callbackFunction, result);

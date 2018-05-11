@@ -2351,21 +2351,22 @@ void QQmlListModel::append(QQmlV4Function *args)
             QV4::ScopedObject argObject(scope);
 
             int objectArrayLength = objectArray->getLength();
+            if (objectArrayLength > 0) {
+                int index = count();
+                emitItemsAboutToBeInserted(index, objectArrayLength);
 
-            int index = count();
-            emitItemsAboutToBeInserted(index, objectArrayLength);
+                for (int i=0 ; i < objectArrayLength ; ++i) {
+                    argObject = objectArray->getIndexed(i);
 
-            for (int i=0 ; i < objectArrayLength ; ++i) {
-                argObject = objectArray->getIndexed(i);
-
-                if (m_dynamicRoles) {
-                    m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
-                } else {
-                    m_listModel->append(argObject);
+                    if (m_dynamicRoles) {
+                        m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
+                    } else {
+                        m_listModel->append(argObject);
+                    }
                 }
-            }
 
-            emitItemsInserted();
+                emitItemsInserted();
+            }
         } else if (argObject) {
             int index;
 

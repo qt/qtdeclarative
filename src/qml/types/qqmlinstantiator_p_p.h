@@ -69,7 +69,9 @@ public:
 
     void clear();
     void regenerate();
+#if QT_CONFIG(qml_delegate_model)
     void makeModel();
+#endif
     void _q_createdItem(int, QObject *);
     void _q_modelUpdated(const QQmlChangeSet &, bool);
     QObject *modelObject(int index, bool async);
@@ -78,7 +80,9 @@ public:
     bool effectiveReset:1;
     bool active:1;
     bool async:1;
+#if QT_CONFIG(qml_delegate_model)
     bool ownModel:1;
+#endif
     int requestedIndex;
     QVariant model;
     QQmlInstanceModel *instanceModel;

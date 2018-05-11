@@ -1652,10 +1652,12 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         }
     } else if (event->timerId() == d->movementEndingTimer.timerId()) {
         d->movementEndingTimer.stop();
-        d->pressed = false;
-        d->stealMouse = false;
-        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
-            movementEnding(true, true);
+        if (!d->scrollingPhase) {
+            d->pressed = false;
+            d->stealMouse = false;
+            if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
+                movementEnding(true, true);
+        }
     }
 }
 

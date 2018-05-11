@@ -188,7 +188,7 @@ public:
             Const
         } type = Invalid;
 
-        bool isLValue() const { return !isReadonly; }
+        bool isLValue() const { return !isReadonly && type > Accumulator; }
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
         Reference() {}
