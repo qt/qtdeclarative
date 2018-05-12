@@ -714,10 +714,11 @@ void BaselineJIT::generate_GetIterator(int iterator)
     as->checkException();
 }
 
-void BaselineJIT::generate_IteratorNext()
+void BaselineJIT::generate_IteratorNext(int returnUndefinedWhenDone)
 {
     as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(2);
+    as->prepareCallWithArgCount(3);
+    as->passInt32AsArg(returnUndefinedWhenDone, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, Assembler::ResultInAccumulator);

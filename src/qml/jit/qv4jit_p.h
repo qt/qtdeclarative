@@ -186,7 +186,7 @@ public:
     void generate_PopScriptContext() override;
     void generate_PopContext(int reg) override;
     void generate_GetIterator(int iterator) override;
-    void generate_IteratorNext() override;
+    void generate_IteratorNext(int returnUndefinedWhenDone) override;
     void generate_DeleteMember(int member, int base) override;
     void generate_DeleteSubscript(int base, int index) override;
     void generate_DeleteName(int name) override;

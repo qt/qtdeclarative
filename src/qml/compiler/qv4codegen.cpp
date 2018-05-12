@@ -476,27 +476,44 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
 {
     RegisterScope scope(this);
 
-    int index = 0;
+    Reference iterator = Reference::fromStackSlot(this);
+
+    array.loadInAccumulator();
+    Instruction::GetIterator iteratorObjInstr;
+    iteratorObjInstr.iterator = 1; // ForEachType::Of
+    bytecodeGenerator->addInstruction(iteratorObjInstr);
+    iterator.storeConsumeAccumulator();
+
+    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+
     for (PatternElementList *p = bindingList; p; p = p->next) {
-        for (Elision *elision = p->elision; elision; elision = elision->next)
-            ++index;
+        for (Elision *elision = p->elision; elision; elision = elision->next) {
+            iterator.loadInAccumulator();
+            Instruction::IteratorNext next;
+            next.returnUndefinedWhenDone = true;
+            bytecodeGenerator->addInstruction(next);
+        }
 
         RegisterScope scope(this);
 
-        Reference idx = Reference::fromConst(this, Encode(index));
-        Reference property = Reference::fromSubscript(array, idx);
+        iterator.loadInAccumulator();
+        Instruction::IteratorNext next;
+        next.returnUndefinedWhenDone = true;
+        bytecodeGenerator->addInstruction(next);
         PatternElement *e = p->element;
         if (!e)
             continue;
         if (e->type != PatternElement::RestElement) {
-            initializeAndDestructureBindingElement(e, property);
-            if (hasError)
+            initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
+            if (hasError) {
+                end.link();
                 return;
+            }
         } else {
             throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
         }
-        ++index;
     }
+    end.link();
 }
 
 void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
@@ -2666,6 +2683,7 @@ bool Codegen::visit(ForEachStatement *ast)
     in.link();
     iterator.loadInAccumulator();
     Instruction::IteratorNext next;
+    next.returnUndefinedWhenDone = false;
     bytecodeGenerator->addInstruction(next);
     Instruction::JumpEmpty jump;
     BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(jump);

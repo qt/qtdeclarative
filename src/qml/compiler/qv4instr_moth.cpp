@@ -434,6 +434,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(IteratorNext)
+            d << returnUndefinedWhenDone;
         MOTH_END_INSTR(IteratorNext)
 
         MOTH_BEGIN_INSTR(DeleteMember)

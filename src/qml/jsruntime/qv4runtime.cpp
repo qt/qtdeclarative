@@ -715,7 +715,7 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
     return engine->newForInIteratorObject(o)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator)
+ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator, int returnUndefinedWhenDone)
 {
     Q_ASSERT(iterator.isObject());
 
@@ -729,7 +729,7 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
         return engine->throwTypeError();
     ScopedValue v(scope, o->get(engine->id_done()));
     if (v->toBoolean() == true)
-        return Primitive::emptyValue().asReturnedValue();
+        return returnUndefinedWhenDone ? Encode::undefined() : Primitive::emptyValue().asReturnedValue();
     return o->get(engine->id_value());
 }
 
