@@ -160,6 +160,7 @@ void GeneratorPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctorProto->defineDefaultProperty(engine->symbol_toStringTag(), (v = engine->newIdentifier(QStringLiteral("GeneratorFunction"))), Attr_ReadOnly_ButConfigurable);
     ctorProto->defineDefaultProperty(engine->id_prototype(), (v = this), Attr_ReadOnly_ButConfigurable);
 
+    setPrototype(engine->iteratorPrototype());
     defineDefaultProperty(QStringLiteral("constructor"), ctorProto, Attr_ReadOnly_ButConfigurable);
     defineDefaultProperty(QStringLiteral("next"), method_next, 1);
     defineDefaultProperty(QStringLiteral("return"), method_return, 1);
