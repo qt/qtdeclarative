@@ -54,7 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
-class QQuickStyleSelector;
+class QQuickStylePluginPrivate;
 
 class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
@@ -74,8 +74,9 @@ public:
     QUrl resolvedUrl(const QString &fileName) const;
 
 private:
-    QQuickTheme *m_theme = nullptr;
-    mutable QScopedPointer<QQuickStyleSelector> m_selector;
+    Q_DISABLE_COPY(QQuickStylePlugin)
+    Q_DECLARE_PRIVATE(QQuickStylePlugin)
+    QScopedPointer<QQuickStylePluginPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE

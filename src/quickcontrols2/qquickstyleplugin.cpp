@@ -43,13 +43,22 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickStylePlugin::QQuickStylePlugin(QObject *parent) : QQmlExtensionPlugin(parent)
+class QQuickStylePluginPrivate
+{
+public:
+    QQuickTheme *theme = nullptr;
+    mutable QScopedPointer<QQuickStyleSelector> selector;
+};
+
+QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
+    : QQmlExtensionPlugin(parent), d_ptr(new QQuickStylePluginPrivate)
 {
 }
 
 QQuickStylePlugin::~QQuickStylePlugin()
 {
-    if (QQuickTheme::current() == m_theme)
+    Q_D(QQuickStylePlugin);
+    if (QQuickTheme::current() == d->theme)
         QQuickTheme::setCurrent(nullptr);
 }
 
@@ -60,26 +69,27 @@ void QQuickStylePlugin::registerTypes(const char *uri)
 
 void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
+    Q_D(QQuickStylePlugin);
     Q_UNUSED(engine);
     Q_UNUSED(uri);
 
     // make sure not to re-create the theme if initializeEngine()
     // is called multiple times, like in case of qml2puppet (QTBUG-54995)
-    if (m_theme)
+    if (d->theme)
         return;
 
     if (isCurrent()) {
-        m_theme = createTheme();
-        if (m_theme) {
+        d->theme = createTheme();
+        if (d->theme) {
 #if QT_CONFIG(settings)
-            QQuickThemePrivate *p = QQuickThemePrivate::get(m_theme);
+            QQuickThemePrivate *p = QQuickThemePrivate::get(d->theme);
             QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name());
             if (settings) {
                 p->defaultFont.reset(QQuickStylePrivate::readFont(settings));
                 p->defaultPalette.reset(QQuickStylePrivate::readPalette(settings));
             }
 #endif
-            QQuickTheme::setCurrent(m_theme);
+            QQuickTheme::setCurrent(d->theme);
         }
     }
 }
@@ -106,23 +116,24 @@ QQuickTheme *QQuickStylePlugin::createTheme() const
 
 QUrl QQuickStylePlugin::resolvedUrl(const QString &fileName) const
 {
-    if (!m_selector) {
-        m_selector.reset(new QQuickStyleSelector);
+    Q_D(const QQuickStylePlugin);
+    if (!d->selector) {
+        d->selector.reset(new QQuickStyleSelector);
         const QString style = QQuickStyle::name();
         if (!style.isEmpty())
-            m_selector->addSelector(style);
+            d->selector->addSelector(style);
 
         const QString fallback = QQuickStylePrivate::fallbackStyle();
         if (!fallback.isEmpty() && fallback != style)
-            m_selector->addSelector(fallback);
+            d->selector->addSelector(fallback);
 
         const QString theme = name();
         if (!theme.isEmpty() && theme != style)
-            m_selector->addSelector(theme);
+            d->selector->addSelector(theme);
 
-        m_selector->setPaths(QQuickStylePrivate::stylePaths(true));
+        d->selector->setPaths(QQuickStylePrivate::stylePaths(true));
     }
-    return m_selector->select(fileName);
+    return d->selector->select(fileName);
 }
 
 QT_END_NAMESPACE
