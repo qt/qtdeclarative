@@ -135,6 +135,8 @@ public:
     QList<TypeInfo> typeInfos() const;
 #endif
 
+    QString className() const;
+
 private:
     bool maybeAddComponent(const QString &typeName, const QString &fileName, const QString &version, QHash<QString,Component> &hash, int lineNumber = -1, bool multi = true);
     void reportError(quint16 line, quint16 column, const QString &message);
@@ -150,6 +152,7 @@ private:
 #ifdef QT_CREATOR
     QList<TypeInfo> _typeInfos;
 #endif
+    QString _className;
 };
 
 typedef QHash<QString,QQmlDirParser::Component> QQmlDirComponents;

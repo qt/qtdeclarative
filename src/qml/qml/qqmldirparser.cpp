@@ -107,6 +107,7 @@ bool QQmlDirParser::parse(const QString &source)
     _components.clear();
     _scripts.clear();
     _designerSupported = false;
+    _className.clear();
 
     quint16 lineNumber = 0;
     bool firstLine = true;
@@ -196,7 +197,8 @@ bool QQmlDirParser::parse(const QString &source)
                 continue;
             }
 
-            // Ignore these. qmlimportscanner uses them.
+            _className = sections[1];
+
         } else if (sections[0] == QLatin1String("internal")) {
             if (sectionCount != 3) {
                 reportError(lineNumber, 0,
@@ -375,6 +377,11 @@ QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
 bool QQmlDirParser::designerSupported() const
 {
     return _designerSupported;
+}
+
+QString QQmlDirParser::className() const
+{
+    return _className;
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
