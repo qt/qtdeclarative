@@ -36,16 +36,12 @@
 
 #include "qquickuniversaltheme_p.h"
 
-#include <QtGui/qfont.h>
 #include <QtGui/qfontinfo.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickUniversalTheme::QQuickUniversalTheme()
-{
-}
-
-void QQuickUniversalTheme::resolve()
+void QQuickUniversalTheme::initialize(QQuickTheme *theme)
 {
     QFont systemFont;
     QFont groupBoxTitleFont;
@@ -60,15 +56,15 @@ void QQuickUniversalTheme::resolve()
     }
 
     systemFont.setPixelSize(15);
-    setFont(System, systemFont);
+    theme->setFont(QQuickTheme::System, systemFont);
 
     groupBoxTitleFont.setPixelSize(15);
     groupBoxTitleFont.setWeight(QFont::DemiBold);
-    setFont(GroupBox, groupBoxTitleFont);
+    theme->setFont(QQuickTheme::GroupBox, groupBoxTitleFont);
 
     tabButtonFont.setPixelSize(24);
     tabButtonFont.setWeight(QFont::Light);
-    setFont(TabBar, tabButtonFont);
+    theme->setFont(QQuickTheme::TabBar, tabButtonFont);
 }
 
 QT_END_NAMESPACE

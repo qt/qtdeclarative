@@ -36,13 +36,11 @@
 
 #include "qquickdefaulttheme_p.h"
 
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
+
 QT_BEGIN_NAMESPACE
 
-QQuickDefaultTheme::QQuickDefaultTheme()
-{
-}
-
-void QQuickDefaultTheme::resolve()
+void QQuickDefaultTheme::initialize(QQuickTheme *theme)
 {
     QPalette systemPalette;
 
@@ -85,7 +83,7 @@ void QQuickDefaultTheme::resolve()
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));
 
-    setPalette(System, systemPalette);
+    theme->setPalette(QQuickTheme::System, systemPalette);
 }
 
 QT_END_NAMESPACE

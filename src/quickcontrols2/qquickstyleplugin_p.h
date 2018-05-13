@@ -64,12 +64,8 @@ public:
     explicit QQuickStylePlugin(QObject *parent = nullptr);
     ~QQuickStylePlugin();
 
-    void registerTypes(const char *uri) override;
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
-
-    bool isCurrent() const;
     virtual QString name() const;
-    virtual QQuickTheme *createTheme() const;
+    virtual void initializeTheme(QQuickTheme *theme);
 
     QUrl resolvedUrl(const QString &fileName) const;
 

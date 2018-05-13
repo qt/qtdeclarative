@@ -58,7 +58,7 @@ public:
     void registerTypes(const char *uri) override;
 
     QString name() const override;
-    QQuickTheme *createTheme() const override;
+    void initializeTheme(QQuickTheme *theme) override;
 };
 
 QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -92,9 +92,9 @@ QString QtQuickControls2MaterialStylePlugin::name() const
     return QStringLiteral("Material");
 }
 
-QQuickTheme *QtQuickControls2MaterialStylePlugin::createTheme() const
+void QtQuickControls2MaterialStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    return new QQuickMaterialTheme;
+    QQuickMaterialTheme::initialize(theme);
 }
 
 QT_END_NAMESPACE

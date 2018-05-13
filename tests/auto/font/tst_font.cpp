@@ -222,7 +222,7 @@ class TestFontTheme : public QQuickTheme
 public:
     static const int NFonts = QQuickTheme::Tumbler + 1;
 
-    void resolve() override
+    TestFontTheme()
     {
         for (int i = 0; i < NFonts; ++i) {
             QFont font = QFont();

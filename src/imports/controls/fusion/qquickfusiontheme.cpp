@@ -36,10 +36,13 @@
 
 #include "qquickfusiontheme_p.h"
 
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
+
 QT_BEGIN_NAMESPACE
 
-QQuickFusionTheme::QQuickFusionTheme()
+void QQuickFusionTheme::initialize(QQuickTheme *theme)
 {
+    Q_UNUSED(theme);
 }
 
 QT_END_NAMESPACE

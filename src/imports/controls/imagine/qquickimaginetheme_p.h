@@ -48,17 +48,16 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImagineTheme : public QQuickTheme
+class QQuickTheme;
+
+class QQuickImagineTheme
 {
 public:
-    explicit QQuickImagineTheme();
-
-protected:
-    void resolve() override;
+    static void initialize(QQuickTheme *theme);
 };
 
 QT_END_NAMESPACE

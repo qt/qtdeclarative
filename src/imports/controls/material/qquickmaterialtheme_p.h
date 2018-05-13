@@ -48,19 +48,16 @@
 // We mean it.
 //
 
-#include <QtCore/qvariant.h>
-#include <QtGui/qfont.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialTheme : public QQuickTheme
+class QQuickTheme;
+
+class QQuickMaterialTheme
 {
 public:
-    explicit QQuickMaterialTheme();
-
-protected:
-    void resolve() override;
+    static void initialize(QQuickTheme *theme);
 };
 
 QT_END_NAMESPACE

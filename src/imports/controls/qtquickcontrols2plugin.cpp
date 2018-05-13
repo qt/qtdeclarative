@@ -37,10 +37,9 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
-#if !defined(QT_STATIC) && QT_CONFIG(library)
-#include <QtCore/qlibrary.h>
-#endif
+#include <QtCore/qpluginloader.h>
 #include <QtCore/private/qfileselector_p.h>
+#include <QtQml/qqmlfile.h>
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickchecklabel_p.h>
@@ -59,6 +58,7 @@
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickControls2/private/qquickclippedtext_p.h>
 #include <QtQuickControls2/private/qquickitemgroup_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 #include "qquickdefaultbusyindicator_p.h"
 #include "qquickdefaultdial_p.h"
@@ -80,12 +80,11 @@ public:
     void registerTypes(const char *uri) override;
 
     QString name() const override;
-    QQuickTheme *createTheme() const override;
+    void initializeTheme(QQuickTheme *theme) override;
 
-#if !defined(QT_STATIC) && QT_CONFIG(library)
 private:
-    void loadStylePlugin();
-#endif
+    QList<QQuickStylePlugin *> loadStylePlugins();
+    QQuickTheme *createTheme(const QString &name);
 };
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -106,6 +105,11 @@ static QUrl fixupBaseUrl(QQmlExtensionPlugin *plugin)
 #endif
 }
 
+static bool isDefaultStyle(const QString &style)
+{
+    return style.isEmpty() || style.compare(QStringLiteral("Default"), Qt::CaseInsensitive) == 0;
+}
+
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     QQuickStylePrivate::init(fixupBaseUrl(this));
@@ -114,10 +118,15 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
 
-#if !defined(QT_STATIC) && QT_CONFIG(library)
-    // load the style's plugin to get access to its resources
-    loadStylePlugin();
-#endif
+    QQuickTheme *theme = createTheme(style.isEmpty() ? name() : style);
+    if (isDefaultStyle(style))
+        initializeTheme(theme);
+
+    // load the style's plugins to get access to its resources and initialize the theme
+    QList<QQuickStylePlugin *> stylePlugins = loadStylePlugins();
+    for (QQuickStylePlugin *stylePlugin : stylePlugins)
+        stylePlugin->initializeTheme(theme);
+    qDeleteAll(stylePlugins);
 
     qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
 
@@ -229,45 +238,69 @@ QString QtQuickControls2Plugin::name() const
     return QStringLiteral("Default");
 }
 
-QQuickTheme *QtQuickControls2Plugin::createTheme() const
+void QtQuickControls2Plugin::initializeTheme(QQuickTheme *theme)
 {
-    return new QQuickDefaultTheme;
+    QQuickDefaultTheme::initialize(theme);
 }
 
-#if !defined(QT_STATIC) && QT_CONFIG(library)
-void QtQuickControls2Plugin::loadStylePlugin()
+QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
 {
-    QFileInfo fileInfo = resolvedUrl(QStringLiteral("qmldir")).toLocalFile();
-    if (!fileInfo.exists() || fileInfo.path() == baseUrl().toLocalFile())
-        return;
+    QList<QQuickStylePlugin *> stylePlugins;
 
-    QFile file(fileInfo.filePath());
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-
-    QQmlDirParser parser;
-    parser.parse(QString::fromUtf8(file.readAll()));
-    if (parser.hasError())
-        return;
-
-    QLibrary lib;
-    lib.setLoadHints(QLibrary::PreventUnloadHint);
-    const auto plugins = parser.plugins();
-    for (const QQmlDirParser::Plugin &plugin : plugins) {
-        QDir dir = fileInfo.dir();
-        if (!plugin.path.isEmpty() && !dir.cd(plugin.path))
-            continue;
-        QString filePath = dir.filePath(plugin.name);
+    QFileInfo fileInfo = QQmlFile::urlToLocalFileOrQrc(resolvedUrl(QStringLiteral("qmldir")));
+    if (fileInfo.exists() && fileInfo.path() != QQmlFile::urlToLocalFileOrQrc(baseUrl())) {
+        QFile file(fileInfo.filePath());
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QQmlDirParser parser;
+            parser.parse(QString::fromUtf8(file.readAll()));
+            if (!parser.hasError()) {
+#ifdef QT_STATIC
+                const auto plugins = QPluginLoader::staticInstances();
+                for (QObject *instance : plugins) {
+                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(instance);
+                    if (!stylePlugin || parser.className() != QLatin1String(instance->metaObject()->className()))
+                        continue;
+                    stylePlugins += stylePlugin;
+                }
+#elif QT_CONFIG(library)
+                QPluginLoader loader;
+                const auto plugins = parser.plugins();
+                for (const QQmlDirParser::Plugin &plugin : plugins) {
+                    QDir dir = fileInfo.dir();
+                    if (!plugin.path.isEmpty() && !dir.cd(plugin.path))
+                        continue;
+                    QString filePath = dir.filePath(plugin.name);
 #if defined(Q_OS_MACOS) && defined(QT_DEBUG)
-        // Avoid mismatching plugins on macOS so that we don't end up loading both debug and
-        // release versions of the same Qt libraries (due to the plugin's dependencies).
-        filePath += QStringLiteral("_debug");
+                    // Avoid mismatching plugins on macOS so that we don't end up loading both debug and
+                    // release versions of the same Qt libraries (due to the plugin's dependencies).
+                    filePath += QStringLiteral("_debug");
 #endif // Q_OS_MACOS && QT_DEBUG
-        lib.setFileName(filePath);
-        lib.load();
+                    loader.setFileName(filePath);
+                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(loader.instance());
+                    if (stylePlugin)
+                        stylePlugins += stylePlugin;
+                }
+#endif
+            }
+        }
     }
+    return stylePlugins;
 }
-#endif // !QT_STATIC && QT_CONFIG(library)
+
+QQuickTheme *QtQuickControls2Plugin::createTheme(const QString &name)
+{
+    QQuickTheme *theme = new QQuickTheme;
+#if QT_CONFIG(settings)
+    QQuickThemePrivate *p = QQuickThemePrivate::get(theme);
+    QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name);
+    if (settings) {
+        p->defaultFont.reset(QQuickStylePrivate::readFont(settings));
+        p->defaultPalette.reset(QQuickStylePrivate::readPalette(settings));
+    }
+#endif
+    QQuickThemePrivate::instance.reset(theme);
+    return theme;
+}
 
 QT_END_NAMESPACE
 

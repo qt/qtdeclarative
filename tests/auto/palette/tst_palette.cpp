@@ -221,7 +221,7 @@ class TestTheme : public QQuickTheme
 public:
     static const int NPalettes = QQuickTheme::Tumbler + 1;
 
-    void resolve() override
+    TestTheme()
     {
         for (int i = 0; i < NPalettes; ++i)
             setPalette(static_cast<Scope>(i), QPalette(QColor::fromRgb(i)));

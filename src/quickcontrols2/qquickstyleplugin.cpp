@@ -39,14 +39,11 @@
 #include "qquickstyle_p.h"
 #include "qquickstyleselector_p.h"
 
-#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
-
 QT_BEGIN_NAMESPACE
 
 class QQuickStylePluginPrivate
 {
 public:
-    QQuickTheme *theme = nullptr;
     mutable QScopedPointer<QQuickStyleSelector> selector;
 };
 
@@ -57,51 +54,6 @@ QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
 
 QQuickStylePlugin::~QQuickStylePlugin()
 {
-    Q_D(QQuickStylePlugin);
-    if (QQuickTheme::instance() == d->theme)
-        QQuickThemePrivate::instance.reset();
-}
-
-void QQuickStylePlugin::registerTypes(const char *uri)
-{
-    Q_UNUSED(uri);
-}
-
-void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
-{
-    Q_D(QQuickStylePlugin);
-    Q_UNUSED(engine);
-    Q_UNUSED(uri);
-
-    // make sure not to re-create the theme if initializeEngine()
-    // is called multiple times, like in case of qml2puppet (QTBUG-54995)
-    if (d->theme)
-        return;
-
-    if (isCurrent()) {
-        d->theme = createTheme();
-        if (d->theme) {
-#if QT_CONFIG(settings)
-            QQuickThemePrivate *p = QQuickThemePrivate::get(d->theme);
-            QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name());
-            if (settings) {
-                p->defaultFont.reset(QQuickStylePrivate::readFont(settings));
-                p->defaultPalette.reset(QQuickStylePrivate::readPalette(settings));
-            }
-#endif
-            QQuickThemePrivate::instance.reset(d->theme);
-        }
-    }
-}
-
-bool QQuickStylePlugin::isCurrent() const
-{
-    QString style = QQuickStyle::name();
-    if (style.isEmpty())
-        style = QStringLiteral("Default");
-
-    const QString theme = name();
-    return theme.compare(style, Qt::CaseInsensitive) == 0;
 }
 
 QString QQuickStylePlugin::name() const
@@ -109,9 +61,9 @@ QString QQuickStylePlugin::name() const
     return QString();
 }
 
-QQuickTheme *QQuickStylePlugin::createTheme() const
+void QQuickStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    return nullptr;
+    Q_UNUSED(theme);
 }
 
 QUrl QQuickStylePlugin::resolvedUrl(const QString &fileName) const

@@ -55,7 +55,7 @@ public:
     void registerTypes(const char *uri) override;
 
     QString name() const override;
-    QQuickTheme *createTheme() const override;
+    void initializeTheme(QQuickTheme *theme) override;
 };
 
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -85,9 +85,9 @@ QString QtQuickControls2UniversalStylePlugin::name() const
     return QStringLiteral("Universal");
 }
 
-QQuickTheme *QtQuickControls2UniversalStylePlugin::createTheme() const
+void QtQuickControls2UniversalStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    return new QQuickUniversalTheme;
+    QQuickUniversalTheme::initialize(theme);
 }
 
 QT_END_NAMESPACE

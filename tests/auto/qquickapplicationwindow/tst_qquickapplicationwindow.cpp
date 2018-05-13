@@ -558,7 +558,7 @@ void tst_QQuickApplicationWindow::font()
 class TestTheme : public QQuickTheme
 {
 public:
-    void resolve() override
+    TestTheme()
     {
         setFont(System, QFont("Courier"));
     }

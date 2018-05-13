@@ -62,14 +62,10 @@ public:
         return theme->d_func();
     }
 
-    const QFont *resolveThemeFont(QQuickTheme::Scope scope);
-    const QPalette *resolveThemePalette(QQuickTheme::Scope scope);
-
     static QScopedPointer<QQuickTheme> instance;
 
     static const int NScopes = QQuickTheme::Tumbler + 1;
 
-    bool hasResolved = false;
     QScopedPointer<const QFont> defaultFont;
     QScopedPointer<const QPalette> defaultPalette;
     QSharedPointer<QFont> fonts[NScopes];

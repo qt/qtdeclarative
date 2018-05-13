@@ -36,19 +36,15 @@
 
 #include "qquickimaginetheme_p.h"
 
-#include <QtGui/qfontinfo.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickImagineTheme::QQuickImagineTheme()
-{
-}
-
-void QQuickImagineTheme::resolve()
+void QQuickImagineTheme::initialize(QQuickTheme *theme)
 {
     QFont systemFont;
     systemFont.setFamily(QLatin1String("Open Sans"));
-    setFont(System, systemFont);
+    theme->setFont(QQuickTheme::System, systemFont);
 
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);
     const QColor windowTextColor = QColor::fromRgb(0x434a54);
@@ -64,7 +60,7 @@ void QQuickImagineTheme::resolve()
     systemPalette.setColor(QPalette::WindowText, windowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::Text, disabledWindowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, disabledWindowTextColor);
-    setPalette(System, systemPalette);
+    theme->setPalette(QQuickTheme::System, systemPalette);
 }
 
 QT_END_NAMESPACE

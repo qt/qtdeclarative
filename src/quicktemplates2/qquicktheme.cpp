@@ -94,26 +94,6 @@ static QPlatformTheme::Palette platformPalette(QQuickTheme::Scope scope)
     }
 }
 
-const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Scope scope)
-{
-    Q_Q(QQuickTheme);
-    if (!hasResolved) {
-        q->resolve();
-        hasResolved = true;
-    }
-    return fonts[scope].data();
-}
-
-const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Scope scope)
-{
-    Q_Q(QQuickTheme);
-    if (!hasResolved) {
-        q->resolve();
-        hasResolved = true;
-    }
-    return palettes[scope].data();
-}
-
 QQuickTheme::QQuickTheme()
     : d_ptr(new QQuickThemePrivate)
 {
@@ -133,7 +113,7 @@ QFont QQuickTheme::font(Scope scope)
 {
     const QFont *font = nullptr;
     if (QQuickTheme *theme = instance())
-        font = QQuickThemePrivate::get(theme)->resolveThemeFont(scope);
+        font = QQuickThemePrivate::get(theme)->fonts[scope].data();
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
         font = theme->font(platformFont(scope));
 
@@ -154,7 +134,7 @@ QPalette QQuickTheme::palette(Scope scope)
 {
     const QPalette *palette = nullptr;
     if (QQuickTheme *theme = instance())
-        palette = QQuickThemePrivate::get(theme)->resolveThemePalette(scope);
+        palette = QQuickThemePrivate::get(theme)->palettes[scope].data();
     else if (QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
         palette = theme->palette(platformPalette(scope));
 
@@ -181,10 +161,6 @@ void QQuickTheme::setPalette(Scope scope, const QPalette &palette)
 {
     Q_D(QQuickTheme);
     d->palettes[scope] = QSharedPointer<QPalette>::create(d->defaultPalette ? d->defaultPalette->resolve(palette) : palette);
-}
-
-void QQuickTheme::resolve()
-{
 }
 
 QT_END_NAMESPACE

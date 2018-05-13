@@ -61,7 +61,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTheme
 {
 public:
     QQuickTheme();
-    virtual ~QQuickTheme();
+    ~QQuickTheme();
 
     static QQuickTheme *instance();
 
@@ -90,11 +90,8 @@ public:
     static QFont font(Scope scope);
     static QPalette palette(Scope scope);
 
-protected:
     void setFont(Scope scope, const QFont &font);
     void setPalette(Scope scope, const QPalette &palette);
-
-    virtual void resolve();
 
 private:
     Q_DISABLE_COPY(QQuickTheme)

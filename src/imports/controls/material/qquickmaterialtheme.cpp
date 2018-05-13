@@ -40,14 +40,11 @@
 #include <QtGui/qpa/qplatformdialoghelper.h>
 #include <QtGui/qfont.h>
 #include <QtGui/qfontinfo.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QQuickMaterialTheme::QQuickMaterialTheme()
-{
-}
-
-void QQuickMaterialTheme::resolve()
+void QQuickMaterialTheme::initialize(QQuickTheme *theme)
 {
     QFont systemFont;
     QFont buttonFont;
@@ -78,38 +75,38 @@ void QQuickMaterialTheme::resolve()
 
     const bool dense = QQuickMaterialStyle::variant() == QQuickMaterialStyle::Dense;
     systemFont.setPixelSize(dense ? 13 : 14);
-    setFont(System, systemFont);
+    theme->setFont(QQuickTheme::System, systemFont);
 
     // https://material.io/guidelines/components/buttons.html#buttons-style
     buttonFont.setPixelSize(dense ? 13 : 14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
-    setFont(Button, buttonFont);
-    setFont(TabBar, buttonFont);
-    setFont(ToolBar, buttonFont);
+    theme->setFont(QQuickTheme::Button, buttonFont);
+    theme->setFont(QQuickTheme::TabBar, buttonFont);
+    theme->setFont(QQuickTheme::ToolBar, buttonFont);
 
     // https://material.io/guidelines/components/tooltips.html
     toolTipFont.setPixelSize(dense ? 10 : 14);
     toolTipFont.setWeight(QFont::Medium);
-    setFont(ToolTip, toolTipFont);
+    theme->setFont(QQuickTheme::ToolTip, toolTipFont);
 
     itemViewFont.setPixelSize(dense ? 13 : 14);
     itemViewFont.setWeight(QFont::Medium);
-    setFont(ItemView, itemViewFont);
+    theme->setFont(QQuickTheme::ItemView, itemViewFont);
 
     // https://material.io/guidelines/components/lists.html#lists-specs
     listViewFont.setPixelSize(dense ? 13 : 16);
-    setFont(ListView, listViewFont);
+    theme->setFont(QQuickTheme::ListView, listViewFont);
 
     menuItemFont.setPixelSize(dense ? 13 : 16);
-    setFont(Menu, menuItemFont);
-    setFont(MenuBar, menuItemFont);
-    setFont(ComboBox, menuItemFont);
+    theme->setFont(QQuickTheme::Menu, menuItemFont);
+    theme->setFont(QQuickTheme::MenuBar, menuItemFont);
+    theme->setFont(QQuickTheme::ComboBox, menuItemFont);
 
     editorFont.setPixelSize(dense ? 13 : 16);
-    setFont(TextArea, editorFont);
-    setFont(TextField, editorFont);
-    setFont(SpinBox, editorFont);
+    theme->setFont(QQuickTheme::TextArea, editorFont);
+    theme->setFont(QQuickTheme::TextField, editorFont);
+    theme->setFont(QQuickTheme::SpinBox, editorFont);
 }
 
 QT_END_NAMESPACE
