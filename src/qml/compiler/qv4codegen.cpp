@@ -2715,11 +2715,21 @@ bool Codegen::visit(ForEachStatement *ast)
     Instruction::IteratorNext next;
     next.value = lhsValue.stackSlot();
     bytecodeGenerator->addInstruction(next);
-    BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue());
-    bytecodeGenerator->jump().link(body);
+    bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
+    BytecodeGenerator::Jump done = bytecodeGenerator->jump();
+
+    end.link();
+
+    if (ast->type == ForEachType::Of) {
+        Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+        iterator.loadInAccumulator();
+        Instruction::IteratorClose close;
+        close.done = iteratorDone.stackSlot();
+        bytecodeGenerator->addInstruction(close);
+    }
 
     done.link();
-    end.link();
+
     return false;
 }
 

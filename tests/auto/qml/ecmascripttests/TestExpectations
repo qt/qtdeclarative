@@ -5963,7 +5963,6 @@ language/statements/for-of/dstr-var-obj-ptrn-id-init-fn-name-class.js fails
 language/statements/for-of/dstr-var-obj-ptrn-id-init-fn-name-cover.js fails
 language/statements/for-of/dstr-var-obj-ptrn-id-init-fn-name-fn.js fails
 language/statements/for-of/dstr-var-obj-ptrn-id-init-fn-name-gen.js fails
-language/statements/for-of/generator-close-via-break.js fails
 language/statements/for-of/generator-close-via-continue.js fails
 language/statements/for-of/generator-close-via-return.js fails
 language/statements/for-of/generator-close-via-throw.js fails
@@ -5972,8 +5971,6 @@ language/statements/for-of/head-const-fresh-binding-per-iteration.js fails
 language/statements/for-of/head-let-bound-names-fordecl-tdz.js fails
 language/statements/for-of/head-var-bound-names-let.js sloppyFails
 language/statements/for-of/iterator-as-proxy.js fails
-language/statements/for-of/iterator-close-non-object.js fails
-language/statements/for-of/iterator-close-via-break.js fails
 language/statements/for-of/iterator-close-via-continue.js fails
 language/statements/for-of/iterator-close-via-return.js fails
 language/statements/for-of/iterator-close-via-throw.js fails
