@@ -277,6 +277,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(2));
+    ctor->addSymbolSpecies();
 
     // Properties deprecated in the spec but required by "the web" :(
     ctor->defineAccessorProperty(QStringLiteral("lastMatch"), method_get_lastMatch_n<0>, nullptr);

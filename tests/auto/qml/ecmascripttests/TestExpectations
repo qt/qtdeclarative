@@ -20,10 +20,6 @@ language/statements/with/let-identifier-with-newline.js sloppyFails
 
 
 # ----- test failures that should be fixed
-built-ins/Array/Symbol.species/length.js fails
-built-ins/Array/Symbol.species/return-value.js fails
-built-ins/Array/Symbol.species/symbol-species-name.js fails
-built-ins/Array/Symbol.species/symbol-species.js fails
 built-ins/Array/from/Array.from-descriptor.js fails
 built-ins/Array/from/Array.from-name.js fails
 built-ins/Array/from/Array.from_arity.js fails
@@ -251,10 +247,6 @@ built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js strictFa
 built-ins/Array/prototype/unshift/clamps-to-integer-limit.js fails
 built-ins/Array/prototype/unshift/length-near-integer-limit.js fails
 built-ins/Array/prototype/unshift/throws-if-integer-limit-exceeded.js fails
-built-ins/ArrayBuffer/Symbol.species/length.js fails
-built-ins/ArrayBuffer/Symbol.species/return-value.js fails
-built-ins/ArrayBuffer/Symbol.species/symbol-species-name.js fails
-built-ins/ArrayBuffer/Symbol.species/symbol-species.js fails
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js fails
 built-ins/ArrayBuffer/isView/arg-is-dataview-subclass-instance.js fails
 built-ins/ArrayBuffer/isView/arg-is-typedarray-subclass-instance.js fails
@@ -1591,10 +1583,6 @@ built-ins/RegExp/S15.10.3.1_A2_T1.js fails
 built-ins/RegExp/S15.10.3.1_A2_T2.js fails
 built-ins/RegExp/S15.10.4.1_A2_T1.js fails
 built-ins/RegExp/S15.10.4.1_A2_T2.js fails
-built-ins/RegExp/Symbol.species/length.js fails
-built-ins/RegExp/Symbol.species/return-value.js fails
-built-ins/RegExp/Symbol.species/symbol-species-name.js fails
-built-ins/RegExp/Symbol.species/symbol-species.js fails
 built-ins/RegExp/call_with_non_regexp_same_constructor.js fails
 built-ins/RegExp/call_with_regexp_match_falsy.js fails
 built-ins/RegExp/call_with_regexp_not_same_constructor.js fails

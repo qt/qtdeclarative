@@ -50,6 +50,7 @@
 #include "qv4string_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 #include <stdint.h>
 
@@ -219,6 +220,15 @@ void Object::defineReadonlyConfigurableProperty(const QString &name, const Value
 void Object::defineReadonlyConfigurableProperty(StringOrSymbol *name, const Value &value)
 {
     insertMember(name, value, Attr_ReadOnly_ButConfigurable);
+}
+
+void Object::addSymbolSpecies()
+{
+    Scope scope(engine());
+    ScopedProperty p(scope);
+    p->setGetter(scope.engine->getSymbolSpecies());
+    p->setSetter(nullptr);
+    insertMember(scope.engine->symbol_species(), p, QV4::Attr_Accessor|QV4::Attr_NotWritable|QV4::Attr_NotEnumerable);
 }
 
 void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)

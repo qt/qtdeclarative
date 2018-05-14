@@ -407,6 +407,8 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(3));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
+    ctor->addSymbolSpecies();
+
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);

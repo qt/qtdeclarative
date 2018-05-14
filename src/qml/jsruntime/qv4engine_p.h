@@ -215,6 +215,8 @@ public:
         ArrayBuffer_Ctor,
         DataView_Ctor,
 
+        GetSymbolSpecies,
+
         Eval_Function,
         GetStack_Function,
         ThrowerObject,
@@ -246,6 +248,8 @@ public:
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
     FunctionObject *typedArrayCtors;
+
+    FunctionObject *getSymbolSpecies() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetSymbolSpecies); }
 
     Object *objectPrototype() const { return reinterpret_cast<Object *>(jsObjects + ObjectProto); }
     Object *symbolPrototype() const { return reinterpret_cast<Object *>(jsObjects + SymbolProto); }

@@ -105,6 +105,10 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    // while this function is implemented here, it's the same for many other JS classes, so the corresponding JS function
+    // is instantiated in the engine, and it can be added to any JS object through Object::addSymbolSpecies()
+    static ReturnedValue method_get_species(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

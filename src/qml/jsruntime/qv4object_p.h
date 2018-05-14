@@ -292,6 +292,8 @@ struct Q_QML_EXPORT Object: Managed {
     void defineReadonlyConfigurableProperty(const QString &name, const Value &value);
     void defineReadonlyConfigurableProperty(StringOrSymbol *name, const Value &value);
 
+    void addSymbolSpecies();
+
     void insertMember(StringOrSymbol *s, const Value &v, PropertyAttributes attributes = Attr_Data) {
         Scope scope(engine());
         ScopedProperty p(scope);

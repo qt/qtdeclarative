@@ -94,6 +94,8 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
+    ctor->addSymbolSpecies();
+
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
@@ -1101,5 +1103,10 @@ ReturnedValue ArrayPrototype::method_values(const FunctionObject *b, const Value
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
     ao->d()->iterationKind = ArrayIteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
+}
+
+ReturnedValue ArrayPrototype::method_get_species(const FunctionObject *, const Value *thisObject, const Value *, int)
+{
+    return thisObject->asReturnedValue();
 }
 
