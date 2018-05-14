@@ -188,6 +188,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_valueOf(), method_toString); // valueOf and toString are identical
     defineDefaultProperty(QStringLiteral("charAt"), method_charAt, 1);
     defineDefaultProperty(QStringLiteral("charCodeAt"), method_charCodeAt, 1);
+    defineDefaultProperty(QStringLiteral("codePointAt"), method_codePointAt, 1);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
     defineDefaultProperty(QStringLiteral("endsWith"), method_endsWith, 1);
     defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
@@ -279,6 +280,29 @@ ReturnedValue StringPrototype::method_charCodeAt(const FunctionObject *b, const 
         RETURN_RESULT(Encode(str.at(pos).unicode()));
 
     return Encode(qt_qnan());
+}
+
+ReturnedValue StringPrototype::method_codePointAt(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    ExecutionEngine *v4 = f->engine();
+    QString value = getThisString(v4, thisObject);
+    if (v4->hasException)
+        return QV4::Encode::undefined();
+
+    int index = argc ? argv[0].toInteger() : 0;
+    if (v4->hasException)
+        return QV4::Encode::undefined();
+
+    if (index < 0 || index >= value.size())
+        return Encode::undefined();
+
+    uint first = value.at(index).unicode();
+    if (QChar::isHighSurrogate(first) && index + 1 < value.size()) {
+        uint second = value.at(index + 1).unicode();
+        if (QChar::isLowSurrogate(second))
+            return Encode(QChar::surrogateToUcs4(first, second));
+    }
+    return Encode(first);
 }
 
 ReturnedValue StringPrototype::method_concat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

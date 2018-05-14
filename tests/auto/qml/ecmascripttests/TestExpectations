@@ -2081,17 +2081,6 @@ built-ins/String/fromCodePoint/number-is-out-of-range.js fails
 built-ins/String/fromCodePoint/return-string-value.js fails
 built-ins/String/fromCodePoint/to-number-conversions.js fails
 built-ins/String/proto-from-ctor-realm.js fails
-built-ins/String/prototype/codePointAt/codePointAt.js fails
-built-ins/String/prototype/codePointAt/length.js fails
-built-ins/String/prototype/codePointAt/name.js fails
-built-ins/String/prototype/codePointAt/return-abrupt-from-object-pos-to-integer.js fails
-built-ins/String/prototype/codePointAt/return-abrupt-from-this.js fails
-built-ins/String/prototype/codePointAt/return-code-unit-coerced-position.js fails
-built-ins/String/prototype/codePointAt/return-first-code-unit.js fails
-built-ins/String/prototype/codePointAt/return-single-code-unit.js fails
-built-ins/String/prototype/codePointAt/return-utf16-decode.js fails
-built-ins/String/prototype/codePointAt/returns-undefined-on-position-equal-or-more-than-size.js fails
-built-ins/String/prototype/codePointAt/returns-undefined-on-position-less-than-zero.js fails
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/indexOf/position-tointeger-errors.js fails

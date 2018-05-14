@@ -120,6 +120,7 @@ struct StringPrototype: StringObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_charAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_charCodeAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_codePointAt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_concat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_endsWith(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
