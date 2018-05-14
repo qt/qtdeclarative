@@ -477,6 +477,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     RegisterScope scope(this);
 
     Reference iterator = Reference::fromStackSlot(this);
+    Reference iteratorValue = Reference::fromStackSlot(this);
 
     array.loadInAccumulator();
     Instruction::GetIterator iteratorObjInstr;
@@ -490,7 +491,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
         for (Elision *elision = p->elision; elision; elision = elision->next) {
             iterator.loadInAccumulator();
             Instruction::IteratorNext next;
-            next.returnUndefinedWhenDone = true;
+            next.value = iteratorValue.stackSlot();
             bytecodeGenerator->addInstruction(next);
         }
 
@@ -503,12 +504,12 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
             initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
         } else {
             Instruction::IteratorNext next;
-            next.returnUndefinedWhenDone = true;
+            next.value = iteratorValue.stackSlot();
             bytecodeGenerator->addInstruction(next);
             if (!e)
                 continue;
             if (e->type != PatternElement::RestElement) {
-                initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
+                initializeAndDestructureBindingElement(e, iteratorValue);
                 if (hasError) {
                     end.link();
                     return;
@@ -2686,11 +2687,9 @@ bool Codegen::visit(ForEachStatement *ast)
     in.link();
     iterator.loadInAccumulator();
     Instruction::IteratorNext next;
-    next.returnUndefinedWhenDone = false;
+    next.value = lhsValue.stackSlot();
     bytecodeGenerator->addInstruction(next);
-    Instruction::JumpEmpty jump;
-    BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(jump);
-    lhsValue.storeConsumeAccumulator();
+    BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue());
     bytecodeGenerator->jump().link(body);
 
     done.link();

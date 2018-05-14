@@ -961,7 +961,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
 
     MOTH_BEGIN_INSTR(IteratorNext)
         STORE_ACC();
-        acc = Runtime::method_iteratorNext(engine, accumulator, returnUndefinedWhenDone);
+        acc = Runtime::method_iteratorNext(engine, accumulator, &STACK_VALUE(value));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNext)
 

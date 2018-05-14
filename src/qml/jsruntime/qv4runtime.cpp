@@ -715,7 +715,7 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
     return engine->newForInIteratorObject(o)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator, int returnUndefinedWhenDone)
+ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator, Value *value)
 {
     Q_ASSERT(iterator.isObject());
 
@@ -727,10 +727,14 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     ScopedObject o(scope, f->call(cData));
     if (!o)
         return engine->throwTypeError();
-    ScopedValue v(scope, o->get(engine->id_done()));
-    if (v->toBoolean() == true)
-        return returnUndefinedWhenDone ? Encode::undefined() : Primitive::emptyValue().asReturnedValue();
-    return o->get(engine->id_value());
+    ScopedValue d(scope, o->get(engine->id_done()));
+    bool done = d->toBoolean();
+    if (done) {
+        *value = Encode::undefined();
+    } else {
+        *value = o->get(engine->id_value());
+    }
+    return Encode(done);
 }
 
 ReturnedValue Runtime::method_destructureRestElement(ExecutionEngine *engine, const Value &iterator)
@@ -742,10 +746,12 @@ ReturnedValue Runtime::method_destructureRestElement(ExecutionEngine *engine, co
     array->arrayCreate();
     uint index = 0;
     while (1) {
-        ScopedValue n(scope, method_iteratorNext(engine, iterator, false));
+        ScopedValue n(scope);
+        ScopedValue done(scope, method_iteratorNext(engine, iterator, n));
         if (engine->hasException)
             return Encode::undefined();
-        if (n->isEmpty())
+        Q_ASSERT(done->isBoolean());
+        if (done->booleanValue())
             break;
         array->arraySet(index, n);
         ++index;
