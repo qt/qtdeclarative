@@ -111,6 +111,11 @@ struct Lookup {
             quintptr protoId;
             int offset;
         } insertionLookup;
+        struct {
+            quintptr _unused;
+            quintptr _unused2;
+            uint index;
+        } indexedLookup;
     };
     uint nameIndex;
 
@@ -133,6 +138,7 @@ struct Lookup {
     static ReturnedValue getterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterProtoAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);

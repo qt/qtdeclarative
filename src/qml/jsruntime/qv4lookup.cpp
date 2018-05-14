@@ -71,6 +71,11 @@ ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *objec
 {
     Heap::Object *obj = object->d();
     Identifier name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    if (name.isArrayIndex()) {
+        indexedLookup.index = name.asArrayIndex();
+        getter = getterIndexed;
+        return getter(this, engine, *object);
+    }
 
     uint index = obj->internalClass->find(name);
     if (index != UINT_MAX) {
@@ -371,6 +376,24 @@ ReturnedValue Lookup::getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
+}
+
+ReturnedValue Lookup::getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    Object *o = object.objectValue();
+    if (o) {
+        Heap::Object *ho = o->d();
+        if (ho->arrayData && ho->arrayData->type == Heap::ArrayData::Simple) {
+            Heap::SimpleArrayData *s = ho->arrayData.cast<Heap::SimpleArrayData>();
+            if (l->indexedLookup.index < s->values.size)
+                if (!s->data(l->indexedLookup.index).isEmpty())
+                    return s->data(l->indexedLookup.index).asReturnedValue();
+        }
+        return o->getIndexed(l->indexedLookup.index);
+    }
+    l->getter = getterFallback;
+    return getterFallback(l, engine, object);
+
 }
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)
