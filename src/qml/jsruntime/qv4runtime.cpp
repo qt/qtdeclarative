@@ -733,6 +733,26 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     return o->get(engine->id_value());
 }
 
+ReturnedValue Runtime::method_destructureRestElement(ExecutionEngine *engine, const Value &iterator)
+{
+    Q_ASSERT(iterator.isObject());
+
+    Scope scope(engine);
+    ScopedArrayObject array(scope, engine->newArrayObject());
+    array->arrayCreate();
+    uint index = 0;
+    while (1) {
+        ScopedValue n(scope, method_iteratorNext(engine, iterator, false));
+        if (engine->hasException)
+            return Encode::undefined();
+        if (n->isEmpty())
+            break;
+        array->arraySet(index, n);
+        ++index;
+    }
+    return array->asReturnedValue();
+}
+
 void Runtime::method_storeNameSloppy(ExecutionEngine *engine, int nameIndex, const Value &value)
 {
     Scope scope(engine);

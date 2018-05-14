@@ -123,6 +123,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 1, reg)
 #define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
 #define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 1, returnUndefinedWhenDone)
+#define INSTR_DestructureRestElement(op) INSTRUCTION(op, DestructureRestElement, 0)
 #define INSTR_DeleteMember(op) INSTRUCTION(op, DeleteMember, 2, member, base)
 #define INSTR_DeleteSubscript(op) INSTRUCTION(op, DeleteSubscript, 2, base, index)
 #define INSTR_DeleteName(op) INSTRUCTION(op, DeleteName, 1, name)
@@ -251,6 +252,7 @@ QT_BEGIN_NAMESPACE
     F(PopContext) \
     F(GetIterator) \
     F(IteratorNext) \
+    F(DestructureRestElement) \
     F(DeleteMember) \
     F(DeleteSubscript) \
     F(DeleteName) \

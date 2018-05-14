@@ -965,6 +965,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNext)
 
+    MOTH_BEGIN_INSTR(DestructureRestElement)
+        STORE_ACC();
+        acc = Runtime::method_destructureRestElement(engine, ACC);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(DestructureRestElement)
+
     MOTH_BEGIN_INSTR(DeleteMember)
         if (!Runtime::method_deleteMember(engine, STACK_VALUE(base), member)) {
             if (function->isStrict()) {

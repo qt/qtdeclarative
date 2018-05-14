@@ -495,22 +495,25 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
         }
 
         RegisterScope scope(this);
-
         iterator.loadInAccumulator();
-        Instruction::IteratorNext next;
-        next.returnUndefinedWhenDone = true;
-        bytecodeGenerator->addInstruction(next);
+
         PatternElement *e = p->element;
-        if (!e)
-            continue;
-        if (e->type != PatternElement::RestElement) {
+        if (e && e->type == PatternElement::RestElement) {
+            bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
             initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
-            if (hasError) {
-                end.link();
-                return;
-            }
         } else {
-            throwSyntaxError(bindingList->firstSourceLocation(), QString::fromLatin1("Support for rest elements in binding arrays not implemented!"));
+            Instruction::IteratorNext next;
+            next.returnUndefinedWhenDone = true;
+            bytecodeGenerator->addInstruction(next);
+            if (!e)
+                continue;
+            if (e->type != PatternElement::RestElement) {
+                initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
+                if (hasError) {
+                    end.link();
+                    return;
+                }
+            }
         }
     }
     end.link();

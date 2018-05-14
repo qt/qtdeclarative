@@ -725,6 +725,17 @@ void BaselineJIT::generate_IteratorNext(int returnUndefinedWhenDone)
     as->checkException();
 }
 
+void BaselineJIT::generate_DestructureRestElement()
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_destructureRestElement, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+
 
 static ReturnedValue deleteMemberHelper(QV4::Function *function, const QV4::Value &base, int member)
 {
@@ -1279,6 +1290,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(IteratorNext)
         MOTH_END_INSTR(IteratorNext)
+
+        MOTH_BEGIN_INSTR(DestructureRestElement)
+        MOTH_END_INSTR(DestructureRestElement)
 
         MOTH_BEGIN_INSTR(DeleteMember)
         MOTH_END_INSTR(DeleteMember)

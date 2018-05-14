@@ -147,6 +147,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     /* for-in, for-of and array destructuring */ \
     F(ReturnedValue, getIterator, (ExecutionEngine *engine, const Value &in, int iterator)) \
     F(ReturnedValue, iteratorNext, (ExecutionEngine *engine, const Value &iterator, int returnUndefinedWhenDone)) \
+    F(ReturnedValue, destructureRestElement, (ExecutionEngine *engine, const Value &iterator)) \
     \
     /* unary operators */ \
     F(ReturnedValue, uMinus, (const Value &value)) \
