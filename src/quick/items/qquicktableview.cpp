@@ -449,25 +449,23 @@ bool QQuickTableViewPrivate::canUnloadTableEdge(Qt::Edge tableEdge, const QRectF
 {
     // Note: if there is only one row or column left, we cannot unload, since
     // they are needed as anchor point for further layouting.
-    const qreal floatingPointMargin = 1;
-
     switch (tableEdge) {
     case Qt::LeftEdge:
         if (loadedTable.width() <= 1)
             return false;
-        return loadedTableInnerRect.left() < fillRect.left() - floatingPointMargin;
+        return loadedTableInnerRect.left() < fillRect.left();
     case Qt::RightEdge:
         if (loadedTable.width() <= 1)
             return false;
-        return loadedTableInnerRect.right() > fillRect.right() + floatingPointMargin;
+        return loadedTableInnerRect.right() > fillRect.right();
     case Qt::TopEdge:
         if (loadedTable.height() <= 1)
             return false;
-        return loadedTableInnerRect.top() < fillRect.top() - floatingPointMargin;
+        return loadedTableInnerRect.top() < fillRect.top();
     case Qt::BottomEdge:
         if (loadedTable.height() <= 1)
             return false;
-        return loadedTableInnerRect.bottom() > fillRect.bottom() + floatingPointMargin;
+        return loadedTableInnerRect.bottom() > fillRect.bottom();
     }
     Q_TABLEVIEW_UNREACHABLE(tableEdge);
     return false;

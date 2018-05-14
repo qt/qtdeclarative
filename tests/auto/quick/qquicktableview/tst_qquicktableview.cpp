@@ -93,6 +93,8 @@ private slots:
     void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
+    void flick_data();
+    void flick();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -405,6 +407,70 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     int expectedRows = qCeil(availableHeight / cellHeight);
     int actualRows = bottomRightAttached->row() + 1;
     QCOMPARE(actualRows, expectedRows);
+}
+
+void tst_QQuickTableView::flick_data()
+{
+    QTest::addColumn<QSizeF>("spacing");
+    QTest::addColumn<QMarginsF>("margins");
+
+    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20);
+    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20);
+}
+
+void tst_QQuickTableView::flick()
+{
+    // Check that if we end up with the correct start and end column/row as we flick around
+    // with different table configurations.
+    QFETCH(QSizeF, spacing);
+    QFETCH(QMarginsF, margins);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+    const int visualColumnCount = 4;
+    const int visualRowCount = 4;
+    const qreal cellWidth = delegateWidth + spacing.width();
+    const qreal cellHeight = delegateHeight + spacing.height();
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+    tableView->setRowSpacing(spacing.height());
+    tableView->setColumnSpacing(spacing.width());
+    tableView->setLeftMargin(margins.left());
+    tableView->setTopMargin(margins.top());
+    tableView->setRightMargin(margins.right());
+    tableView->setBottomMargin(margins.bottom());
+    tableView->setCacheBuffer(0);
+    tableView->setWidth(margins.left() + (visualColumnCount * cellWidth) - spacing.width());
+    tableView->setHeight(margins.top() + (visualRowCount * cellHeight) - spacing.height());
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check the "simple" case if the cells never lands egde-to-edge with the viewport. For
+    // that case we only accept that visible row/columns are loaded.
+    qreal flickValues[] = {0.5, 1.5, 4.5, 20.5, 10.5, 3.5, 1.5, 0.5};
+
+    for (qreal cellsToFlick : flickValues) {
+        // Flick to the beginning of the cell
+        tableView->setContentX(cellsToFlick * cellWidth);
+        tableView->setContentY(cellsToFlick * cellHeight);
+        tableView->polish();
+
+        WAIT_UNTIL_POLISHED;
+
+        const QRect loadedTable = tableViewPrivate->loadedTable;
+
+        const int expectedTableLeft = cellsToFlick - int((margins.left() + spacing.width()) / cellWidth);
+        const int expectedTableTop = cellsToFlick - int((margins.top() + spacing.height()) / cellHeight);
+
+        QCOMPARE(loadedTable.left(), expectedTableLeft);
+        QCOMPARE(loadedTable.right(), expectedTableLeft + visualColumnCount);
+        QCOMPARE(loadedTable.top(), expectedTableTop);
+        QCOMPARE(loadedTable.bottom(), expectedTableTop + visualRowCount);
+    }
 }
 
 QTEST_MAIN(tst_QQuickTableView)

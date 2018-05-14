@@ -43,13 +43,14 @@ import Qt.labs.tableview 1.0
 
 Item {
     width: 640
-    height: 480
+    height: 450
 
     property alias tableView: tableView
 
     TableView {
         id: tableView
-        anchors.fill: parent
+        width: 600
+        height: 400
         anchors.margins: 1
         clip: true
         delegate: tableViewDelegate
@@ -65,6 +66,7 @@ Item {
             implicitWidth: 100
             implicitHeight: 50
             color: "lightgray"
+            border.width: 1
             Text {
                 anchors.centerIn: parent
                 text: modelData
