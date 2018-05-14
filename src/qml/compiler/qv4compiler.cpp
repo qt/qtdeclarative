@@ -90,7 +90,11 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
+        s->refcount = -1;
         s->size = qstr.length();
+        s->allocAndCapacityReservedFlag = 0;
+        s->offsetOn32Bit = sizeof(QV4::CompiledData::String);
+        s->offsetOn64Bit = sizeof(QV4::CompiledData::String);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
 #else
@@ -98,6 +102,7 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         for (int i = 0; i < qstr.length(); ++i)
             uc[i] = qToLittleEndian<ushort>(qstr.at(i).unicode());
 #endif
+        reinterpret_cast<ushort *>(s + 1)[s->size] = 0;
 
         stringData += QV4::CompiledData::String::calculateSize(qstr);
     }
