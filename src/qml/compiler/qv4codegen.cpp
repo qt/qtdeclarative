@@ -478,6 +478,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
 
     Reference iterator = Reference::fromStackSlot(this);
     Reference iteratorValue = Reference::fromStackSlot(this);
+    Reference iteratorDone = Reference::fromStackSlot(this);
 
     array.loadInAccumulator();
     Instruction::GetIterator iteratorObjInstr;
@@ -485,29 +486,42 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
+    bool hadNext = false;
+    bool hasRest = false;
+
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     for (PatternElementList *p = bindingList; p; p = p->next) {
+        PatternElement *e = p->element;
         for (Elision *elision = p->elision; elision; elision = elision->next) {
             iterator.loadInAccumulator();
             Instruction::IteratorNext next;
             next.value = iteratorValue.stackSlot();
             bytecodeGenerator->addInstruction(next);
+            hadNext = true;
+            bool last = !elision->next && !e && !p->next;
+            if (last)
+                iteratorDone.storeConsumeAccumulator();
         }
 
+        if (!e)
+            continue;
+
+        hadNext = true;
         RegisterScope scope(this);
         iterator.loadInAccumulator();
 
-        PatternElement *e = p->element;
-        if (e && e->type == PatternElement::RestElement) {
+        if (e->type == PatternElement::RestElement) {
             bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
             initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
+            hasRest = true;
         } else {
             Instruction::IteratorNext next;
             next.value = iteratorValue.stackSlot();
             bytecodeGenerator->addInstruction(next);
-            if (!e)
-                continue;
+            bool last = !p->next;
+            if (last)
+                iteratorDone.storeConsumeAccumulator();
             if (e->type != PatternElement::RestElement) {
                 initializeAndDestructureBindingElement(e, iteratorValue);
                 if (hasError) {
@@ -517,6 +531,18 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
             }
         }
     }
+
+    if (!hadNext) {
+        Reference::storeConstOnStack(this, Encode(false), iteratorDone.stackSlot());
+    }
+
+    if (!hasRest) {
+        iterator.loadInAccumulator();
+        Instruction::IteratorClose close;
+        close.done = iteratorDone.stackSlot();
+        bytecodeGenerator->addInstruction(close);
+    }
+
     end.link();
 }
 

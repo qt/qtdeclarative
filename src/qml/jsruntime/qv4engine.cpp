@@ -270,6 +270,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_lastIndex] = newIdentifier(QStringLiteral("lastIndex"));
     jsStrings[String_next] = newIdentifier(QStringLiteral("next"));
     jsStrings[String_done] = newIdentifier(QStringLiteral("done"));
+    jsStrings[String_return] = newIdentifier(QStringLiteral("return"));
 
     jsSymbols[Symbol_hasInstance] = Symbol::create(this, QStringLiteral("@Symbol.hasInstance"));
     jsSymbols[Symbol_isConcatSpreadable] = Symbol::create(this, QStringLiteral("@Symbol.isConcatSpreadable"));

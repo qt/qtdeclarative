@@ -737,6 +737,39 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     return Encode(done);
 }
 
+ReturnedValue Runtime::method_iteratorClose(ExecutionEngine *engine, const Value &iterator, const Value &done)
+{
+    Q_ASSERT(iterator.isObject());
+    Q_ASSERT(done.isBoolean());
+    if (done.booleanValue())
+        return Encode::undefined();
+
+    Scope scope(engine);
+    bool hadException = engine->hasException;
+    ScopedValue e(scope);
+    if (hadException) {
+        e = *engine->exceptionValue;
+        engine->hasException = false;
+    }
+    ScopedFunctionObject f(scope, static_cast<const Object &>(iterator).get(engine->id_return()));
+    ScopedObject o(scope);
+    if (f) {
+        JSCallData cData(scope, 0, nullptr, &iterator);
+        o = f->call(cData);
+    }
+    if (hadException || !f) {
+        *engine->exceptionValue = e;
+        engine->hasException = hadException;
+        return Encode::undefined();
+    }
+    if (engine->hasException)
+        return Encode::undefined();
+
+    if (!o)
+        return engine->throwTypeError();
+    return Encode::undefined();
+}
+
 ReturnedValue Runtime::method_destructureRestElement(ExecutionEngine *engine, const Value &iterator)
 {
     Q_ASSERT(iterator.isObject());

@@ -965,6 +965,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNext)
 
+    MOTH_BEGIN_INSTR(IteratorClose)
+        STORE_ACC();
+        acc = Runtime::method_iteratorClose(engine, accumulator, STACK_VALUE(done));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(IteratorClose)
+
     MOTH_BEGIN_INSTR(DestructureRestElement)
         STORE_ACC();
         acc = Runtime::method_destructureRestElement(engine, ACC);

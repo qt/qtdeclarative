@@ -329,6 +329,7 @@ public:
         String_lastIndex,
         String_next,
         String_done,
+        String_return,
 
         NJSStrings
     };
@@ -389,6 +390,7 @@ public:
     String *id_lastIndex() const { return reinterpret_cast<String *>(jsStrings + String_lastIndex); }
     String *id_next() const { return reinterpret_cast<String *>(jsStrings + String_next); }
     String *id_done() const { return reinterpret_cast<String *>(jsStrings + String_done); }
+    String *id_return() const { return reinterpret_cast<String *>(jsStrings + String_return); }
 
     Symbol *symbol_hasInstance() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_hasInstance); }
     Symbol *symbol_isConcatSpreadable() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_isConcatSpreadable); }

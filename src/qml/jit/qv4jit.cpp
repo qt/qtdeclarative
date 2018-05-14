@@ -725,6 +725,17 @@ void BaselineJIT::generate_IteratorNext(int value)
     as->checkException();
 }
 
+void BaselineJIT::generate_IteratorClose(int done)
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(3);
+    as->passRegAsArg(done, 2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorClose, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_DestructureRestElement()
 {
     as->saveAccumulatorInFrame();
@@ -1290,6 +1301,9 @@ void BaselineJIT::collectLabelsInBytecode()
 
         MOTH_BEGIN_INSTR(IteratorNext)
         MOTH_END_INSTR(IteratorNext)
+
+        MOTH_BEGIN_INSTR(IteratorClose)
+        MOTH_END_INSTR(IteratorClose)
 
         MOTH_BEGIN_INSTR(DestructureRestElement)
         MOTH_END_INSTR(DestructureRestElement)
