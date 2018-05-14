@@ -115,7 +115,9 @@ static QStringList defaultImportPathList()
 {
     QStringList importPaths;
     importPaths.reserve(3);
+#ifndef QT_STATIC
     importPaths += QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#endif
     importPaths += envPathList("QML2_IMPORT_PATH");
     importPaths += QStringLiteral(":/qt-project.org/imports");
     importPaths += QCoreApplication::applicationDirPath();
