@@ -1853,6 +1853,10 @@ ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, cons
     if (argc > i)
         n = argv[i].toInt32();
 
+    if (QQmlEnginePrivate *ep = (scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr))
+        if (ep->propertyCapture)
+            ep->propertyCapture->captureTranslation();
+
     QString result = QCoreApplication::translate(context.toUtf8().constData(),
                                                  text.toUtf8().constData(),
                                                  comment.toUtf8().constData(),
@@ -1956,6 +1960,10 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
     if (argc > 2)
         n = argv[2].toInt32();
 
+    if (QQmlEnginePrivate *ep = (scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr))
+        if (ep->propertyCapture)
+            ep->propertyCapture->captureTranslation();
+
     QString result = QCoreApplication::translate(context.toUtf8().constData(), text.toUtf8().constData(),
                                                  comment.toUtf8().constData(), n);
 
@@ -2035,6 +2043,10 @@ ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Val
     int n = -1;
     if (argc > 1)
         n = argv[1].toInt32();
+
+    if (QQmlEnginePrivate *ep = (scope.engine->qmlEngine() ? QQmlEnginePrivate::get(scope.engine->qmlEngine()) : nullptr))
+        if (ep->propertyCapture)
+            ep->propertyCapture->captureTranslation();
 
     return Encode(scope.engine->newString(qtTrId(argv[0].toQStringNoThrow().toUtf8().constData(), n)));
 }

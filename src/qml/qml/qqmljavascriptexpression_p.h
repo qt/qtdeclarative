@@ -171,13 +171,17 @@ protected:
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> permanentGuards;
 
+    void setTranslationsCaptured(bool captured) { m_error.setFlagValue(captured); }
+    bool translationsCaptured() const { return m_error.flag(); }
+
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlTranslationBinding;
 
-    QQmlDelayedError *m_error;
+    // m_error:flag1 translationsCapturedDuringEvaluation
+    QFlagPointer<QQmlDelayedError> m_error;
 
     QQmlContextData *m_context;
     QQmlJavaScriptExpression **m_prevExpression;
@@ -208,12 +212,14 @@ public:
     static void registerQmlDependencies(QV4::Heap::QmlContext *context, const QV4::ExecutionEngine *engine, const QV4::CompiledData::Function *compiledFunction);
     void captureProperty(QQmlNotifier *, Duration duration = OnlyOnce);
     void captureProperty(QObject *, int, int, Duration duration = OnlyOnce, bool doNotify = true);
+    void captureTranslation() { translationCaptured = true; }
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
     QQmlJavaScriptExpression::DeleteWatcher *watcher;
     QFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
     QStringList *errorString;
+    bool translationCaptured = false;
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)
@@ -260,18 +266,17 @@ void QQmlJavaScriptExpression::setScopeObject(QObject *v)
 
 bool QQmlJavaScriptExpression::hasError() const
 {
-    return m_error && m_error->isValid();
+    return !m_error.isNull() && m_error->isValid();
 }
 
 bool QQmlJavaScriptExpression::hasDelayedError() const
 {
-    return m_error;
+    return !m_error.isNull();
 }
 
 inline void QQmlJavaScriptExpression::clearError()
 {
-    if (m_error)
-        delete m_error;
+    delete m_error.data();
     m_error = nullptr;
 }
 

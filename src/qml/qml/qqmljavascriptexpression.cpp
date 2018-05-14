@@ -93,8 +93,7 @@ void QQmlDelayedError::catchJavaScriptException(QV4::ExecutionEngine *engine)
 
 
 QQmlJavaScriptExpression::QQmlJavaScriptExpression()
-    : m_error(nullptr),
-      m_context(nullptr),
+    :  m_context(nullptr),
       m_prevExpression(nullptr),
       m_nextExpression(nullptr),
       m_v4Function(nullptr)
@@ -247,6 +246,9 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
         g->Delete();
 
+    if (!watcher.wasDeleted())
+        setTranslationsCaptured(capture.translationCaptured);
+
     ep->propertyCapture = lastPropertyCapture;
 
     return result->asReturnedValue();
@@ -392,7 +394,7 @@ QQmlDelayedError *QQmlJavaScriptExpression::delayedError()
 {
     if (!m_error)
         m_error = new QQmlDelayedError;
-    return m_error;
+    return m_error.data();
 }
 
 QV4::ReturnedValue

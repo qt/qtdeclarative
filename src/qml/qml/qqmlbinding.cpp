@@ -374,6 +374,8 @@ public:
         }
     }
 
+    bool hasDependencies() const override final { return true; }
+
 private:
     const QV4::CompiledData::Binding *m_binding;
 };
@@ -661,6 +663,11 @@ QVector<QQmlProperty> QQmlBinding::dependencies() const
     }
 
     return dependencies;
+}
+
+bool QQmlBinding::hasDependencies() const
+{
+    return !permanentGuards.isEmpty() || !activeGuards.isEmpty() || translationsCaptured();
 }
 
 class QObjectPointerBinding: public QQmlNonbindingBinding

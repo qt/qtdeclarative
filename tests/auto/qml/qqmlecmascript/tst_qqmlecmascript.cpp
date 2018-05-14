@@ -49,6 +49,8 @@
 #include <private/qv4object_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qv4objectiterator_p.h>
+#include <private/qqmlabstractbinding_p.h>
+#include <private/qqmlvaluetypeproxybinding_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -353,6 +355,7 @@ private slots:
     void anotherNaN();
     void callPropertyOnUndefined();
     void jumpStrictNotEqualUndefined();
+    void removeBindingsWithNoDependencies();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -5974,7 +5977,7 @@ void tst_qqmlecmascript::nullObjectInitializer()
         {
             const int propertyIndex = obj->metaObject()->indexOfProperty("testProperty");
             QVERIFY(propertyIndex > 0);
-            QVERIFY(ddata->hasBindingBit(propertyIndex));
+            QVERIFY(!ddata->hasBindingBit(propertyIndex));
         }
 
         QVERIFY(obj->property("success").toBool());
@@ -8756,6 +8759,35 @@ void tst_qqmlecmascript::jumpStrictNotEqualUndefined()
     ));
     QVERIFY(!v.isError());
     QCOMPARE(v.toInt(), 2);
+}
+
+void tst_qqmlecmascript::removeBindingsWithNoDependencies()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("removeBindingsWithNoDependencies.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QVariant rect = object->property("placement");
+    QCOMPARE(rect.toRectF(), QRectF(0, 0, 100, 100));
+    const QMetaObject *metaObject = object->metaObject();
+
+    {
+        const QMetaProperty prop = metaObject->property(metaObject->indexOfProperty("placement"));
+        QVERIFY(prop.isValid());
+        QVERIFY(!QQmlPropertyPrivate::binding(object.data(), QQmlPropertyIndex(prop.propertyIndex())));
+    }
+
+    {
+        const QMetaProperty prop = metaObject->property(metaObject->indexOfProperty("partialPlacement"));
+        QVERIFY(prop.isValid());
+        QQmlAbstractBinding *vtProxyBinding = QQmlPropertyPrivate::binding(object.data(), QQmlPropertyIndex(prop.propertyIndex()));
+        QVERIFY(vtProxyBinding);
+        QVERIFY(vtProxyBinding->isValueTypeProxy());
+
+        QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding*>(vtProxyBinding);
+        QVERIFY(!proxy->subBindings());
+    }
+
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

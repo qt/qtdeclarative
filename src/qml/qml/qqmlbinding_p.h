@@ -118,6 +118,7 @@ public:
      * Call this method from the UI thread.
      */
     QVector<QQmlProperty> dependencies() const;
+    virtual bool hasDependencies() const;
 
 protected:
     virtual void doUpdate(const DeleteWatcher &watcher,

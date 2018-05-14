@@ -82,6 +82,8 @@ public:
 
     inline T *data() const;
 
+    inline explicit operator bool() const;
+
 private:
     quintptr ptr_value = 0;
 
@@ -228,6 +230,12 @@ template<typename T>
 T *QFlagPointer<T>::data() const
 {
     return (T *)(ptr_value & ~FlagsMask);
+}
+
+template<typename T>
+QFlagPointer<T>::operator bool() const
+{
+    return data() != nullptr;
 }
 
 template<typename T, typename T2>

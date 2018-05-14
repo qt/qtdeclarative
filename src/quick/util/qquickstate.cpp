@@ -222,7 +222,7 @@ bool QQuickState::isWhenKnown() const
 QQmlBinding *QQuickState::when() const
 {
     Q_D(const QQuickState);
-    return d->when;
+    return d->when.data();
 }
 
 void QQuickState::setWhen(QQmlBinding *when)

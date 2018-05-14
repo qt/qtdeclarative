@@ -1344,6 +1344,11 @@ QQmlContextData *QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interru
         data->clearPendingBindingBit(b->targetPropertyIndex().coreIndex());
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                       QQmlPropertyData::DontRemoveBinding);
+        if (!b->isValueTypeProxy()) {
+            QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
+            if (!binding->hasError() && !binding->hasDependencies())
+                b->removeFromObject();
+        }
 
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return nullptr;
