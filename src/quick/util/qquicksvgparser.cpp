@@ -280,11 +280,8 @@ bool QQuickSvgParser::parsePathDataFast(const QString &dataStr, QPainterPath &pa
             ++str;
         QChar pathElem = *str;
         ++str;
-        QChar endc = *end;
-        *const_cast<QChar *>(end) = 0; // parseNumbersArray requires 0-termination that QStringRef cannot guarantee
         QVarLengthArray<qreal, 8> arg;
         parseNumbersArray(str, arg);
-        *const_cast<QChar *>(end) = endc;
         if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
             arg.append(0);//dummy
         const qreal *num = arg.constData();
