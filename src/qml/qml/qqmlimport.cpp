@@ -2048,7 +2048,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
 
         if (QQmlExtensionPlugin *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
             // basepath should point to the directory of the module, not the plugin file itself:
-            QQmlExtensionPluginPrivate::get(plugin)->baseUrl = QUrl::fromLocalFile(basePath);
+            QQmlExtensionPluginPrivate::get(plugin)->baseUrl = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
         }
 
         iface->registerTypes(moduleId);
