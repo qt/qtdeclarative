@@ -539,8 +539,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("escape"), GlobalFunctions::method_escape, 1);
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
-    ScopedString name(scope, newString(QStringLiteral("thrower")));
-    jsObjects[ThrowerObject] = FunctionObject::createBuiltinFunction(this, name, ::throwTypeError, 0);
+    ScopedFunctionObject t(scope, memoryManager->allocate<FunctionObject>(rootContext(), nullptr, ::throwTypeError));
+    t->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
+    t->setInternalClass(t->internalClass()->frozen());
+    jsObjects[ThrowerObject] = t;
 
     ScopedProperty pd(scope);
     pd->value = thrower();

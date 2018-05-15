@@ -2134,10 +2134,6 @@ built-ins/Symbol/toPrimitive/cross-realm.js fails
 built-ins/Symbol/toStringTag/cross-realm.js fails
 built-ins/Symbol/unscopables/cross-realm.js fails
 built-ins/ThrowTypeError/distinct-cross-realm.js fails
-built-ins/ThrowTypeError/extensible.js fails
-built-ins/ThrowTypeError/frozen.js fails
-built-ins/ThrowTypeError/length.js fails
-built-ins/ThrowTypeError/name.js fails
 built-ins/TypedArray/Symbol.species/length.js fails
 built-ins/TypedArray/Symbol.species/name.js fails
 built-ins/TypedArray/Symbol.species/prop-desc.js fails
