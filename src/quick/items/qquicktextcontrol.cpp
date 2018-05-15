@@ -1304,8 +1304,12 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         cursor.removeSelectedText();
     }
 
+    QTextBlock block;
+
     // insert commit string
     if (!e->commitString().isEmpty() || e->replacementLength()) {
+        if (e->commitString().endsWith(QChar::LineFeed))
+            block = cursor.block(); // Remember the block where the preedit text is
         QTextCursor c = cursor;
         c.setPosition(c.position() + e->replacementStart());
         c.setPosition(c.position() + e->replacementLength(), QTextCursor::KeepAnchor);
@@ -1324,7 +1328,9 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
         }
     }
 
-    QTextBlock block = cursor.block();
+    if (!block.isValid())
+        block = cursor.block();
+
     QTextLayout *layout = block.layout();
     if (isGettingInput) {
         layout->setPreeditArea(cursor.position() - block.position(), e->preeditString());

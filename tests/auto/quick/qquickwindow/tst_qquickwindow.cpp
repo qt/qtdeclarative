@@ -179,6 +179,7 @@ public:
 
     bool acceptTouchEvents;
     bool acceptMouseEvents;
+    bool grabOnRelease = false;
     TouchEventData lastEvent;
     int mousePressCount;
     int mouseMoveCount;
@@ -247,6 +248,10 @@ public:
         switch (e->type()) {
         case QEvent::MouseButtonPress:
             mousePressCount = ++mousePressNum;
+            break;
+        case QEvent::MouseButtonRelease:
+            if (grabOnRelease)
+                grabMouse();
             break;
         case QEvent::MouseMove:
             mouseMoveCount = ++mouseMoveNum;
@@ -468,6 +473,7 @@ private slots:
 
     void testChildMouseEventFilter();
     void testChildMouseEventFilter_data();
+    void cleanupGrabsOnRelease();
 
 private:
     QTouchDevice *touchDevice;
@@ -3514,6 +3520,41 @@ void tst_qquickwindow::testChildMouseEventFilter()
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
 }
 
+void tst_qquickwindow::cleanupGrabsOnRelease()
+{
+    TestTouchItem::clearMouseEventCounters();
+
+    QQuickWindow *window = new QQuickWindow;
+    QScopedPointer<QQuickWindow> cleanup(window);
+    window->resize(250, 250);
+    window->setPosition(100, 100);
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    TestTouchItem *parent = new TestTouchItem(window->contentItem());
+    parent->setObjectName("parent");
+    parent->setSize(QSizeF(150, 150));
+    parent->acceptMouseEvents = true;
+    parent->grabOnRelease = true;
+
+    TestTouchItem *child = new TestTouchItem(parent);
+    child->setObjectName("child");
+    child->setSize(QSizeF(100, 100));
+    child->acceptMouseEvents = true;
+
+    QPoint pos(80, 80);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pos);
+    // There is an explicit parent->grabMouse on release(!). This means grab changes from child
+    // to parent:
+    // This will emit two ungrab events:
+    // 1. One for the child (due to the explicit call to parent->grabMouse())
+    // 2. One for the parent (since the mouse button was finally released)
+    QCOMPARE(child->mouseUngrabEventCount, 1);
+    QCOMPARE(parent->mouseUngrabEventCount, 1);
+}
 
 QTEST_MAIN(tst_qquickwindow)
 

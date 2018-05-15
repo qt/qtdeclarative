@@ -66,7 +66,9 @@ QT_BEGIN_NAMESPACE
 class QQuickPointerDevice;
 class QQuickPointerEvent;
 class QQuickPointerMouseEvent;
+#if QT_CONFIG(gestures)
 class QQuickPointerNativeGestureEvent;
+#endif
 class QQuickPointerTabletEvent;
 class QQuickPointerTouchEvent;
 class QQuickPointerHandler;
@@ -414,11 +416,15 @@ public: // helpers for C++ only (during event delivery)
     virtual QQuickPointerMouseEvent *asPointerMouseEvent() { return nullptr; }
     virtual QQuickPointerTouchEvent *asPointerTouchEvent() { return nullptr; }
     virtual QQuickPointerTabletEvent *asPointerTabletEvent() { return nullptr; }
+#if QT_CONFIG(gestures)
     virtual QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() { return nullptr; }
+#endif
     virtual const QQuickPointerMouseEvent *asPointerMouseEvent() const { return nullptr; }
     virtual const QQuickPointerTouchEvent *asPointerTouchEvent() const { return nullptr; }
     virtual const QQuickPointerTabletEvent *asPointerTabletEvent() const { return nullptr; }
+#if QT_CONFIG(gestures)
     virtual const QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() const { return nullptr; }
+#endif
     virtual bool allPointsAccepted() const = 0;
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
@@ -519,6 +525,7 @@ private:
     Q_DISABLE_COPY(QQuickPointerTouchEvent)
 };
 
+#if QT_CONFIG(gestures)
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickPointerEvent
 {
     Q_OBJECT
@@ -553,6 +560,7 @@ private:
 
     Q_DISABLE_COPY(QQuickPointerNativeGestureEvent)
 };
+#endif // QT_CONFIG(gestures)
 
 
 // ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent

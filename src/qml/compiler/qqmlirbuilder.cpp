@@ -323,16 +323,16 @@ Document::Document(bool debugMode)
 {
 }
 
-ScriptDirectivesCollector::ScriptDirectivesCollector(QQmlJS::Engine *engine, QV4::Compiler::JSUnitGenerator *unitGenerator)
-    : engine(engine)
-    , jsGenerator(unitGenerator)
-    , hasPragmaLibrary(false)
+ScriptDirectivesCollector::ScriptDirectivesCollector(Document *doc)
+    : document(doc)
+    , engine(&doc->jsParserEngine)
+    , jsGenerator(&doc->jsGenerator)
 {
 }
 
 void ScriptDirectivesCollector::pragmaLibrary()
 {
-    hasPragmaLibrary = true;
+    document->jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 }
 
 void ScriptDirectivesCollector::importFile(const QString &jsfile, const QString &module, int lineNumber, int column)
@@ -343,7 +343,7 @@ void ScriptDirectivesCollector::importFile(const QString &jsfile, const QString 
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
-    imports << import;
+    document->imports << import;
 }
 
 void ScriptDirectivesCollector::importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column)
@@ -359,7 +359,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
-    imports << import;
+    document->imports << import;
 }
 
 IRBuilder::IRBuilder(const QSet<QString> &illegalNames)

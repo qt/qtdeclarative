@@ -207,7 +207,11 @@ public:
 
     TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine)
     {
-        QQmlComponent component(engine, fileInfo.absoluteFilePath());
+        QString path = fileInfo.absoluteFilePath();
+        if (path.startsWith(QLatin1String(":/")))
+            path.prepend(QLatin1String("qrc"));
+
+        QQmlComponent component(engine, path);
         m_errors += component.errors();
 
         if (component.isReady()) {
@@ -534,7 +538,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         QTestRootObject::instance()->init();
         QString path = fi.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
-            view.setSource(QUrl(QLatin1String("qrc:") + path.midRef(2)));
+            view.setSource(QUrl(QLatin1String("qrc:") + path.midRef(1)));
         else
             view.setSource(QUrl::fromLocalFile(path));
 
