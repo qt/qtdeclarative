@@ -238,6 +238,8 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
     defineDefaultProperty(QStringLiteral("match"), method_match, 1);
     defineDefaultProperty(QStringLiteral("normalize"), method_normalize, 0);
+    defineDefaultProperty(QStringLiteral("padEnd"), method_padEnd, 1);
+    defineDefaultProperty(QStringLiteral("padStart"), method_padStart, 1);
     defineDefaultProperty(QStringLiteral("repeat"), method_repeat, 1);
     defineDefaultProperty(QStringLiteral("replace"), method_replace, 2);
     defineDefaultProperty(QStringLiteral("search"), method_search, 1);
@@ -556,6 +558,88 @@ ReturnedValue StringPrototype::method_normalize(const FunctionObject *f, const V
     QString normalized = value.normalized(form);
     return v4->newString(normalized)->asReturnedValue();
 }
+
+ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    ExecutionEngine *v4 = f->engine();
+    if (thisObject->isNullOrUndefined())
+        return v4->throwTypeError();
+
+    Scope scope(v4);
+    ScopedString s(scope, thisAsString(v4, thisObject));
+    if (v4->hasException)
+        return Encode::undefined();
+    if (!argc)
+        return s->asReturnedValue();
+
+    int maxLen = argv[0].toInteger();
+    if (maxLen <= s->d()->length())
+        return s->asReturnedValue();
+    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
+    if (v4->hasException)
+        return Encode::undefined();
+
+    if (fillString.isEmpty())
+        return s->asReturnedValue();
+
+    QString padded = s->toQString();
+    int oldLength = padded.length();
+    int toFill = maxLen - oldLength;
+    padded.resize(maxLen);
+    QChar *ch = padded.data() + oldLength;
+    while (toFill) {
+        int copy = qMin(fillString.length(), toFill);
+        memcpy(ch, fillString.constData(), copy*sizeof(QChar));
+        toFill -= copy;
+        ch += copy;
+    }
+    *ch = 0;
+
+    return v4->newString(padded)->asReturnedValue();
+}
+
+ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    ExecutionEngine *v4 = f->engine();
+    if (thisObject->isNullOrUndefined())
+        return v4->throwTypeError();
+
+    Scope scope(v4);
+    ScopedString s(scope, thisAsString(v4, thisObject));
+    if (v4->hasException)
+        return Encode::undefined();
+    if (!argc)
+        return s->asReturnedValue();
+
+    int maxLen = argv[0].toInteger();
+    if (maxLen <= s->d()->length())
+        return s->asReturnedValue();
+    QString fillString = (argc > 1 && !argv[1].isUndefined()) ? argv[1].toQString() : QString::fromLatin1(" ");
+    if (v4->hasException)
+        return Encode::undefined();
+
+    if (fillString.isEmpty())
+        return s->asReturnedValue();
+
+    QString original = s->toQString();
+    int oldLength = original.length();
+    int toFill = maxLen - oldLength;
+    QString padded;
+    padded.resize(maxLen);
+    QChar *ch = padded.data();
+    while (toFill) {
+        int copy = qMin(fillString.length(), toFill);
+        memcpy(ch, fillString.constData(), copy*sizeof(QChar));
+        toFill -= copy;
+        ch += copy;
+    }
+    memcpy(ch, original.constData(), oldLength*sizeof(QChar));
+    ch += oldLength;
+    *ch = 0;
+
+    return v4->newString(padded)->asReturnedValue();
+}
+
 
 ReturnedValue StringPrototype::method_repeat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {

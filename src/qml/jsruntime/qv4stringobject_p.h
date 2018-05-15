@@ -132,6 +132,8 @@ struct StringPrototype: StringObject
     static ReturnedValue method_localeCompare(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_normalize(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_padEnd(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_padStart(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_repeat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_replace(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_search(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
