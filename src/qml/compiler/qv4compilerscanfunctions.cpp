@@ -568,6 +568,17 @@ void ScanFunctions::calcEscapingVariables()
                 c = c->parent;
             }
         }
+        if (inner->usesThis) {
+            inner->usesThis = false;
+            if (!inner->isStrict) {
+                Context *c = inner;
+                while (c->contextType == ContextType::Block) {
+                    c = c->parent;
+                }
+                Q_ASSERT(c);
+                c->usesThis = true;
+            }
+        }
     }
     for (Context *c : qAsConst(m->contextMap)) {
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())

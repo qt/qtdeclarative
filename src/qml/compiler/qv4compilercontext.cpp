@@ -195,7 +195,8 @@ void Context::emitBlockHeader(Codegen *codegen)
         }
     }
 
-    if (usesThis && !isStrict) {
+    if (usesThis) {
+        Q_ASSERT(!isStrict);
         // make sure we convert this to an object
         Instruction::ConvertThisToObject convert;
         bytecodeGenerator->addInstruction(convert);
