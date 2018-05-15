@@ -66,6 +66,8 @@ public:
     static void reset();
     static QString configFilePath();
     static QSharedPointer<QSettings> settings(const QString &group = QString());
+    static const QFont *readFont(const QSharedPointer<QSettings> &settings);
+    static const QPalette *readPalette(const QSharedPointer<QSettings> &settings);
     static bool isDarkSystemTheme();
 };
 

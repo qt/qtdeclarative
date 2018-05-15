@@ -43,13 +43,17 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtCore/qmetaobject.h>
 #include <QtGui/qcolor.h>
+#include <QtGui/qfont.h>
 #include <QtGui/qpalette.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
+
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -348,6 +352,81 @@ QSharedPointer<QSettings> QQuickStylePrivate::settings(const QString &group)
 #endif // QT_NO_SETTINGS
     return QSharedPointer<QSettings>();
 }
+
+#if QT_CONFIG(settings)
+static void readValue(const QSharedPointer<QSettings> &settings, const QString &name, std::function<void(const QVariant &)> setValue)
+{
+    const QVariant var = settings->value(name);
+    if (var.isValid())
+        setValue(var);
+}
+
+template <typename Enum>
+static Enum toEnumValue(const QVariant &var)
+{
+    // ### TODO: expose QFont enums to the meta object system using Q_ENUM
+    //QMetaEnum enumeration = QMetaEnum::fromType<Enum>();
+    //bool ok = false;
+    //int value = enumeration.keyToValue(var.toByteArray(), &ok);
+    //if (!ok)
+    //    value = var.toInt();
+    //return static_cast<Enum>(value);
+
+    return static_cast<Enum>(var.toInt());
+}
+
+const QFont *QQuickStylePrivate::readFont(const QSharedPointer<QSettings> &settings)
+{
+    const QVariant var = settings->value(QStringLiteral("Font"));
+    if (var.isValid())
+        return new QFont(var.value<QFont>());
+
+    QFont f;
+    settings->beginGroup(QStringLiteral("Font"));
+    readValue(settings, QStringLiteral("Family"), [&f](const QVariant &var) { f.setFamily(var.toString()); });
+    readValue(settings, QStringLiteral("PointSize"), [&f](const QVariant &var) { f.setPointSizeF(var.toReal()); });
+    readValue(settings, QStringLiteral("PixelSize"), [&f](const QVariant &var) { f.setPixelSize(var.toInt()); });
+    readValue(settings, QStringLiteral("StyleHint"), [&f](const QVariant &var) { f.setStyleHint(toEnumValue<QFont::StyleHint>(var.toInt())); });
+    readValue(settings, QStringLiteral("Weight"), [&f](const QVariant &var) { f.setWeight(toEnumValue<QFont::Weight>(var)); });
+    readValue(settings, QStringLiteral("Style"), [&f](const QVariant &var) { f.setStyle(toEnumValue<QFont::Style>(var.toInt())); });
+    settings->endGroup();
+    return new QFont(f);
+}
+
+static void readColorGroup(const QSharedPointer<QSettings> &settings, QPalette::ColorGroup group, QPalette *palette)
+{
+    const QStringList keys = settings->childKeys();
+    if (keys.isEmpty())
+        return;
+
+    static const int index = QPalette::staticMetaObject.indexOfEnumerator("ColorRole");
+    Q_ASSERT(index != -1);
+    QMetaEnum metaEnum = QPalette::staticMetaObject.enumerator(index);
+
+    for (const QString &key : keys) {
+        bool ok = false;
+        int role = metaEnum.keyToValue(key.toUtf8(), &ok);
+        if (ok)
+            palette->setColor(group, static_cast<QPalette::ColorRole>(role), settings->value(key).value<QColor>());
+    }
+}
+
+const QPalette *QQuickStylePrivate::readPalette(const QSharedPointer<QSettings> &settings)
+{
+    QPalette p;
+    settings->beginGroup(QStringLiteral("Palette"));
+    readColorGroup(settings, QPalette::All, &p);
+
+    settings->beginGroup(QStringLiteral("Normal"));
+    readColorGroup(settings, QPalette::Normal, &p);
+    settings->endGroup();
+
+    settings->beginGroup(QStringLiteral("Disabled"));
+    readColorGroup(settings, QPalette::Disabled, &p);
+    settings->endGroup();
+    return new QPalette(p);
+}
+#endif // QT_CONFIG(settings)
 
 static bool qt_is_dark_system_theme()
 {
