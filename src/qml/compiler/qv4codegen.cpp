@@ -2482,7 +2482,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     statementList(body);
 
-    _context->emitBlockFooter(this, -1);
+    _context->emitBlockFooter(this);
 
     if (hasError || !endsWithReturn(_module, body)) {
         bytecodeGenerator->setLocation(ast->lastSourceLocation());

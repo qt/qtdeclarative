@@ -617,44 +617,40 @@ void BaselineJIT::generate_CreateCallContext()
     as->storeHeapObject(CallData::Context);
 }
 
-void BaselineJIT::generate_PushCatchContext(int reg, int index, int name) { as->pushCatchContext(reg, index, name); }
+void BaselineJIT::generate_PushCatchContext(int index, int name) { as->pushCatchContext(index, name); }
 
-static void pushWithContextHelper(ExecutionEngine *engine, QV4::Value *stack, int reg)
+static void pushWithContextHelper(ExecutionEngine *engine, QV4::Value *stack)
 {
     QV4::Value &accumulator = stack[CallData::Accumulator];
     accumulator = accumulator.toObject(engine);
     if (engine->hasException)
         return;
-    stack[reg] = stack[CallData::Context];
     ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
     stack[CallData::Context] = Runtime::method_createWithContext(c, accumulator);
 }
 
-void BaselineJIT::generate_PushWithContext(int reg)
+void BaselineJIT::generate_PushWithContext()
 {
     STORE_IP();
     as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(3);
-    as->passInt32AsArg(reg, 2);
+    as->prepareCallWithArgCount(2);
     as->passRegAsArg(0, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(pushWithContextHelper, Assembler::IgnoreResult);
     as->checkException();
 }
 
-static void pushBlockContextHelper(QV4::Value *stack, int reg, int index)
+static void pushBlockContextHelper(QV4::Value *stack, int index)
 {
-    stack[reg] = stack[CallData::Context];
     ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
     stack[CallData::Context] = Runtime::method_createBlockContext(c, index);
 }
 
-void BaselineJIT::generate_PushBlockContext(int reg, int index)
+void BaselineJIT::generate_PushBlockContext(int index)
 {
     as->saveAccumulatorInFrame();
-    as->prepareCallWithArgCount(3);
-    as->passInt32AsArg(index, 2);
-    as->passInt32AsArg(reg, 1);
+    as->prepareCallWithArgCount(2);
+    as->passInt32AsArg(index, 1);
     as->passRegAsArg(0, 0);
     JIT_GENERATE_RUNTIME_CALL(pushBlockContextHelper, Assembler::IgnoreResult);
 }
@@ -701,7 +697,7 @@ void BaselineJIT::generate_PopScriptContext()
     JIT_GENERATE_RUNTIME_CALL(popScriptContextHelper, Assembler::IgnoreResult);
 }
 
-void BaselineJIT::generate_PopContext(int reg) { as->popContext(reg); }
+void BaselineJIT::generate_PopContext() { as->popContext(); }
 
 void BaselineJIT::generate_GetIterator(int iterator)
 {

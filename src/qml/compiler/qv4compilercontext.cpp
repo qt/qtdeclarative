@@ -159,36 +159,32 @@ Context::ResolvedName Context::resolveName(const QString &name)
     return result;
 }
 
-int Context::emitBlockHeader(Codegen *codegen)
+void Context::emitBlockHeader(Codegen *codegen)
 {
     using Instruction = Moth::Instruction;
     Moth::BytecodeGenerator *bytecodeGenerator = codegen->generator();
 
     setupFunctionIndices(bytecodeGenerator);
-    int contextReg = -1;
 
-    if (requiresExecutionContext && blockIndex < 0) {
-        codegen->module()->blocks.append(this);
-        blockIndex = codegen->module()->blocks.count() - 1;
-    }
+    if (requiresExecutionContext) {
+        if (blockIndex < 0) {
+            codegen->module()->blocks.append(this);
+            blockIndex = codegen->module()->blocks.count() - 1;
+        }
 
-    if (requiresExecutionContext && contextType == ContextType::Global) {
-        Instruction::PushScriptContext scriptContext;
-        scriptContext.index = blockIndex;
-        bytecodeGenerator->addInstruction(scriptContext);
-    } else if (requiresExecutionContext ||
-        contextType == ContextType::Binding) { // we don't really need this for bindings, but we do for signal handlers, and we don't know if the code is a signal handler or not.
-        if (contextType == ContextType::Block || (contextType == ContextType::Eval && !isStrict)) {
+        if (contextType == ContextType::Global) {
+            Instruction::PushScriptContext scriptContext;
+            scriptContext.index = blockIndex;
+            bytecodeGenerator->addInstruction(scriptContext);
+        } else if (contextType == ContextType::Block || (contextType == ContextType::Eval && !isStrict)) {
             if (isCatchBlock) {
                 Instruction::PushCatchContext catchContext;
                 catchContext.index = blockIndex;
-                catchContext.reg = contextReg = bytecodeGenerator->newRegister();
                 catchContext.name = codegen->registerString(caughtVariable);
                 bytecodeGenerator->addInstruction(catchContext);
             } else {
                 Instruction::PushBlockContext blockContext;
                 blockContext.index = blockIndex;
-                blockContext.reg = contextReg = bytecodeGenerator->newRegister();
                 bytecodeGenerator->addInstruction(blockContext);
             }
         } else {
@@ -196,6 +192,7 @@ int Context::emitBlockHeader(Codegen *codegen)
             bytecodeGenerator->addInstruction(createContext);
         }
     }
+
     if (usesThis && !isStrict) {
         // make sure we convert this to an object
         Instruction::ConvertThisToObject convert;
@@ -250,25 +247,23 @@ int Context::emitBlockHeader(Codegen *codegen)
             r.storeConsumeAccumulator();
         }
     }
-
-    return contextReg;
 }
 
-void Context::emitBlockFooter(Codegen *codegen, int oldContextReg)
+void Context::emitBlockFooter(Codegen *codegen)
 {
     using Instruction = Moth::Instruction;
     Moth::BytecodeGenerator *bytecodeGenerator = codegen->generator();
 
-    if (requiresExecutionContext && contextType == ContextType::Global) {
+    if (!requiresExecutionContext)
+        return;
+
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
+    if (contextType == ContextType::Global)
         bytecodeGenerator->addInstruction(Instruction::PopScriptContext());
+    else
+        bytecodeGenerator->addInstruction(Instruction::PopContext());
 QT_WARNING_POP
-    } else if (oldContextReg != -1) {
-        Instruction::PopContext popContext;
-        popContext.reg = oldContextReg;
-        bytecodeGenerator->addInstruction(popContext);
-    }
 }
 
 void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)

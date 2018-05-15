@@ -279,8 +279,8 @@ struct Context {
         bool isValid() const { return type != Unresolved; }
     };
     ResolvedName resolveName(const QString &name);
-    int emitBlockHeader(Compiler::Codegen *codegen);
-    void emitBlockFooter(Compiler::Codegen *codegen, int oldContextReg);
+    void emitBlockHeader(Compiler::Codegen *codegen);
+    void emitBlockFooter(Compiler::Codegen *codegen);
 
     void setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator);
 };

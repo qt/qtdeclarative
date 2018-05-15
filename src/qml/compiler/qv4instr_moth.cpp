@@ -404,15 +404,14 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(CreateCallContext)
 
         MOTH_BEGIN_INSTR(PushCatchContext)
-            d << dumpRegister(reg, nFormals) << ", " << index << ", " << name;
+            d << index << ", " << name;
         MOTH_END_INSTR(PushCatchContext)
 
         MOTH_BEGIN_INSTR(PushWithContext)
-            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PushWithContext)
 
         MOTH_BEGIN_INSTR(PushBlockContext)
-            d << dumpRegister(reg, nFormals) << ", " << index;
+            d << index;
         MOTH_END_INSTR(PushBlockContext)
 
         MOTH_BEGIN_INSTR(CloneBlockContext)
@@ -426,7 +425,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(PopScriptContext)
 
         MOTH_BEGIN_INSTR(PopContext)
-            d << dumpRegister(reg, nFormals);
         MOTH_END_INSTR(PopContext)
 
         MOTH_BEGIN_INSTR(GetIterator)

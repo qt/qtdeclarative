@@ -2241,9 +2241,8 @@ void Assembler::clearExceptionHandler()
     pasm()->storePtr(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
 }
 
-void Assembler::pushCatchContext(int reg, int index, int name)
+void Assembler::pushCatchContext(int index, int name)
 {
-    pasm()->copyReg(pasm()->contextAddress(), regAddr(reg));
     prepareCallWithArgCount(3);
     passInt32AsArg(name, 2);
     passInt32AsArg(index, 1);
@@ -2252,9 +2251,13 @@ void Assembler::pushCatchContext(int reg, int index, int name)
     pasm()->storeAccumulator(pasm()->contextAddress());
 }
 
-void Assembler::popContext(int reg)
+void Assembler::popContext()
 {
-    pasm()->copyReg(regAddr(reg), pasm()->contextAddress());
+    Heap::CallContext ctx;
+    Q_UNUSED(ctx)
+    pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
+    pasm()->loadAccumulator(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset));
+    pasm()->storeAccumulator(regAddr(CallData::Context));
 }
 
 void Assembler::ret()

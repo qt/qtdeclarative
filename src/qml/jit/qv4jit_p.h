@@ -178,13 +178,13 @@ public:
     void generate_GetException() override;
     void generate_SetException() override;
     void generate_CreateCallContext() override;
-    void generate_PushCatchContext(int reg, int index, int name) override;
-    void generate_PushWithContext(int reg) override;
-    void generate_PushBlockContext(int reg, int index) override;
+    void generate_PushCatchContext(int index, int name) override;
+    void generate_PushWithContext() override;
+    void generate_PushBlockContext(int index) override;
     void generate_CloneBlockContext() override;
     void generate_PushScriptContext(int index) override;
     void generate_PopScriptContext() override;
-    void generate_PopContext(int reg) override;
+    void generate_PopContext() override;
     void generate_GetIterator(int iterator) override;
     void generate_IteratorNext(int value) override;
     void generate_IteratorClose(int done) override;

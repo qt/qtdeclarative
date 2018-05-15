@@ -306,11 +306,9 @@ struct ControlFlowWith : public ControlFlowUnwind
         : ControlFlowUnwind(cg, With)
     {
         setupExceptionHandler();
-        savedContextRegister = Moth::StackSlot::createRegister(generator()->newRegister());
 
         // assumes the with object is in the accumulator
         Instruction::PushWithContext pushScope;
-        pushScope.reg = savedContextRegister;
         generator()->addInstruction(pushScope);
         generator()->setExceptionHandler(&unwindLabel);
     }
@@ -321,12 +319,10 @@ struct ControlFlowWith : public ControlFlowUnwind
 
         generator()->setExceptionHandler(parentExceptionHandler());
         Instruction::PopContext pop;
-        pop.reg = savedContextRegister;
         generator()->addInstruction(pop);
 
         emitUnwindHandler();
     }
-    Moth::StackSlot savedContextRegister;
 };
 
 struct ControlFlowBlock : public ControlFlowUnwind
@@ -335,9 +331,9 @@ struct ControlFlowBlock : public ControlFlowUnwind
         : ControlFlowUnwind(cg, Block)
     {
         block = cg->enterBlock(ast);
-        savedContextRegister = block->emitBlockHeader(cg);
+        block->emitBlockHeader(cg);
 
-        if (savedContextRegister != -1) {
+        if (block->requiresExecutionContext) {
             setupExceptionHandler();
             generator()->setExceptionHandler(&unwindLabel);
         }
@@ -345,24 +341,23 @@ struct ControlFlowBlock : public ControlFlowUnwind
 
     virtual ~ControlFlowBlock() {
         // emit code for unwinding
-        if (savedContextRegister != -1) {
+        if (block->requiresExecutionContext ) {
             unwindLabel.link();
             generator()->setExceptionHandler(parentExceptionHandler());
         }
 
-        block->emitBlockFooter(cg, savedContextRegister);
+        block->emitBlockFooter(cg);
 
-        if (savedContextRegister != -1)
+        if (block->requiresExecutionContext )
             emitUnwindHandler();
         cg->leaveBlock();
     }
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
-        if (savedContextRegister == -1)
+        if (!block->requiresExecutionContext )
             return getParentHandler(type, label);
         return ControlFlowUnwind::getHandler(type, label);
     }
 
-    int savedContextRegister = -1;
     Context *block;
 };
 
@@ -414,7 +409,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         Context *block = cg->enterBlock(catchExpression);
 
-        int savedContextReg = block->emitBlockHeader(cg);
+        block->emitBlockHeader(cg);
 
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
@@ -430,7 +425,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // exceptions inside catch and break/return statements go here
         catchUnwindLabel.link();
-        block->emitBlockFooter(cg, savedContextReg);
+        block->emitBlockFooter(cg);
 
         cg->leaveBlock();
 
