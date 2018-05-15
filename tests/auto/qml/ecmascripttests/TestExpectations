@@ -2082,15 +2082,6 @@ built-ins/String/prototype/indexOf/searchstring-tostring-errors.js fails
 built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js fails
 built-ins/String/prototype/indexOf/searchstring-tostring-wrapped-values.js fails
 built-ins/String/prototype/match/cstm-matcher-invocation.js fails
-built-ins/String/prototype/normalize/form-is-not-valid-throws.js fails
-built-ins/String/prototype/normalize/length.js fails
-built-ins/String/prototype/normalize/name.js fails
-built-ins/String/prototype/normalize/normalize.js fails
-built-ins/String/prototype/normalize/return-abrupt-from-form.js fails
-built-ins/String/prototype/normalize/return-abrupt-from-this.js fails
-built-ins/String/prototype/normalize/return-normalized-string-from-coerced-form.js fails
-built-ins/String/prototype/normalize/return-normalized-string-using-default-parameter.js fails
-built-ins/String/prototype/normalize/return-normalized-string.js fails
 built-ins/String/prototype/padEnd/exception-not-object-coercible.js fails
 built-ins/String/prototype/padEnd/fill-string-empty.js fails
 built-ins/String/prototype/padEnd/fill-string-non-strings.js fails

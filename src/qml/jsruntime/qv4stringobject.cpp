@@ -237,6 +237,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("localeCompare"), method_localeCompare, 1);
     defineDefaultProperty(QStringLiteral("match"), method_match, 1);
+    defineDefaultProperty(QStringLiteral("normalize"), method_normalize, 0);
     defineDefaultProperty(QStringLiteral("repeat"), method_repeat, 1);
     defineDefaultProperty(QStringLiteral("replace"), method_replace, 2);
     defineDefaultProperty(QStringLiteral("search"), method_search, 1);
@@ -527,6 +528,33 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
         return Encode::null();
     else
         return a.asReturnedValue();
+}
+
+ReturnedValue StringPrototype::method_normalize(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    ExecutionEngine *v4 = f->engine();
+    const QString value = getThisString(v4, thisObject);
+    if (v4->hasException)
+        return Encode::undefined();
+
+    QString::NormalizationForm form = QString::NormalizationForm_C;
+    if (argc >= 1 && !argv[0].isUndefined()) {
+        QString f = argv[0].toQString();
+        if (v4->hasException)
+            return Encode::undefined();
+        if (f == QLatin1String("NFC"))
+            form = QString::NormalizationForm_C;
+        else if (f == QLatin1String("NFD"))
+            form = QString::NormalizationForm_D;
+        else if (f == QLatin1String("NFKC"))
+            form = QString::NormalizationForm_KC;
+        else if (f == QLatin1String("NFKD"))
+            form = QString::NormalizationForm_KD;
+        else
+            return v4->throwRangeError(QLatin1String("String.prototype.normalize: Invalid normalization form."));
+    }
+    QString normalized = value.normalized(form);
+    return v4->newString(normalized)->asReturnedValue();
 }
 
 ReturnedValue StringPrototype::method_repeat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
