@@ -50,7 +50,7 @@
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -571,7 +571,7 @@ public:
 
 void tst_QQuickApplicationWindow::defaultFont()
 {
-    QQuickTheme::setCurrent(new TestTheme);
+    QQuickThemePrivate::instance.reset(new TestTheme);
 
     QQmlEngine engine;
     QQmlComponent component(&engine);

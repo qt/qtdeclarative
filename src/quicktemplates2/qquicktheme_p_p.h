@@ -65,7 +65,7 @@ public:
     const QFont *resolveThemeFont(QQuickTheme::Scope scope);
     const QPalette *resolveThemePalette(QQuickTheme::Scope scope);
 
-    static QScopedPointer<QQuickTheme> current;
+    static QScopedPointer<QQuickTheme> instance;
 
     bool hasResolvedFonts = false;
     bool hasResolvedPalettes = false;

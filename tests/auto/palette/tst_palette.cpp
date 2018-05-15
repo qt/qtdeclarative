@@ -45,7 +45,7 @@
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -301,7 +301,7 @@ void tst_palette::defaultPalette()
 
     // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.
-    QQuickTheme::setCurrent(new TestTheme);
+    QQuickThemePrivate::instance.reset(new TestTheme);
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));

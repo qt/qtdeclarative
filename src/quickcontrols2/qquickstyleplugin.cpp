@@ -58,8 +58,8 @@ QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
 QQuickStylePlugin::~QQuickStylePlugin()
 {
     Q_D(QQuickStylePlugin);
-    if (QQuickTheme::current() == d->theme)
-        QQuickTheme::setCurrent(nullptr);
+    if (QQuickTheme::instance() == d->theme)
+        QQuickThemePrivate::instance.reset();
 }
 
 void QQuickStylePlugin::registerTypes(const char *uri)
@@ -89,7 +89,7 @@ void QQuickStylePlugin::initializeEngine(QQmlEngine *engine, const char *uri)
                 p->defaultPalette.reset(QQuickStylePrivate::readPalette(settings));
             }
 #endif
-            QQuickTheme::setCurrent(d->theme);
+            QQuickThemePrivate::instance.reset(d->theme);
         }
     }
 }

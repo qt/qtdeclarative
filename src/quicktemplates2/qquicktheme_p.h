@@ -63,8 +63,7 @@ public:
     QQuickTheme();
     virtual ~QQuickTheme();
 
-    static QQuickTheme *current();
-    static void setCurrent(QQuickTheme *theme);
+    static QQuickTheme *instance();
 
     enum Scope {
         System,
