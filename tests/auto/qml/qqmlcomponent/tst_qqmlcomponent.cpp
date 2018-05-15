@@ -116,6 +116,7 @@ private slots:
     void onDestructionCount();
     void recursion();
     void recursionContinuation();
+    void partialComponentCreation();
     void callingContextForInitialProperties();
     void relativeUrl_data();
     void relativeUrl();
@@ -524,6 +525,29 @@ void tst_qqmlcomponent::recursionContinuation()
 
     // Eventual sub-object creation succeeds
     QVERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlcomponent::partialComponentCreation()
+{
+    const int maxCount = 17;
+    QQmlEngine engine;
+    QScopedPointer<QQmlComponent> components[maxCount];
+    QScopedPointer<QObject> objects[maxCount];
+    QQmlTestMessageHandler messageHandler;
+
+    QCOMPARE(engine.outputWarningsToStandardError(), true);
+
+    for (int i = 0; i < maxCount; i++) {
+        components[i].reset(new QQmlComponent(&engine, testFileUrl("QtObjectComponent.qml")));
+        objects[i].reset(components[i]->beginCreate(engine.rootContext()));
+        QVERIFY(objects[i].isNull() == false);
+    }
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
+
+    for (int i = 0; i < maxCount; i++) {
+        components[i]->completeCreate();
+    }
+    QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
 
 class CallingContextCheckingClass : public QObject

@@ -845,13 +845,10 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
 
     // Do not create infinite recursion in object creation
     static const int maxCreationDepth = 10;
-    if (++creationDepth.localData() >= maxCreationDepth) {
+    if (creationDepth.localData() >= maxCreationDepth) {
         qWarning("QQmlComponent: Component creation is recursing - aborting");
-        --creationDepth.localData();
         return nullptr;
     }
-    Q_ASSERT(creationDepth.localData() >= 1);
-    depthIncreased = true;
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(engine);
 
@@ -875,10 +872,6 @@ QQmlComponentPrivate::beginCreate(QQmlContextData *context)
         ddata->indestructible = true;
         ddata->explicitIndestructibleSet = true;
         ddata->rootObjectInCreation = false;
-    } else {
-        Q_ASSERT(creationDepth.localData() >= 1);
-        --creationDepth.localData();
-        depthIncreased = false;
     }
 
     return rv;
@@ -952,14 +945,10 @@ void QQmlComponent::completeCreate()
 void QQmlComponentPrivate::completeCreate()
 {
     if (state.completePending) {
+        ++creationDepth.localData();
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
         complete(ep, &state);
-    }
-
-    if (depthIncreased) {
-        Q_ASSERT(creationDepth.localData() >= 1);
         --creationDepth.localData();
-        depthIncreased = false;
     }
 }
 

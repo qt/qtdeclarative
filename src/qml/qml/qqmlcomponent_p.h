@@ -79,7 +79,7 @@ class Q_QML_PRIVATE_EXPORT QQmlComponentPrivate : public QObjectPrivate, public 
 
 public:
     QQmlComponentPrivate()
-        : progress(0.), start(-1), engine(nullptr), creationContext(nullptr), depthIncreased(false) {}
+        : progress(0.), start(-1), engine(nullptr), creationContext(nullptr) {}
 
     void loadUrl(const QUrl &newUrl, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous);
 
@@ -136,7 +136,6 @@ public:
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;
-    bool depthIncreased;
 
     void clear();
 
