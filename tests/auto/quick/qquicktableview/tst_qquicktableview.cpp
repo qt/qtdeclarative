@@ -95,6 +95,8 @@ private slots:
     void fillTableViewButNothingMore();
     void flick_data();
     void flick();
+    void flickOvershoot_data();
+    void flickOvershoot();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -471,6 +473,148 @@ void tst_QQuickTableView::flick()
         QCOMPARE(loadedTable.top(), expectedTableTop);
         QCOMPARE(loadedTable.bottom(), expectedTableTop + visualRowCount);
     }
+}
+
+void tst_QQuickTableView::flickOvershoot_data()
+{
+    QTest::addColumn<QSizeF>("spacing");
+    QTest::addColumn<QMarginsF>("margins");
+
+    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20);
+    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20);
+}
+
+void tst_QQuickTableView::flickOvershoot()
+{
+    // Flick the table completely out and then in again, and see
+    // that we still contains the expected rows/columns
+    // Note that TableView always keeps top-left item loaded, even
+    // when everything is flicked out of view.
+    QFETCH(QSizeF, spacing);
+    QFETCH(QMarginsF, margins);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int rowCount = 5;
+    const int columnCount = 5;
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+    const qreal cellWidth = delegateWidth + spacing.width();
+    const qreal cellHeight = delegateHeight + spacing.height();
+    const qreal tableWidth = margins.left() + margins.right() + (cellWidth * columnCount) - spacing.width();
+    const qreal tableHeight = margins.top() + margins.bottom() + (cellHeight * rowCount) - spacing.height();
+    const int outsideMargin = 10;
+    auto model = TestModelAsVariant(rowCount, columnCount);
+
+    tableView->setModel(model);
+    tableView->setRowSpacing(spacing.height());
+    tableView->setColumnSpacing(spacing.width());
+    tableView->setLeftMargin(margins.left());
+    tableView->setTopMargin(margins.top());
+    tableView->setRightMargin(margins.right());
+    tableView->setBottomMargin(margins.bottom());
+    tableView->setCacheBuffer(0);
+    tableView->setWidth(tableWidth - margins.right() - cellWidth / 2);
+    tableView->setHeight(tableHeight - margins.bottom() - cellHeight / 2);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick table out of view left
+    tableView->setContentX(-tableView->width() - outsideMargin);
+    tableView->setContentY(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+
+    // Flick table out of view right
+    tableView->setContentX(tableWidth + outsideMargin);
+    tableView->setContentY(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+
+    // Flick table out of view on top
+    tableView->setContentX(0);
+    tableView->setContentY(-tableView->height() - outsideMargin);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), 0);
+
+    // Flick table out of view at the bottom
+    tableView->setContentX(0);
+    tableView->setContentY(tableHeight + outsideMargin);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+
+    // Flick table out of view left and top at the same time
+    tableView->setContentX(-tableView->width() - outsideMargin);
+    tableView->setContentY(-tableView->height() - outsideMargin);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), 0);
+
+    // Flick table back to origo
+    tableView->setContentX(0);
+    tableView->setContentY(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+
+    // Flick table out of view right and bottom at the same time
+    tableView->setContentX(tableWidth + outsideMargin);
+    tableView->setContentY(tableHeight + outsideMargin);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+
+    // Flick table back to origo
+    tableView->setContentX(0);
+    tableView->setContentY(0);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
+    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

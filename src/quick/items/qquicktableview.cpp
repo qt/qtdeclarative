@@ -1058,6 +1058,7 @@ void QQuickTableViewPrivate::updatePolish()
     // Whenever something changes, e.g viewport moves, spacing is set to a
     // new value, model changes etc, this function will end up being called. Here
     // we check what needs to be done, and load/unload cells accordingly.
+    Q_Q(QQuickTableView);
 
     if (loadRequest.isActive()) {
         // We're currently loading items async to build a new edge in the table. We see the loading
@@ -1066,6 +1067,9 @@ void QQuickTableViewPrivate::updatePolish()
         // after the loadRequest has completed to handle anything that might have occurred in-between.
         return;
     }
+
+    // viewportrect describes the part of the content view that is actually visible
+    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
 
     if (tableInvalid) {
         beginRebuildTable();
@@ -1393,8 +1397,9 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
 {
     Q_D(QQuickTableView);
     QQuickFlickable::viewportMoved(orientation);
-
-    d->viewportRect = QRectF(contentX(), contentY(), width(), height());
+    // We update the viewport rect from within updatePolish to
+    // ensure that we update when we're ready to update, and not
+    // while we're in the middle of loading/unloading edges.
     d->updatePolish();
 }
 
