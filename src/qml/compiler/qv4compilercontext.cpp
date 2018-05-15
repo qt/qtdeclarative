@@ -143,8 +143,10 @@ Context::ResolvedName Context::resolveName(const QString &name)
                 return result;
             }
         }
-        if (!c->isStrict && c->hasDirectEval && c->contextType != ContextType::Block)
+        if (c->hasDirectEval) {
+            Q_ASSERT(!c->isStrict && c->contextType != ContextType::Block);
             return result;
+        }
 
         if (c->requiresExecutionContext)
             ++scope;

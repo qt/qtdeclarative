@@ -552,19 +552,29 @@ void ScanFunctions::calcEscapingVariables()
                 c = c->parent;
             }
         }
-        Context *c = inner->parent;
-        while (c) {
-            c->hasDirectEval |= inner->hasDirectEval;
-            c = c->parent;
+        if (inner->hasDirectEval) {
+            inner->hasDirectEval = false;
+            if (!inner->isStrict) {
+                Context *c = inner;
+                while (c->contextType == ContextType::Block) {
+                    c = c->parent;
+                }
+                Q_ASSERT(c);
+                c->hasDirectEval = true;
+            }
+            Context *c = inner;
+            while (c) {
+                c->allVarsEscape = true;
+                c = c->parent;
+            }
         }
     }
     for (Context *c : qAsConst(m->contextMap)) {
-        bool allVarsEscape = c->hasDirectEval;
-        if (allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
-            allVarsEscape = false;
+        if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
+            c->allVarsEscape = false;
         if (!c->parent || m->debugMode)
-            allVarsEscape = true;
-        if (allVarsEscape) {
+            c->allVarsEscape = true;
+        if (c->allVarsEscape) {
             if (c->parent) {
                 c->requiresExecutionContext = true;
                 c->argumentsCanEscape = true;
@@ -588,7 +598,7 @@ void ScanFunctions::calcEscapingVariables()
             // we don't really need this for bindings, but we do for signal handlers, and in this case,
             // we don't know if the code is a signal handler or not.
             c->requiresExecutionContext = true;
-        if (allVarsEscape) {
+        if (c->allVarsEscape) {
             for (auto &m : c->members)
                 m.canEscape = true;
         }

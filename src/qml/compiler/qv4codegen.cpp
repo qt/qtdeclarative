@@ -2405,8 +2405,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->blockIndex = _module->blocks.count() - 1;
     }
 
-    _context->hasDirectEval |= (_context->contextType == ContextType::Eval || _context->contextType == ContextType::Global || _module->debugMode); // Conditional breakpoints are like eval in the function
-
     // When a user writes the following QML signal binding:
     //    onSignal: function() { doSomethingUsefull }
     // we will generate a binding function that just returns the closure. However, that's not useful

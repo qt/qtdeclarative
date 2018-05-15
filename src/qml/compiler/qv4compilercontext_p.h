@@ -144,6 +144,7 @@ struct Context {
     int nRegisters = 0;
     int registerOffset = -1;
     bool hasDirectEval = false;
+    bool allVarsEscape = false;
     bool hasNestedFunctions = false;
     bool isStrict = false;
     bool isArrowFunction = false;
