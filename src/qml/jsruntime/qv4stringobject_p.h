@@ -110,6 +110,9 @@ struct StringCtor: FunctionObject
 
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fromCodePoint(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct StringPrototype: StringObject
@@ -140,7 +143,6 @@ struct StringPrototype: StringObject
     static ReturnedValue method_toLocaleLowerCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toUpperCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleUpperCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_trim(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_iterator(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };

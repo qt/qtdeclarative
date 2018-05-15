@@ -168,6 +168,46 @@ ReturnedValue StringCtor::call(const FunctionObject *m, const Value *, const Val
     return argv[0].toString(v4)->asReturnedValue();
 }
 
+ReturnedValue StringCtor::method_fromCharCode(const FunctionObject *b, const Value *, const Value *argv, int argc)
+{
+    QString str(argc, Qt::Uninitialized);
+    QChar *ch = str.data();
+    for (int i = 0, ei = argc; i < ei; ++i) {
+        *ch = QChar(argv[i].toUInt16());
+        ++ch;
+    }
+    *ch = 0;
+    return Encode(b->engine()->newString(str));
+}
+
+
+
+ReturnedValue StringCtor::method_fromCodePoint(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    ExecutionEngine *e = f->engine();
+    QString result(argc*2, Qt::Uninitialized); // assume worst case
+    QChar *ch = result.data();
+    for (int i = 0; i < argc; ++i) {
+        double num = argv[i].toNumber();
+        if (e->hasException)
+            return Encode::undefined();
+        int cp = static_cast<int>(num);
+        if (cp != num || cp < 0 || cp > 0x10ffff)
+            return e->throwRangeError(QStringLiteral("String.fromCodePoint: argument out of range."));
+        if (cp > 0xffff) {
+            *ch = QChar::highSurrogate(cp);
+            ++ch;
+            *ch = QChar::lowSurrogate(cp);
+        } else {
+            *ch = cp;
+        }
+        ++ch;
+    }
+    *ch = 0;
+    result.truncate(ch - result.constData());
+    return e->newString(result)->asReturnedValue();
+}
+
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
@@ -181,7 +221,8 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
-    ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), method_fromCharCode, 1);
+    ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), StringCtor::method_fromCharCode, 1);
+    ctor->defineDefaultProperty(QStringLiteral("fromCodePoint"), StringCtor::method_fromCodePoint, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString);
@@ -922,17 +963,6 @@ ReturnedValue StringPrototype::method_toUpperCase(const FunctionObject *b, const
 ReturnedValue StringPrototype::method_toLocaleUpperCase(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     return method_toUpperCase(b, thisObject, argv, argc);
-}
-
-ReturnedValue StringPrototype::method_fromCharCode(const FunctionObject *b, const Value *, const Value *argv, int argc)
-{
-    QString str(argc, Qt::Uninitialized);
-    QChar *ch = str.data();
-    for (int i = 0, ei = argc; i < ei; ++i) {
-        *ch = QChar(argv[i].toUInt16());
-        ++ch;
-    }
-    return Encode(b->engine()->newString(str));
 }
 
 ReturnedValue StringPrototype::method_trim(const FunctionObject *b, const Value *thisObject, const Value *, int)

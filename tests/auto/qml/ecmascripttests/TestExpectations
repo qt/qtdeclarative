@@ -2071,15 +2071,6 @@ built-ins/SharedArrayBuffer/return-abrupt-from-length.js fails
 built-ins/SharedArrayBuffer/toindex-length.js fails
 built-ins/SharedArrayBuffer/undefined-newtarget-throws.js fails
 built-ins/SharedArrayBuffer/zero-length.js fails
-built-ins/String/fromCodePoint/argument-is-not-integer.js fails
-built-ins/String/fromCodePoint/argument-not-coercible.js fails
-built-ins/String/fromCodePoint/arguments-is-empty.js fails
-built-ins/String/fromCodePoint/fromCodePoint.js fails
-built-ins/String/fromCodePoint/length.js fails
-built-ins/String/fromCodePoint/name.js fails
-built-ins/String/fromCodePoint/number-is-out-of-range.js fails
-built-ins/String/fromCodePoint/return-string-value.js fails
-built-ins/String/fromCodePoint/to-number-conversions.js fails
 built-ins/String/proto-from-ctor-realm.js fails
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js fails
