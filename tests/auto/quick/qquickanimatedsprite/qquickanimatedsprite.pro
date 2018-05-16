@@ -11,4 +11,4 @@ TESTDATA = data/*
 QT += core-private gui-private qml-private quick-private network testlib
 
 OTHER_FILES += \
-    data/largeAnimation.qml
+    $$files(data/*.qml)
