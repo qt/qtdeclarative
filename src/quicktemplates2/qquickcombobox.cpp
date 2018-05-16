@@ -1764,12 +1764,12 @@ void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLo
 
 QFont QQuickComboBox::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ComboBox);
+    return QQuickTheme::font(QQuickTheme::ComboBox);
 }
 
 QPalette QQuickComboBox::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ComboBox);
+    return QQuickTheme::palette(QQuickTheme::ComboBox);
 }
 
 #if QT_CONFIG(accessibility)

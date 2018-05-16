@@ -170,12 +170,12 @@ void QQuickCheckDelegate::setCheckState(Qt::CheckState state)
 
 QFont QQuickCheckDelegate::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ListView);
+    return QQuickTheme::font(QQuickTheme::ListView);
 }
 
 QPalette QQuickCheckDelegate::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ListView);
+    return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
 void QQuickCheckDelegate::buttonChange(ButtonChange change)

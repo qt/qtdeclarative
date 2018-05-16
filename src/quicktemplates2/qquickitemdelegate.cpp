@@ -117,12 +117,12 @@ void QQuickItemDelegate::setHighlighted(bool highlighted)
 
 QFont QQuickItemDelegate::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ItemView);
+    return QQuickTheme::font(QQuickTheme::ItemView);
 }
 
 QPalette QQuickItemDelegate::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ItemView);
+    return QQuickTheme::palette(QQuickTheme::ItemView);
 }
 
 #if QT_CONFIG(accessibility)

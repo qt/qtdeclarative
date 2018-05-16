@@ -87,7 +87,7 @@ void tst_palette::palette_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::System);
+    QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -171,7 +171,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette = QQuickTheme::themePalette(QQuickTheme::System);
+    QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
     defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
     defaultPalette.setColor(QPalette::Text, QColor("#101010"));
 
@@ -299,7 +299,7 @@ void tst_palette::defaultPalette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    QPalette expectedPalette = QQuickTheme::themePalette(scope);
+    QPalette expectedPalette = QQuickTheme::palette(scope);
     QPalette actualPalette = var.value<QPalette>();
     QCOMPARE(actualPalette, expectedPalette);
 }

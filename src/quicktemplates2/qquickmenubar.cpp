@@ -561,12 +561,12 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
 
 QFont QQuickMenuBar::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::MenuBar);
+    return QQuickTheme::font(QQuickTheme::MenuBar);
 }
 
 QPalette QQuickMenuBar::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::MenuBar);
+    return QQuickTheme::palette(QQuickTheme::MenuBar);
 }
 
 #if QT_CONFIG(accessibility)

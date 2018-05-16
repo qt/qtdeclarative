@@ -256,12 +256,12 @@ void QQuickMenuItem::componentComplete()
 
 QFont QQuickMenuItem::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::Menu);
+    return QQuickTheme::font(QQuickTheme::Menu);
 }
 
 QPalette QQuickMenuItem::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::Menu);
+    return QQuickTheme::palette(QQuickTheme::Menu);
 }
 
 #if QT_CONFIG(accessibility)

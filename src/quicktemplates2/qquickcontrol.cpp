@@ -515,7 +515,7 @@ QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
         return window->font();
 
-    return QQuickTheme::themeFont(QQuickTheme::System);
+    return QQuickTheme::font(QQuickTheme::System);
 }
 
 /*!
@@ -606,7 +606,7 @@ QPalette QQuickControlPrivate::parentPalette(const QQuickItem *item)
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(item->window()))
         return window->palette();
 
-    return QQuickTheme::themePalette(QQuickTheme::System);
+    return QQuickTheme::palette(QQuickTheme::System);
 }
 
 /*!
@@ -2012,12 +2012,12 @@ void QQuickControl::componentComplete()
 
 QFont QQuickControl::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::System);
+    return QQuickTheme::font(QQuickTheme::System);
 }
 
 QPalette QQuickControl::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::System);
+    return QQuickTheme::palette(QQuickTheme::System);
 }
 
 void QQuickControl::focusInEvent(QFocusEvent *event)

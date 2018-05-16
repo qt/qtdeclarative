@@ -2649,12 +2649,12 @@ void QQuickPopup::insetChange(const QMarginsF &newInset, const QMarginsF &oldIns
 
 QFont QQuickPopup::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::System);
+    return QQuickTheme::font(QQuickTheme::System);
 }
 
 QPalette QQuickPopup::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::System);
+    return QQuickTheme::palette(QQuickTheme::System);
 }
 
 #if QT_CONFIG(accessibility)

@@ -575,7 +575,7 @@ void tst_QQuickApplicationWindow::defaultFont()
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(!window.isNull());
-    QCOMPARE(window->font(), QQuickTheme::themeFont(QQuickTheme::System));
+    QCOMPARE(window->font(), QQuickTheme::font(QQuickTheme::System));
 }
 
 void tst_QQuickApplicationWindow::locale()

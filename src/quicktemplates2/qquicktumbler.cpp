@@ -810,12 +810,12 @@ void QQuickTumbler::updatePolish()
 
 QFont QQuickTumbler::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::Tumbler);
+    return QQuickTheme::font(QQuickTheme::Tumbler);
 }
 
 QPalette QQuickTumbler::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::Tumbler);
+    return QQuickTheme::palette(QQuickTheme::Tumbler);
 }
 
 void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)

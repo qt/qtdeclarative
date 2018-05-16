@@ -133,12 +133,12 @@ bool QQuickToolSeparator::isVertical() const
 
 QFont QQuickToolSeparator::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ToolBar);
+    return QQuickTheme::font(QQuickTheme::ToolBar);
 }
 
 QPalette QQuickToolSeparator::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ToolBar);
+    return QQuickTheme::palette(QQuickTheme::ToolBar);
 }
 
 #if QT_CONFIG(accessibility)

@@ -297,12 +297,12 @@ void QQuickToolTip::hide()
 
 QFont QQuickToolTip::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ToolTip);
+    return QQuickTheme::font(QQuickTheme::ToolTip);
 }
 
 QPalette QQuickToolTip::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ToolTip);
+    return QQuickTheme::palette(QQuickTheme::ToolTip);
 }
 
 void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)

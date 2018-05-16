@@ -87,8 +87,8 @@ public:
         Tumbler
     };
 
-    static QFont themeFont(Scope scope);
-    static QPalette themePalette(Scope scope);
+    static QFont font(Scope scope);
+    static QPalette palette(Scope scope);
 
 protected:
     void setFont(Scope scope, const QFont &font);

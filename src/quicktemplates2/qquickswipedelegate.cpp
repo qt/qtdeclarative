@@ -1221,12 +1221,12 @@ void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRect
 
 QFont QQuickSwipeDelegate::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::ListView);
+    return QQuickTheme::font(QQuickTheme::ListView);
 }
 
 QPalette QQuickSwipeDelegate::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::ListView);
+    return QQuickTheme::palette(QQuickTheme::ListView);
 }
 
 #if QT_CONFIG(accessibility)

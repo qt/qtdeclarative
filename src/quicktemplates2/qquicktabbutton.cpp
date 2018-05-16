@@ -72,12 +72,12 @@ QQuickTabButton::QQuickTabButton(QQuickItem *parent)
 
 QFont QQuickTabButton::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::TabBar);
+    return QQuickTheme::font(QQuickTheme::TabBar);
 }
 
 QPalette QQuickTabButton::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::TabBar);
+    return QQuickTheme::palette(QQuickTheme::TabBar);
 }
 
 #if QT_CONFIG(accessibility)

@@ -303,7 +303,7 @@ void tst_font::defaultFont()
     QVariant var = object->property("font");
     QVERIFY(var.isValid());
 
-    QFont expectedFont = QQuickTheme::themeFont(scope);
+    QFont expectedFont = QQuickTheme::font(scope);
     QFont actualFont = var.value<QFont>();
     QCOMPARE(actualFont, expectedFont);
 }

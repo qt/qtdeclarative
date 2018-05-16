@@ -263,12 +263,12 @@ void QQuickGroupBox::componentComplete()
 
 QFont QQuickGroupBox::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::GroupBox);
+    return QQuickTheme::font(QQuickTheme::GroupBox);
 }
 
 QPalette QQuickGroupBox::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::GroupBox);
+    return QQuickTheme::palette(QQuickTheme::GroupBox);
 }
 
 #if QT_CONFIG(accessibility)

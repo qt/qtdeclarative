@@ -231,12 +231,12 @@ void QQuickSwitch::buttonChange(ButtonChange change)
 
 QFont QQuickSwitch::defaultFont() const
 {
-    return QQuickTheme::themeFont(QQuickTheme::Switch);
+    return QQuickTheme::font(QQuickTheme::Switch);
 }
 
 QPalette QQuickSwitch::defaultPalette() const
 {
-    return QQuickTheme::themePalette(QQuickTheme::Switch);
+    return QQuickTheme::palette(QQuickTheme::Switch);
 }
 
 QT_END_NAMESPACE

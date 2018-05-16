@@ -129,7 +129,7 @@ QQuickTheme *QQuickTheme::instance()
     return QQuickThemePrivate::instance.data();
 }
 
-QFont QQuickTheme::themeFont(Scope scope)
+QFont QQuickTheme::font(Scope scope)
 {
     const QFont *font = nullptr;
     if (QQuickTheme *theme = instance())
@@ -145,12 +145,12 @@ QFont QQuickTheme::themeFont(Scope scope)
     }
 
     if (scope != System)
-        return themeFont(System);
+        return QQuickTheme::font(System);
 
     return QFont();
 }
 
-QPalette QQuickTheme::themePalette(Scope scope)
+QPalette QQuickTheme::palette(Scope scope)
 {
     const QPalette *palette = nullptr;
     if (QQuickTheme *theme = instance())
@@ -166,7 +166,7 @@ QPalette QQuickTheme::themePalette(Scope scope)
     }
 
     if (scope != System)
-        return themePalette(System);
+        return QQuickTheme::palette(System);
 
     return QPalette();
 }
