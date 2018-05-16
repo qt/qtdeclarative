@@ -39,6 +39,7 @@
 
 #include "qquickpixmapcache_p.h"
 #include <qquickimageprovider.h>
+#include "qquickimageprovider_p.h"
 
 #include <qqmlengine.h>
 #include <private/qqmlglobal_p.h>
@@ -179,6 +180,8 @@ public:
     QQuickPixmapReaderThreadObject(QQuickPixmapReader *);
     void processJobs();
     bool event(QEvent *e) override;
+public slots:
+    void asyncResponseFinished(QQuickImageResponse *response);
 private slots:
     void networkRequestDone();
     void asyncResponseFinished();
@@ -613,10 +616,15 @@ void QQuickPixmapReaderThreadObject::networkRequestDone()
 #endif
 }
 
+void QQuickPixmapReaderThreadObject::asyncResponseFinished(QQuickImageResponse *response)
+{
+    reader->asyncResponseFinished(response);
+}
+
 void QQuickPixmapReaderThreadObject::asyncResponseFinished()
 {
     QQuickImageResponse *response = static_cast<QQuickImageResponse *>(sender());
-    reader->asyncResponseFinished(response);
+    asyncResponseFinished(response);
 }
 
 void QQuickPixmapReader::processJobs()
@@ -800,7 +808,14 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
                     response = asyncProvider->requestImageResponse(imageId(url), runningJob->requestSize);
                 }
 
-                QObject::connect(response, SIGNAL(finished()), threadObject, SLOT(asyncResponseFinished()));
+                // Might be that the async provider was so quick it emitted the signal before we
+                // could connect to it.
+                if (static_cast<QQuickImageResponsePrivate*>(QObjectPrivate::get(response))->finished) {
+                    QMetaObject::invokeMethod(threadObject, "asyncResponseFinished",
+                                              Qt::QueuedConnection, Q_ARG(QQuickImageResponse*, response));
+                } else {
+                    QObject::connect(response, SIGNAL(finished()), threadObject, SLOT(asyncResponseFinished()));
+                }
 
                 asyncResponses.insert(response, runningJob);
                 break;

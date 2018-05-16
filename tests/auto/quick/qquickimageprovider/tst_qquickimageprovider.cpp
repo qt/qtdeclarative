@@ -65,6 +65,7 @@ private slots:
     void threadTest();
 
     void asyncTextureTest();
+    void instantAsyncTextureTest();
 
 private:
     QString newImageFileName() const;
@@ -546,6 +547,70 @@ void tst_qquickimageprovider::asyncTextureTest()
     provider->ok = true;
     provider->condition.wakeAll();
     foreach (QQuickImage *img, images) {
+        QTRY_COMPARE(img->status(), QQuickImage::Ready);
+    }
+}
+
+class InstantAsyncImageResponse : public QQuickImageResponse
+{
+    public:
+        InstantAsyncImageResponse(const QString &id, const QSize &requestedSize)
+        {
+            QImage image(50, 50, QImage::Format_RGB32);
+            image.fill(QColor(id).rgb());
+            if (requestedSize.isValid())
+                image = image.scaled(requestedSize);
+            m_texture = QQuickTextureFactory::textureFactoryForImage(image);
+            emit finished();
+        }
+
+        QQuickTextureFactory *textureFactory() const
+        {
+            return m_texture;
+        }
+
+        QQuickTextureFactory *m_texture;
+};
+
+class InstancAsyncProvider : public QQuickAsyncImageProvider
+{
+    public:
+        InstancAsyncProvider()
+        {
+        }
+
+        ~InstancAsyncProvider() {}
+
+        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+        {
+            return new InstantAsyncImageResponse(id, requestedSize);
+        }
+};
+
+void tst_qquickimageprovider::instantAsyncTextureTest()
+{
+    QQmlEngine engine;
+
+    InstancAsyncProvider *provider = new InstancAsyncProvider;
+
+    engine.addImageProvider("test_instantasync", provider);
+    QVERIFY(engine.imageProvider("test_instantasync") != nullptr);
+
+    QString componentStr = "import QtQuick 2.0\nItem { \n"
+            "Image { source: \"image://test_instantasync/blue\"; }\n"
+            "Image { source: \"image://test_instantasync/red\"; }\n"
+            "Image { source: \"image://test_instantasync/green\";  }\n"
+            "Image { source: \"image://test_instantasync/yellow\";  }\n"
+            " }";
+    QQmlComponent component(&engine);
+    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QScopedPointer<QObject> obj(component.create());
+
+    QVERIFY(!obj.isNull());
+    const QList<QQuickImage *> images = obj->findChildren<QQuickImage *>();
+    QCOMPARE(images.count(), 4);
+
+    for (QQuickImage *img: images) {
         QTRY_COMPARE(img->status(), QQuickImage::Ready);
     }
 }

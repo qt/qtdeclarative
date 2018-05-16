@@ -53,6 +53,7 @@ HEADERS += \
     $$PWD/qquickfontloader_p.h \
     $$PWD/qquickstyledtext_p.h \
     $$PWD/qquickimageprovider.h \
+    $$PWD/qquickimageprovider_p.h \
     $$PWD/qquicksvgparser_p.h \
     $$PWD/qquickvaluetypes_p.h \
     $$PWD/qquickanimator_p.h \

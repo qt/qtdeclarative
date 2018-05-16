@@ -69,6 +69,8 @@ public:
     static QQuickTextureFactory *textureFactoryForImage(const QImage &image);
 };
 
+class QQuickImageResponsePrivate;
+
 class Q_QUICK_EXPORT QQuickImageResponse : public QObject
 {
 Q_OBJECT
@@ -84,6 +86,10 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void finished();
+
+private:
+    Q_DECLARE_PRIVATE(QQuickImageResponse)
+    Q_PRIVATE_SLOT(d_func(), void _q_finished())
 };
 
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase

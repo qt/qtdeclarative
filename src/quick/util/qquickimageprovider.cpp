@@ -39,8 +39,10 @@
 
 #include "qquickimageprovider.h"
 
+#include "qquickimageprovider_p.h"
 #include "qquickpixmapcache_p.h"
 #include <QtQuick/private/qsgcontext_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -160,7 +162,10 @@ QQuickTextureFactory *QQuickTextureFactory::textureFactoryForImage(const QImage 
     Constructs the image response
 */
 QQuickImageResponse::QQuickImageResponse()
+    : QObject(*(new QQuickImageResponsePrivate))
 {
+    qmlobject_connect(this, QQuickImageResponse, SIGNAL(finished()),
+                      this, QQuickImageResponse, SLOT(_q_finished()));
 }
 
 /*!
