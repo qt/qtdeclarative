@@ -63,7 +63,7 @@ Rectangle {
             anchors.centerIn: parent
             antialiasing: true
             Rectangle {
-                y: -40
+                y: -56
                 anchors.horizontalCenter: parent.horizontalCenter
                 color: "lightsteelblue"
                 implicitWidth: label.implicitWidth
@@ -71,7 +71,8 @@ Rectangle {
                 Text {
                     id: label
                     text: 'id: ' + dragHandler.point.id.toString(16) + " uid: " + dragHandler.point.uniqueId.numericId +
-                        '\npos: (' + dragHandler.point.position.x.toFixed(2) + ', ' + dragHandler.point.position.y.toFixed(2) + ')'
+                        '\npos: (' + dragHandler.point.position.x.toFixed(2) + ', ' + dragHandler.point.position.y.toFixed(2) + ')' +
+                        '\nmodifiers: ' + dragHandler.point.modifiers.toString(16)
                 }
             }
         }

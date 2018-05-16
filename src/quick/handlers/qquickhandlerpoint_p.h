@@ -68,6 +68,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickHandlerPoint {
     Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition)
     Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition)
     Q_PROPERTY(Qt::MouseButtons pressedButtons READ pressedButtons)
+    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers)
     Q_PROPERTY(QVector2D velocity READ velocity)
     Q_PROPERTY(qreal rotation READ rotation)
     Q_PROPERTY(qreal pressure READ pressure)
@@ -78,6 +79,7 @@ public:
 
     int id() const { return m_id; }
     Qt::MouseButtons pressedButtons() const { return m_pressedButtons; }
+    Qt::KeyboardModifiers modifiers() const { return m_pressedModifiers; }
     QPointF pressPosition() const { return m_pressPosition; }
     QPointF scenePressPosition() const { return m_scenePressPosition; }
     QPointF sceneGrabPosition() const { return m_sceneGrabPosition; }
@@ -97,6 +99,7 @@ private:
     int m_id;
     QPointingDeviceUniqueId m_uniqueId;
     Qt::MouseButtons m_pressedButtons;
+    Qt::KeyboardModifiers m_pressedModifiers;
     QPointF m_position;
     QPointF m_scenePosition;
     QPointF m_pressPosition;

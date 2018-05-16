@@ -92,6 +92,7 @@ void QQuickHandlerPoint::reset()
     m_pressure = 0;
     m_ellipseDiameters = QSizeF();
     m_pressedButtons = Qt::NoButton;
+    m_pressedModifiers = Qt::NoModifier;
 }
 
 void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
@@ -111,6 +112,7 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
         m_pressedButtons = event->buttons();
         break;
     }
+    m_pressedModifiers = event->modifiers();
     if (event->asPointerTouchEvent()) {
         const QQuickEventTouchPoint *tp = static_cast<const QQuickEventTouchPoint *>(point);
         m_uniqueId = tp->uniqueId();
@@ -164,6 +166,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickEventPoint *> &points)
     m_id = 0;
     m_uniqueId = QPointingDeviceUniqueId();
     m_pressedButtons = event->buttons();
+    m_pressedModifiers = event->modifiers();
     m_position = posSum / points.size();
     m_scenePosition = scenePosSum / points.size();
     if (press) {
@@ -269,6 +272,17 @@ void QQuickHandlerPoint::reset(const QVector<QQuickEventPoint *> &points)
     \brief Which mouse or stylus buttons are currently pressed
 
     \sa MouseArea::pressedButtons
+*/
+
+/*!
+    \readonly
+    \qmlproperty enum QtQuick::HandlerPoint::modifiers
+    \brief Which modifier keys are currently pressed
+
+    This property holds the keyboard modifiers that were pressed at the time
+    the event occurred.
+
+    \sa MouseArea::modifiers
 */
 
 /*!
