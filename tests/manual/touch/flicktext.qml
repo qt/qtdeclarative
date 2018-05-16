@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.12
 import "qrc:/quick/shared/" as Examples
 
 Rectangle {
@@ -67,6 +67,7 @@ Rectangle {
             contentWidth: text.implicitWidth
             contentHeight: text.implicitHeight
             pixelAligned: pxAlignCB.checked
+            synchronousDrag: syncDragCB.checked
             Text {
                 id: text
                 text: "foo bar"
@@ -366,9 +367,14 @@ Rectangle {
         }
 
         Column {
+            spacing: 2
             Examples.CheckBox {
                 id: pxAlignCB
                 text: "pixel aligned"
+            }
+            Examples.CheckBox {
+                id: syncDragCB
+                text: "synchronous drag"
             }
             Text {
                 text: "content X " + flick.contentX.toFixed(2) + " Y " + flick.contentY.toFixed(2)

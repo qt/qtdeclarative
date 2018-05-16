@@ -106,6 +106,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
     Q_PROPERTY(QQuickFlickableVisibleArea *visibleArea READ visibleArea CONSTANT)
 
     Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
+    Q_PROPERTY(bool synchronousDrag READ synchronousDrag WRITE setSynchronousDrag NOTIFY synchronousDragChanged REVISION 12)
 
     Q_PROPERTY(qreal horizontalOvershoot READ horizontalOvershoot NOTIFY horizontalOvershootChanged REVISION 9)
     Q_PROPERTY(qreal verticalOvershoot READ verticalOvershoot NOTIFY verticalOvershootChanged REVISION 9)
@@ -213,6 +214,9 @@ public:
     bool pixelAligned() const;
     void setPixelAligned(bool align);
 
+    bool synchronousDrag() const;
+    void setSynchronousDrag(bool v);
+
     qreal horizontalOvershoot() const;
     qreal verticalOvershoot() const;
 
@@ -259,6 +263,7 @@ Q_SIGNALS:
     void dragStarted();
     void dragEnded();
     void pixelAlignedChanged();
+    Q_REVISION(12) void synchronousDragChanged();
     Q_REVISION(9) void horizontalOvershootChanged();
     Q_REVISION(9) void verticalOvershootChanged();
 

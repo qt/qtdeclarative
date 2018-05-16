@@ -248,6 +248,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , stealMouse(false), pressed(false)
     , scrollingPhase(false), interactive(true), calcVelocity(false)
     , pixelAligned(false)
+    , syncDrag(false)
     , lastPosTime(-1)
     , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
@@ -959,6 +960,33 @@ void QQuickFlickable::setPixelAligned(bool align)
     }
 }
 
+/*!
+    \qmlproperty bool QtQuick::Flickable::synchronousDrag
+    \since 5.12
+
+    If this property is set to true, then when the mouse or touchpoint moves
+    far enough to begin dragging the content, the content will jump, such that
+    the content pixel which was under the cursor or touchpoint when pressed
+    remains under that point.
+
+    The default is \c false, which provides a smoother experience (no jump)
+    at the cost that some of the drag distance is "lost" at the beginning.
+*/
+bool QQuickFlickable::synchronousDrag() const
+{
+    Q_D(const QQuickFlickable);
+    return d->syncDrag;
+}
+
+void QQuickFlickable::setSynchronousDrag(bool v)
+{
+    Q_D(QQuickFlickable);
+    if (v != d->syncDrag) {
+        d->syncDrag = v;
+        emit synchronousDragChanged();
+    }
+}
+
 qint64 QQuickFlickablePrivate::computeCurrentTime(QInputEvent *event) const
 {
     if (0 != event->timestamp())
@@ -1075,7 +1103,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
         if (overThreshold || elapsedSincePress > 200) {
             if (!vMoved)
                 vData.dragStartOffset = dy;
-            qreal newY = dy + vData.pressPos - vData.dragStartOffset;
+            qreal newY = dy + vData.pressPos - (syncDrag ? 0 : vData.dragStartOffset);
             // Recalculate bounds in case margins have changed, but use the content
             // size estimate taken at the start of the drag in case the drag causes
             // the estimate to be altered
@@ -1151,7 +1179,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
         if (overThreshold || elapsedSincePress > 200) {
             if (!hMoved)
                 hData.dragStartOffset = dx;
-            qreal newX = dx + hData.pressPos - hData.dragStartOffset;
+            qreal newX = dx + hData.pressPos - (syncDrag ? 0 : hData.dragStartOffset);
             const qreal minX = hData.dragMinBound + hData.startMargin;
             const qreal maxX = hData.dragMaxBound - hData.endMargin;
             if (!(boundsBehavior & QQuickFlickable::DragOverBounds)) {

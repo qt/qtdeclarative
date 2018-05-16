@@ -221,6 +221,7 @@ public:
     bool interactive : 1;
     bool calcVelocity : 1;
     bool pixelAligned : 1;
+    bool syncDrag : 1;
     QElapsedTimer timer;
     QBasicTimer movementEndingTimer;
     qint64 lastPosTime;

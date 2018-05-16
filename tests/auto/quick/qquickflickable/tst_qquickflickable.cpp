@@ -203,6 +203,8 @@ private slots:
     void overshoot();
     void overshoot_data();
     void overshoot_reentrant();
+    void synchronousDrag_data();
+    void synchronousDrag();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2456,6 +2458,70 @@ void tst_qquickflickable::overshoot_reentrant()
     flickable->setContentY(220.0);
     QCOMPARE(flickable->contentY(), 225.0);
     QCOMPARE(flickable->verticalOvershoot(), 25.0);
+}
+
+void tst_qquickflickable::synchronousDrag_data()
+{
+    QTest::addColumn<bool>("synchronousDrag");
+
+    QTest::newRow("default") << false;
+    QTest::newRow("synch") << true;
+}
+
+void tst_qquickflickable::synchronousDrag()
+{
+    QFETCH(bool, synchronousDrag);
+
+    QScopedPointer<QQuickView> scopedWindow(new QQuickView);
+    QQuickView *window = scopedWindow.data();
+    window->setSource(testFileUrl("longList.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window);
+    QQuickViewTestUtil::moveMouseAway(window);
+    window->show();
+    QVERIFY(window->rootObject() != nullptr);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != nullptr);
+    QCOMPARE(flickable->synchronousDrag(), false);
+    flickable->setSynchronousDrag(synchronousDrag);
+
+    QPoint p1(100, 100);
+    QPoint p2(95, 95);
+    QPoint p3(70, 70);
+    QPoint p4(50, 50);
+    QPoint p5(30, 30);
+    QCOMPARE(flickable->contentY(), 0.0f);
+
+    // Drag via mouse
+    moveAndPress(window, p1);
+    QTest::mouseMove(window, p2);
+    QTest::mouseMove(window, p3);
+    QTest::mouseMove(window, p4);
+    QCOMPARE(flickable->contentY(), synchronousDrag ? 50.0f : 0.0f);
+    QTest::mouseMove(window, p5);
+    if (!synchronousDrag)
+        QVERIFY(flickable->contentY() < 50.0f);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p5);
+
+    // Reset to initial condition
+    flickable->setContentY(0);
+
+    // Drag via touch
+    QTest::touchEvent(window, touchDevice).press(0, p1, window);
+    QQuickTouchUtils::flush(window);
+    QTest::touchEvent(window, touchDevice).move(0, p2, window);
+    QQuickTouchUtils::flush(window);
+    QTest::touchEvent(window, touchDevice).move(0, p3, window);
+    QQuickTouchUtils::flush(window);
+    QTest::touchEvent(window, touchDevice).move(0, p4, window);
+    QQuickTouchUtils::flush(window);
+    QCOMPARE(flickable->contentY(), synchronousDrag ? 50.0f : 0.0f);
+    QTest::touchEvent(window, touchDevice).move(0, p5, window);
+    QQuickTouchUtils::flush(window);
+    if (!synchronousDrag)
+        QVERIFY(flickable->contentY() < 50.0f);
+    QTest::touchEvent(window, touchDevice).release(0, p5, window);
 }
 
 QTEST_MAIN(tst_qquickflickable)
