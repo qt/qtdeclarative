@@ -36,8 +36,10 @@
 
 #include "qquickattachedobject_p.h"
 
+#include <QtCore/qpointer.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -154,44 +156,102 @@ static QQuickItem *findAttachedItem(QObject *parent)
     return item;
 }
 
-QQuickAttachedObject::QQuickAttachedObject(QObject *parent) : QObject(parent)
+class QQuickAttachedObjectPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
-    attachTo(parent);
+    Q_DECLARE_PUBLIC(QQuickAttachedObject)
+
+public:
+    static QQuickAttachedObjectPrivate *get(QQuickAttachedObject *attachedObject)
+    {
+        return attachedObject->d_func();
+    }
+
+    void attachTo(QObject *object);
+    void detachFrom(QObject *object);
+
+    void itemWindowChanged(QQuickWindow *window);
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
+
+    QList<QQuickAttachedObject *> attachedChildren;
+    QPointer<QQuickAttachedObject> attachedParent;
+};
+
+void QQuickAttachedObjectPrivate::attachTo(QObject *object)
+{
+    QQuickItem *item = findAttachedItem(object);
+    if (item) {
+        connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObjectPrivate::itemWindowChanged);
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
 }
 
-QQuickAttachedObject::QQuickAttachedObject(QObjectPrivate &dd, QObject *parent)
-    : QObject(dd, parent)
+void QQuickAttachedObjectPrivate::detachFrom(QObject *object)
 {
-    attachTo(parent);
+    QQuickItem *item = findAttachedItem(object);
+    if (item) {
+        disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObjectPrivate::itemWindowChanged);
+        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
+    }
+}
+
+void QQuickAttachedObjectPrivate::itemWindowChanged(QQuickWindow *window)
+{
+    Q_Q(QQuickAttachedObject);
+    QQuickAttachedObject *attachedParent = nullptr;
+    QQuickItem *item = qobject_cast<QQuickItem *>(q->sender());
+    if (item)
+        attachedParent = findAttachedParent(q->metaObject(), item);
+    if (!attachedParent)
+        attachedParent = attachedObject(q->metaObject(), window);
+    q->setAttachedParent(attachedParent);
+}
+
+void QQuickAttachedObjectPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
+{
+    Q_Q(QQuickAttachedObject);
+    Q_UNUSED(parent);
+    q->setAttachedParent(findAttachedParent(q->metaObject(), item));
+}
+
+QQuickAttachedObject::QQuickAttachedObject(QObject *parent)
+    : QObject(*(new QQuickAttachedObjectPrivate), parent)
+{
+    Q_D(QQuickAttachedObject);
+    d->attachTo(parent);
 }
 
 QQuickAttachedObject::~QQuickAttachedObject()
 {
-    detachFrom(parent());
+    Q_D(QQuickAttachedObject);
+    d->detachFrom(parent());
     setAttachedParent(nullptr);
 }
 
 QList<QQuickAttachedObject *> QQuickAttachedObject::attachedChildren() const
 {
-    return m_attachedChildren;
+    Q_D(const QQuickAttachedObject);
+    return d->attachedChildren;
 }
 
 QQuickAttachedObject *QQuickAttachedObject::attachedParent() const
 {
-    return m_attachedParent;
+    Q_D(const QQuickAttachedObject);
+    return d->attachedParent;
 }
 
 void QQuickAttachedObject::setAttachedParent(QQuickAttachedObject *parent)
 {
-    if (m_attachedParent != parent) {
-        QQuickAttachedObject *oldParent = m_attachedParent;
-        if (m_attachedParent)
-            m_attachedParent->m_attachedChildren.removeOne(this);
-        m_attachedParent = parent;
-        if (parent)
-            parent->m_attachedChildren.append(this);
-        attachedParentChange(parent, oldParent);
-    }
+    Q_D(QQuickAttachedObject);
+    if (d->attachedParent == parent)
+        return;
+
+    QQuickAttachedObject *oldParent = d->attachedParent;
+    if (d->attachedParent)
+        QQuickAttachedObjectPrivate::get(d->attachedParent)->attachedChildren.removeOne(this);
+    d->attachedParent = parent;
+    if (parent)
+        QQuickAttachedObjectPrivate::get(parent)->attachedChildren.append(this);
+    attachedParentChange(parent, oldParent);
 }
 
 void QQuickAttachedObject::init()
@@ -209,41 +269,6 @@ void QQuickAttachedObject::attachedParentChange(QQuickAttachedObject *newParent,
 {
     Q_UNUSED(newParent);
     Q_UNUSED(oldParent);
-}
-
-void QQuickAttachedObject::itemWindowChanged(QQuickWindow *window)
-{
-    QQuickAttachedObject *attachedParent = nullptr;
-    QQuickItem *item = qobject_cast<QQuickItem *>(sender());
-    if (item)
-        attachedParent = findAttachedParent(metaObject(), item);
-    if (!attachedParent)
-        attachedParent = attachedObject(metaObject(), window);
-    setAttachedParent(attachedParent);
-}
-
-void QQuickAttachedObject::itemParentChanged(QQuickItem *item, QQuickItem *parent)
-{
-    Q_UNUSED(parent);
-    setAttachedParent(findAttachedParent(metaObject(), item));
-}
-
-void QQuickAttachedObject::attachTo(QObject *object)
-{
-    QQuickItem *item = findAttachedItem(object);
-    if (item) {
-        connect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
-        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Parent);
-    }
-}
-
-void QQuickAttachedObject::detachFrom(QObject *object)
-{
-    QQuickItem *item = findAttachedItem(object);
-    if (item) {
-        disconnect(item, &QQuickItem::windowChanged, this, &QQuickAttachedObject::itemWindowChanged);
-        QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Parent);
-    }
 }
 
 QT_END_NAMESPACE

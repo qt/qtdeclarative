@@ -49,17 +49,14 @@
 //
 
 #include <QtQml/qqml.h>
-#include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
-#include <QtCore/qpointer.h>
-#include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuickControls2/private/qtquickcontrols2global_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickWindow;
+class QQuickAttachedObjectPrivate;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickAttachedObject : public QObject, public QQuickItemChangeListener
+class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickAttachedObject : public QObject
 {
     Q_OBJECT
 
@@ -73,21 +70,13 @@ public:
     void setAttachedParent(QQuickAttachedObject *parent);
 
 protected:
-    QQuickAttachedObject(QObjectPrivate &dd, QObject *parent = nullptr);
-
     void init();
 
     virtual void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent);
 
-    void itemWindowChanged(QQuickWindow *window);
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
-
 private:
-    void attachTo(QObject *object);
-    void detachFrom(QObject *object);
-
-    QList<QQuickAttachedObject *> m_attachedChildren;
-    QPointer<QQuickAttachedObject> m_attachedParent;
+    Q_DISABLE_COPY(QQuickAttachedObject)
+    Q_DECLARE_PRIVATE(QQuickAttachedObject)
 };
 
 QT_END_NAMESPACE
