@@ -47,8 +47,16 @@ QQuickMaterialTheme::QQuickMaterialTheme()
 {
 }
 
-void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
+void QQuickMaterialTheme::resolve()
 {
+    QFont systemFont;
+    QFont buttonFont;
+    QFont toolTipFont;
+    QFont itemViewFont;
+    QFont listViewFont;
+    QFont menuItemFont;
+    QFont editorFont;
+
     QFont font;
     font.setFamily(QLatin1String("Roboto"));
     QString family = QFontInfo(font).family();
@@ -70,58 +78,38 @@ void QQuickMaterialTheme::resolveFonts(const QFont &defaultFont)
 
     const bool dense = QQuickMaterialStyle::variant() == QQuickMaterialStyle::Dense;
     systemFont.setPixelSize(dense ? 13 : 14);
-    systemFont = defaultFont.resolve(systemFont);
+    setFont(System, systemFont);
 
     // https://material.io/guidelines/components/buttons.html#buttons-style
     buttonFont.setPixelSize(dense ? 13 : 14);
     buttonFont.setCapitalization(QFont::AllUppercase);
     buttonFont.setWeight(QFont::Medium);
-    buttonFont = defaultFont.resolve(buttonFont);
+    setFont(Button, buttonFont);
+    setFont(TabBar, buttonFont);
+    setFont(ToolBar, buttonFont);
 
     // https://material.io/guidelines/components/tooltips.html
     toolTipFont.setPixelSize(dense ? 10 : 14);
     toolTipFont.setWeight(QFont::Medium);
-    toolTipFont = defaultFont.resolve(toolTipFont);
+    setFont(ToolTip, toolTipFont);
 
     itemViewFont.setPixelSize(dense ? 13 : 14);
     itemViewFont.setWeight(QFont::Medium);
-    itemViewFont = defaultFont.resolve(itemViewFont);
+    setFont(ItemView, itemViewFont);
 
     // https://material.io/guidelines/components/lists.html#lists-specs
     listViewFont.setPixelSize(dense ? 13 : 16);
-    listViewFont = defaultFont.resolve(listViewFont);
+    setFont(ListView, listViewFont);
 
     menuItemFont.setPixelSize(dense ? 13 : 16);
-    menuItemFont = defaultFont.resolve(menuItemFont);
+    setFont(Menu, menuItemFont);
+    setFont(MenuBar, menuItemFont);
+    setFont(ComboBox, menuItemFont);
 
     editorFont.setPixelSize(dense ? 13 : 16);
-    editorFont = defaultFont.resolve(editorFont);
-}
-
-const QFont *QQuickMaterialTheme::font(Scope scope) const
-{
-    switch (scope) {
-    case Button:
-    case TabBar:
-    case ToolBar:
-        return &buttonFont;
-    case ToolTip:
-        return &toolTipFont;
-    case ItemView:
-        return &itemViewFont;
-    case ListView:
-        return &listViewFont;
-    case Menu:
-    case MenuBar:
-    case ComboBox:
-        return &menuItemFont;
-    case TextArea:
-    case TextField:
-    case SpinBox:
-        return &editorFont;
-    default:
-        return &systemFont;
-    }
+    setFont(TextArea, editorFont);
+    setFont(TextField, editorFont);
+    setFont(SpinBox, editorFont);
 }
 
 QT_END_NAMESPACE

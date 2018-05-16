@@ -59,14 +59,7 @@ public:
     explicit QQuickUniversalTheme();
 
 protected:
-    const QFont *font(Scope scope) const override;
-
-    void resolveFonts(const QFont &defaultFont) override;
-
-private:
-    QFont systemFont;
-    QFont groupBoxTitleFont;
-    QFont tabButtonFont;
+    void resolve() override;
 };
 
 QT_END_NAMESPACE

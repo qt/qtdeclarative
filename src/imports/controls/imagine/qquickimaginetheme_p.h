@@ -58,15 +58,7 @@ public:
     explicit QQuickImagineTheme();
 
 protected:
-    const QFont *font(Scope scope) const override;
-    const QPalette *palette(Scope scope) const override;
-
-    void resolveFonts(const QFont &defaultFont) override;
-    void resolvePalettes(const QPalette &defaultPalette) override;
-
-private:
-    QFont systemFont;
-    QPalette systemPalette;
+    void resolve() override;
 };
 
 QT_END_NAMESPACE

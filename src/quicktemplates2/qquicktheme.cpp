@@ -97,23 +97,21 @@ static QPlatformTheme::Palette platformPalette(QQuickTheme::Scope scope)
 const QFont *QQuickThemePrivate::resolveThemeFont(QQuickTheme::Scope scope)
 {
     Q_Q(QQuickTheme);
-    if (!hasResolvedFonts) {
-        q->resolveFonts(defaultFont ? *defaultFont : QFont());
-        hasResolvedFonts = true;
-        defaultFont.reset();
+    if (!hasResolved) {
+        q->resolve();
+        hasResolved = true;
     }
-    return q->font(scope);
+    return fonts[scope].data();
 }
 
 const QPalette *QQuickThemePrivate::resolveThemePalette(QQuickTheme::Scope scope)
 {
     Q_Q(QQuickTheme);
-    if (!hasResolvedPalettes) {
-        q->resolvePalettes(defaultPalette ? *defaultPalette : QPalette());
-        hasResolvedPalettes = true;
-        defaultPalette.reset();
+    if (!hasResolved) {
+        q->resolve();
+        hasResolved = true;
     }
-    return q->palette(scope);
+    return palettes[scope].data();
 }
 
 QQuickTheme::QQuickTheme()
@@ -146,6 +144,9 @@ QFont QQuickTheme::themeFont(Scope scope)
         return f;
     }
 
+    if (scope != System)
+        return themeFont(System);
+
     return QFont();
 }
 
@@ -164,31 +165,26 @@ QPalette QQuickTheme::themePalette(Scope scope)
         return f;
     }
 
+    if (scope != System)
+        return themePalette(System);
+
     return QPalette();
 }
 
-const QFont *QQuickTheme::font(Scope scope) const
+void QQuickTheme::setFont(Scope scope, const QFont &font)
 {
-    Q_D(const QQuickTheme);
-    Q_UNUSED(scope)
-    return d->defaultFont.data();
+    Q_D(QQuickTheme);
+    d->fonts[scope] = QSharedPointer<QFont>::create(d->defaultFont ? d->defaultFont->resolve(font) : font);
 }
 
-const QPalette *QQuickTheme::palette(Scope scope) const
+void QQuickTheme::setPalette(Scope scope, const QPalette &palette)
 {
-    Q_D(const QQuickTheme);
-    Q_UNUSED(scope)
-    return d->defaultPalette.data();
+    Q_D(QQuickTheme);
+    d->palettes[scope] = QSharedPointer<QPalette>::create(d->defaultPalette ? d->defaultPalette->resolve(palette) : palette);
 }
 
-void QQuickTheme::resolveFonts(const QFont &defaultFont)
+void QQuickTheme::resolve()
 {
-    Q_UNUSED(defaultFont)
-}
-
-void QQuickTheme::resolvePalettes(const QPalette &defaultPalette)
-{
-    Q_UNUSED(defaultPalette)
 }
 
 QT_END_NAMESPACE

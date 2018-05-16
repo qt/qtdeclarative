@@ -44,18 +44,17 @@ QQuickImagineTheme::QQuickImagineTheme()
 {
 }
 
-void QQuickImagineTheme::resolveFonts(const QFont &defaultFont)
+void QQuickImagineTheme::resolve()
 {
+    QFont systemFont;
     systemFont.setFamily(QLatin1String("Open Sans"));
-    systemFont = defaultFont.resolve(systemFont);
-}
+    setFont(System, systemFont);
 
-void QQuickImagineTheme::resolvePalettes(const QPalette &defaultPalette)
-{
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);
     const QColor windowTextColor = QColor::fromRgb(0x434a54);
     const QColor disabledWindowTextColor = QColor::fromRgb(0xccd1d9);
 
+    QPalette systemPalette;
     systemPalette.setColor(QPalette::ButtonText, Qt::white);
     systemPalette.setColor(QPalette::BrightText, Qt::white);
     systemPalette.setColor(QPalette::Highlight, accentColor);
@@ -65,19 +64,7 @@ void QQuickImagineTheme::resolvePalettes(const QPalette &defaultPalette)
     systemPalette.setColor(QPalette::WindowText, windowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::Text, disabledWindowTextColor);
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, disabledWindowTextColor);
-    systemPalette = defaultPalette.resolve(systemPalette);
-}
-
-const QFont *QQuickImagineTheme::font(Scope scope) const
-{
-    Q_UNUSED(scope);
-    return &systemFont;
-}
-
-const QPalette *QQuickImagineTheme::palette(Scope scope) const
-{
-    Q_UNUSED(scope);
-    return &systemPalette;
+    setPalette(System, systemPalette);
 }
 
 QT_END_NAMESPACE

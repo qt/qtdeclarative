@@ -45,8 +45,12 @@ QQuickUniversalTheme::QQuickUniversalTheme()
 {
 }
 
-void QQuickUniversalTheme::resolveFonts(const QFont &defaultFont)
+void QQuickUniversalTheme::resolve()
 {
+    QFont systemFont;
+    QFont groupBoxTitleFont;
+    QFont tabButtonFont;
+
     const QFont font(QLatin1String("Segoe UI"));
     if (QFontInfo(font).family() == QLatin1String("Segoe UI")) {
         const QString family = font.family();
@@ -56,27 +60,15 @@ void QQuickUniversalTheme::resolveFonts(const QFont &defaultFont)
     }
 
     systemFont.setPixelSize(15);
-    systemFont = defaultFont.resolve(systemFont);
+    setFont(System, systemFont);
 
     groupBoxTitleFont.setPixelSize(15);
     groupBoxTitleFont.setWeight(QFont::DemiBold);
-    groupBoxTitleFont = defaultFont.resolve(groupBoxTitleFont);
+    setFont(GroupBox, groupBoxTitleFont);
 
     tabButtonFont.setPixelSize(24);
     tabButtonFont.setWeight(QFont::Light);
-    tabButtonFont = defaultFont.resolve(tabButtonFont);
-}
-
-const QFont *QQuickUniversalTheme::font(Scope scope) const
-{
-    switch (scope) {
-    case GroupBox:
-        return &groupBoxTitleFont;
-    case TabBar:
-        return &tabButtonFont;
-    default:
-        return &systemFont;
-    }
+    setFont(TabBar, tabButtonFont);
 }
 
 QT_END_NAMESPACE

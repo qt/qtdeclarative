@@ -558,15 +558,10 @@ void tst_QQuickApplicationWindow::font()
 class TestTheme : public QQuickTheme
 {
 public:
-    TestTheme() : m_font("Courier") { }
-
-    const QFont *font(Scope scope) const override
+    void resolve() override
     {
-        Q_UNUSED(scope);
-        return &m_font;
+        setFont(System, QFont("Courier"));
     }
-
-    QFont m_font;
 };
 
 void tst_QQuickApplicationWindow::defaultFont()

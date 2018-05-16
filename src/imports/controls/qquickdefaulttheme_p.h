@@ -58,12 +58,7 @@ public:
     explicit QQuickDefaultTheme();
 
 protected:
-    const QPalette *palette(Scope scope) const override;
-
-    void resolvePalettes(const QPalette &defaultPalette) override;
-
-private:
-    QPalette systemPalette;
+    void resolve() override;
 };
 
 QT_END_NAMESPACE

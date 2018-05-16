@@ -221,21 +221,11 @@ class TestTheme : public QQuickTheme
 public:
     static const int NPalettes = QQuickTheme::Tumbler + 1;
 
-    TestTheme()
+    void resolve() override
     {
-        std::fill(palettes, palettes + NPalettes, static_cast<QPalette *>(0));
-
         for (int i = 0; i < NPalettes; ++i)
-            palettes[i] = new QPalette(QColor::fromRgb(i));
+            setPalette(static_cast<Scope>(i), QPalette(QColor::fromRgb(i)));
     }
-
-    const QPalette *palette(Scope scope) const override
-    {
-        return palettes[scope];
-    }
-
-private:
-    QPalette *palettes[NPalettes];
 };
 
 Q_DECLARE_METATYPE(QQuickTheme::Scope)

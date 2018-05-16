@@ -222,24 +222,14 @@ class TestFontTheme : public QQuickTheme
 public:
     static const int NFonts = QQuickTheme::Tumbler + 1;
 
-    TestFontTheme()
+    void resolve() override
     {
-        std::fill(fonts, fonts + NFonts, static_cast<QFont *>(0));
-
         for (int i = 0; i < NFonts; ++i) {
             QFont font = QFont();
             font.setPixelSize(i + 10);
-            fonts[i] = new QFont(font);
+            setFont(static_cast<Scope>(i), font);
         }
     }
-
-    const QFont *font(Scope scope) const override
-    {
-        return fonts[scope];
-    }
-
-private:
-    QFont *fonts[NFonts];
 };
 
 Q_DECLARE_METATYPE(QQuickTheme::Scope)

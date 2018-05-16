@@ -60,18 +60,7 @@ public:
     explicit QQuickMaterialTheme();
 
 protected:
-    const QFont *font(Scope scope) const override;
-
-    void resolveFonts(const QFont &defaultFont) override;
-
-private:
-    QFont systemFont;
-    QFont buttonFont;
-    QFont toolTipFont;
-    QFont itemViewFont;
-    QFont listViewFont;
-    QFont menuItemFont;
-    QFont editorFont;
+    void resolve() override;
 };
 
 QT_END_NAMESPACE

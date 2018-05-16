@@ -42,8 +42,10 @@ QQuickDefaultTheme::QQuickDefaultTheme()
 {
 }
 
-void QQuickDefaultTheme::resolvePalettes(const QPalette &defaultPalette)
+void QQuickDefaultTheme::resolve()
 {
+    QPalette systemPalette;
+
     systemPalette.setColor(QPalette::Base, QColor::fromRgba(0xFFFFFFFF));
     systemPalette.setColor(QPalette::Disabled, QPalette::Base, QColor::fromRgba(0xFFD6D6D6));
 
@@ -83,13 +85,7 @@ void QQuickDefaultTheme::resolvePalettes(const QPalette &defaultPalette)
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));
 
-    systemPalette = defaultPalette.resolve(systemPalette);
-}
-
-const QPalette *QQuickDefaultTheme::palette(Scope scope) const
-{
-    Q_UNUSED(scope);
-    return &systemPalette;
+    setPalette(System, systemPalette);
 }
 
 QT_END_NAMESPACE

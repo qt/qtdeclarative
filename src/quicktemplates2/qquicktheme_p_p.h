@@ -67,10 +67,13 @@ public:
 
     static QScopedPointer<QQuickTheme> instance;
 
-    bool hasResolvedFonts = false;
-    bool hasResolvedPalettes = false;
+    static const int NScopes = QQuickTheme::Tumbler + 1;
+
+    bool hasResolved = false;
     QScopedPointer<const QFont> defaultFont;
     QScopedPointer<const QPalette> defaultPalette;
+    QSharedPointer<QFont> fonts[NScopes];
+    QSharedPointer<QPalette> palettes[NScopes];
     QQuickTheme *q_ptr = nullptr;
 };
 

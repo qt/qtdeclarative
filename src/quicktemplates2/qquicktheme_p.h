@@ -91,11 +91,10 @@ public:
     static QPalette themePalette(Scope scope);
 
 protected:
-    virtual const QFont *font(Scope scope) const;
-    virtual const QPalette *palette(Scope scope) const;
+    void setFont(Scope scope, const QFont &font);
+    void setPalette(Scope scope, const QPalette &palette);
 
-    virtual void resolveFonts(const QFont &defaultFont);
-    virtual void resolvePalettes(const QPalette &defaultPalette);
+    virtual void resolve();
 
 private:
     Q_DISABLE_COPY(QQuickTheme)
