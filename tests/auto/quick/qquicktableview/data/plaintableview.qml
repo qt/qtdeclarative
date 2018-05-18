@@ -46,6 +46,8 @@ Item {
     height: 450
 
     property alias tableView: tableView
+    property real delegateWidth: 100
+    property real delegateHeight: 50
 
     TableView {
         id: tableView
@@ -63,8 +65,8 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: 100
-            implicitHeight: 50
+            implicitWidth: delegateWidth
+            implicitHeight: delegateHeight
             color: "lightgray"
             border.width: 1
             Text {

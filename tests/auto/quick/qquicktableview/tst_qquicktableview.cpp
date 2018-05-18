@@ -85,6 +85,7 @@ private slots:
     void setAndGetModel();
     void emptyModel_data();
     void emptyModel();
+    void checkZeroSizedDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
     void checkLayoutOfEqualSizedDelegateItems_data();
@@ -179,6 +180,31 @@ void tst_QQuickTableView::emptyModel()
     tableView->setModel(model);
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
+}
+
+void tst_QQuickTableView::checkZeroSizedDelegate()
+{
+    // Check that if we assign a delegate with empty width and height, we
+    // fall back to use kDefaultColumnWidth and kDefaultRowHeight as
+    // column/row sizes.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    view->rootObject()->setProperty("delegateWidth", 0);
+    view->rootObject()->setProperty("delegateHeight", 0);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto items = tableViewPrivate->loadedItems;
+    QVERIFY(!items.isEmpty());
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        auto item = fxItem->item;
+        QCOMPARE(item->width(), kDefaultColumnWidth);
+        QCOMPARE(item->height(), kDefaultRowHeight);
+    }
 }
 
 void tst_QQuickTableView::countDelegateItems_data()

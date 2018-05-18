@@ -53,6 +53,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
 
 static const int kDefaultCacheBuffer = 300;
+static const qreal kDefaultRowHeight = 50;
+static const qreal kDefaultColumnWidth = 50;
 
 class FxTableItem;
 
@@ -249,8 +251,8 @@ public:
     void relayoutTable();
     void relayoutTableItems();
 
-    void layoutVerticalEdge(Qt::Edge tableEdge, bool adjustSize);
-    void layoutHorizontalEdge(Qt::Edge tableEdge, bool adjustSize);
+    void layoutVerticalEdge(Qt::Edge tableEdge);
+    void layoutHorizontalEdge(Qt::Edge tableEdge);
     void layoutTopLeftItem();
     void layoutTableEdgeFromLoadRequest();
 

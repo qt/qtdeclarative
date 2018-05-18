@@ -499,6 +499,9 @@ void QQuickTableViewPrivate::calculateColumnWidthsAfterRebuilding()
             columnWidth = qMax(columnWidth, item->geometry().width());
         }
 
+        if (columnWidth <= 0)
+            columnWidth = kDefaultColumnWidth;
+
         if (columnWidth == prevColumnWidth)
             continue;
 
@@ -523,10 +526,14 @@ void QQuickTableViewPrivate::calculateRowHeightsAfterRebuilding()
             rowHeight = qMax(rowHeight, item->geometry().height());
         }
 
+        if (rowHeight <= 0)
+            rowHeight = kDefaultRowHeight;
+
         if (rowHeight == prevRowHeight)
             continue;
 
         rowHeights.append({row, rowHeight});
+        prevRowHeight = rowHeight;
     }
 
     if (rowHeights.isEmpty()) {
@@ -550,6 +557,9 @@ void QQuickTableViewPrivate::calculateColumnWidth(int column)
         columnWidth = qMax(columnWidth, item->geometry().width());
     }
 
+    if (columnWidth <= 0)
+        columnWidth = kDefaultColumnWidth;
+
     if (columnWidth == columnWidths.last().size)
         return;
 
@@ -569,6 +579,9 @@ void QQuickTableViewPrivate::calculateRowHeight(int row)
         auto const item = loadedTableItem(QPoint(column, row));
         rowHeight = qMax(rowHeight, item->geometry().height());
     }
+
+    if (rowHeight <= 0)
+        rowHeight = kDefaultRowHeight;
 
     if (rowHeight == rowHeights.last().size)
         return;
@@ -710,6 +723,9 @@ void QQuickTableViewPrivate::relayoutTableItems()
     for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
         // Adjust the geometry of all cells in the current column
         qreal width = columnWidth(column);
+        if (width <= 0)
+            width = kDefaultColumnWidth;
+
         for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
@@ -724,6 +740,9 @@ void QQuickTableViewPrivate::relayoutTableItems()
     for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
         // Adjust the geometry of all cells in the current row
         qreal height = rowHeight(row);
+        if (height <= 0)
+            height = kDefaultRowHeight;
+
         for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
@@ -745,22 +764,23 @@ void QQuickTableViewPrivate::relayoutTableItems()
     }
 }
 
-void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge, bool adjustSize)
+void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
 {
     int column = (tableEdge == Qt::LeftEdge) ? loadedTable.left() : loadedTable.right();
     QPoint neighbourDirection = (tableEdge == Qt::LeftEdge) ? kRight : kLeft;
-    qreal width = adjustSize ? columnWidth(column) : 0;
     qreal left = -1;
+
+    qreal width = columnWidth(column);
+    if (width <= 0)
+        width = kDefaultColumnWidth;
 
     for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
         auto fxTableItem = loadedTableItem(QPoint(column, row));
         auto const neighbourItem = itemNextTo(fxTableItem, neighbourDirection);
-        QRectF geometry = fxTableItem->geometry();
 
-        if (adjustSize) {
-            geometry.setWidth(width);
-            geometry.setHeight(neighbourItem->geometry().height());
-        }
+        QRectF geometry = fxTableItem->geometry();
+        geometry.setWidth(width);
+        geometry.setHeight(neighbourItem->geometry().height());
 
         if (left == -1) {
             // left will be the same for all items in the
@@ -776,29 +796,27 @@ void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge, bool adjustS
         fxTableItem->setGeometry(geometry);
         fxTableItem->setVisible(true);
 
-        qCDebug(lcTableViewDelegateLifecycle()) << "layout item:"
-                                            << QPoint(column, row)
-                                            << fxTableItem->geometry()
-                                            << "adjust size:" << adjustSize;
+        qCDebug(lcTableViewDelegateLifecycle()) << "layout item:" << QPoint(column, row) << fxTableItem->geometry();
     }
 }
 
-void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge, bool adjustSize)
+void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 {
     int row = (tableEdge == Qt::TopEdge) ? loadedTable.top() : loadedTable.bottom();
     QPoint neighbourDirection = (tableEdge == Qt::TopEdge) ? kDown : kUp;
-    qreal height = adjustSize ? rowHeight(row) : 0;
     qreal top = -1;
+
+    qreal height = rowHeight(row);
+    if (height <= 0)
+        height = kDefaultRowHeight;
 
     for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
         auto fxTableItem = loadedTableItem(QPoint(column, row));
         auto const neighbourItem = itemNextTo(fxTableItem, neighbourDirection);
-        QRectF geometry = fxTableItem->geometry();
 
-        if (adjustSize) {
-            geometry.setWidth(neighbourItem->geometry().width());
-            geometry.setHeight(height);
-        }
+        QRectF geometry = fxTableItem->geometry();
+        geometry.setWidth(neighbourItem->geometry().width());
+        geometry.setHeight(height);
 
         if (top == -1) {
             // top will be the same for all items in the
@@ -814,10 +832,7 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge, bool adjus
         fxTableItem->setGeometry(geometry);
         fxTableItem->setVisible(true);
 
-        qCDebug(lcTableViewDelegateLifecycle()) << "layout item:"
-                                            << QPoint(column, row)
-                                            << fxTableItem->geometry()
-                                            << "adjust size:" << adjustSize;
+        qCDebug(lcTableViewDelegateLifecycle()) << "layout item:" << QPoint(column, row) << fxTableItem->geometry();
     }
 }
 
@@ -826,31 +841,28 @@ void QQuickTableViewPrivate::layoutTopLeftItem()
     // ###todo: support starting with other top-left items than 0,0
     Q_TABLEVIEW_ASSERT(loadRequest.firstCell() == QPoint(0, 0), loadRequest.toString());
     auto topLeftItem = loadedTableItem(QPoint(0, 0));
-    topLeftItem->item->setPosition(QPoint(tableMargins.left(), tableMargins.top()));
+    auto item = topLeftItem->item;
+
+    if (item->width() <= 0)
+        item->setWidth(kDefaultColumnWidth);
+    if (item->height() <= 0)
+        item->setHeight(kDefaultRowHeight);
+
+    item->setPosition(QPoint(tableMargins.left(), tableMargins.top()));
     topLeftItem->setVisible(true);
     qCDebug(lcTableViewDelegateLifecycle) << "geometry:" << topLeftItem->geometry();
 }
 
 void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
 {
-    // If tableRebuilding is true, we avoid adjusting cell sizes until all items
-    // needed to fill up the viewport has been loaded. This way we can base the later
-    // relayoutTable() on the original size of the items. But we still need to
-    // position the items now at approximate positions so we know (roughly) how many
-    // rows/columns we need to load before we can consider the viewport as filled up.
-    // Only then will the table rebuilding be considered done, and relayoutTable() called.
-    // The relayout might cause new rows and columns to be loaded/unloaded depending on
-    // whether the new sizes reveals or hides already loaded rows/columns.
-    const bool adjustSize = !tableRebuilding;
-
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
     case Qt::RightEdge:
-        layoutVerticalEdge(loadRequest.edge(), adjustSize);
+        layoutVerticalEdge(loadRequest.edge());
         break;
     case Qt::TopEdge:
     case Qt::BottomEdge:
-        layoutHorizontalEdge(loadRequest.edge(), adjustSize);
+        layoutHorizontalEdge(loadRequest.edge());
         break;
     default:
         layoutTopLeftItem();
