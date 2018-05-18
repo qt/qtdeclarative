@@ -230,7 +230,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
                 type = Role::Function;
                 break;
             } else if (data.userType() == qMetaTypeId<const QV4::CompiledData::Binding*>()
-                       && data.value<const QV4::CompiledData::Binding*>()->containsTranslations()) {
+                       && data.value<const QV4::CompiledData::Binding*>()->isTranslationBinding()) {
                 type = Role::String;
                 break;
             } else {
@@ -2731,7 +2731,7 @@ bool QQmlListModelParser::applyProperty(QV4::CompiledData::CompilationUnit *comp
     } else {
         QVariant value;
 
-        if (binding->containsTranslations()) {
+        if (binding->isTranslationBinding()) {
             value = QVariant::fromValue<const QV4::CompiledData::Binding*>(binding);
         } else if (binding->evaluatesToString()) {
             value = binding->valueAsString(qmlUnit);

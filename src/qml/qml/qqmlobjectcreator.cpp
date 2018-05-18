@@ -876,7 +876,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         && !_valueTypeProperty)
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
 
-    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->containsTranslations()) {
+    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
             int signalIndex = _propertyCache->methodIndexToSignalIndex(bindingProperty->coreIndex());
@@ -898,7 +898,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 targetProperty = _valueTypeProperty;
                 subprop = bindingProperty;
             }
-            if (binding->containsTranslations()) {
+            if (binding->isTranslationBinding()) {
                 qmlBinding = QQmlBinding::createTranslationBinding(compilationUnit, binding, _scopeObject, context);
             } else {
                 QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];

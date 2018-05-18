@@ -298,7 +298,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         }
     }
 
-    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->containsTranslations()) {
+    if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
         QUrl url = QUrl();
         int line = -1;
         int column = -1;
@@ -313,7 +313,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         QString expression;
         QQmlBinding::Identifier id = QQmlBinding::Invalid;
 
-        if (!binding->containsTranslations()) {
+        if (!binding->isTranslationBinding()) {
             expression = binding->valueAsString(qmlUnit);
             id = binding->value.compiledScriptIndex;
         }
@@ -468,7 +468,7 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             QQmlContextData *context = QQmlContextData::get(qmlContext(this));
 
             QQmlBinding *newBinding = nullptr;
-            if (e.binding && e.binding->containsTranslations()) {
+            if (e.binding && e.binding->isTranslationBinding()) {
                 newBinding = QQmlBinding::createTranslationBinding(d->compilationUnit, e.binding, object(), context);
             } else if (e.id != QQmlBinding::Invalid) {
                 QV4::Scope scope(qmlEngine(this)->handle());
