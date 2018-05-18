@@ -124,6 +124,7 @@ private:
     friend class ListElement;
     friend class DynamicRoleModelNode;
     friend class DynamicRoleModelNodeMetaObject;
+    friend struct StringOrTranslation;
 
     // Constructs a flat list model for a worker agent
     QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agent);
@@ -135,6 +136,7 @@ private:
 
     QQmlListModelWorkerAgent *m_agent;
     mutable QV4::ExecutionEngine *m_engine;
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_compilationUnit;
     bool m_mainThread;
     bool m_primary;
 

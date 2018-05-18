@@ -195,6 +195,7 @@ void tst_qqmltranslation::translationChange()
     QCOMPARE(object->property("text1").toString(), QString::fromUtf8("translate me"));
     QCOMPARE(object->property("text2").toString(), QString::fromUtf8("translate me"));
     QCOMPARE(object->property("text3").toString(), QString::fromUtf8("translate me"));
+    QCOMPARE(object->property("fromListModel").toString(), QString::fromUtf8("translate me"));
 
     DummyTranslator translator;
     QCoreApplication::installTranslator(&translator);
@@ -206,6 +207,7 @@ void tst_qqmltranslation::translationChange()
     QCOMPARE(object->property("text1").toString(), QString::fromUtf8("xxx"));
     QCOMPARE(object->property("text2").toString(), QString::fromUtf8("xxx"));
     QCOMPARE(object->property("text3").toString(), QString::fromUtf8("xxx"));
+    QCOMPARE(object->property("fromListModel").toString(), QString::fromUtf8("xxx"));
 
     QCoreApplication::removeTranslator(&translator);
 }

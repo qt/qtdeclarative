@@ -244,6 +244,22 @@ private:
     QStringHash<Role *> roleHash;
 };
 
+struct StringOrTranslation
+{
+    explicit StringOrTranslation(const QString &s);
+    explicit StringOrTranslation(const QV4::CompiledData::Binding *binding);
+    ~StringOrTranslation();
+    bool isSet() const { return d.flag(); }
+    bool isTranslation() const { return d.isT2(); }
+    void setString(const QString &s);
+    void setTranslation(const QV4::CompiledData::Binding *binding);
+    QString toString(const QQmlListModel *owner) const;
+    QString asString() const;
+private:
+    void clear();
+    QBiPointer<QStringData, const QV4::CompiledData::Binding> d;
+};
+
 /*!
 \internal
 */
@@ -279,6 +295,7 @@ private:
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
     int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
     int setFunctionProperty(const ListLayout::Role &role, const QJSValue &f);
+    int setTranslationProperty(const ListLayout::Role &role, const QV4::CompiledData::Binding *b);
 
     void setStringPropertyFast(const ListLayout::Role &role, const QString &s);
     void setDoublePropertyFast(const ListLayout::Role &role, double n);
@@ -293,7 +310,7 @@ private:
 
     QVariant getProperty(const ListLayout::Role &role, const QQmlListModel *owner, QV4::ExecutionEngine *eng);
     ListModel *getListProperty(const ListLayout::Role &role);
-    QString *getStringProperty(const ListLayout::Role &role);
+    StringOrTranslation *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
     QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
