@@ -264,7 +264,14 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
 void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
 {
     if (scriptCallback && scriptApi(e).isUndefined()) {
-        setScriptApi(e, scriptCallback(e, e));
+        QJSValue value = scriptCallback(e, e);
+        if (value.isQObject()) {
+            QObject *o = value.toQObject();
+            // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+            // should behave identically to QML singleton types.
+            e->setContextForObject(o, new QQmlContext(e->rootContext(), e));
+        }
+        setScriptApi(e, value);
     } else if (qobjectCallback && !qobjectApi(e)) {
         QObject *o = qobjectCallback(e, e);
         setQObjectApi(e, o);
@@ -273,6 +280,9 @@ void QQmlType::SingletonInstanceInfo::init(QQmlEngine *e)
         }
         // if this object can use a property cache, create it now
         QQmlData::ensurePropertyCache(e, o);
+        // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+        // should behave identically to QML singleton types.
+        e->setContextForObject(o, new QQmlContext(e->rootContext(), e));
     } else if (!url.isEmpty() && !qobjectApi(e)) {
         QQmlComponent component(e, url, QQmlComponent::PreferSynchronous);
         QObject *o = component.beginCreate(e->rootContext());

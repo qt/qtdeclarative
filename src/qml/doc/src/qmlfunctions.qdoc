@@ -538,30 +538,6 @@
    }
    \endqml
 
-   Since singleton types do not have an associated QQmlContext object, then within the functions of a QObject-derived
-   type that is registered as a singleton type implementation the QML context and engine information is not available.
-   The QQmlEngine::contextForObject() function returns NULL when supplied with a pointer to an QObject that
-   implements a singleton type.
-
-   Extending the above example:
-
-   \code
-   class SingletonTypeExample : public QObject
-   {
-       ...
-
-       Q_INVOKABLE void doSomethingElse()
-       {
-           // QML Engine/Context information is not accessible here:
-           Q_ASSERT(QQmlEngine::contextForObject(this) == 0);
-           Q_ASSERT(qmlContext(this) == 0);
-           Q_ASSERT(qmlEngine(this) == 0);
-       }
-
-       ...
-   }
-   \endcode
-
    \sa {Choosing the Correct Integration Method Between C++ and QML}
 */
 

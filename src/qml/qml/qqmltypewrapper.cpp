@@ -95,12 +95,17 @@ QObject* QQmlTypeWrapper::singletonObject() const
 
 QVariant QQmlTypeWrapper::toVariant() const
 {
-    QObject *qobjectSingleton = singletonObject();
-    if (qobjectSingleton)
+    // Only Singleton type wrappers can be converted to a variant.
+    if (!isSingleton())
+        return QVariant();
+
+    QQmlEngine *e = engine()->qmlEngine();
+    QQmlType::SingletonInstanceInfo *siinfo = d()->type().singletonInstanceInfo();
+    siinfo->init(e);
+    if (QObject *qobjectSingleton = siinfo->qobjectApi(e))
         return QVariant::fromValue<QObject*>(qobjectSingleton);
 
-    // only QObject Singleton Type can be converted to a variant.
-    return QVariant();
+    return QVariant::fromValue<QJSValue>(siinfo->scriptApi(e));
 }
 
 

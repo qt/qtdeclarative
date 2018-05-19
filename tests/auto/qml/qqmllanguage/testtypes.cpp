@@ -35,6 +35,14 @@ static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngin
     return new MyTypeObject();
 }
 
+static QJSValue myQJSValueQObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
+{
+    Q_UNUSED(engine)
+
+    QJSValue value = scriptEngine->newQObject(new MyTypeObject());
+    return value;
+}
+
 void registerTypes()
 {
     qmlRegisterInterface<MyInterface>("MyInterface");
@@ -101,6 +109,7 @@ void registerTypes()
     qmlRegisterType<MyCompositeBaseType>("Test", 1, 0, "MyCompositeBaseType");
 
     qmlRegisterSingletonType<MyTypeObjectSingleton>("Test", 1, 0, "MyTypeObjectSingleton", myTypeObjectSingleton);
+    qmlRegisterSingletonType("Test", 1, 0, "MyQJSValueQObjectSingleton", myQJSValueQObjectSingleton);
 
     qmlRegisterType<MyArrayBufferTestClass>("Test", 1, 0, "MyArrayBufferTestClass");
 

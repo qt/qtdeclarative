@@ -246,6 +246,8 @@ private slots:
     void compositeSingletonRegistered();
     void compositeSingletonCircular();
 
+    void singletonsHaveContextAndEngine();
+
     void customParserBindingScopes();
     void customParserEvaluateEnum();
     void customParserProperties();
@@ -3923,11 +3925,13 @@ void tst_qqmllanguage::getSingletonInstance(QObject* o, const char* propertyName
         return;
 
     QVariant variant = o->property(propertyName);
-    QVERIFY(variant.userType() == qMetaTypeId<QObject *>());
+    QVERIFY(variant.isValid());
 
     QObject *singleton = nullptr;
-    if (variant.canConvert<QObject*>())
+    if (variant.userType() == qMetaTypeId<QObject *>())
         singleton = variant.value<QObject*>();
+    else if (variant.userType() == qMetaTypeId<QJSValue>())
+        singleton = variant.value<QJSValue>().toQObject();
 
     QVERIFY(singleton != nullptr);
     *result = singleton;
@@ -4230,6 +4234,24 @@ void tst_qqmllanguage::compositeSingletonCircular()
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 
     QCOMPARE(o->property("value").toInt(), 2);
+}
+
+void tst_qqmllanguage::singletonsHaveContextAndEngine()
+{
+    QObject *qmlSingleton = nullptr;
+    getSingletonInstance(engine, "singletonTest18.qml", "qmlSingleton", &qmlSingleton);
+    QVERIFY(qmlContext(qmlSingleton));
+    QCOMPARE(qmlEngine(qmlSingleton), &engine);
+
+    QObject *jsSingleton = nullptr;
+    getSingletonInstance(engine, "singletonTest18.qml", "jsSingleton", &jsSingleton);
+    QVERIFY(qmlContext(jsSingleton));
+    QCOMPARE(qmlEngine(jsSingleton), &engine);
+
+    QObject *cppSingleton = nullptr;
+    getSingletonInstance(engine, "singletonTest18.qml", "cppSingleton", &cppSingleton);
+    QVERIFY(qmlContext(cppSingleton));
+    QCOMPARE(qmlEngine(cppSingleton), &engine);
 }
 
 void tst_qqmllanguage::customParserBindingScopes()
