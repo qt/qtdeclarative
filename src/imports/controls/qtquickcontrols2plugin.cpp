@@ -96,15 +96,6 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
     QQuickStylePrivate::reset();
 }
 
-static QUrl fixupBaseUrl(QQmlExtensionPlugin *plugin)
-{
-#ifdef QT_STATIC
-    return QLatin1String("qrc") + plugin->baseUrl().path();
-#else
-    return plugin->baseUrl();
-#endif
-}
-
 static bool isDefaultStyle(const QString &style)
 {
     return style.isEmpty() || style.compare(QStringLiteral("Default"), Qt::CaseInsensitive) == 0;
@@ -112,7 +103,7 @@ static bool isDefaultStyle(const QString &style)
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    QQuickStylePrivate::init(fixupBaseUrl(this));
+    QQuickStylePrivate::init(baseUrl());
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
