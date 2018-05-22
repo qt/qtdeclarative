@@ -47,6 +47,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 #include <qpa/qplatformnativeinterface.h>
+#include <math.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -334,7 +335,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     } else
 #endif // QT_CONFIG(gestures)
     {
-        bool containsReleasedPoints = event->isReleaseEvent();
+        const bool containsReleasedPoints = event->isReleaseEvent();
         QVector<QQuickEventPoint *> chosenPoints;
         for (const QQuickHandlerPoint &p : m_currentPoints) {
             QQuickEventPoint *ep = event->pointById(p.id());
@@ -342,10 +343,65 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         }
         if (!active()) {
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler
+            int numberOfPointsDraggedOverThreshold = 0;
+            QVector2D accumulatedDrag;
+            const QVector2D currentCentroid(m_centroid.scenePosition());
+            const QVector2D pressCentroid(m_centroid.scenePressPosition());
+
+            QStyleHints *styleHints = QGuiApplication::styleHints();
+            const int dragThreshold = styleHints->startDragDistance();
+            const int dragThresholdSquared = dragThreshold * dragThreshold;
+
+            double accumulatedCentroidDistance = 0;     // Used to detect scale
+            if (event->isPressEvent())
+                m_accumulatedStartCentroidDistance = 0;   // Used to detect scale
+
+            float accumulatedMovementMagnitude = 0;
+
             for (QQuickEventPoint *point : qAsConst(chosenPoints)) {
-                if (!containsReleasedPoints && QQuickWindowPrivate::dragOverThreshold(point) && grabPoints(chosenPoints)) {
-                    setActive(true);
-                    break;
+                if (!containsReleasedPoints) {
+                    accumulatedDrag += QVector2D(point->scenePressPosition() - point->scenePosition());
+                    /*
+                       In order to detect a drag, we want to check if all points have moved more or
+                       less in the same direction.
+
+                       We then take each point, and convert the point to a local coordinate system where
+                       the centroid is the origin. This is done both for the press positions and the
+                       current positions. We will then have two positions:
+
+                       - pressCentroidRelativePosition
+                           is the start point relative to the press centroid
+                       - currentCentroidRelativePosition
+                           is the current point relative to the current centroid
+
+                       If those two points are far enough apart, it might not be considered as a drag
+                       anymore. (Note that the threshold will matched to the average of the relative
+                       movement of all the points). Therefore, a big relative movement will make a big
+                       contribution to the average relative movement.
+
+                       The algorithm then can be described as:
+                         For each point:
+                          - Calculate vector pressCentroidRelativePosition (from the press centroid to the press position)
+                          - Calculate vector currentCentroidRelativePosition (from the current centroid to the current position)
+                          - Calculate the relative movement vector:
+
+                             centroidRelativeMovement = currentCentroidRelativePosition - pressCentroidRelativePosition
+
+                           and measure its magnitude. Add the magnitude to the accumulatedMovementMagnitude.
+
+                         Finally, if the accumulatedMovementMagnitude is below some threshold, it means
+                         that the points were stationary or they were moved in parallel (e.g. the hand
+                         was moved, but the relative position between each finger remained very much
+                         the same). This is then used to rule out if there is a rotation or scale.
+                    */
+                    QVector2D pressCentroidRelativePosition = QVector2D(point->scenePosition()) - currentCentroid;
+                    QVector2D currentCentroidRelativePosition = QVector2D(point->scenePressPosition()) - pressCentroid;
+                    QVector2D centroidRelativeMovement = currentCentroidRelativePosition - pressCentroidRelativePosition;
+                    accumulatedMovementMagnitude += centroidRelativeMovement.length();
+
+                    accumulatedCentroidDistance += pressCentroidRelativePosition.length();
+                    if (event->isPressEvent())
+                        m_accumulatedStartCentroidDistance += (QVector2D(point->scenePressPosition()) - pressCentroid).length();
                 } else {
                     setPassiveGrab(point);
                 }
@@ -353,11 +409,44 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                     point->setAccepted(false); // don't stop propagation
                     setPassiveGrab(point);
                 }
+                if (QQuickWindowPrivate::dragOverThreshold(point))
+                    ++numberOfPointsDraggedOverThreshold;
+            }
+
+            const bool requiredNumberOfPointsDraggedOverThreshold = numberOfPointsDraggedOverThreshold >= minimumPointCount() && numberOfPointsDraggedOverThreshold <= maximumPointCount();
+            accumulatedMovementMagnitude /= m_currentPoints.count();
+
+            QVector2D avgDrag = accumulatedDrag / m_currentPoints.count();
+            if (!xAxis()->enabled())
+                avgDrag.setX(0);
+            if (!yAxis()->enabled())
+                avgDrag.setY(0);
+
+            const qreal centroidMovementDelta = (currentCentroid - pressCentroid).length();
+
+            qreal distanceToCentroidDelta = qAbs(accumulatedCentroidDistance - m_accumulatedStartCentroidDistance); // Used to detect scale
+            if (numberOfPointsDraggedOverThreshold >= 1) {
+                if (requiredNumberOfPointsDraggedOverThreshold && avgDrag.lengthSquared() >= dragThresholdSquared && accumulatedMovementMagnitude < dragThreshold) {
+                    // Drag
+                    if (grabPoints(chosenPoints))
+                        setActive(true);
+                } else if (distanceToCentroidDelta > dragThreshold) {    // all points should in accumulation have been moved beyond threshold (?)
+                    // Scale
+                    if (grabPoints(chosenPoints))
+                        setActive(true);
+                } else if (distanceToCentroidDelta < dragThreshold && (centroidMovementDelta < dragThreshold)) {
+                    // Rotate
+                    // Since it wasn't a scale and if we exceeded the dragthreshold, and the
+                    // centroid didn't moved much, the points must have been moved around the centroid.
+                    if (grabPoints(chosenPoints))
+                        setActive(true);
+                }
             }
             if (!active())
                 return;
         }
         // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
+
         // avoid mapping the minima and maxima, as they might have unmappable values
         // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
         // 1. scale
@@ -376,7 +465,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     }
 
     QPointF centroidParentPos;
-    QRectF bounds(m_minimumX, m_minimumY, m_maximumX - m_minimumX, m_maximumY - m_minimumY);
+    QRectF bounds(QPointF(xAxis()->minimum(), yAxis()->minimum()), QPointF(xAxis()->maximum(), yAxis()->maximum()) );
     if (target() && target()->parentItem()) {
         centroidParentPos = target()->parentItem()->mapFromScene(m_centroid.scenePosition());
         centroidParentPos = QPointF(qBound(bounds.left(), centroidParentPos.x(), bounds.right()),
@@ -391,6 +480,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
+        if (!xAxis()->enabled())
+            m_activeTranslation.setX(0);
+        if (!yAxis()->enabled())
+            m_activeTranslation.setY(0);
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
 

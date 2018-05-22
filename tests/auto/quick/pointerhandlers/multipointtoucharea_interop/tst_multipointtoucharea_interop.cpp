@@ -188,10 +188,15 @@ void tst_MptaInterop::touchesThenPinch()
 
     // Start moving: PinchHandler steals the exclusive grab from MPTA as soon as dragThreshold is exceeded
     int pinchStoleGrab = 0;
-    for (int i = 0; i < 8; ++i) {
-        p1 += QPoint(dragThreshold / 2, dragThreshold / 2);
-        p2 += QPoint(dragThreshold / 2, dragThreshold / 2);
-        p3 += QPoint(-dragThreshold / 2, dragThreshold / 2);
+
+    const QPointF c = (p1 + p2 + p3)/3;     // centroid of p1,p2,p3
+    QTransform xform;   // transform to rotate around the centroid
+    xform.translate(c.x(), c.y()).rotate(1).translate(-c.x(), -c.y());
+
+    for (int i = 0; i < 16; ++i) {
+        p1 = xform.map(p1);
+        p2 = xform.map(p2);
+        p3 = xform.map(p3);
         touch.move(1, p1).move(2, p2).move(3, p3).commit();
         QQuickTouchUtils::flush(window);
         if (!pinchStoleGrab && pointerEvent->point(0)->exclusiveGrabber() == pinch) {

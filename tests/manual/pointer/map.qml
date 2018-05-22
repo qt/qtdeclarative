@@ -77,6 +77,8 @@ Item {
         target: map
         minimumScale: 0.1
         maximumScale: 10
+        xAxis.enabled: false
+        yAxis.enabled: false
         onActiveChanged: if (!active) reRenderIfNecessary()
         grabPermissions: PinchHandler.TakeOverForbidden // don't allow takeover if pinch has started
     }

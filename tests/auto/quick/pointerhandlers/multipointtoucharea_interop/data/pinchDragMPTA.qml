@@ -93,6 +93,7 @@ Rectangle {
                 id: dragHandler
                 objectName: "DragHandler"
                 target: container
+                grabPermissions: PointerHandler.CanTakeOverFromItems
             }
             PinchHandler {
                 id: pinch3
@@ -101,6 +102,7 @@ Rectangle {
                 minimumPointCount: 3
                 minimumScale: 0.1
                 maximumScale: 10
+                grabPermissions: PointerHandler.CanTakeOverFromItems
             }
         }
     }

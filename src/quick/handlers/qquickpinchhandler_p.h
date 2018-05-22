@@ -55,6 +55,7 @@
 #include "qevent.h"
 #include "qquickmultipointhandler_p.h"
 #include <private/qquicktranslate_p.h>
+#include "qquickdragaxis_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -74,6 +75,8 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(qreal maximumX READ maximumX WRITE setMaximumX NOTIFY maximumXChanged)
     Q_PROPERTY(qreal minimumY READ minimumY WRITE setMinimumY NOTIFY minimumYChanged)
     Q_PROPERTY(qreal maximumY READ maximumY WRITE setMaximumY NOTIFY maximumYChanged)
+    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
+    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
 
 public:
     enum PinchOrigin {
@@ -111,6 +114,9 @@ public:
     qreal maximumY() const { return m_maximumY; }
     void setMaximumY(qreal maxY);
 
+    QQuickDragAxis *xAxis() { return &m_xAxis; }
+    QQuickDragAxis *yAxis() { return &m_yAxis; }
+
 signals:
     void minimumScaleChanged();
     void maximumScaleChanged();
@@ -145,6 +151,8 @@ private:
     qreal m_maximumX = qInf();
     qreal m_minimumY = -qInf();
     qreal m_maximumY = qInf();
+    QQuickDragAxis m_xAxis;
+    QQuickDragAxis m_yAxis;
 
     PinchOrigin m_pinchOrigin = PinchOrigin::PinchCenter;
 
@@ -153,10 +161,12 @@ private:
     qreal m_startRotation = 0;
     qreal m_startDistance = 0;
     QPointF m_startPos;
+    qreal m_accumulatedStartCentroidDistance = 0;
 
     QVector<PointData> m_startAngles;
     QMatrix4x4 m_startMatrix;
     QQuickMatrix4x4 m_transform;
+
 
 };
 
