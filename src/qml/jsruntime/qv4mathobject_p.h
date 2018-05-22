@@ -71,13 +71,23 @@ struct MathObject: Object
 
     static ReturnedValue method_abs(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_acos(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_acosh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_asin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_asinh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_atan(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_atanh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_atan2(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_cbrt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_ceil(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_clz32(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_cos(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_cosh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_exp(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_expm1(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_floor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fround(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_hypot(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_imul(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_log(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_log10(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_log1p(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -89,8 +99,11 @@ struct MathObject: Object
     static ReturnedValue method_round(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sign(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sinh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sqrt(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_tan(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_tanh(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_trunc(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 }
