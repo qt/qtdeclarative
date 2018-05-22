@@ -465,14 +465,14 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 */
 
 QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
-  : enabled(true)
+  : grabPermissions(QQuickPointerHandler::CanTakeOverFromItems |
+                      QQuickPointerHandler::CanTakeOverFromHandlersOfDifferentType |
+                      QQuickPointerHandler::ApprovesTakeOverByAnything)
+  , enabled(true)
   , active(false)
   , targetExplicitlySet(false)
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
-  , grabPermissions(QQuickPointerHandler::CanTakeOverFromItems |
-                      QQuickPointerHandler::CanTakeOverFromHandlersOfDifferentType |
-                      QQuickPointerHandler::ApprovesTakeOverByAnything)
 {
 }
 

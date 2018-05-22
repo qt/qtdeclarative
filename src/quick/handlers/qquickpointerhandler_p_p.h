@@ -71,13 +71,12 @@ public:
 
     QQuickPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;
+    uint8_t grabPermissions : 8;
     bool enabled : 1;
     bool active : 1;
     bool targetExplicitlySet : 1;
     bool hadKeepMouseGrab : 1;    // some handlers override target()->setKeepMouseGrab(); this remembers previous state
     bool hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
-    uint reserved : 19;
-    uint8_t grabPermissions : 8;
 };
 
 QT_END_NAMESPACE
