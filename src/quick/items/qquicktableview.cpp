@@ -1342,6 +1342,7 @@ void QQuickTableView::setModel(const QVariant &newModel)
         d->delegateModel->setModel(effectiveModelVariant);
     }
 
+    Q_ASSERT(d->model);
     QObjectPrivate::connect(d->model, &QQmlInstanceModel::createdItem, d, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::connect(d->model, &QQmlInstanceModel::initItem, d, &QQuickTableViewPrivate::initItemCallback);
     QObjectPrivate::connect(d->model, &QQmlInstanceModel::modelUpdated, d, &QQuickTableViewPrivate::modelUpdated);
