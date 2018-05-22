@@ -2414,6 +2414,22 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         object->qmlSignals->append(s);
     }
 
+    for (uint i = 0; i < serializedObject->nEnums; ++i) {
+        const QV4::CompiledData::Enum *serializedEnum = serializedObject->enumAt(i);
+        QmlIR::Enum *e = pool->New<QmlIR::Enum>();
+        e->nameIndex = serializedEnum->nameIndex;
+        e->location = serializedEnum->location;
+        e->enumValues = pool->New<QmlIR::PoolList<QmlIR::EnumValue> >();
+
+        for (uint i = 0; i < serializedEnum->nEnumValues; ++i) {
+            QmlIR::EnumValue *v = pool->New<QmlIR::EnumValue>();
+            *static_cast<QV4::CompiledData::EnumValue*>(v) = *serializedEnum->enumValueAt(i);
+            e->enumValues->append(v);
+        }
+
+        object->qmlEnums->append(e);
+    }
+
     const QV4::CompiledData::Property *serializedProperty = serializedObject->propertyTable();
     for (uint i = 0; i < serializedObject->nProperties; ++i, ++serializedProperty) {
         QmlIR::Property *p = pool->New<QmlIR::Property>();
