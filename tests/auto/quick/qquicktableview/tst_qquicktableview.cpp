@@ -86,6 +86,7 @@ private slots:
     void emptyModel_data();
     void emptyModel();
     void checkZeroSizedDelegate();
+    void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
     void checkLayoutOfEqualSizedDelegateItems_data();
@@ -206,6 +207,49 @@ void tst_QQuickTableView::checkZeroSizedDelegate()
         QCOMPARE(item->width(), kDefaultColumnWidth);
         QCOMPARE(item->height(), kDefaultRowHeight);
     }
+}
+
+void tst_QQuickTableView::noDelegate()
+{
+    // Check that you can skip setting a delegate without
+    // it causing any problems (like crashing or asserting).
+    // And then set a delegate, and do a quick check that the
+    // view gets populated as expected.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int rows = 5;
+    const int columns = 5;
+    auto model = TestModelAsVariant(columns, rows);
+    tableView->setModel(model);
+
+    // Start with no delegate, and check
+    // that we end up with no items in the table.
+    tableView->setDelegate(nullptr);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto items = tableViewPrivate->loadedItems;
+    QVERIFY(items.isEmpty());
+
+    // Set a delegate, and check that we end
+    // up with the expected number of items.
+    auto delegate = view->rootObject()->property("delegate").value<QQmlComponent *>();
+    QVERIFY(delegate);
+    tableView->setDelegate(delegate);
+
+    WAIT_UNTIL_POLISHED;
+
+    items = tableViewPrivate->loadedItems;
+    QCOMPARE(items.count(), rows * columns);
+
+    // And then unset the delegate again, and check
+    // that we end up with no items.
+    tableView->setDelegate(nullptr);
+
+    WAIT_UNTIL_POLISHED;
+
+    items = tableViewPrivate->loadedItems;
+    QVERIFY(items.isEmpty());
 }
 
 void tst_QQuickTableView::countDelegateItems_data()

@@ -48,6 +48,7 @@ Item {
     property alias tableView: tableView
     property real delegateWidth: 100
     property real delegateHeight: 50
+    property Component delegate: tableViewDelegate
 
     TableView {
         id: tableView

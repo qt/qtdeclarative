@@ -965,6 +965,9 @@ void QQuickTableViewPrivate::loadInitialTopLeftItem()
     if (tableSize.isEmpty())
         return;
 
+    if (model->count() == 0)
+        return;
+
     // Load top-left item. After loaded, loadItemsInsideRect() will take
     // care of filling out the rest of the table.
     loadRequest.begin(QPoint(0, 0), QQmlIncubator::AsynchronousIfNested);
@@ -1007,8 +1010,7 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
     if (loadedItems.isEmpty()) {
         // We need at least the top-left item to be loaded before we can
         // start loading edges around it. Not having a top-left item at
-        // this point means that the model is empty (or row and and column
-        // is 0) since we have no active load request.
+        // this point means that the model is empty (or no delegate).
         return;
     }
 
@@ -1115,7 +1117,7 @@ void QQuickTableViewPrivate::updatePolish()
         endRebuildTable();
 
     if (loadedItems.isEmpty()) {
-        qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded, meaning empty model or row/column == 0";
+        qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded, meaning empty model or no delegate";
         return;
     }
 
