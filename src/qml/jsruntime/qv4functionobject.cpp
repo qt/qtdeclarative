@@ -229,7 +229,9 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
     if (engine->hasException)
         return nullptr;
 
-    QString function = (t == Type_Function ? QLatin1String("function anonymous(") : QLatin1String("function* anonymous(")) + arguments + QLatin1String("){") + body + QLatin1Char('}');
+    QString function = (t == Type_Function ? QLatin1String("function anonymous(") : QLatin1String("function* anonymous(")) + arguments + QLatin1String("\n){") + body + QLatin1String("\n}");
+
+    qDebug() << "parsing function:" << function;
 
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
