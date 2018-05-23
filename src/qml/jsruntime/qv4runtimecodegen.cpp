@@ -54,7 +54,7 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
 
     Compiler::ScanFunctions scan(this, sourceCode, Compiler::ContextType::Global);
     // fake a global environment
-    scan.enterEnvironment(nullptr, Compiler::ContextType::Function);
+    scan.enterEnvironment(nullptr, Compiler::ContextType::Function, QString());
     scan(ast);
     scan.leaveEnvironment();
 

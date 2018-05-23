@@ -75,16 +75,17 @@ void ScanFunctions::operator()(Node *node)
 
 void ScanFunctions::enterGlobalEnvironment(ContextType compilationMode)
 {
-    enterEnvironment(astNodeForGlobalEnvironment, compilationMode);
+    enterEnvironment(astNodeForGlobalEnvironment, compilationMode, QStringLiteral("%GlobalCode"));
 }
 
-void ScanFunctions::enterEnvironment(Node *node, ContextType compilationMode)
+void ScanFunctions::enterEnvironment(Node *node, ContextType compilationMode, const QString &name)
 {
     Context *c = _cg->_module->contextMap.value(node);
     if (!c)
         c = _cg->_module->newContext(node, _context, compilationMode);
     if (!c->isStrict)
         c->isStrict = _cg->_strictMode;
+    c->name = name;
     _contextStack.append(c);
     _context = c;
 }
@@ -92,7 +93,7 @@ void ScanFunctions::enterEnvironment(Node *node, ContextType compilationMode)
 void ScanFunctions::leaveEnvironment()
 {
     _contextStack.pop();
-    _context = _contextStack.isEmpty() ? 0 : _contextStack.top();
+    _context = _contextStack.isEmpty() ? nullptr : _contextStack.top();
 }
 
 void ScanFunctions::checkDirectivePrologue(StatementList *ast)
@@ -138,7 +139,7 @@ void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
 
 bool ScanFunctions::visit(Program *ast)
 {
-    enterEnvironment(ast, defaultProgramType);
+    enterEnvironment(ast, defaultProgramType, QStringLiteral("%ProgramCode"));
     checkDirectivePrologue(ast->statements);
     return true;
 }
@@ -320,8 +321,7 @@ bool ScanFunctions::visit(DoWhileStatement *ast) {
 }
 
 bool ScanFunctions::visit(ForStatement *ast) {
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("For");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%For"));
     Node::accept(ast->initialiser, this);
     Node::accept(ast->declarations, this);
     Node::accept(ast->condition, this);
@@ -339,8 +339,7 @@ void ScanFunctions::endVisit(ForStatement *)
 }
 
 bool ScanFunctions::visit(ForEachStatement *ast) {
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("Foreach");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%Foreach"));
     Node::accept(ast->lhs, this);
     Node::accept(ast->expression, this);
 
@@ -364,8 +363,7 @@ bool ScanFunctions::visit(ThisExpression *)
 bool ScanFunctions::visit(Block *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("Block");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%Block"));
     Node::accept(ast->statements, this);
     return false;
 }
@@ -377,8 +375,7 @@ void ScanFunctions::endVisit(Block *)
 
 bool ScanFunctions::visit(CaseBlock *ast)
 {
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("CaseBlock");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%CaseBlock"));
     return true;
 }
 
@@ -390,8 +387,7 @@ void ScanFunctions::endVisit(CaseBlock *)
 bool ScanFunctions::visit(Catch *ast)
 {
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("CatchBlock");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%CatchBlock"));
     _context->isCatchBlock = true;
     QString caughtVar = ast->patternElement->bindingIdentifier;
     if (caughtVar.isEmpty())
@@ -420,8 +416,7 @@ bool ScanFunctions::visit(WithStatement *ast)
     Node::accept(ast->expression, this);
 
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
-    enterEnvironment(ast, ContextType::Block);
-    _context->name = QLatin1String("WithBlock");
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%WithBlock"));
     _context->isWithBlock = true;
 
     if (_context->isStrict) {
@@ -441,7 +436,7 @@ void ScanFunctions::endVisit(WithStatement *)
 bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
 {
     Context *outerContext = _context;
-    enterEnvironment(ast, ContextType::Function);
+    enterEnvironment(ast, ContextType::Function, name);
 
     FunctionExpression *expr = AST::cast<FunctionExpression *>(ast);
     if (!expr)

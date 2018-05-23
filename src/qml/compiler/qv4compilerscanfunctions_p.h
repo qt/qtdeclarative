@@ -85,7 +85,7 @@ public:
     void operator()(AST::Node *node);
 
     void enterGlobalEnvironment(ContextType compilationMode);
-    void enterEnvironment(AST::Node *node, ContextType compilationMode);
+    void enterEnvironment(AST::Node *node, ContextType compilationMode, const QString &name);
     void leaveEnvironment();
 
     void enterQmlFunction(AST::FunctionDeclaration *ast)

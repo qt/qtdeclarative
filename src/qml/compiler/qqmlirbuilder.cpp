@@ -1810,6 +1810,12 @@ void JSCodeGen::beginObjectScope(QQmlPropertyCache *scopeObject)
 
 QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions)
 {
+    auto qmlName = [&](const CompiledFunctionOrExpression &c) {
+        if (c.nameIndex != 0)
+            return stringPool->stringForIndex(c.nameIndex);
+        else
+            return QStringLiteral("%qml-expression-entry");
+    };
     QVector<int> runtimeFunctionIndices(functions.size());
 
     QV4::Compiler::ScanFunctions scan(this, sourceCode, QV4::Compiler::ContextType::Global);
@@ -1823,7 +1829,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
             scan.enterQmlFunction(function);
         } else {
             Q_ASSERT(f.node != f.parentNode);
-            scan.enterEnvironment(f.parentNode, QV4::Compiler::ContextType::Binding);
+            scan.enterEnvironment(f.parentNode, QV4::Compiler::ContextType::Binding, qmlName(f));
         }
 
         scan(function ? function->body : f.node);
@@ -1846,10 +1852,8 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         QString name;
         if (function)
             name = function->name.toString();
-        else if (qmlFunction.nameIndex != 0)
-            name = stringPool->stringForIndex(qmlFunction.nameIndex);
         else
-            name = QStringLiteral("%qml-expression-entry");
+            name = qmlName(qmlFunction);
 
         QQmlJS::AST::StatementList *body;
         if (function) {
