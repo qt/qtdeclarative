@@ -78,20 +78,22 @@ struct ObjectPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
-    static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_getOwnPropertyDescriptor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_getOwnPropertyNames(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_assign(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_create(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_defineProperty(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_defineProperties(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_seal(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_defineProperty(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_freeze(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_preventExtensions(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_isSealed(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_isFrozen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertyDescriptor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertyNames(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertySymbols(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_is(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_isExtensible(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isFrozen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isSealed(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_preventExtensions(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_seal(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_setPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

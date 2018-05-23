@@ -97,6 +97,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
+    ctor->defineDefaultProperty(QStringLiteral("getOwnPropertySymbols"), method_getOwnPropertySymbols, 1);
     ctor->defineDefaultProperty(QStringLiteral("assign"), method_assign, 2);
     ctor->defineDefaultProperty(QStringLiteral("create"), method_create, 2);
     ctor->defineDefaultProperty(QStringLiteral("defineProperty"), method_defineProperty, 3);
@@ -104,6 +105,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("seal"), method_seal, 1);
     ctor->defineDefaultProperty(QStringLiteral("freeze"), method_freeze, 1);
     ctor->defineDefaultProperty(QStringLiteral("preventExtensions"), method_preventExtensions, 1);
+    ctor->defineDefaultProperty(QStringLiteral("is"), method_is, 2);
     ctor->defineDefaultProperty(QStringLiteral("isSealed"), method_isSealed, 1);
     ctor->defineDefaultProperty(QStringLiteral("isFrozen"), method_isFrozen, 1);
     ctor->defineDefaultProperty(QStringLiteral("isExtensible"), method_isExtensible, 1);
@@ -135,6 +137,15 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(const FunctionObject *b, co
 
     ScopedObject p(scope, o->prototype());
     return (!!p ? p->asReturnedValue() : Encode::null());
+}
+
+ReturnedValue ObjectPrototype::method_is(const FunctionObject *, const Value *, const Value *argv, int argc)
+{
+    if (!argc)
+        return Encode(true);
+    if (argc == 1)
+        return Encode((argv[0].isUndefined() ? true : false));
+    return Encode(argv[0].sameValue(argv[1]));
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObject *b, const Value *, const Value *argv, int argc)
@@ -172,6 +183,26 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyNames(const FunctionObject *
         return QV4::Encode::undefined();
 
     return Encode(getOwnPropertyNames(scope.engine, argv[0]));
+}
+
+ReturnedValue ObjectPrototype::method_getOwnPropertySymbols(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject O(scope, argv[0].toObject(scope.engine));
+    Heap::InternalClass *ic = O->d()->internalClass;
+    ScopedValue n(scope);
+    ScopedArrayObject array(scope, scope.engine->newArrayObject());
+    for (uint i = 0; i < ic->size; ++i) {
+        Identifier id = ic->nameMap.at(i);
+        n = id.asHeapObject();
+        if (!n || !n->isSymbol())
+            continue;
+        array->push_back(n);
+    }
+    return array->asReturnedValue();
 }
 
 // 19.1.2.1
