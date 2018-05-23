@@ -205,6 +205,8 @@ private slots:
 
     void scriptScopes();
 
+    void protoChanges_QTBUG68369();
+
 signals:
     void testSignal();
 };
@@ -4155,6 +4157,22 @@ void tst_QJSEngine::scriptScopes()
     QJSValue use = engine.evaluate("'use strict'; foo()");
     QVERIFY(use.isNumber());
     QCOMPARE(use.toInt(), 42);
+}
+
+void tst_QJSEngine::protoChanges_QTBUG68369()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+    "var o = { x: true };"
+    "var p1 = {};"
+    "var p2 = {};"
+    "o.__proto__ = p1;"
+    "o.__proto__ = p2;"
+    "o.__proto__ = p1;"
+    "p1.y = true;"
+    "o.y"
+    );
+    QVERIFY(ok.toBool() == true);
 }
 
 QTEST_MAIN(tst_QJSEngine)
