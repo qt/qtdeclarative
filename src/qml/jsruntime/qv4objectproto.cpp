@@ -108,6 +108,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("isFrozen"), method_isFrozen, 1);
     ctor->defineDefaultProperty(QStringLiteral("isExtensible"), method_isExtensible, 1);
     ctor->defineDefaultProperty(QStringLiteral("keys"), method_keys, 1);
+    ctor->defineDefaultProperty(QStringLiteral("setPrototypeOf"), method_setPrototypeOf, 2);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(v4->id_toString(), method_toString, 0);
@@ -471,6 +472,30 @@ ReturnedValue ObjectPrototype::method_keys(const FunctionObject *b, const Value 
     }
 
     return a.asReturnedValue();
+}
+
+ReturnedValue ObjectPrototype::method_setPrototypeOf(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f->engine());
+    if (argc < 2 || argv[0].isNullOrUndefined() || !(argv[1].isObject() || argv[1].isNull()))
+        return scope.engine->throwTypeError();
+
+    if (!argv[0].isObject())
+        return argv[0].asReturnedValue();
+
+    ScopedObject o(scope, argv[0]);
+    ScopedObject p(scope, argv[1]);
+    Q_ASSERT(!!o);
+
+    if (o->prototype() != p->d()) {
+        bool ok = false;
+        if (o->isExtensible()) {
+            ok = o->setPrototype(p);
+        }
+        if (!ok)
+            return scope.engine->throwTypeError(QStringLiteral("Object.setPrototypeOf: Could not change prototype"));
+    }
+    return o->asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)

@@ -92,6 +92,7 @@ struct ObjectPrototype: Object
     static ReturnedValue method_isFrozen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_isExtensible(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_setPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
