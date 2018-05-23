@@ -47,6 +47,7 @@
 #include <qv4variantobject_p.h>
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
+#include <qv4symbol_p.h>
 
 #include <qstack.h>
 #include <qstringlist.h>
@@ -881,6 +882,8 @@ void Heap::JsonObject::init()
 
     o->defineDefaultProperty(QStringLiteral("parse"), QV4::JsonObject::method_parse, 2);
     o->defineDefaultProperty(QStringLiteral("stringify"), QV4::JsonObject::method_stringify, 3);
+    ScopedString json(scope, scope.engine->newString(QStringLiteral("JSON")));
+    o->defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), json);
 }
 
 

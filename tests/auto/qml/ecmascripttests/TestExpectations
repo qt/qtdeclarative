@@ -626,7 +626,6 @@ built-ins/Function/prototype/toString/symbol-named-builtins.js fails
 built-ins/Function/prototype/toString/unicode.js fails
 built-ins/GeneratorFunction/proto-from-ctor-realm.js fails
 built-ins/GeneratorPrototype/throw/try-finally-nested-try-catch-within-catch.js fails
-built-ins/JSON/Symbol.toStringTag.js fails
 built-ins/JSON/parse/revived-proxy-revoked.js fails
 built-ins/JSON/parse/revived-proxy.js fails
 built-ins/JSON/parse/reviver-array-define-prop-err.js fails
