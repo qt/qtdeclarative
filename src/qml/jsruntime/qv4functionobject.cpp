@@ -297,6 +297,7 @@ void FunctionPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
 
+    defineReadonlyConfigurableProperty(engine->id_name(), *engine->id_empty());
     defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);

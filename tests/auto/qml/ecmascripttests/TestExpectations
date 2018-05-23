@@ -576,7 +576,6 @@ built-ins/Function/prototype/bind/instance-name-chained.js fails
 built-ins/Function/prototype/bind/instance-name-non-string.js fails
 built-ins/Function/prototype/bind/instance-name.js fails
 built-ins/Function/prototype/bind/proto-from-ctor-realm.js fails
-built-ins/Function/prototype/name.js fails
 built-ins/Function/prototype/toString/AsyncFunction.js fails
 built-ins/Function/prototype/toString/Function.js fails
 built-ins/Function/prototype/toString/GeneratorFunction.js fails
