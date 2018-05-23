@@ -97,10 +97,16 @@ DECLARE_HEAP_OBJECT(TypedArray, Object) {
     void init(Type t);
 };
 
+struct IntrinsicTypedArrayCtor : FunctionObject {
+};
+
 struct TypedArrayCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope, TypedArray::Type t);
 
     TypedArray::Type type;
+};
+
+struct IntrinsicTypedArrayPrototype : Object {
 };
 
 struct TypedArrayPrototype : Object {
@@ -137,6 +143,14 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     static bool putIndexed(Managed *m, uint index, const Value &value);
 };
 
+struct IntrinsicTypedArrayCtor: FunctionObject
+{
+    V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
+
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
 struct TypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(TypedArrayCtor, FunctionObject)
@@ -145,13 +159,12 @@ struct TypedArrayCtor: FunctionObject
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-
-struct TypedArrayPrototype : Object
+struct IntrinsicTypedArrayPrototype : Object
 {
-    V4_OBJECT2(TypedArrayPrototype, Object)
+    V4_OBJECT2(IntrinsicTypedArrayPrototype, Object)
     V4_PROTOTYPE(objectPrototype)
 
-    void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
+    void init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor);
 
     static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -163,6 +176,14 @@ struct TypedArrayPrototype : Object
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct TypedArrayPrototype : Object
+{
+    V4_OBJECT2(TypedArrayPrototype, Object)
+    V4_PROTOTYPE(objectPrototype)
+
+    void init(ExecutionEngine *engine, TypedArrayCtor *ctor);
 };
 
 inline void

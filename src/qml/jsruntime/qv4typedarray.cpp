@@ -48,6 +48,8 @@
 
 using namespace QV4;
 
+DEFINE_OBJECT_VTABLE(IntrinsicTypedArrayCtor);
+DEFINE_OBJECT_VTABLE(IntrinsicTypedArrayPrototype);
 DEFINE_OBJECT_VTABLE(TypedArrayCtor);
 DEFINE_OBJECT_VTABLE(TypedArrayPrototype);
 DEFINE_OBJECT_VTABLE(TypedArray);
@@ -346,9 +348,9 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const V
     return array.asReturnedValue();
 }
 
-ReturnedValue TypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue TypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *, int)
 {
-    return callAsConstructor(f, argv, argc);
+    return f->engine()->throwTypeError(QStringLiteral("calling a TypedArray constructor without new is invalid"));
 }
 
 void Heap::TypedArray::init(Type t)
@@ -404,27 +406,18 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
+
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(3));
-    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->defineReadonlyProperty(engine->id_prototype(), *this);
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
-    ctor->addSymbolSpecies();
+    ctor->setPrototype(engine->intrinsicTypedArrayCtor());
 
+    setPrototype(engine->intrinsicTypedArrayPrototype());
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
-    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
-    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
-    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, nullptr);
-    defineAccessorProperty(QStringLiteral("length"), method_get_length, nullptr);
     defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
-
-    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
-    defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
-    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
-    defineDefaultProperty(QStringLiteral("set"), method_set, 1);
-    defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
-    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
 }
 
-ReturnedValue TypedArrayPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     const TypedArray *v = thisObject->as<TypedArray>();
@@ -434,7 +427,7 @@ ReturnedValue TypedArrayPrototype::method_get_buffer(const FunctionObject *b, co
     return v->d()->buffer->asReturnedValue();
 }
 
-ReturnedValue TypedArrayPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     const TypedArray *v = thisObject->as<TypedArray>();
@@ -444,7 +437,7 @@ ReturnedValue TypedArrayPrototype::method_get_byteLength(const FunctionObject *b
     return Encode(v->d()->byteLength);
 }
 
-ReturnedValue TypedArrayPrototype::method_get_byteOffset(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteOffset(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     const TypedArray *v = thisObject->as<TypedArray>();
@@ -454,7 +447,7 @@ ReturnedValue TypedArrayPrototype::method_get_byteOffset(const FunctionObject *b
     return Encode(v->d()->byteOffset);
 }
 
-ReturnedValue TypedArrayPrototype::method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     const TypedArray *v = thisObject->as<TypedArray>();
@@ -464,7 +457,7 @@ ReturnedValue TypedArrayPrototype::method_get_length(const FunctionObject *b, co
     return Encode(v->d()->byteLength/v->d()->type->bytesPerElement);
 }
 
-ReturnedValue TypedArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<TypedArray> O(scope, thisObject);
@@ -476,7 +469,7 @@ ReturnedValue TypedArrayPrototype::method_entries(const FunctionObject *b, const
     return ao->asReturnedValue();
 }
 
-ReturnedValue TypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<TypedArray> O(scope, thisObject);
@@ -488,7 +481,7 @@ ReturnedValue TypedArrayPrototype::method_keys(const FunctionObject *b, const Va
     return ao->asReturnedValue();
 }
 
-ReturnedValue TypedArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue IntrinsicTypedArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<TypedArray> O(scope, thisObject);
@@ -500,7 +493,7 @@ ReturnedValue TypedArrayPrototype::method_values(const FunctionObject *b, const 
     return ao->asReturnedValue();
 }
 
-ReturnedValue TypedArrayPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     Scoped<TypedArray> a(scope, *thisObject);
@@ -589,7 +582,7 @@ ReturnedValue TypedArrayPrototype::method_set(const FunctionObject *b, const Val
     RETURN_UNDEFINED();
 }
 
-ReturnedValue TypedArrayPrototype::method_subarray(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(builtin);
     Scoped<TypedArray> a(scope, *thisObject);
@@ -628,4 +621,33 @@ ReturnedValue TypedArrayPrototype::method_subarray(const FunctionObject *builtin
     arguments[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
     arguments[2] = Encode(newLen);
     return constructor->callAsConstructor(arguments, 3);
+}
+
+ReturnedValue IntrinsicTypedArrayCtor::callAsConstructor(const FunctionObject *f, const Value *, int)
+{
+    return f->engine()->throwTypeError();
+}
+
+ReturnedValue IntrinsicTypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+{
+    return f->engine()->throwTypeError();
+}
+
+void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor)
+{
+    ctor->defineReadonlyProperty(engine->id_prototype(), *this);
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->addSymbolSpecies();
+
+    defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
+    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
+    defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, nullptr);
+    defineAccessorProperty(QStringLiteral("length"), method_get_length, nullptr);
+
+    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
+    defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
+    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
+    defineDefaultProperty(QStringLiteral("set"), method_set, 1);
+    defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
+    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
 }

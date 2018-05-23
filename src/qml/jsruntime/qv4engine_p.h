@@ -188,6 +188,7 @@ public:
 #endif
         ArrayBufferProto,
         DataViewProto,
+        IntrinsicTypedArrayProto,
         ValueTypeProto,
         SignalHandlerProto,
         IteratorProto,
@@ -214,6 +215,7 @@ public:
         URIError_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
+        IntrinsicTypedArray_Ctor,
 
         GetSymbolSpecies,
 
@@ -247,6 +249,7 @@ public:
     FunctionObject *uRIErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + URIError_Ctor); }
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
+    FunctionObject *intrinsicTypedArrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + IntrinsicTypedArray_Ctor); }
     FunctionObject *typedArrayCtors;
 
     FunctionObject *getSymbolSpecies() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetSymbolSpecies); }
@@ -277,6 +280,7 @@ public:
 
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
+    Object *intrinsicTypedArrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + IntrinsicTypedArrayProto); }
     Object *typedArrayPrototype;
 
     Object *valueTypeWrapperPrototype() const { return reinterpret_cast<Object *>(jsObjects + ValueTypeProto); }
