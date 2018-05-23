@@ -148,7 +148,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isView"), ArrayBufferCtor::method_isView, 1);
     ctor->addSymbolSpecies();

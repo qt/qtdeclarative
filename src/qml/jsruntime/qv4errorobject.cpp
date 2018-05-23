@@ -312,7 +312,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     ScopedString s(scope);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = obj));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     obj->setProperty(Index_Constructor, ctor->d());
     obj->setProperty(Index_Message, engine->id_empty()->d());
     obj->setProperty(Index_Name, engine->newString(QString::fromLatin1(ErrorObject::className(t))));

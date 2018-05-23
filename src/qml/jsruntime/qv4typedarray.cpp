@@ -404,7 +404,7 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(3));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(3));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
     ctor->addSymbolSpecies();
