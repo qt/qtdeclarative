@@ -1098,8 +1098,12 @@ void QQuickTableViewPrivate::updatePolish()
         return;
     }
 
-    // viewportrect describes the part of the content view that is actually visible
+    // viewportRect describes the part of the content view that is actually visible. Since a
+    // negative width/height can happen (e.g during start-up), we check for this to avoid rebuilding
+    // the table (and e.g calculate initial row/column sizes) based on a premature viewport rect.
     viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
+    if (!viewportRect.isValid())
+        return;
 
     if (tableInvalid) {
         beginRebuildTable();
@@ -1415,13 +1419,10 @@ void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &o
 {
     Q_D(QQuickTableView);
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
-
-    QRectF rect = QRectF(contentX(), contentY(), newGeometry.width(), newGeometry.height());
-    if (!rect.isValid())
-        return;
-
-    d->viewportRect = rect;
-    polish();
+    // We update the viewport rect from within updatePolish to
+    // ensure that we update when we're ready to update, and not
+    // while we're in the middle of loading/unloading edges.
+    d->updatePolish();
 }
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
