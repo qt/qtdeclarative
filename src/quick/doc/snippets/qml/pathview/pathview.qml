@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -59,6 +59,7 @@ Rectangle {
         id: delegate
         Column {
             id: wrapper
+            opacity: PathView.isCurrentItem ? 1 : 0.5
             Image {
                 anchors.horizontalCenter: nameText.horizontalCenter
                 width: 64; height: 64
@@ -68,7 +69,6 @@ Rectangle {
                 id: nameText
                 text: name
                 font.pointSize: 16
-                color: wrapper.PathView.isCurrentItem ? "red" : "black"
             }
         }
     }
