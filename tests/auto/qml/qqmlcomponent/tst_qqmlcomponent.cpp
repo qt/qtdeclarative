@@ -118,6 +118,7 @@ private slots:
     void recursionContinuation();
     void partialComponentCreation();
     void callingContextForInitialProperties();
+    void setNonExistentInitialProperty();
     void relativeUrl_data();
     void relativeUrl();
 
@@ -605,6 +606,23 @@ void tst_qqmlcomponent::callingContextForInitialProperties()
 
     QVERIFY(!checker->scopeObject.isNull());
     QVERIFY(checker->scopeObject->metaObject()->indexOfProperty("incubatedObject") != -1);
+}
+
+void tst_qqmlcomponent::setNonExistentInitialProperty()
+{
+    QQmlIncubationController controller;
+    QQmlEngine engine;
+    engine.setIncubationController(&controller);
+    QQmlComponent component(&engine, testFileUrl("nonExistentInitialProperty.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QMetaObject::invokeMethod(obj.data(), "startIncubation");
+    QJSValue incubatorStatus = obj->property("incubator").value<QJSValue>();
+    incubatorStatus.property("forceCompletion").callWithInstance(incubatorStatus);
+    QJSValue objectWrapper = incubatorStatus.property("object");
+    QVERIFY(objectWrapper.isQObject());
+    QPointer<QObject> object(objectWrapper.toQObject());
+    QVERIFY(object->property("ok").toBool());
 }
 
 void tst_qqmlcomponent::relativeUrl_data()

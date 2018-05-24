@@ -852,16 +852,19 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
 
 QString CppStackFrame::source() const
 {
-    return v4Function->sourceFile();
+    return v4Function ? v4Function->sourceFile() : QString();
 }
 
 QString CppStackFrame::function() const
 {
-    return v4Function->name()->toQString();
+    return v4Function ? v4Function->name()->toQString() : QString();
 }
 
 int CppStackFrame::lineNumber() const
 {
+    if (!v4Function)
+        return -1;
+
     auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
         return entry.codeOffset < offset;
     };

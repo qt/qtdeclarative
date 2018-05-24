@@ -849,14 +849,16 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
             qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
+        QQuickItem *oldGrabberItem = grabberItem();
         m_exclusiveGrabber = QPointer<QObject>(grabber);
         m_grabberIsHandler = false;
         m_sceneGrabPos = m_scenePos;
-        QQuickItem *oldGrabberItem = grabberItem();
-        if (oldGrabberHandler)
+        if (oldGrabberHandler) {
             oldGrabberHandler->onGrabChanged(oldGrabberHandler, (grabber ? CancelGrabExclusive : UngrabExclusive), this);
-        else if (oldGrabberItem && oldGrabberItem != grabber && grabber && pointerEvent()->asPointerTouchEvent())
-            oldGrabberItem->touchUngrabEvent();
+        } else if (oldGrabberItem && oldGrabberItem != grabber && grabber && grabber->window()) {
+            QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(grabber->window());
+            windowPriv->sendUngrabEvent(oldGrabberItem, windowPriv->isDeliveringTouchAsMouse());
+        }
         for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
             passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
     }

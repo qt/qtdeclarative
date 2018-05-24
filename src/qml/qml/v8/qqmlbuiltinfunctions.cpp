@@ -1703,7 +1703,7 @@ ReturnedValue ConsoleObject::method_count(const FunctionObject *b, const Value *
 
     QString scriptName = frame->source();
 
-    int value = v8engine->consoleCountHelper(scriptName, frame->lineNumber(), -1);
+    int value = v8engine->consoleCountHelper(scriptName, frame->lineNumber(), 0);
     QString message = name + QLatin1String(": ") + QString::number(value);
 
     QMessageLogger(qPrintable(scriptName), frame->lineNumber(),

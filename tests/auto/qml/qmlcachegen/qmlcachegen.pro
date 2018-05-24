@@ -14,4 +14,6 @@ RESOURCES += trickypaths.qrc
 
 RESOURCES += jsimport.qml script.js library.js
 
+RESOURCES += Enums.qml
+
 QT += core-private qml-private testlib

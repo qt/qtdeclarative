@@ -215,6 +215,8 @@ private slots:
     void functionToString_data();
     void functionToString();
 
+    void protoChanges_QTBUG68369();
+
 signals:
     void testSignal();
 };
@@ -4245,6 +4247,22 @@ void tst_QJSEngine::functionToString()
     QJSValue evaluationResult = engine.evaluate(source);
     QVERIFY(!evaluationResult.isError());
     QCOMPARE(evaluationResult.toString(), expectedString);
+}
+
+void tst_QJSEngine::protoChanges_QTBUG68369()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+    "var o = { x: true };"
+    "var p1 = {};"
+    "var p2 = {};"
+    "o.__proto__ = p1;"
+    "o.__proto__ = p2;"
+    "o.__proto__ = p1;"
+    "p1.y = true;"
+    "o.y"
+    );
+    QVERIFY(ok.toBool() == true);
 }
 
 QTEST_MAIN(tst_QJSEngine)

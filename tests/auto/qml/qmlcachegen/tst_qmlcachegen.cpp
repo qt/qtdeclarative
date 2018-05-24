@@ -56,6 +56,8 @@ private slots:
     void trickyPaths();
 
     void scriptImport();
+
+    void enums();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -425,6 +427,15 @@ void tst_qmlcachegen::scriptImport()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 42);
+}
+
+void tst_qmlcachegen::enums()
+{
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///Enums.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QTRY_COMPARE(obj->property("value").toInt(), 200);
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
