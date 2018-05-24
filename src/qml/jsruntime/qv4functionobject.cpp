@@ -231,8 +231,6 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
 
     QString function = (t == Type_Function ? QLatin1String("function anonymous(") : QLatin1String("function* anonymous(")) + arguments + QLatin1String("\n){") + body + QLatin1String("\n}");
 
-    qDebug() << "parsing function:" << function;
-
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
     lexer.setCode(function, 1, false);
