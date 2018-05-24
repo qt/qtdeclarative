@@ -385,6 +385,23 @@ public:
         DoNotThrow
     };
 
+    // This is the same as set(), but it doesn't require creating a string key,
+    // which is much more efficient for the array case.
+    inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
+    {
+        bool ret = vtable()->putIndexed(this, idx, v);
+        // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
+        if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
+            ExecutionEngine *e = engine();
+            if (!e->hasException) { // allow a custom set impl to throw itself
+                QString message = QLatin1String("Cannot assign to read-only property \"") +
+                        QString::number(idx) + QLatin1Char('\"');
+                e->throwTypeError(message);
+            }
+        }
+        return ret;
+    }
+
     // ES6: 7.3.3 Set (O, P, V, Throw)
     inline bool set(StringOrSymbol *name, const Value &v, ThrowOnFailure shouldThrow)
     {

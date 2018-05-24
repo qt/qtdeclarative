@@ -116,6 +116,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("every"), method_every, 1);
+    defineDefaultProperty(QStringLiteral("fill"), method_fill, 1);
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
     defineDefaultProperty(QStringLiteral("map"), method_map, 1);
@@ -852,6 +853,42 @@ ReturnedValue ArrayPrototype::method_every(const FunctionObject *b, const Value 
         ok = r->toBoolean();
     }
     return Encode(ok);
+}
+
+ReturnedValue ArrayPrototype::method_fill(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
+    if (!instance)
+        RETURN_UNDEFINED();
+
+    uint len = instance->getLength();
+    int relativeStart = argc > 1 ? argv[1].toInteger() : 0;
+    int relativeEnd = len;
+    if (argc > 2 && !argv[2].isUndefined()) {
+        relativeEnd = argv[2].toInteger();
+    }
+    uint k = 0;
+    uint fin = 0;
+
+    if (relativeStart < 0) {
+        k = std::max(len+relativeStart, uint(0));
+    } else {
+        k = std::min(uint(relativeStart), len);
+    }
+
+    if (relativeEnd < 0) {
+        fin = std::max(len + relativeEnd, uint(0));
+    } else {
+        fin = std::min(uint(relativeEnd), len);
+    }
+
+    while (k < fin) {
+        instance->setIndexed(k, argv[0], QV4::Object::DoThrowOnRejection);
+        k++;
+    }
+
+    return instance.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_some(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

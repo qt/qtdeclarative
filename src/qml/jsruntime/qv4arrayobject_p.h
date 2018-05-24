@@ -98,6 +98,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fill(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_map(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
