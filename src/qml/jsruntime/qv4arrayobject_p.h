@@ -83,6 +83,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_concat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_copyWithin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

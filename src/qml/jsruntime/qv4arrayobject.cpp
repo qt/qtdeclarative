@@ -102,6 +102,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
+    defineDefaultProperty(QStringLiteral("copyWithin"), method_copyWithin, 2);
     defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
     defineDefaultProperty(QStringLiteral("find"), method_find, 1);
     defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
@@ -240,6 +241,76 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
     }
 
     return result.asReturnedValue();
+}
+
+ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
+    if (!instance)
+        RETURN_UNDEFINED();
+
+    double len = instance->getLength();
+    double target = argv[0].toInteger();
+    double start = argv[1].toInteger();
+    double end = len;
+
+    if (argc > 2 && !argv[2].isUndefined()) {
+        end = argv[2].toInteger();
+    }
+
+    double relativeTarget = target;
+    double relativeStart = start;
+    double relativeEnd = end;
+    double from = 0;
+    double to = 0;
+
+    if (relativeTarget < 0) {
+        to = std::max(len+relativeTarget, 0.0);
+    } else {
+        to = std::min(relativeTarget, len);
+    }
+    if (relativeStart < 0) {
+        from = std::max(len+relativeStart, 0.0);
+    } else {
+        from = std::min(relativeStart, len);
+    }
+
+    double fin = 0;
+    if (relativeEnd < 0) {
+        fin = std::max(len+relativeEnd, 0.0);
+    } else {
+        fin = std::min(relativeEnd, len);
+    }
+    double count = std::min(fin-from, len-to);
+    double direction = 1;
+    if (from < to && to < from+count) {
+        direction = -1;
+        from = from + count - 1;
+        to = to + count - 1;
+    }
+
+    while (count > 0) {
+        bool fromPresent = false;
+        ScopedValue fromVal(scope, instance->getIndexed(from, &fromPresent));
+
+        if (fromPresent) {
+            instance->setIndexed(to, fromVal, QV4::Object::DoThrowOnRejection);
+            CHECK_EXCEPTION();
+        } else {
+            bool didDelete = instance->deleteIndexedProperty(to);
+            CHECK_EXCEPTION();
+            if (!didDelete) {
+                return scope.engine->throwTypeError();
+            }
+        }
+
+        from = from + direction;
+        to = to + direction;
+        count = count - 1;
+    }
+
+    return instance.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
