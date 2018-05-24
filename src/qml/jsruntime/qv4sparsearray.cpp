@@ -395,7 +395,7 @@ void SparseArray::freeTree(SparseArrayNode *root, int alignment)
 SparseArray::SparseArray()
     : numEntries(0)
 {
-    freeList = Primitive::emptyValue(UINT_MAX).asReturnedValue();
+    freeList = Encode(-1);
     header.p = 0;
     header.left = nullptr;
     header.right = nullptr;

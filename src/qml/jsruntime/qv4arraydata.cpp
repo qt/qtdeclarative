@@ -105,13 +105,6 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SimpleArrayData));
 Q_STATIC_ASSERT(sizeof(Heap::ArrayData) == sizeof(Heap::SparseArrayData));
 
-static Q_ALWAYS_INLINE void storeValue(ReturnedValue *target, uint value)
-{
-    Value v;
-    v.setEmpty(value);
-    *target = v.asReturnedValue();
-}
-
 void Heap::ArrayData::markObjects(Heap::Base *base, MarkStack *stack)
 {
     ArrayData *a = static_cast<ArrayData *>(base);
@@ -200,7 +193,7 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
 
     Heap::SparseArrayData *sparse = static_cast<Heap::SparseArrayData *>(newData->d());
 
-    ReturnedValue *lastFree;
+    Value *lastFree;
     if (d && d->type() == Heap::ArrayData::Sparse) {
         Heap::SparseArrayData *old = static_cast<Heap::SparseArrayData *>(d->d());
         sparse->sparse = old->sparse;
@@ -209,29 +202,29 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     } else {
         sparse->sparse = new SparseArray;
         lastFree = &sparse->sparse->freeList;
-        storeValue(lastFree, 0);
+        *lastFree = Encode(0);
         for (uint i = 0; i < toCopy; ++i) {
             if (!sparse->values[i].isEmpty()) {
                 SparseArrayNode *n = sparse->sparse->insert(i);
                 n->value = i;
             } else {
-                storeValue(lastFree, i);
+                *lastFree = Encode(i);
                 sparse->values.values[i].setEmpty();
-                lastFree = &sparse->values.values[i].rawValueRef();
+                lastFree = &sparse->values.values[i];
             }
         }
     }
 
     if (toCopy < sparse->values.alloc) {
         for (uint i = toCopy; i < sparse->values.alloc; ++i) {
-            storeValue(lastFree, i);
+            *lastFree = Encode(i);
             sparse->values.values[i].setEmpty();
-            lastFree = &sparse->values.values[i].rawValueRef();
+            lastFree = &sparse->values.values[i];
         }
     }
-    storeValue(lastFree, UINT_MAX);
+    *lastFree = Encode(-1);
 
-    Q_ASSERT(Value::fromReturnedValue(sparse->sparse->freeList).isEmpty());
+    Q_ASSERT(sparse->sparse->freeList.isInteger());
     // ### Could explicitly free the old data
 }
 
@@ -373,12 +366,12 @@ void SparseArrayData::free(Heap::ArrayData *d, uint idx)
     Value *v = d->values.values + idx;
     if (d->attrs && d->attrs[idx].isAccessor()) {
         // double slot, free both. Order is important, so we have a double slot for allocation again afterwards.
-        v[1].setEmpty(Value::fromReturnedValue(d->sparse->freeList).emptyValue());
-        v[0].setEmpty(idx + 1);
+        v[1] = d->sparse->freeList;
+        v[0] = Encode(idx + 1);
     } else {
-        v->setEmpty(Value::fromReturnedValue(d->sparse->freeList).emptyValue());
+        *v = d->sparse->freeList;
     }
-    d->sparse->freeList = Primitive::emptyValue(idx).asReturnedValue();
+    d->sparse->freeList = Encode(idx);
     if (d->attrs)
         d->attrs[idx].clear();
 }
@@ -395,36 +388,34 @@ uint SparseArrayData::allocate(Object *o, bool doubleSlot)
     Q_ASSERT(o->d()->arrayData->type == Heap::ArrayData::Sparse);
     Heap::SimpleArrayData *dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
     if (doubleSlot) {
-        ReturnedValue *last = &dd->sparse->freeList;
+        Value *last = &dd->sparse->freeList;
         while (1) {
-            if (Value::fromReturnedValue(*last).value() == UINT_MAX) {
+            if (last->int_32() == -1) {
                 reallocate(o, dd->values.alloc + 2, true);
                 dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
                 last = &dd->sparse->freeList;
-                Q_ASSERT(Value::fromReturnedValue(*last).value() != UINT_MAX);
+                Q_ASSERT(last->int_32() != -1);
             }
 
-            Q_ASSERT(dd->values[Value::fromReturnedValue(*last).value()].value() != Value::fromReturnedValue(*last).value());
-            if (dd->values[Value::fromReturnedValue(*last).value()].value() == (Value::fromReturnedValue(*last).value() + 1)) {
+            Q_ASSERT(dd->values[static_cast<uint>(last->int_32())].int_32() != last->int_32());
+            if (dd->values[static_cast<uint>(last->int_32())].int_32() == last->int_32() + 1) {
                 // found two slots in a row
-                uint idx = Value::fromReturnedValue(*last).emptyValue();
-                Value lastV = Value::fromReturnedValue(*last);
-                lastV.setEmpty(dd->values[lastV.emptyValue() + 1].value());
-                *last = lastV.rawValue();
+                uint idx = static_cast<uint>(last->int_32());
+                *last = Encode(dd->values[static_cast<uint>(last->int_32()) + 1].int_32());
                 dd->attrs[idx] = Attr_Accessor;
                 return idx;
             }
-            last = &dd->values.values[Value::fromReturnedValue(*last).value()].rawValueRef();
+            last = &dd->values.values[last->int_32()];
         }
     } else {
-        if (Value::fromReturnedValue(dd->sparse->freeList).value() == UINT_MAX) {
+        if (dd->sparse->freeList.int_32() == -1) {
             reallocate(o, dd->values.alloc + 1, false);
             dd = o->d()->arrayData.cast<Heap::SimpleArrayData>();
         }
-        uint idx = Value::fromReturnedValue(dd->sparse->freeList).value();
-        Q_ASSERT(idx != UINT_MAX);
-        dd->sparse->freeList = dd->values[idx].asReturnedValue();
-        Q_ASSERT(Value::fromReturnedValue(dd->sparse->freeList).isEmpty());
+        Q_ASSERT(dd->sparse->freeList.int_32() != -1);
+        uint idx = static_cast<uint>(dd->sparse->freeList.int_32());
+        dd->sparse->freeList = dd->values[idx];
+        Q_ASSERT(dd->sparse->freeList.isInteger());
         if (dd->attrs)
             dd->attrs[idx] = Attr_Data;
         return idx;
@@ -479,14 +470,14 @@ bool SparseArrayData::del(Object *o, uint index)
 
     if (isAccessor) {
         // free up both indices
-        dd->values.values[pidx + 1].setEmpty(Value::fromReturnedValue(dd->sparse->freeList).emptyValue());
-        dd->values.values[pidx].setEmpty(pidx + 1);
+        dd->values.values[pidx + 1] = dd->sparse->freeList;
+        dd->values.values[pidx] = Encode(pidx + 1);
     } else {
         Q_ASSERT(dd->type == Heap::ArrayData::Sparse);
-        dd->values.values[pidx].setEmpty(Value::fromReturnedValue(dd->sparse->freeList).emptyValue());
+        dd->values.values[pidx] = dd->sparse->freeList;
     }
 
-    dd->sparse->freeList = Primitive::emptyValue(pidx).asReturnedValue();
+    dd->sparse->freeList = Encode(pidx);
     dd->sparse->erase(n);
     return true;
 }

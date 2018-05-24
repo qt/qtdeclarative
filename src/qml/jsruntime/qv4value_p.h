@@ -185,23 +185,7 @@ public:
 
     QML_NEARLY_ALWAYS_INLINE void setEmpty()
     {
-        setTagValue(quint32(ValueTypeInternal::Empty), value());
-    }
-
-    QML_NEARLY_ALWAYS_INLINE void setEmpty(int i)
-    {
-        setTagValue(quint32(ValueTypeInternal::Empty), quint32(i));
-    }
-
-    QML_NEARLY_ALWAYS_INLINE void setEmpty(quint32 i)
-    {
-        setTagValue(quint32(ValueTypeInternal::Empty), i);
-    }
-
-    QML_NEARLY_ALWAYS_INLINE quint32 emptyValue()
-    {
-        Q_ASSERT(isEmpty());
-        return quint32(value());
+        setTagValue(quint32(ValueTypeInternal::Empty), 0);
     }
 
     // ### Fix for 32 bit (easiest solution is to set highest bit to 1 for mananged/undefined/integercompatible
@@ -612,7 +596,6 @@ ReturnedValue Heap::Base::asReturnedValue() const
 struct Q_QML_PRIVATE_EXPORT Primitive : public Value
 {
     inline static Primitive emptyValue();
-    inline static Primitive emptyValue(uint v);
     static inline Primitive fromBoolean(bool b);
     static inline Primitive fromInt32(int i);
     inline static Primitive undefinedValue();
@@ -638,14 +621,7 @@ inline Primitive Primitive::undefinedValue()
 inline Primitive Primitive::emptyValue()
 {
     Primitive v;
-    v.setEmpty(0);
-    return v;
-}
-
-inline Primitive Primitive::emptyValue(uint e)
-{
-    Primitive v;
-    v.setEmpty(e);
+    v.setEmpty();
     return v;
 }
 

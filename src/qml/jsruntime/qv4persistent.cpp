@@ -98,9 +98,9 @@ Page *allocatePage(PersistentValueStorage *storage)
     p->header.freeList = 0;
     insertInFront(storage, p);
     for (int i = 0; i < kEntriesPerPage - 1; ++i) {
-        p->values[i].setEmpty(i + 1);
+        p->values[i] = Encode(i + 1);
     }
-    p->values[kEntriesPerPage - 1].setEmpty(-1);
+    p->values[kEntriesPerPage - 1] = Encode(-1);
 
     return p;
 }
@@ -226,7 +226,7 @@ void PersistentValueStorage::free(Value *v)
 
     Page *p = getPage(v);
 
-    v->setEmpty(p->header.freeList);
+    *v = Encode(p->header.freeList);
     p->header.freeList = v - p->values;
     if (!--p->header.refCount)
         freePage(p);

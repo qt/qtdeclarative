@@ -52,6 +52,7 @@
 //
 
 #include "qv4global_p.h"
+#include "qv4value_p.h"
 #include <QtCore/qlist.h>
 
 //#define Q_MAP_DEBUG
@@ -151,7 +152,7 @@ struct Q_QML_EXPORT SparseArray
 
     SparseArray(const SparseArray &other);
 
-    ReturnedValue freeList;
+    Value freeList;
 private:
     SparseArray &operator=(const SparseArray &other);
 
