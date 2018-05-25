@@ -55,6 +55,11 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qjsonvalue.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsondocument.h>
+
 #include <private/qmetaobject_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qversionedpacket_p.h>
@@ -211,34 +216,40 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
         return contents;
     }
 
-    if (QQmlValueTypeFactory::isValueType(userType)) {
-        switch (userType) {
-        case QMetaType::QRect:
-        case QMetaType::QRectF:
-        case QMetaType::QPoint:
-        case QMetaType::QPointF:
-        case QMetaType::QSize:
-        case QMetaType::QSizeF:
-        case QMetaType::QFont:
-            // Don't call the toString() method on those. The stream operators are better.
-            return value;
-        default:
-            break;
-        }
-
-        const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(userType);
-        if (mo) {
-            int toStringIndex = mo->indexOfMethod("toString()");
-            if (toStringIndex != -1) {
-                QMetaMethod mm = mo->method(toStringIndex);
-                QString s;
-                if (mm.invokeOnGadget(value.data(), Q_RETURN_ARG(QString, s)))
-                    return s;
-            }
-        }
-
-        // We expect all QML value types to either have a toString() method or stream operators
+    switch (userType) {
+    case QMetaType::QRect:
+    case QMetaType::QRectF:
+    case QMetaType::QPoint:
+    case QMetaType::QPointF:
+    case QMetaType::QSize:
+    case QMetaType::QSizeF:
+    case QMetaType::QFont:
+        // Don't call the toString() method on those. The stream operators are better.
         return value;
+    case QMetaType::QJsonValue:
+        return value.toJsonValue().toVariant();
+    case QMetaType::QJsonObject:
+        return value.toJsonObject().toVariantMap();
+    case QMetaType::QJsonArray:
+        return value.toJsonArray().toVariantList();
+    case QMetaType::QJsonDocument:
+        return value.toJsonDocument().toVariant();
+    default:
+        if (QQmlValueTypeFactory::isValueType(userType)) {
+            const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(userType);
+            if (mo) {
+                int toStringIndex = mo->indexOfMethod("toString()");
+                if (toStringIndex != -1) {
+                    QMetaMethod mm = mo->method(toStringIndex);
+                    QString s;
+                    if (mm.invokeOnGadget(value.data(), Q_RETURN_ARG(QString, s)))
+                        return s;
+                }
+            }
+
+            // We expect all QML value types to either have a toString() method or stream operators
+            return value;
+        }
     }
 
     if (QQmlMetaType::isQObject(userType)) {
