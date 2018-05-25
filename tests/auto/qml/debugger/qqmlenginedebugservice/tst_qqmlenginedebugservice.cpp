@@ -53,6 +53,9 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qthread.h>
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsondocument.h>
 
 #define QVERIFYOBJECT(statement) \
     do {\
@@ -81,6 +84,40 @@ public:
 
     QModelIndex modelIndex() { return QModelIndex(); }
 };
+
+class JsonTest : public QObject
+{
+   Q_OBJECT
+   Q_PROPERTY(QJsonObject data READ data WRITE setData NOTIFY dataChanged)
+
+public:
+   JsonTest(QObject *parent = 0) : QObject(parent)
+   {
+      m_data["foo"] = QJsonValue(12);
+      m_data["ttt"] = QJsonArray({4, 5, 4, 3, 2});
+      m_data["a"] = QJsonValue(QJsonValue::Null);
+      m_data["b"] = QJsonValue(QJsonValue::Undefined);
+      m_data["c"] = QJsonValue("fffff");
+   }
+
+   QJsonObject data() const { return m_data; }
+
+signals:
+   void dataChanged(const QJsonObject &data);
+
+public slots:
+   void setData(const QJsonObject &data)
+   {
+       if (data != m_data) {
+           m_data = data;
+           emit dataChanged(data);
+       }
+   }
+
+private:
+   QJsonObject m_data;
+};
+
 
 class tst_QQmlEngineDebugService : public QObject
 {
@@ -139,6 +176,7 @@ private slots:
 
     void regression_QTCREATORBUG_7451();
     void queryObjectWithNonStreamableTypes();
+    void jsonData();
     void asynchronousCreate();
     void invalidContexts();
     void createObjectOnDestruction();
@@ -361,6 +399,11 @@ void tst_QQmlEngineDebugService::initTestCase()
     qmlRegisterType<CustomTypes>("Backend", 1, 0, "CustomTypes");
     qml << "import Backend 1.0\n"
            "CustomTypes {}"
+           ;
+
+    qmlRegisterType<JsonTest>("JsonTest", 1, 0, "JsonTest");
+    qml << "import JsonTest 1.0\n"
+           "JsonTest {}"
            ;
 
     for (int i=0; i<qml.count(); i++) {
@@ -676,7 +719,7 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     // root context query sends only root object data - it doesn't fill in
     // the children or property info
     QCOMPARE(context.objects.count(), 0);
-    QCOMPARE(context.contexts.count(), 6);
+    QCOMPARE(context.contexts.count(), 7);
     QVERIFY(context.contexts[0].debugId >= 0);
     QCOMPARE(context.contexts[0].name, QString("tst_QQmlDebug_childContext"));
 }
@@ -915,6 +958,24 @@ void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
              QVariant(QLatin1String("QModelIndex()")));
 }
 
+void tst_QQmlEngineDebugService::jsonData()
+{
+    bool success;
+
+    QmlDebugObjectReference rootObject = findRootObject(5, true);
+    QVERIFY(!rootObject.className.isEmpty());
+
+    m_dbg->queryObject(rootObject, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    QmlDebugObjectReference obj = m_dbg->object();
+    QVERIFY(!obj.className.isEmpty());
+
+    QCOMPARE(findProperty(obj.properties, "data").value,
+             QJsonDocument::fromJson("{\"a\":null,\"c\":\"fffff\",\"foo\":12,\"ttt\":[4,5,4,3,2]}")
+             .toVariant());
+}
 
 void tst_QQmlEngineDebugService::queryExpressionResult()
 {

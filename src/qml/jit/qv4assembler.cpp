@@ -62,7 +62,6 @@ namespace JIT {
 #define callHelper(x) PlatformAssemblerCommon::callRuntime(#x, reinterpret_cast<void *>(&x))
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
-const int IsIntegerConvertible_Shift = QV4::Value::IsIntegerConvertible_Shift;
 
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
@@ -885,7 +884,7 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
 
     Jump unopIntPath(std::function<Jump(void)> fastPath)
     {
-        urshift64(AccumulatorRegister, TrustedImm32(IsIntegerConvertible_Shift), ScratchRegister);
+        urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
         Jump accNotIntConvertible = branch32(NotEqual, TrustedImm32(1), ScratchRegister);
 
         // both integer

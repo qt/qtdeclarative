@@ -204,6 +204,7 @@ void tst_qqmllistmodelworkerscript::dynamic_data()
         QTest::newRow("get4") << "{append({'foo':123});get(0).foo}" << 123 << "" << dr;
         QTest::newRow("get-modify1") << "{append({'foo':123,'bar':456});get(0).foo = 333;get(0).foo}" << 333 << "" << dr;
         QTest::newRow("get-modify2") << "{append({'z':1});append({'foo':123,'bar':456});get(1).bar = 999;get(1).bar}" << 999 << "" << dr;
+        QTest::newRow("get-set") << "{append({'foo':123});get(0).foo;setProperty(0, 'foo', 999);get(0).foo}" << 999 << "" << dr;
 
         QTest::newRow("append1") << "{append({'foo':123});count}" << 1 << "" << dr;
         QTest::newRow("append2") << "{append({'foo':123,'bar':456});count}" << 1 << "" << dr;

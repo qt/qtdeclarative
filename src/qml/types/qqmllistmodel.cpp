@@ -1463,8 +1463,8 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
     QQmlData *ddata = QQmlData::get(object(), /*create*/false);
     if (!ddata)
         return;
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine(m_model));
-    if (!ep)
+    // There's nothing to emit if we're a list model in a worker thread.
+    if (!qmlEngine(m_model))
         return;
     for (int i = 0; i < roleCount; ++i) {
         const int changedRole = changedRoles[i];
