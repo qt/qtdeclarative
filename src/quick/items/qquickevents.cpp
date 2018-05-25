@@ -1291,7 +1291,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     Qt::TouchPointState state = Qt::TouchPointStationary;
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
-        m_mousePoint->clearPassiveGrabbers();
+        m_point->clearPassiveGrabbers();
         Q_FALLTHROUGH();
     case QEvent::MouseButtonDblClick:
         state = Qt::TouchPointPressed;
@@ -1305,13 +1305,13 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     default:
         break;
     }
-    m_mousePoint->reset(state, ev->windowPos(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
+    m_point->reset(state, ev->windowPos(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
     return this;
 }
 
-void QQuickPointerMouseEvent::localize(QQuickItem *target)
+void QQuickSinglePointEvent::localize(QQuickItem *target)
 {
-    m_mousePoint->localizePosition(target);
+    m_point->localizePosition(target);
 }
 
 QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
@@ -1412,35 +1412,24 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
         break;
     }
     quint64 deviceId = QTouchDevicePrivate::get(const_cast<QTouchDevice *>(ev->device()))->id; // a bit roundabout since QTouchDevice::mTouchDeviceId is protected
-    m_gesturePoint->reset(state, ev->windowPos(), deviceId << 24, ev->timestamp());
+    m_point->reset(state, ev->windowPos(), deviceId << 24, ev->timestamp());
     return this;
-}
-
-void QQuickPointerNativeGestureEvent::localize(QQuickItem *target)
-{
-    m_gesturePoint->localizePosition(target);
 }
 #endif // QT_CONFIG(gestures)
 
-QQuickEventPoint *QQuickPointerMouseEvent::point(int i) const {
+QQuickEventPoint *QQuickSinglePointEvent::point(int i) const
+{
     if (i == 0)
-        return m_mousePoint;
+        return m_point;
     return nullptr;
 }
 
-QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const {
+QQuickEventPoint *QQuickPointerTouchEvent::point(int i) const
+{
     if (i >= 0 && i < m_pointCount)
         return m_touchPoints.at(i);
     return nullptr;
 }
-
-#if QT_CONFIG(gestures)
-QQuickEventPoint *QQuickPointerNativeGestureEvent::point(int i) const {
-    if (i == 0)
-        return m_gesturePoint;
-    return nullptr;
-}
-#endif // QT_CONFIG(gestures)
 
 QQuickEventPoint::QQuickEventPoint(QQuickPointerEvent *parent)
   : QObject(parent), m_pointId(0), m_exclusiveGrabber(nullptr), m_timestamp(0), m_pressTimestamp(0),
@@ -1454,17 +1443,19 @@ QQuickPointerEvent *QQuickEventPoint::pointerEvent() const
     return static_cast<QQuickPointerEvent *>(parent());
 }
 
-bool QQuickPointerMouseEvent::allPointsAccepted() const {
-    return m_mousePoint->isAccepted();
-}
-
-bool QQuickPointerMouseEvent::allUpdatedPointsAccepted() const {
-    return m_mousePoint->state() == QQuickEventPoint::Pressed || m_mousePoint->isAccepted();
-}
-
-bool QQuickPointerMouseEvent::allPointsGrabbed() const
+bool QQuickSinglePointEvent::allPointsAccepted() const
 {
-    return m_mousePoint->exclusiveGrabber() != nullptr;
+    return m_point->isAccepted();
+}
+
+bool QQuickSinglePointEvent::allUpdatedPointsAccepted() const
+{
+    return m_point->state() == QQuickEventPoint::Pressed || m_point->isAccepted();
+}
+
+bool QQuickSinglePointEvent::allPointsGrabbed() const
+{
+    return m_point->exclusiveGrabber() != nullptr;
 }
 
 QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
@@ -1477,10 +1468,10 @@ QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) cons
 /*!
     Returns the exclusive grabber of this event, if any, in a vector.
 */
-QVector<QObject *> QQuickPointerMouseEvent::exclusiveGrabbers() const
+QVector<QObject *> QQuickSinglePointEvent::exclusiveGrabbers() const
 {
     QVector<QObject *> result;
-    if (QObject *grabber = m_mousePoint->exclusiveGrabber())
+    if (QObject *grabber = m_point->exclusiveGrabber())
         result << grabber;
     return result;
 }
@@ -1488,17 +1479,18 @@ QVector<QObject *> QQuickPointerMouseEvent::exclusiveGrabbers() const
 /*!
     Remove all passive and exclusive grabbers of this event, without notifying.
 */
-void QQuickPointerMouseEvent::clearGrabbers() const {
-    m_mousePoint->setGrabberItem(nullptr);
-    m_mousePoint->clearPassiveGrabbers();
+void QQuickSinglePointEvent::clearGrabbers() const
+{
+    m_point->setGrabberItem(nullptr);
+    m_point->clearPassiveGrabbers();
 }
 
 /*!
     Returns whether the given \a handler is the exclusive grabber of this event.
 */
-bool QQuickPointerMouseEvent::hasExclusiveGrabber(const QQuickPointerHandler *handler) const
+bool QQuickSinglePointEvent::hasExclusiveGrabber(const QQuickPointerHandler *handler) const
 {
-    return m_mousePoint->exclusiveGrabber() == handler;
+    return handler && (m_point->exclusiveGrabber() == handler);
 }
 
 bool QQuickPointerMouseEvent::isPressEvent() const
@@ -1526,7 +1518,8 @@ bool QQuickPointerMouseEvent::isReleaseEvent() const
     return me && me->type() == QEvent::MouseButtonRelease;
 }
 
-bool QQuickPointerTouchEvent::allPointsAccepted() const {
+bool QQuickPointerTouchEvent::allPointsAccepted() const
+{
     for (int i = 0; i < m_pointCount; ++i) {
         if (!m_touchPoints.at(i)->isAccepted())
             return false;
@@ -1534,7 +1527,8 @@ bool QQuickPointerTouchEvent::allPointsAccepted() const {
     return true;
 }
 
-bool QQuickPointerTouchEvent::allUpdatedPointsAccepted() const {
+bool QQuickPointerTouchEvent::allUpdatedPointsAccepted() const
+{
     for (int i = 0; i < m_pointCount; ++i) {
         auto point = m_touchPoints.at(i);
         if (point->state() != QQuickEventPoint::Pressed && !point->isAccepted())
@@ -1571,7 +1565,8 @@ QVector<QObject *> QQuickPointerTouchEvent::exclusiveGrabbers() const
     Remove all passive and exclusive grabbers of all touchpoints in this event,
     without notifying.
 */
-void QQuickPointerTouchEvent::clearGrabbers() const {
+void QQuickPointerTouchEvent::clearGrabbers() const
+{
     for (auto point: m_touchPoints) {
         point->setGrabberItem(nullptr);
         point->clearPassiveGrabbers();
@@ -1629,7 +1624,8 @@ QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() cons
     If the touchpoint cannot be found, this returns nullptr.
     Ownership of the event is NOT transferred to the caller.
 */
-QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const {
+QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const
+{
     const QTouchEvent::TouchPoint *p = touchPointById(pointID);
     if (!p)
         return nullptr;
@@ -1669,33 +1665,6 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
 }
 
 #if QT_CONFIG(gestures)
-/*!
-    Returns the exclusive grabber of this event, if any, in a vector.
-*/
-QVector<QObject *> QQuickPointerNativeGestureEvent::exclusiveGrabbers() const
-{
-    QVector<QObject *> result;
-    if (QObject *grabber = m_gesturePoint->exclusiveGrabber())
-        result << grabber;
-    return result;
-}
-
-/*!
-    Remove all passive and exclusive grabbers of this event, without notifying.
-*/
-void QQuickPointerNativeGestureEvent::clearGrabbers() const {
-    m_gesturePoint->setGrabberItem(nullptr);
-    m_gesturePoint->clearPassiveGrabbers();
-}
-
-/*!
-    Returns whether the given \a handler is the exclusive grabber of this event.
-*/
-bool QQuickPointerNativeGestureEvent::hasExclusiveGrabber(const QQuickPointerHandler *handler) const
-{
-    return m_gesturePoint->exclusiveGrabber() == handler;
-}
-
 bool QQuickPointerNativeGestureEvent::isPressEvent() const
 {
     return type() == Qt::BeginNativeGesture;
@@ -1736,13 +1705,15 @@ qreal QQuickPointerNativeGestureEvent::value() const
 
     \fn QQuickPointerEvent::pointById(int pointId) const
 */
-QQuickEventPoint *QQuickPointerMouseEvent::pointById(int pointId) const {
-    if (m_mousePoint && pointId == m_mousePoint->pointId())
-        return m_mousePoint;
+QQuickEventPoint *QQuickSinglePointEvent::pointById(int pointId) const
+{
+    if (m_point && pointId == m_point->pointId())
+        return m_point;
     return nullptr;
 }
 
-QQuickEventPoint *QQuickPointerTouchEvent::pointById(int pointId) const {
+QQuickEventPoint *QQuickPointerTouchEvent::pointById(int pointId) const
+{
     auto it = std::find_if(m_touchPoints.constBegin(), m_touchPoints.constEnd(),
         [pointId](const QQuickEventTouchPoint *tp) { return tp->pointId() == pointId; } );
     if (it != m_touchPoints.constEnd())
@@ -1750,21 +1721,14 @@ QQuickEventPoint *QQuickPointerTouchEvent::pointById(int pointId) const {
     return nullptr;
 }
 
-#if QT_CONFIG(gestures)
-QQuickEventPoint *QQuickPointerNativeGestureEvent::pointById(int pointId) const {
-    if (m_gesturePoint && pointId == m_gesturePoint->pointId())
-        return m_gesturePoint;
-    return nullptr;
-}
-#endif
-
 /*!
     \internal
     Returns a pointer to the original TouchPoint which has the same
     \l {QTouchEvent::TouchPoint::id}{id} as \a pointId, if the original event is a
     QTouchEvent, and if that point is found. Otherwise, returns nullptr.
 */
-const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const {
+const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const
+{
     const QTouchEvent *ev = asTouchEvent();
     if (!ev)
         return nullptr;
@@ -1875,24 +1839,10 @@ QTouchEvent *QQuickPointerTouchEvent::asTouchEvent() const
     return static_cast<QTouchEvent *>(m_event);
 }
 
-#if QT_CONFIG(gestures)
-bool QQuickPointerNativeGestureEvent::allPointsAccepted() const {
-    return m_gesturePoint->isAccepted();
-}
-
-bool QQuickPointerNativeGestureEvent::allUpdatedPointsAccepted() const {
-    return m_gesturePoint->state() == QQuickEventPoint::Pressed || m_gesturePoint->isAccepted();
-}
-
-bool QQuickPointerNativeGestureEvent::allPointsGrabbed() const
-{
-    return m_gesturePoint->exclusiveGrabber() != nullptr;
-}
-#endif // QT_CONFIG(gestures)
-
 #ifndef QT_NO_DEBUG_STREAM
 
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev) {
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev)
+{
     QDebugStateSaver saver(dbg);
     dbg.nospace();
     if (!dev) {
@@ -1914,7 +1864,8 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *
     return dbg;
 }
 
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *event) {
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *event)
+{
     QDebugStateSaver saver(dbg);
     dbg.nospace();
     dbg << "QQuickPointerEvent(";
@@ -1933,7 +1884,8 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *e
     return dbg;
 }
 
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *event) {
+Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *event)
+{
     QDebugStateSaver saver(dbg);
     dbg.nospace();
     dbg << "QQuickEventPoint(accepted:" << event->isAccepted()

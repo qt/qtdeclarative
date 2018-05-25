@@ -450,21 +450,14 @@ protected:
     Q_DISABLE_COPY(QQuickPointerEvent)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickPointerEvent
+class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointEvent : public QQuickPointerEvent
 {
     Q_OBJECT
 public:
-    QQuickPointerMouseEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickPointerEvent(parent, device), m_mousePoint(new QQuickEventPoint(this)) { }
+    QQuickSinglePointEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickPointerEvent(parent, device), m_point(new QQuickEventPoint(this)) { }
 
-    QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
-    bool isPressEvent() const override;
-    bool isDoubleClickEvent() const override;
-    bool isUpdateEvent() const override;
-    bool isReleaseEvent() const override;
-    QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
-    const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
     int pointCount() const override { return 1; }
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(int pointId) const override;
@@ -475,10 +468,28 @@ public:
     void clearGrabbers() const override;
     bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
 
-    QMouseEvent *asMouseEvent(const QPointF& localPos) const;
+protected:
+    QQuickEventPoint *m_point;
 
-private:
-    QQuickEventPoint *m_mousePoint;
+    Q_DISABLE_COPY(QQuickSinglePointEvent)
+};
+
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickSinglePointEvent
+{
+    Q_OBJECT
+public:
+    QQuickPointerMouseEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+        : QQuickSinglePointEvent(parent, device) { }
+
+    QQuickPointerEvent *reset(QEvent *) override;
+    bool isPressEvent() const override;
+    bool isDoubleClickEvent() const override;
+    bool isUpdateEvent() const override;
+    bool isReleaseEvent() const override;
+    QQuickPointerMouseEvent *asPointerMouseEvent() override { return this; }
+    const QQuickPointerMouseEvent *asPointerMouseEvent() const override { return this; }
+
+    QMouseEvent *asMouseEvent(const QPointF& localPos) const;
 
     Q_DISABLE_COPY(QQuickPointerMouseEvent)
 };
@@ -526,7 +537,7 @@ private:
 };
 
 #if QT_CONFIG(gestures)
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickPointerEvent
+class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickSinglePointEvent
 {
     Q_OBJECT
     Q_PROPERTY(Qt::NativeGestureType type READ type CONSTANT)
@@ -534,29 +545,16 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickPoin
 
 public:
     QQuickPointerNativeGestureEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
-        : QQuickPointerEvent(parent, device), m_gesturePoint(new QQuickEventPoint(this)) { }
+        : QQuickSinglePointEvent(parent, device) { }
 
     QQuickPointerEvent *reset(QEvent *) override;
-    void localize(QQuickItem *target) override;
     bool isPressEvent() const override;
     bool isUpdateEvent() const override;
     bool isReleaseEvent() const override;
     QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() override { return this; }
     const QQuickPointerNativeGestureEvent *asPointerNativeGestureEvent() const override { return this; }
-    int pointCount() const override { return 1; }
-    QQuickEventPoint *point(int i) const override;
-    QQuickEventPoint *pointById(int pointId) const override;
-    bool allPointsAccepted() const override;
-    bool allUpdatedPointsAccepted() const override;
-    bool allPointsGrabbed() const override;
-    QVector<QObject *> exclusiveGrabbers() const override;
-    void clearGrabbers() const override;
-    bool hasExclusiveGrabber(const QQuickPointerHandler *handler) const override;
     Qt::NativeGestureType type() const;
     qreal value() const;
-
-private:
-    QQuickEventPoint *m_gesturePoint;
 
     Q_DISABLE_COPY(QQuickPointerNativeGestureEvent)
 };
