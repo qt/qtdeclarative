@@ -44,6 +44,10 @@
 #endif
 #endif
 
+#if defined(__ANDROID__) && defined(SYS_memfd_create)
+#  undef SYS_memfd_create
+#endif
+
 namespace WTF {
 
 #ifdef SYS_memfd_create
@@ -149,7 +153,7 @@ void* OSAllocator::reserveAndCommit(size_t bytes, Usage usage, bool writable, bo
 
 #if OS(DARWIN)
     int fd = usage;
-#elif OS(LINUX) && defined(SYS_memfd_create)
+#elif OS(LINUX)
     int fd = memfdForUsage(bytes, usage);
     if (fd != -1)
         flags &= ~MAP_ANON;
