@@ -216,6 +216,7 @@ private slots:
     void functionToString();
 
     void protoChanges_QTBUG68369();
+    void multilineStrings();
 
 signals:
     void testSignal();
@@ -4263,6 +4264,17 @@ void tst_QJSEngine::protoChanges_QTBUG68369()
     "o.y"
     );
     QVERIFY(ok.toBool() == true);
+}
+
+void tst_QJSEngine::multilineStrings()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(
+    "var x = `a\nb`; x;"
+    );
+    QVERIFY(result.isString());
+    QVERIFY(result.toString() == QStringLiteral("a\nb"));
+
 }
 
 QTEST_MAIN(tst_QJSEngine)

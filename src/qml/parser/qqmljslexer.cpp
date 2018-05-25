@@ -823,7 +823,7 @@ int Lexer::scanString(ScanStringMode mode)
 
     if (_engine) {
         while (_codePtr <= _endPtr) {
-            if (isLineTerminator()) {
+            if (isLineTerminator() && quote != QLatin1Char('`')) {
                 if (qmlMode())
                     break;
                 _errorCode = IllegalCharacter;
