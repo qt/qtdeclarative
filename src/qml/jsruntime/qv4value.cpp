@@ -246,6 +246,20 @@ bool Value::sameValue(Value other) const {
     return false;
 }
 
+bool Value::sameValueZero(Value other) const {
+    if (_val == other._val)
+        return true;
+    String *s = stringValue();
+    String *os = other.stringValue();
+    if (s && os)
+        return s->isEqualTo(os);
+    if (isInteger() && other.isDouble())
+        return double(int_32()) == other.doubleValue();
+    if (isDouble() && other.isInteger())
+        return other.int_32() == doubleValue();
+    return false;
+}
+
 #ifndef V4_BOOTSTRAP
 Heap::String *Value::toString(ExecutionEngine *e, Value val)
 {

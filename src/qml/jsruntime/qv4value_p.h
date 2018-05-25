@@ -478,8 +478,9 @@ public:
     ReturnedValue asReturnedValue() const { return _val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v._val = val; return v; }
 
-    // Section 9.12
+    // As per ES specs
     bool sameValue(Value other) const;
+    bool sameValueZero(Value other) const;
 
     inline void mark(MarkStack *markStack);
 

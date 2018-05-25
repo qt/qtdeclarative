@@ -94,6 +94,7 @@ struct ArrayPrototype: ArrayObject
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_splice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_unshift(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_includes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

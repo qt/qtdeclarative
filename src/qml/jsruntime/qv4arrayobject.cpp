@@ -1,5 +1,6 @@
 /****************************************************************************
 **
+** Copyright (C) 2018 Crimson AS <info@crimson.no>
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -112,6 +113,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(QStringLiteral("splice"), method_splice, 2);
     defineDefaultProperty(QStringLiteral("unshift"), method_unshift, 1);
+    defineDefaultProperty(QStringLiteral("includes"), method_includes, 1);
     defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
@@ -699,6 +701,44 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
     }
 
     return Encode(newLen);
+}
+
+ReturnedValue ArrayPrototype::method_includes(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject->toObject(scope.engine));
+    if (!instance)
+        RETURN_UNDEFINED();
+
+    qint64 len = instance->getLength();
+    if (len == 0) {
+        return Encode(false);
+    }
+
+    double n = 0;
+    if (argc > 1 && !argv[1].isUndefined()) {
+        n = argv[1].toInteger();
+    }
+
+    double k = 0;
+    if (n >= 0) {
+        k = n;
+    } else {
+        k = len + n;
+        if (k < 0) {
+            k = 0;
+        }
+    }
+
+    while (k < len) {
+        ScopedValue val(scope, instance->getIndexed(k));
+        if (val->sameValueZero(argv[0])) {
+            return Encode(true);
+        }
+        k++;
+    }
+
+    return Encode(false);
 }
 
 ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
