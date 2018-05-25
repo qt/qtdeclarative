@@ -92,8 +92,8 @@ struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
     ObjectIterator(Scope &scope, const Object *o, uint flags)
     {
         engine = scope.engine;
-        object = scope.alloc(1);
-        current = scope.alloc(1);
+        object = scope.alloc();
+        current = scope.alloc();
         arrayNode = nullptr;
         arrayIndex = 0;
         memberIndex = 0;

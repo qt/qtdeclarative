@@ -110,7 +110,7 @@ Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
     uint nLocals = compiledFunction->nLocals;
     c->locals.size = nLocals;
     c->locals.alloc = localsAndFormals;
-    // memory allocated from the JS heap is 0 initialized, so check if undefined is 0
+    // memory allocated from the JS heap is 0 initialized, so check if empty is 0
     Q_ASSERT(Primitive::undefinedValue().asReturnedValue() == 0);
 
     Value *args = c->locals.values + nLocals;

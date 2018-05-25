@@ -344,7 +344,7 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
     uint len = arr->getLength();
 
     Scope scope(v4);
-    Value *arguments = v4->jsAlloca(len);
+    Value *arguments = scope.alloc(len);
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();

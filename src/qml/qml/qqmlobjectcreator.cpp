@@ -252,7 +252,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance, QQmlData::
     Q_ASSERT(!sharedState->allJavaScriptObjects);
     sharedState->allJavaScriptObjects = valueScope.alloc(compilationUnit->totalObjectCount);
 
-    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc(1));
+    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
 
     qSwap(_qmlContext, qmlContext);
 
@@ -312,7 +312,7 @@ bool QQmlObjectCreator::populateDeferredBinding(const QQmlProperty &qmlProperty,
     if (!sharedState->allJavaScriptObjects)
         sharedState->allJavaScriptObjects = valueScope.alloc(compilationUnit->totalObjectCount);
 
-    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc(1));
+    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
 
     qSwap(_qmlContext, qmlContext);
 
@@ -1292,7 +1292,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ++sharedState->allJavaScriptObjects;
 
     QV4::Scope valueScope(v4);
-    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc(1));
+    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
 
     qSwap(_qmlContext, qmlContext);
 

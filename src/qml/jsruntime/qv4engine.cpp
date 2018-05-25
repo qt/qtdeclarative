@@ -193,6 +193,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     }
 
     exceptionValue = jsAlloca(1);
+    *exceptionValue = Encode::undefined();
     globalObject = static_cast<Object *>(jsAlloca(1));
     jsObjects = jsAlloca(NJSObjects);
     typedArrayPrototype = static_cast<Object *>(jsAlloca(NTypedArrayTypes));

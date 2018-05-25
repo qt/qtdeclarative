@@ -142,8 +142,6 @@ public:
     QML_NEARLY_ALWAYS_INLINE Value *jsAlloca(int nValues) {
         Value *ptr = jsStackTop;
         jsStackTop = ptr + nValues;
-        for (int i = 0; i < nValues; ++i)
-            ptr[i] = Primitive::undefinedValue();
         return ptr;
     }
 

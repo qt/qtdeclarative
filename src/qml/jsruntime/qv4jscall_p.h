@@ -67,7 +67,7 @@ struct JSCallData {
         if (thisObject)
             this->thisObject = const_cast<Value *>(thisObject);
         else
-            this->thisObject = scope.alloc(1);
+            this->thisObject = scope.alloc();
         if (argv)
             this->args = const_cast<Value *>(argv);
         else
@@ -80,8 +80,7 @@ struct JSCallData {
 
     CallData *callData(const FunctionObject *f = nullptr) const {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        CallData *ptr = reinterpret_cast<CallData *>(scope.engine->jsStackTop);
-        scope.engine->jsStackTop += size;
+        CallData *ptr = reinterpret_cast<CallData *>(scope.alloc<Scope::Uninitialized>(size));
         ptr->function = Encode::undefined();
         ptr->context = Encode::undefined();
         ptr->accumulator = Encode::undefined();

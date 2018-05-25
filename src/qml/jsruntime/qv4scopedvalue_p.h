@@ -117,8 +117,45 @@ struct Scope {
         engine->jsStackTop = mark;
     }
 
-    QML_NEARLY_ALWAYS_INLINE Value *alloc(int nValues) const {
-        return engine->jsAlloca(nValues);
+    enum AllocMode {
+        Undefined,
+        Empty,
+        /* Be careful when using Uninitialized, the stack has to be fully initialized before calling into the memory manager again */
+        Uninitialized
+    };
+    template <AllocMode mode = Undefined>
+    QML_NEARLY_ALWAYS_INLINE Value *alloc(int nValues) const
+    {
+        Value *ptr = engine->jsAlloca(nValues);
+        switch (mode) {
+        case Undefined:
+            for (int i = 0; i < nValues; ++i)
+                ptr[i] = Primitive::undefinedValue();
+            break;
+        case Empty:
+            for (int i = 0; i < nValues; ++i)
+                ptr[i] = Primitive::emptyValue();
+            break;
+        case Uninitialized:
+            break;
+        }
+        return ptr;
+    }
+    template <AllocMode mode = Undefined>
+    QML_NEARLY_ALWAYS_INLINE Value *alloc() const
+    {
+        Value *ptr = engine->jsAlloca(1);
+        switch (mode) {
+        case Undefined:
+            *ptr = Primitive::undefinedValue();
+            break;
+        case Empty:
+            *ptr = Primitive::emptyValue();
+            break;
+        case Uninitialized:
+            break;
+        }
+        return ptr;
     }
 
     bool hasException() const {
@@ -136,31 +173,31 @@ struct ScopedValue
 {
     ScopedValue(const Scope &scope)
     {
-        ptr = scope.engine->jsStackTop++;
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setRawValue(0);
     }
 
     ScopedValue(const Scope &scope, const Value &v)
     {
-        ptr = scope.engine->jsStackTop++;
+        ptr = scope.alloc<Scope::Uninitialized>();
         *ptr = v;
     }
 
     ScopedValue(const Scope &scope, Heap::Base *o)
     {
-        ptr = scope.engine->jsStackTop++;
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setM(o);
     }
 
     ScopedValue(const Scope &scope, Managed *m)
     {
-        ptr = scope.engine->jsStackTop++;
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setRawValue(m->asReturnedValue());
     }
 
     ScopedValue(const Scope &scope, const ReturnedValue &v)
     {
-        ptr = scope.engine->jsStackTop++;
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setRawValue(v);
     }
 
@@ -214,66 +251,66 @@ struct Scoped
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Undefined>();
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value &v)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(v.as<T>());
     }
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, Heap::Base *o)
     {
         Value v;
         v = o;
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(v.as<T>());
     }
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const ScopedValue &v)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(v.ptr->as<T>());
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value &v, ConvertType)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setRawValue(value_convert<T>(scope.engine, v));
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value *v)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(v ? v->as<T>() : nullptr);
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, T *t)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(t);
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const T *t)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(t);
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, typename T::Data *t)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         *ptr = t;
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const ReturnedValue &v)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         setPointer(QV4::Value::fromReturnedValue(v).as<T>());
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const ReturnedValue &v, ConvertType)
     {
-        ptr = scope.engine->jsAlloca(1);
+        ptr = scope.alloc<Scope::Uninitialized>();
         ptr->setRawValue(value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));
     }
 
