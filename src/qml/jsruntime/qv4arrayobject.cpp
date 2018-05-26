@@ -95,6 +95,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
+    ctor->defineDefaultProperty(QStringLiteral("of"), method_of, 0);
     ctor->addSymbolSpecies();
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
@@ -136,6 +137,50 @@ ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value
 {
     bool isArray = argc && argv[0].as<ArrayObject>();
     return Encode(isArray);
+}
+
+ReturnedValue ArrayPrototype::method_of(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(builtin);
+    ScopedObject object(scope, Primitive::undefinedValue());
+    ScopedFunctionObject that(scope, thisObject);
+
+    if (that) {
+        // ### the spec says that we should only call constructors if
+        // IsConstructor(that), but we have no way of knowing if a builtin is a
+        // constructor. so for the time being, just try call it, and silence any
+        // exceptions-- this is not ideal, as the spec also says that we should
+        // return on exception.
+        ScopedValue argument(scope, QV4::Encode(argc));
+        object = ScopedObject(scope, that->callAsConstructor(argument, 1));
+        if (scope.engine->hasException) {
+            scope.engine->catchException(); // probably not a constructor, then.
+        }
+    }
+
+    if (!object) {
+        object = ScopedObject(scope, scope.engine->newArrayObject());
+        CHECK_EXCEPTION();
+    }
+
+    int k = 0;
+    while (k < argc) {
+        if (object->hasOwnProperty(k)) {
+            return scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
+        }
+        object->arraySet(k, argv[k]);
+        CHECK_EXCEPTION();
+
+        k++;
+    }
+
+    // ArrayObject updates its own length, and will throw if we try touch it.
+    if (!object->as<ArrayObject>()) {
+        object->set(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(argc)), QV4::Object::DoThrowOnRejection);
+        CHECK_EXCEPTION();
+    }
+
+    return object.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_toString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
