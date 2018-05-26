@@ -79,6 +79,7 @@ struct ArrayPrototype: ArrayObject
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_isArray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_from(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

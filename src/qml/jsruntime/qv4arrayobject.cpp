@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include "qv4arrayobject_p.h"
+#include "qv4objectiterator_p.h"
 #include "qv4arrayiterator_p.h"
 #include "qv4sparsearray_p.h"
 #include "qv4objectproto_p.h"
@@ -96,6 +97,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isArray"), method_isArray, 1);
     ctor->defineDefaultProperty(QStringLiteral("of"), method_of, 0);
+    ctor->defineDefaultProperty(QStringLiteral("from"), method_from, 1);
     ctor->addSymbolSpecies();
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
@@ -140,48 +142,198 @@ ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value
     return Encode(isArray);
 }
 
-ReturnedValue ArrayPrototype::method_of(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObject ctor, bool useLen, int len)
 {
-    Scope scope(builtin);
-    ScopedObject object(scope, Primitive::undefinedValue());
-    ScopedFunctionObject that(scope, thisObject);
+    ScopedObject a(scope, Primitive::undefinedValue());
 
-    if (that) {
+    if (ctor) {
         // ### the spec says that we should only call constructors if
         // IsConstructor(that), but we have no way of knowing if a builtin is a
         // constructor. so for the time being, just try call it, and silence any
         // exceptions-- this is not ideal, as the spec also says that we should
         // return on exception.
-        ScopedValue argument(scope, QV4::Encode(argc));
-        object = ScopedObject(scope, that->callAsConstructor(argument, 1));
-        if (scope.engine->hasException) {
+        //
+        // this also isn't completely kosher. for instance:
+        // Array.from.call(Object, []).constructor == Object
+        // is expected by the tests, but naturally, we get Number.
+        ScopedValue argument(scope, useLen ? QV4::Encode(len) : Primitive::undefinedValue());
+        a = ctor->callAsConstructor(argument, useLen ? 1 : 0);
+        if (scope.engine->hasException)
             scope.engine->catchException(); // probably not a constructor, then.
+    }
+
+    if (!a) {
+        a = scope.engine->newArrayObject(len);
+    }
+
+    return a;
+}
+
+ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(builtin);
+    ScopedFunctionObject thatCtor(scope, thisObject);
+    ScopedObject itemsObject(scope, argv[0]);
+    bool usingIterator = false;
+
+    if (itemsObject) {
+        // If the object claims to support iterators, then let's try use them.
+        ScopedValue it(scope, itemsObject->get(scope.engine->symbol_iterator()));
+        if (!it->isNullOrUndefined()) {
+            ScopedFunctionObject itfunc(scope, it);
+            if (!itfunc)
+                return scope.engine->throwTypeError();
+            usingIterator = true;
         }
     }
 
-    if (!object) {
-        object = ScopedObject(scope, scope.engine->newArrayObject());
-        CHECK_EXCEPTION();
+    ScopedFunctionObject mapfn(scope, Primitive::undefinedValue());
+    Value *mapArguments = nullptr;
+    if (argc > 1) {
+        mapfn = ScopedFunctionObject(scope, argv[1]);
+        if (!mapfn)
+            return scope.engine->throwTypeError(QString::fromLatin1("%1 is not a function").arg(argv[1].toQStringNoThrow()));
+        mapArguments = scope.alloc(2);
     }
+
+    ScopedValue thisArg(scope);
+    if (argc > 2)
+        thisArg = argv[2];
+
+    if (usingIterator) {
+        // Item iteration supported, so let's go ahead and try use that.
+        ScopedObject a(createObjectFromCtorOrArray(scope, thatCtor, false, 0));
+        CHECK_EXCEPTION();
+        ScopedObject iterator(scope, Runtime::method_getIterator(scope.engine, itemsObject, true));
+        CHECK_EXCEPTION(); // symbol_iterator threw; whoops.
+        if (!iterator) {
+            return scope.engine->throwTypeError(); // symbol_iterator wasn't an object.
+        }
+
+        qint64 k = 0;
+        ScopedValue mappedValue(scope);
+        Value *nextValue = scope.alloc(1);
+        ScopedValue done(scope);
+
+        // The loop below pulls out all the properties using the iterator, and
+        // sets them into the created array.
+        forever {
+            if (k > (static_cast<qint64>(1) << 53) - 1) {
+                ScopedValue falsey(scope, Encode(false));
+                ScopedValue error(scope, scope.engine->throwTypeError());
+                return Runtime::method_iteratorClose(scope.engine, iterator, falsey);
+            }
+
+            // Retrieve the next value. If the iteration ends, we're done here.
+            done = Value::fromReturnedValue(Runtime::method_iteratorNext(scope.engine, iterator, nextValue));
+            CHECK_EXCEPTION();
+            if (done->toBoolean()) {
+                if (ArrayObject *ao = a->as<ArrayObject>()) {
+                    ao->setArrayLengthUnchecked(k);
+                } else {
+                    a->set(scope.engine->id_length(), Primitive::fromDouble(k), QV4::Object::DoThrowOnRejection);
+                    CHECK_EXCEPTION();
+                }
+                return a.asReturnedValue();
+            }
+
+            if (mapfn) {
+                mapArguments[0] = *nextValue;
+                mapArguments[1] = Primitive::fromDouble(k);
+                mappedValue = mapfn->call(thisArg, mapArguments, 2);
+                if (scope.engine->hasException)
+                    return Runtime::method_iteratorClose(scope.engine, iterator, Primitive::fromBoolean(false));
+            } else {
+                mappedValue = *nextValue;
+            }
+
+            if (!a->hasOwnProperty(k)) {
+                a->arraySet(k, mappedValue);
+            } else {
+                // Don't return: we need to close the iterator.
+                scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
+            }
+
+            if (scope.engine->hasException) {
+                ScopedValue falsey(scope, Encode(false));
+                return Runtime::method_iteratorClose(scope.engine, iterator, falsey);
+            }
+
+            k++;
+        }
+
+        // the return is hidden up in the loop above, when iteration finishes.
+    } else {
+        // Array-like fallback. We request properties by index, and set them on
+        // the return object.
+        ScopedObject arrayLike(scope, argv[0].toObject(scope.engine));
+        if (!arrayLike)
+            return scope.engine->throwTypeError(QString::fromLatin1("Cannot convert %1 to object").arg(argv[0].toQStringNoThrow()));
+        qint64 len = arrayLike->getLength();
+        ScopedObject a(createObjectFromCtorOrArray(scope, thatCtor, true, len));
+        CHECK_EXCEPTION();
+
+        qint64 k = 0;
+        ScopedValue mappedValue(scope, Primitive::undefinedValue());
+        ScopedValue kValue(scope);
+        while (k < len) {
+            kValue = arrayLike->getIndexed(k);
+            CHECK_EXCEPTION();
+
+            if (mapfn) {
+                mapArguments[0] = kValue;
+                mapArguments[1] = Primitive::fromDouble(k);
+                mappedValue = mapfn->call(thisArg, mapArguments, 2);
+                CHECK_EXCEPTION();
+            } else {
+                mappedValue = kValue;
+            }
+
+            if (a->hasOwnProperty(k))
+                return scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
+
+            a->arraySet(k, mappedValue);
+            CHECK_EXCEPTION();
+
+            k++;
+        }
+
+        if (ArrayObject *ao = a->as<ArrayObject>()) {
+            ao->setArrayLengthUnchecked(k);
+        } else {
+            a->set(scope.engine->id_length(), Primitive::fromDouble(k), QV4::Object::DoThrowOnRejection);
+            CHECK_EXCEPTION();
+        }
+        return a.asReturnedValue();
+    }
+
+}
+
+ReturnedValue ArrayPrototype::method_of(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(builtin);
+    ScopedFunctionObject that(scope, thisObject);
+    ScopedObject a(createObjectFromCtorOrArray(scope, that, true, argc));
+    CHECK_EXCEPTION();
 
     int k = 0;
     while (k < argc) {
-        if (object->hasOwnProperty(k)) {
+        if (a->hasOwnProperty(k)) {
             return scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
         }
-        object->arraySet(k, argv[k]);
+        a->arraySet(k, argv[k]);
         CHECK_EXCEPTION();
 
         k++;
     }
 
     // ArrayObject updates its own length, and will throw if we try touch it.
-    if (!object->as<ArrayObject>()) {
-        object->set(scope.engine->id_length(), ScopedValue(scope, Primitive::fromDouble(argc)), QV4::Object::DoThrowOnRejection);
+    if (!a->as<ArrayObject>()) {
+        a->set(scope.engine->id_length(), Primitive::fromDouble(argc), QV4::Object::DoThrowOnRejection);
         CHECK_EXCEPTION();
     }
 
-    return object.asReturnedValue();
+    return a.asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_toString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)

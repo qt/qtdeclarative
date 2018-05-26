@@ -61,3 +61,4 @@ ReturnedValue IteratorPrototype::createIterResultObject(ExecutionEngine *engine,
     obj->set(ScopedString(scope, engine->newString(QStringLiteral("done"))), Primitive::fromBoolean(done), Object::DoNotThrow);
     return obj->asReturnedValue();
 }
+

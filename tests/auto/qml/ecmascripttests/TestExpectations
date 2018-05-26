@@ -20,45 +20,8 @@ language/statements/with/let-identifier-with-newline.js sloppyFails
 
 
 # ----- test failures that should be fixed
-built-ins/Array/from/Array.from-descriptor.js fails
-built-ins/Array/from/Array.from-name.js fails
-built-ins/Array/from/Array.from_arity.js fails
-built-ins/Array/from/Array.from_forwards-length-for-array-likes.js fails
-built-ins/Array/from/calling-from-valid-1-noStrict.js sloppyFails
-built-ins/Array/from/calling-from-valid-1-onlyStrict.js strictFails
-built-ins/Array/from/calling-from-valid-2.js fails
-built-ins/Array/from/elements-added-after.js fails
-built-ins/Array/from/elements-deleted-after.js fails
-built-ins/Array/from/elements-updated-after.js fails
-built-ins/Array/from/from-array.js fails
-built-ins/Array/from/from-string.js fails
-built-ins/Array/from/get-iter-method-err.js fails
-built-ins/Array/from/items-is-arraybuffer.js fails
-built-ins/Array/from/iter-adv-err.js fails
 built-ins/Array/from/iter-cstm-ctor-err.js fails
-built-ins/Array/from/iter-cstm-ctor.js fails
-built-ins/Array/from/iter-get-iter-err.js fails
-built-ins/Array/from/iter-get-iter-val-err.js fails
-built-ins/Array/from/iter-map-fn-args.js fails
-built-ins/Array/from/iter-map-fn-err.js fails
-built-ins/Array/from/iter-map-fn-return.js fails
-built-ins/Array/from/iter-map-fn-this-arg.js fails
-built-ins/Array/from/iter-map-fn-this-non-strict.js sloppyFails
-built-ins/Array/from/iter-map-fn-this-strict.js strictFails
-built-ins/Array/from/iter-set-elem-prop-err.js fails
-built-ins/Array/from/iter-set-elem-prop.js fails
-built-ins/Array/from/iter-set-length-err.js fails
-built-ins/Array/from/iter-set-length.js fails
-built-ins/Array/from/mapfn-throws-exception.js fails
 built-ins/Array/from/proto-from-ctor-realm.js fails
-built-ins/Array/from/source-array-boundary.js fails
-built-ins/Array/from/source-object-constructor.js fails
-built-ins/Array/from/source-object-iterator-1.js fails
-built-ins/Array/from/source-object-iterator-2.js fails
-built-ins/Array/from/source-object-length.js fails
-built-ins/Array/from/source-object-missing.js fails
-built-ins/Array/from/source-object-without.js fails
-built-ins/Array/from/this-null.js fails
 built-ins/Array/isArray/proxy-revoked.js fails
 built-ins/Array/isArray/proxy.js fails
 built-ins/Array/length/define-own-prop-length-overflow-realm.js fails
