@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2018 Crimson AS <info@crimson.no>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4ITERATOR_P_H
-#define QV4ITERATOR_P_H
+#ifndef QV4SETOBJECT_P_H
+#define QV4SETOBJECT_P_H
 
 //
 //  W A R N I N G
@@ -52,31 +52,62 @@
 //
 
 #include "qv4object_p.h"
-#include "qv4arraydata_p.h"
+#include "qv4objectproto_p.h"
+#include "qv4functionobject_p.h"
+#include "qv4string_p.h"
 
 QT_BEGIN_NAMESPACE
 
-
 namespace QV4 {
 
-enum IteratorKind {
-    KeyIteratorKind,
-    ValueIteratorKind,
-    KeyValueIteratorKind
+namespace Heap {
+
+struct SetCtor : FunctionObject {
+    void init(QV4::ExecutionContext *scope);
 };
 
-struct IteratorPrototype : Object
-{
-    void init(ExecutionEngine *engine);
+#define SetObjectMembers(class, Member) \
+    Member(class, Pointer, ArrayObject *, setArray)
 
-    static ReturnedValue method_iterator(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-
-    static ReturnedValue createIterResultObject(ExecutionEngine *engine, const Value &value, bool done);
+DECLARE_HEAP_OBJECT(SetObject, Object) {
+    DECLARE_MARKOBJECTS(SetObject);
+    void init() { Object::init(); }
 };
 
 }
 
+struct SetCtor: FunctionObject
+{
+    V4_OBJECT2(SetCtor, FunctionObject)
+
+    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct SetObject : Object
+{
+    V4_OBJECT2(SetObject, Object)
+    V4_PROTOTYPE(setPrototype)
+};
+
+struct SetPrototype : Object
+{
+    void init(ExecutionEngine *engine, Object *ctor);
+
+    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_clear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_size(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+};
+
+
+} // namespace QV4
+
+
 QT_END_NAMESPACE
 
-#endif // QV4ARRAYITERATOR_P_H
-
+#endif // QV4SETOBJECT_P_H

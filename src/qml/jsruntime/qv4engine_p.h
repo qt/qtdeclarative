@@ -186,11 +186,13 @@ public:
 #endif
         ArrayBufferProto,
         DataViewProto,
+        SetProto,
         IntrinsicTypedArrayProto,
         ValueTypeProto,
         SignalHandlerProto,
         IteratorProto,
         ForInIteratorProto,
+        SetIteratorProto,
         ArrayIteratorProto,
         StringIteratorProto,
 
@@ -213,6 +215,7 @@ public:
         URIError_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
+        Set_Ctor,
         IntrinsicTypedArray_Ctor,
 
         GetSymbolSpecies,
@@ -247,6 +250,7 @@ public:
     FunctionObject *uRIErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + URIError_Ctor); }
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
+    FunctionObject *setCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Set_Ctor); }
     FunctionObject *intrinsicTypedArrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + IntrinsicTypedArray_Ctor); }
     FunctionObject *typedArrayCtors;
 
@@ -278,6 +282,7 @@ public:
 
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
+    Object *setPrototype() const { return reinterpret_cast<Object *>(jsObjects + SetProto); }
     Object *intrinsicTypedArrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + IntrinsicTypedArrayProto); }
     Object *typedArrayPrototype;
 
@@ -285,6 +290,7 @@ public:
     Object *signalHandlerPrototype() const { return reinterpret_cast<Object *>(jsObjects + SignalHandlerProto); }
     Object *iteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + IteratorProto); }
     Object *forInIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ForInIteratorProto); }
+    Object *setIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + SetIteratorProto); }
     Object *arrayIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayIteratorProto); }
     Object *stringIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringIteratorProto); }
 
@@ -510,6 +516,7 @@ public:
     Heap::Object *newVariantObject(const QVariant &v);
 
     Heap::Object *newForInIteratorObject(Object *o);
+    Heap::Object *newSetIteratorObject(Object *o);
     Heap::Object *newArrayIteratorObject(Object *o);
 
     Heap::QmlContext *qmlContext() const;

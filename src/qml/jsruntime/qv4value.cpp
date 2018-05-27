@@ -257,6 +257,11 @@ bool Value::sameValueZero(Value other) const {
         return double(int_32()) == other.doubleValue();
     if (isDouble() && other.isInteger())
         return other.int_32() == doubleValue();
+    if (isDouble() && other.isDouble()) {
+        if (doubleValue() == 0 && other.doubleValue() == 0) {
+            return true;
+        }
+    }
     return false;
 }
 

@@ -1,0 +1,297 @@
+/****************************************************************************
+**
+** Copyright (C) 2018 Crimson AS <info@crimson.no>
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+
+#include "qv4setobject_p.h"
+#include "qv4setiterator_p.h"
+#include "qv4symbol_p.h"
+
+using namespace QV4;
+
+DEFINE_OBJECT_VTABLE(SetCtor);
+DEFINE_OBJECT_VTABLE(SetObject);
+
+void Heap::SetCtor::init(QV4::ExecutionContext *scope)
+{
+    Heap::FunctionObject::init(scope, QStringLiteral("Set"));
+}
+
+ReturnedValue SetCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+{
+    Scope scope(f);
+    Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());
+    Scoped<ArrayObject> arr(scope, scope.engine->newArrayObject());
+    a->d()->setArray.set(scope.engine, arr->d());
+
+    if (argc > 0) {
+        ScopedValue iterable(scope, argv[0]);
+        if (!iterable->isUndefined() && !iterable->isNull()) {
+            ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("add")))));
+            if (!adder) {
+                return scope.engine->throwTypeError();
+            }
+            ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
+            CHECK_EXCEPTION();
+            if (!iter) {
+                return a.asReturnedValue();
+            }
+
+            Value *nextValue = scope.alloc(1);
+            ScopedValue done(scope);
+            forever {
+                done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
+                CHECK_EXCEPTION();
+                if (done->toBoolean()) {
+                    return a.asReturnedValue();
+                }
+
+                adder->call(a, nextValue, 1);
+                if (scope.engine->hasException) {
+                    ScopedValue falsey(scope, Encode(false));
+                    return Runtime::method_iteratorClose(scope.engine, iter, falsey);
+                }
+            }
+        }
+    }
+
+    return a.asReturnedValue();
+}
+
+ReturnedValue SetCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+{
+    Scope scope(f);
+    return scope.engine->throwTypeError(QString::fromLatin1("Set requires new"));
+}
+
+void SetPrototype::init(ExecutionEngine *engine, Object *ctor)
+{
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->addSymbolSpecies();
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
+
+    defineDefaultProperty(QStringLiteral("add"), method_add, 1);
+    defineDefaultProperty(QStringLiteral("clear"), method_clear, 0);
+    defineDefaultProperty(QStringLiteral("delete"), method_delete, 1);
+    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
+    defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
+    defineDefaultProperty(QStringLiteral("has"), method_has, 1);
+    defineAccessorProperty(QStringLiteral("size"), method_get_size, nullptr);
+
+    // Per the spec, the value for 'keys' is the same as 'values'.
+    ScopedString valString(scope, scope.engine->newIdentifier(QStringLiteral("values")));
+    ScopedFunctionObject valuesFn(scope, FunctionObject::createBuiltinFunction(engine, valString, SetPrototype::method_values, 0));
+    defineDefaultProperty(QStringLiteral("keys"), valuesFn);
+    defineDefaultProperty(QStringLiteral("values"), valuesFn);
+
+    defineDefaultProperty(engine->symbol_iterator(), valuesFn);
+
+    ScopedString val(scope, engine->newString(QLatin1String("Set")));
+    defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), val);
+}
+
+ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<ArrayObject> arr(scope, that->d()->setArray);
+    ScopedValue sk(scope);
+    qint64 len = arr->getLength();
+
+    for (int i = 0; i < len; ++i) {
+        sk = arr->getIndexed(i);
+        if (sk->sameValueZero(argv[0]))
+            return that.asReturnedValue();
+    }
+
+    sk = argv[0];
+    if (sk->isDouble()) {
+        if (sk->doubleValue() == 0 && std::signbit(sk->doubleValue()))
+            sk = Primitive::fromDouble(+0);
+    }
+
+    arr->putIndexed(len, sk);
+    return that.asReturnedValue();
+}
+
+ReturnedValue SetPrototype::method_clear(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<ArrayObject> arr(scope, scope.engine->newArrayObject());
+    that->d()->setArray.set(scope.engine, arr->d());
+    return Encode::undefined();
+}
+
+// delete value
+ReturnedValue SetPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<ArrayObject> arr(scope, that->d()->setArray);
+    ScopedValue sk(scope);
+    qint64 len = arr->getLength();
+
+    bool found = false;
+    int idx = 0;
+
+    for (; idx < len; ++idx) {
+        sk = arr->getIndexed(idx);
+        if (sk->sameValueZero(argv[0])) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found == true) {
+        Scoped<ArrayObject> newArr(scope, scope.engine->newArrayObject());
+        for (int j = 0, newIdx = 0; j < len; ++j, newIdx++) {
+            if (j == idx) {
+                newIdx--; // skip the entry
+                continue;
+            }
+            newArr->putIndexed(newIdx, ScopedValue(scope, arr->getIndexed(j)));
+        }
+
+        that->d()->setArray.set(scope.engine, newArr->d());
+        return Encode(true);
+    } else {
+        return Encode(false);
+    }
+}
+
+ReturnedValue SetPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<SetIteratorObject> ao(scope, scope.engine->newSetIteratorObject(that));
+    ao->d()->iterationKind = IteratorKind::KeyValueIteratorKind;
+    return ao->asReturnedValue();
+}
+
+ReturnedValue SetPrototype::method_forEach(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    ScopedFunctionObject callbackfn(scope, argv[0]);
+    if (!callbackfn)
+        return scope.engine->throwTypeError();
+
+    ScopedValue thisArg(scope, Primitive::undefinedValue());
+    if (argc > 1)
+        thisArg = ScopedValue(scope, argv[1]);
+
+    Scoped<ArrayObject> arr(scope, that->d()->setArray);
+    ScopedValue sk(scope);
+    qint64 len = arr->getLength();
+
+    Value *arguments = scope.alloc(3);
+    for (int i = 0; i < len; ++i) {
+        sk = arr->getIndexed(i);
+
+        arguments[0] = sk;
+        arguments[1] = sk;
+        arguments[2] = that;
+        callbackfn->call(thisArg, arguments, 3);
+        CHECK_EXCEPTION();
+    }
+    return Encode::undefined();
+}
+
+ReturnedValue SetPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<ArrayObject> arr(scope, that->d()->setArray);
+    ScopedValue sk(scope);
+    qint64 len = arr->getLength();
+
+    for (int i = 0; i < len; ++i) {
+        sk = arr->getIndexed(i);
+        if (sk->sameValueZero(argv[0]))
+            return Encode(true);
+    }
+
+    return Encode(false);
+}
+
+ReturnedValue SetPrototype::method_get_size(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<ArrayObject> arr(scope, that->d()->setArray);
+    qint64 len = arr->getLength();
+    return Encode((uint)len);
+}
+
+ReturnedValue SetPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that)
+        return scope.engine->throwTypeError();
+
+    Scoped<SetIteratorObject> ao(scope, scope.engine->newSetIteratorObject(that));
+    ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
+    return ao->asReturnedValue();
+}
+

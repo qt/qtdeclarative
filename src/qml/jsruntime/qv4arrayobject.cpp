@@ -473,7 +473,7 @@ ReturnedValue ArrayPrototype::method_entries(const FunctionObject *b, const Valu
         RETURN_UNDEFINED();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::KeyValueIteratorKind;
+    ao->d()->iterationKind = IteratorKind::KeyValueIteratorKind;
     return ao->asReturnedValue();
 }
 
@@ -1083,7 +1083,7 @@ ReturnedValue ArrayPrototype::method_keys(const FunctionObject *f, const Value *
         RETURN_UNDEFINED();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::KeyIteratorKind;
+    ao->d()->iterationKind = IteratorKind::KeyIteratorKind;
     return ao->asReturnedValue();
 }
 
@@ -1446,7 +1446,7 @@ ReturnedValue ArrayPrototype::method_values(const FunctionObject *b, const Value
         RETURN_UNDEFINED();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::ValueIteratorKind;
+    ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
 }
 

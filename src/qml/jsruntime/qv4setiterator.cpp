@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 Crimson AS <info@crimson.no>
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2018 Crimson AS <info@crimson.no>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -39,68 +38,63 @@
 ****************************************************************************/
 
 #include <private/qv4iterator_p.h>
-#include <private/qv4arrayiterator_p.h>
-#include <private/qv4typedarray_p.h>
+#include <private/qv4setiterator_p.h>
+#include <private/qv4setobject_p.h>
 #include <private/qv4symbol_p.h>
 
 using namespace QV4;
 
-DEFINE_OBJECT_VTABLE(ArrayIteratorObject);
+DEFINE_OBJECT_VTABLE(SetIteratorObject);
 
-void ArrayIteratorPrototype::init(ExecutionEngine *e)
+void SetIteratorPrototype::init(ExecutionEngine *e)
 {
     defineDefaultProperty(QStringLiteral("next"), method_next, 0);
 
     Scope scope(e);
-    ScopedString val(scope, e->newString(QLatin1String("Array Iterator")));
+    ScopedString val(scope, e->newString(QLatin1String("Set Iterator")));
     defineReadonlyConfigurableProperty(e->symbol_toStringTag(), val);
 }
 
-ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const Value *that, const Value *, int)
+ReturnedValue SetIteratorPrototype::method_next(const FunctionObject *b, const Value *that, const Value *, int)
 {
     Scope scope(b);
-    const ArrayIteratorObject *thisObject = that->as<ArrayIteratorObject>();
+    const SetIteratorObject *thisObject = that->as<SetIteratorObject>();
     if (!thisObject)
-        return scope.engine->throwTypeError(QLatin1String("Not an Array Iterator instance"));
+        return scope.engine->throwTypeError(QLatin1String("Not a Set Iterator instance"));
 
-    ScopedObject a(scope, thisObject->d()->iteratedObject);
-    if (!a) {
-        QV4::Value undefined = Primitive::undefinedValue();
-        return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
-    }
-
-    quint32 index = thisObject->d()->nextIndex;
+    Scoped<SetObject> s(scope, thisObject->d()->iteratedSet);
+    quint32 index = thisObject->d()->setNextIndex;
     IteratorKind itemKind = thisObject->d()->iterationKind;
 
-    Scoped<TypedArray> ta(scope, a->as<TypedArray>());
-    quint32 len = a->getLength();
 
-    if (index >= len) {
-        thisObject->d()->iteratedObject.set(scope.engine, nullptr);
+    if (!s) {
         QV4::Value undefined = Primitive::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
-    thisObject->d()->nextIndex = index + 1;
-    if (itemKind == KeyIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Primitive::fromInt32(index), false);
+    Scoped<ArrayObject> arr(scope, s->d()->setArray);
+
+    while (index < arr->getLength()) {
+        ScopedValue e(scope, arr->getIndexed(index));
+        index += 1;
+        thisObject->d()->setNextIndex = index;
+
+        if (itemKind == KeyValueIteratorKind) {
+            // Return CreateIterResultObject(CreateArrayFromList(« e, e »), false).
+            ScopedArrayObject resultArray(scope, scope.engine->newArrayObject());
+            resultArray->arrayReserve(2);
+            resultArray->arrayPut(0, e);
+            resultArray->arrayPut(1, e);
+            resultArray->setArrayLengthUnchecked(2);
+
+            return IteratorPrototype::createIterResultObject(scope.engine, resultArray, false);
+        }
+
+        return IteratorPrototype::createIterResultObject(scope.engine, e, false);
     }
 
-    ReturnedValue elementValue = a->getIndexed(index);
-    CHECK_EXCEPTION();
-
-    if (itemKind == ValueIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Value::fromReturnedValue(elementValue), false);
-    } else {
-        Q_ASSERT(itemKind == KeyValueIteratorKind);
-
-        ScopedArrayObject resultArray(scope, scope.engine->newArrayObject());
-        resultArray->arrayReserve(2);
-        resultArray->arrayPut(0, Primitive::fromInt32(index));
-        resultArray->arrayPut(1, Value::fromReturnedValue(elementValue));
-        resultArray->setArrayLengthUnchecked(2);
-
-        return IteratorPrototype::createIterResultObject(scope.engine, resultArray, false);
-    }
+    thisObject->d()->iteratedSet.set(scope.engine, nullptr);
+    QV4::Value undefined = Primitive::undefinedValue();
+    return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
 }
 

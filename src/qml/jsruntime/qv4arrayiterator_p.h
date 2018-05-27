@@ -53,6 +53,7 @@
 //
 
 #include "qv4object_p.h"
+#include "qv4iterator_p.h"
 #include "qv4arraydata_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -60,20 +61,11 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-// ### spec says that this is a string, but I don't see it exposed anywhere, so
-// does that matter?
-// ### maybe we should share this with other iterator types in the future.
-enum ArrayIteratorKind {
-    KeyIteratorKind,
-    ValueIteratorKind,
-    KeyValueIteratorKind
-};
-
 namespace Heap {
 
 #define ArrayIteratorObjectMembers(class, Member) \
     Member(class, Pointer, Object *, iteratedObject) \
-    Member(class, NoMark, ArrayIteratorKind, iterationKind) \
+    Member(class, NoMark, IteratorKind, iterationKind) \
     Member(class, NoMark, quint32, nextIndex)
 
 DECLARE_HEAP_OBJECT(ArrayIteratorObject, Object) {

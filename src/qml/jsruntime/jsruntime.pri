@@ -41,6 +41,8 @@ SOURCES += \
     $$PWD/qv4serialize.cpp \
     $$PWD/qv4script.cpp \
     $$PWD/qv4symbol.cpp \
+    $$PWD/qv4setobject.cpp \
+    $$PWD/qv4setiterator.cpp \
     $$PWD/qv4include.cpp \
     $$PWD/qv4qobjectwrapper.cpp \
     $$PWD/qv4arraybuffer.cpp \
@@ -96,6 +98,8 @@ HEADERS += \
     $$PWD/qv4serialize_p.h \
     $$PWD/qv4script_p.h \
     $$PWD/qv4symbol_p.h \
+    $$PWD/qv4setobject_p.h \
+    $$PWD/qv4setiterator_p.h \
     $$PWD/qv4scopedvalue_p.h \
     $$PWD/qv4executableallocator_p.h \
     $$PWD/qv4include_p.h \

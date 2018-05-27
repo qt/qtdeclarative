@@ -465,7 +465,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject 
         THROW_TYPE_ERROR();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::KeyValueIteratorKind;
+    ao->d()->iterationKind = IteratorKind::KeyValueIteratorKind;
     return ao->asReturnedValue();
 }
 
@@ -477,7 +477,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b,
         THROW_TYPE_ERROR();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::KeyIteratorKind;
+    ao->d()->iterationKind = IteratorKind::KeyIteratorKind;
     return ao->asReturnedValue();
 }
 
@@ -489,7 +489,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_values(const FunctionObject *
         THROW_TYPE_ERROR();
 
     Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
-    ao->d()->iterationKind = ArrayIteratorKind::ValueIteratorKind;
+    ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
 }
 

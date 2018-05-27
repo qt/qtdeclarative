@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2018 Crimson AS <info@crimson.no>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4ITERATOR_P_H
-#define QV4ITERATOR_P_H
+#ifndef QV4SETITERATOR_P_H
+#define QV4SETITERATOR_P_H
 
 //
 //  W A R N I N G
@@ -52,31 +52,52 @@
 //
 
 #include "qv4object_p.h"
-#include "qv4arraydata_p.h"
+#include "qv4iterator_p.h"
 
 QT_BEGIN_NAMESPACE
 
-
 namespace QV4 {
 
-enum IteratorKind {
-    KeyIteratorKind,
-    ValueIteratorKind,
-    KeyValueIteratorKind
+namespace Heap {
+
+#define SetIteratorObjectMembers(class, Member) \
+    Member(class, Pointer, Object *, iteratedSet) \
+    Member(class, NoMark, IteratorKind, iterationKind) \
+    Member(class, NoMark, quint32, setNextIndex)
+
+DECLARE_HEAP_OBJECT(SetIteratorObject, Object) {
+    DECLARE_MARKOBJECTS(SetIteratorObject);
+    void init(Object *obj, QV4::ExecutionEngine *engine)
+    {
+        Object::init();
+        this->iteratedSet.set(engine, obj);
+        this->setNextIndex = 0;
+    }
 };
 
-struct IteratorPrototype : Object
+}
+
+struct SetIteratorPrototype : Object
 {
+    V4_PROTOTYPE(iteratorPrototype)
     void init(ExecutionEngine *engine);
 
-    static ReturnedValue method_iterator(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-
-    static ReturnedValue createIterResultObject(ExecutionEngine *engine, const Value &value, bool done);
+    static ReturnedValue method_next(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 };
+
+struct SetIteratorObject : Object
+{
+    V4_OBJECT2(SetIteratorObject, Object)
+    Q_MANAGED_TYPE(SetIteratorObject)
+    V4_PROTOTYPE(setIteratorPrototype)
+
+    void init(ExecutionEngine *engine);
+};
+
 
 }
 
 QT_END_NAMESPACE
 
-#endif // QV4ARRAYITERATOR_P_H
+#endif // QV4SETITERATOR_P_H
 
