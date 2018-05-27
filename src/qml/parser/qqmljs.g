@@ -2469,7 +2469,7 @@ LogicalORExpression_In: LogicalORExpression_In T_OR_OR LogicalANDExpression_In;
 ConditionalExpression: LogicalORExpression;
 ConditionalExpression_In: LogicalORExpression_In;
 
-ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression T_COLON AssignmentExpression;
+ConditionalExpression: LogicalORExpression T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 ConditionalExpression_In: LogicalORExpression_In T_QUESTION AssignmentExpression_In T_COLON AssignmentExpression_In;
 /.

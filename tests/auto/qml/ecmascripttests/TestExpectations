@@ -3962,7 +3962,6 @@ language/expressions/compound-assignment/S11.13.2_A7.6_T4.js fails
 language/expressions/compound-assignment/S11.13.2_A7.7_T4.js fails
 language/expressions/compound-assignment/S11.13.2_A7.8_T4.js fails
 language/expressions/compound-assignment/S11.13.2_A7.9_T4.js fails
-language/expressions/conditional/in-branch-1.js fails
 language/expressions/conditional/tco-cond.js strictFails
 language/expressions/conditional/tco-pos.js strictFails
 language/expressions/delete/11.4.1-5-a-28-s.js strictFails
