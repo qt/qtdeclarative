@@ -304,6 +304,7 @@ public:
         String_boolean,
         String_number,
         String_string,
+        String_default,
         String_symbol,
         String_object,
         String_function,
@@ -365,6 +366,7 @@ public:
     String *id_boolean() const { return reinterpret_cast<String *>(jsStrings + String_boolean); }
     String *id_number() const { return reinterpret_cast<String *>(jsStrings + String_number); }
     String *id_string() const { return reinterpret_cast<String *>(jsStrings + String_string); }
+    String *id_default() const { return reinterpret_cast<String *>(jsStrings + String_default); }
     String *id_symbol() const { return reinterpret_cast<String *>(jsStrings + String_symbol); }
     String *id_object() const { return reinterpret_cast<String *>(jsStrings + String_object); }
     String *id_function() const { return reinterpret_cast<String *>(jsStrings + String_function); }

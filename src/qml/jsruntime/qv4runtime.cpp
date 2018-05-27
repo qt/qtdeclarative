@@ -420,27 +420,59 @@ Heap::String *RuntimeHelpers::stringFromNumber(ExecutionEngine *engine, double n
 
 ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeHint)
 {
-    if (typeHint == PREFERREDTYPE_HINT) {
-        if (object->as<DateObject>())
-            typeHint = STRING_HINT;
-        else
-            typeHint = NUMBER_HINT;
-    }
-
     ExecutionEngine *engine = object->internalClass()->engine;
     if (engine->hasException)
         return Encode::undefined();
 
+    String *hint;
+    switch (typeHint) {
+    case STRING_HINT:
+        hint = engine->id_string();
+        break;
+    case NUMBER_HINT:
+        hint = engine->id_number();
+        break;
+    default:
+        hint = engine->id_default();
+        break;
+    }
+
+    Scope scope(engine);
+    ScopedFunctionObject toPrimitive(scope, object->get(engine->symbol_toPrimitive()));
+    if (engine->hasException)
+        return Encode::undefined();
+    if (toPrimitive) {
+        ScopedValue result(scope, toPrimitive->call(object, hint, 1));
+        if (engine->hasException)
+            return Encode::undefined();
+        if (!result->isPrimitive())
+            return engine->throwTypeError();
+        return result->asReturnedValue();
+    }
+
+    if (hint == engine->id_default())
+        hint = engine->id_number();
+    return ordinaryToPrimitive(engine, object, hint);
+}
+
+
+ReturnedValue RuntimeHelpers::ordinaryToPrimitive(ExecutionEngine *engine, const Object *object, String *typeHint)
+{
+    Q_ASSERT(!engine->hasException);
+
     String *meth1 = engine->id_toString();
     String *meth2 = engine->id_valueOf();
 
-    if (typeHint == NUMBER_HINT)
+    if (typeHint->identifier() == engine->id_number()->identifier()) {
         qSwap(meth1, meth2);
+    } else {
+        Q_ASSERT(typeHint->identifier() == engine->id_string()->identifier());
+    }
 
     Scope scope(engine);
     ScopedValue result(scope);
-    ScopedValue conv(scope, object->get(meth1));
 
+    ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         result = o->call(object, nullptr, 0);
         if (result->isPrimitive())
@@ -459,7 +491,6 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
 
     return engine->throwTypeError();
 }
-
 
 
 Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Value &value)

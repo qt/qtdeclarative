@@ -240,6 +240,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_boolean] = newIdentifier(QStringLiteral("boolean"));
     jsStrings[String_number] = newIdentifier(QStringLiteral("number"));
     jsStrings[String_string] = newIdentifier(QStringLiteral("string"));
+    jsStrings[String_default] = newIdentifier(QStringLiteral("default"));
     jsStrings[String_symbol] = newIdentifier(QStringLiteral("symbol"));
     jsStrings[String_object] = newIdentifier(QStringLiteral("object"));
     jsStrings[String_function] = newIdentifier(QStringLiteral("function"));

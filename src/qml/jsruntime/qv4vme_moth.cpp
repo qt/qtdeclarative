@@ -398,13 +398,13 @@ static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
             Heap::Base *r = rhs.m();
             Q_ASSERT(l);
             Q_ASSERT(r);
-            if (l->internalClass->vtable->isString == r->internalClass->vtable->isString)
+            if (l->internalClass->vtable->isStringOrSymbol == r->internalClass->vtable->isStringOrSymbol)
                 return static_cast<QV4::Managed &>(lhs).isEqualTo(&static_cast<QV4::Managed &>(rhs));
-            if (l->internalClass->vtable->isString) {
+            if (l->internalClass->vtable->isStringOrSymbol) {
                 rhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT));
                 break;
             } else {
-                Q_ASSERT(r->internalClass->vtable->isString);
+                Q_ASSERT(r->internalClass->vtable->isStringOrSymbol);
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
                 break;
             }
@@ -419,8 +419,8 @@ static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
             rhs = Primitive::fromDouble(rhs.int_32());
             // fall through
         default: // double
-            if (lhs.m()->internalClass->vtable->isString)
-                return RuntimeHelpers::toNumber(lhs) == rhs.doubleValue();
+            if (lhs.m()->internalClass->vtable->isStringOrSymbol)
+                return lhs.m()->internalClass->vtable->isString ? (RuntimeHelpers::toNumber(lhs) == rhs.doubleValue()) : false;
             else
                 lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
         }

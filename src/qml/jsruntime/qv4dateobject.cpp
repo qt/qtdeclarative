@@ -44,6 +44,7 @@
 #include "qv4runtime_p.h"
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
@@ -859,6 +860,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
 
     defineDefaultProperty(QStringLiteral("toISOString"), method_toISOString, 0);
     defineDefaultProperty(QStringLiteral("toJSON"), method_toJSON, 1);
+    defineDefaultProperty(engine->symbol_toPrimitive(), method_symbolToPrimitive, 1, Attr_ReadOnly_ButConfigurable);
 }
 
 double DatePrototype::getThisDate(ExecutionEngine *v4, const Value *thisObject)
@@ -1513,6 +1515,22 @@ ReturnedValue DatePrototype::method_toJSON(const FunctionObject *b, const Value 
         return v4->throwTypeError();
 
     return toIso->call(O, nullptr, 0);
+}
+
+ReturnedValue DatePrototype::method_symbolToPrimitive(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    ExecutionEngine *e = f->engine();
+    if (!thisObject->isObject() || !argc || !argv->isString())
+        return e->throwTypeError();
+
+    String *hint = argv->stringValue();
+    Identifier id = hint->identifier();
+    if (id == e->id_default()->identifier())
+        hint = e->id_string();
+    else if (id != e->id_string()->identifier() && id != e->id_number()->identifier())
+        return e->throwTypeError();
+
+    return RuntimeHelpers::ordinaryToPrimitive(e, static_cast<const Object *>(thisObject), hint);
 }
 
 void DatePrototype::timezoneUpdated(ExecutionEngine *e)

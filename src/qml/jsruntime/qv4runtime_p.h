@@ -100,6 +100,7 @@ enum TypeHint {
 struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static ReturnedValue objectDefaultValue(const Object *object, int typeHint);
     static ReturnedValue toPrimitive(const Value &value, TypeHint typeHint);
+    static ReturnedValue ordinaryToPrimitive(ExecutionEngine *engine, const Object *object, String *typeHint);
 
     static double stringToNumber(const QString &s);
     static Heap::String *stringFromNumber(ExecutionEngine *engine, double number);
