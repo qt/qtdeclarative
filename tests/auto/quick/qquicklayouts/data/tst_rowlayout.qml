@@ -1082,5 +1082,23 @@ Item {
 
             // Shouldn't crash upon destroying containerUser.
         }
+
+        /*
+            Tests that a layout-managed item that sets layer.enabled to true
+            still renders something. This is a simpler test case that only
+            reproduces the issue when the layout that manages it is made visible
+            after component completion, but QTBUG-63269 has a more complex example
+            where this (setting visible to true afterwards) isn't necessary.
+        */
+        function test_layerEnabled() {
+            var component = Qt.createComponent("rowlayout/LayerEnabled.qml");
+            compare(component.status, Component.Ready);
+
+            var rootRect = createTemporaryObject(component, container);
+            verify(rootRect);
+            rootRect.layout.visible = true;
+            waitForRendering(rootRect.layout)
+            compare(rootRect.item1.width, 100)
+        }
     }
 }

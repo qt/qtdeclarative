@@ -764,6 +764,9 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
         ignoreItem = effectiveMaxSize.isNull();
     }
 
+    if (!ignoreItem && childPrivate->isTransparentForPositioner())
+        ignoreItem = true;
+
     if (ignoreItem)
         d->m_ignoredItems << child;
     return ignoreItem;
