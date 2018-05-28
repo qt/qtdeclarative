@@ -384,7 +384,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
     runtimeFunctions.resize(data->functionTableSize);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
-        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction, &Moth::VME::exec);
+        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction);
     }
 
     Scope scope(engine);

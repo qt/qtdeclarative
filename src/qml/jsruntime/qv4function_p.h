@@ -72,8 +72,6 @@ struct Q_QML_EXPORT Function {
         return Moth::VME::exec(this, thisObject, argv, argc, context);
     }
 
-    typedef ReturnedValue (*Code)(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc);
-    Code code;
     const uchar *codeData;
 
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
@@ -86,7 +84,7 @@ struct Q_QML_EXPORT Function {
     int interpreterCallCount = 0;
     bool hasQmlDependencies;
 
-    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function, Code codePtr);
+    Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);
     ~Function();
 
     // used when dynamically assigning signal handlers (QQmlConnection)

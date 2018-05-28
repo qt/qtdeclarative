@@ -465,7 +465,6 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
 
     setFunction(function);
     Q_ASSERT(function);
-    Q_ASSERT(function->code);
 
     Scope s(scope);
     ScopedFunctionObject f(s, this);
