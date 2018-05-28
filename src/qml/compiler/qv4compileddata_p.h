@@ -299,7 +299,7 @@ struct Function
     const quint32_le *formalsEnd() const { return formalsTable() + nFormals; }
     // ---
 
-    const uchar *code() const { return reinterpret_cast<const uchar *>(this) + codeOffset; }
+    const char *code() const { return reinterpret_cast<const char *>(this) + codeOffset; }
 
     inline bool hasQmlDependencies() const { return nDependingIdObjects > 0 || nDependingContextProperties > 0 || nDependingScopeProperties > 0; }
 

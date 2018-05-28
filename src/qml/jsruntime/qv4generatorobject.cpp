@@ -231,7 +231,7 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
     engine->currentStackFrame = &gp->cppFrame;
 
     Q_ASSERT(gp->cppFrame.yield != nullptr);
-    const uchar *code = gp->cppFrame.yield;
+    const char *code = gp->cppFrame.yield;
     gp->cppFrame.yield = nullptr;
     gp->cppFrame.jsFrame->accumulator = arg;
 

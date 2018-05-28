@@ -60,7 +60,7 @@ BaselineJIT::~BaselineJIT()
 void BaselineJIT::generate()
 {
 //    qDebug()<<"jitting" << function->name()->toQString();
-    const char *code = reinterpret_cast<const char *>(function->codeData);
+    const char *code = function->codeData;
     uint len = function->compiledFunction->codeSize;
     labels = collectLabelsInBytecode(code, len);
 

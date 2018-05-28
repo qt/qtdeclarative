@@ -585,7 +585,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     return result;
 }
 
-QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const uchar *code)
+QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 {
     QV4::Function *function = frame.v4Function;
     QV4::Value &accumulator = frame.jsFrame->accumulator;

@@ -96,8 +96,8 @@ struct Q_QML_EXPORT CppStackFrame {
     const Value *originalArguments;
     int originalArgumentsCount;
     int instructionPointer;
-    const uchar *yield;
-    const uchar *exceptionHandler;
+    const char *yield;
+    const char *exceptionHandler;
 
     QString source() const;
     QString function() const;

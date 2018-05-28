@@ -72,7 +72,7 @@ struct Q_QML_EXPORT Function {
         return Moth::VME::exec(this, thisObject, argv, argc, context);
     }
 
-    const uchar *codeData;
+    const char *codeData;
 
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
     JittedCode jittedCode;
