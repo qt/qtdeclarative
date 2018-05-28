@@ -1408,7 +1408,7 @@ ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    if (Value::integerCompatible(left, right) && right.integerValue() != 0) {
+    if (Value::integerCompatible(left, right) && left.integerValue() > 0 && right.integerValue() > 0) {
         int intRes = left.integerValue() % right.integerValue();
         if (intRes != 0 || left.integerValue() >= 0)
             return Encode(intRes);
