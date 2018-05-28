@@ -45,6 +45,9 @@
 #endif
 
 #if defined(__ANDROID__) && defined(SYS_memfd_create)
+   // On Android it's been observed that permissions of memory mappings
+   // backed by a memfd could not be changed via mprotect for no obvious
+   // reason.
 #  undef SYS_memfd_create
 #endif
 
