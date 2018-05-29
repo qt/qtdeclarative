@@ -125,6 +125,9 @@ QString Managed::className() const
     case Type_ExecutionContext:
         s = "__ExecutionContext";
         break;
+    case Type_MapIteratorObject:
+        s = "Map Iterator";
+        break;
     case Type_SetIteratorObject:
         s = "Set Iterator";
         break;

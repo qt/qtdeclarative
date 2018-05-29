@@ -43,6 +43,7 @@
 #include <qv4objectproto_p.h>
 #include <qv4objectiterator_p.h>
 #include <qv4setiterator_p.h>
+#include <qv4mapiterator_p.h>
 #include <qv4arrayiterator_p.h>
 #include <qv4arrayobject_p.h>
 #include <qv4booleanobject_p.h>
@@ -56,6 +57,7 @@
 #include <qv4regexp_p.h>
 #include "qv4symbol_p.h"
 #include "qv4setobject_p.h"
+#include "qv4mapobject_p.h"
 #include <qv4variantobject_p.h>
 #include <qv4runtime_p.h>
 #include <private/qv4mm_p.h>
@@ -423,6 +425,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[URIError_Ctor] = memoryManager->allocate<URIErrorCtor>(global);
     jsObjects[IteratorProto] = memoryManager->allocate<IteratorPrototype>();
     jsObjects[ForInIteratorProto] = memoryManager->allocObject<ForInIteratorPrototype>(newInternalClass(ForInIteratorPrototype::staticVTable(), iteratorPrototype()));
+    jsObjects[MapIteratorProto] = memoryManager->allocObject<MapIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
     jsObjects[SetIteratorProto] = memoryManager->allocObject<SetIteratorPrototype>(newInternalClass(SetIteratorPrototype::staticVTable(), iteratorPrototype()));
     jsObjects[ArrayIteratorProto] = memoryManager->allocObject<ArrayIteratorPrototype>(newInternalClass(ArrayIteratorPrototype::staticVTable(), iteratorPrototype()));
     jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype()));
@@ -451,6 +454,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
     static_cast<ForInIteratorPrototype *>(forInIteratorPrototype())->init(this);
+    static_cast<MapIteratorPrototype *>(mapIteratorPrototype())->init(this);
     static_cast<SetIteratorPrototype *>(setIteratorPrototype())->init(this);
     static_cast<ArrayIteratorPrototype *>(arrayIteratorPrototype())->init(this);
     static_cast<StringIteratorPrototype *>(stringIteratorPrototype())->init(this);
@@ -460,6 +464,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #if QT_CONFIG(qml_sequence_object)
     sequencePrototype()->cast<SequencePrototype>()->init();
 #endif
+
+    jsObjects[Map_Ctor] = memoryManager->allocate<MapCtor>(global);
+    jsObjects[MapProto] = memoryManager->allocate<MapPrototype>();
+    static_cast<MapPrototype *>(mapPrototype())->init(this, mapCtor());
 
     jsObjects[Set_Ctor] = memoryManager->allocate<SetCtor>(global);
     jsObjects[SetProto] = memoryManager->allocate<SetPrototype>();
@@ -515,6 +523,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Set"), *setCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Map"), *mapCtor());
+
     for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
         globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
     ScopedObject o(scope);
@@ -822,6 +832,11 @@ Heap::Object *ExecutionEngine::newForInIteratorObject(Object *o)
     Scope scope(this);
     ScopedObject obj(scope, memoryManager->allocate<ForInIteratorObject>(o));
     return obj->d();
+}
+
+Heap::Object *ExecutionEngine::newMapIteratorObject(Object *o)
+{
+    return memoryManager->allocate<MapIteratorObject>(o->d(), this);
 }
 
 Heap::Object *ExecutionEngine::newSetIteratorObject(Object *o)

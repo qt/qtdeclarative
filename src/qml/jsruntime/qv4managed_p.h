@@ -200,6 +200,7 @@ public:
         Type_ExecutionContext,
         Type_InternalClass,
         Type_SetIteratorObject,
+        Type_MapIteratorObject,
         Type_ArrayIteratorObject,
         Type_StringIteratorObject,
         Type_ForInIterator,
