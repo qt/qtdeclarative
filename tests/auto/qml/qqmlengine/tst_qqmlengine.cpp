@@ -78,6 +78,7 @@ private slots:
     void testGroupedPropertyRevisions();
     void componentFromEval();
     void qrcUrls();
+    void cppSignalAndEval();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -922,6 +923,37 @@ void tst_qqmlengine::qrcUrls()
         QVERIFY(twoJS != nullptr);
         QCOMPARE(oneJS, twoJS);
     }
+}
+
+class ObjectCaller : public QObject
+{
+    Q_OBJECT
+signals:
+    void doubleReply(const double a);
+};
+
+void tst_qqmlengine::cppSignalAndEval()
+{
+    ObjectCaller objectCaller;
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QLatin1Literal("CallerCpp"), &objectCaller);
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick 2.9\n"
+              "Item {\n"
+              "    property var r: 0\n"
+              "    Connections {\n"
+              "        target: CallerCpp;\n"
+              "        onDoubleReply: {\n"
+              "            eval('var z = 1');\n"
+              "            r = a;\n"
+              "        }\n"
+              "    }\n"
+              "}",
+              QUrl(QStringLiteral("qrc:/main.qml")));
+    QScopedPointer<QObject> object(c.create());
+    QVERIFY(!object.isNull());
+    emit objectCaller.doubleReply(1.1234);
+    QCOMPARE(object->property("r"), 1.1234);
 }
 
 QTEST_MAIN(tst_qqmlengine)
