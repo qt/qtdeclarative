@@ -585,16 +585,6 @@ void BaselineJIT::generate_CreateCallContext()
 
 void BaselineJIT::generate_PushCatchContext(int index, int name) { as->pushCatchContext(index, name); }
 
-static void pushWithContextHelper(ExecutionEngine *engine, QV4::Value *stack)
-{
-    QV4::Value &accumulator = stack[CallData::Accumulator];
-    accumulator = accumulator.toObject(engine);
-    if (engine->hasException)
-        return;
-    ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-    stack[CallData::Context] = Runtime::method_createWithContext(c, accumulator);
-}
-
 void BaselineJIT::generate_PushWithContext()
 {
     STORE_IP();
@@ -602,8 +592,9 @@ void BaselineJIT::generate_PushWithContext()
     as->prepareCallWithArgCount(2);
     as->passRegAsArg(0, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(pushWithContextHelper, Assembler::IgnoreResult);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createWithContext, Assembler::IgnoreResult);  // keeps result in return value register
     as->checkException();
+    as->storeHeapObject(CallData::Context);
 }
 
 static void pushBlockContextHelper(QV4::Value *stack, int index)

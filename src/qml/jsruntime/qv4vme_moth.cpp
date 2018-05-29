@@ -920,10 +920,9 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_BEGIN_INSTR(PushWithContext)
         STORE_IP();
         STORE_ACC();
-        accumulator = accumulator.toObject(engine);
+        auto ctx = Runtime::method_createWithContext(engine, stack);
         CHECK_EXCEPTION;
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-        STACK_VALUE(CallData::Context) = Runtime::method_createWithContext(c, accumulator);
+        STACK_VALUE(CallData::Context) = ctx;
     MOTH_END_INSTR(PushWithContext)
 
     MOTH_BEGIN_INSTR(PushBlockContext)

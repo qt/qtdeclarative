@@ -1318,11 +1318,16 @@ QV4::ReturnedValue Runtime::method_typeofName(ExecutionEngine *engine, int nameI
     return method_typeofValue(engine, prop);
 }
 
-ReturnedValue Runtime::method_createWithContext(ExecutionContext *parent, const Value &o)
+ReturnedValue Runtime::method_createWithContext(ExecutionEngine *engine, Value *jsStackFrame)
 {
-    Q_ASSERT(o.isObject());
-    const Object &obj = static_cast<const Object &>(o);
-    return parent->newWithContext(obj.d())->asReturnedValue();
+    QV4::Value &accumulator = jsStackFrame[CallData::Accumulator];
+    accumulator = accumulator.toObject(engine);
+    if (engine->hasException)
+        return Encode::undefined();
+    Q_ASSERT(accumulator.isObject());
+    const Object &obj = static_cast<const Object &>(accumulator);
+    ExecutionContext *context = static_cast<ExecutionContext *>(jsStackFrame + CallData::Context);
+    return context->newWithContext(obj.d())->asReturnedValue();
 }
 
 ReturnedValue Runtime::method_createCatchContext(ExecutionContext *parent, int blockIndex, int exceptionVarNameIndex)
