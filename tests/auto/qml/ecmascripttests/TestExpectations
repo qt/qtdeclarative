@@ -1647,7 +1647,6 @@ built-ins/TypedArray/name.js fails
 built-ins/TypedArray/of/length.js fails
 built-ins/TypedArray/of/name.js fails
 built-ins/TypedArray/of/prop-desc.js fails
-built-ins/TypedArray/prototype/Symbol.iterator.js fails
 built-ins/TypedArray/prototype/Symbol.toStringTag/detached-buffer.js fails
 built-ins/TypedArray/prototype/buffer/detached-buffer.js fails
 built-ins/TypedArray/prototype/byteLength/detached-buffer.js fails

@@ -655,9 +655,14 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
 
     defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
-    defineDefaultProperty(QStringLiteral("values"), method_values, 0);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
-    defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
+
+    Scope scope(engine);
+    ScopedString valuesString(scope, engine->newIdentifier(QStringLiteral("values")));
+    ScopedObject values(scope, FunctionObject::createBuiltinFunction(engine, valuesString, method_values, 0));
+    defineDefaultProperty(QStringLiteral("values"), values);
+    defineDefaultProperty(engine->symbol_iterator(), values);
+
     defineAccessorProperty(engine->symbol_toStringTag(), method_get_toStringTag, nullptr);
 }
