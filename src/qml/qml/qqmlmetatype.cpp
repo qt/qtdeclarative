@@ -114,13 +114,27 @@ struct QQmlMetaTypeData
     QSet<QString> protectedNamespaces;
 
     QString typeRegistrationNamespace;
-    QStringList typeRegistrationFailures;
 
     QHash<int, int> qmlLists;
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
     QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
+
+    void startRecordingTypeRegFailures(QStringList *storage)
+    { typeRegistrationFailures = storage; }
+    void stopRecordingTypeRegFailures()
+    { startRecordingTypeRegFailures(nullptr); }
+    void recordTypeRegFailure(const QString &message)
+    {
+        if (typeRegistrationFailures)
+            typeRegistrationFailures->append(message);
+        else
+            qWarning("%s", message.toUtf8().constData());
+    }
+
+private:
+    QStringList *typeRegistrationFailures = nullptr;
 };
 
 class QQmlTypeModulePrivate
@@ -150,6 +164,16 @@ Q_GLOBAL_STATIC_WITH_ARGS(QMutex, metaTypeDataLock, (QMutex::Recursive))
 static uint qHash(const QQmlMetaTypeData::VersionedUri &v)
 {
     return v.uri.hash() ^ qHash(v.majorVersion);
+}
+
+QQmlMetaTypeRegistrationFailureRecorder::QQmlMetaTypeRegistrationFailureRecorder()
+{
+    metaTypeData()->startRecordingTypeRegFailures(&_failures);
+}
+
+QQmlMetaTypeRegistrationFailureRecorder::~QQmlMetaTypeRegistrationFailureRecorder()
+{
+    metaTypeData()->stopRecordingTypeRegFailures();
 }
 
 QQmlMetaTypeData::QQmlMetaTypeData()
@@ -1571,7 +1595,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     if (!typeName.isEmpty()) {
         if (typeName.at(0).isLower()) {
             QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; type names must begin with an uppercase letter"));
-            data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName));
+            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
             return false;
         }
 
@@ -1579,7 +1603,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
         for (int ii = 0; ii < typeNameLen; ++ii) {
             if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == '_')) {
                 QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\""));
-                data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName));
+                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
                 return false;
             }
         }
@@ -1593,7 +1617,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
             if (data->protectedNamespaces.contains(nameSpace)) {
                 QString failure(QCoreApplication::translate("qmlRegisterType",
                                                             "Cannot install %1 '%2' into protected namespace '%3'"));
-                data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace));
+                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace));
                 return false;
             }
         } else if (majorVersion >= 0) {
@@ -1604,7 +1628,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
                 if (QQmlTypeModulePrivate::get(qqtm)->locked){
                     QString failure(QCoreApplication::translate("qmlRegisterType",
                                                                 "Cannot install %1 '%2' into protected module '%3' version '%4'"));
-                    data->typeRegistrationFailures.append(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
+                    data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
                     return false;
                 }
             }
@@ -1878,14 +1902,6 @@ void QQmlMetaType::setTypeRegistrationNamespace(const QString &uri)
     QQmlMetaTypeData *data = metaTypeData();
 
     data->typeRegistrationNamespace = uri;
-    data->typeRegistrationFailures.clear();
-}
-
-QStringList QQmlMetaType::typeRegistrationFailures()
-{
-    QQmlMetaTypeData *data = metaTypeData();
-
-    return data->typeRegistrationFailures;
 }
 
 QMutex *QQmlMetaType::typeRegistrationLock()

@@ -158,6 +158,8 @@ QQmlType fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRe
     // can guarentee it will live long enough to reach qmlregister.
     QByteArray buf(unqualifiedtype.toString().toUtf8());
 
+    QQmlMetaTypeRegistrationFailureRecorder failureRecorder;
+
     // Register the type. Note that the URI parameters here are empty; for
     // file type imports, we do not place them in a URI as we don't
     // necessarily have a good and unique one (picture a library import,
@@ -200,9 +202,9 @@ QQmlType fetchOrCreateTypeForUrl(const QString &urlString, const QHashedStringRe
     // data.
     if (!ret.isValid()) {
         if (!errors) // Cannot list errors properly, just quit
-            qFatal("%s", QQmlMetaType::typeRegistrationFailures().join('\n').toLatin1().constData());
+            qFatal("%s", failureRecorder.failures().join('\n').toLatin1().constData());
         QQmlError error;
-        error.setDescription(QQmlMetaType::typeRegistrationFailures().join('\n'));
+        error.setDescription(failureRecorder.failures().join('\n'));
         errors->prepend(error);
     }
     return ret;
@@ -2010,7 +2012,7 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
     const QByteArray bytes = uri.toUtf8();
     const char *moduleId = bytes.constData();
 
-    QStringList registrationFailures;
+    QQmlMetaTypeRegistrationFailureRecorder failureRecorder;
     {
         // Create a scope for QWriteLocker to keep it as narrow as possible, and
         // to ensure that we release it before the call to initalizeEngine below
@@ -2052,14 +2054,12 @@ bool QQmlImportDatabase::registerPluginTypes(QObject *instance, const QString &b
         }
 
         iface->registerTypes(moduleId);
-
-        registrationFailures = QQmlMetaType::typeRegistrationFailures();
         QQmlMetaType::setTypeRegistrationNamespace(QString());
     } // QWriteLocker lock(QQmlMetaType::typeRegistrationLock())
 
-    if (!registrationFailures.isEmpty()) {
+    if (!failureRecorder.failures().isEmpty()) {
         if (errors) {
-            for (const QString &failure : qAsConst(registrationFailures)) {
+            for (const QString &failure : failureRecorder.failures()) {
                 QQmlError error;
                 error.setDescription(failure);
                 errors->prepend(error);

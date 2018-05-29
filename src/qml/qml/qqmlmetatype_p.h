@@ -150,7 +150,6 @@ public:
     static void protectNamespace(const QString &);
 
     static void setTypeRegistrationNamespace(const QString &);
-    static QStringList typeRegistrationFailures();
 
     static QMutex *typeRegistrationLock();
 
@@ -354,6 +353,18 @@ public:
 private:
     QQmlTypeModule *m_module;
     int m_minor;
+};
+
+class Q_AUTOTEST_EXPORT QQmlMetaTypeRegistrationFailureRecorder
+{
+    QStringList _failures;
+
+public:
+    QQmlMetaTypeRegistrationFailureRecorder();
+    ~QQmlMetaTypeRegistrationFailureRecorder();
+
+    QStringList failures() const
+    { return _failures; }
 };
 
 QT_END_NAMESPACE
