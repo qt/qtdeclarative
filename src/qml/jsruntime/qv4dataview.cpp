@@ -40,6 +40,7 @@
 #include "qv4dataview_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4string_p.h"
+#include "qv4symbol_p.h"
 
 #include <QtCore/private/qnumeric_p.h>
 #include "qendian.h"
@@ -109,6 +110,9 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUint32"), method_set<unsigned int>, 2);
     defineDefaultProperty(QStringLiteral("setFloat32"), method_setFloat<float>, 2);
     defineDefaultProperty(QStringLiteral("setFloat64"), method_setFloat<double>, 2);
+
+    ScopedString name(scope, engine->newString(QStringLiteral("DataView")));
+    defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), name);
 
     // For backword compatibility
     defineDefaultProperty(QStringLiteral("getUInt8"), method_getChar<unsigned char>, 1);

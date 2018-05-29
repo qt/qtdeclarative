@@ -176,6 +176,9 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
 };
 
 struct TypedArrayPrototype : Object

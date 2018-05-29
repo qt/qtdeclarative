@@ -41,6 +41,7 @@
 #include "qv4dataview_p.h"
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 using namespace QV4;
 
@@ -157,6 +158,8 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
     defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
     defineDefaultProperty(QStringLiteral("toString"), method_toString, 0);
+    ScopedString name(scope, engine->newString(QStringLiteral("ArrayBuffer")));
+    defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), name);
 }
 
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)

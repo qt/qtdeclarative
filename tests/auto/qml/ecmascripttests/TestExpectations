@@ -145,7 +145,6 @@ built-ins/ArrayBuffer/isView/arg-is-typedarray-subclass-instance.js fails
 built-ins/ArrayBuffer/newtarget-prototype-is-not-object.js fails
 built-ins/ArrayBuffer/proto-from-ctor-realm.js fails
 built-ins/ArrayBuffer/prototype-from-newtarget.js fails
-built-ins/ArrayBuffer/prototype/Symbol.toStringTag.js fails
 built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js fails
 built-ins/ArrayBuffer/prototype/byteLength/name.js fails
 built-ins/ArrayBuffer/prototype/byteLength/prop-desc.js fails
@@ -271,7 +270,6 @@ built-ins/DataView/detached-buffer.js fails
 built-ins/DataView/length.js fails
 built-ins/DataView/newtarget-undefined-throws.js fails
 built-ins/DataView/proto-from-ctor-realm.js fails
-built-ins/DataView/prototype/Symbol.toStringTag.js fails
 built-ins/DataView/prototype/buffer/detached-buffer.js fails
 built-ins/DataView/prototype/buffer/name.js fails
 built-ins/DataView/prototype/buffer/prop-desc.js fails
@@ -552,7 +550,6 @@ built-ins/Map/prototype/size/name.js fails
 built-ins/Map/prototype/size/returns-count-of-present-values-by-iterable.js fails
 built-ins/Map/prototype/size/size.js fails
 built-ins/Map/prototype/values/does-not-have-mapdata-internal-slot-weakmap.js fails
-built-ins/Math/Symbol.toStringTag.js fails
 built-ins/Math/acosh/arg-is-infinity.js fails
 built-ins/Math/acosh/arg-is-one.js fails
 built-ins/Math/acosh/length.js fails
@@ -731,9 +728,6 @@ built-ins/Object/prototype/toString/no-prototype-property.js fails
 built-ins/Object/prototype/toString/proxy-array.js fails
 built-ins/Object/prototype/toString/proxy-function.js fails
 built-ins/Object/prototype/toString/proxy-revoked.js fails
-built-ins/Object/prototype/toString/symbol-tag-override-instances.js fails
-built-ins/Object/prototype/toString/symbol-tag-override-primitives.js fails
-built-ins/Object/prototype/toString/symbol-tag-str.js fails
 built-ins/Object/prototype/valueOf/S15.2.4.4_A14.js fails
 built-ins/Object/setPrototypeOf/set-error.js fails
 built-ins/Object/values/exception-during-enumeration.js fails
@@ -1663,13 +1657,8 @@ built-ins/TypedArray/of/name.js fails
 built-ins/TypedArray/of/prop-desc.js fails
 built-ins/TypedArray/prototype/Symbol.iterator.js fails
 built-ins/TypedArray/prototype/Symbol.toStringTag/detached-buffer.js fails
-built-ins/TypedArray/prototype/Symbol.toStringTag/invoked-as-func.js fails
-built-ins/TypedArray/prototype/Symbol.toStringTag/length.js fails
 built-ins/TypedArray/prototype/Symbol.toStringTag/name.js fails
 built-ins/TypedArray/prototype/Symbol.toStringTag/prop-desc.js fails
-built-ins/TypedArray/prototype/Symbol.toStringTag/return-typedarrayname.js fails
-built-ins/TypedArray/prototype/Symbol.toStringTag/this-has-no-typedarrayname-internal.js fails
-built-ins/TypedArray/prototype/Symbol.toStringTag/this-is-not-object.js fails
 built-ins/TypedArray/prototype/buffer/detached-buffer.js fails
 built-ins/TypedArray/prototype/buffer/name.js fails
 built-ins/TypedArray/prototype/buffer/prop-desc.js fails

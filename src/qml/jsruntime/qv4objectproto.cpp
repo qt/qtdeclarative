@@ -47,6 +47,7 @@
 #include "qv4objectiterator_p.h"
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
@@ -532,20 +533,33 @@ ReturnedValue ObjectPrototype::method_setPrototypeOf(const FunctionObject *f, co
 ReturnedValue ObjectPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
+    QString string;
     if (thisObject->isUndefined()) {
-        return Encode(v4->newString(QStringLiteral("[object Undefined]")));
+        string = QStringLiteral("[object Undefined]");
     } else if (thisObject->isNull()) {
-        return Encode(v4->newString(QStringLiteral("[object Null]")));
-    } else if (thisObject->isBoolean()) {
-        return Encode(v4->newString(QStringLiteral("[object Boolean]")));
-    } else if (thisObject->isNumber()) {
-        return Encode(v4->newString(QStringLiteral("[object Number]")));
+        string = QStringLiteral("[object Null]");
     } else {
-        Q_ASSERT(thisObject->isManaged());
-        const Managed *m = static_cast<const Managed *>(thisObject);
-        QString className = m->className();
-        return Encode(v4->newString(QStringLiteral("[object %1]").arg(className)));
+        const Object *o = thisObject->as<Object>();
+        if (!o) {
+            // primitive, get the proper prototype
+            if (thisObject->isBoolean())
+                o = v4->booleanPrototype();
+            else if (thisObject->isNumber())
+                o = v4->numberPrototype();
+            else if (thisObject->isString())
+                o = v4->stringPrototype();
+            else if (thisObject->isSymbol())
+                o = v4->symbolPrototype();
+            Q_ASSERT(o);
+        }
+        QString name = o->className();
+        Scope scope(v4);
+        ScopedString toStringTag(scope, o->get(v4->symbol_toStringTag()));
+        if (toStringTag)
+            name = toStringTag->toQString();
+        string = QStringLiteral("[object %1]").arg(name);
     }
+    return Encode(v4->newString(string));
 }
 
 ReturnedValue ObjectPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

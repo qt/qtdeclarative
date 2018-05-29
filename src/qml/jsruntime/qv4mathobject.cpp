@@ -39,6 +39,7 @@
 
 #include "qv4mathobject_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4symbol_p.h"
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmath.h>
@@ -90,6 +91,9 @@ void Heap::MathObject::init()
     m->defineDefaultProperty(QStringLiteral("sin"), QV4::MathObject::method_sin, 1);
     m->defineDefaultProperty(QStringLiteral("sqrt"), QV4::MathObject::method_sqrt, 1);
     m->defineDefaultProperty(QStringLiteral("tan"), QV4::MathObject::method_tan, 1);
+
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("Math")));
+    m->defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), name);
 }
 
 static Q_ALWAYS_INLINE double copySign(double x, double y)

@@ -623,6 +623,15 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
     return constructor->callAsConstructor(arguments, 3);
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *, int)
+{
+    const TypedArray *a = thisObject->as<TypedArray>();
+    if (!a)
+        return Encode::undefined();
+
+    return a->engine()->newString(QString::fromLatin1(a->d()->type->name))->asReturnedValue();
+}
+
 ReturnedValue IntrinsicTypedArrayCtor::callAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
@@ -650,4 +659,5 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
     defineDefaultProperty(engine->symbol_iterator(), method_values, 0);
+    defineAccessorProperty(engine->symbol_toStringTag(), method_get_toStringTag, nullptr);
 }
