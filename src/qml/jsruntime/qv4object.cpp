@@ -189,9 +189,22 @@ void Object::defineAccessorProperty(StringOrSymbol *name, jsCallFunction getter,
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);
     ScopedProperty p(scope);
-    p->setGetter(ScopedFunctionObject(scope, (getter ? FunctionObject::createBuiltinFunction(v4, name, getter, 0) : nullptr)));
-    p->setSetter(ScopedFunctionObject(scope, (setter ? FunctionObject::createBuiltinFunction(v4, name, setter, 1) : nullptr)));
-    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotConfigurable|QV4::Attr_NotEnumerable);
+    QString n = name->toQString();
+    if (n.at(0) == QLatin1Char('@'))
+        n = QChar::fromLatin1('[') + n.midRef(1) + QChar::fromLatin1(']');
+    if (getter) {
+        ScopedString getName(scope, v4->newString(QString::fromLatin1("get ") + n));
+        p->setGetter(ScopedFunctionObject(scope, FunctionObject::createBuiltinFunction(v4, getName, getter, 0)));
+    } else {
+        p->setGetter(nullptr);
+    }
+    if (setter) {
+        ScopedString setName(scope, v4->newString(QString::fromLatin1("set ") + n));
+        p->setSetter(ScopedFunctionObject(scope, FunctionObject::createBuiltinFunction(v4, setName, setter, 0)));
+    } else {
+        p->setSetter(nullptr);
+    }
+    insertMember(name, p, QV4::Attr_Accessor|QV4::Attr_NotEnumerable);
 }
 
 
