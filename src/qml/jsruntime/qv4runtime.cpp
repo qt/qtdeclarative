@@ -331,7 +331,9 @@ bool Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, c
             return o->deleteIndexedProperty(n);
     }
 
-    ScopedStringOrSymbol name(scope, index.toStringOrSymbol(engine));
+    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
+    if (engine->hasException)
+        return false;
     return method_deleteMemberString(engine, base, name);
 }
 
@@ -383,7 +385,7 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
     if (!ro)
         return engine->throwTypeError();
     Scope scope(engine);
-    ScopedStringOrSymbol s(scope, left.toStringOrSymbol(engine));
+    ScopedStringOrSymbol s(scope, left.toPropertyKey(engine));
     if (scope.hasException())
         return Encode::undefined();
     bool r = ro->hasProperty(s);
@@ -647,7 +649,7 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
         Q_ASSERT(!!o); // can't fail as null/undefined is covered above
     }
 
-    ScopedStringOrSymbol  name(scope, index.toStringOrSymbol(engine));
+    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
     if (scope.hasException())
         return Encode::undefined();
     return o->get(name);
@@ -701,7 +703,9 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
         return o->putIndexed(idx, value);
     }
 
-    ScopedStringOrSymbol name(scope, index.toStringOrSymbol(engine));
+    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
+    if (engine->hasException)
+        return false;
     return o->put(name, value);
 }
 
@@ -1213,7 +1217,7 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, 
     ScopedValue thisObject(scope, base->toObject(engine));
     base = thisObject;
 
-    ScopedStringOrSymbol str(scope, index.toStringOrSymbol(engine));
+    ScopedStringOrSymbol str(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return Encode::undefined();
 

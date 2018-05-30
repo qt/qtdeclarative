@@ -163,7 +163,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
     ScopedValue v(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
-    ScopedStringOrSymbol name(scope, v->toStringOrSymbol(scope.engine));
+    ScopedStringOrSymbol name(scope, v->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -284,7 +284,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedStringOrSymbol name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
+    ScopedStringOrSymbol name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -584,7 +584,7 @@ ReturnedValue ObjectPrototype::method_valueOf(const FunctionObject *b, const Val
 ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedStringOrSymbol P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
+    ScopedStringOrSymbol P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
     ScopedObject O(scope, thisObject->toObject(scope.engine));
@@ -618,7 +618,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
 ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedStringOrSymbol p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toStringOrSymbol(scope.engine));
+    ScopedStringOrSymbol p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 

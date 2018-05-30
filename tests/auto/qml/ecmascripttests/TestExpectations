@@ -707,12 +707,6 @@ built-ins/Object/keys/proxy-keys.js fails
 built-ins/Object/preventExtensions/15.2.3.10-1-1.js fails
 built-ins/Object/preventExtensions/15.2.3.10-1-2.js fails
 built-ins/Object/proto-from-ctor.js fails
-built-ins/Object/prototype/hasOwnProperty/symbol_property_toPrimitive.js fails
-built-ins/Object/prototype/hasOwnProperty/symbol_property_toString.js fails
-built-ins/Object/prototype/hasOwnProperty/symbol_property_valueOf.js fails
-built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toPrimitive.js fails
-built-ins/Object/prototype/propertyIsEnumerable/symbol_property_toString.js fails
-built-ins/Object/prototype/propertyIsEnumerable/symbol_property_valueOf.js fails
 built-ins/Object/prototype/setPrototypeOf-with-different-values.js fails
 built-ins/Object/prototype/setPrototypeOf-with-same-value.js fails
 built-ins/Object/prototype/toLocaleString/primitive_this_value_getter.js strictFails

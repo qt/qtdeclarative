@@ -228,6 +228,17 @@ QString Value::toQString() const
     }
     } // switch
 }
+
+Heap::StringOrSymbol *Value::toPropertyKey(ExecutionEngine *e) const
+{
+    Scope scope(e);
+    ScopedValue v(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
+    if (!v->isStringOrSymbol())
+        v = v->toString(e);
+    if (e->hasException)
+        return nullptr;
+    return static_cast<Heap::StringOrSymbol *>(v->m());
+}
 #endif // V4_BOOTSTRAP
 
 bool Value::sameValue(Value other) const {

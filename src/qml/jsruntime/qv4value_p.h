@@ -415,11 +415,8 @@ public:
             return reinterpret_cast<Heap::String *>(m());
         return toString(e, *this);
     }
-    Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e) const {
-        if (isStringOrSymbol())
-            return reinterpret_cast<Heap::StringOrSymbol *>(m());
-        return reinterpret_cast<Heap::StringOrSymbol *>(toString(e, *this));
-    }
+    Heap::StringOrSymbol *toPropertyKey(ExecutionEngine *e) const;
+
     static Heap::String *toString(ExecutionEngine *e, Value val);
     Heap::Object *toObject(ExecutionEngine *e) const {
         if (isObject())
