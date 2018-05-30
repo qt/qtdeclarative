@@ -2123,22 +2123,29 @@ QQmlDelegateModelAttached::QQmlDelegateModelAttached(
     , m_previousGroups(cacheItem->groups)
 {
     QQml_setParent_noEvent(this, parent);
-    if (QQDMIncubationTask *incubationTask = m_cacheItem->incubationTask) {
-        for (int i = 1; i < qMin<int>(m_cacheItem->metaType->groupCount, Compositor::MaximumGroupCount); ++i)
-            m_currentIndex[i] = m_previousIndex[i] = incubationTask->index[i];
-    } else {
-        QQmlDelegateModelPrivate * const model = QQmlDelegateModelPrivate::get(m_cacheItem->metaType->model);
-        Compositor::iterator it = model->m_compositor.find(
-                Compositor::Cache, model->m_cache.indexOf(m_cacheItem));
-        for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
-            m_currentIndex[i] = m_previousIndex[i] = it.index[i];
-    }
+    resetCurrentIndex();
+    // Let m_previousIndex be equal to m_currentIndex
+    std::copy(std::begin(m_currentIndex), std::end(m_currentIndex), std::begin(m_previousIndex));
 
     if (!cacheItem->metaType->metaObject)
         cacheItem->metaType->initializeMetaObject();
 
     QObjectPrivate::get(this)->metaObject = cacheItem->metaType->metaObject;
     cacheItem->metaType->metaObject->addref();
+}
+
+void QQmlDelegateModelAttached::resetCurrentIndex()
+{
+    if (QQDMIncubationTask *incubationTask = m_cacheItem->incubationTask) {
+        for (int i = 1; i < qMin<int>(m_cacheItem->metaType->groupCount, Compositor::MaximumGroupCount); ++i)
+            m_currentIndex[i] = incubationTask->index[i];
+    } else {
+        QQmlDelegateModelPrivate * const model = QQmlDelegateModelPrivate::get(m_cacheItem->metaType->model);
+        Compositor::iterator it = model->m_compositor.find(
+                Compositor::Cache, model->m_cache.indexOf(m_cacheItem));
+        for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
+            m_currentIndex[i] = it.index[i];
+    }
 }
 
 /*!

@@ -219,6 +219,7 @@ public:
     QQmlDelegateModelAttached(QQmlDelegateModelItem *cacheItem, QObject *parent);
     ~QQmlDelegateModelAttached() {}
 
+    void resetCurrentIndex();
     void setCacheItem(QQmlDelegateModelItem *item);
 
     QQmlDelegateModel *model() const;
