@@ -891,6 +891,13 @@ void QQmlDelegateModelPrivate::releaseIncubator(QQDMIncubationTask *incubationTa
     }
 }
 
+void QQmlDelegateModelPrivate::addCacheItem(QQmlDelegateModelItem *item, Compositor::iterator it)
+{
+    m_cache.insert(it.cacheIndex, item);
+    m_compositor.setFlags(it, 1, Compositor::CacheFlag);
+    Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
+}
+
 void QQmlDelegateModelPrivate::removeCacheItem(QQmlDelegateModelItem *cacheItem)
 {
     int cidx = m_cache.lastIndexOf(cacheItem);
@@ -980,10 +987,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             return nullptr;
 
         cacheItem->groups = it->flags;
-
-        m_cache.insert(it.cacheIndex, cacheItem);
-        m_compositor.setFlags(it, 1, Compositor::CacheFlag);
-        Q_ASSERT(m_cache.count() == m_compositor.count(Compositor::Cache));
+        addCacheItem(cacheItem, it);
     }
 
     // Bump the reference counts temporarily so neither the content data or the delegate object

@@ -269,6 +269,7 @@ public:
         Q_EMIT q_func()->initItem(incubationTask->index[m_compositorGroup], item); }
     void emitDestroyingPackage(QQuickPackage *package);
     void emitDestroyingItem(QObject *item) { Q_EMIT q_func()->destroyingItem(item); }
+    void addCacheItem(QQmlDelegateModelItem *item, Compositor::iterator it);
     void removeCacheItem(QQmlDelegateModelItem *cacheItem);
 
     void updateFilterGroup();
