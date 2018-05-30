@@ -261,11 +261,13 @@ void tst_QQmlProfilerService::checkProcessTerminated()
     QVERIFY(m_client->client);
     QTRY_COMPARE(m_client->client->state(), QQmlDebugClient::NotConnected);
     QVERIFY(m_process);
+    QVERIFY(m_process->exitStatus() != QProcess::CrashExit);
     QTRY_COMPARE(m_process->exitStatus(), QProcess::NormalExit);
 }
 
 void tst_QQmlProfilerService::checkTraceReceived()
 {
+    QVERIFY(m_process->exitStatus() != QProcess::CrashExit);
     QTRY_VERIFY2(m_isComplete, "No trace received in time.");
 
     QVector<qint64> numbers;
