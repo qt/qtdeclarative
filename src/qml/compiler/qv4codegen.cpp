@@ -2075,6 +2075,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     _context->functionIndex = _module->functions.count() - 1;
 
     _context->hasDirectEval |= (_context->compilationMode == EvalCode || _context->compilationMode == GlobalCode || _module->debugMode); // Conditional breakpoints are like eval in the function
+    if (_module->debugMode) // allow the debugger to see overwritten arguments
+        _context->argumentsCanEscape = true;
 
     // When a user writes the following QML signal binding:
     //    onSignal: function() { doSomethingUsefull }
