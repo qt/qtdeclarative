@@ -1150,7 +1150,8 @@ void MemoryManager::runGC()
 
     if (aggressiveGC) {
         // ensure we don't 'loose' any memory
-        Q_ASSERT(blockAllocator.allocatedMem() == getUsedMem() + dumpBins(&blockAllocator, false));
+        Q_ASSERT(blockAllocator.allocatedMem()
+                 == blockAllocator.usedMem() + dumpBins(&blockAllocator, false));
     }
 
     usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
@@ -1163,12 +1164,12 @@ void MemoryManager::runGC()
 
 size_t MemoryManager::getUsedMem() const
 {
-    return blockAllocator.usedMem();
+    return blockAllocator.usedMem() + icAllocator.usedMem();
 }
 
 size_t MemoryManager::getAllocatedMem() const
 {
-    return blockAllocator.allocatedMem() + hugeItemAllocator.usedMem();
+    return blockAllocator.allocatedMem() + icAllocator.allocatedMem() + hugeItemAllocator.usedMem();
 }
 
 size_t MemoryManager::getLargeItemsMem() const
