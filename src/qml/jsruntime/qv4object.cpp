@@ -549,8 +549,9 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 
     while (it->memberIndex < o->internalClass()->size) {
         Identifier n = o->internalClass()->nameMap.at(it->memberIndex);
-        if (!n.isValid()) {
+        if (!n.isValid() || !n.asHeapObject()->internalClass->vtable->isString) {
             // accessor properties have a dummy entry with n == 0
+            // symbol entries are supposed to be skipped
             ++it->memberIndex;
             continue;
         }

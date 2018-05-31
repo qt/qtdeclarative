@@ -2393,7 +2393,6 @@ language/arguments-object/mapped/nonconfigurable-nonenumerable-nonwritable-descr
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-arguments.js sloppyFails
 language/arguments-object/mapped/nonconfigurable-nonwritable-descriptors-set-by-param.js sloppyFails
 language/arguments-object/mapped/nonwritable-nonconfigurable-descriptors-set-by-arguments.js sloppyFails
-language/computed-property-names/basics/symbol.js fails
 language/computed-property-names/class/accessor/getter-duplicates.js fails
 language/computed-property-names/class/accessor/getter.js fails
 language/computed-property-names/class/accessor/setter-duplicates.js fails
@@ -2423,7 +2422,6 @@ language/computed-property-names/class/static/setter-prototype.js fails
 language/computed-property-names/object/accessor/getter-super.js fails
 language/computed-property-names/object/accessor/setter-super.js fails
 language/computed-property-names/object/method/super.js fails
-language/computed-property-names/object/method/symbol.js fails
 language/computed-property-names/to-name-side-effects/class.js fails
 language/computed-property-names/to-name-side-effects/numbers-class.js fails
 language/eval-code/direct/lex-env-distinct-cls.js fails
