@@ -400,6 +400,12 @@ void BaselineJIT::generate_Yield()
     Q_UNREACHABLE();
 }
 
+void BaselineJIT::generate_YieldStar()
+{
+    // #####
+    Q_UNREACHABLE();
+}
+
 void BaselineJIT::generate_Resume(int)
 {
     // #####
@@ -691,6 +697,18 @@ void BaselineJIT::generate_IteratorNext(int value, int done)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, CallResultDestination::InAccumulator);
     as->storeReg(done);
+    as->checkException();
+}
+
+void BaselineJIT::generate_IteratorNextForYieldStar(int iterator, int object)
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(4);
+    as->passJSSlotAsArg(object, 3);
+    as->passJSSlotAsArg(iterator, 2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNextForYieldStar, CallResultDestination::InAccumulator);
     as->checkException();
 }
 

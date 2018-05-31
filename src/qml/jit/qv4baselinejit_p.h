@@ -117,6 +117,7 @@ public:
                                             int captureRequired) override;
     void generate_LoadIdObject(int index, int base) override;
     void generate_Yield() override;
+    void generate_YieldStar() override;
     void generate_Resume(int) override;
 
     void generate_CallValue(int name, int argc, int argv) override;
@@ -149,6 +150,7 @@ public:
     void generate_PopContext() override;
     void generate_GetIterator(int iterator) override;
     void generate_IteratorNext(int value, int done) override;
+    void generate_IteratorNextForYieldStar(int iterator, int object) override;
     void generate_IteratorClose(int done) override;
     void generate_DestructureRestElement() override;
     void generate_DeleteProperty(int base, int index) override;

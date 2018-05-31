@@ -2826,25 +2826,64 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
 bool Codegen::visit(YieldExpression *ast)
 {
-    if (ast->isYieldStar) {
-        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield* is not currently supported"));
-        return false;
-    }
     if (inFormalParameterList) {
         throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield is not allowed inside parameter lists"));
         return false;
     }
 
-
-    Reference result = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
+    RegisterScope scope(this);
+    Reference expr = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
     if (hasError)
         return false;
-    result.loadInAccumulator();
+
+    Reference acc = Reference::fromAccumulator(this);
+
+    if (ast->isYieldStar) {
+        Reference iterator = Reference::fromStackSlot(this);
+        Reference lhsValue = Reference::fromConst(this, Encode::undefined()).storeOnStack();
+
+        expr.loadInAccumulator();
+        Instruction::GetIterator getIterator;
+        getIterator.iterator = /*ForEachType::Of*/ 1;
+        bytecodeGenerator->addInstruction(getIterator);
+        iterator.storeConsumeAccumulator();
+        Instruction::LoadUndefined load;
+        bytecodeGenerator->addInstruction(load);
+
+        BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+        bytecodeGenerator->jump().link(in);
+
+        BytecodeGenerator::Label loop = bytecodeGenerator->label();
+
+        lhsValue.loadInAccumulator();
+        Instruction::YieldStar yield;
+        bytecodeGenerator->addInstruction(yield);
+
+        in.link();
+
+        Instruction::IteratorNextForYieldStar next;
+        next.object = lhsValue.stackSlot();
+        next.iterator = iterator.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+
+        BytecodeGenerator::Jump done = bytecodeGenerator->jumpTrue();
+        bytecodeGenerator->jumpNotUndefined().link(loop);
+        lhsValue.loadInAccumulator();
+        emitReturn(acc);
+
+
+        done.link();
+
+        lhsValue.loadInAccumulator();
+        _expr.setResult(acc);
+        return false;
+    }
+
+    expr.loadInAccumulator();
     Instruction::Yield yield;
     bytecodeGenerator->addInstruction(yield);
     Instruction::Resume resume;
     BytecodeGenerator::Jump jump = bytecodeGenerator->addJumpInstruction(resume);
-    Reference acc = Reference::fromAccumulator(this);
     emitReturn(acc);
     jump.link();
     _expr.setResult(acc);

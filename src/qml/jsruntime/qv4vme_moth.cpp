@@ -661,8 +661,15 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(Yield)
         frame->yield = code;
+        frame->yieldIsIterator = false;
         return acc;
     MOTH_END_INSTR(Yield)
+
+    MOTH_BEGIN_INSTR(YieldStar)
+        frame->yield = code;
+        frame->yieldIsIterator = true;
+        return acc;
+    MOTH_END_INSTR(YieldStar)
 
     MOTH_BEGIN_INSTR(Resume)
         // check exception, in case the generator was called with throw() or return()
@@ -672,10 +679,16 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
                 goto handleUnwind;
             engine->hasException = false;
             *engine->exceptionValue = Primitive::undefinedValue();
-    } else {
-        code += offset;
-    }
+        } else {
+            code += offset;
+        }
     MOTH_END_INSTR(Resume)
+
+    MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
+        STORE_ACC();
+        acc = Runtime::method_iteratorNextForYieldStar(engine, accumulator, STACK_VALUE(iterator), &STACK_VALUE(object));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(IteratorNextForYieldStar)
 
     MOTH_BEGIN_INSTR(CallValue)
         STORE_IP();

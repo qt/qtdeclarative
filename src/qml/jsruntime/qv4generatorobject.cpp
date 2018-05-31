@@ -215,6 +215,7 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
     const char *code = gp->cppFrame.yield;
     gp->cppFrame.yield = nullptr;
     gp->cppFrame.jsFrame->accumulator = arg;
+    gp->cppFrame.yieldIsIterator = false;
 
     Scope scope(engine);
     ScopedValue result(scope, Moth::VME::interpret(&gp->cppFrame, engine, code));
@@ -225,6 +226,8 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
     gp->state = done ? GeneratorState::Completed : GeneratorState::SuspendedYield;
     if (engine->hasException)
         return Encode::undefined();
+    if (gp->cppFrame.yieldIsIterator)
+        return result->asReturnedValue();
     return IteratorPrototype::createIterResultObject(engine, result, done);
 }
 

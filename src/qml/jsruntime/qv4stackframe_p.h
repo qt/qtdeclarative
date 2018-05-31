@@ -122,6 +122,7 @@ struct Q_QML_EXPORT CppStackFrame {
     const char *unwindHandler;
     const char *unwindLabel;
     int unwindLevel;
+    bool yieldIsIterator;
 
     void init(EngineBase *engine, Function *v4Function, const Value *argv, int argc) {
         this->engine = engine;
@@ -134,6 +135,7 @@ struct Q_QML_EXPORT CppStackFrame {
         unwindHandler = nullptr;
         unwindLabel = nullptr;
         unwindLevel = 0;
+        yieldIsIterator = false;
     }
 
     void push() {

@@ -94,7 +94,9 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadContextObjectProperty(op) INSTRUCTION(op, LoadContextObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
 #define INSTR_Yield(op) INSTRUCTION(op, Yield, 0)
+#define INSTR_YieldStar(op) INSTRUCTION(op, YieldStar, 0)
 #define INSTR_Resume(op) INSTRUCTION(op, Resume, 1, offset)
+#define INSTR_IteratorNextForYieldStar(op) INSTRUCTION(op, IteratorNextForYieldStar, 2, iterator, object)
 #define INSTR_StoreProperty(op) INSTRUCTION(op, StoreProperty, 2, name, base)
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
 #define INSTR_LoadSuperProperty(op) INSTRUCTION(op, LoadSuperProperty, 1, property)
@@ -327,7 +329,9 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlContext) \
     F(LoadQmlImportedScripts) \
     F(Yield) \
+    F(YieldStar) \
     F(Resume) \
+    F(IteratorNextForYieldStar) \
     F(CreateClass) \
     F(LoadSuperConstructor) \
     F(PushScriptContext) \

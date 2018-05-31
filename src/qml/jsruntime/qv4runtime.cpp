@@ -782,6 +782,78 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     return Encode(false);
 }
 
+ReturnedValue Runtime::method_iteratorNextForYieldStar(ExecutionEngine *engine, const Value &received, const Value &iterator, Value *object)
+{
+    // the return value encodes how to continue the yield* iteration.
+    // true implies iteration is done, false for iteration to continue
+    // a return value of undefines is a special marker, that the iterator has been invoked with return()
+
+    Scope scope(engine);
+    Q_ASSERT(iterator.isObject());
+
+    const Value *arg = &received;
+    bool returnCalled = false;
+    FunctionObject *f = nullptr;
+    if (engine->hasException) {
+        if (engine->exceptionValue->isEmpty()) {
+            // generator called with return()
+            *engine->exceptionValue = Encode::undefined();
+            engine->hasException = false;
+
+            ScopedValue ret(scope, static_cast<const Object &>(iterator).get(engine->id_return()));
+            if (ret->isUndefined()) {
+                // propagate return()
+                return Encode::undefined();
+            }
+            returnCalled = true;
+            f = ret->as<FunctionObject>();
+        } else {
+            // generator called with throw
+            ScopedValue exceptionValue(scope, *engine->exceptionValue);
+            *engine->exceptionValue = Encode::undefined();
+            engine->hasException = false;
+
+            ScopedValue t(scope, static_cast<const Object &>(iterator).get(engine->id_throw()));
+            if (engine->hasException)
+                return Encode::undefined();
+            if (t->isUndefined()) {
+                // no throw method on the iterator
+                ScopedValue done(scope, Encode(false));
+                method_iteratorClose(engine, iterator, done);
+                if (engine->hasException)
+                    return Encode::undefined();
+                return engine->throwTypeError();
+            }
+            f = t->as<FunctionObject>();
+            arg = exceptionValue;
+        }
+    } else {
+        // generator called with next()
+        ScopedFunctionObject next(scope, static_cast<const Object &>(iterator).get(engine->id_next()));
+        f = next->as<FunctionObject>();
+    }
+
+    if (!f)
+        return engine->throwTypeError();
+
+    ScopedObject o(scope, f->call(&iterator, arg, 1));
+    if (scope.hasException())
+        return Encode(true);
+    if (!o)
+        return engine->throwTypeError();
+
+    ScopedValue d(scope, o->get(engine->id_done()));
+    if (scope.hasException())
+        return Encode(true);
+    bool done = d->toBoolean();
+    if (done) {
+        *object = o->get(engine->id_value());
+        return returnCalled ? Encode::undefined() : Encode(true);
+    }
+    *object = o;
+    return Encode(false);
+}
+
 ReturnedValue Runtime::method_iteratorClose(ExecutionEngine *engine, const Value &iterator, const Value &done)
 {
     Q_ASSERT(iterator.isObject());
