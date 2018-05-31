@@ -696,7 +696,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
     return o->put(name, value);
 }
 
-bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
+void Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     uint idx = 0;
     if (index.asArrayIndex(idx)) {
@@ -707,14 +707,15 @@ bool Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
                     Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
                     if (idx < s->values.size) {
                         s->setData(engine, idx, value);
-                        return true;
+                        return;
                     }
                 }
             }
         }
     }
 
-    return setElementFallback(engine, object, index, value);
+    if (!setElementFallback(engine, object, index, value) && engine->currentStackFrame->v4Function->isStrict())
+        engine->throwTypeError();
 }
 
 ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &in, int iterator)

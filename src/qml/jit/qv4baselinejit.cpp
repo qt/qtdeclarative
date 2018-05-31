@@ -245,13 +245,6 @@ void BaselineJIT::generate_LoadElement(int base)
     as->checkException();
 }
 
-static void storeElementHelper(QV4::Function *f, const Value &base, const Value &index, const Value &value)
-{
-    auto engine = f->internalClass->engine;
-    if (!Runtime::method_storeElement(engine, base, index, value) && f->isStrict())
-        engine->throwTypeError();
-}
-
 void BaselineJIT::generate_StoreElement(int base, int index)
 {
     STORE_IP();
@@ -260,8 +253,8 @@ void BaselineJIT::generate_StoreElement(int base, int index)
     as->passAccumulatorAsArg(3);
     as->passRegAsArg(index, 2);
     as->passRegAsArg(base, 1);
-    as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(storeElementHelper, Assembler::IgnoreResult);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeElement, Assembler::IgnoreResult);
     as->checkException();
 }
 
