@@ -919,7 +919,6 @@ struct ValueArray {
 // have wrong offsets between host and target.
 Q_STATIC_ASSERT(offsetof(ValueArray<0>, values) == 8);
 
-
 }
 
 QT_END_NAMESPACE

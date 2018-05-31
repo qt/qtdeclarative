@@ -1034,7 +1034,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
     MOTH_BEGIN_INSTR(DefineObjectLiteral)
         QV4::Value *arguments = stack + args;
-        acc = Runtime::method_objectLiteral(engine, arguments, internalClassId, arrayValueCount, arrayGetterSetterCountAndFlags);
+        acc = Runtime::method_objectLiteral(engine, internalClassId, argc, arguments);
     MOTH_END_INSTR(DefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)

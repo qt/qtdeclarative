@@ -470,10 +470,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(DefineArray)
 
         MOTH_BEGIN_INSTR(DefineObjectLiteral)
-            d << dumpRegister(args, nFormals)
-              << ", " << internalClassId
-              << ", " << arrayValueCount
-              << ", " << arrayGetterSetterCountAndFlags;
+            d << internalClassId
+              << ", " << argc
+              << ", " << dumpRegister(args, nFormals);
         MOTH_END_INSTR(DefineObjectLiteral)
 
         MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)

@@ -1944,138 +1944,94 @@ bool Codegen::visit(ObjectPattern *ast)
 
     RegisterScope scope(this);
 
-    for (PatternPropertyList *it = ast->properties; it; it = it->next) {
+    QStringList members;
+
+    int argc = 0;
+    int args = 0;
+    auto push = [this, &args, &argc](const Reference &arg) {
+        int temp = bytecodeGenerator->newRegister();
+        if (argc == 0)
+            args = temp;
+        (void) arg.storeOnStack(temp);
+        ++argc;
+    };
+
+    PatternPropertyList *it = ast->properties;
+    for (; it; it = it->next) {
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
-        if (cname) {
-            Reference name = expression(cname->expression);
-            if (hasError)
-                return false;
-            name = name.storeOnStack();
-            computedProperties.append({name, ObjectPropertyValue()});
-        }
+        if (cname || p->type == PatternProperty::Getter || p->type == PatternProperty::Setter)
+            break;
         QString name = p->name->asString();
-        ObjectPropertyValue &v = cname ? computedProperties.last().second : valueMap[name];
-        if (p->type == PatternProperty::Literal) {
+        uint arrayIndex = QV4::String::toArrayIndex(name);
+        if (arrayIndex != UINT_MAX)
+            break;
+        if (members.contains(name))
+            break;
+        members.append(name);
+
+        {
+            RegisterScope innerScope(this);
             Reference value = expression(p->initializer);
             if (hasError)
                 return false;
-
-            v.rvalue = value.storeOnStack();
-            v.getter = v.setter = -1;
-        } else if (p->type == PatternProperty::Getter || p->type == PatternProperty::Setter) {
-            FunctionExpression *f = AST::cast<FunctionExpression *>(p->initializer);
-            Q_ASSERT(f);
-            const int function = defineFunction(name, f, f->formals, f->body);
-            v.rvalue = Reference();
-            if (p->type == PatternProperty::Getter)
-                v.getter = function;
-            else
-                v.setter = function;
-        } else {
-            Q_UNREACHABLE();
+            value.loadInAccumulator();
         }
-    }
-
-    QVector<QString> nonArrayKey, arrayKeyWithValue, arrayKeyWithGetterSetter;
-    bool needSparseArray = false; // set to true if any array index is bigger than 16
-
-    for (QMap<QString, ObjectPropertyValue>::iterator it = valueMap.begin(), eit = valueMap.end();
-            it != eit; ++it) {
-        QString name = it.key();
-        uint keyAsIndex = QV4::String::toArrayIndex(name);
-        if (keyAsIndex != std::numeric_limits<uint>::max()) {
-            it->keyAsIndex = keyAsIndex;
-            if (keyAsIndex > 16)
-                needSparseArray = true;
-            if (it->hasSetter() || it->hasGetter())
-                arrayKeyWithGetterSetter.append(name);
-            else
-                arrayKeyWithValue.append(name);
-        } else {
-            nonArrayKey.append(name);
-        }
-    }
-
-    int args = -1;
-    auto push = [this, &args](const Reference &arg) {
-        int temp = bytecodeGenerator->newRegister();
-        if (args == -1)
-            args = temp;
-        (void) arg.storeOnStack(temp);
-    };
-
-    QVector<QV4::Compiler::JSUnitGenerator::MemberInfo> members;
-
-    Reference acc = Reference::fromAccumulator(this);
-    // generate the key/value pairs
-    for (const QString &key : qAsConst(nonArrayKey)) {
-        const ObjectPropertyValue &prop = valueMap[key];
-
-        if (prop.hasGetter() || prop.hasSetter()) {
-            Q_ASSERT(!prop.rvalue.isValid());
-            loadClosure(prop.getter);
-            push(acc);
-            loadClosure(prop.setter);
-            push(acc);
-            members.append({ key, true });
-        } else {
-            Q_ASSERT(prop.rvalue.isValid());
-            push(prop.rvalue);
-            members.append({ key, false });
-        }
-    }
-
-    // generate array entries with values
-    for (const QString &key : qAsConst(arrayKeyWithValue)) {
-        const ObjectPropertyValue &prop = valueMap[key];
-        Q_ASSERT(!prop.hasGetter() && !prop.hasSetter());
-        push(Reference::fromConst(this, Encode(prop.keyAsIndex)));
-        push(prop.rvalue);
-    }
-
-    // generate array entries with both a value and a setter
-    for (const QString &key : qAsConst(arrayKeyWithGetterSetter)) {
-        const ObjectPropertyValue &prop = valueMap[key];
-        Q_ASSERT(!prop.rvalue.isValid());
-        push(Reference::fromConst(this, Encode(prop.keyAsIndex)));
-        loadClosure(prop.getter);
-        push(acc);
-        loadClosure(prop.setter);
-        push(acc);
+        push(Reference::fromAccumulator(this));
     }
 
     int classId = jsUnitGenerator->registerJSClass(members);
 
-    uint arrayGetterSetterCountAndFlags = arrayKeyWithGetterSetter.size();
-    arrayGetterSetterCountAndFlags |= needSparseArray << 30;
+    // handle complex property setters
+    for (; it; it = it->next) {
+        PatternProperty *p = it->property;
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
+        ObjectLiteralArgument argType = ObjectLiteralArgument::Value;
+        if (p->type == PatternProperty::Getter)
+            argType = ObjectLiteralArgument::Getter;
+        else if (p->type == PatternProperty::Setter)
+            argType = ObjectLiteralArgument::Setter;
 
-    if (args == -1)
-        args = 0;
+        Reference::fromConst(this, Encode(int(argType))).loadInAccumulator();
+        push(Reference::fromAccumulator(this));
+
+        if (cname) {
+            RegisterScope innerScope(this);
+            Reference name = expression(cname->expression);
+            if (hasError)
+                return false;
+            name.loadInAccumulator();
+        } else {
+            QString name = p->name->asString();
+#if 0
+            uint arrayIndex = QV4::String::toArrayIndex(name);
+            if (arrayIndex != UINT_MAX) {
+                Reference::fromConst(this, Encode(arrayIndex)).loadInAccumulator();
+            } else
+#endif
+            {
+                Instruction::LoadRuntimeString instr;
+                instr.stringId = registerString(name);
+                bytecodeGenerator->addInstruction(instr);
+            }
+        }
+        push(Reference::fromAccumulator(this));
+        {
+            RegisterScope innerScope(this);
+            Reference value = expression(p->initializer);
+            if (hasError)
+                return false;
+            value.loadInAccumulator();
+        }
+        push(Reference::fromAccumulator(this));
+    }
 
     Instruction::DefineObjectLiteral call;
     call.internalClassId = classId;
-    call.arrayValueCount = arrayKeyWithValue.size();
-    call.arrayGetterSetterCountAndFlags = arrayGetterSetterCountAndFlags;
+    call.argc = argc;
     call.args = Moth::StackSlot::createRegister(args);
     bytecodeGenerator->addInstruction(call);
     Reference result = Reference::fromAccumulator(this);
-
-    if (!computedProperties.isEmpty()) {
-        result = result.storeOnStack();
-        for (const auto &c : qAsConst(computedProperties)) {
-            // ### if RHS is an anonymous FunctionExpression, we need to set it's name to the computed name
-            Reference element = Reference::fromSubscript(result, c.first);
-            if (c.second.getter >= 0 || c.second.setter >= 0) {
-                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("getter/setter with computed property names unimplemented."));
-                return false;// ###
-            } else {
-                c.second.rvalue.loadInAccumulator();
-                element.storeConsumeAccumulator();
-            }
-        }
-    }
-
     _expr.setResult(result);
     return false;
 }

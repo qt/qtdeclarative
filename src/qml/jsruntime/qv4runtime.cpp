@@ -1382,45 +1382,45 @@ ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *value
     return engine->newArrayObject(values, length)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, const QV4::Value *args, int classId, int arrayValueCount, int arrayGetterSetterCountAndFlags)
+ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId, int argc, const QV4::Value *args)
 {
     Scope scope(engine);
     Scoped<InternalClass> klass(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeClasses[classId]);
     ScopedObject o(scope, engine->newObject(klass->d()));
 
-    {
-        bool needSparseArray = arrayGetterSetterCountAndFlags >> 30;
-        if (needSparseArray)
-            o->initSparseArray();
-    }
+    Q_ASSERT(uint(argc) >= klass->d()->size);
 
     for (uint i = 0; i < klass->d()->size; ++i)
         o->setProperty(i, *args++);
 
-    if (arrayValueCount > 0) {
-        ScopedValue entry(scope);
-        for (int i = 0; i < arrayValueCount; ++i) {
-            uint idx = args->toUInt32();
-            ++args;
-            entry = *args++;
-            o->arraySet(idx, entry);
-        }
-    }
+    Q_ASSERT((argc - klass->d()->size) % 3 == 0);
+    int additionalArgs = (argc - int(klass->d()->size))/3;
 
-    uint arrayGetterSetterCount = arrayGetterSetterCountAndFlags & ((1 << 30) - 1);
-    if (arrayGetterSetterCount > 0) {
-        ScopedProperty pd(scope);
-        for (uint i = 0; i < arrayGetterSetterCount; ++i) {
-            uint idx = args->toUInt32();
-            ++args;
-            pd->value = *args;
-            ++args;
-            pd->set = *args;
-            ++args;
-            o->arraySet(idx, pd, Attr_Accessor);
-        }
-    }
+    if (!additionalArgs)
+        return o->asReturnedValue();
 
+    Scoped<StringOrSymbol> name(scope);
+    ScopedProperty pd(scope);
+    for (int i = 0; i < additionalArgs; ++i) {
+        Q_ASSERT(args->isInteger());
+        ObjectLiteralArgument arg = ObjectLiteralArgument(args->integerValue());
+        name = args[1].toPropertyKey(engine);
+        if (engine->hasException)
+            return Encode::undefined();
+        Q_ASSERT(arg == ObjectLiteralArgument::Value || args[2].isFunctionObject());
+        if (arg == ObjectLiteralArgument::Value || arg == ObjectLiteralArgument::Getter) {
+            pd->value = args[2];
+            pd->set = Primitive::emptyValue();
+        } else {
+            pd->value = Primitive::emptyValue();
+            pd->set = args[2];
+        }
+        bool ok = o->__defineOwnProperty__(scope.engine, name, pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
+        if (!ok)
+            return engine->throwTypeError();
+
+        args += 3;
+    }
     return o.asReturnedValue();
 }
 

@@ -188,7 +188,7 @@ QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx)
     return constants.at(idx);
 }
 
-int QV4::Compiler::JSUnitGenerator::registerJSClass(const QVector<MemberInfo> &members)
+int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
 {
     // ### re-use existing class definitions.
 
@@ -202,27 +202,11 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QVector<MemberInfo> &m
     jsClass->nMembers = members.size();
     CompiledData::JSClassMember *member = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
 
-    for (const MemberInfo &memberInfo : members) {
-        member->nameOffset = registerString(memberInfo.name);
-        member->isAccessor = memberInfo.isAccessor;
+    for (const auto &name : members) {
+        member->nameOffset = registerString(name);
+        member->isAccessor = false;
         ++member;
     }
-
-    return jsClassOffsets.size() - 1;
-}
-
-int QV4::Compiler::JSUnitGenerator::registerJSClass(int count, CompiledData::JSClassMember *members)
-{
-    const int size = CompiledData::JSClass::calculateSize(count);
-    jsClassOffsets.append(jsClassData.size());
-    const int oldSize = jsClassData.size();
-    jsClassData.resize(jsClassData.size() + size);
-    memset(jsClassData.data() + oldSize, 0, size);
-
-    CompiledData::JSClass *jsClass = reinterpret_cast<CompiledData::JSClass*>(jsClassData.data() + oldSize);
-    jsClass->nMembers = count;
-    CompiledData::JSClassMember *jsClassMembers = reinterpret_cast<CompiledData::JSClassMember*>(jsClass + 1);
-    memcpy(jsClassMembers, members, sizeof(CompiledData::JSClassMember)*count);
 
     return jsClassOffsets.size() - 1;
 }

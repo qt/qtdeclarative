@@ -804,14 +804,12 @@ void BaselineJIT::generate_DefineArray(int argc, int args)
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_arrayLiteral, Assembler::ResultInAccumulator);
 }
 
-void BaselineJIT::generate_DefineObjectLiteral(int internalClassId, int arrayValueCount,
-                                             int arrayGetterSetterCountAndFlags, int args)
+void BaselineJIT::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
 {
-    as->prepareCallWithArgCount(5);
-    as->passInt32AsArg(arrayGetterSetterCountAndFlags, 4);
-    as->passInt32AsArg(arrayValueCount, 3);
-    as->passInt32AsArg(internalClassId, 2);
-    as->passRegAsArg(args, 1);
+    as->prepareCallWithArgCount(4);
+    as->passRegAsArg(args, 3);
+    as->passInt32AsArg(argc, 2);
+    as->passInt32AsArg(internalClassId, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_objectLiteral, Assembler::ResultInAccumulator);
 }

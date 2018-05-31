@@ -116,8 +116,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     int registerConstant(ReturnedValue v);
     ReturnedValue constant(int idx);
 
-    int registerJSClass(const QVector<MemberInfo> &members);
-    int registerJSClass(int count, CompiledData::JSClassMember *members);
+    int registerJSClass(const QStringList &members);
 
     enum GeneratorOption {
         GenerateWithStringTable,

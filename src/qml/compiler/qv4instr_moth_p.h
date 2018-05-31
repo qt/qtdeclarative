@@ -134,8 +134,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_TypeofValue(op) INSTRUCTION(op, TypeofValue, 0)
 #define INSTR_DeclareVar(op) INSTRUCTION(op, DeclareVar, 2, varName, isDeletable)
 #define INSTR_DefineArray(op) INSTRUCTION(op, DefineArray, 2, argc, args)
-// arrayGetterSetterCountAndFlags contains 30 bits for count, 1 bit for needsSparseArray boolean
-#define INSTR_DefineObjectLiteral(op) INSTRUCTION(op, DefineObjectLiteral, 4, internalClassId, arrayValueCount, arrayGetterSetterCountAndFlags, args)
+#define INSTR_DefineObjectLiteral(op) INSTRUCTION(op, DefineObjectLiteral, 3, internalClassId, argc, args)
 #define INSTR_CreateMappedArgumentsObject(op) INSTRUCTION(op, CreateMappedArgumentsObject, 0)
 #define INSTR_CreateUnmappedArgumentsObject(op) INSTRUCTION(op, CreateUnmappedArgumentsObject, 0)
 #define INSTR_CreateRestParameter(op) INSTRUCTION(op, CreateRestParameter, 1, argIndex)

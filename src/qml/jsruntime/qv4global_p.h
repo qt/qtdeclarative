@@ -372,6 +372,12 @@ struct Q_QML_EXPORT StackFrame {
 };
 typedef QVector<StackFrame> StackTrace;
 
+enum class ObjectLiteralArgument {
+    Value,
+    Getter,
+    Setter
+};
+
 }
 
 Q_DECLARE_TYPEINFO(QV4::PropertyAttributes, Q_PRIMITIVE_TYPE);
