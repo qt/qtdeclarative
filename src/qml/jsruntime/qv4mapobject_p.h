@@ -60,19 +60,19 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+class ESTable;
+
 namespace Heap {
 
 struct MapCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
 };
 
-#define MapObjectMembers(class, Member) \
-    Member(class, Pointer, ArrayObject *, mapKeys) \
-    Member(class, Pointer, ArrayObject *, mapValues)
-
-DECLARE_HEAP_OBJECT(MapObject, Object) {
-    DECLARE_MARKOBJECTS(MapObject);
-    void init() { Object::init(); }
+struct MapObject : Object {
+    static void markObjects(Heap::Base *that, MarkStack *markStack);
+    void init();
+    void destroy();
+    ESTable *esTable;
 };
 
 }
@@ -89,6 +89,7 @@ struct MapObject : Object
 {
     V4_OBJECT2(MapObject, Object)
     V4_PROTOTYPE(mapPrototype)
+    V4_NEEDS_DESTROY
 };
 
 struct MapPrototype : Object

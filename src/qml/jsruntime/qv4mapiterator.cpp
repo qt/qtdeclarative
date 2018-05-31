@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <private/qv4iterator_p.h>
+#include <private/qv4estable_p.h>
 #include <private/qv4mapiterator_p.h>
 #include <private/qv4mapobject_p.h>
 #include <private/qv4symbol_p.h>
@@ -63,7 +64,7 @@ ReturnedValue MapIteratorPrototype::method_next(const FunctionObject *b, const V
         return scope.engine->throwTypeError(QLatin1String("Not a Map Iterator instance"));
 
     Scoped<MapObject> s(scope, thisObject->d()->iteratedMap);
-    quint32 index = thisObject->d()->mapNextIndex;
+    uint index = thisObject->d()->mapNextIndex;
     IteratorKind itemKind = thisObject->d()->iterationKind;
 
     if (!s) {
@@ -71,21 +72,18 @@ ReturnedValue MapIteratorPrototype::method_next(const FunctionObject *b, const V
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
-    Scoped<ArrayObject> keys(scope, s->d()->mapKeys);
-    Scoped<ArrayObject> values(scope, s->d()->mapValues);
+    Value *arguments = scope.alloc(2);
 
-    while (index < keys->getLength()) {
-        ScopedValue sk(scope, keys->getIndexed(index));
-        ScopedValue sv(scope, values->getIndexed(index));
-        index += 1;
-        thisObject->d()->mapNextIndex = index;
+    while (index < s->d()->esTable->size()) {
+        s->d()->esTable->iterate(index, &arguments[0], &arguments[1]);
+        thisObject->d()->mapNextIndex = index + 1;
 
         ScopedValue result(scope);
 
         if (itemKind == KeyIteratorKind) {
-            result = sk;
+            result = arguments[0];
         } else if (itemKind == ValueIteratorKind) {
-            result = sv;
+            result = arguments[1];
         } else {
             Q_ASSERT(itemKind == KeyValueIteratorKind);
 
@@ -93,8 +91,8 @@ ReturnedValue MapIteratorPrototype::method_next(const FunctionObject *b, const V
 
             Scoped<ArrayObject> resultArray(scope, result);
             resultArray->arrayReserve(2);
-            resultArray->arrayPut(0, sk);
-            resultArray->arrayPut(1, sv);
+            resultArray->arrayPut(0, arguments[0]);
+            resultArray->arrayPut(1, arguments[1]);
             resultArray->setArrayLengthUnchecked(2);
         }
 

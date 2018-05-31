@@ -37,9 +37,6 @@
 **
 ****************************************************************************/
 
-#ifndef QV4SETOBJECT_P_H
-#define QV4SETOBJECT_P_H
-
 //
 //  W A R N I N G
 //  -------------
@@ -51,65 +48,40 @@
 // We mean it.
 //
 
-#include "qv4object_p.h"
-#include "qv4objectproto_p.h"
-#include "qv4functionobject_p.h"
-#include "qv4string_p.h"
+#ifndef QV4ESTABLE_P_H
+#define QV4ESTABLE_P_H
+
+#include "qv4value_p.h"
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
+namespace QV4
+{
 
-class ESTable;
+class ESTable
+{
+public:
+    ESTable();
+    ~ESTable();
 
-namespace Heap {
+    void markObjects(MarkStack *s);
+    void clear();
+    void set(const Value &k, const Value &v);
+    bool has(const Value &k) const;
+    ReturnedValue get(const Value &k, bool *hasValue = nullptr) const;
+    bool remove(const Value &k);
+    uint size() const;
+    void iterate(uint idx, Value *k, Value *v);
 
-struct SetCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
-};
-
-struct SetObject : Object {
-    static void markObjects(Heap::Base *that, MarkStack *markStack);
-    void init();
-    void destroy();
-    ESTable *esTable;
+private:
+    Value *m_keys = nullptr;
+    Value *m_values = nullptr;
+    uint m_size = 0;
+    uint m_capacity = 0;
 };
 
 }
 
-struct SetCtor: FunctionObject
-{
-    V4_OBJECT2(SetCtor, FunctionObject)
-
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-};
-
-struct SetObject : Object
-{
-    V4_OBJECT2(SetObject, Object)
-    V4_PROTOTYPE(setPrototype)
-    V4_NEEDS_DESTROY
-};
-
-struct SetPrototype : Object
-{
-    void init(ExecutionEngine *engine, Object *ctor);
-
-    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_clear(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_size(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-};
-
-
-} // namespace QV4
-
-
 QT_END_NAMESPACE
 
-#endif // QV4SETOBJECT_P_H
+#endif

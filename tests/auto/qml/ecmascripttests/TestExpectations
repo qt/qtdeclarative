@@ -1106,8 +1106,6 @@ built-ins/Set/prototype/clear/does-not-have-setdata-internal-slot-weakset.js fai
 built-ins/Set/prototype/delete/does-not-have-setdata-internal-slot-weakset.js fails
 built-ins/Set/prototype/entries/does-not-have-setdata-internal-slot-weakset.js fails
 built-ins/Set/prototype/forEach/does-not-have-setdata-internal-slot-weakset.js fails
-built-ins/Set/prototype/forEach/iterates-values-added-after-foreach-begins.js fails
-built-ins/Set/prototype/forEach/iterates-values-deleted-then-readded.js fails
 built-ins/Set/prototype/forEach/iterates-values-revisits-after-delete-re-add.js fails
 built-ins/Set/prototype/forEach/this-arg-explicit-cannot-override-lexical-this-arrow.js fails
 built-ins/Set/prototype/has/does-not-have-setdata-internal-slot-weakset.js fails

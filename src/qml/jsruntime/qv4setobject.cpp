@@ -40,6 +40,7 @@
 
 #include "qv4setobject_p.h"
 #include "qv4setiterator_p.h"
+#include "qv4estable_p.h"
 #include "qv4symbol_p.h"
 
 using namespace QV4;
@@ -56,30 +57,25 @@ ReturnedValue SetCtor::callAsConstructor(const FunctionObject *f, const Value *a
 {
     Scope scope(f);
     Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());
-    Scoped<ArrayObject> arr(scope, scope.engine->newArrayObject());
-    a->d()->setArray.set(scope.engine, arr->d());
 
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
         if (!iterable->isUndefined() && !iterable->isNull()) {
             ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("add")))));
-            if (!adder) {
+            if (!adder)
                 return scope.engine->throwTypeError();
-            }
             ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
             CHECK_EXCEPTION();
-            if (!iter) {
+            if (!iter)
                 return a.asReturnedValue();
-            }
 
             Value *nextValue = scope.alloc(1);
             ScopedValue done(scope);
             forever {
                 done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
                 CHECK_EXCEPTION();
-                if (done->toBoolean()) {
+                if (done->toBoolean())
                     return a.asReturnedValue();
-                }
 
                 adder->call(a, nextValue, 1);
                 if (scope.engine->hasException) {
@@ -128,6 +124,25 @@ void SetPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), val);
 }
 
+void Heap::SetObject::init()
+{
+    Object::init();
+    esTable = new ESTable();
+}
+
+void Heap::SetObject::destroy()
+{
+    delete esTable;
+    esTable = 0;
+}
+
+void Heap::SetObject::markObjects(Heap::Base *that, MarkStack *markStack)
+{
+    SetObject *s = static_cast<SetObject *>(that);
+    s->esTable->markObjects(markStack);
+    Object::markObjects(that, markStack);
+}
+
 ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
 {
     Scope scope(b);
@@ -135,23 +150,7 @@ ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thi
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> arr(scope, that->d()->setArray);
-    ScopedValue sk(scope);
-    qint64 len = arr->getLength();
-
-    for (int i = 0; i < len; ++i) {
-        sk = arr->getIndexed(i);
-        if (sk->sameValueZero(argv[0]))
-            return that.asReturnedValue();
-    }
-
-    sk = argv[0];
-    if (sk->isDouble()) {
-        if (sk->doubleValue() == 0 && std::signbit(sk->doubleValue()))
-            sk = Primitive::fromDouble(+0);
-    }
-
-    arr->putIndexed(len, sk);
+    that->d()->esTable->set(argv[0], Primitive::undefinedValue());
     return that.asReturnedValue();
 }
 
@@ -162,12 +161,10 @@ ReturnedValue SetPrototype::method_clear(const FunctionObject *b, const Value *t
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> arr(scope, scope.engine->newArrayObject());
-    that->d()->setArray.set(scope.engine, arr->d());
+    that->d()->esTable->clear();
     return Encode::undefined();
 }
 
-// delete value
 ReturnedValue SetPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
 {
     Scope scope(b);
@@ -175,36 +172,7 @@ ReturnedValue SetPrototype::method_delete(const FunctionObject *b, const Value *
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> arr(scope, that->d()->setArray);
-    ScopedValue sk(scope);
-    qint64 len = arr->getLength();
-
-    bool found = false;
-    int idx = 0;
-
-    for (; idx < len; ++idx) {
-        sk = arr->getIndexed(idx);
-        if (sk->sameValueZero(argv[0])) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found == true) {
-        Scoped<ArrayObject> newArr(scope, scope.engine->newArrayObject());
-        for (int j = 0, newIdx = 0; j < len; ++j, newIdx++) {
-            if (j == idx) {
-                newIdx--; // skip the entry
-                continue;
-            }
-            newArr->putIndexed(newIdx, ScopedValue(scope, arr->getIndexed(j)));
-        }
-
-        that->d()->setArray.set(scope.engine, newArr->d());
-        return Encode(true);
-    } else {
-        return Encode(false);
-    }
+    return Encode(that->d()->esTable->remove(argv[0]));
 }
 
 ReturnedValue SetPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -234,16 +202,11 @@ ReturnedValue SetPrototype::method_forEach(const FunctionObject *b, const Value 
     if (argc > 1)
         thisArg = ScopedValue(scope, argv[1]);
 
-    Scoped<ArrayObject> arr(scope, that->d()->setArray);
-    ScopedValue sk(scope);
-    qint64 len = arr->getLength();
-
     Value *arguments = scope.alloc(3);
-    for (int i = 0; i < len; ++i) {
-        sk = arr->getIndexed(i);
+    for (uint i = 0; i < that->d()->esTable->size(); ++i) {
+        that->d()->esTable->iterate(i, &arguments[0], &arguments[1]); // fill in key (0), value (1)
+        arguments[1] = arguments[0]; // but for set, we want to return the key twice; value is always undefined.
 
-        arguments[0] = sk;
-        arguments[1] = sk;
         arguments[2] = that;
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
@@ -258,17 +221,7 @@ ReturnedValue SetPrototype::method_has(const FunctionObject *b, const Value *thi
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> arr(scope, that->d()->setArray);
-    ScopedValue sk(scope);
-    qint64 len = arr->getLength();
-
-    for (int i = 0; i < len; ++i) {
-        sk = arr->getIndexed(i);
-        if (sk->sameValueZero(argv[0]))
-            return Encode(true);
-    }
-
-    return Encode(false);
+    return Encode(that->d()->esTable->has(argv[0]));
 }
 
 ReturnedValue SetPrototype::method_get_size(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -278,9 +231,7 @@ ReturnedValue SetPrototype::method_get_size(const FunctionObject *b, const Value
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> arr(scope, that->d()->setArray);
-    qint64 len = arr->getLength();
-    return Encode((uint)len);
+    return Encode(that->d()->esTable->size());
 }
 
 ReturnedValue SetPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)

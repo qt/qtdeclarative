@@ -40,6 +40,7 @@
 #include "qv4setobject_p.h" // ### temporary
 #include "qv4mapobject_p.h"
 #include "qv4mapiterator_p.h"
+#include "qv4estable_p.h"
 #include "qv4symbol_p.h"
 
 using namespace QV4;
@@ -56,8 +57,6 @@ ReturnedValue MapCtor::callAsConstructor(const FunctionObject *f, const Value *a
 {
     Scope scope(f);
     Scoped<MapObject> a(scope, scope.engine->memoryManager->allocate<MapObject>());
-    a->d()->mapKeys.set(scope.engine, scope.engine->newArrayObject());
-    a->d()->mapValues.set(scope.engine, scope.engine->newArrayObject());
 
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
@@ -71,27 +70,22 @@ ReturnedValue MapCtor::callAsConstructor(const FunctionObject *f, const Value *a
         Scoped<SetObject> setObjectCheck(scope, argv[0]);
 
         if (!iterable->isUndefined() && !iterable->isNull() && (mapObjectCheck || setObjectCheck)) {
-
-
             ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("set")))));
-            if (!adder) {
+            if (!adder)
                 return scope.engine->throwTypeError();
-            }
             ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
 
             CHECK_EXCEPTION();
-            if (!iter) {
+            if (!iter)
                 return a.asReturnedValue();
-            }
 
             Value *nextValue = scope.alloc(1);
             ScopedValue done(scope);
             forever {
                 done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
                 CHECK_EXCEPTION();
-                if (done->toBoolean()) {
+                if (done->toBoolean())
                     return a.asReturnedValue();
-                }
 
                 adder->call(a, nextValue, 1);
                 if (scope.engine->hasException) {
@@ -139,6 +133,25 @@ void MapPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), val);
 }
 
+void Heap::MapObject::init()
+{
+    Object::init();
+    esTable = new ESTable();
+}
+
+void Heap::MapObject::destroy()
+{
+    delete esTable;
+    esTable = 0;
+}
+
+void Heap::MapObject::markObjects(Heap::Base *that, MarkStack *markStack)
+{
+    MapObject *m = static_cast<MapObject *>(that);
+    m->esTable->markObjects(markStack);
+    Object::markObjects(that, markStack);
+}
+
 ReturnedValue MapPrototype::method_clear(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
@@ -146,12 +159,10 @@ ReturnedValue MapPrototype::method_clear(const FunctionObject *b, const Value *t
     if (!that)
         return scope.engine->throwTypeError();
 
-    that->d()->mapKeys.set(scope.engine, scope.engine->newArrayObject());
-    that->d()->mapValues.set(scope.engine, scope.engine->newArrayObject());
+    that->d()->esTable->clear();
     return Encode::undefined();
 }
 
-// delete value
 ReturnedValue MapPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
 {
     Scope scope(b);
@@ -159,40 +170,7 @@ ReturnedValue MapPrototype::method_delete(const FunctionObject *b, const Value *
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    qint64 len = keys->getLength();
-
-    bool found = false;
-    int idx = 0;
-    ScopedValue sk(scope);
-
-    for (; idx < len; ++idx) {
-        sk = keys->getIndexed(idx);
-        if (sk->sameValueZero(argv[0])) {
-            found = true;
-            break;
-        }
-    }
-
-    if (found == true) {
-        Scoped<ArrayObject> values(scope, that->d()->mapValues);
-        Scoped<ArrayObject> newKeys(scope, scope.engine->newArrayObject());
-        Scoped<ArrayObject> newValues(scope, scope.engine->newArrayObject());
-        for (int j = 0, newIdx = 0; j < len; ++j, newIdx++) {
-            if (j == idx) {
-                newIdx--; // skip the entry
-                continue;
-            }
-            newKeys->putIndexed(newIdx, ScopedValue(scope, keys->getIndexed(j)));
-            newValues->putIndexed(newIdx, ScopedValue(scope, values->getIndexed(j)));
-        }
-
-        that->d()->mapKeys.set(scope.engine, newKeys->d());
-        that->d()->mapValues.set(scope.engine, newValues->d());
-        return Encode(true);
-    } else {
-        return Encode(false);
-    }
+    return Encode(that->d()->esTable->remove(argv[0]));
 }
 
 ReturnedValue MapPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -222,19 +200,10 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
     if (argc > 1)
         thisArg = ScopedValue(scope, argv[1]);
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    Scoped<ArrayObject> values(scope, that->d()->mapKeys);
-    qint64 len = keys->getLength();
-
     Value *arguments = scope.alloc(3);
-    ScopedValue sk(scope);
-    ScopedValue sv(scope);
-    for (int i = 0; i < len; ++i) {
-        sk = keys->getIndexed(i);
-        sv = values->getIndexed(i);
+    for (uint i = 0; i < that->d()->esTable->size(); ++i) {
+        that->d()->esTable->iterate(i, &arguments[0], &arguments[1]); // fill in key (0), value (1)
 
-        arguments[0] = sv;
-        arguments[1] = sk;
         arguments[2] = that;
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
@@ -249,19 +218,7 @@ ReturnedValue MapPrototype::method_get(const FunctionObject *b, const Value *thi
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    ScopedValue sk(scope);
-    qint64 len = keys->getLength();
-
-    for (int i = 0; i < len; ++i) {
-        sk = keys->getIndexed(i);
-        if (sk->sameValueZero(argv[0])) {
-            Scoped<ArrayObject> values(scope, that->d()->mapValues);
-            return values->getIndexed(i);
-        }
-    }
-
-    return Encode::undefined();
+    return that->d()->esTable->get(argv[0]);
 }
 
 ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
@@ -271,17 +228,7 @@ ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thi
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    ScopedValue sk(scope);
-    qint64 len = keys->getLength();
-
-    for (int i = 0; i < len; ++i) {
-        sk = keys->getIndexed(i);
-        if (sk->sameValueZero(argv[0]))
-            return Encode(true);
-    }
-
-    return Encode(false);
+    return Encode(that->d()->esTable->has(argv[0]));
 }
 
 ReturnedValue MapPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -303,27 +250,7 @@ ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thi
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    Scoped<ArrayObject> values(scope, that->d()->mapValues);
-    ScopedValue sk(scope, argv[1]);
-    qint64 len = keys->getLength();
-
-    for (int i = 0; i < len; ++i) {
-        sk = keys->getIndexed(i);
-        if (sk->sameValueZero(argv[0])) {
-            values->putIndexed(len, argv[1]);
-            return that.asReturnedValue();
-        }
-    }
-
-    sk = argv[0];
-    if (sk->isDouble()) {
-        if (sk->doubleValue() == 0 && std::signbit(sk->doubleValue()))
-            sk = Primitive::fromDouble(+0);
-    }
-
-    keys->putIndexed(len, sk);
-    values->putIndexed(len, argv[1]);
+    that->d()->esTable->set(argv[0], argv[1]);
     return that.asReturnedValue();
 }
 
@@ -334,9 +261,7 @@ ReturnedValue MapPrototype::method_get_size(const FunctionObject *b, const Value
     if (!that)
         return scope.engine->throwTypeError();
 
-    Scoped<ArrayObject> keys(scope, that->d()->mapKeys);
-    qint64 len = keys->getLength();
-    return Encode((uint)len);
+    return Encode(that->d()->esTable->size());
 }
 
 ReturnedValue MapPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)

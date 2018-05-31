@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <private/qv4iterator_p.h>
+#include <private/qv4estable_p.h>
 #include <private/qv4setiterator_p.h>
 #include <private/qv4setobject_p.h>
 #include <private/qv4symbol_p.h>
@@ -63,34 +64,31 @@ ReturnedValue SetIteratorPrototype::method_next(const FunctionObject *b, const V
         return scope.engine->throwTypeError(QLatin1String("Not a Set Iterator instance"));
 
     Scoped<SetObject> s(scope, thisObject->d()->iteratedSet);
-    quint32 index = thisObject->d()->setNextIndex;
+    uint index = thisObject->d()->setNextIndex;
     IteratorKind itemKind = thisObject->d()->iterationKind;
-
 
     if (!s) {
         QV4::Value undefined = Primitive::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
-    Scoped<ArrayObject> arr(scope, s->d()->setArray);
+    Value *arguments = scope.alloc(2);
 
-    while (index < arr->getLength()) {
-        ScopedValue e(scope, arr->getIndexed(index));
-        index += 1;
-        thisObject->d()->setNextIndex = index;
+    while (index < s->d()->esTable->size()) {
+        s->d()->esTable->iterate(index, &arguments[0], &arguments[1]);
+        thisObject->d()->setNextIndex = index + 1;
 
         if (itemKind == KeyValueIteratorKind) {
-            // Return CreateIterResultObject(CreateArrayFromList(« e, e »), false).
             ScopedArrayObject resultArray(scope, scope.engine->newArrayObject());
             resultArray->arrayReserve(2);
-            resultArray->arrayPut(0, e);
-            resultArray->arrayPut(1, e);
+            resultArray->arrayPut(0, arguments[0]);
+            resultArray->arrayPut(1, arguments[0]); // yes, the key is repeated.
             resultArray->setArrayLengthUnchecked(2);
 
             return IteratorPrototype::createIterResultObject(scope.engine, resultArray, false);
         }
 
-        return IteratorPrototype::createIterResultObject(scope.engine, e, false);
+        return IteratorPrototype::createIterResultObject(scope.engine, arguments[0], false);
     }
 
     thisObject->d()->iteratedSet.set(scope.engine, nullptr);
