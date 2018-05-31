@@ -658,8 +658,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_BEGIN_INSTR(StoreProperty)
         STORE_IP();
         STORE_ACC();
-        if (!Runtime::method_storeProperty(engine, STACK_VALUE(base), name, accumulator) && function->isStrict())
-            engine->throwTypeError();
+        Runtime::method_storeProperty(engine, STACK_VALUE(base), name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 

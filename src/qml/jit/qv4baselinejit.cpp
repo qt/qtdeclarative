@@ -301,13 +301,6 @@ void BaselineJIT::generate_GetLookupA(int index)
     as->checkException();
 }
 
-static void storePropertyHelper(QV4::Function *f, const Value &base, int name, const Value &value)
-{
-    auto engine = f->internalClass->engine;
-    if (!Runtime::method_storeProperty(engine, base, name, value) && f->isStrict())
-        engine->throwTypeError();
-}
-
 void BaselineJIT::generate_StoreProperty(int name, int base)
 {
     STORE_IP();
@@ -316,8 +309,8 @@ void BaselineJIT::generate_StoreProperty(int name, int base)
     as->passAccumulatorAsArg(3);
     as->passInt32AsArg(name, 2);
     as->passRegAsArg(base, 1);
-    as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(storePropertyHelper, Assembler::IgnoreResult);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeProperty, Assembler::IgnoreResult);
     as->checkException();
 }
 

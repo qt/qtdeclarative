@@ -577,14 +577,14 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
     return Encode(x + y);
 }
 
-bool Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
+void Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
 {
     Scope scope(engine);
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    QV4::Function *v4Function = engine->currentStackFrame->v4Function;
+    ScopedString name(scope, v4Function->compilationUnit->runtimeStrings[nameIndex]);
     ScopedObject o(scope, object.toObject(engine));
-    if (!o)
-        return false;
-    return o->put(name, value);
+    if ((!o || !o->put(name, value)) && v4Function->isStrict())
+        engine->throwTypeError();
 }
 
 static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engine, const Value &object, uint idx)
