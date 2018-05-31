@@ -290,6 +290,8 @@ private slots:
 
     void valueTypeGroupPropertiesInBehavior();
 
+    void retrieveQmlTypeId();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -4954,6 +4956,26 @@ void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()
     QVERIFY(animation);
 
     QCOMPARE(animation->property("easing").value<QEasingCurve>().type(), QEasingCurve::InOutQuad);
+}
+
+void tst_qqmllanguage::retrieveQmlTypeId()
+{
+    // Register in reverse order to provoke wrong minor version matching.
+    int id2 = qmlRegisterType<QObject>("Test", 2, 3, "SomeTestType");
+    int id1 = qmlRegisterType<QObject>("Test", 2, 1, "SomeTestType");
+    QCOMPARE(qmlTypeId("Test", 2, 1, "SomeTestType"), id1);
+    QCOMPARE(qmlTypeId("Test", 2, 2, "SomeTestType"), id1);
+    QCOMPARE(qmlTypeId("Test", 2, 3, "SomeTestType"), id2);
+
+    // Error cases
+    QCOMPARE(qmlTypeId("Test", 2, 0, "SomeTestType"), -1);
+    QCOMPARE(qmlTypeId("Test", 2, 3, "DoesNotExist"), -1);
+    QCOMPARE(qmlTypeId("DoesNotExist", 2, 3, "SomeTestType"), -1);
+
+    // Must also work for other types (defined in testtpes.cpp)
+    QVERIFY(qmlTypeId("Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
+    QVERIFY(qmlTypeId("Test", 1, 0, "MyUncreateableBaseClass") >= 0);
+    QVERIFY(qmlTypeId("Test", 1, 0, "MyTypeObjectSingleton") >= 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

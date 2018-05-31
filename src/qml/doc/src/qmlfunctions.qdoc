@@ -638,3 +638,25 @@
   are registered for that version. This is particularly useful for keeping the
   versions of related modules in sync.
 */
+
+/*!
+  \since 5.12
+  \fn int qmlTypeId(const char* uri, int versionMajor, int versionMinor, const char *qmlName);
+  \relates QQmlEngine
+
+  Returns the QML type id of a type that was registered with the
+  name \a qmlName in a particular \a uri and a version specified in \a
+  versionMajor and \a versionMinor.
+
+  This function returns the same value as the QML type registration functions
+  such as qmlRegisterType() and qmlRegisterSingletonType().
+
+  If \a qmlName, \a uri and \a versionMajor match a registered type, but the
+  specified minor version in \a versionMinor is higher, then the id of the type
+  with the closest minor version is returned.
+
+  Returns -1 if no matching type was found or one of the given parameters
+  was invalid.
+
+  \sa qmlRegisterType(), qmlRegisterSingletonType()
+*/

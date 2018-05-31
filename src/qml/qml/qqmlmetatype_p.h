@@ -91,11 +91,16 @@ public:
     static QList<QQmlType> qmlSingletonTypes();
     static QList<QQmlType> qmlAllTypes();
 
+    enum class TypeIdCategory {
+        MetaType,
+        QmlType
+    };
+
     static QQmlType qmlType(const QString &qualifiedName, int, int);
     static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
     static QQmlType qmlType(const QMetaObject *);
     static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
-    static QQmlType qmlType(int);
+    static QQmlType qmlType(int typeId, TypeIdCategory category = TypeIdCategory::MetaType);
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
     static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);

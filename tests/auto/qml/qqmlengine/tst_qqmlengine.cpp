@@ -79,6 +79,7 @@ private slots:
     void componentFromEval();
     void qrcUrls();
     void cppSignalAndEval();
+    void singletonInstance();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -950,6 +951,96 @@ void tst_qqmlengine::cppSignalAndEval()
     QVERIFY(!object.isNull());
     emit objectCaller.doubleReply(1.1234);
     QCOMPARE(object->property("r"), 1.1234);
+}
+
+class CppSingleton : public QObject {
+    Q_OBJECT
+public:
+    CppSingleton() {}
+
+    static QObject *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
+    {
+        Q_UNUSED(qmlEngine);
+        Q_UNUSED(jsEngine);
+        return new CppSingleton();
+    }
+};
+
+class JsSingleton : public QObject {
+    Q_OBJECT
+public:
+    JsSingleton() {}
+
+    static QJSValue create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
+    {
+        Q_UNUSED(qmlEngine);
+        QJSValue value = jsEngine->newQObject(new JsSingleton());
+        return value;
+    }
+};
+
+class SomeQObjectClass : public QObject {
+    Q_OBJECT
+public:
+    SomeQObjectClass() : QObject(nullptr){}
+};
+
+void tst_qqmlengine::singletonInstance()
+{
+    QQmlEngine engine;
+
+    int cppSingletonTypeId = qmlRegisterSingletonType<CppSingleton>("Test", 1, 0, "CppSingleton", &CppSingleton::create);
+    int jsValueSingletonTypeId = qmlRegisterSingletonType("Test", 1, 0, "JsSingleton", &JsSingleton::create);
+
+    {
+        // Cpp QObject singleton type
+        QJSValue value = engine.singletonInstance<QJSValue>(cppSingletonTypeId);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+    }
+
+    {
+        // QJSValue QObject singleton type
+        QJSValue value = engine.singletonInstance<QJSValue>(jsValueSingletonTypeId);
+        QVERIFY(!value.isUndefined());
+        QVERIFY(value.isQObject());
+        QObject *instance = value.toQObject();
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "JsSingleton");
+    }
+
+    {
+        // Invalid types
+        QJSValue value;
+        value = engine.singletonInstance<QJSValue>(-4711);
+        QVERIFY(value.isUndefined());
+        value = engine.singletonInstance<QJSValue>(1701);
+        QVERIFY(value.isUndefined());
+    }
+
+    {
+        // Valid, but non-singleton type
+        int typeId = qmlRegisterType<CppSingleton>("Test", 1, 0, "NotASingleton");
+        QJSValue value = engine.singletonInstance<QJSValue>(typeId);
+        QVERIFY(value.isUndefined());
+    }
+
+    {
+        // Cpp QObject singleton type
+        CppSingleton *instance = engine.singletonInstance<CppSingleton*>(cppSingletonTypeId);
+        QVERIFY(instance);
+        QCOMPARE(instance->metaObject()->className(), "CppSingleton");
+        QCOMPARE(instance, engine.singletonInstance<QJSValue>(cppSingletonTypeId).toQObject());
+    }
+
+    {
+        // Wrong destination type
+        SomeQObjectClass * instance = engine.singletonInstance<SomeQObjectClass*>(cppSingletonTypeId);
+        QVERIFY(!instance);
+    }
 }
 
 QTEST_MAIN(tst_qqmlengine)

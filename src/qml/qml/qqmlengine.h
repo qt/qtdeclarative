@@ -143,6 +143,9 @@ public:
     bool outputWarningsToStandardError() const;
     void setOutputWarningsToStandardError(bool);
 
+    template<typename T>
+    T singletonInstance(int qmlTypeId);
+
 public Q_SLOTS:
     void retranslate();
 
@@ -166,6 +169,19 @@ private:
     Q_DISABLE_COPY(QQmlEngine)
     Q_DECLARE_PRIVATE(QQmlEngine)
 };
+
+template<>
+Q_QML_EXPORT QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId);
+
+template<typename T>
+T QQmlEngine::singletonInstance(int qmlTypeId) {
+    QJSValue instance = singletonInstance<QJSValue>(qmlTypeId);
+    if (!instance.isQObject())
+        return nullptr;
+
+    QObject *object = instance.toQObject();
+    return qobject_cast<T>(object);
+}
 
 QT_END_NAMESPACE
 

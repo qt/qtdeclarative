@@ -1863,6 +1863,23 @@ void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
     p->maxMinorVersion = qMax(p->maxMinorVersion, versionMinor);
 }
 
+//From qqml.h
+int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+
+    QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), versionMajor, data);
+    if (!module)
+        return -1;
+
+    QQmlType type = module->type(QHashedStringRef(qmlName), versionMinor);
+    if (!type.isValid())
+        return -1;
+
+    return type.index();
+}
+
 bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)
 {
     const QQmlMetaTypeData *data = metaTypeData();
@@ -2242,19 +2259,25 @@ QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStrin
 }
 
 /*!
-    Returns the type (if any) that corresponds to the QVariant::Type \a userType.
-    Returns null if no type is registered.
+    Returns the type (if any) that corresponds to \a typeId.  Depending on \a category, the
+    \a typeId is interpreted either as QVariant::Type or as QML type id returned by one of the
+    qml type registration functions.  Returns null if no type is registered.
 */
-QQmlType QQmlMetaType::qmlType(int userType)
+QQmlType QQmlMetaType::qmlType(int typeId, TypeIdCategory category)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlTypePrivate *type = data->idToType.value(userType);
-    if (type && type->typeId == userType)
-        return QQmlType(type);
-    else
-        return QQmlType();
+    if (category == TypeIdCategory::MetaType) {
+        QQmlTypePrivate *type = data->idToType.value(typeId);
+        if (type && type->typeId == typeId)
+            return QQmlType(type);
+    } else if (category == TypeIdCategory::QmlType) {
+        QQmlType type = data->types.value(typeId);
+        if (type.isValid())
+            return type;
+    }
+    return QQmlType();
 }
 
 /*!

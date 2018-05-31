@@ -645,6 +645,8 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
     return QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &type);
 }
 
+int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QObject)

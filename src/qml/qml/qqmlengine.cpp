@@ -1374,6 +1374,71 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
+  \fn template<typename T> T QQmlEngine::singletonInstance(int qmlTypeId)
+
+  Returns the instance of a singleton type that was registered under \a qmlTypeId.
+
+  The template argument \e T may be either QJSValue or a pointer to a QObject-derived
+  type and depends on how the singleton was registered. If no instance of \e T has been
+  created yet, it is created now. If \a qmlTypeId does not represent a valid singleton
+  type, either a default constructed QJSValue or a \c nullptr is returned.
+
+  QObject* example:
+  \code
+  class MySingleton : public QObject {
+    Q_OBJECT
+    static int typeId;
+    // ...
+  };
+
+  // Register with QObject* callback
+  MySingleton::typeId = qmlRegisterSingletonType<MySingleton>(...);
+
+  // Retrieve as QObject*
+  QQmlEngine engine;
+  MySingleton* instance = engine.singletonInstance<MySingleton*>(MySingleton::typeId);
+  \endcode
+
+  QJSValue example:
+  \code
+  // Register with QJSValue callback
+  int typeId = qmlRegisterSingletonType(...);
+
+  // Retrieve as QJSValue
+  QQmlEngine engine;
+  QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
+  \endcode
+
+  It is recommended to store the QML type id during registration, e.g. as a static member
+  in the singleton class. Otherwise, a costly lookup via qmlTypeId() has to be performed
+  at run-time.
+
+  \sa qmlRegisterSingletonType(), qmlTypeId()
+  \since 5.12
+*/
+template<>
+QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
+{
+    QQmlType type = QQmlMetaType::qmlType(qmlTypeId, QQmlMetaType::TypeIdCategory::QmlType);
+
+    if (!type.isValid() || !type.isSingleton())
+        return QJSValue();
+
+    QQmlType::SingletonInstanceInfo* info = type.singletonInstanceInfo();
+    info->init(this);
+
+    if (QObject* o = info->qobjectApi(this))
+        return this->newQObject(o);
+    else {
+        QJSValue value = info->scriptApi(this);
+        if (!value.isUndefined())
+            return value;
+    }
+
+    return QJSValue();
+}
+
+/*!
   Refreshes all binding expressions that use strings marked for translation.
 
   Call this function after you have installed a new translator with
