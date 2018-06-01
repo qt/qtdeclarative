@@ -1,1 +1,1 @@
-4:18:Unexpected object assignment
+4:18:Unexpected object assignment for property "x"
