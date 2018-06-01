@@ -86,6 +86,7 @@ private slots:
     void emptyModel_data();
     void emptyModel();
     void checkZeroSizedDelegate();
+    void checkImplicitSizeDelegate();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -206,6 +207,28 @@ void tst_QQuickTableView::checkZeroSizedDelegate()
         auto item = fxItem->item;
         QCOMPARE(item->width(), kDefaultColumnWidth);
         QCOMPARE(item->height(), kDefaultRowHeight);
+    }
+}
+
+void tst_QQuickTableView::checkImplicitSizeDelegate()
+{
+    // Check that we can set the size of delegate items using
+    // implicit width/height, instead of forcing the user to
+    // create an attached object by using TableView.cellWidth/Height.
+    LOAD_TABLEVIEW("tableviewimplicitsize.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto items = tableViewPrivate->loadedItems;
+    QVERIFY(!items.isEmpty());
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        auto item = fxItem->item;
+        QCOMPARE(item->width(), 90);
+        QCOMPARE(item->height(), 60);
     }
 }
 

@@ -54,6 +54,7 @@
 #include <QtCore/qpointer.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQml/private/qqmlnullablevalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -158,19 +159,19 @@ public:
         Q_EMIT tableViewChanged();
     }
 
-    qreal cellWidth() const { return m_cellSize.width(); }
+    qreal cellWidth() const { return m_cellWidth; }
     void setCellWidth(qreal newWidth) {
-        if (newWidth == m_cellSize.width())
+        if (newWidth == m_cellWidth)
             return;
-        m_cellSize.setWidth(newWidth);
+        m_cellWidth = newWidth;
         Q_EMIT cellWidthChanged();
     }
 
-    qreal cellHeight() const { return m_cellSize.height(); }
+    qreal cellHeight() const { return m_cellHeight; }
     void setCellHeight(qreal newHeight) {
-        if (newHeight == m_cellSize.height())
+        if (newHeight == m_cellHeight)
             return;
-        m_cellSize.setHeight(newHeight);
+        m_cellHeight = newHeight;
         Q_EMIT cellHeightChanged();
     }
 
@@ -201,7 +202,10 @@ private:
     QPointer<QQuickTableView> m_tableview;
     int m_row = -1;
     int m_column = -1;
-    QSizeF m_cellSize;
+    QQmlNullableValue<qreal> m_cellWidth;
+    QQmlNullableValue<qreal> m_cellHeight;
+
+    friend class QQuickTableViewPrivate;
 };
 
 QT_END_NAMESPACE

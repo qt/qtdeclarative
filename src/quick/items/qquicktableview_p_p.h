@@ -268,6 +268,9 @@ public:
     Qt::Edge nextEdgeToLoad(const QRectF rect);
     Qt::Edge nextEdgeToUnload(const QRectF rect);
 
+    qreal cellWidth(const QPoint &cell);
+    qreal cellHeight(const QPoint &cell);
+
     FxTableItem *loadedTableItem(const QPoint &cell) const;
     FxTableItem *itemNextTo(const FxTableItem *fxTableItem, const QPoint &direction) const;
     FxTableItem *createFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
