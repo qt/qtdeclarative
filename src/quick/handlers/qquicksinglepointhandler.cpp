@@ -145,11 +145,6 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     }
 }
 
-bool QQuickSinglePointHandler::wantsEventPoint(QQuickEventPoint *point)
-{
-    return parentContains(point);
-}
-
 void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
     if (grabber != this)

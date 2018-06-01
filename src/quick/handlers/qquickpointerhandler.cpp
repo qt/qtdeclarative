@@ -410,6 +410,11 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
     return d->enabled;
 }
 
+bool QQuickPointerHandler::wantsEventPoint(QQuickEventPoint *point)
+{
+    return parentContains(point);
+}
+
 /*!
     \readonly
     \qmlproperty bool QtQuick::PointerHandler::active

@@ -77,7 +77,6 @@ Q_SIGNALS:
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    virtual bool wantsEventPoint(QQuickEventPoint *point);
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
 

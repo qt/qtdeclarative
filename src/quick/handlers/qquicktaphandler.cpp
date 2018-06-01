@@ -107,7 +107,7 @@ QQuickTapHandler::~QQuickTapHandler()
 {
 }
 
-static bool dragOverThreshold(QQuickEventPoint *point)
+static bool dragOverThreshold(const QQuickEventPoint *point)
 {
     QPointF delta = point->scenePosition() - point->scenePressPosition();
     return (QQuickWindowPrivate::dragOverThreshold(delta.x(), Qt::XAxis, point) ||

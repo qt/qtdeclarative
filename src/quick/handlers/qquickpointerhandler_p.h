@@ -122,6 +122,7 @@ protected:
 
     QQuickPointerEvent *currentEvent();
     virtual bool wantsPointerEvent(QQuickPointerEvent *event);
+    virtual bool wantsEventPoint(QQuickEventPoint *point);
     virtual void handlePointerEventImpl(QQuickPointerEvent *event);
     void setActive(bool active);
     virtual void onTargetChanged(QQuickItem *oldTarget) { Q_UNUSED(oldTarget); }
