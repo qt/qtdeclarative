@@ -886,9 +886,9 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallContextObjectProperty)
 
-    MOTH_BEGIN_INSTR(SetExceptionHandler)
+    MOTH_BEGIN_INSTR(SetUnwindHandler)
         frame.exceptionHandler = offset ? code + offset : nullptr;
-    MOTH_END_INSTR(SetExceptionHandler)
+    MOTH_END_INSTR(SetUnwindHandler)
 
     MOTH_BEGIN_INSTR(ThrowException)
         STORE_IP();

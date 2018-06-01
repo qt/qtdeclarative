@@ -128,7 +128,7 @@ public:
     void generate_CallGlobalLookup(int index, int argc, int argv) override;
     void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
-    void generate_SetExceptionHandler(int offset) override;
+    void generate_SetUnwindHandler(int offset) override;
     void generate_ThrowException() override;
     void generate_GetException() override;
     void generate_SetException() override;

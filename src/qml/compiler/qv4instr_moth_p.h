@@ -111,7 +111,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
 #define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
-#define INSTR_SetExceptionHandler(op) INSTRUCTION(op, SetExceptionHandler, 1, offset)
+#define INSTR_SetUnwindHandler(op) INSTRUCTION(op, SetUnwindHandler, 1, offset)
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
 #define INSTR_SetException(op) INSTRUCTION(op, SetException, 0)
@@ -240,7 +240,7 @@ QT_BEGIN_NAMESPACE
     F(CallGlobalLookup) \
     F(CallScopeObjectProperty) \
     F(CallContextObjectProperty) \
-    F(SetExceptionHandler) \
+    F(SetUnwindHandler) \
     F(ThrowException) \
     F(GetException) \
     F(SetException) \

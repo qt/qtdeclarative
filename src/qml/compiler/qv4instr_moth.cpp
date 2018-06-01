@@ -384,12 +384,12 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallContextObjectProperty)
 
-        MOTH_BEGIN_INSTR(SetExceptionHandler)
+        MOTH_BEGIN_INSTR(SetUnwindHandler)
             if (offset)
                 d << ABSOLUTE_OFFSET();
             else
                 d << "<null>";
-        MOTH_END_INSTR(SetExceptionHandler)
+        MOTH_END_INSTR(SetUnwindHandler)
 
         MOTH_BEGIN_INSTR(ThrowException)
         MOTH_END_INSTR(ThrowException)

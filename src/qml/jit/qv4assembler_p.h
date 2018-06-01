@@ -162,8 +162,8 @@ public:
     void gotoCatchException();
     void getException();
     void setException();
-    void setExceptionHandler(int offset);
-    void clearExceptionHandler();
+    void setUnwindHandler(int offset);
+    void clearUnwindHandler();
     void pushCatchContext(int index, int name);
     void popContext();
 

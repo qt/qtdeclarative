@@ -269,9 +269,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(CallContextObjectProperty)
         COLLECTOR_END_INSTR(CallContextObjectProperty)
 
-        COLLECTOR_BEGIN_INSTR(SetExceptionHandler)
+        COLLECTOR_BEGIN_INSTR(SetUnwindHandler)
             addLabel(code - start + offset);
-        COLLECTOR_END_INSTR(SetExceptionHandler)
+        COLLECTOR_END_INSTR(SetUnwindHandler)
 
         COLLECTOR_BEGIN_INSTR(ThrowException)
         COLLECTOR_END_INSTR(ThrowException)

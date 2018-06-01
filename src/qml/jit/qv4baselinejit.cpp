@@ -553,12 +553,12 @@ void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int 
     as->checkException();
 }
 
-void BaselineJIT::generate_SetExceptionHandler(int offset)
+void BaselineJIT::generate_SetUnwindHandler(int offset)
 {
     if (offset)
-        as->setExceptionHandler(instructionOffset() + offset);
+        as->setUnwindHandler(instructionOffset() + offset);
     else
-        as->clearExceptionHandler();
+        as->clearUnwindHandler();
 }
 
 void BaselineJIT::generate_ThrowException()

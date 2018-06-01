@@ -2228,14 +2228,14 @@ void Assembler::setException()
     pasm()->store8(TrustedImm32(1), addr);
 }
 
-void Assembler::setExceptionHandler(int offset)
+void Assembler::setUnwindHandler(int offset)
 {
     auto l = pasm()->storePtrWithPatch(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
     pasm()->ehTargets.push_back({ l, offset });
 }
 
 
-void Assembler::clearExceptionHandler()
+void Assembler::clearUnwindHandler()
 {
     pasm()->storePtr(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
 }

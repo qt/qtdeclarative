@@ -310,14 +310,14 @@ struct ControlFlowWith : public ControlFlowUnwind
         // assumes the with object is in the accumulator
         Instruction::PushWithContext pushScope;
         generator()->addInstruction(pushScope);
-        generator()->setExceptionHandler(&unwindLabel);
+        generator()->setUnwindHandler(&unwindLabel);
     }
 
     virtual ~ControlFlowWith() {
         // emit code for unwinding
         unwindLabel.link();
 
-        generator()->setExceptionHandler(parentExceptionHandler());
+        generator()->setUnwindHandler(parentExceptionHandler());
         Instruction::PopContext pop;
         generator()->addInstruction(pop);
 
@@ -335,7 +335,7 @@ struct ControlFlowBlock : public ControlFlowUnwind
 
         if (block->requiresExecutionContext) {
             setupExceptionHandler();
-            generator()->setExceptionHandler(&unwindLabel);
+            generator()->setUnwindHandler(&unwindLabel);
         }
     }
 
@@ -343,7 +343,7 @@ struct ControlFlowBlock : public ControlFlowUnwind
         // emit code for unwinding
         if (block->requiresExecutionContext ) {
             unwindLabel.link();
-            generator()->setExceptionHandler(parentExceptionHandler());
+            generator()->setUnwindHandler(parentExceptionHandler());
         }
 
         block->emitBlockFooter(cg);
@@ -375,7 +375,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
           catchUnwindLabel(generator()->newExceptionHandler())
     {
         setupExceptionHandler();
-        generator()->setExceptionHandler(&exceptionLabel);
+        generator()->setUnwindHandler(&exceptionLabel);
     }
 
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
@@ -413,7 +413,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // clear the unwind temp for exceptions, we want to resume normal code flow afterwards
         Reference::storeConstOnStack(cg, QV4::Encode::undefined(), controlFlowTemp);
-        generator()->setExceptionHandler(&catchUnwindLabel);
+        generator()->setUnwindHandler(&catchUnwindLabel);
 
         if (catchExpression->patternElement->bindingIdentifier.isEmpty())
             // destructuring pattern
@@ -431,7 +431,7 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         // break/continue/return statements in try go here
         unwindLabel.link();
-        generator()->setExceptionHandler(parentExceptionHandler());
+        generator()->setUnwindHandler(parentExceptionHandler());
 
         emitUnwindHandler();
     }
@@ -448,7 +448,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
     {
         Q_ASSERT(finally != nullptr);
         setupExceptionHandler();
-        generator()->setExceptionHandler(&unwindLabel);
+        generator()->setUnwindHandler(&unwindLabel);
     }
 
     virtual Handler getHandler(HandlerType type, const QString &label = QString()) {
@@ -480,7 +480,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
         generator()->addInstruction(instr);
         Reference::fromStackSlot(cg, exceptionTemp).storeConsumeAccumulator();
 
-        generator()->setExceptionHandler(parentExceptionHandler());
+        generator()->setUnwindHandler(parentExceptionHandler());
         cg->statement(finally->statement);
         insideFinally = false;
 

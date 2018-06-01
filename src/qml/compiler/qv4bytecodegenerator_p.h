@@ -224,10 +224,10 @@ public:
         return addJumpInstruction(data);
     }
 
-    void setExceptionHandler(ExceptionHandler *handler)
+    void setUnwindHandler(ExceptionHandler *handler)
     {
         currentExceptionHandler = handler;
-        Instruction::SetExceptionHandler data;
+        Instruction::SetUnwindHandler data;
         data.offset = 0;
         if (!handler)
             addInstruction(data);
