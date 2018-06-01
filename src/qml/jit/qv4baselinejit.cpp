@@ -561,6 +561,17 @@ void BaselineJIT::generate_SetUnwindHandler(int offset)
         as->clearUnwindHandler();
 }
 
+void BaselineJIT::generate_UnwindDispatch()
+{
+    as->unwindDispatch();
+}
+
+void BaselineJIT::generate_UnwindToLabel(int level, int offset)
+{
+    as->unwindToLabel(level, instructionOffset() + offset);
+}
+
+
 void BaselineJIT::generate_ThrowException()
 {
     STORE_IP();
@@ -891,6 +902,7 @@ void BaselineJIT::generate_Construct(int func, int argc, int argv)
 void BaselineJIT::generate_Jump(int offset) { as->jump(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(instructionOffset() + offset); }
+void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpEmpty(int offset) { as->jumpEmpty(instructionOffset() + offset); }
 
@@ -927,16 +939,6 @@ void BaselineJIT::generate_CmpInstanceOf(int lhs)
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_instanceof, Assembler::ResultInAccumulator);
     as->checkException();
-}
-
-void BaselineJIT::generate_JumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
-{
-    as->jumpStrictEqualStackSlotInt(lhs, rhs, instructionOffset() + offset);
-}
-
-void BaselineJIT::generate_JumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
-{
-    as->jumpStrictNotEqualStackSlotInt(lhs, rhs, instructionOffset() + offset);
 }
 
 void BaselineJIT::generate_UNot() { as->unot(); }

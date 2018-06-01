@@ -140,10 +140,9 @@ public:
     void jump(int offset);
     void jumpTrue(int offset);
     void jumpFalse(int offset);
+    void jumpNoException(int offset);
     void jumpNotUndefined(int offset);
     void jumpEmpty(int offset);
-    void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset);
-    void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset);
 
     // stuff for runtime calls
     void prepareCallWithArgCount(int argc);
@@ -164,6 +163,8 @@ public:
     void setException();
     void setUnwindHandler(int offset);
     void clearUnwindHandler();
+    void unwindDispatch();
+    void unwindToLabel(int level, int offset);
     void pushCatchContext(int index, int name);
     void popContext();
 

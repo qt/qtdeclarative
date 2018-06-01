@@ -344,7 +344,7 @@ static struct InstrCount {
 #endif
 #define CHECK_EXCEPTION \
     if (engine->hasException) \
-        goto catchException
+        goto handleUnwind
 
 static inline Heap::CallContext *getScope(QV4::Value *stack, int level)
 {
@@ -510,7 +510,10 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
     frame.originalArguments = argv;
     frame.originalArgumentsCount = argc;
     frame.yield = nullptr;
-    frame.exceptionHandler = nullptr;
+    frame.unwindHandler = nullptr;
+    frame.unwindLabel = nullptr;
+    frame.unwindLevel = 0;
+
     Function *function;
 
     {
@@ -810,7 +813,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         if (engine->hasException) {
             // an empty value indicates that the generator was called with return()
             if (engine->exceptionValue->asReturnedValue() != Primitive::emptyValue().asReturnedValue())
-                goto catchException;
+                goto handleUnwind;
             engine->hasException = false;
             *engine->exceptionValue = Primitive::undefinedValue();
     } else {
@@ -823,7 +826,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         Value func = STACK_VALUE(name);
         if (Q_UNLIKELY(!func.isFunctionObject())) {
             acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
-            goto catchException;
+            goto handleUnwind;
         }
         acc = static_cast<const FunctionObject &>(func).call(nullptr, stack + argv, argc);
         CHECK_EXCEPTION;
@@ -843,7 +846,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
         if (Q_UNLIKELY(!f.isFunctionObject())) {
             acc = engine->throwTypeError();
-            goto catchException;
+            goto handleUnwind;
         }
 
         acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);
@@ -887,14 +890,30 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(SetUnwindHandler)
-        frame.exceptionHandler = offset ? code + offset : nullptr;
+        frame.unwindHandler = offset ? code + offset : nullptr;
     MOTH_END_INSTR(SetUnwindHandler)
+
+    MOTH_BEGIN_INSTR(UnwindDispatch)
+        CHECK_EXCEPTION;
+        if (frame.unwindLevel) {
+            --frame.unwindLevel;
+            if (frame.unwindLevel)
+                goto handleUnwind;
+            code = frame.unwindLabel;
+        }
+    MOTH_END_INSTR(UnwindDispatch)
+
+    MOTH_BEGIN_INSTR(UnwindToLabel)
+        frame.unwindLevel = level;
+        frame.unwindLabel = code + offset;
+        goto handleUnwind;
+    MOTH_END_INSTR(UnwindToLabel)
 
     MOTH_BEGIN_INSTR(ThrowException)
         STORE_IP();
         STORE_ACC();
         Runtime::method_throwException(engine, accumulator);
-        goto catchException;
+        goto handleUnwind;
     MOTH_END_INSTR(ThrowException)
 
     MOTH_BEGIN_INSTR(GetException)
@@ -904,8 +923,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(HasException)
 
     MOTH_BEGIN_INSTR(SetException)
-        *engine->exceptionValue = acc;
-        engine->hasException = true;
+        if (acc != Primitive::emptyValue().asReturnedValue()) {
+            *engine->exceptionValue = acc;
+            engine->hasException = true;
+        }
     MOTH_END_INSTR(SetException)
 
     MOTH_BEGIN_INSTR(PushCatchContext)
@@ -979,7 +1000,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
             if (function->isStrict()) {
                 STORE_IP();
                 engine->throwTypeError();
-                goto catchException;
+                goto handleUnwind;
             }
             acc = Encode(false);
         } else {
@@ -992,7 +1013,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
             if (function->isStrict()) {
                 STORE_IP();
                 engine->throwTypeError();
-                goto catchException;
+                goto handleUnwind;
             }
             acc = Encode(false);
         } else {
@@ -1006,7 +1027,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
                 STORE_IP();
                 QString n = function->compilationUnit->runtimeStrings[name]->toQString();
                 engine->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(n));
-                goto catchException;
+                goto handleUnwind;
             }
             acc = Encode(false);
         } else {
@@ -1095,6 +1116,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
                 code += offset;
         }
     MOTH_END_INSTR(JumpFalse)
+
+    MOTH_BEGIN_INSTR(JumpNoException)
+        if (!engine->hasException)
+            code += offset;
+    MOTH_END_INSTR(JumpNoException)
 
     MOTH_BEGIN_INSTR(JumpNotUndefined)
         if (Q_LIKELY(acc != QV4::Encode::undefined()))
@@ -1241,16 +1267,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         acc = Runtime::method_instanceof(engine, STACK_VALUE(lhs), ACC);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CmpInstanceOf)
-
-    MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-        if (STACK_VALUE(lhs).int_32() != rhs || STACK_VALUE(lhs).isUndefined())
-            code += offset;
-    MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
-
-    MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-        if (STACK_VALUE(lhs).int_32() == rhs && !STACK_VALUE(lhs).isUndefined())
-            code += offset;
-    MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
     MOTH_BEGIN_INSTR(UNot)
         if (ACC.integerCompatible()) {
@@ -1456,12 +1472,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         STACK_VALUE(result) = Runtime::method_loadQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
-    catchException:
-        Q_ASSERT(engine->hasException);
-        if (!frame.exceptionHandler) {
+    handleUnwind:
+        Q_ASSERT(engine->hasException || frame.unwindLevel);
+        if (!frame.unwindHandler) {
             acc = Encode::undefined();
             return acc;
         }
-        code = frame.exceptionHandler;
+        code = frame.unwindHandler;
     }
 }

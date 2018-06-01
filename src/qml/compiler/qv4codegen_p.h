@@ -660,6 +660,12 @@ public:
 
     Module *module() const { return _module; }
 
+    BytecodeGenerator::Label returnLabel() {
+        if (!_returnLabel)
+            _returnLabel = new BytecodeGenerator::Label(bytecodeGenerator->newLabel());
+        return *_returnLabel;
+    }
+
 protected:
     friend class ScanFunctions;
     friend struct ControlFlow;
@@ -674,6 +680,7 @@ protected:
     AST::LabelledStatement *_labelledStatement;
     QV4::Compiler::JSUnitGenerator *jsUnitGenerator;
     BytecodeGenerator *bytecodeGenerator = nullptr;
+    Moth::BytecodeGenerator::Label *_returnLabel = nullptr;
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;

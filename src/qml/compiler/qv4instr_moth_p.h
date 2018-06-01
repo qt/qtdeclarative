@@ -112,6 +112,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
 #define INSTR_SetUnwindHandler(op) INSTRUCTION(op, SetUnwindHandler, 1, offset)
+#define INSTR_UnwindDispatch(op) INSTRUCTION(op, UnwindDispatch, 0)
+#define INSTR_UnwindToLabel(op) INSTRUCTION(op, UnwindToLabel, 2, level, offset)
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
 #define INSTR_SetException(op) INSTRUCTION(op, SetException, 0)
@@ -145,6 +147,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_JumpTrue(op) INSTRUCTION(op, JumpTrue, 1, offset)
 #define INSTR_JumpFalse(op) INSTRUCTION(op, JumpFalse, 1, offset)
 #define INSTR_JumpNotUndefined(op) INSTRUCTION(op, JumpNotUndefined, 1, offset)
+#define INSTR_JumpNoException(op) INSTRUCTION(op, JumpNoException, 1, offset)
 #define INSTR_JumpEmpty(op) INSTRUCTION(op, JumpEmpty, 1, offset)
 #define INSTR_CmpEqNull(op) INSTRUCTION(op, CmpEqNull, 0)
 #define INSTR_CmpNeNull(op) INSTRUCTION(op, CmpNeNull, 0)
@@ -160,8 +163,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CmpStrictNotEqual(op) INSTRUCTION(op, CmpStrictNotEqual, 1, lhs)
 #define INSTR_CmpIn(op) INSTRUCTION(op, CmpIn, 1, lhs)
 #define INSTR_CmpInstanceOf(op) INSTRUCTION(op, CmpInstanceOf, 1, lhs)
-#define INSTR_JumpStrictEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictEqualStackSlotInt, 3, lhs, rhs, offset)
-#define INSTR_JumpStrictNotEqualStackSlotInt(op) INSTRUCTION(op, JumpStrictNotEqualStackSlotInt, 3, lhs, rhs, offset)
 #define INSTR_UNot(op) INSTRUCTION(op, UNot, 0)
 #define INSTR_UPlus(op) INSTRUCTION(op, UPlus, 0)
 #define INSTR_UMinus(op) INSTRUCTION(op, UMinus, 0)
@@ -241,6 +242,8 @@ QT_BEGIN_NAMESPACE
     F(CallScopeObjectProperty) \
     F(CallContextObjectProperty) \
     F(SetUnwindHandler) \
+    F(UnwindDispatch) \
+    F(UnwindToLabel) \
     F(ThrowException) \
     F(GetException) \
     F(SetException) \
@@ -273,6 +276,7 @@ QT_BEGIN_NAMESPACE
     F(Jump) \
     F(JumpTrue) \
     F(JumpFalse) \
+    F(JumpNoException) \
     F(JumpNotUndefined) \
     F(JumpEmpty) \
     F(CmpEqNull) \
@@ -289,8 +293,6 @@ QT_BEGIN_NAMESPACE
     F(CmpStrictNotEqual) \
     F(CmpIn) \
     F(CmpInstanceOf) \
-    F(JumpStrictEqualStackSlotInt) \
-    F(JumpStrictNotEqualStackSlotInt) \
     F(UNot) \
     F(UPlus) \
     F(UMinus) \

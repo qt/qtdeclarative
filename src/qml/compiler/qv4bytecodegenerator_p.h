@@ -81,14 +81,6 @@ public:
             if (mode == LinkNow)
                 link();
         }
-        static Label returnLabel() {
-            Label l;
-            l.index = INT_MAX;
-            return l;
-        }
-        bool isReturn() const {
-            return index == INT_MAX;
-        }
 
         void link() {
             Q_ASSERT(index >= 0);
@@ -96,6 +88,7 @@ public:
             generator->labels[index] = generator->instructions.size();
             generator->clearLastInstruction();
         }
+        bool isValid() const { return generator != nullptr; }
 
         BytecodeGenerator *generator = nullptr;
         int index = -1;
@@ -192,6 +185,12 @@ public:
         return addJumpInstruction(data);
     }
 
+    Q_REQUIRED_RESULT Jump jumpNoException()
+    {
+        Instruction::JumpNoException data;
+        return addJumpInstruction(data);
+    }
+
     void jumpStrictEqual(const StackSlot &lhs, const Label &target)
     {
         Instruction::CmpStrictEqual cmp;
@@ -208,22 +207,6 @@ public:
         addJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
-    Q_REQUIRED_RESULT Jump jumpStrictEqualStackSlotInt(const StackSlot &lhs, int rhs)
-    {
-        Instruction::JumpStrictEqualStackSlotInt data;
-        data.lhs = lhs;
-        data.rhs = rhs;
-        return addJumpInstruction(data);
-    }
-
-    Q_REQUIRED_RESULT Jump jumpStrictNotEqualStackSlotInt(const StackSlot &lhs, int rhs)
-    {
-        Instruction::JumpStrictNotEqualStackSlotInt data;
-        data.lhs = lhs;
-        data.rhs = rhs;
-        return addJumpInstruction(data);
-    }
-
     void setUnwindHandler(ExceptionHandler *handler)
     {
         currentExceptionHandler = handler;
@@ -234,6 +217,19 @@ public:
         else
             addJumpInstruction(data).link(*handler);
     }
+
+    void unwindToLabel(int level, const Label &target)
+    {
+        if (level) {
+            Instruction::UnwindToLabel unwind;
+            unwind.level = level;
+            addJumpInstruction(unwind).link(target);
+        } else {
+            jump().link(target);
+        }
+    }
+
+
 
     void setLocation(const QQmlJS::AST::SourceLocation &loc);
 

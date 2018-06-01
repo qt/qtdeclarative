@@ -90,7 +90,7 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
 
 Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     : _module(nullptr)
-    , _returnAddress(0)
+    , _returnAddress(-1)
     , _context(nullptr)
     , _labelledStatement(nullptr)
     , jsUnitGenerator(jsUnitGenerator)
@@ -2376,6 +2376,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
+    BytecodeGenerator::Label *savedReturnLabel = _returnLabel;
+    _returnLabel = nullptr;
 
     // reserve the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
@@ -2386,8 +2388,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     int returnAddress = -1;
     bool _requiresReturnValue = _context->requiresImplicitReturnValue();
     qSwap(requiresReturnValue, _requiresReturnValue);
-    if (requiresReturnValue)
-        returnAddress = bytecodeGenerator->newRegister();
+    returnAddress = bytecodeGenerator->newRegister();
     qSwap(_returnAddress, returnAddress);
 
     // register the lexical scope for global code
@@ -2438,19 +2439,21 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     statementList(body);
 
+    bytecodeGenerator->setLocation(ast->lastSourceLocation());
     _context->emitBlockFooter(this);
 
-    if (hasError || !endsWithReturn(_module, body)) {
-        bytecodeGenerator->setLocation(ast->lastSourceLocation());
-        if (requiresReturnValue) {
-            if (_returnAddress >= 0) {
-                Instruction::LoadReg load;
-                load.reg = Moth::StackSlot::createRegister(_returnAddress);
-                bytecodeGenerator->addInstruction(load);
-            }
+    if (_returnLabel || hasError || !endsWithReturn(_module, body)) {
+        if (_returnLabel)
+            _returnLabel->link();
+
+        if (_returnLabel || requiresReturnValue) {
+            Instruction::LoadReg load;
+            load.reg = Moth::StackSlot::createRegister(_returnAddress);
+            bytecodeGenerator->addInstruction(load);
         } else {
             Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
         }
+
         bytecodeGenerator->addInstruction(Instruction::Ret());
     }
 
@@ -2470,6 +2473,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     qSwap(requiresReturnValue, _requiresReturnValue);
     qSwap(_inFormalParameterList, inFormalParameterList);
     bytecodeGenerator = savedBytecodeGenerator;
+    delete _returnLabel;
+    _returnLabel = savedReturnLabel;
     controlFlow = savedControlFlow;
     _functionContext = savedFunctionContext;
 
@@ -2498,8 +2503,8 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
     }
 
-    ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Break, ast->label.toString());
-    if (h.type == ControlFlow::Invalid) {
+    ControlFlow::UnwindTarget target = controlFlow->unwindTarget(ControlFlow::Break, ast->label.toString());
+    if (!target.linkLabel.isValid()) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         else
@@ -2507,7 +2512,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
     }
 
-    controlFlow->jumpToHandler(h);
+    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
 
     return false;
 }
@@ -2524,8 +2529,8 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
 
-    ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Continue, ast->label.toString());
-    if (h.type == ControlFlow::Invalid) {
+    ControlFlow::UnwindTarget target = controlFlow->unwindTarget(ControlFlow::Continue, ast->label.toString());
+    if (!target.linkLabel.isValid()) {
         if (ast->label.isEmpty())
             throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Undefined label '%1'").arg(ast->label.toString()));
         else
@@ -2533,7 +2538,7 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
 
-    controlFlow->jumpToHandler(h);
+    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
 
     return false;
 }
@@ -2628,51 +2633,53 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+    BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
-    bytecodeGenerator->jump().link(in);
-
-    ControlFlowLoop flow(this, &end, &in);
-
-    BytecodeGenerator::Label body = bytecodeGenerator->label();
-
-    // each iteration gets it's own context, as per spec
     {
-        RegisterScope innerScope(this);
-        ControlFlowBlock controlFlow(this, ast);
+        ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+        bytecodeGenerator->jump().link(in);
 
-        if (ExpressionNode *e = ast->lhs->expressionCast()) {
-            if (AST::Pattern *p = e->patternCast()) {
-                RegisterScope scope(this);
-                destructurePattern(p, lhsValue);
-            } else {
-                Reference lhs = expression(e);
+        BytecodeGenerator::Label body = bytecodeGenerator->label();
+
+        // each iteration gets it's own context, as per spec
+        {
+            RegisterScope innerScope(this);
+            ControlFlowBlock controlFlow(this, ast);
+
+            if (ExpressionNode *e = ast->lhs->expressionCast()) {
+                if (AST::Pattern *p = e->patternCast()) {
+                    RegisterScope scope(this);
+                    destructurePattern(p, lhsValue);
+                } else {
+                    Reference lhs = expression(e);
+                    if (hasError)
+                        goto error;
+                    lhs = lhs.asLValue();
+                    lhsValue.loadInAccumulator();
+                    lhs.storeConsumeAccumulator();
+                }
+            } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
+                initializeAndDestructureBindingElement(p, lhsValue);
                 if (hasError)
                     goto error;
-                lhs = lhs.asLValue();
-                lhsValue.loadInAccumulator();
-                lhs.storeConsumeAccumulator();
+            } else {
+                Q_UNREACHABLE();
             }
-        } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
-            initializeAndDestructureBindingElement(p, lhsValue);
-            if (hasError)
-                goto error;
-        } else {
-            Q_UNREACHABLE();
+
+            statement(ast->statement);
+            setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
+
         }
 
-        statement(ast->statement);
-        setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
-
+      error:
+        in.link();
+        iterator.loadInAccumulator();
+        Instruction::IteratorNext next;
+        next.value = lhsValue.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+        bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
+        bytecodeGenerator->jump().link(done);
     }
-
-  error:
-    in.link();
-    iterator.loadInAccumulator();
-    Instruction::IteratorNext next;
-    next.value = lhsValue.stackSlot();
-    bytecodeGenerator->addInstruction(next);
-    bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
-    BytecodeGenerator::Jump done = bytecodeGenerator->jump();
 
     end.link();
 
@@ -2796,13 +2803,11 @@ bool Codegen::visit(LabelledStatement *ast)
 
 void Codegen::emitReturn(const Reference &expr)
 {
-    if (controlFlow && controlFlow->returnRequiresUnwind()) {
-        if (_returnAddress >= 0)
-            (void) expr.storeOnStack(_returnAddress);
-        else
-            expr.loadInAccumulator();
-        ControlFlow::Handler h = controlFlow->getHandler(ControlFlow::Return);
-        controlFlow->jumpToHandler(h);
+    ControlFlow::UnwindTarget target = controlFlow ? controlFlow->unwindTarget(ControlFlow::Return) : ControlFlow::UnwindTarget();
+    if (target.linkLabel.isValid() && target.unwindLevel) {
+        Q_ASSERT(_returnAddress >= 0);
+        (void) expr.storeOnStack(_returnAddress);
+        bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
     } else {
         expr.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::Ret());
@@ -2923,13 +2928,9 @@ bool Codegen::visit(ThrowStatement *ast)
     if (hasError)
         return false;
 
-    if (controlFlow) {
-        controlFlow->handleThrow(expr);
-    } else {
-        expr.loadInAccumulator();
-        Instruction::ThrowException instr;
-        bytecodeGenerator->addInstruction(instr);
-    }
+    expr.loadInAccumulator();
+    Instruction::ThrowException instr;
+    bytecodeGenerator->addInstruction(instr);
     return false;
 }
 

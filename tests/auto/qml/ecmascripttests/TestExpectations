@@ -496,7 +496,6 @@ built-ins/Function/prototype/toString/setter-object.js fails
 built-ins/Function/prototype/toString/symbol-named-builtins.js fails
 built-ins/Function/prototype/toString/unicode.js fails
 built-ins/GeneratorFunction/proto-from-ctor-realm.js fails
-built-ins/GeneratorPrototype/throw/try-finally-nested-try-catch-within-catch.js fails
 built-ins/JSON/parse/revived-proxy-revoked.js fails
 built-ins/JSON/parse/revived-proxy.js fails
 built-ins/JSON/parse/reviver-array-define-prop-err.js fails
@@ -1575,6 +1574,7 @@ built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.
 built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js fails
 built-ins/String/prototype/indexOf/position-tointeger.js fails
 built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js fails
+built-ins/String/prototype/match/invoke-builtin-match.js fails
 built-ins/String/prototype/match/cstm-matcher-invocation.js fails
 built-ins/String/prototype/replace/cstm-replace-invocation.js fails
 built-ins/String/prototype/replace/this-value-not-obj-coercible.js fails

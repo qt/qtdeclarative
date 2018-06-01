@@ -273,6 +273,13 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(SetUnwindHandler)
 
+        COLLECTOR_BEGIN_INSTR(UnwindDispatch)
+        COLLECTOR_END_INSTR(UnwindDispatch)
+
+        COLLECTOR_BEGIN_INSTR(UnwindToLabel)
+            addLabel(code - start + offset);
+        COLLECTOR_END_INSTR(UnwindToLabel)
+
         COLLECTOR_BEGIN_INSTR(ThrowException)
         COLLECTOR_END_INSTR(ThrowException)
 
@@ -372,6 +379,10 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(JumpFalse)
 
+        COLLECTOR_BEGIN_INSTR(JumpNoException)
+            addLabel(code - start + offset);
+        COLLECTOR_END_INSTR(JumpNoException)
+
         COLLECTOR_BEGIN_INSTR(JumpNotUndefined)
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(JumpNotUndefined)
@@ -421,14 +432,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(CmpInstanceOf)
         COLLECTOR_END_INSTR(CmpInstanceOf)
-
-        COLLECTOR_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-            addLabel(code - start + offset);
-        COLLECTOR_END_INSTR(JumpStrictEqualStackSlotInt)
-
-        COLLECTOR_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-            addLabel(code - start + offset);
-        COLLECTOR_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
         COLLECTOR_BEGIN_INSTR(UNot)
         COLLECTOR_END_INSTR(UNot)

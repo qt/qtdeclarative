@@ -712,6 +712,11 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         patches.push_back({ jump, offset });
     }
 
+    Jump jumpEmpty()
+    {
+        return branch64(Equal, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
+    }
+
     void toBoolean(std::function<void(RegisterID)> continuation)
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerConvertible_Shift), ScratchRegister);
@@ -813,26 +818,6 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
     {
         urshift64(AccumulatorRegister, TrustedImm32(Value::IsIntegerOrBool_Shift), ScratchRegister);
         return branch32(Equal, TrustedImm32(3), ScratchRegister);
-    }
-
-    void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
-    {
-        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
-        load64(lhsAddr, ScratchRegister);
-        Jump isUndef = branch64(Equal, ScratchRegister, TrustedImm64(0));
-        Jump equal = branch32(Equal, TrustedImm32(rhs), ScratchRegister);
-        patches.push_back({ equal, offset });
-        isUndef.link(this);
-    }
-
-    void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
-    {
-        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
-        load64(lhsAddr, ScratchRegister);
-        Jump isUndef = branch64(Equal, ScratchRegister, TrustedImm64(0));
-        patches.push_back({ isUndef, offset });
-        Jump notEqual = branch32(NotEqual, TrustedImm32(rhs), ScratchRegister);
-        patches.push_back({ notEqual, offset });
     }
 
     void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
@@ -1163,6 +1148,11 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         patches.push_back({ jump, offset });
     }
 
+    Jump jumpEmpty()
+    {
+        return branch32(Equal, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
+    }
+
     void toBoolean(std::function<void(RegisterID)> continuation)
     {
         urshift32(AccumulatorRegisterTag, TrustedImm32(Value::IsIntegerConvertible_Shift - 32),
@@ -1200,34 +1190,6 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         continuation(ScratchRegister);
 
         done.link(this);
-    }
-
-    void jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
-    {
-        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
-        load32(lhsAddr, ScratchRegister);
-        Jump notEqInt = branch32(NotEqual, ScratchRegister, TrustedImm32(rhs));
-        Jump notEqUndefVal = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
-        patches.push_back({ notEqUndefVal, offset });
-        lhsAddr.offset += 4;
-        load32(lhsAddr, ScratchRegister);
-        Jump notEqUndefTag = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
-        patches.push_back({ notEqUndefTag, offset });
-        notEqInt.link(this);
-    }
-
-    void jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
-    {
-        Address lhsAddr(JSStackFrameRegister, lhs * int(sizeof(Value)));
-        load32(lhsAddr, ScratchRegister);
-        Jump notEqual = branch32(NotEqual, TrustedImm32(rhs), ScratchRegister);
-        patches.push_back({ notEqual, offset });
-        Jump notUndefValue = branch32(NotEqual, TrustedImm32(0), ScratchRegister);
-        lhsAddr.offset += 4;
-        load32(lhsAddr, ScratchRegister);
-        Jump equalUndef = branch32(Equal, TrustedImm32(0), ScratchRegister);
-        patches.push_back({ equalUndef, offset });
-        notUndefValue.link(this);
     }
 
     void setAccumulatorTag(QV4::Value::ValueTypeInternal tag, RegisterID sourceReg = NoRegister)
@@ -2009,6 +1971,16 @@ void Assembler::jumpFalse(int offset)
     });
 }
 
+void Assembler::jumpNoException(int offset)
+{
+    auto jump = pasm()->branch32(
+        PlatformAssembler::Equal,
+        PlatformAssembler::Address(PlatformAssembler::EngineRegister,
+                                   offsetof(EngineBase, hasException)),
+        TrustedImm32(0));
+    pasm()->patches.push_back({ jump, offset });
+}
+
 void Assembler::jumpNotUndefined(int offset)
 {
     pasm()->jumpNotUndefined(offset);
@@ -2017,16 +1989,6 @@ void Assembler::jumpNotUndefined(int offset)
 void JIT::Assembler::jumpEmpty(int offset)
 {
     pasm()->jumpEmpty(offset);
-}
-
-void Assembler::jumpStrictEqualStackSlotInt(int lhs, int rhs, int offset)
-{
-    pasm()->jumpStrictEqualStackSlotInt(lhs, rhs, offset);
-}
-
-void Assembler::jumpStrictNotEqualStackSlotInt(int lhs, int rhs, int offset)
-{
-    pasm()->jumpStrictNotEqualStackSlotInt(lhs, rhs, offset);
 }
 
 void Assembler::prepareCallWithArgCount(int argc)
@@ -2220,12 +2182,14 @@ void Assembler::getException()
 
 void Assembler::setException()
 {
+    auto noException = pasm()->jumpEmpty();
     Address addr(PlatformAssembler::EngineRegister, offsetof(EngineBase, exceptionValue));
     pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
     pasm()->storeAccumulator(Address(PlatformAssembler::ScratchRegister));
     addr.offset = offsetof(EngineBase, hasException);
     Q_STATIC_ASSERT(sizeof(QV4::EngineBase::hasException) == 1);
     pasm()->store8(TrustedImm32(1), addr);
+    noException.link(pasm());
 }
 
 void Assembler::setUnwindHandler(int offset)
@@ -2238,6 +2202,31 @@ void Assembler::setUnwindHandler(int offset)
 void Assembler::clearUnwindHandler()
 {
     pasm()->storePtr(TrustedImmPtr(nullptr), pasm()->exceptionHandlerAddress());
+}
+
+void JIT::Assembler::unwindDispatch()
+{
+    checkException();
+    pasm()->load32(Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)), PlatformAssembler::ScratchRegister);
+    auto noUnwind = pasm()->branch32(PlatformAssembler::Equal, PlatformAssembler::ScratchRegister, TrustedImm32(0));
+    pasm()->sub32(TrustedImm32(1), PlatformAssembler::ScratchRegister);
+    pasm()->store32(PlatformAssembler::ScratchRegister, Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)));
+    auto jump = pasm()->branch32(PlatformAssembler::Equal, PlatformAssembler::ScratchRegister, TrustedImm32(0));
+    gotoCatchException();
+    jump.link(pasm());
+
+    pasm()->loadPtr(Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLabel)), PlatformAssembler::ScratchRegister);
+    pasm()->jump(PlatformAssembler::ScratchRegister);
+
+    noUnwind.link(pasm());
+}
+
+void JIT::Assembler::unwindToLabel(int level, int offset)
+{
+    auto l = pasm()->storePtrWithPatch(TrustedImmPtr(nullptr), Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLabel)));
+    pasm()->ehTargets.push_back({ l, offset });
+    pasm()->store32(TrustedImm32(level), Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)));
+    gotoCatchException();
 }
 
 void Assembler::pushCatchContext(int index, int name)

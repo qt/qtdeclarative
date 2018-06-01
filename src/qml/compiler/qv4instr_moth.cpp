@@ -391,6 +391,13 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
                 d << "<null>";
         MOTH_END_INSTR(SetUnwindHandler)
 
+        MOTH_BEGIN_INSTR(UnwindDispatch)
+        MOTH_END_INSTR(UnwindDispatch)
+
+        MOTH_BEGIN_INSTR(UnwindToLabel)
+                d << "(" << level << ") " << ABSOLUTE_OFFSET();
+        MOTH_END_INSTR(UnwindToLabel)
+
         MOTH_BEGIN_INSTR(ThrowException)
         MOTH_END_INSTR(ThrowException)
 
@@ -511,6 +518,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpNotUndefined)
 
+        MOTH_BEGIN_INSTR(JumpNoException)
+            d << ABSOLUTE_OFFSET();
+        MOTH_END_INSTR(JumpNoException)
+
         MOTH_BEGIN_INSTR(JumpEmpty)
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(JumpEmpty)
@@ -560,14 +571,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(CmpStrictNotEqual)
             d << dumpRegister(lhs, nFormals);
         MOTH_END_INSTR(CmpStrictNotEqual)
-
-        MOTH_BEGIN_INSTR(JumpStrictEqualStackSlotInt)
-            d << dumpRegister(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpStrictEqualStackSlotInt)
-
-        MOTH_BEGIN_INSTR(JumpStrictNotEqualStackSlotInt)
-            d << dumpRegister(lhs, nFormals) << ", " << rhs << "  " << ABSOLUTE_OFFSET();
-        MOTH_END_INSTR(JumpStrictNotEqualStackSlotInt)
 
         MOTH_BEGIN_INSTR(UNot)
         MOTH_END_INSTR(UNot)

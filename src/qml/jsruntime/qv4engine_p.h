@@ -97,7 +97,9 @@ struct Q_QML_EXPORT CppStackFrame {
     int originalArgumentsCount;
     int instructionPointer;
     const char *yield;
-    const char *exceptionHandler;
+    const char *unwindHandler;
+    const char *unwindLabel;
+    int unwindLevel;
 
     QString source() const;
     QString function() const;

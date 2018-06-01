@@ -129,6 +129,8 @@ public:
     void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_SetUnwindHandler(int offset) override;
+    void generate_UnwindDispatch() override;
+    void generate_UnwindToLabel(int level, int offset) override;
     void generate_ThrowException() override;
     void generate_GetException() override;
     void generate_SetException() override;
@@ -161,6 +163,7 @@ public:
     void generate_Jump(int offset) override;
     void generate_JumpTrue(int offset) override;
     void generate_JumpFalse(int offset) override;
+    void generate_JumpNoException(int offset) override;
     void generate_JumpNotUndefined(int offset) override;
     void generate_JumpEmpty(int offset) override;
     void generate_CmpEqNull() override;
@@ -177,10 +180,6 @@ public:
     void generate_CmpStrictNotEqual(int lhs) override;
     void generate_CmpIn(int lhs) override;
     void generate_CmpInstanceOf(int lhs) override;
-    void generate_JumpStrictEqualStackSlotInt(int lhs, int rhs,
-                                              int offset) override;
-    void generate_JumpStrictNotEqualStackSlotInt(int lhs, int rhs,
-                                                 int offset) override;
     void generate_UNot() override;
     void generate_UPlus() override;
     void generate_UMinus() override;
