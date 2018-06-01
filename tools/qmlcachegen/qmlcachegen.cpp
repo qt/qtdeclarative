@@ -433,9 +433,6 @@ int main(int argc, char **argv)
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
-    QCommandLineOption checkIfSupportedOption(QStringLiteral("check-if-supported"), QCoreApplication::translate("main", "Check if cache generate is supported on the specified target architecture"));
-    parser.addOption(checkIfSupportedOption);
-
     parser.addPositionalArgument(QStringLiteral("[qml file]"),
             QStringLiteral("QML source file to generate cache for."));
 
