@@ -4954,7 +4954,6 @@ language/statements/class/syntax/early-errors/class-body-constructor-empty-missi
 language/statements/const/block-local-closure-get-before-initialization.js fails
 language/statements/const/block-local-use-before-initialization-in-declaration-statement.js fails
 language/statements/const/block-local-use-before-initialization-in-prior-statement.js fails
-language/statements/const/cptn-value.js fails
 language/statements/const/dstr-ary-ptrn-elem-id-init-fn-name-arrow.js fails
 language/statements/const/dstr-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/const/dstr-ary-ptrn-elem-id-init-fn-name-cover.js fails
@@ -4976,7 +4975,6 @@ language/statements/const/syntax/const-invalid-assignment-next-expression-for.js
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-in.js fails
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-of.js fails
 language/statements/do-while/tco-body.js strictFails
-language/statements/empty/cptn-value.js fails
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js fails
 language/statements/for-in/head-const-fresh-binding-per-iteration.js fails
 language/statements/for-in/head-let-bound-names-fordecl-tdz.js fails
@@ -5201,8 +5199,6 @@ language/statements/for-of/yield-star-from-catch.js fails
 language/statements/for-of/yield-star-from-finally.js fails
 language/statements/for-of/yield-star-from-try.js fails
 language/statements/for-of/yield-star.js fails
-language/statements/for/S12.6.3_A9.1.js fails
-language/statements/for/S12.6.3_A9.js fails
 language/statements/for/dstr-const-ary-ptrn-elem-id-init-fn-name-arrow.js fails
 language/statements/for/dstr-const-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/for/dstr-const-ary-ptrn-elem-id-init-fn-name-cover.js fails
@@ -5243,7 +5239,6 @@ language/statements/function/13.2-30-s.js fails
 language/statements/function/S13_A15_T4.js sloppyFails
 language/statements/function/arguments-with-arguments-fn.js sloppyFails
 language/statements/function/arguments-with-arguments-lex.js sloppyFails
-language/statements/function/cptn-decl.js fails
 language/statements/function/dflt-params-ref-later.js fails
 language/statements/function/dflt-params-ref-self.js fails
 language/statements/function/dflt-params-trailing-comma.js fails
@@ -5278,7 +5273,6 @@ language/statements/function/scope-param-rest-elem-var-open.js sloppyFails
 language/statements/function/scope-paramsbody-var-open.js fails
 language/statements/generators/arguments-with-arguments-fn.js sloppyFails
 language/statements/generators/arguments-with-arguments-lex.js sloppyFails
-language/statements/generators/cptn-decl.js fails
 language/statements/generators/default-proto.js fails
 language/statements/generators/dflt-params-ref-later.js fails
 language/statements/generators/dflt-params-ref-self.js fails
@@ -5319,7 +5313,6 @@ language/statements/generators/yield-identifier-non-strict.js sloppyFails
 language/statements/generators/yield-spread-arr-multiple.js fails
 language/statements/generators/yield-spread-arr-single.js fails
 language/statements/generators/yield-star-before-newline.js fails
-language/statements/if/cptn-no-else-true-abrupt-empty.js fails
 language/statements/if/tco-else-body.js strictFails
 language/statements/if/tco-if-body.js strictFails
 language/statements/labeled/tco.js strictFails
@@ -5327,7 +5320,6 @@ language/statements/let/block-local-closure-get-before-initialization.js fails
 language/statements/let/block-local-closure-set-before-initialization.js fails
 language/statements/let/block-local-use-before-initialization-in-declaration-statement.js fails
 language/statements/let/block-local-use-before-initialization-in-prior-statement.js fails
-language/statements/let/cptn-value.js fails
 language/statements/let/dstr-ary-ptrn-elem-id-init-fn-name-arrow.js fails
 language/statements/let/dstr-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/let/dstr-ary-ptrn-elem-id-init-fn-name-cover.js fails
@@ -5356,15 +5348,6 @@ language/statements/switch/tco-case-body.js strictFails
 language/statements/switch/tco-dftl-body.js strictFails
 language/statements/throw/S12.13_A2_T6.js strictFails
 language/statements/try/S12.14_A18_T6.js strictFails
-language/statements/try/cptn-catch-empty-break.js fails
-language/statements/try/cptn-catch-empty-continue.js fails
-language/statements/try/cptn-catch-finally-empty-break.js fails
-language/statements/try/cptn-catch-finally-empty-continue.js fails
-language/statements/try/cptn-finally-empty-break.js fails
-language/statements/try/cptn-finally-empty-continue.js fails
-language/statements/try/cptn-finally-from-catch.js fails
-language/statements/try/cptn-finally-skip-catch.js fails
-language/statements/try/cptn-finally-wo-catch.js fails
 language/statements/try/dstr-ary-ptrn-elem-id-init-fn-name-arrow.js fails
 language/statements/try/dstr-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/try/dstr-ary-ptrn-elem-id-init-fn-name-cover.js fails
@@ -5380,7 +5363,6 @@ language/statements/try/tco-catch-finally.js strictFails
 language/statements/try/tco-catch.js strictFails
 language/statements/try/tco-finally.js strictFails
 language/statements/variable/binding-resolution.js sloppyFails
-language/statements/variable/cptn-value.js fails
 language/statements/variable/dstr-ary-ptrn-elem-id-init-fn-name-arrow.js fails
 language/statements/variable/dstr-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/variable/dstr-ary-ptrn-elem-id-init-fn-name-cover.js fails
@@ -5394,7 +5376,6 @@ language/statements/variable/dstr-obj-ptrn-id-init-fn-name-gen.js fails
 language/statements/variable/fn-name-class.js fails
 language/statements/while/tco-body.js strictFails
 language/statements/with/binding-blocked-by-unscopables.js sloppyFails
-language/statements/with/cptn-abrupt-empty.js sloppyFails
 language/statements/with/has-property-err.js sloppyFails
 language/statements/with/unscopables-inc-dec.js sloppyFails
 language/types/reference/get-value-prop-base-primitive-realm.js fails

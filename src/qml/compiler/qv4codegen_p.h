@@ -684,7 +684,9 @@ protected:
     bool _strictMode;
     bool useFastLookups = true;
     bool requiresReturnValue = false;
+    bool insideSwitch = false;
     bool inFormalParameterList = false;
+    bool functionEndsWithReturn = false;
     ControlFlow *controlFlow = nullptr;
 
     bool _fileNameIsUrl;

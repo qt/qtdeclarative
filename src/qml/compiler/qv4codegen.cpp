@@ -352,21 +352,96 @@ void Codegen::program(Program *ast)
     }
 }
 
+enum class CompletionState {
+    Empty,
+    EmptyAbrupt,
+    NonEmpty
+};
+
+static CompletionState completionState(StatementList *list)
+{
+    for (StatementList *it = list; it; it = it->next) {
+        if (it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement)
+            return CompletionState::EmptyAbrupt;
+        if (it->statement->kind == Statement::Kind_EmptyStatement ||
+            it->statement->kind == Statement::Kind_VariableDeclaration ||
+            it->statement->kind == Statement::Kind_FunctionDeclaration)
+            continue;
+        if (it->statement->kind == Statement::Kind_Block) {
+            CompletionState subState = completionState(static_cast<Block *>(it->statement)->statements);
+            if (subState != CompletionState::Empty)
+                return subState;
+            continue;
+        }
+        return CompletionState::NonEmpty;
+    }
+    return CompletionState::Empty;
+}
+
+static Node *completionStatement(StatementList *list)
+{
+    Node *completionStatement = nullptr;
+    for (StatementList *it = list; it; it = it->next) {
+        if (it->statement->kind == Statement::Kind_BreakStatement ||
+            it->statement->kind == Statement::Kind_ContinueStatement)
+            return completionStatement;
+        if (it->statement->kind == Statement::Kind_ThrowStatement ||
+            it->statement->kind == Statement::Kind_ReturnStatement)
+            return it->statement;
+        if (it->statement->kind == Statement::Kind_EmptyStatement ||
+            it->statement->kind == Statement::Kind_VariableStatement ||
+            it->statement->kind == Statement::Kind_FunctionDeclaration)
+            continue;
+        if (it->statement->kind == Statement::Kind_Block) {
+            CompletionState state = completionState(static_cast<Block *>(it->statement)->statements);
+            switch (state) {
+            case CompletionState::Empty:
+                continue;
+            case CompletionState::EmptyAbrupt:
+                return it->statement;
+            case CompletionState::NonEmpty:
+                break;
+            }
+        }
+        completionStatement = it->statement;
+    }
+    return completionStatement;
+}
+
 void Codegen::statementList(StatementList *ast)
 {
+    if (!ast)
+        return;
+
     bool _requiresReturnValue = requiresReturnValue;
-    requiresReturnValue = false;
+    // ### the next line is pessimizing a bit too much, as there are many cases, where the complietion from the break
+    // statement will not be used, but it's at least spec compliant
+    if (!controlFlow || !controlFlow->hasLoop())
+        requiresReturnValue = false;
+
+    Node *needsCompletion = nullptr;
+
+    if (_requiresReturnValue && !requiresReturnValue)
+        needsCompletion = completionStatement(ast);
+
+    if (requiresReturnValue && !needsCompletion && !insideSwitch) {
+        // break or continue is the first real statement, set the return value to undefined
+        Reference::fromConst(this, Encode::undefined()).storeOnStack(_returnAddress);
+    }
+
+    bool _insideSwitch = insideSwitch;
+    insideSwitch = false;
+
     for (StatementList *it = ast; it; it = it->next) {
-        if (!it->next ||
-            it->next->statement->kind == Statement::Kind_BreakStatement ||
-            it->next->statement->kind == Statement::Kind_ContinueStatement ||
-            it->next->statement->kind == Statement::Kind_ReturnStatement)
-                requiresReturnValue = _requiresReturnValue;
+        if (it->statement == needsCompletion)
+            requiresReturnValue = true;
         if (Statement *s = it->statement->statementCast())
             statement(s);
         else
             statement(static_cast<ExpressionNode *>(it->statement));
-        requiresReturnValue = false;
+        if (it->statement == needsCompletion)
+            requiresReturnValue = false;
         if (it->statement->kind == Statement::Kind_ThrowStatement ||
             it->statement->kind == Statement::Kind_BreakStatement ||
             it->statement->kind == Statement::Kind_ContinueStatement ||
@@ -375,6 +450,7 @@ void Codegen::statementList(StatementList *ast)
             break;
     }
     requiresReturnValue = _requiresReturnValue;
+    insideSwitch = _insideSwitch;
 }
 
 void Codegen::variableDeclaration(PatternElement *ast)
@@ -2379,6 +2455,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     BytecodeGenerator::Label *savedReturnLabel = _returnLabel;
     _returnLabel = nullptr;
 
+    bool savedFunctionEndsWithReturn = functionEndsWithReturn;
+    functionEndsWithReturn = endsWithReturn(_module, body);
+
     // reserve the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
 
@@ -2442,7 +2521,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     bytecodeGenerator->setLocation(ast->lastSourceLocation());
     _context->emitBlockFooter(this);
 
-    if (_returnLabel || hasError || !endsWithReturn(_module, body)) {
+    if (_returnLabel || hasError || !functionEndsWithReturn) {
         if (_returnLabel)
             _returnLabel->link();
 
@@ -2463,7 +2542,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
-                 << "register count" << _context->registerCountInFunction;
+                 << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
         QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
                                 _context->line, _context->lineNumberMapping);
         qDebug();
@@ -2476,6 +2555,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     delete _returnLabel;
     _returnLabel = savedReturnLabel;
     controlFlow = savedControlFlow;
+    functionEndsWithReturn = savedFunctionEndsWithReturn;
     _functionContext = savedFunctionContext;
 
     return leaveContext();
@@ -2842,6 +2922,9 @@ bool Codegen::visit(SwitchStatement *ast)
     if (hasError)
         return true;
 
+    if (requiresReturnValue)
+        Reference::fromConst(this, Encode::undefined()).storeOnStack(_returnAddress);
+
     RegisterScope scope(this);
 
     if (ast->block) {
@@ -2889,6 +2972,7 @@ bool Codegen::visit(SwitchStatement *ast)
 
         ControlFlowLoop flow(this, &switchEnd);
 
+        insideSwitch = true;
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             blockMap[clause].link();
@@ -2909,6 +2993,7 @@ bool Codegen::visit(SwitchStatement *ast)
 
             statementList(clause->statements);
         }
+        insideSwitch = false;
 
         switchEnd.link();
 

@@ -8,6 +8,6 @@ MyQmlObject {
         return 321
     }
 
-    value: try { var p = go() } catch(e) { var p = defaultValue } finally { p == 123 }
+    qjsvalue: try { var p = go() } catch(e) { var p = defaultValue } finally { p == 123 }
 }
 

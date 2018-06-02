@@ -7371,7 +7371,7 @@ void tst_qqmlecmascript::tryStatement()
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != nullptr);
 
-        QCOMPARE(object->value(), 1);
+        QVERIFY(object->qjsvalue().isUndefined());
     }
 
     {
@@ -7379,7 +7379,7 @@ void tst_qqmlecmascript::tryStatement()
         MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
         QVERIFY(object != nullptr);
 
-        QCOMPARE(object->value(), 1);
+        QVERIFY(object->qjsvalue().isUndefined());
     }
 }
 

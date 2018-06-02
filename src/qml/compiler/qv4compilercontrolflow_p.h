@@ -119,6 +119,16 @@ struct ControlFlow {
 
     virtual QString label() const { return QString(); }
 
+    bool hasLoop() const {
+        const ControlFlow *flow = this;
+        while (flow) {
+            if (flow->type == Loop)
+                return true;
+            flow = flow->parent;
+        }
+        return false;
+    }
+
 protected:
     virtual BytecodeGenerator::Label getUnwindTarget(UnwindType, const QString & = QString()) {
         return BytecodeGenerator::Label();
@@ -355,7 +365,6 @@ struct ControlFlowFinally : public ControlFlowUnwind
 {
     AST::Finally *finally;
     bool insideFinally = false;
-    int exceptionTemp = -1;
 
     ControlFlowFinally(Codegen *cg, AST::Finally *finally)
         : ControlFlowUnwind(cg, Finally), finally(finally)
@@ -380,9 +389,17 @@ struct ControlFlowFinally : public ControlFlowUnwind
         Codegen::RegisterScope scope(cg);
 
         insideFinally = true;
-        exceptionTemp = generator()->newRegister();
+        int exceptionTemp = generator()->newRegister();
         Instruction::GetException instr;
         generator()->addInstruction(instr);
+        int returnValueTemp = -1;
+        if (cg->requiresReturnValue) {
+            returnValueTemp = generator()->newRegister();
+            Instruction::MoveReg move;
+            move.srcReg = cg->_returnAddress;
+            move.destReg = returnValueTemp;
+            generator()->addInstruction(move);
+        }
         Reference::fromStackSlot(cg, exceptionTemp).storeConsumeAccumulator();
 
         generator()->setUnwindHandler(parentUnwindHandler());
@@ -391,6 +408,12 @@ struct ControlFlowFinally : public ControlFlowUnwind
 
         Reference::fromStackSlot(cg, exceptionTemp).loadInAccumulator();
 
+        if (cg->requiresReturnValue) {
+            Instruction::MoveReg move;
+            move.srcReg = returnValueTemp;
+            move.destReg = cg->_returnAddress;
+            generator()->addInstruction(move);
+        }
         Instruction::SetException setException;
         generator()->addInstruction(setException);
 
