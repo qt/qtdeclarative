@@ -3561,8 +3561,6 @@ language/expressions/compound-assignment/S11.13.2_A7.9_T4.js fails
 language/expressions/conditional/tco-cond.js strictFails
 language/expressions/conditional/tco-pos.js strictFails
 language/expressions/delete/super-property.js fails
-language/expressions/exponentiation/applying-the-exp-operator_A7.js fails
-language/expressions/exponentiation/applying-the-exp-operator_A8.js fails
 language/expressions/function/arguments-with-arguments-fn.js sloppyFails
 language/expressions/function/arguments-with-arguments-lex.js sloppyFails
 language/expressions/function/dflt-params-ref-later.js fails

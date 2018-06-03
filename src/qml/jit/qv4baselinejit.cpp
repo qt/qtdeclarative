@@ -967,7 +967,9 @@ static ReturnedValue expHelper(const Value &base, const Value &exp)
 {
     double b = base.toNumber();
     double e = exp.toNumber();
-    return QV4::Encode(pow(b,e));
+    if (qIsInf(e) && (b == 1 || b == -1))
+        return Encode(qSNaN());
+    return Encode(pow(b,e));
 }
 
 void BaselineJIT::generate_Exp(int lhs) {

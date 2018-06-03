@@ -1340,7 +1340,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         const Value left = STACK_VALUE(lhs);
         double base = left.toNumber();
         double exp = ACC.toNumber();
-        acc = QV4::Encode(pow(base,exp));
+        if (qIsInf(exp) && (base == 1 || base == -1))
+            acc = Encode(qSNaN());
+        else
+            acc = Encode(pow(base,exp));
     MOTH_END_INSTR(Exp)
 
     MOTH_BEGIN_INSTR(Mul)
