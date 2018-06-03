@@ -3560,7 +3560,6 @@ language/expressions/compound-assignment/S11.13.2_A7.8_T4.js fails
 language/expressions/compound-assignment/S11.13.2_A7.9_T4.js fails
 language/expressions/conditional/tco-cond.js strictFails
 language/expressions/conditional/tco-pos.js strictFails
-language/expressions/delete/11.4.1-5-a-28-s.js strictFails
 language/expressions/delete/super-property.js fails
 language/expressions/exponentiation/applying-the-exp-operator_A7.js fails
 language/expressions/exponentiation/applying-the-exp-operator_A8.js fails

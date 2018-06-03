@@ -276,7 +276,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ScopedObject ctor(scope, constructor);
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(2));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(2));
     ctor->addSymbolSpecies();
 
     // Properties deprecated in the spec but required by "the web" :(
