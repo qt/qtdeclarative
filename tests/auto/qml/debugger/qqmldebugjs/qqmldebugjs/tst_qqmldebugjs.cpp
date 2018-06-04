@@ -124,6 +124,7 @@ const char *QUIT_QMLFILE = "quit.qml";
 const char *CHANGEBREAKPOINT_QMLFILE = "changeBreakpoint.qml";
 const char *STEPACTION_QMLFILE = "stepAction.qml";
 const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
+const char *ENCODEQMLSCOPE_QMLFILE = "encodeQmlScope.qml";
 
 #define VARIANTMAPINIT \
     QString obj("{}"); \
@@ -216,6 +217,8 @@ private slots:
 
     void getScripts_data() { targetData(); }
     void getScripts();
+
+    void encodeQmlScope();
 
 private:
     ConnectResult init(bool qmlscene, const QString &qmlFile = QString(TEST_QMLFILE),
@@ -1453,6 +1456,70 @@ void tst_QQmlDebugJS::getScripts()
 
     QCOMPARE(scripts.count(), 1);
     QVERIFY(scripts.first().toMap()[QStringLiteral("name")].toString().endsWith(QStringLiteral("data/test.qml")));
+}
+
+void tst_QQmlDebugJS::encodeQmlScope()
+{
+    QString file(ENCODEQMLSCOPE_QMLFILE);
+    QCOMPARE(init(true, file), ConnectSuccess);
+
+    int numFrames = 0;
+    int numExpectedScopes = 0;
+    int numReceivedScopes = 0;
+    bool isStopped = false;
+    bool scopesFailed = false;
+
+    QObject::connect(m_client, &QJSDebugClient::failure, this, [&]() {
+        qWarning() << "received failure" << m_client->response;
+        scopesFailed = true;
+        m_process->stop();
+        numFrames = 2;
+        isStopped = false;
+    });
+
+    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() {
+        m_client->frame();
+        isStopped = true;
+    });
+
+    QObject::connect(m_client, &QJSDebugClient::result, this, [&]() {
+        const QVariantMap value = m_client->parser.call(
+                    QJSValueList() << QJSValue(QString(m_client->response))).toVariant().toMap();
+
+        const QMap<QString, QVariant> body = value.value("body").toMap();
+        const QString command = value.value("command").toString();
+
+        if (command == QString("scope")) {
+            // If the scope commands fail we get a failure() signal above.
+            if (++numReceivedScopes == numExpectedScopes) {
+                m_client->continueDebugging(QJSDebugClient::Continue);
+                isStopped = false;
+            }
+        } else if (command == QString("frame")) {
+
+            // We want at least a global scope and some kind of local scope here.
+            const QList<QVariant> scopes = body.value("scopes").toList();
+            if (scopes.length() < 2)
+                scopesFailed = true;
+
+            for (const QVariant &scope : scopes) {
+                ++numExpectedScopes;
+                m_client->scope(scope.toMap().value("index").toInt());
+            }
+
+            ++numFrames;
+        }
+    });
+
+    m_client->setBreakpoint(file, 6);
+    m_client->setBreakpoint(file, 8);
+    m_client->connect();
+
+    QTRY_COMPARE(numFrames, 2);
+    QVERIFY(numExpectedScopes > 3);
+    QVERIFY(!scopesFailed);
+    QTRY_VERIFY(!isStopped);
+    QCOMPARE(numReceivedScopes, numExpectedScopes);
 }
 
 QList<QQmlDebugClient *> tst_QQmlDebugJS::createClients()

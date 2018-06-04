@@ -390,6 +390,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
     int w = 0;
     m_maxFrames = 0;
     m_imageStateCount = 0;
+    qreal pixelRatio = 1.0;
 
     for (QQuickSprite* state : qAsConst(m_sprites)) {
         if (state->frames() > m_maxFrames)
@@ -412,6 +413,8 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
 
         if (!state->m_frameHeight)
             state->m_frameHeight = img.height();
+
+        pixelRatio = qMax(pixelRatio, state->devicePixelRatio());
 
         if (state->frames() * state->frameWidth() > maxSize){
             struct helper{
@@ -437,43 +440,58 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
         }
     }
 
+    if (h > maxSize){
+        qWarning() << "SpriteEngine: Too many animations to fit in one texture...";
+        qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
+        return QImage();
+    }
+
     //maxFrames is max number in a line of the texture
-    QImage image(w, h, QImage::Format_ARGB32_Premultiplied);
+    QImage image(w * pixelRatio, h * pixelRatio, QImage::Format_ARGB32_Premultiplied);
+    image.setDevicePixelRatio(pixelRatio);
     image.fill(0);
     QPainter p(&image);
     int y = 0;
     for (QQuickSprite* state : qAsConst(m_sprites)) {
         QImage img(state->m_pix.image());
-        int frameWidth = state->m_frameWidth;
-        int frameHeight = state->m_frameHeight;
-        if (img.height() == frameHeight && img.width() <  maxSize){//Simple case
-            p.drawImage(0,y,img.copy(state->m_frameX,0,state->m_frames * frameWidth, frameHeight));
+        const int frameWidth = state->m_frameWidth;
+        const int frameHeight = state->m_frameHeight;
+        const int imgHeight = img.height() / img.devicePixelRatioF();
+        const int imgWidth = img.width() / img.devicePixelRatioF();
+        if (imgHeight == frameHeight && imgWidth <  maxSize){ //Simple case
+            p.drawImage(QRect(0, y, state->m_frames * frameWidth, frameHeight),
+                        img,
+                        QRect(state->m_frameX * img.devicePixelRatioF(), 0, state->m_frames * frameWidth * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
             state->m_rowStartX = 0;
             state->m_rowY = y;
             y += frameHeight;
-        }else{//Chopping up image case
-            state->m_framesPerRow = image.width()/frameWidth;
+        } else { //Chopping up image case
+            state->m_framesPerRow = w/frameWidth;
             state->m_rowY = y;
             int x = 0;
             int curX = state->m_frameX;
             int curY = state->m_frameY;
             int framesLeft = state->frames();
             while (framesLeft > 0){
-                if (image.width() - x + curX <= img.width()){//finish a row in image (dest)
-                    int copied = image.width() - x;
+                if (w - x + curX <= imgWidth){//finish a row in image (dest)
+                    int copied = w - x;
                     framesLeft -= copied/frameWidth;
-                    p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
+                    p.drawImage(QRect(x, y, copied, frameHeight),
+                                img,
+                                QRect(curX * img.devicePixelRatioF(), curY * img.devicePixelRatioF(), copied * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
                     y += frameHeight;
                     curX += copied;
                     x = 0;
-                    if (curX == img.width()){
+                    if (curX == imgWidth){
                         curX = 0;
                         curY += frameHeight;
                     }
                 }else{//finish a row in img (src)
-                    int copied = img.width() - curX;
+                    int copied = imgWidth - curX;
                     framesLeft -= copied/frameWidth;
-                    p.drawImage(x,y,img.copy(curX,curY,copied,frameHeight));
+                    p.drawImage(QRect(x, y, copied, frameHeight),
+                                img,
+                                QRect(curX * img.devicePixelRatioF(), curY * img.devicePixelRatioF(), copied * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
                     curY += frameHeight;
                     x += copied;
                     curX = 0;
@@ -482,12 +500,6 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
             if (x)
                 y += frameHeight;
         }
-    }
-
-    if (image.height() > maxSize){
-        qWarning() << "SpriteEngine: Too many animations to fit in one texture...";
-        qWarning() << "SpriteEngine: Your texture max size today is " << maxSize;
-        return QImage();
     }
 
 #ifdef SPRITE_IMAGE_DEBUG

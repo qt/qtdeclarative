@@ -261,7 +261,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
     }
 
     QQmlJS::Engine *engine = &irDocument.jsParserEngine;
-    QmlIR::ScriptDirectivesCollector directivesCollector(engine, &irDocument.jsGenerator);
+    QmlIR::ScriptDirectivesCollector directivesCollector(&irDocument);
     QQmlJS::Directives *oldDirs = engine->directives();
     engine->setDirectives(&directivesCollector);
 

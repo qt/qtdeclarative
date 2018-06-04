@@ -297,6 +297,7 @@ private slots:
     // context access:
     void readArguments_data() { redundancy_data(); }
     void readArguments();
+    void readComplicatedArguments();
     void readLocals_data() { redundancy_data(); }
     void readLocals();
     void readObject_data() { redundancy_data(); }
@@ -547,6 +548,27 @@ void tst_qv4debugger::readArguments()
     QVERIFY(frame0.scope.contains("b"));
     QCOMPARE(frame0.type(QStringLiteral("b")), QStringLiteral("string"));
     QCOMPARE(frame0.value(QStringLiteral("b")).toString(), QStringLiteral("two"));
+}
+
+void tst_qv4debugger::readComplicatedArguments()
+{
+    m_debuggerAgent->collector.setRedundantRefs(false);
+    m_debuggerAgent->m_captureContextInfo = true;
+    QString script =
+            "var f = function(a) {\n"
+            "  a = 12;\n"
+            "  return a;\n"
+            "}\n"
+            "f(1, 2);\n";
+    debugger()->addBreakPoint("readArguments", 3);
+    evaluateJavaScript(script, "readArguments");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
+    const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
+    QCOMPARE(frame0.size(), 1);
+    QVERIFY(frame0.contains(QStringLiteral("a")));
+    QCOMPARE(frame0.type(QStringLiteral("a")), QStringLiteral("number"));
+    QCOMPARE(frame0.value(QStringLiteral("a")).toInt(), 12);
 }
 
 void tst_qv4debugger::readLocals()

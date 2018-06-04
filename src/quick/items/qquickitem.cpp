@@ -3134,6 +3134,9 @@ void QQuickItemPrivate::itemToParentTransform(QTransform &t) const
 */
 QTransform QQuickItemPrivate::windowToGlobalTransform() const
 {
+    if (Q_UNLIKELY(window == nullptr))
+        return QTransform();
+
     QPoint quickWidgetOffset;
     QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
     QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
@@ -3145,6 +3148,9 @@ QTransform QQuickItemPrivate::windowToGlobalTransform() const
 */
 QTransform QQuickItemPrivate::globalToWindowTransform() const
 {
+    if (Q_UNLIKELY(window == nullptr))
+        return QTransform();
+
     QPoint quickWidgetOffset;
     QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window, &quickWidgetOffset);
     QPointF pos = (renderWindow ? renderWindow : window)->mapToGlobal(quickWidgetOffset);
@@ -7456,11 +7462,8 @@ void QQuickItem::grabMouse()
     auto point = fromTouch ?
         windowPriv->pointerEventInstance(windowPriv->touchMouseDevice)->pointById(windowPriv->touchMouseId) :
         windowPriv->pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0);
-    if (point) {
-        QQuickItem *oldGrabber = point->grabberItem();
+    if (point)
         point->setGrabberItem(this);
-        windowPriv->sendUngrabEvent(oldGrabber, fromTouch);
-    }
 }
 
 /*!

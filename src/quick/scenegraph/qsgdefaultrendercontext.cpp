@@ -39,6 +39,7 @@
 
 #include "qsgdefaultrendercontext_p.h"
 
+#include <QtGui/QGuiApplication>
 #include <QtGui/QOpenGLFramebufferObject>
 
 #include <QtQuick/private/qsgbatchrenderer_p.h>
@@ -315,6 +316,17 @@ void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)
 QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
 {
     return qobject_cast<QSGDefaultRenderContext *>(context->property(QSG_RENDERCONTEXT_PROPERTY).value<QObject *>());
+}
+
+bool QSGDefaultRenderContext::separateIndexBuffer() const
+{
+    // WebGL: A given WebGLBuffer object may only be bound to one of
+    // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
+    // lifetime. An attempt to bind a buffer object to the other
+    // target will generate an INVALID_OPERATION error, and the
+    // current binding will remain untouched.
+    static const bool isWebGL = qGuiApp->platformName().compare(QLatin1String("webgl")) == 0;
+    return isWebGL;
 }
 
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)

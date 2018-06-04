@@ -20,4 +20,5 @@ OTHER_FILES += data/test.qml data/test.js \
     data/changeBreakpoint.qml \
     data/stepAction.qml \
     data/breakpointRelocation.qml \
-    data/createComponent.qml
+    data/createComponent.qml \
+    data/encodeQmlScope.qml

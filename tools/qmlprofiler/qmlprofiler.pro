@@ -1,4 +1,4 @@
-QT = qml-private network core qmldebug-private
+QT = network core qmldebug-private
 CONFIG += no_import_scan
 
 SOURCES += main.cpp \

@@ -533,6 +533,8 @@ void InternalClass::updateInternalClassIdRecursive()
     id = engine->newInternalClassId();
     for (auto &t : transitions) {
         Q_ASSERT(t.lookup);
+        if (t.flags == InternalClassTransition::VTableChange || t.flags == InternalClassTransition::PrototypeChange)
+            continue;
         t.lookup->updateInternalClassIdRecursive();
     }
 }

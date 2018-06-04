@@ -358,9 +358,8 @@ qreal QQmlDataBlob::progress() const
 
 /*!
 Returns the physical url of the data.  Initially this is the same as
-finalUrl(), but if a network redirect happens while fetching the data, this url
-is updated to reflect the new location. Also, if a URL interceptor is set, it
-will work on this URL and leave finalUrl() alone.
+finalUrl(), but if a URL interceptor is set, it will work on this URL
+and leave finalUrl() alone.
 
 \sa finalUrl()
 */
@@ -381,8 +380,12 @@ QString QQmlDataBlob::urlString() const
 Returns the logical URL to be used for resolving further URLs referred to in
 the code.
 
-This is the blob url passed to the constructor.  If a network redirect
-happens while fetching the data, this url remains the same.
+This is the blob url passed to the constructor. If a URL interceptor rewrites
+the URL, this one stays the same. If a network redirect happens while fetching
+the data, this url is updated to reflect the new location. Therefore, if both
+an interception and a redirection happen, the final url will indirectly
+incorporate the result of the interception, potentially breaking further
+lookups.
 
 \sa url()
 */
@@ -1184,15 +1187,15 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
         QVariant redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirect.isValid()) {
             QUrl url = reply->url().resolved(redirect.toUrl());
-            blob->m_url = url;
-            blob->m_urlString.clear();
+            blob->m_finalUrl = url;
+            blob->m_finalUrlString.clear();
 
             QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(url));
             QObject *nrp = m_thread->networkReplyProxy();
             QObject::connect(reply, SIGNAL(finished()), nrp, SLOT(finished()));
             m_networkReplies.insert(reply, blob);
 #ifdef DATABLOB_DEBUG
-            qWarning("QQmlDataBlob: redirected to %s", qPrintable(blob->urlString()));
+            qWarning("QQmlDataBlob: redirected to %s", qPrintable(blob->finalUrlString()));
 #endif
             return;
         }
@@ -1648,14 +1651,24 @@ QQmlImportDatabase *QQmlTypeLoader::importDatabase() const
     return &QQmlEnginePrivate::get(engine())->importDatabase;
 }
 
+QUrl QQmlTypeLoader::normalize(const QUrl &unNormalizedUrl)
+{
+    QUrl normalized(unNormalizedUrl);
+    if (normalized.scheme() == QLatin1String("qrc"))
+        normalized.setHost(QString()); // map qrc:///a.qml to qrc:/a.qml
+    return normalized;
+}
+
 /*!
 Returns a QQmlTypeData for the specified \a url.  The QQmlTypeData may be cached.
 */
-QQmlTypeData *QQmlTypeLoader::getType(const QUrl &url, Mode mode)
+QQmlTypeData *QQmlTypeLoader::getType(const QUrl &unNormalizedUrl, Mode mode)
 {
-    Q_ASSERT(!url.isRelative() &&
-            (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
-             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
+    Q_ASSERT(!unNormalizedUrl.isRelative() &&
+            (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
+             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
+
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
@@ -1713,11 +1726,13 @@ QQmlTypeData *QQmlTypeLoader::getType(const QByteArray &data, const QUrl &url, M
 /*!
 Return a QQmlScriptBlob for \a url.  The QQmlScriptData may be cached.
 */
-QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &url)
+QQmlScriptBlob *QQmlTypeLoader::getScript(const QUrl &unNormalizedUrl)
 {
-    Q_ASSERT(!url.isRelative() &&
-            (QQmlFile::urlToLocalFileOrQrc(url).isEmpty() ||
-             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
+    Q_ASSERT(!unNormalizedUrl.isRelative() &&
+            (QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl).isEmpty() ||
+             !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(unNormalizedUrl))));
+
+    const QUrl url = normalize(unNormalizedUrl);
 
     LockHolder<QQmlTypeLoader> holder(this);
 
@@ -1833,15 +1848,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         if (*value)
             absoluteFilePath = path;
     } else {
-        bool exists = false;
-#ifdef Q_OS_UNIX
-        struct stat statBuf;
-        // XXX Avoid encoding entire path. Should store encoded dirpath in cache
-        if (::stat(QFile::encodeName(path).constData(), &statBuf) == 0)
-            exists = S_ISREG(statBuf.st_mode);
-#else
-        exists = QFile::exists(path);
-#endif
+        bool exists = QFile::exists(path);
         fileSet->insert(fileName, new bool(exists));
         if (exists)
             absoluteFilePath = path;
@@ -3010,7 +3017,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
 
-    QmlIR::ScriptDirectivesCollector collector(&irUnit.jsParserEngine, &irUnit.jsGenerator);
+    QmlIR::ScriptDirectivesCollector collector(&irUnit);
 
     QList<QQmlError> errors;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(
@@ -3026,9 +3033,6 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         unit.adopt(new QV4::CompiledData::CompilationUnit);
     }
     irUnit.javaScriptCompilationUnit = unit;
-    irUnit.imports = collector.imports;
-    if (collector.hasPragmaLibrary)
-        irUnit.jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);

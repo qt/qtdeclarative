@@ -62,6 +62,8 @@ private slots:
     void defaultObject();
     void unregisterCustomType();
     void unregisterCustomSingletonType();
+
+    void normalizeUrls();
 };
 
 class TestType : public QObject
@@ -521,6 +523,18 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QCOMPARE(stringVal.type(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
+}
+
+void tst_qqmlmetatype::normalizeUrls()
+{
+    const QUrl url("qrc:///tstqqmlmetatype/data/CompositeType.qml");
+    QVERIFY(!QQmlMetaType::qmlType(url).isValid());
+    const auto registrationId = qmlRegisterType(url, "Test", 1, 0, "ResourceCompositeType");
+    QVERIFY(QQmlMetaType::qmlType(url, /*includeNonFileImports=*/true).isValid());
+    QUrl normalizedURL("qrc:/tstqqmlmetatype/data/CompositeType.qml");
+    QVERIFY(QQmlMetaType::qmlType(normalizedURL, /*includeNonFileImports=*/true).isValid());
+    qmlUnregisterType(registrationId);
+    QVERIFY(!QQmlMetaType::qmlType(url, /*includeNonFileImports=*/true).isValid());
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

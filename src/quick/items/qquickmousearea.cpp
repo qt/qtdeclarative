@@ -910,7 +910,7 @@ void QQuickMouseArea::ungrabMouse()
     if (d->pressed) {
         // if our mouse grab has been removed (probably by Flickable), fix our
         // state
-        d->pressed = nullptr;
+        d->pressed = Qt::NoButton;
         d->stealMouse = false;
         d->doubleClick = false;
         d->overThreshold = false;

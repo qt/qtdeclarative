@@ -1196,6 +1196,8 @@ void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
   support.
 
   The factory must be set before executing the engine.
+
+  \note QQmlEngine does not take ownership of the factory.
 */
 void QQmlEngine::setNetworkAccessManagerFactory(QQmlNetworkAccessManagerFactory *factory)
 {

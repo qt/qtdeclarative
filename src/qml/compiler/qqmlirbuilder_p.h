@@ -462,14 +462,14 @@ struct Q_QML_PRIVATE_EXPORT Document
     static void removeScriptPragmas(QString &script);
 };
 
-struct Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
+class Q_QML_PRIVATE_EXPORT ScriptDirectivesCollector : public QQmlJS::Directives
 {
-    ScriptDirectivesCollector(QQmlJS::Engine *engine, QV4::Compiler::JSUnitGenerator *unitGenerator);
-
+    QmlIR::Document *document;
     QQmlJS::Engine *engine;
     QV4::Compiler::JSUnitGenerator *jsGenerator;
-    QList<const QV4::CompiledData::Import *> imports;
-    bool hasPragmaLibrary;
+
+public:
+    ScriptDirectivesCollector(QmlIR::Document *doc);
 
     void pragmaLibrary() override;
     void importFile(const QString &jsfile, const QString &module, int lineNumber, int column) override;

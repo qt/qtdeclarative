@@ -29,6 +29,7 @@
 \page qtquick-bestpractices.html
 \title Best Practices for QML and Qt Quick
 \brief Lists best practices for working with QML and Qt Quick
+\ingroup best-practices
 
 Despite all of the benefits that QML and Qt Quick offer, they can be
 challenging in certain situations. The following sections elaborate on some of
@@ -317,8 +318,8 @@ component loaded by the engine. Context properties are useful for objects that
 must be available as soon as the QML is loaded and cannot be instantiated in
 QML.
 
-\l {Integrating QML and C++} demonstrates an alternative approach where QML is
-made aware of a C++ type so that it can instantiate it itself.
+For a quick guide to choosing the correct approach to expose C++ types to QML,
+see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
 \section2 Related Information
 \list

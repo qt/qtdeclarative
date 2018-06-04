@@ -40,9 +40,11 @@
 #include "qdebugmessageservice.h"
 
 #include <private/qqmldebugconnector_p.h>
-#include <private/qqmldebugpacket_p.h>
+#include <private/qversionedpacket_p.h>
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 void DebugMessageHandler(QtMsgType type, const QMessageLogContext &ctxt,
                          const QString &buf)

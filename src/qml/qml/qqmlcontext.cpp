@@ -536,7 +536,7 @@ QQmlContextData::QQmlContextData()
 QQmlContextData::QQmlContextData(QQmlContext *ctxt)
     : engine(nullptr), isInternal(false), isJSContext(false),
       isPragmaLibraryContext(false), unresolvedNames(false), hasEmittedDestruction(false), isRootObjectInCreation(false),
-      publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
+      stronglyReferencedByParent(false), publicContext(ctxt), incubator(nullptr), componentObjectIndex(-1),
       contextObject(nullptr), nextChild(nullptr), prevChild(nullptr),
       expressions(nullptr), contextObjects(nullptr), idValues(nullptr), idValueCount(0),
       componentAttached(nullptr)
@@ -577,7 +577,10 @@ void QQmlContextData::invalidate()
 
     while (childContexts) {
         Q_ASSERT(childContexts != this);
-        childContexts->invalidate();
+        if (childContexts->stronglyReferencedByParent && !--childContexts->refCount)
+            childContexts->destroy();
+        else
+            childContexts->invalidate();
     }
 
     if (prevChild) {
@@ -672,12 +675,16 @@ void QQmlContextData::destroy()
     delete this;
 }
 
-void QQmlContextData::setParent(QQmlContextData *p)
+void QQmlContextData::setParent(QQmlContextData *p, bool stronglyReferencedByParent)
 {
     if (p == parent)
         return;
     if (p) {
+        Q_ASSERT(!parent);
         parent = p;
+        this->stronglyReferencedByParent = stronglyReferencedByParent;
+        if (stronglyReferencedByParent)
+            ++refCount; // balanced in QQmlContextData::invalidate()
         engine = p->engine;
         nextChild = p->childContexts;
         if (nextChild) nextChild->prevChild = &nextChild;

@@ -72,16 +72,12 @@ QV4::Heap::ExecutionContext *QV4DataCollector::findContext(int frame)
     return f ? f->context()->d() : nullptr;
 }
 
-QV4::Heap::CallContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext *ctx, int scope)
+QV4::Heap::ExecutionContext *QV4DataCollector::findScope(QV4::Heap::ExecutionContext *ctx, int scope)
 {
-    if (!ctx)
-        return nullptr;
-
     for (; scope > 0 && ctx; --scope)
         ctx = ctx->outer;
 
-    return (ctx && ctx->type == QV4::Heap::ExecutionContext::Type_CallContext) ?
-                static_cast<QV4::Heap::CallContext *>(ctx) : nullptr;
+    return ctx;
 }
 
 QVector<QV4::Heap::ExecutionContext::ContextType> QV4DataCollector::getScopeTypes(int frame)
@@ -108,6 +104,7 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
     case QV4::Heap::ExecutionContext::Type_CallContext:
         return 1;
     case QV4::Heap::ExecutionContext::Type_QmlContext:
+        return 3;
     default:
         return -1;
     }
@@ -259,31 +256,32 @@ bool QV4DataCollector::isValidRef(QV4DataCollector::Ref ref) const
 
 bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
 {
-    QStringList names;
-
     QV4::Scope scope(engine());
 
-    QV4::Scoped<QV4::CallContext> ctxt(scope, findScope(findContext(frameNr), scopeNr));
+    QV4::Scoped<QV4::ExecutionContext> ctxt(scope, findScope(findContext(frameNr), scopeNr));
     if (!ctxt)
         return false;
 
-    Refs collectedRefs;
-    QV4::ScopedValue v(scope);
-    QV4::InternalClass *ic = ctxt->internalClass();
-    for (uint i = 0; i < ic->size; ++i) {
-        QString name = ic->nameMap[i]->string;
-        names.append(name);
-        v = ctxt->d()->locals[i];
-        collectedRefs.append(collect(v));
-    }
-
     QV4::ScopedObject scopeObject(scope, engine()->newObject());
+    if (ctxt->d()->type == QV4::Heap::ExecutionContext::Type_CallContext) {
+        QStringList names;
+        Refs collectedRefs;
 
-    Q_ASSERT(names.size() == collectedRefs.size());
-    QV4::ScopedString propName(scope);
-    for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
-        propName = engine()->newString(names.at(i));
-        scopeObject->put(propName, QV4::Value::fromReturnedValue(getValue(collectedRefs.at(i))));
+        QV4::ScopedValue v(scope);
+        QV4::InternalClass *ic = ctxt->internalClass();
+        for (uint i = 0; i < ic->size; ++i) {
+            QString name = ic->nameMap[i]->string;
+            names.append(name);
+            v = static_cast<QV4::Heap::CallContext *>(ctxt->d())->locals[i];
+            collectedRefs.append(collect(v));
+        }
+
+        Q_ASSERT(names.size() == collectedRefs.size());
+        QV4::ScopedString propName(scope);
+        for (int i = 0, ei = collectedRefs.size(); i != ei; ++i) {
+            propName = engine()->newString(names.at(i));
+            scopeObject->put(propName, (v = getValue(collectedRefs.at(i))));
+        }
     }
 
     Ref scopeObjectRef = addRef(scopeObject);

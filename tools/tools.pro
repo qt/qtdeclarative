@@ -4,7 +4,7 @@ SUBDIRS += \
     qmlmin \
     qmlimportscanner
 
-qtConfig(commandlineparser): SUBDIRS += qmlcachegen
+qtConfig(commandlineparser):qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 !emscripten:!android|android_app {
     SUBDIRS += \
         qml \

@@ -50,6 +50,7 @@ private slots:
     void types();
     void chaining();
     void messageTypes();
+    void component();
 
 private:
     QQmlEngine engine;
@@ -214,6 +215,19 @@ void tst_qqmlinfo::messageTypes()
 
     QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: warning");
     qmlWarning(nullptr) << QLatin1String("warning");
+}
+
+void tst_qqmlinfo::component()
+{
+    QQmlComponent component(&engine, testFileUrl("Component.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QQmlComponent *delegate = qobject_cast<QQmlComponent*>(object->property("delegate").value<QObject*>());
+    QVERIFY(delegate);
+
+    QString message = component.url().toString() + ":4:34: QML Component: Delegate error";
+    QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
+    qmlInfo(delegate) << "Delegate error";
 }
 
 QTEST_MAIN(tst_qqmlinfo)

@@ -248,6 +248,7 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickMultiPointHandler::wantsPointerEvent(event))
         return false;
 
+#if QT_CONFIG(gestures)
     if (const auto gesture = event->asPointerNativeGestureEvent()) {
         if (minimumPointCount() == 2) {
             switch (gesture->type()) {
@@ -263,6 +264,7 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
             return false;
         }
     }
+#endif
 
     return true;
 }
@@ -319,6 +321,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     }
 
     qreal dist = 0;
+#if QT_CONFIG(gestures)
     if (const auto gesture = event->asPointerNativeGestureEvent()) {
         switch (gesture->type()) {
         case Qt::EndNativeGesture:
@@ -349,7 +352,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             m_centroidVelocity = QVector2D();
             m_activeTranslation = QVector2D();
         }
-    } else {
+    } else
+#endif // QT_CONFIG(gestures)
+    {
         bool containsReleasedPoints = event->isReleaseEvent();
         if (!active()) {
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler

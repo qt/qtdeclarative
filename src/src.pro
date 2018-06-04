@@ -8,9 +8,9 @@ SUBDIRS += \
 
 qtHaveModule(gui):qtConfig(animation) {
     SUBDIRS += \
-        quick \
-        qmltest
+        quick
 
+    qtConfig(testlib): SUBDIRS += qmltest
     qtConfig(quick-particles): \
         SUBDIRS += particles
     qtHaveModule(widgets): SUBDIRS += quickwidgets

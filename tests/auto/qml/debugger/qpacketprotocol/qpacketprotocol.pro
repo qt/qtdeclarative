@@ -6,4 +6,4 @@ SOURCES += tst_qpacketprotocol.cpp
 
 include(../shared/debugutil.pri)
 
-QT += qml network testlib gui-private core-private
+QT += network testlib gui-private core-private

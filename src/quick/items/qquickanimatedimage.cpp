@@ -426,15 +426,18 @@ void QQuickAnimatedImage::movieRequestFinished()
     }
 
     bool pausedAtStart = d->paused;
-    if (d->playing)
+    if (d->movie && d->playing)
         d->movie->start();
-    if (pausedAtStart)
+    if (d->movie && pausedAtStart)
         d->movie->setPaused(true);
-    if (d->paused || !d->playing) {
+    if (d->movie && (d->paused || !d->playing)) {
         d->movie->jumpToFrame(d->presetCurrentFrame);
         d->presetCurrentFrame = 0;
     }
-    d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
+
+    QQuickPixmap *pixmap = d->infoForCurrentFrame(qmlEngine(this));
+    if (pixmap)
+        d->setPixmap(*pixmap);
 
     if (isPlaying() != d->oldPlaying)
         emit playingChanged();
@@ -512,7 +515,10 @@ void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
     Q_Q(QQuickAnimatedImage);
     const int oldFrameCount = q->frameCount();
 
-    delete movie;
+    if (movie) {
+        movie->disconnect();
+        movie->deleteLater();
+    }
     movie = m;
 
     if (oldFrameCount != q->frameCount())

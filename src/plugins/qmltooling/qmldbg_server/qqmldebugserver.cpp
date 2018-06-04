@@ -47,7 +47,7 @@
 #include <private/qqmldebugpluginmanager_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qpacketprotocol_p.h>
-#include <private/qqmldebugpacket_p.h>
+#include <private/qversionedpacket_p.h>
 
 #include <QtCore/QAtomicInt>
 #include <QtCore/QDir>
@@ -83,6 +83,7 @@ QT_BEGIN_NAMESPACE
 Q_QML_DEBUG_PLUGIN_LOADER(QQmlDebugServerConnection)
 
 const int protocolVersion = 1;
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 class QQmlDebugServerImpl;
 class QQmlDebugServerThread : public QThread

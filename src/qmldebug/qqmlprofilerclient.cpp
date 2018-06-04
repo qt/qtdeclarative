@@ -39,7 +39,6 @@
 
 #include "qqmlprofilerclient_p_p.h"
 #include "qqmldebugconnection_p.h"
-#include <private/qqmldebugserviceinterfaces_p.h>
 
 QT_BEGIN_NAMESPACE
 

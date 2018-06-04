@@ -201,9 +201,12 @@ private slots:
 
     void basicBlockMergeAfterLoopPeeling();
 
+    void modulusCrash();
     void malformedExpression();
 
     void scriptScopes();
+
+    void protoChanges_QTBUG68369();
 
 signals:
     void testSignal();
@@ -4135,6 +4138,15 @@ void tst_QJSEngine::basicBlockMergeAfterLoopPeeling()
 
 }
 
+void tst_QJSEngine::modulusCrash()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(
+    "var a = -2147483648; var b = -1; var c = a % b; c;"
+    );
+    QVERIFY(result.isNumber() && result.toNumber() == 0.);
+}
+
 void tst_QJSEngine::malformedExpression()
 {
     QJSEngine engine;
@@ -4155,6 +4167,22 @@ void tst_QJSEngine::scriptScopes()
     QJSValue use = engine.evaluate("'use strict'; foo()");
     QVERIFY(use.isNumber());
     QCOMPARE(use.toInt(), 42);
+}
+
+void tst_QJSEngine::protoChanges_QTBUG68369()
+{
+    QJSEngine engine;
+    QJSValue ok = engine.evaluate(
+    "var o = { x: true };"
+    "var p1 = {};"
+    "var p2 = {};"
+    "o.__proto__ = p1;"
+    "o.__proto__ = p2;"
+    "o.__proto__ = p1;"
+    "p1.y = true;"
+    "o.y"
+    );
+    QVERIFY(ok.toBool() == true);
 }
 
 QTEST_MAIN(tst_QJSEngine)

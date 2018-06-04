@@ -43,8 +43,8 @@
 #include "qqmldebugclient_p.h"
 #include "qqmlprofilereventlocation_p.h"
 #include "qqmlprofilereventreceiver_p.h"
+#include "qqmlprofilerclientdefinitions_p.h"
 
-#include <private/qqmlprofilerdefinitions_p.h>
 #include <private/qpacket_p.h>
 
 //
@@ -61,7 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlProfilerClientPrivate;
-class QQmlProfilerClient : public QQmlDebugClient, public QQmlProfilerDefinitions
+class QQmlProfilerClient : public QQmlDebugClient
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlProfilerClient)

@@ -67,6 +67,7 @@ private slots:
     void progressAndStatusChanges();
     void playingAndPausedChanges();
     void noCaching();
+    void sourceChangesOnFrameChanged();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -588,6 +589,33 @@ void tst_qquickanimatedimage::noCaching()
             QCOMPARE(image_cache, image_nocache);
         }
     }
+}
+
+void tst_qquickanimatedimage::sourceChangesOnFrameChanged()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("colors.qml"));
+    QVector<QQuickAnimatedImage*> images;
+
+    // Run multiple animations in parallel, this should be fast
+    for (int loops = 0; loops < 25; ++loops) {
+        QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage *>(component.create());
+
+        // QTBUG-67427: this should not produce a segfault
+        QObject::connect(anim,
+                         &QQuickAnimatedImage::frameChanged,
+                         [this, anim]() { anim->setSource(testFileUrl("hearts.gif")); });
+
+        QVERIFY(anim);
+        QVERIFY(anim->isPlaying());
+
+        images.append(anim);
+    }
+
+    for (auto *anim : images)
+        QTRY_COMPARE(anim->source(), testFileUrl("hearts.gif"));
+
+    qDeleteAll(images);
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

@@ -322,16 +322,16 @@ Document::Document(bool debugMode)
 {
 }
 
-ScriptDirectivesCollector::ScriptDirectivesCollector(QQmlJS::Engine *engine, QV4::Compiler::JSUnitGenerator *unitGenerator)
-    : engine(engine)
-    , jsGenerator(unitGenerator)
-    , hasPragmaLibrary(false)
+ScriptDirectivesCollector::ScriptDirectivesCollector(Document *doc)
+    : document(doc)
+    , engine(&doc->jsParserEngine)
+    , jsGenerator(&doc->jsGenerator)
 {
 }
 
 void ScriptDirectivesCollector::pragmaLibrary()
 {
-    hasPragmaLibrary = true;
+    document->jsModule.unitFlags |= QV4::CompiledData::Unit::IsSharedLibrary;
 }
 
 void ScriptDirectivesCollector::importFile(const QString &jsfile, const QString &module, int lineNumber, int column)
@@ -342,7 +342,7 @@ void ScriptDirectivesCollector::importFile(const QString &jsfile, const QString 
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
-    imports << import;
+    document->imports << import;
 }
 
 void ScriptDirectivesCollector::importModule(const QString &uri, const QString &version, const QString &module, int lineNumber, int column)
@@ -358,7 +358,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
-    imports << import;
+    document->imports << import;
 }
 
 IRBuilder::IRBuilder(const QSet<QString> &illegalNames)
@@ -2412,6 +2412,22 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         }
 
         object->qmlSignals->append(s);
+    }
+
+    for (uint i = 0; i < serializedObject->nEnums; ++i) {
+        const QV4::CompiledData::Enum *serializedEnum = serializedObject->enumAt(i);
+        QmlIR::Enum *e = pool->New<QmlIR::Enum>();
+        e->nameIndex = serializedEnum->nameIndex;
+        e->location = serializedEnum->location;
+        e->enumValues = pool->New<QmlIR::PoolList<QmlIR::EnumValue> >();
+
+        for (uint i = 0; i < serializedEnum->nEnumValues; ++i) {
+            QmlIR::EnumValue *v = pool->New<QmlIR::EnumValue>();
+            *static_cast<QV4::CompiledData::EnumValue*>(v) = *serializedEnum->enumValueAt(i);
+            e->enumValues->append(v);
+        }
+
+        object->qmlEnums->append(e);
     }
 
     const QV4::CompiledData::Property *serializedProperty = serializedObject->propertyTable();

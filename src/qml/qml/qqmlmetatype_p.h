@@ -96,7 +96,7 @@ public:
     static QQmlType qmlType(const QMetaObject *);
     static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
     static QQmlType qmlType(int);
-    static QQmlType qmlType(const QUrl &url, bool includeNonFileImports = false);
+    static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
     static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
     static QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);

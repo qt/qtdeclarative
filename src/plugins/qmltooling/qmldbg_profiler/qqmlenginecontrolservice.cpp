@@ -38,10 +38,13 @@
 ****************************************************************************/
 
 #include "qqmlenginecontrolservice.h"
-#include <private/qqmldebugpacket_p.h>
+#include <private/qqmldebugconnector_p.h>
+#include <private/qversionedpacket_p.h>
 #include <QJSEngine>
 
 QT_BEGIN_NAMESPACE
+
+using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 QQmlEngineControlServiceImpl::QQmlEngineControlServiceImpl(QObject *parent) :
     QQmlEngineControlService(1, parent)

@@ -40,7 +40,7 @@
 #ifndef QQMLPROFILEREVENT_P_H
 #define QQMLPROFILEREVENT_P_H
 
-#include <private/qqmlprofilerdefinitions_p.h>
+#include "qqmlprofilerclientdefinitions_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
@@ -63,7 +63,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlProfilerEvent : public QQmlProfilerDefinitions {
+struct QQmlProfilerEvent {
     QQmlProfilerEvent() :
         m_timestamp(-1), m_typeIndex(-1), m_dataType(Inline8Bit), m_dataLength(0)
     {}

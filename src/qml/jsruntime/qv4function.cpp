@@ -112,6 +112,11 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     internalClass = engine->internalClasses[EngineBase::Class_CallContext];
 
+    // first locals
+    const quint32_le *localsIndices = compiledFunction->localsTable();
+    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
+        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+
     Scope scope(engine);
     ScopedString arg(scope);
     for (const QString &parameterName : parameterNames) {
@@ -119,10 +124,6 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
         internalClass = internalClass->addMember(arg, Attr_NotConfigurable);
     }
     nFormals = parameters.size();
-
-    const quint32_le *localsIndices = compiledFunction->localsTable();
-    for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 }
 
 QT_END_NAMESPACE
