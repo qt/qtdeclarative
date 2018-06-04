@@ -2944,6 +2944,9 @@ BindingProperty: BindingIdentifier InitializerOpt_In;
     case $rule_number: {
         AST::StringLiteralPropertyName *name = new (pool) AST::StringLiteralPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
+        // if initializer is an anonymous function expression, we need to assign identifierref as it's name
+        if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+            f->name = stringRef(1);
         sym(1).Node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
     } break;
 ./
@@ -2969,6 +2972,9 @@ BindingElement: BindingIdentifier InitializerOpt_In;
     case $rule_number: {
       AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
       node->identifierToken = loc(1);
+      // if initializer is an anonymous function expression, we need to assign identifierref as it's name
+      if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+          f->name = stringRef(1);
       sym(1).Node = node;
     } break;
 ./
