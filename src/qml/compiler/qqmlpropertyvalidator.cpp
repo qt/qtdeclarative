@@ -693,7 +693,8 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         }
 
         if (!isAssignable) {
-            return QQmlCompileError(binding->valueLocation, tr("Cannot assign object to property"));
+            return QQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
+                    .arg(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
         }
     }
     return noError;
