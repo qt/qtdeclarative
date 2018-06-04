@@ -140,7 +140,6 @@ struct Context {
     QByteArray code;
     QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
 
-    int maxNumberOfArguments = 0;
     int nRegisters = 0;
     int registerOffset = -1;
     bool hasDirectEval = false;

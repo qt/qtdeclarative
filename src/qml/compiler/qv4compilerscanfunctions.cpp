@@ -160,31 +160,6 @@ bool ScanFunctions::visit(CallExpression *ast)
             }
         }
     }
-    int argc = 0;
-    for (ArgumentList *it = ast->arguments; it; it = it->next)
-        ++argc;
-    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, argc);
-    return true;
-}
-
-bool ScanFunctions::visit(NewMemberExpression *ast)
-{
-    int argc = 0;
-    for (ArgumentList *it = ast->arguments; it; it = it->next)
-        ++argc;
-    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, argc);
-    return true;
-}
-
-bool ScanFunctions::visit(ArrayPattern *ast)
-{
-    int index = 0;
-    for (PatternElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            ++index;
-        ++index;
-    }
-    _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, index);
     return true;
 }
 
