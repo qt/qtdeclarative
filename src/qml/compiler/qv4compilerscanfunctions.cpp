@@ -184,10 +184,6 @@ bool ScanFunctions::visit(ArrayPattern *ast)
             ++index;
         ++index;
     }
-    if (ast->elision) {
-        for (Elision *elision = ast->elision->next; elision; elision = elision->next)
-            ++index;
-    }
     _context->maxNumberOfArguments = qMax(_context->maxNumberOfArguments, index);
     return true;
 }

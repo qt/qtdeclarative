@@ -595,7 +595,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
             Instruction::IteratorNext next;
             next.value = iteratorValue.stackSlot();
             bytecodeGenerator->addInstruction(next);
-            bool last = !p->next;
+            bool last = !p->next || (!p->next->elision && !p->next->element);
             if (last)
                 iteratorDone.storeConsumeAccumulator();
             if (e->type != PatternElement::RestElement) {
@@ -833,6 +833,9 @@ bool Codegen::visit(ArrayPattern *ast)
     };
 
     for (PatternElementList *it = ast->elements; it; it = it->next) {
+        for (Elision *elision = it->elision; elision; elision = elision->next)
+            push(nullptr);
+
         PatternElement *e = it->element;
         if (!e)
             continue;
@@ -841,15 +844,10 @@ bool Codegen::visit(ArrayPattern *ast)
             return false;
         }
 
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(nullptr);
-
         push(e->initializer);
         if (hasError)
             return false;
     }
-    for (Elision *elision = ast->elision; elision; elision = elision->next)
-        push(nullptr);
 
     if (args == -1) {
         Q_ASSERT(argc == 0);

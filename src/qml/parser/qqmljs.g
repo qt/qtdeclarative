@@ -1585,7 +1585,10 @@ RegularExpressionLiteral: T_DIVIDE_EQ;
 ArrayLiteral: T_LBRACKET ElisionOpt T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).Elision);
+        AST::PatternElementList *list = nullptr;
+        if (sym(2).Elision)
+            list = (new (pool) AST::PatternElementList(sym(2).Elision, nullptr))->finish();
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(list);
         node->lbracketToken = loc(1);
         node->rbracketToken = loc(3);
         sym(1).Node = node;
@@ -1605,7 +1608,12 @@ ArrayLiteral: T_LBRACKET ElementList T_RBRACKET;
 ArrayLiteral: T_LBRACKET ElementList T_COMMA ElisionOpt T_RBRACKET;
 /.
     case $rule_number: {
-        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(sym(2).PatternElementList->finish(), sym(4).Elision);
+        auto *list = sym(2).PatternElementList;
+        if (sym(4).Elision) {
+            AST::PatternElementList *l = new (pool) AST::PatternElementList(sym(4).Elision, nullptr);
+            list = list->append(l);
+        }
+        AST::ArrayPattern *node = new (pool) AST::ArrayPattern(list->finish());
         node->lbracketToken = loc(1);
         node->commaToken = loc(3);
         node->rbracketToken = loc(5);

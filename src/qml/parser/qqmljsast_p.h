@@ -542,16 +542,8 @@ class QML_PARSER_EXPORT ArrayPattern : public Pattern
 public:
     QQMLJS_DECLARE_AST_NODE(ArrayPattern)
 
-    ArrayPattern(Elision *e)
-        : elision(e)
-    { kind = K; }
-
     ArrayPattern(PatternElementList *elts)
         : elements(elts)
-    { kind = K; }
-
-    ArrayPattern(PatternElementList *elts, Elision *e)
-        : elements(elts), elision(e)
     { kind = K; }
 
     void accept0(Visitor *visitor) override;
@@ -568,7 +560,6 @@ public:
 
 // attributes
     PatternElementList *elements = nullptr;
-    Elision *elision = nullptr;
     SourceLocation lbracketToken;
     SourceLocation commaToken;
     SourceLocation rbracketToken;

@@ -259,10 +259,8 @@ void RegExpLiteral::accept0(Visitor *visitor)
 
 void ArrayPattern::accept0(Visitor *visitor)
 {
-    if (visitor->visit(this)) {
+    if (visitor->visit(this))
         accept(elements, visitor);
-        accept(elision, visitor);
-    }
 
     visitor->endVisit(this);
 }
@@ -358,6 +356,8 @@ bool ArrayPattern::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLoc
     if (parseMode == Binding)
         return true;
     for (auto *it = elements; it; it = it->next) {
+        if (!it->element)
+            continue;
         if (it->element->type == PatternElement::SpreadElement && it->next) {
             *errorLocation = it->element->firstSourceLocation();
             *errorMessage = QString::fromLatin1("'...' can only appear as last element in a destructuring list.");
