@@ -138,10 +138,12 @@ QV8Engine::QV8Engine(QV4::ExecutionEngine *v4)
     , m_xmlHttpRequestData(nullptr)
 #endif
 {
+#ifndef Q_OS_WASM // wasm does not have working simd QTBUG-63924
 #ifdef Q_PROCESSOR_X86_32
     if (!qCpuHasFeature(SSE2)) {
         qFatal("This program requires an X86 processor that supports SSE2 extension, at least a Pentium 4 or newer");
     }
+#endif
 #endif
 
     QML_MEMORY_SCOPE_STRING("QV8Engine::QV8Engine");

@@ -1770,8 +1770,14 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 {
     filePluginPath << QLatin1String(".");
     // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
+#ifndef Q_OS_WASM
+    QString installImportsPath = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#else
+    // Hardcode the qml imports to "qml/" relative to the app exe.
+    // This should perhaps be set via Qml2Imports in qt.conf.
+   QString installImportsPath = QStringLiteral("qml/");
+#endif
 
-    QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     addImportPath(installImportsPath);
 
     // env import paths
