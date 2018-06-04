@@ -3532,17 +3532,32 @@ FormalParameters: ;
     } break;
 ./
 
+FormalParameters: BindingRestElement;
+/.
+    case $rule_number: {
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish();
+        sym(1).Node = node;
+    } break;
+./
+
 FormalParameters: FormalParameterList;
+/. case $rule_number: ./
+FormalParameters: FormalParameterList T_COMMA;
 /.
     case $rule_number: {
         sym(1).Node = sym(1).FormalParameterList->finish();
     } break;
 ./
 
-FormalsList: BindingElement;
-/. case $rule_number: ./
+FormalParameters: FormalParameterList T_COMMA BindingRestElement;
+/.
+    case $rule_number: {
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).PatternElement))->finish();
+        sym(1).Node = node;
+    } break;
+./
 
-FormalParameterList: BindingRestElement;
+FormalParameterList: BindingElement;
 /.
     case $rule_number: {
         AST::FormalParameterList *node = new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement);
@@ -3550,12 +3565,8 @@ FormalParameterList: BindingRestElement;
     } break;
 ./
 
-FormalParameterList: FormalsList;
 
-FormalParameterList: FormalsList T_COMMA BindingRestElement;
-/. case $rule_number: ./
-
-FormalsList: FormalsList T_COMMA BindingElement;
+FormalParameterList: FormalParameterList T_COMMA BindingElement;
 /.
     case $rule_number: {
         AST::FormalParameterList *node = new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).PatternElement);
