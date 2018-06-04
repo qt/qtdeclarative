@@ -1766,12 +1766,15 @@ CoverInitializedName: IdentifierReference Initializer_In;
     case $rule_number: {
         AST::IdentifierPropertyName *name = new (pool) AST::IdentifierPropertyName(stringRef(1));
         name->propertyNameToken = loc(1);
-        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, sym(2).Expression);
-        node->colonToken = loc(2);
-        sym(1).Node = node;
+        AST::IdentifierExpression *left = new (pool) AST::IdentifierExpression(stringRef(1));
+        left->identifierToken = loc(1);
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
             f->name = stringRef(1);
+        AST::BinaryExpression *assignment = new (pool) AST::BinaryExpression(left, QSOperator::Assign, sym(2).Expression);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(name, assignment);
+        node->colonToken = loc(1);
+        sym(1).Node = node;
 
     } break;
 ./
