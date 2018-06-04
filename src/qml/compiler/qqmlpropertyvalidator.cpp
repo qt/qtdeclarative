@@ -681,7 +681,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         // Using -1 for the minor version ensures that we get the raw metaObject.
         QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(property->propType(), -1);
 
-        // Will be true if the assgned type inherits propertyMetaObject
+        // Will be true if the assigned type inherits propertyMetaObject
         bool isAssignable = false;
         // Determine isAssignable value
         if (propertyMetaObject) {
