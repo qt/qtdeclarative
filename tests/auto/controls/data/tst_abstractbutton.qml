@@ -744,7 +744,7 @@ TestCase {
     }
 
     function test_trigger(data) {
-        var control = createTemporaryObject(actionButton, testCase, {"enabled": data.button, "action.enabled": data.action})
+        var control = createTemporaryObject(actionButton, testCase, {"action.enabled": data.action, "enabled": data.button})
         verify(control)
 
         compare(control.enabled, data.button)
