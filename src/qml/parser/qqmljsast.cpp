@@ -268,7 +268,7 @@ void ArrayPattern::accept0(Visitor *visitor)
 bool ArrayPattern::isValidArrayLiteral(SourceLocation *errorLocation) const {
     for (PatternElementList *it = elements; it != nullptr; it = it->next) {
         PatternElement *e = it->element;
-        if (e && e->bindingPattern != nullptr) {
+        if (e && e->bindingTarget != nullptr) {
             if (errorLocation)
                 *errorLocation = e->firstSourceLocation();
             return false;
@@ -386,8 +386,8 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
 {
     Q_ASSERT(type == Literal || type == SpreadElement);
     Q_ASSERT(bindingIdentifier.isNull());
-    Q_ASSERT(bindingPattern == nullptr);
-    Q_ASSERT(bindingPattern == nullptr);
+    Q_ASSERT(bindingTarget == nullptr);
+    Q_ASSERT(bindingTarget == nullptr);
     Q_ASSERT(initializer);
     ExpressionNode *init = initializer;
 
@@ -399,8 +399,7 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
             *errorMessage = QString::fromLatin1("Invalid lhs expression after '...' in destructuring expression.");
             return false;
         }
-        // ### Should be binding
-        initializer = lhs;
+        bindingTarget = lhs;
         return true;
     }
     type = PatternElement::Binding;
@@ -422,21 +421,18 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
         *errorMessage = QString::fromLatin1("Destructuring target is not a left hand side expression.");
         return false;
     }
-
-    if (auto *p = lhs->patternCast()) {
-        bindingPattern = p;
-        if (!p->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
-            return false;
-        return true;
-    }
     if (auto *i = cast<IdentifierExpression *>(lhs)) {
         bindingIdentifier = i->name.toString();
         identifierToken = i->identifierToken;
         return true;
     }
-    *errorLocation = lastSourceLocation();
-    *errorMessage = QLatin1String("Unimplemented!");
-    return false;
+
+    bindingTarget = lhs;
+    if (auto *p = lhs->patternCast()) {
+        if (!p->convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage))
+            return false;
+    }
+    return true;
 }
 
 bool PatternProperty::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage)
@@ -1209,7 +1205,7 @@ void TaggedTemplate::accept0(Visitor *visitor)
 void PatternElement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(bindingPattern, visitor);
+        accept(bindingTarget, visitor);
         accept(initializer, visitor);
     }
 
@@ -1218,7 +1214,7 @@ void PatternElement::accept0(Visitor *visitor)
 
 void PatternElement::boundNames(QStringList *names)
 {
-    if (bindingPattern) {
+    if (bindingTarget) {
         if (PatternElementList *e = elementList())
             e->boundNames(names);
         else if (PatternPropertyList *p = propertyList())
@@ -1252,7 +1248,7 @@ void PatternProperty::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(name, visitor);
-        accept(bindingPattern, visitor);
+        accept(bindingTarget, visitor);
         accept(initializer, visitor);
     }
 

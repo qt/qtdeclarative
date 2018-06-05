@@ -678,7 +678,7 @@ public:
     }
 
     PatternElement(Pattern *pattern, ExpressionNode *i = nullptr, Type t = Binding)
-        : bindingPattern(pattern), initializer(i), type(t)
+        : bindingTarget(pattern), initializer(i), type(t)
     {
         Q_ASSERT(t >= RestElement);
         kind = K;
@@ -688,13 +688,15 @@ public:
     virtual bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage);
 
     SourceLocation firstSourceLocation() const override
-    { return identifierToken.isValid() ? identifierToken : (bindingPattern ? bindingPattern->firstSourceLocation() : initializer->firstSourceLocation()); }
+    { return identifierToken.isValid() ? identifierToken : (bindingTarget ? bindingTarget->firstSourceLocation() : initializer->firstSourceLocation()); }
 
     SourceLocation lastSourceLocation() const override
-    { return initializer ? initializer->lastSourceLocation() : (bindingPattern ? bindingPattern->lastSourceLocation() : identifierToken); }
+    { return initializer ? initializer->lastSourceLocation() : (bindingTarget ? bindingTarget->lastSourceLocation() : identifierToken); }
 
-    PatternElementList *elementList() const { ArrayPattern *a = cast<ArrayPattern *>(bindingPattern); return a ? a->elements : nullptr; }
-    PatternPropertyList *propertyList() const { ObjectPattern *o = cast<ObjectPattern *>(bindingPattern); return o ? o->properties : nullptr;  }
+    ExpressionNode *destructuringTarget() const { return bindingTarget; }
+    Pattern *destructuringPattern() const { return bindingTarget ? bindingTarget->patternCast() : nullptr; }
+    PatternElementList *elementList() const { ArrayPattern *a = cast<ArrayPattern *>(bindingTarget); return a ? a->elements : nullptr; }
+    PatternPropertyList *propertyList() const { ObjectPattern *o = cast<ObjectPattern *>(bindingTarget); return o ? o->properties : nullptr;  }
 
     bool isVariableDeclaration() const { return scope != VariableScope::NoScope; }
     bool isLexicallyScoped() const { return scope == VariableScope::Let || scope == VariableScope::Const; }
@@ -704,7 +706,7 @@ public:
 // attributes
     SourceLocation identifierToken;
     QString bindingIdentifier;
-    Pattern *bindingPattern = nullptr;
+    ExpressionNode *bindingTarget = nullptr;
     ExpressionNode *initializer = nullptr;
     Type type = Literal;
     // when used in a VariableDeclarationList
@@ -2164,7 +2166,7 @@ public:
             PatternElement *e = formals->element;
             if (e && e->type == PatternElement::RestElement)
                 return false;
-            if (e && (e->initializer || e->bindingPattern))
+            if (e && (e->initializer || e->bindingTarget))
                 return false;
             formals = formals->next;
         }

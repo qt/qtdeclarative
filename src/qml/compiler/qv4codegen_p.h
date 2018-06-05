@@ -516,6 +516,7 @@ protected:
     void variableDeclaration(AST::PatternElement *ast);
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
+    Reference targetForPatternElement(AST::PatternElement *p);
     void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef = Reference());
     void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
     void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);

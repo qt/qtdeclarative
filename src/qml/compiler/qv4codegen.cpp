@@ -469,10 +469,27 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
     }
 }
 
-void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef)
+Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
+{
+    if (!p->bindingIdentifier.isNull())
+        return referenceForName(p->bindingIdentifier, true);
+    if (!p->bindingTarget || p->destructuringPattern())
+        return Codegen::Reference::fromStackSlot(this);
+    Reference lhs = expression(p->bindingTarget);
+    if (hasError)
+        return lhs;
+    lhs = lhs.asLValue();
+    return lhs;
+}
+
+void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base)
 {
     RegisterScope scope(this);
-    Reference varToStore = e->bindingIdentifier.isNull() ? Reference::fromStackSlot(this, bytecodeGenerator->newRegister()) : referenceForName(e->bindingIdentifier, true);
+    Reference baseRef = (base.isAccumulator()) ? base.storeOnStack() : base;
+    Reference varToStore = targetForPatternElement(e);
+    if (hasError)
+        return;
+
     if (e->initializer) {
         if (!baseRef.isValid()) {
             // assignment
@@ -508,13 +525,17 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
         baseRef.loadInAccumulator();
         varToStore.storeConsumeAccumulator();
     }
+    Pattern *p = e->destructuringPattern();
+    if (!p)
+        return;
+
     if (!varToStore.isStackSlot())
         varToStore = varToStore.storeOnStack();
     if (PatternElementList *l = e->elementList()) {
         destructureElementList(varToStore, l);
     } else if (PatternPropertyList *p = e->propertyList()) {
         destructurePropertyList(varToStore, p);
-    } else if (e->bindingPattern) {
+    } else if (e->bindingTarget) {
         // empty binding pattern. For spec compatibility, try to coerce the argument to an object
         varToStore.loadInAccumulator();
         Instruction::ToObject toObject;
@@ -537,7 +558,7 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
             if (hasError)
                 return;
             computedName = computedName.storeOnStack();
-            property = Reference::fromSubscript(object, computedName);
+            property = Reference::fromSubscript(object, computedName).asLValue();
         } else {
             QString propertyName = p->name->asString();
             property = Reference::fromMember(object, propertyName);
@@ -2496,7 +2517,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             bytecodeGenerator->addInstruction(rest);
             arg.storeConsumeAccumulator();
         } else {
-            if (e->bindingPattern || e->initializer) {
+            if (e->bindingTarget || e->initializer) {
                 initializeAndDestructureBindingElement(e, arg);
                 if (hasError)
                     break;
