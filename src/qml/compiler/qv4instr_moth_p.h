@@ -908,7 +908,7 @@ QT_WARNING_DISABLE_GCC("-Wuninitialized")
         static void setDataNoCommon(Instr &instr, const DataType &v) \
         { memcpy(reinterpret_cast<char *>(&instr.FMT) + sizeof(Instr::instr_common), \
                  reinterpret_cast<const char *>(&v) + sizeof(Instr::instr_common), \
-                 Size - sizeof(Instr::instr_common)); } \
+                 sizeof(DataType) - sizeof(Instr::instr_common)); } \
     };
 FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
