@@ -1218,16 +1218,9 @@ void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool r
 {
     Q_UNUSED(changeSet);
     Q_UNUSED(reset);
-    Q_Q(QQuickTableView);
 
-    if (!q->isComponentComplete())
-        return;
-
-    // Rudimentary solution for now until support for
-    // more fine-grained updates and transitions are implemented.
-    auto modelVariant = q->model();
-    q->setModel(QVariant());
-    q->setModel(modelVariant);
+    // TODO: implement fine-grained support for model changes
+    invalidateTable();
 }
 
 QQuickTableView::QQuickTableView(QQuickItem *parent)
