@@ -375,6 +375,25 @@ void InstructionSelection::callSubscript(IR::Expr *base, IR::Expr *index, IR::Ex
 
 void InstructionSelection::convertType(IR::Expr *source, IR::Expr *target)
 {
+    if (source->type == IR::DoubleType) {
+        switch (target->type) {
+        case IR::SInt32Type:
+            Instruction::DoubleToInt d2i;
+            d2i.source = getParam(source);
+            d2i.result = getParam(target);
+            addInstruction(d2i);
+            return;
+        case IR::UInt32Type:
+            Instruction::DoubleToUInt d2ui;
+            d2ui.source = getParam(source);
+            d2ui.result = getParam(target);
+            addInstruction(d2ui);
+            return;
+        default:
+            break;
+        }
+    }
+
     // FIXME: do something more useful with this info
     if (target->type & IR::NumberType && !(source->type & IR::NumberType))
         unop(IR::OpUPlus, source, target);

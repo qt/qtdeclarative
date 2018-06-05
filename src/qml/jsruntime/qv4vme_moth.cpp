@@ -892,6 +892,14 @@ QV4::ReturnedValue VME::run(ExecutionEngine *engine, const uchar *code)
         STOREVALUE(instr.result, Runtime::method_sub(VALUE(instr.lhs), VALUE(instr.rhs)));
     MOTH_END_INSTR(Sub)
 
+    MOTH_BEGIN_INSTR(DoubleToInt)
+        STOREVALUE(instr.result, Encode(Runtime::method_doubleToInt(VALUE(instr.source).asDouble())));
+    MOTH_END_INSTR(DoubleToInt)
+
+    MOTH_BEGIN_INSTR(DoubleToUInt)
+        STOREVALUE(instr.result, Encode(Runtime::method_doubleToUInt(VALUE(instr.source).asDouble())));
+    MOTH_END_INSTR(DoubleToUInt)
+
     MOTH_BEGIN_INSTR(BinopContext)
         QV4::Runtime::BinaryOperationContext op = *reinterpret_cast<QV4::Runtime::BinaryOperationContext *>(reinterpret_cast<char *>(&engine->runtime.runtimeMethods[instr.alu]));
         STOREVALUE(instr.result, op(engine, VALUE(instr.lhs), VALUE(instr.rhs)));
