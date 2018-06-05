@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qv4baselinejit_p.h"
+#include "qv4jithelpers_p.h"
 #include "qv4assembler_p.h"
 #include <private/qv4lookup_p.h>
 #include <private/qv4generatorobject_p.h>
@@ -193,19 +194,13 @@ void BaselineJIT::generate_LoadName(int name)
     as->checkException();
 }
 
-static ReturnedValue loadGlobalLookupHelper(ExecutionEngine *engine, QV4::Function *f, int index)
-{
-    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
-    return l->globalGetter(l, engine);
-}
-
 void BaselineJIT::generate_LoadGlobalLookup(int index)
 {
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(loadGlobalLookupHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::loadGlobalLookup, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -270,12 +265,6 @@ void BaselineJIT::generate_LoadProperty(int name)
     as->checkException();
 }
 
-static ReturnedValue getLookupHelper(ExecutionEngine *engine, QV4::Function *f, int index, const QV4::Value &base)
-{
-    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
-    return l->getter(l, engine, base);
-}
-
 void BaselineJIT::generate_GetLookup(int index, int base)
 {
     STORE_IP();
@@ -284,7 +273,7 @@ void BaselineJIT::generate_GetLookup(int index, int base)
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(getLookupHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -297,7 +286,7 @@ void BaselineJIT::generate_GetLookupA(int index)
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(getLookupHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -314,14 +303,6 @@ void BaselineJIT::generate_StoreProperty(int name, int base)
     as->checkException();
 }
 
-static void setLookupHelper(QV4::Function *f, int index, QV4::Value &base, const QV4::Value &value)
-{
-    ExecutionEngine *engine = f->internalClass->engine;
-    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
-    if (!l->setter(l, engine, base, value) && f->isStrict())
-        engine->throwTypeError();
-}
-
 void BaselineJIT::generate_SetLookup(int index, int base)
 {
     STORE_IP();
@@ -331,7 +312,7 @@ void BaselineJIT::generate_SetLookup(int index, int base)
     as->passRegAsArg(base, 2);
     as->passInt32AsArg(index, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(setLookupHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::setLookup, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -612,24 +593,13 @@ void BaselineJIT::generate_PushWithContext()
     as->storeHeapObject(CallData::Context);
 }
 
-static void pushBlockContextHelper(QV4::Value *stack, int index)
-{
-    ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-    stack[CallData::Context] = Runtime::method_createBlockContext(c, index);
-}
-
 void BaselineJIT::generate_PushBlockContext(int index)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(index, 1);
     as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(pushBlockContextHelper, Assembler::IgnoreResult);
-}
-
-static void cloneBlockContextHelper(QV4::Value *contextSlot)
-{
-    *contextSlot = Runtime::method_cloneBlockContext(static_cast<QV4::ExecutionContext *>(contextSlot));
+    JIT_GENERATE_RUNTIME_CALL(Helpers::pushBlockContext, Assembler::IgnoreResult);
 }
 
 void BaselineJIT::generate_CloneBlockContext()
@@ -637,12 +607,7 @@ void BaselineJIT::generate_CloneBlockContext()
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(1);
     as->passRegAsArg(CallData::Context, 0);
-    JIT_GENERATE_RUNTIME_CALL(cloneBlockContextHelper, Assembler::IgnoreResult);
-}
-
-static void pushScriptContextHelper(QV4::Value *stack, ExecutionEngine *engine, int index)
-{
-    stack[CallData::Context] = Runtime::method_createScriptContext(engine, index);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::cloneBlockContext, Assembler::IgnoreResult);
 }
 
 void BaselineJIT::generate_PushScriptContext(int index)
@@ -652,12 +617,7 @@ void BaselineJIT::generate_PushScriptContext(int index)
     as->passInt32AsArg(index, 2);
     as->passEngineAsArg(1);
     as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(pushScriptContextHelper, Assembler::IgnoreResult);
-}
-
-static void popScriptContextHelper(QV4::Value *stack, ExecutionEngine *engine)
-{
-    stack[CallData::Context] = Runtime::method_popScriptContext(engine);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::pushScriptContext, Assembler::IgnoreResult);
 }
 
 void BaselineJIT::generate_PopScriptContext()
@@ -666,7 +626,7 @@ void BaselineJIT::generate_PopScriptContext()
     as->prepareCallWithArgCount(2);
     as->passEngineAsArg(1);
     as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(popScriptContextHelper, Assembler::IgnoreResult);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::popScriptContext, Assembler::IgnoreResult);
 }
 
 void BaselineJIT::generate_PopContext() { as->popContext(); }
@@ -714,18 +674,6 @@ void BaselineJIT::generate_DestructureRestElement()
     as->checkException();
 }
 
-static ReturnedValue deletePropertyHelper(QV4::Function *function, const QV4::Value &base, const QV4::Value &index)
-{
-    auto engine = function->internalClass->engine;
-    if (!Runtime::method_deleteProperty(engine, base, index)) {
-        if (function->isStrict())
-            engine->throwTypeError();
-        return Encode(false);
-    } else {
-        return Encode(true);
-    }
-}
-
 void BaselineJIT::generate_DeleteProperty(int base, int index)
 {
     STORE_IP();
@@ -733,20 +681,8 @@ void BaselineJIT::generate_DeleteProperty(int base, int index)
     as->passRegAsArg(index, 2);
     as->passRegAsArg(base, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(deletePropertyHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::deleteProperty, Assembler::ResultInAccumulator);
     as->checkException();
-}
-
-static ReturnedValue deleteNameHelper(QV4::Function *function, int name)
-{
-    auto engine = function->internalClass->engine;
-    if (!Runtime::method_deleteName(engine, name)) {
-        if (function->isStrict())
-            engine->throwTypeError();
-        return Encode(false);
-    } else {
-        return Encode(true);
-    }
 }
 
 void BaselineJIT::generate_DeleteName(int name)
@@ -755,7 +691,7 @@ void BaselineJIT::generate_DeleteName(int name)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(name, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(deleteNameHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::deleteName, Assembler::ResultInAccumulator);
     as->checkException();
 }
 
@@ -838,32 +774,13 @@ void BaselineJIT::generate_CreateRestParameter(int argIndex)
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_createRestParameter, Assembler::ResultInAccumulator);
 }
 
-static void convertThisToObjectHelper(ExecutionEngine *engine, Value *t)
-{
-    if (!t->isObject()) {
-        if (t->isNullOrUndefined()) {
-            *t = engine->globalObject->asReturnedValue();
-        } else {
-            *t = t->toObject(engine)->asReturnedValue();
-        }
-    }
-}
-
 void BaselineJIT::generate_ConvertThisToObject()
 {
     as->prepareCallWithArgCount(2);
     as->passRegAsArg(CallData::This, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(convertThisToObjectHelper, Assembler::IgnoreResult);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::convertThisToObject, Assembler::IgnoreResult);
     as->checkException();
-}
-
-static ReturnedValue ToObjectHelper(ExecutionEngine *engine, const Value &obj)
-{
-    if (obj.isObject())
-        return obj.asReturnedValue();
-
-    return obj.toObject(engine)->asReturnedValue();
 }
 
 void BaselineJIT::generate_ToObject()
@@ -872,7 +789,7 @@ void BaselineJIT::generate_ToObject()
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(ToObjectHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::toObject, Assembler::ResultInAccumulator);
     as->checkException();
 
 }
@@ -940,22 +857,13 @@ void BaselineJIT::generate_UShrConst(int rhs) { as->ushrConst(rhs); }
 void BaselineJIT::generate_ShrConst(int rhs) { as->shrConst(rhs); }
 void BaselineJIT::generate_ShlConst(int rhs) { as->shlConst(rhs); }
 
-static ReturnedValue expHelper(const Value &base, const Value &exp)
-{
-    double b = base.toNumber();
-    double e = exp.toNumber();
-    if (qIsInf(e) && (b == 1 || b == -1))
-        return Encode(qSNaN());
-    return Encode(pow(b,e));
-}
-
 void BaselineJIT::generate_Exp(int lhs) {
     STORE_IP();
     STORE_ACC();
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passRegAsArg(lhs, 0);
-    JIT_GENERATE_RUNTIME_CALL(expHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::exp, Assembler::ResultInAccumulator);
     as->checkException();
 }
 void BaselineJIT::generate_Mul(int lhs) { as->mul(lhs); }
