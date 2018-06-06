@@ -745,7 +745,10 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
         if (!f)
             return engine->throwTypeError();
         JSCallData cData(scope, 0, nullptr, o);
-        return f->call(cData);
+        ScopedObject it(scope, f->call(cData));
+        if (!it)
+            return engine->throwTypeError();
+        return it->asReturnedValue();
     }
     return engine->newForInIteratorObject(o)->asReturnedValue();
 }

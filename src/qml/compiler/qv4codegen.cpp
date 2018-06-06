@@ -831,53 +831,155 @@ bool Codegen::visit(ArrayPattern *ast)
     if (hasError)
         return false;
 
-    RegisterScope scope(this);
+    PatternElementList *it = ast->elements;
 
     int argc = 0;
-    int args = -1;
-    auto push = [this, &argc, &args](AST::ExpressionNode *arg) {
-        int temp = bytecodeGenerator->newRegister();
-        if (args == -1)
-            args = temp;
-        if (!arg) {
-            auto c = Reference::fromConst(this, Primitive::emptyValue().asReturnedValue());
-            (void) c.storeOnStack(temp);
-        } else {
-            RegisterScope scope(this);
-            Reference r = expression(arg);
+    {
+        RegisterScope scope(this);
+
+        int args = -1;
+        auto push = [this, &argc, &args](AST::ExpressionNode *arg) {
+            int temp = bytecodeGenerator->newRegister();
+            if (args == -1)
+                args = temp;
+            if (!arg) {
+                auto c = Reference::fromConst(this, Primitive::emptyValue().asReturnedValue());
+                (void) c.storeOnStack(temp);
+            } else {
+                RegisterScope scope(this);
+                Reference r = expression(arg);
+                if (hasError)
+                    return;
+                (void) r.storeOnStack(temp);
+            }
+            ++argc;
+        };
+
+        for (; it; it = it->next) {
+            PatternElement *e = it->element;
+            if (e && e->type == PatternElement::SpreadElement)
+                break;
+            for (Elision *elision = it->elision; elision; elision = elision->next)
+                push(nullptr);
+
+            if (!e)
+                continue;
+
+            push(e->initializer);
             if (hasError)
-                return;
-            (void) r.storeOnStack(temp);
+                return false;
         }
-        ++argc;
+
+        if (args == -1) {
+            Q_ASSERT(argc == 0);
+            args = 0;
+        }
+
+        Instruction::DefineArray call;
+        call.argc = argc;
+        call.args = Moth::StackSlot::createRegister(args);
+        bytecodeGenerator->addInstruction(call);
+    }
+
+    if (!it) {
+        _expr.setResult(Reference::fromAccumulator(this));
+        return false;
+    }
+    Q_ASSERT(it->element && it->element->type == PatternElement::SpreadElement);
+
+    RegisterScope scope(this);
+    Reference array = Reference::fromStackSlot(this);
+    array.storeConsumeAccumulator();
+    Reference index = Reference::storeConstOnStack(this, Encode(argc));
+
+    auto pushAccumulator = [&]() {
+        Reference slot = Reference::fromSubscript(array, index);
+        slot.storeConsumeAccumulator();
+
+        index.loadInAccumulator();
+        Instruction::Increment inc;
+        bytecodeGenerator->addInstruction(inc);
+        index.storeConsumeAccumulator();
     };
 
-    for (PatternElementList *it = ast->elements; it; it = it->next) {
-        for (Elision *elision = it->elision; elision; elision = elision->next)
-            push(nullptr);
-
-        PatternElement *e = it->element;
-        if (!e)
-            continue;
-        if (e->type == PatternElement::RestElement) {
-            throwSyntaxError(it->firstSourceLocation(), QLatin1String("'...' in ArrayLiterals is unimplementd."));
-            return false;
+    while (it) {
+        for (Elision *elision = it->elision; elision; elision = elision->next) {
+            Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).loadInAccumulator();
+            pushAccumulator();
         }
 
-        push(e->initializer);
-        if (hasError)
-            return false;
+        if (!it->element) {
+            it = it->next;
+            continue;
+        }
+
+        // handle spread element
+        if (it->element->type == PatternElement::SpreadElement) {
+            RegisterScope scope(this);
+
+            Reference iterator = Reference::fromStackSlot(this);
+            Reference lhsValue = Reference::fromStackSlot(this);
+
+            // There should be a temporal block, so that variables declared in lhs shadow outside vars.
+            // This block should define a temporal dead zone for those variables, which is not yet implemented.
+            {
+                RegisterScope innerScope(this);
+                Reference expr = expression(it->element->initializer);
+                if (hasError)
+                    return false;
+
+                expr.loadInAccumulator();
+                Instruction::GetIterator iteratorObjInstr;
+                iteratorObjInstr.iterator = /*ForEachType::Of*/ 1;
+                bytecodeGenerator->addInstruction(iteratorObjInstr);
+                iterator.storeConsumeAccumulator();
+            }
+
+            BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+            BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
+            BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
+
+            {
+                ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+                bytecodeGenerator->jump().link(in);
+
+                BytecodeGenerator::Label body = bytecodeGenerator->label();
+
+                lhsValue.loadInAccumulator();
+                pushAccumulator();
+
+                in.link();
+                iterator.loadInAccumulator();
+                Instruction::IteratorNext next;
+                next.value = lhsValue.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+                bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
+                bytecodeGenerator->jump().link(done);
+            }
+
+            end.link();
+
+            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+            iterator.loadInAccumulator();
+            Instruction::IteratorClose close;
+            close.done = iteratorDone.stackSlot();
+            bytecodeGenerator->addInstruction(close);
+
+            done.link();
+        } else {
+            RegisterScope innerScope(this);
+            Reference expr = expression(it->element->initializer);
+            if (hasError)
+                return false;
+
+            expr.loadInAccumulator();
+            pushAccumulator();
+        }
+
+        it = it->next;
     }
 
-    if (args == -1) {
-        Q_ASSERT(argc == 0);
-        args = 0;
-    }
-
-    Instruction::DefineArray call;
-    call.argc = argc;
-    call.args = Moth::StackSlot::createRegister(args);
-    bytecodeGenerator->addInstruction(call);
+    array.loadInAccumulator();
     _expr.setResult(Reference::fromAccumulator(this));
 
     return false;
