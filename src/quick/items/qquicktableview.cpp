@@ -716,7 +716,7 @@ qreal QQuickTableViewPrivate::rowHeight(int row)
 
     // If we have an item loaded at row, return the height of the item.
     if (row >= loadedTable.top() && row <= loadedTable.bottom())
-        return cellWidth(QPoint(loadedTable.left(), row));
+        return cellHeight(QPoint(loadedTable.left(), row));
 
     return -1;
 }

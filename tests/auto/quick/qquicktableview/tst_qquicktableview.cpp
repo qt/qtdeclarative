@@ -331,6 +331,11 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems_data()
     QTest::newRow("QAIM 1x1 1,1 5555") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
     QTest::newRow("QAIM 4x4 0,0 3333") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
     QTest::newRow("QAIM 4x4 2,2 1234") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
+
+    // Check "list" models
+    QTest::newRow("NumberModel 1x4, 0000") << QVariant::fromValue(4) << QSize(1, 4) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QStringList 1x4, 0,0 1111") << QVariant::fromValue(QStringList() << "one" << "two" << "three" << "four")
+                                               << QSize(1, 4) << QSizeF(0, 0) << QMarginsF(1, 1, 1, 1);
 }
 
 void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
@@ -341,6 +346,10 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
     QFETCH(QSizeF, spacing);
     QFETCH(QMarginsF, margins);
     LOAD_TABLEVIEW("plaintableview.qml");
+
+    const qreal expectedItemWidth = 100;
+    const qreal expectedItemHeight = 50;
+    const int expectedItemCount = tableSize.width() * tableSize.height();
 
     tableView->setModel(model);
     tableView->setRowSpacing(spacing.height());
@@ -354,11 +363,6 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
 
     auto const items = tableViewPrivate->loadedItems;
     QVERIFY(!items.isEmpty());
-    const QQuickItem *firstItem = items[0]->item;
-
-    qreal expectedWidth = firstItem->width();
-    qreal expectedHeight = firstItem->height();
-    int expectedItemCount = tableSize.width() * tableSize.height();
 
     for (int i = 0; i < expectedItemCount; ++i) {
         const QQuickItem *item = items[i]->item;
@@ -368,12 +372,12 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         auto attached = getAttachedObject(item);
         int row = attached->row();
         int column = attached->column();
-        qreal expectedX = margins.left() + (column * (expectedWidth + spacing.width()));
-        qreal expectedY = margins.top() + (row * (expectedHeight + spacing.height()));
+        qreal expectedX = margins.left() + (column * (expectedItemWidth + spacing.width()));
+        qreal expectedY = margins.top() + (row * (expectedItemHeight + spacing.height()));
         QCOMPARE(item->x(), expectedX);
         QCOMPARE(item->y(), expectedY);
-        QCOMPARE(item->width(), expectedWidth);
-        QCOMPARE(item->height(), expectedHeight);
+        QCOMPARE(item->width(), expectedItemWidth);
+        QCOMPARE(item->height(), expectedItemHeight);
     }
 }
 
