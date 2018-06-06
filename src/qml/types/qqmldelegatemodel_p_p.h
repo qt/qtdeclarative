@@ -95,6 +95,8 @@ class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
+    Q_PROPERTY(int row MEMBER row NOTIFY rowChanged)
+    Q_PROPERTY(int column MEMBER column NOTIFY columnChanged)
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
     QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex);
@@ -121,7 +123,7 @@ public:
     int groupIndex(Compositor::Group group);
 
     int modelIndex() const { return index; }
-    virtual void setModelIndex(int idx) { index = idx; Q_EMIT modelIndexChanged(); }
+    virtual void setModelIndex(int idx);
 
     virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
@@ -148,9 +150,13 @@ public:
 
 Q_SIGNALS:
     void modelIndexChanged();
+    void rowChanged();
+    void columnChanged();
 
 protected:
     void objectDestroyed(QObject *);
+    int row;
+    int column;
 };
 
 namespace QV4 {

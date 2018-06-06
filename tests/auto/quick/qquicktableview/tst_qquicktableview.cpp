@@ -96,6 +96,8 @@ private slots:
     void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
+    void checkInitialAttachedProperties_data();
+    void checkInitialAttachedProperties();
     void flick_data();
     void flick();
     void flickOvershoot_data();
@@ -507,6 +509,51 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     int expectedRows = qCeil(availableHeight / cellHeight);
     int actualRows = bottomRightAttached->row() + 1;
     QCOMPARE(actualRows, expectedRows);
+}
+
+void tst_QQuickTableView::checkInitialAttachedProperties_data()
+{
+    QTest::addColumn<QVariant>("model");
+
+    QTest::newRow("QAIM") << TestModelAsVariant(4, 4);
+    QTest::newRow("Number model") << QVariant::fromValue(4);
+    QTest::newRow("QStringList") << QVariant::fromValue(QStringList() << "0" << "1" << "2" << "3");
+}
+
+void tst_QQuickTableView::checkInitialAttachedProperties()
+{
+    // Check that the context and attached properties inside
+    // the delegate items are what we expect at start-up.
+    QFETCH(QVariant, model);
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const int index = fxItem->index;
+        const auto item = fxItem->item;
+        const auto attached = getAttachedObject(item);
+        const auto context = qmlContext(item.data());
+        const QPoint cell = tableViewPrivate->cellAtModelIndex(index);
+        const int contextIndex = context->contextProperty("index").toInt();
+        const int contextRow = context->contextProperty("row").toInt();
+        const int contextColumn = context->contextProperty("column").toInt();
+        const QString contextModelData = context->contextProperty("modelData").toString();
+        const QQmlDelegateModelAttached *delegateModelAttached =
+                static_cast<QQmlDelegateModelAttached *>(
+                    qmlAttachedPropertiesObject<QQmlDelegateModel>(item));
+        const int contextItemsIndex = delegateModelAttached->property("itemsIndex").toInt();
+
+        QCOMPARE(attached->row(), cell.y());
+        QCOMPARE(attached->column(), cell.x());
+        QCOMPARE(contextRow, cell.y());
+        QCOMPARE(contextColumn, cell.x());
+        QCOMPARE(contextIndex, index);
+        QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
+        QCOMPARE(contextItemsIndex, index);
+    }
 }
 
 void tst_QQuickTableView::flick_data()

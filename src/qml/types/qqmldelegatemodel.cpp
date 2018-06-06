@@ -1960,6 +1960,8 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(
     , scriptRef(0)
     , groups(0)
     , index(modelIndex)
+    , row(QQmlDelegateModelPrivate::get(metaType->model)->m_adaptorModel.rowAt(modelIndex))
+    , column(QQmlDelegateModelPrivate::get(metaType->model)->m_adaptorModel.columnAt(modelIndex))
 {
     metaType->addref();
 }
@@ -1992,6 +1994,27 @@ void QQmlDelegateModelItem::Dispose()
         model->removeCacheItem(this);
     }
     delete this;
+}
+
+void QQmlDelegateModelItem::setModelIndex(int idx)
+{
+    if (idx == index)
+        return;
+
+    const int prevRow = row;
+    const int prevColumn = column;
+    const QQmlAdaptorModel &adaptorModel = QQmlDelegateModelPrivate::get(metaType->model)->m_adaptorModel;
+
+    index = idx;
+    row = adaptorModel.rowAt(idx);
+    column = adaptorModel.columnAt(idx);
+
+    Q_EMIT modelIndexChanged();
+
+    if (row != prevRow)
+        emit rowChanged();
+    if (column != prevColumn)
+        emit columnChanged();
 }
 
 void QQmlDelegateModelItem::destroyObject()

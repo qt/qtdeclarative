@@ -60,7 +60,7 @@ public:
         int cell = index.row() + (index.column() * m_columns);
         if (selectedCells.contains(cell))
             return QStringLiteral("selected");
-        return QString("%1,%2").arg(index.column()).arg(index.row());
+        return QString("%1").arg(index.row());
     }
 
     QHash<int, QByteArray> roleNames() const override

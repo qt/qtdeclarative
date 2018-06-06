@@ -58,7 +58,7 @@ static const qreal kDefaultColumnWidth = 50;
 
 class FxTableItem;
 
-class QQuickTableViewPrivate : public QQuickFlickablePrivate
+class Q_QML_AUTOTEST_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
 {
     Q_DECLARE_PUBLIC(QQuickTableView)
 

@@ -398,8 +398,6 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(const QV4::FunctionObject
 class QQmlDMAbstractItemModelData : public QQmlDMCachedModelData
 {
     Q_OBJECT
-    Q_PROPERTY(int row MEMBER row NOTIFY rowChanged)
-    Q_PROPERTY(int column MEMBER column NOTIFY columnChanged)
     Q_PROPERTY(bool hasModelChildren READ hasModelChildren CONSTANT)
 
 public:
@@ -408,8 +406,6 @@ public:
             VDMModelDelegateDataType *dataType,
             int index)
         : QQmlDMCachedModelData(metaType, dataType, index)
-        , row(type->model->rowAt(index))
-        , column(type->model->columnAt(index))
     {
     }
 
@@ -447,16 +443,6 @@ public:
         ++scriptRef;
         return o.asReturnedValue();
     }
-
-    void setModelIndex(int idx) override;
-
-Q_SIGNALS:
-    void rowChanged();
-    void columnChanged();
-
-private:
-    int row;
-    int column;
 };
 
 class VDMAbstractItemModelDataType : public VDMModelDelegateDataType
@@ -576,22 +562,6 @@ public:
         propertyCache = new QQmlPropertyCache(metaObject);
     }
 };
-
-void QQmlDMAbstractItemModelData::setModelIndex(int idx)
-{
-    QQmlDMCachedModelData::setModelIndex(idx);
-
-    int prevRow = row;
-    int prevColumn = column;
-
-    row = type->model->rowAt(idx);
-    column = type->model->columnAt(idx);
-
-    if (row != prevRow)
-        emit rowChanged();
-    if (column != prevColumn)
-        emit columnChanged();
-}
 
 //-----------------------------------------------------------------
 // QQmlListAccessor
