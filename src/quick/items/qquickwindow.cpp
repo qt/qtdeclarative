@@ -536,8 +536,6 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     Q_Q(QQuickWindow);
 
-    qRegisterMetaType<QWindow::Visibility>();
-
     contentItem = new QQuickRootItem;
     QQml_setParent_noEvent(contentItem, c);
     QQmlEngine::setObjectOwnership(contentItem, QQmlEngine::CppOwnership);

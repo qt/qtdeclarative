@@ -157,7 +157,6 @@
     || defined(_M_IX86)  \
     || defined(_X86_)    \
     || defined(__THW_INTEL)
-
 #define WTF_CPU_X86 1
 #endif
 

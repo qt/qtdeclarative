@@ -334,7 +334,6 @@ void QQuickItemView::setModel(const QVariant &m)
         connect(d->model, SIGNAL(createdItem(int,QObject*)), this, SLOT(createdItem(int,QObject*)));
         connect(d->model, SIGNAL(initItem(int,QObject*)), this, SLOT(initItem(int,QObject*)));
         connect(d->model, SIGNAL(destroyingItem(QObject*)), this, SLOT(destroyingItem(QObject*)));
-
         if (isComponentComplete()) {
             d->updateSectionCriteria();
             d->refill();

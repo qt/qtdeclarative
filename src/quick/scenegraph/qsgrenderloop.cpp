@@ -413,6 +413,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (profileFrames)
         renderTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
+
     cd->polishItems();
 
     if (profileFrames)

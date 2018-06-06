@@ -68,7 +68,6 @@ QT_BEGIN_NAMESPACE
 QQmlChangeSet::QQmlChangeSet()
     : m_difference(0)
 {
-    qRegisterMetaType<QQmlChangeSet >("QQmlChangeSet");
 }
 
 /*!
@@ -81,7 +80,6 @@ QQmlChangeSet::QQmlChangeSet(const QQmlChangeSet &changeSet)
     , m_changes(changeSet.m_changes)
     , m_difference(changeSet.m_difference)
 {
-    qRegisterMetaType<QQmlChangeSet >("QQmlChangeSet");
 }
 
 /*!

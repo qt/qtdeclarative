@@ -58,8 +58,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_METATYPE(QWindow::Visibility)
-
 class QQuickWindowQmlImplPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus

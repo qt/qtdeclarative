@@ -322,7 +322,6 @@ void QQmlThread::internalCallMethodInThread(Message *message)
 
     bool wasEmpty = d->threadList.isEmpty();
     d->threadList.append(message);
-
     if (wasEmpty && d->m_threadProcessing == false)
         d->triggerThreadEvent();
 
@@ -404,7 +403,9 @@ void QQmlThread::waitForNextMessage()
     Q_ASSERT(!isThisThread());
     d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
+
     d->m_mainThreadWaiting = true;
+
     if (d->mainSync || !d->threadList.isEmpty()) {
         if (d->mainSync) {
             QQmlThread::Message *message = d->mainSync;

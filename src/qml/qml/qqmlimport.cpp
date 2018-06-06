@@ -1280,6 +1280,7 @@ bool QQmlImportsPrivate::locateQmldir(const QString &uri, int vmaj, int vmin, QQ
     QQmlAbstractUrlInterceptor *interceptor = typeLoader.engine()->urlInterceptor();
     QStringList localImportPaths = database->importPathList(
                 interceptor ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
+
     // Search local import paths for a matching version
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(uri, localImportPaths, vmaj, vmin);
     for (QString qmldirPath : qmlDirPaths) {

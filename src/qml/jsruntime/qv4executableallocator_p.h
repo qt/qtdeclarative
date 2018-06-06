@@ -100,14 +100,9 @@ public:
         bool mergeNext(ExecutableAllocator *allocator);
         bool mergePrevious(ExecutableAllocator *allocator);
 
-#ifndef QT_NO_BITFIELDS
         quintptr addr = 0;
         uint size : 31; // More than 2GB of function code? nah :)
         uint free : 1;
-#else
-        uint size = 31; // More than 2GB of function code? nah :)
-        uint free = 1;
-#endif
         Allocation *next = nullptr;
         Allocation *prev = nullptr;
     };

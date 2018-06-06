@@ -1044,6 +1044,8 @@ void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
     qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->urlString()),
              m_thread->isThisThread()?"Compile":"Engine");
 #endif
+    blob->startLoading();
+
     if (m_thread->isThisThread()) {
         unlock();
         loader.loadThread(this, blob);
@@ -1692,6 +1694,7 @@ QQmlTypeData *QQmlTypeLoader::getType(const QUrl &unNormalizedUrl, Mode mode)
     } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
+
         if (!m_thread->isThisThread()) {
             // this only works when called directly from the UI thread, but not
             // when recursively called on the QML thread via resolveTypes()
