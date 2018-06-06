@@ -3209,7 +3209,6 @@ ForDeclaration: Var BindingPattern;
 /.
     case $rule_number: {
         auto *node = new (pool) AST::PatternElement(sym(2).Pattern, nullptr);
-        node->identifierToken = loc(2);
         node->scope = sym(1).scope;
         sym(1).Node = node;
     } break;
