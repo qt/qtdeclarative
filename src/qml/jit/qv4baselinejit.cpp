@@ -904,7 +904,6 @@ void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(instructionOffset
 void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(instructionOffset() + offset); }
 void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(instructionOffset() + offset); }
-void BaselineJIT::generate_JumpEmpty(int offset) { as->jumpEmpty(instructionOffset() + offset); }
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }

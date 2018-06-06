@@ -142,7 +142,6 @@ public:
     void jumpFalse(int offset);
     void jumpNoException(int offset);
     void jumpNotUndefined(int offset);
-    void jumpEmpty(int offset);
 
     // stuff for runtime calls
     void prepareCallWithArgCount(int argc);

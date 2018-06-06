@@ -706,12 +706,6 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         patches.push_back({ jump, offset });
     }
 
-    void jumpEmpty(int offset)
-    {
-        auto jump = branch64(Equal, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
-        patches.push_back({ jump, offset });
-    }
-
     Jump jumpEmpty()
     {
         return branch64(Equal, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
@@ -1137,14 +1131,6 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         move(AccumulatorRegisterTag, ScratchRegister);
         or32(AccumulatorRegisterValue, ScratchRegister);
         auto jump = branch32(NotEqual, ScratchRegister, TrustedImm32(0));
-        patches.push_back({ jump, offset });
-    }
-
-    void jumpEmpty(int offset)
-    {
-        auto notEqual = branch32(NotEqual, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
-        auto jump = branch32(Equal, AccumulatorRegisterValue, TrustedImm32(Primitive::emptyValue().asReturnedValue() & 0xffffffff));
-        notEqual.link(this);
         patches.push_back({ jump, offset });
     }
 
@@ -1984,11 +1970,6 @@ void Assembler::jumpNoException(int offset)
 void Assembler::jumpNotUndefined(int offset)
 {
     pasm()->jumpNotUndefined(offset);
-}
-
-void JIT::Assembler::jumpEmpty(int offset)
-{
-    pasm()->jumpEmpty(offset);
 }
 
 void Assembler::prepareCallWithArgCount(int argc)

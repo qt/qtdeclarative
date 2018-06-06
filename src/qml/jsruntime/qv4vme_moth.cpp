@@ -1127,11 +1127,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
             code += offset;
     MOTH_END_INSTR(JumpNotUndefined)
 
-    MOTH_BEGIN_INSTR(JumpEmpty)
-        if (Q_UNLIKELY(acc == QV4::Primitive::emptyValue().asReturnedValue()))
-            code += offset;
-    MOTH_END_INSTR(JumpEmpty)
-
     MOTH_BEGIN_INSTR(CmpEqNull)
         acc = Encode(ACC.isNullOrUndefined());
     MOTH_END_INSTR(CmpEqNull)

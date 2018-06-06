@@ -148,7 +148,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_JumpFalse(op) INSTRUCTION(op, JumpFalse, 1, offset)
 #define INSTR_JumpNotUndefined(op) INSTRUCTION(op, JumpNotUndefined, 1, offset)
 #define INSTR_JumpNoException(op) INSTRUCTION(op, JumpNoException, 1, offset)
-#define INSTR_JumpEmpty(op) INSTRUCTION(op, JumpEmpty, 1, offset)
 #define INSTR_CmpEqNull(op) INSTRUCTION(op, CmpEqNull, 0)
 #define INSTR_CmpNeNull(op) INSTRUCTION(op, CmpNeNull, 0)
 #define INSTR_CmpEqInt(op) INSTRUCTION(op, CmpEqInt, 1, lhs)
@@ -278,7 +277,6 @@ QT_BEGIN_NAMESPACE
     F(JumpFalse) \
     F(JumpNoException) \
     F(JumpNotUndefined) \
-    F(JumpEmpty) \
     F(CmpEqNull) \
     F(CmpNeNull) \
     F(CmpEqInt) \

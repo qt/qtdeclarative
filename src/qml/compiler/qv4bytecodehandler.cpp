@@ -387,10 +387,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(JumpNotUndefined)
 
-        COLLECTOR_BEGIN_INSTR(JumpEmpty)
-            addLabel(code - start + offset);
-        COLLECTOR_END_INSTR(JumpEmpty)
-
         COLLECTOR_BEGIN_INSTR(CmpEqNull)
         COLLECTOR_END_INSTR(CmpEqNull)
 
