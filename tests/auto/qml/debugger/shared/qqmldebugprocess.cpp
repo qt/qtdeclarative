@@ -41,7 +41,6 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     , m_receivedBindErrors(0)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
-    m_timer.setSingleShot(true);
     m_timer.setInterval(15000);
     connect(&m_process, &QProcess::readyReadStandardOutput,
             this, &QQmlDebugProcess::processAppOutput);
@@ -127,7 +126,6 @@ void QQmlDebugProcess::timeout()
     qWarning() << "Timeout while waiting for QML debugging messages "
                   "in application output. Process is in state" << m_process.state()
                << ", Output:" << m_output << ".";
-    m_eventLoop.quit();
 }
 
 bool QQmlDebugProcess::waitForSessionStart()
