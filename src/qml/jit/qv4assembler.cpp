@@ -1391,7 +1391,6 @@ void Assembler::link(Function *function)
     function->codeRef = new JSC::MacroAssemblerCodeRef(codeRef);
     function->jittedCode = reinterpret_cast<Function::JittedCode>(function->codeRef->code().executableAddress());
 
-#if defined(Q_OS_LINUX)
     // This implements writing of JIT'd addresses so that perf can find the
     // symbol names.
     //
@@ -1399,7 +1398,7 @@ void Assembler::link(Function *function)
     // content, for more information, see:
     // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
     static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
-    if (doProfile) {
+    if (Q_UNLIKELY(doProfile)) {
         static QFile perfMapFile(QString::fromLatin1("/tmp/perf-%1.map")
                                  .arg(QCoreApplication::applicationPid()));
         static const bool isOpen = perfMapFile.open(QIODevice::WriteOnly);
@@ -1417,7 +1416,6 @@ void Assembler::link(Function *function)
             perfMapFile.flush();
         }
     }
-#endif
 }
 
 void Assembler::addLabel(int offset)
