@@ -321,36 +321,22 @@ ReturnedValue Runtime::method_closure(ExecutionEngine *engine, int functionId)
     return FunctionObject::createScriptFunction(current, clos)->asReturnedValue();
 }
 
-bool Runtime::method_deleteElement(ExecutionEngine *engine, const Value &base, const Value &index)
+bool Runtime::method_deleteProperty(ExecutionEngine *engine, const Value &base, const Value &index)
 {
     Scope scope(engine);
-    ScopedObject o(scope, base);
-    if (o) {
-        uint n = index.asArrayIndex();
-        if (n < UINT_MAX)
-            return o->deleteIndexedProperty(n);
-    }
+    ScopedObject o(scope, base.toObject(engine));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    Q_ASSERT(o);
+
+    uint n = index.asArrayIndex();
+    if (n < UINT_MAX)
+        return o->deleteIndexedProperty(n);
 
     ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return false;
-    return method_deleteMemberString(engine, base, name);
-}
-
-bool Runtime::method_deleteMember(ExecutionEngine *engine, const Value &base, int nameIndex)
-{
-    Scope scope(engine);
-    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    return method_deleteMemberString(engine, base, name);
-}
-
-bool Runtime::method_deleteMemberString(ExecutionEngine *engine, const Value &base, StringOrSymbol *name)
-{
-    Scope scope(engine);
-    ScopedObject obj(scope, base.toObject(engine));
-    if (scope.engine->hasException)
-        return Encode::undefined();
-    return obj->deleteProperty(name);
+    return o->deleteProperty(name);
 }
 
 bool Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)

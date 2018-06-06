@@ -325,11 +325,8 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(DestructureRestElement)
         COLLECTOR_END_INSTR(DestructureRestElement)
 
-        COLLECTOR_BEGIN_INSTR(DeleteMember)
-        COLLECTOR_END_INSTR(DeleteMember)
-
-        COLLECTOR_BEGIN_INSTR(DeleteSubscript)
-        COLLECTOR_END_INSTR(DeleteSubscript)
+        COLLECTOR_BEGIN_INSTR(DeleteProperty)
+        COLLECTOR_END_INSTR(DeleteProperty)
 
         COLLECTOR_BEGIN_INSTR(DeleteName)
         COLLECTOR_END_INSTR(DeleteName)

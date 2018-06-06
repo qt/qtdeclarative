@@ -146,8 +146,7 @@ public:
     void generate_IteratorNext(int value) override;
     void generate_IteratorClose(int done) override;
     void generate_DestructureRestElement() override;
-    void generate_DeleteMember(int member, int base) override;
-    void generate_DeleteSubscript(int base, int index) override;
+    void generate_DeleteProperty(int base, int index) override;
     void generate_DeleteName(int name) override;
     void generate_TypeofName(int name) override;
     void generate_TypeofValue() override;

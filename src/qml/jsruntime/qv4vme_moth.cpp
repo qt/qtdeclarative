@@ -995,8 +995,8 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(DestructureRestElement)
 
-    MOTH_BEGIN_INSTR(DeleteMember)
-        if (!Runtime::method_deleteMember(engine, STACK_VALUE(base), member)) {
+    MOTH_BEGIN_INSTR(DeleteProperty)
+        if (!Runtime::method_deleteProperty(engine, STACK_VALUE(base), STACK_VALUE(index))) {
             if (function->isStrict()) {
                 STORE_IP();
                 engine->throwTypeError();
@@ -1006,20 +1006,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         } else {
             acc = Encode(true);
         }
-    MOTH_END_INSTR(DeleteMember)
-
-    MOTH_BEGIN_INSTR(DeleteSubscript)
-        if (!Runtime::method_deleteElement(engine, STACK_VALUE(base), STACK_VALUE(index))) {
-            if (function->isStrict()) {
-                STORE_IP();
-                engine->throwTypeError();
-                goto handleUnwind;
-            }
-            acc = Encode(false);
-        } else {
-            acc = Encode(true);
-        }
-    MOTH_END_INSTR(DeleteSubscript)
+    MOTH_END_INSTR(DeleteProperty)
 
     MOTH_BEGIN_INSTR(DeleteName)
         if (!Runtime::method_deleteName(engine, name)) {

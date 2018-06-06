@@ -129,8 +129,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 1, value)
 #define INSTR_IteratorClose(op) INSTRUCTION(op, IteratorClose, 1, done)
 #define INSTR_DestructureRestElement(op) INSTRUCTION(op, DestructureRestElement, 0)
-#define INSTR_DeleteMember(op) INSTRUCTION(op, DeleteMember, 2, member, base)
-#define INSTR_DeleteSubscript(op) INSTRUCTION(op, DeleteSubscript, 2, base, index)
+#define INSTR_DeleteProperty(op) INSTRUCTION(op, DeleteProperty, 2, base, index)
 #define INSTR_DeleteName(op) INSTRUCTION(op, DeleteName, 1, name)
 #define INSTR_TypeofName(op) INSTRUCTION(op, TypeofName, 1, name)
 #define INSTR_TypeofValue(op) INSTRUCTION(op, TypeofValue, 0)
@@ -258,8 +257,7 @@ QT_BEGIN_NAMESPACE
     F(IteratorNext) \
     F(IteratorClose) \
     F(DestructureRestElement) \
-    F(DeleteMember) \
-    F(DeleteSubscript) \
+    F(DeleteProperty) \
     F(DeleteName) \
     F(TypeofName) \
     F(TypeofValue) \

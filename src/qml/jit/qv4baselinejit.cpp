@@ -710,12 +710,10 @@ void BaselineJIT::generate_DestructureRestElement()
     as->checkException();
 }
 
-
-
-static ReturnedValue deleteMemberHelper(QV4::Function *function, const QV4::Value &base, int member)
+static ReturnedValue deletePropertyHelper(QV4::Function *function, const QV4::Value &base, const QV4::Value &index)
 {
     auto engine = function->internalClass->engine;
-    if (!Runtime::method_deleteMember(engine, base, member)) {
+    if (!Runtime::method_deleteProperty(engine, base, index)) {
         if (function->isStrict())
             engine->throwTypeError();
         return Encode(false);
@@ -724,37 +722,14 @@ static ReturnedValue deleteMemberHelper(QV4::Function *function, const QV4::Valu
     }
 }
 
-void BaselineJIT::generate_DeleteMember(int member, int base)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(3);
-    as->passInt32AsArg(member, 2);
-    as->passRegAsArg(base, 1);
-    as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(deleteMemberHelper, Assembler::ResultInAccumulator);
-    as->checkException();
-}
-
-static ReturnedValue deleteSubscriptHelper(QV4::Function *function, const QV4::Value &base, const QV4::Value &index)
-{
-    auto engine = function->internalClass->engine;
-    if (!Runtime::method_deleteElement(engine, base, index)) {
-        if (function->isStrict())
-            engine->throwTypeError();
-        return Encode(false);
-    } else {
-        return Encode(true);
-    }
-}
-
-void BaselineJIT::generate_DeleteSubscript(int base, int index)
+void BaselineJIT::generate_DeleteProperty(int base, int index)
 {
     STORE_IP();
     as->prepareCallWithArgCount(3);
     as->passRegAsArg(index, 2);
     as->passRegAsArg(base, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(deleteSubscriptHelper, Assembler::ResultInAccumulator);
+    JIT_GENERATE_RUNTIME_CALL(deletePropertyHelper, Assembler::ResultInAccumulator);
     as->checkException();
 }
 

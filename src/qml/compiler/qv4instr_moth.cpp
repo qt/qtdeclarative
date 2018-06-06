@@ -449,13 +449,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(DestructureRestElement)
         MOTH_END_INSTR(DestructureRestElement)
 
-        MOTH_BEGIN_INSTR(DeleteMember)
-            d << dumpRegister(base, nFormals) << "[" << member << "]";
-        MOTH_END_INSTR(DeleteMember)
-
-        MOTH_BEGIN_INSTR(DeleteSubscript)
+        MOTH_BEGIN_INSTR(DeleteProperty)
             d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]";
-        MOTH_END_INSTR(DeleteSubscript)
+        MOTH_END_INSTR(DeleteProperty)
 
         MOTH_BEGIN_INSTR(DeleteName)
             d << name;

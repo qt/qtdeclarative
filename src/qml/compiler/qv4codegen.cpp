@@ -1798,6 +1798,7 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError)
         return false;
 
+    RegisterScope scope(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return false;
@@ -1829,9 +1830,14 @@ bool Codegen::visit(DeleteExpression *ast)
     case Reference::Member: {
         //### maybe add a variant where the base can be in the accumulator?
         expr = expr.asLValue();
-        Instruction::DeleteMember del;
+        Instruction::LoadRuntimeString instr;
+        instr.stringId = expr.propertyNameIndex;
+        bytecodeGenerator->addInstruction(instr);
+        Reference index = Reference::fromStackSlot(this);
+        index.storeConsumeAccumulator();
+        Instruction::DeleteProperty del;
         del.base = expr.propertyBase.stackSlot();
-        del.member = expr.propertyNameIndex;
+        del.index = index.stackSlot();
         bytecodeGenerator->addInstruction(del);
         _expr.setResult(Reference::fromAccumulator(this));
         return false;
@@ -1839,7 +1845,7 @@ bool Codegen::visit(DeleteExpression *ast)
     case Reference::Subscript: {
         //### maybe add a variant where the index can be in the accumulator?
         expr = expr.asLValue();
-        Instruction::DeleteSubscript del;
+        Instruction::DeleteProperty del;
         del.base = expr.elementBase;
         del.index = expr.elementSubscript.stackSlot();
         bytecodeGenerator->addInstruction(del);
