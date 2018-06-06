@@ -399,28 +399,28 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
             *errorMessage = QString::fromLatin1("Invalid lhs expression after '...' in destructuring expression.");
             return false;
         }
-        bindingTarget = lhs;
-        return true;
-    }
-    type = PatternElement::Binding;
+    } else {
+        type = PatternElement::Binding;
 
-    if (BinaryExpression *b = init->binaryExpressionCast()) {
-        if (b->op != QSOperator::Assign) {
-            *errorLocation = b->operatorToken;
-            *errorMessage = QString::fromLatin1("Invalid assignment operation in destructuring expression");
+        if (BinaryExpression *b = init->binaryExpressionCast()) {
+            if (b->op != QSOperator::Assign) {
+                *errorLocation = b->operatorToken;
+                *errorMessage = QString::fromLatin1("Invalid assignment operation in destructuring expression");
+                return false;
+            }
+            lhs = b->left->leftHandSideExpressionCast();
+            initializer = b->right;
+            Q_ASSERT(lhs);
+        } else {
+            lhs = init->leftHandSideExpressionCast();
+        }
+        if (!lhs) {
+            *errorLocation = init->firstSourceLocation();
+            *errorMessage = QString::fromLatin1("Destructuring target is not a left hand side expression.");
             return false;
         }
-        lhs = b->left->leftHandSideExpressionCast();
-        initializer = b->right;
-        Q_ASSERT(lhs);
-    } else {
-        lhs = init->leftHandSideExpressionCast();
     }
-    if (!lhs) {
-        *errorLocation = init->firstSourceLocation();
-        *errorMessage = QString::fromLatin1("Destructuring target is not a left hand side expression.");
-        return false;
-    }
+
     if (auto *i = cast<IdentifierExpression *>(lhs)) {
         bindingIdentifier = i->name.toString();
         identifierToken = i->identifierToken;

@@ -484,6 +484,7 @@ Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
 
 void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base)
 {
+    Q_ASSERT(e->type == AST::PatternElement::Binding || e->type == AST::PatternElement::RestElement);
     RegisterScope scope(this);
     Reference baseRef = (base.isAccumulator()) ? base.storeOnStack() : base;
     Reference varToStore = targetForPatternElement(e);
@@ -619,12 +620,10 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
             bool last = !p->next || (!p->next->elision && !p->next->element);
             if (last)
                 iteratorDone.storeConsumeAccumulator();
-            if (e->type != PatternElement::RestElement) {
-                initializeAndDestructureBindingElement(e, iteratorValue);
-                if (hasError) {
-                    end.link();
-                    return;
-                }
+            initializeAndDestructureBindingElement(e, iteratorValue);
+            if (hasError) {
+                end.link();
+                return;
             }
         }
     }
