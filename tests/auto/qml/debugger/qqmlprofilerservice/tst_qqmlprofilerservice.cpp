@@ -284,6 +284,7 @@ void tst_QQmlProfilerService::checkTraceReceived()
 
 void tst_QQmlProfilerService::checkJsHeap()
 {
+    QVERIFY(m_client);
     QVERIFY2(m_client->jsHeapMessages.count() > 0, "no JavaScript heap messages received");
 
     bool seen_alloc = false;
@@ -342,6 +343,11 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
                                      int expectedPosition, const QQmlProfilerEventType &expected,
                                      quint32 checks, const QVector<qint64> &expectedNumbers)
 {
+    if (!m_client) {
+        qWarning() << "No debug client available";
+        return false;
+    }
+
     const QVector<QQmlProfilerEvent> *target = nullptr;
     switch (type) {
         case MessageListQML:          target = &(m_client->qmlMessages); break;
@@ -349,6 +355,11 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         case MessageListJsHeap:       target = &(m_client->jsHeapMessages); break;
         case MessageListAsynchronous: target = &(m_client->asynchronousMessages); break;
         case MessageListPixmap:       target = &(m_client->pixmapMessages); break;
+    }
+
+    if (!target) {
+        qWarning() << "Invalid MessageListType" << type;
+        return false;
     }
 
     if (target->length() <= expectedPosition) {
@@ -735,6 +746,7 @@ void tst_QQmlProfilerService::memory()
     checkTraceReceived();
     checkJsHeap();
 
+    QVERIFY(m_client);
     int smallItems = 0;
     for (auto message : m_client->jsHeapMessages) {
         const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
@@ -758,6 +770,8 @@ void tst_QQmlProfilerService::compile()
 {
     // Flush interval so that we actually get the events before we stop recording.
     connect(true, "test.qml", true, 100);
+
+    QVERIFY(m_client);
 
     // We need to check specifically for compile events as we can otherwise stop recording after the
     // StartTrace has arrived, but before it compiles anything.
