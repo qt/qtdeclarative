@@ -883,8 +883,12 @@ void QQuickControlPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryC
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    extra.value().hasBackgroundWidth = p->widthValid;
-    extra.value().hasBackgroundHeight = p->heightValid;
+    // Only set hasBackgroundWidth/Height if it was a width/height change,
+    // otherwise we're prevented from setting a width/height in the future.
+    if (change.widthChange())
+        extra.value().hasBackgroundWidth = p->widthValid;
+    if (change.heightChange())
+        extra.value().hasBackgroundHeight = p->heightValid;
     resizeBackground();
 }
 
