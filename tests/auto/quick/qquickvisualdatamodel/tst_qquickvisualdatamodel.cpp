@@ -2996,7 +2996,7 @@ void tst_qquickvisualdatamodel::insert_data()
                        "items.get(2).model.modelData = \"seven\"; }")
                 << 4 << 5 << 0 << true << false << false << false << false
                 << QString("modelData")
-                << (QStringList() << "eight" << "one" << "two" << "three" << "four");
+                << (QStringList() << "eight" << "one" << "seven" << "three" << "four");
 
         QTest::newRow("StringList.create prepend modelData")
                 << stringListSource[i]

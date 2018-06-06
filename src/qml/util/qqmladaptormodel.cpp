@@ -566,10 +566,11 @@ public:
 
     void setModelData(const QVariant &data)
     {
-        if (index == -1 && data != cachedData) {
-            cachedData = data;
-            emit modelDataChanged();
-        }
+        if (data == cachedData)
+            return;
+
+        cachedData = data;
+        emit modelDataChanged();
     }
 
     static QV4::ReturnedValue get_modelData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
@@ -665,6 +666,20 @@ public:
                 metaType,
                 index, row, column,
                 index >= 0 && index < model.list.count() ? model.list.at(index) : QVariant());
+    }
+
+    bool notify(const QQmlAdaptorModel &model, const QList<QQmlDelegateModelItem *> &items, int index, int count, const QVector<int> &) const override
+    {
+        for (auto modelItem : items) {
+            const int modelItemIndex = modelItem->index;
+            if (modelItemIndex < index || modelItemIndex >= index + count)
+                continue;
+
+            auto listModelItem = static_cast<QQmlDMListAccessorData *>(modelItem);
+            QVariant updatedModelData = model.list.at(listModelItem->index);
+            listModelItem->setModelData(updatedModelData);
+        }
+        return true;
     }
 };
 
