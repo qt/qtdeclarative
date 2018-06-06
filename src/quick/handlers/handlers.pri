@@ -11,6 +11,7 @@ HEADERS += \
     $$PWD/qquickpointhandler_p.h \
     $$PWD/qquicksinglepointhandler_p.h \
     $$PWD/qquicktaphandler_p.h \
+    $$PWD/qquickdragaxis_p.h
 
 SOURCES += \
     $$PWD/qquickdraghandler.cpp \
@@ -23,3 +24,4 @@ SOURCES += \
     $$PWD/qquickpointhandler.cpp \
     $$PWD/qquicksinglepointhandler.cpp \
     $$PWD/qquicktaphandler.cpp \
+    $$PWD/qquickdragaxis.cpp

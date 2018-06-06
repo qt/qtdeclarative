@@ -243,39 +243,6 @@ void QQuickDragHandler::setTranslation(const QVector2D &trans)
     applied to the \l {PointerHandler::target} {target}.
     If \c enabled is true, vertical dragging is allowed.
  */
-QQuickDragAxis::QQuickDragAxis()
-  : m_minimum(-DBL_MAX)
-  , m_maximum(DBL_MAX)
-  , m_enabled(true)
-{
-}
-
-void QQuickDragAxis::setMinimum(qreal minimum)
-{
-    if (m_minimum == minimum)
-        return;
-
-    m_minimum = minimum;
-    emit minimumChanged();
-}
-
-void QQuickDragAxis::setMaximum(qreal maximum)
-{
-    if (m_maximum == maximum)
-        return;
-
-    m_maximum = maximum;
-    emit maximumChanged();
-}
-
-void QQuickDragAxis::setEnabled(bool enabled)
-{
-    if (m_enabled == enabled)
-        return;
-
-    m_enabled = enabled;
-    emit enabledChanged();
-}
 
 /*!
     \readonly

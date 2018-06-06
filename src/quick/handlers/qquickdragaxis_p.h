@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDRAGHANDLER_H
-#define QQUICKDRAGHANDLER_H
+#ifndef QQUICKDRAGAXIS_P_H
+#define QQUICKDRAGAXIS_P_H
 
 //
 //  W A R N I N G
@@ -51,64 +51,37 @@
 // We mean it.
 //
 
-#include "qquicksinglepointhandler_p.h"
-#include "qquickdragaxis_p.h"
+#include <QtCore/qobject.h>
+#include <QtCore/qglobal.h>
 
-QT_BEGIN_NAMESPACE
-
-class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
+class Q_AUTOTEST_EXPORT QQuickDragAxis : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
-    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
-    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
+    Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged)
+    Q_PROPERTY(qreal maximum READ maximum WRITE setMaximum NOTIFY maximumChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
 
 public:
-    explicit QQuickDragHandler(QObject *parent = nullptr);
-    ~QQuickDragHandler();
+    QQuickDragAxis();
 
-    void handleEventPoint(QQuickEventPoint *point) override;
+    qreal minimum() const { return m_minimum; }
+    void setMinimum(qreal minimum);
 
-    QQuickDragAxis *xAxis() { return &m_xAxis; }
-    QQuickDragAxis *yAxis() { return &m_yAxis; }
+    qreal maximum() const { return m_maximum; }
+    void setMaximum(qreal maximum);
 
-    QVector2D translation() const { return m_translation; }
-    void setTranslation(const QVector2D &trans);
+    bool enabled() const { return m_enabled; }
+    void setEnabled(bool enabled);
 
-    Q_INVOKABLE void enforceConstraints();
-
-Q_SIGNALS:
-//    void gestureStarted(QQuickGestureEvent *gesture);
-    void translationChanged();
-
-protected:
-    bool wantsEventPoint(QQuickEventPoint *point) override;
-    void onActiveChanged() override;
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
+signals:
+    void minimumChanged();
+    void maximumChanged();
+    void enabledChanged();
 
 private:
-    void ungrab();
-    void enforceAxisConstraints(QPointF *localPos);
-    bool targetContains(QQuickEventPoint *point);
-    QPointF localTargetPosition(QQuickEventPoint *point);
-
-private:
-    QPointF m_pressScenePos;
-    QPointF m_pressTargetPos;   // We must also store the local targetPos, because we cannot deduce
-                                // the press target pos from the scene pos in case there was e.g a
-                                // flick in one of the ancestors during the drag.
-    QVector2D m_translation;
-
-    QQuickDragAxis m_xAxis;
-    QQuickDragAxis m_yAxis;
-    bool m_pressedInsideTarget = false;
-
-    friend class QQuickDragAxis;
+    qreal m_minimum;
+    qreal m_maximum;
+    bool m_enabled;
 };
 
-QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickDragHandler)
-QML_DECLARE_TYPE(QQuickDragAxis)
-
-#endif // QQUICKDRAGHANDLER_H
+#endif // QQUICKDRAGAXIS_P_H
