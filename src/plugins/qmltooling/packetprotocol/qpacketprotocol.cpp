@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const int MAX_PACKET_SIZE = 0x7FFFFFFF;
-
 /*!
   \class QPacketProtocol
   \internal
@@ -238,12 +236,10 @@ void QPacketProtocol::readyToRead()
                 return;
 
             // Read size header
-            int read = d->dev->read((char *)&d->inProgressSize, sizeof(qint32));
-            Q_ASSERT(read == sizeof(qint32));
-            Q_UNUSED(read);
+            const qint64 read = d->dev->read((char *)&d->inProgressSize, sizeof(qint32));
 
             // Check sizing constraints
-            if (d->inProgressSize > MAX_PACKET_SIZE) {
+            if (read != sizeof(qint32) || d->inProgressSize < read) {
                 disconnect(d->dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
                 disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
                 disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
@@ -252,7 +248,7 @@ void QPacketProtocol::readyToRead()
                 return;
             }
 
-            d->inProgressSize -= sizeof(qint32);
+            d->inProgressSize -= read;
         } else {
             d->inProgress.append(d->dev->read(d->inProgressSize - d->inProgress.size()));
 
