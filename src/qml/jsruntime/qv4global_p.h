@@ -381,7 +381,16 @@ enum class ObjectLiteralArgument {
     Setter
 };
 
-}
+namespace JIT {
+
+enum class CallResultDestination {
+    Ignore,
+    InAccumulator,
+};
+
+} // JIT namespace
+
+} // QV4 namespace
 
 Q_DECLARE_TYPEINFO(QV4::PropertyAttributes, Q_PRIMITIVE_TYPE);
 

@@ -39,7 +39,7 @@
 
 #include "qv4baselinejit_p.h"
 #include "qv4jithelpers_p.h"
-#include "qv4assembler_p.h"
+#include "qv4baselineassembler_p.h"
 #include <private/qv4lookup_p.h>
 #include <private/qv4generatorobject_p.h>
 
@@ -52,7 +52,7 @@ using namespace QV4::Moth;
 
 BaselineJIT::BaselineJIT(Function *function)
     : function(function)
-    , as(new Assembler(function->compilationUnit->constants))
+    , as(new BaselineAssembler(function->compilationUnit->constants))
 {}
 
 BaselineJIT::~BaselineJIT()
@@ -75,6 +75,8 @@ void BaselineJIT::generate()
 
 #define STORE_IP() as->storeInstructionPointer(nextInstructionOffset())
 #define STORE_ACC() as->saveAccumulatorInFrame()
+#define BASELINEJIT_GENERATE_RUNTIME_CALL(function, destination) \
+    as->GENERATE_RUNTIME_CALL(function, destination)
 
 void BaselineJIT::generate_Ret()
 {
@@ -177,7 +179,7 @@ void BaselineJIT::generate_MoveRegExp(int regExpId, int destReg)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(regExpId, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_regexpLiteral, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_regexpLiteral, CallResultDestination::InAccumulator);
     as->storeReg(destReg);
 }
 
@@ -186,7 +188,7 @@ void BaselineJIT::generate_LoadClosure(int value)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(value, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_closure, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_closure, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_LoadName(int name)
@@ -195,7 +197,7 @@ void BaselineJIT::generate_LoadName(int name)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadName, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadName, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -205,7 +207,7 @@ void BaselineJIT::generate_LoadGlobalLookup(int index)
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::loadGlobalLookup, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadGlobalLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -217,7 +219,7 @@ void BaselineJIT::generate_StoreNameSloppy(int name)
     as->passAccumulatorAsArg(2);
     as->passInt32AsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameSloppy, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameSloppy, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -229,7 +231,7 @@ void BaselineJIT::generate_StoreNameStrict(int name)
     as->passAccumulatorAsArg(2);
     as->passInt32AsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameStrict, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeNameStrict, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -239,9 +241,9 @@ void BaselineJIT::generate_LoadElement(int base)
     STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadElement, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadElement, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -251,10 +253,10 @@ void BaselineJIT::generate_StoreElement(int base, int index)
     STORE_ACC();
     as->prepareCallWithArgCount(4);
     as->passAccumulatorAsArg(3);
-    as->passRegAsArg(index, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(index, 2);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeElement, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeElement, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -266,7 +268,7 @@ void BaselineJIT::generate_LoadProperty(int name)
     as->passInt32AsArg(name, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -279,7 +281,7 @@ void BaselineJIT::generate_GetLookup(int index)
     as->passInt32AsArg(index, 2);
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -290,9 +292,9 @@ void BaselineJIT::generate_StoreProperty(int name, int base)
     as->prepareCallWithArgCount(4);
     as->passAccumulatorAsArg(3);
     as->passInt32AsArg(name, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeProperty, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeProperty, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -302,10 +304,10 @@ void BaselineJIT::generate_SetLookup(int index, int base)
     STORE_ACC();
     as->prepareCallWithArgCount(4);
     as->passAccumulatorAsArg(3);
-    as->passRegAsArg(base, 2);
+    as->passJSSlotAsArg(base, 2);
     as->passInt32AsArg(index, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::setLookup, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::setLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -314,9 +316,9 @@ void BaselineJIT::generate_LoadSuperProperty(int property)
     STORE_IP();
     STORE_ACC();
     as->prepareCallWithArgCount(2);
-    as->passRegAsArg(property, 1);
+    as->passJSSlotAsArg(property, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadSuperProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadSuperProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -326,9 +328,9 @@ void BaselineJIT::generate_StoreSuperProperty(int property)
     STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(property, 1);
+    as->passJSSlotAsArg(property, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeSuperProperty, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeSuperProperty, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -339,9 +341,9 @@ void BaselineJIT::generate_StoreScopeObjectProperty(int base, int propertyIndex)
     as->prepareCallWithArgCount(4);
     as->passAccumulatorAsArg(3);
     as->passInt32AsArg(propertyIndex, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeQmlScopeObjectProperty, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeQmlScopeObjectProperty, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -351,9 +353,9 @@ void BaselineJIT::generate_StoreContextObjectProperty(int base, int propertyInde
     as->prepareCallWithArgCount(4);
     as->passAccumulatorAsArg(3);
     as->passInt32AsArg(propertyIndex, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeQmlContextObjectProperty, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_storeQmlContextObjectProperty, CallResultDestination::Ignore);
     as->checkException();
 }
 
@@ -363,9 +365,9 @@ void BaselineJIT::generate_LoadScopeObjectProperty(int propertyIndex, int base, 
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(captureRequired, 3);
     as->passInt32AsArg(propertyIndex, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlScopeObjectProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlScopeObjectProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -375,9 +377,9 @@ void BaselineJIT::generate_LoadContextObjectProperty(int propertyIndex, int base
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(captureRequired, 3);
     as->passInt32AsArg(propertyIndex, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlContextObjectProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlContextObjectProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -386,9 +388,9 @@ void BaselineJIT::generate_LoadIdObject(int index, int base)
     STORE_IP();
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlIdObject, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlIdObject, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -409,10 +411,10 @@ void BaselineJIT::generate_CallValue(int name, int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
-    as->passRegAsArg(name, 1);
+    as->passJSSlotAsArg(argv, 2);
+    as->passJSSlotAsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callValue, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callValue, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -421,11 +423,11 @@ void BaselineJIT::generate_CallProperty(int name, int base, int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passInt32AsArg(name, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -434,11 +436,11 @@ void BaselineJIT::generate_CallPropertyLookup(int lookupIndex, int base, int arg
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passInt32AsArg(lookupIndex, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callPropertyLookup, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callPropertyLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -447,11 +449,11 @@ void BaselineJIT::generate_CallElement(int base, int index, int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
-    as->passRegAsArg(index, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(argv, 3);
+    as->passJSSlotAsArg(index, 2);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callElement, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callElement, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -460,10 +462,10 @@ void BaselineJIT::generate_CallName(int name, int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
+    as->passJSSlotAsArg(argv, 2);
     as->passInt32AsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callName, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callName, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -472,9 +474,9 @@ void BaselineJIT::generate_CallPossiblyDirectEval(int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(argc, 2);
-    as->passRegAsArg(argv, 1);
+    as->passJSSlotAsArg(argv, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callPossiblyDirectEval, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callPossiblyDirectEval, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -483,10 +485,10 @@ void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
     STORE_IP();
     as->prepareCallWithArgCount(4);
     as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
+    as->passJSSlotAsArg(argv, 2);
     as->passInt32AsArg(index, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callGlobalLookup, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callGlobalLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -495,11 +497,11 @@ void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int ar
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passInt32AsArg(propIdx, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlScopeObjectProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlScopeObjectProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -508,11 +510,11 @@ void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int 
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passInt32AsArg(propIdx, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(base, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlContextObjectProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlContextObjectProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -522,11 +524,11 @@ void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, in
     STORE_IP();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
-    as->passRegAsArg(thisObject, 2);
-    as->passRegAsArg(func, 1);
+    as->passJSSlotAsArg(argv, 3);
+    as->passJSSlotAsArg(thisObject, 2);
+    as->passJSSlotAsArg(func, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callWithSpread, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callWithSpread, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -537,11 +539,11 @@ void BaselineJIT::generate_Construct(int func, int argc, int argv)
     STORE_ACC();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(func, 1);
+    as->passJSSlotAsArg(func, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_construct, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_construct, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -551,11 +553,11 @@ void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
     STORE_ACC();
     as->prepareCallWithArgCount(5);
     as->passInt32AsArg(argc, 4);
-    as->passRegAsArg(argv, 3);
+    as->passJSSlotAsArg(argv, 3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(func, 1);
+    as->passJSSlotAsArg(func, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_constructWithSpread, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_constructWithSpread, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -585,7 +587,7 @@ void BaselineJIT::generate_ThrowException()
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_throwException, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_throwException, CallResultDestination::Ignore);
     as->gotoCatchException();
 }
 
@@ -596,7 +598,7 @@ void BaselineJIT::generate_CreateCallContext()
 {
     as->prepareCallWithArgCount(1);
     as->passCppFrameAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, Assembler::IgnoreResult); // keeps result in return value register
+    BASELINEJIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, CallResultDestination::Ignore); // keeps result in return value register
     as->storeHeapObject(CallData::Context);
 }
 
@@ -607,9 +609,9 @@ void BaselineJIT::generate_PushWithContext()
     STORE_IP();
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(2);
-    as->passRegAsArg(0, 1);
+    as->passJSSlotAsArg(0, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createWithContext, Assembler::IgnoreResult);  // keeps result in return value register
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createWithContext, CallResultDestination::Ignore);  // keeps result in return value register
     as->checkException();
     as->storeHeapObject(CallData::Context);
 }
@@ -619,16 +621,16 @@ void BaselineJIT::generate_PushBlockContext(int index)
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(index, 1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::pushBlockContext, Assembler::IgnoreResult);
+    as->passJSSlotAsArg(0, 0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::pushBlockContext, CallResultDestination::Ignore);
 }
 
 void BaselineJIT::generate_CloneBlockContext()
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(1);
-    as->passRegAsArg(CallData::Context, 0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::cloneBlockContext, Assembler::IgnoreResult);
+    as->passJSSlotAsArg(CallData::Context, 0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::cloneBlockContext, CallResultDestination::Ignore);
 }
 
 void BaselineJIT::generate_PushScriptContext(int index)
@@ -637,8 +639,8 @@ void BaselineJIT::generate_PushScriptContext(int index)
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
     as->passEngineAsArg(1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::pushScriptContext, Assembler::IgnoreResult);
+    as->passJSSlotAsArg(0, 0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::pushScriptContext, CallResultDestination::Ignore);
 }
 
 void BaselineJIT::generate_PopScriptContext()
@@ -646,8 +648,8 @@ void BaselineJIT::generate_PopScriptContext()
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(2);
     as->passEngineAsArg(1);
-    as->passRegAsArg(0, 0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::popScriptContext, Assembler::IgnoreResult);
+    as->passJSSlotAsArg(0, 0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::popScriptContext, CallResultDestination::Ignore);
 }
 
 void BaselineJIT::generate_PopContext() { as->popContext(); }
@@ -659,7 +661,7 @@ void BaselineJIT::generate_GetIterator(int iterator)
     as->passInt32AsArg(iterator, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_getIterator, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_getIterator, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -667,10 +669,10 @@ void BaselineJIT::generate_IteratorNext(int value)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(3);
-    as->passRegAsArg(value, 2);
+    as->passJSSlotAsArg(value, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -678,10 +680,10 @@ void BaselineJIT::generate_IteratorClose(int done)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(3);
-    as->passRegAsArg(done, 2);
+    as->passJSSlotAsArg(done, 2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorClose, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorClose, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -691,7 +693,7 @@ void BaselineJIT::generate_DestructureRestElement()
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_destructureRestElement, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_destructureRestElement, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -699,10 +701,10 @@ void BaselineJIT::generate_DeleteProperty(int base, int index)
 {
     STORE_IP();
     as->prepareCallWithArgCount(3);
-    as->passRegAsArg(index, 2);
-    as->passRegAsArg(base, 1);
+    as->passJSSlotAsArg(index, 2);
+    as->passJSSlotAsArg(base, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::deleteProperty, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::deleteProperty, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -712,7 +714,7 @@ void BaselineJIT::generate_DeleteName(int name)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(name, 1);
     as->passFunctionAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::deleteName, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::deleteName, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -721,7 +723,7 @@ void BaselineJIT::generate_TypeofName(int name)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(name, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_typeofName, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_typeofName, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_TypeofValue()
@@ -730,7 +732,7 @@ void BaselineJIT::generate_TypeofValue()
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_typeofValue, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_typeofValue, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_DeclareVar(int varName, int isDeletable)
@@ -739,52 +741,52 @@ void BaselineJIT::generate_DeclareVar(int varName, int isDeletable)
     as->passInt32AsArg(varName, 2);
     as->passInt32AsArg(isDeletable, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_declareVar, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_declareVar, CallResultDestination::Ignore);
 }
 
 void BaselineJIT::generate_DefineArray(int argc, int args)
 {
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(argc, 2);
-    as->passRegAsArg(args, 1);
+    as->passJSSlotAsArg(args, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_arrayLiteral, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_arrayLiteral, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
 {
     as->prepareCallWithArgCount(4);
-    as->passRegAsArg(args, 3);
+    as->passJSSlotAsArg(args, 3);
     as->passInt32AsArg(argc, 2);
     as->passInt32AsArg(internalClassId, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_objectLiteral, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_objectLiteral, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_CreateClass(int classIndex, int heritage, int computedNames)
 {
     as->prepareCallWithArgCount(4);
-    as->passRegAsArg(computedNames, 3);
-    as->passRegAsArg(heritage, 2);
+    as->passJSSlotAsArg(computedNames, 3);
+    as->passJSSlotAsArg(heritage, 2);
     as->passInt32AsArg(classIndex, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createClass, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createClass, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_CreateMappedArgumentsObject()
 {
     as->prepareCallWithArgCount(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createMappedArgumentsObject,
-                              Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createMappedArgumentsObject,
+                              CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_CreateUnmappedArgumentsObject()
 {
     as->prepareCallWithArgCount(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createUnmappedArgumentsObject,
-                              Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createUnmappedArgumentsObject,
+                              CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_CreateRestParameter(int argIndex)
@@ -792,24 +794,24 @@ void BaselineJIT::generate_CreateRestParameter(int argIndex)
     as->prepareCallWithArgCount(2);
     as->passInt32AsArg(argIndex, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createRestParameter, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createRestParameter, CallResultDestination::InAccumulator);
 }
 
 void BaselineJIT::generate_ConvertThisToObject()
 {
     as->prepareCallWithArgCount(2);
-    as->passRegAsArg(CallData::This, 1);
+    as->passJSSlotAsArg(CallData::This, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::convertThisToObject, Assembler::IgnoreResult);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::convertThisToObject, CallResultDestination::Ignore);
     as->checkException();
 }
 
 void BaselineJIT::generate_LoadSuperConstructor()
 {
     as->prepareCallWithArgCount(2);
-    as->passRegAsArg(CallData::Function, 1);
+    as->passJSSlotAsArg(CallData::Function, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::loadSuperConstructor, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadSuperConstructor, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -819,7 +821,7 @@ void BaselineJIT::generate_ToObject()
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::toObject, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::toObject, CallResultDestination::InAccumulator);
     as->checkException();
 
 }
@@ -848,9 +850,9 @@ void BaselineJIT::generate_CmpIn(int lhs)
     STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(lhs, 1);
+    as->passJSSlotAsArg(lhs, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_in, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_in, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -859,9 +861,9 @@ void BaselineJIT::generate_CmpInstanceOf(int lhs)
     STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
-    as->passRegAsArg(lhs, 1);
+    as->passJSSlotAsArg(lhs, 1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_instanceof, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_instanceof, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -892,8 +894,8 @@ void BaselineJIT::generate_Exp(int lhs) {
     STORE_ACC();
     as->prepareCallWithArgCount(2);
     as->passAccumulatorAsArg(1);
-    as->passRegAsArg(lhs, 0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::exp, Assembler::ResultInAccumulator);
+    as->passJSSlotAsArg(lhs, 0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::exp, CallResultDestination::InAccumulator);
     as->checkException();
 }
 void BaselineJIT::generate_Mul(int lhs) { as->mul(lhs); }
@@ -909,7 +911,7 @@ void BaselineJIT::generate_Sub(int lhs) { as->sub(lhs); }
 //    as->passAccumulatorAsArg(2);
 //    as->passRegAsArg(lhs, 1);
 //    as->passEngineAsArg(0);
-//    as->callRuntime("binopContext", op, Assembler::ResultInAccumulator);
+//    as->callRuntime("binopContext", op, CallResultDestination::InAccumulator);
 //    as->checkException();
 //}
 
@@ -917,7 +919,7 @@ void BaselineJIT::generate_LoadQmlContext(int result)
 {
     as->prepareCallWithArgCount(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlContext, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlContext, CallResultDestination::InAccumulator);
     as->storeReg(result);
 }
 
@@ -925,7 +927,7 @@ void BaselineJIT::generate_LoadQmlImportedScripts(int result)
 {
     as->prepareCallWithArgCount(1);
     as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlImportedScripts, Assembler::ResultInAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlImportedScripts, CallResultDestination::InAccumulator);
     as->storeReg(result);
 }
 
