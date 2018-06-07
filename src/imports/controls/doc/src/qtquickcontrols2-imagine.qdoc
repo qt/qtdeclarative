@@ -2299,9 +2299,15 @@
     \image qtquickcontrols2-imagine-9-patch-4x.png
 
     The content of the image is 44 pixels wide by 32 pixels high. Every 9-patch
-    image needs a one pixel thick border around every side, so the actual size
-    of the image becomes 46 pixels wide by 34 pixels high. The 9-patch lines
-    must be black, and the remaining areas must be transparent or white:
+    image needs a one pixel thick line (collectively referred to as
+    "9-patch lines") around every side, so the actual size of the image becomes
+    46 pixels wide by 34 pixels high. Note that the 9-patch lines must be one
+    pixel thick regardless of the target DPI of the image. For example,
+    the 9-patch lines for button-background.9.png and button-background@2x.9.png
+    must both be one pixel thick.
+
+    The 9-patch lines must be black, and the remaining areas must be transparent
+    or white:
 
     \image qtquickcontrols2-imagine-9-patch-size.png
 
