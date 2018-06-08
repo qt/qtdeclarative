@@ -261,7 +261,7 @@ void QQuickImageResponse::cancel()
     an image provider named "colors", and the images to be loaded are "yellow"
     and "red", respectively:
 
-    \snippet imageprovider/imageprovider-example.qml 0
+    \snippet imgprovider/imageprovider-example.qml 0
 
     When these images are loaded by QML, it looks for a matching image provider
     and calls its requestImage() or requestPixmap() method (depending on its
@@ -272,25 +272,14 @@ void QQuickImageResponse::cancel()
     requested by the above QML. This implementation dynamically
     generates QPixmap images that are filled with the requested color:
 
-    \snippet imageprovider/imageprovider.cpp 0
-    \codeline
-    \snippet imageprovider/imageprovider.cpp 1
+    \snippet imgprovider/imageprovider.cpp 0
 
     To make this provider accessible to QML, it is registered with the QML engine
     with a "colors" identifier:
 
-    \code
-    int main(int argc, char *argv[])
-    {
-        ...
-
-        QQuickView view;
-        QQmlEngine *engine = view.engine();
-        engine->addImageProvider(QLatin1String("colors"), new ColorPixmapProvider);
-
-        ...
-    }
-    \endcode
+    \snippet imgprovider/imageprovider.cpp 1
+    \codeline
+    \snippet imgprovider/imageprovider.cpp 2
 
     Now the images can be successfully loaded in QML:
 
