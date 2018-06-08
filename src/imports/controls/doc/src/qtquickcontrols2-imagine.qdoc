@@ -2358,6 +2358,60 @@
 
     \image qtquickcontrols2-imagine-9-patch-inset-boundaries.png
 
+    \section3 Exporting 9-Patch Images
+
+    Various vector and bitmap editors can be used to create 9-patch images
+    suitable for use with the Imagine style. The following sections briefly
+    explain the export process for each editor, and the last section explains
+    how to ensure the exported images are 9-patch-conformant.
+
+    \section4 Illustrator
+
+    See Adobe's
+    \l {https://helpx.adobe.com/in/illustrator/using/collect-assets-export-for-screens.html#panel}
+    {Asset Export panel} documentation.
+
+    \section4 Inkscape
+
+    The \l {https://github.com/mitchcurtis/inkscape-9-patch-export}
+    {Inkscape 9-Patch Export Extension} can be used to export assets with
+    Inkscape.
+
+    \section4 Photoshop
+
+    See Adobe's
+    \l {https://helpx.adobe.com/photoshop/using/generate-assets-layers.html}
+    {Generate image assets from layers} documentation.
+
+    \section4 Sketch
+
+    See Sketch's \l {https://sketchapp.com/docs/exporting/}{Exporting} documentation.
+
+    Qt Quick Controls 2 also provides a
+    \l {http://code.qt.io/cgit/qt/qtquickcontrols2.git/tree/src/imports/controls/imagine/design}
+    {plugin} for Sketch that automatically fixes the thickness of the 9-patch lines
+    after the assets are exported. To install this file, double-click on it.
+    Once Sketch has confirmed that the 9-patch export plugin has been installed,
+    the plugin will automatically process images when they are exported.
+
+    \section4 Fixing 9-Patch Lines
+
+    When exporting 9-patch images in several DPI variants (\c {@2x}, \c {@3x},
+    etc.), the 9-patch lines will typically be scaled up along with the image.
+    There are several ways to fix this, but perhaps the simplest approach is
+    to use \l {https://www.imagemagick.org/script/mogrify.php}{ImageMagick's mogrify}
+    tool. The tool has a \c -shave feature that can be used to crop the image
+    to reduce the thickness of the 9-patch lines:
+
+    \badcode
+    mogrify -shave 1x1 -path path/to/images *@2x.9.png
+    mogrify -shave 2x2 -path path/to/images *@3x.9.png
+    mogrify -shave 3x3 -path path/to/images *@4x.9.png
+    \endcode
+
+    Regular DPI images (those without the \c @Nx prefix) are not affected, so it
+    is only necessary to run the command on images intended for high DPI displays.
+
     \section2 Animated Images
 
     The \l {https://developers.google.com/speed/webp/}{WebP} and GIF animated
