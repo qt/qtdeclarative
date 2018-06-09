@@ -86,8 +86,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadGlobalLookup(op) INSTRUCTION(op, LoadGlobalLookup, 1, index)
 #define INSTR_StoreNameSloppy(op) INSTRUCTION(op, StoreNameSloppy, 1, name)
 #define INSTR_StoreNameStrict(op) INSTRUCTION(op, StoreNameStrict, 1, name)
-#define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 2, name, base)
-#define INSTR_LoadPropertyA(op) INSTRUCTION(op, LoadPropertyA, 1, name)
+#define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 1, name)
 #define INSTR_GetLookup(op) INSTRUCTION(op, GetLookup, 2, index, base)
 #define INSTR_GetLookupA(op) INSTRUCTION(op, GetLookupA, 1, index)
 #define INSTR_LoadScopeObjectProperty(op) INSTRUCTION(op, LoadScopeObjectProperty, 3, propertyIndex, base, captureRequired)
@@ -99,8 +98,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
 #define INSTR_StoreScopeObjectProperty(op) INSTRUCTION(op, StoreScopeObjectProperty, 2, base, propertyIndex)
 #define INSTR_StoreContextObjectProperty(op) INSTRUCTION(op, StoreContextObjectProperty, 2, base, propertyIndex)
-#define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 2, base, index)
-#define INSTR_LoadElementA(op) INSTRUCTION(op, LoadElementA, 1, base)
+#define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 1, base)
 #define INSTR_StoreElement(op) INSTRUCTION(op, StoreElement, 2, base, index)
 #define INSTR_CallValue(op) INSTRUCTION(op, CallValue, 3, name, argc, argv)
 #define INSTR_CallProperty(op) INSTRUCTION(op, CallProperty, 4, name, base, argc, argv)
@@ -215,10 +213,8 @@ QT_BEGIN_NAMESPACE
     F(StoreNameSloppy) \
     F(StoreNameStrict) \
     F(LoadElement) \
-    F(LoadElementA) \
     F(StoreElement) \
     F(LoadProperty) \
-    F(LoadPropertyA) \
     F(GetLookup) \
     F(GetLookupA) \
     F(StoreProperty) \

@@ -708,16 +708,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
     MOTH_BEGIN_INSTR(LoadElement)
         STORE_IP();
-        acc = Runtime::method_loadElement(engine, STACK_VALUE(base), STACK_VALUE(index));
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadElement)
-
-    MOTH_BEGIN_INSTR(LoadElementA)
-        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_loadElement(engine, STACK_VALUE(base), accumulator);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadElementA)
+    MOTH_END_INSTR(LoadElement)
 
     MOTH_BEGIN_INSTR(StoreElement)
         STORE_IP();
@@ -729,16 +723,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
     MOTH_BEGIN_INSTR(LoadProperty)
         STORE_IP();
-        acc = Runtime::method_loadProperty(engine, STACK_VALUE(base), name);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadProperty)
-
-    MOTH_BEGIN_INSTR(LoadPropertyA)
-        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_loadProperty(engine, accumulator, name);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(LoadPropertyA)
+    MOTH_END_INSTR(LoadProperty)
 
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();

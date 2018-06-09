@@ -286,10 +286,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(StoreNameStrict)
 
         MOTH_BEGIN_INSTR(LoadElement)
-            d << dumpRegister(base, nFormals) << "[" << dumpRegister(index, nFormals) << "]";
-        MOTH_END_INSTR(LoadElement)
-
-        MOTH_BEGIN_INSTR(LoadElementA)
             d << dumpRegister(base, nFormals) << "[acc]";
         MOTH_END_INSTR(LoadElement)
 
@@ -298,12 +294,8 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(StoreElement)
 
         MOTH_BEGIN_INSTR(LoadProperty)
-            d << dumpRegister(base, nFormals) << "[" << name << "]";
-        MOTH_END_INSTR(LoadProperty)
-
-        MOTH_BEGIN_INSTR(LoadPropertyA)
             d << "acc[" << name << "]";
-        MOTH_END_INSTR(LoadElementA)
+        MOTH_END_INSTR(LoadProperty)
 
         MOTH_BEGIN_INSTR(GetLookup)
             d << dumpRegister(base, nFormals) << "(" << index << ")";

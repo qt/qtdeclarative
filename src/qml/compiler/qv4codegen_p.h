@@ -172,6 +172,7 @@ public:
         }
 
         Q_REQUIRED_RESULT RValue storeOnStack() const;
+        void loadInAccumulator() const;
     };
     struct Reference {
         enum Type {

@@ -197,17 +197,11 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(LoadElement)
         COLLECTOR_END_INSTR(LoadElement)
 
-        COLLECTOR_BEGIN_INSTR(LoadElementA)
-        COLLECTOR_END_INSTR(LoadElement)
-
         COLLECTOR_BEGIN_INSTR(StoreElement)
         COLLECTOR_END_INSTR(StoreElement)
 
         COLLECTOR_BEGIN_INSTR(LoadProperty)
         COLLECTOR_END_INSTR(LoadProperty)
-
-        COLLECTOR_BEGIN_INSTR(LoadPropertyA)
-        COLLECTOR_END_INSTR(LoadElementA)
 
         COLLECTOR_BEGIN_INSTR(GetLookup)
         COLLECTOR_END_INSTR(GetLookup)

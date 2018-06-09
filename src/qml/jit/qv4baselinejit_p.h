@@ -98,11 +98,9 @@ public:
     void generate_LoadGlobalLookup(int index) override;
     void generate_StoreNameSloppy(int name) override;
     void generate_StoreNameStrict(int name) override;
-    void generate_LoadElement(int base, int index) override;
-    void generate_LoadElementA(int base) override;
+    void generate_LoadElement(int base) override;
     void generate_StoreElement(int base, int index) override;
-    void generate_LoadProperty(int name, int base) override;
-    void generate_LoadPropertyA(int name) override;
+    void generate_LoadProperty(int name) override;
     void generate_GetLookup(int index, int base) override;
     void generate_GetLookupA(int index) override;
     void generate_StoreProperty(int name, int base) override;

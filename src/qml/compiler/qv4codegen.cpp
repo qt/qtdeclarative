@@ -3495,6 +3495,22 @@ Codegen::RValue Codegen::RValue::storeOnStack() const
     }
 }
 
+void Codegen::RValue::loadInAccumulator() const
+{
+    switch (type) {
+    case Accumulator:
+        // nothing to do
+        return;
+    case StackSlot:
+        return Reference::fromStackSlot(codegen, theStackSlot).loadInAccumulator();
+    case Const:
+        return Reference::fromConst(codegen, constant).loadInAccumulator();
+    default:
+        Q_UNREACHABLE();
+    }
+
+}
+
 Codegen::Reference::Reference(const Codegen::Reference &other)
 {
     *this = other;
@@ -3867,34 +3883,17 @@ QT_WARNING_POP
                 codegen->bytecodeGenerator->addInstruction(load);
             }
         } else {
-            if (propertyBase.isAccumulator()) {
-                Instruction::LoadPropertyA load;
-                load.name = propertyNameIndex;
-                codegen->bytecodeGenerator->addInstruction(load);
-            } else {
-                Instruction::LoadProperty load;
-                load.base = propertyBase.storeOnStack().stackSlot();
-                load.name = propertyNameIndex;
-                codegen->bytecodeGenerator->addInstruction(load);
-            }
+            propertyBase.loadInAccumulator();
+            Instruction::LoadProperty load;
+            load.name = propertyNameIndex;
+            codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
     case Subscript: {
-        if (elementSubscript.isAccumulator()) {
-            Instruction::LoadElementA load;
-            load.base = elementBase;
-            codegen->bytecodeGenerator->addInstruction(load);
-        } else if (elementSubscript.isConst()) {
-            Reference::fromConst(codegen, elementSubscript.constantValue()).loadInAccumulator();
-            Instruction::LoadElementA load;
-            load.base = elementBase;
-            codegen->bytecodeGenerator->addInstruction(load);
-        } else {
-            Instruction::LoadElement load;
-            load.base = elementBase;
-            load.index = elementSubscript.storeOnStack().stackSlot();
-            codegen->bytecodeGenerator->addInstruction(load);
-        }
+        elementSubscript.loadInAccumulator();
+        Instruction::LoadElement load;
+        load.base = elementBase;
+        codegen->bytecodeGenerator->addInstruction(load);
     } return;
     case QmlScopeObject: {
         Instruction::LoadScopeObjectProperty load;

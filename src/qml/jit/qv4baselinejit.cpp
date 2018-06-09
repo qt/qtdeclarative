@@ -233,18 +233,7 @@ void BaselineJIT::generate_StoreNameStrict(int name)
     as->checkException();
 }
 
-void BaselineJIT::generate_LoadElement(int base, int index)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(3);
-    as->passRegAsArg(index, 2);
-    as->passRegAsArg(base, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadElement, Assembler::ResultInAccumulator);
-    as->checkException();
-}
-
-void BaselineJIT::generate_LoadElementA(int base)
+void BaselineJIT::generate_LoadElement(int base)
 {
     STORE_IP();
     STORE_ACC();
@@ -276,17 +265,7 @@ void BaselineJIT::generate_StoreElement(int base, int index)
     as->checkException();
 }
 
-void BaselineJIT::generate_LoadProperty(int name, int base)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(3);
-    as->passInt32AsArg(name, 2);
-    as->passRegAsArg(base, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadProperty, Assembler::ResultInAccumulator);
-    as->checkException();
-}
-void BaselineJIT::generate_LoadPropertyA(int name)
+void BaselineJIT::generate_LoadProperty(int name)
 {
     STORE_IP();
     STORE_ACC();
