@@ -44,7 +44,7 @@ function(QTQUICK_COMPILER_ADD_RESOURCES outfiles)
 
         set(rcc_file_with_compilation_units)
 
-        execute_process(COMMAND ${rcc_path} -list \"${input_resource}\" OUTPUT_VARIABLE rcc_contents)
+        execute_process(COMMAND ${rcc_path} -list "${input_resource}" OUTPUT_VARIABLE rcc_contents)
         string(REGEX REPLACE "[\r\n]+" ";" rcc_contents ${rcc_contents})
         foreach(it ${rcc_contents})
             get_filename_component(extension ${it} EXT)
