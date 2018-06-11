@@ -90,7 +90,7 @@ Rectangle {
                 objectName: "dragHandler" + index
                 onActiveChanged: {
                     if (!active)
-                        anim.restart(point.velocity)
+                        anim.restart(centroid.velocity)
                 }
             }
             Rectangle {
@@ -103,12 +103,12 @@ Rectangle {
 
             Rectangle {
                 visible: width > 0
-                width: dragHandler.point.velocity.length() * 100
+                width: dragHandler.centroid.velocity.length() * 100
                 height: 2
                 x: ball.width / 2
                 y: ball.height / 2
                 z: -1
-                rotation: Math.atan2(dragHandler.point.velocity.y, dragHandler.point.velocity.x) * 180 / Math.PI
+                rotation: Math.atan2(dragHandler.centroid.velocity.y, dragHandler.centroid.velocity.x) * 180 / Math.PI
                 transformOrigin: Item.BottomLeft
                 antialiasing: true
 

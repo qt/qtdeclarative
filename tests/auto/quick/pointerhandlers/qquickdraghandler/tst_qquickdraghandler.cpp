@@ -119,11 +119,11 @@ void tst_DragHandler::defaultPropertyValues()
 
     QCOMPARE(dragHandler->acceptedButtons(), Qt::LeftButton);
     QCOMPARE(dragHandler->translation(), QVector2D());
-    QCOMPARE(dragHandler->point().position(), QPointF());
-    QCOMPARE(dragHandler->point().scenePosition(), QPointF());
-    QCOMPARE(dragHandler->point().pressPosition(), QPointF());
-    QCOMPARE(dragHandler->point().scenePressPosition(), QPointF());
-    QCOMPARE(dragHandler->point().sceneGrabPosition(), QPointF());
+    QCOMPARE(dragHandler->centroid().position(), QPointF());
+    QCOMPARE(dragHandler->centroid().scenePosition(), QPointF());
+    QCOMPARE(dragHandler->centroid().pressPosition(), QPointF());
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), QPointF());
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), QPointF());
 }
 
 void tst_DragHandler::touchDrag()
@@ -146,10 +146,10 @@ void tst_DragHandler::touchDrag()
     QTest::touchEvent(window, touchDevice).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!dragHandler->active());
-    QCOMPARE(dragHandler->point().position(), ballCenter);
-    QCOMPARE(dragHandler->point().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->point().scenePosition(), scenePressPos);
-    QCOMPARE(dragHandler->point().scenePressPosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().position(), ballCenter);
+    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+    QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     p1 += QPoint(dragThreshold, 0);
     QTest::touchEvent(window, touchDevice).move(1, p1, window);
     QQuickTouchUtils::flush(window);
@@ -161,22 +161,22 @@ void tst_DragHandler::touchDrag()
     QCOMPARE(translationChangedSpy.count(), 0);
     QCOMPARE(dragHandler->translation().x(), 0.0);
     QPointF sceneGrabPos = p1;
-    QCOMPARE(dragHandler->point().sceneGrabPosition(), sceneGrabPos);
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     p1 += QPoint(19, 0);
     QTest::touchEvent(window, touchDevice).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(dragHandler->active());
-    QCOMPARE(dragHandler->point().position(), ballCenter);
-    QCOMPARE(dragHandler->point().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->point().scenePosition(), ball->mapToScene(ballCenter));
-    QCOMPARE(dragHandler->point().scenePressPosition(), scenePressPos);
-    QCOMPARE(dragHandler->point().sceneGrabPosition(), sceneGrabPos);
+    QCOMPARE(dragHandler->centroid().position(), ballCenter);
+    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+    QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     QCOMPARE(dragHandler->translation().x(), dragThreshold + 20.0);
     QCOMPARE(dragHandler->translation().y(), 0.0);
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!dragHandler->active());
-    QCOMPARE(dragHandler->point().pressedButtons(), Qt::NoButton);
+    QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.count(), 1);
 }
@@ -200,10 +200,10 @@ void tst_DragHandler::mouseDrag()
     QPoint p1 = scenePressPos.toPoint();
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
     QVERIFY(!dragHandler->active());
-    QCOMPARE(dragHandler->point().position(), ballCenter);
-    QCOMPARE(dragHandler->point().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->point().scenePosition(), scenePressPos);
-    QCOMPARE(dragHandler->point().scenePressPosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().position(), ballCenter);
+    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+    QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     p1 += QPoint(dragThreshold, 0);
     QTest::mouseMove(window, p1);
     QVERIFY(!dragHandler->active());
@@ -213,20 +213,20 @@ void tst_DragHandler::mouseDrag()
     QCOMPARE(translationChangedSpy.count(), 0);
     QCOMPARE(dragHandler->translation().x(), 0.0);
     QPointF sceneGrabPos = p1;
-    QCOMPARE(dragHandler->point().sceneGrabPosition(), sceneGrabPos);
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     p1 += QPoint(19, 0);
     QTest::mouseMove(window, p1);
     QTRY_VERIFY(dragHandler->active());
-    QCOMPARE(dragHandler->point().position(), ballCenter);
-    QCOMPARE(dragHandler->point().pressPosition(), ballCenter);
-    QCOMPARE(dragHandler->point().scenePosition(), ball->mapToScene(ballCenter));
-    QCOMPARE(dragHandler->point().scenePressPosition(), scenePressPos);
-    QCOMPARE(dragHandler->point().sceneGrabPosition(), sceneGrabPos);
+    QCOMPARE(dragHandler->centroid().position(), ballCenter);
+    QCOMPARE(dragHandler->centroid().pressPosition(), ballCenter);
+    QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
+    QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+    QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     QCOMPARE(dragHandler->translation().x(), dragThreshold + 20.0);
     QCOMPARE(dragHandler->translation().y(), 0.0);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
-    QCOMPARE(dragHandler->point().pressedButtons(), Qt::NoButton);
+    QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
     QCOMPARE(translationChangedSpy.count(), 1);
 }
@@ -243,12 +243,14 @@ void tst_DragHandler::touchDragMulti()
     QQuickDragHandler *dragHandler1 = ball1->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler1);
     QSignalSpy translationChangedSpy1(dragHandler1, SIGNAL(translationChanged()));
+    QSignalSpy centroidChangedSpy1(dragHandler1, SIGNAL(centroidChanged()));
 
     QQuickItem *ball2 = window->rootObject()->childItems().at(1);
     QVERIFY(ball2);
     QQuickDragHandler *dragHandler2 = ball2->findChild<QQuickDragHandler*>();
     QVERIFY(dragHandler2);
     QSignalSpy translationChangedSpy2(dragHandler2, SIGNAL(translationChanged()));
+    QSignalSpy centroidChangedSpy2(dragHandler1, SIGNAL(centroidChanged()));
 
     QPointF ball1Center = ball1->clipRect().center();
     QPointF scenePressPos1 = ball1->mapToScene(ball1Center);
@@ -261,20 +263,33 @@ void tst_DragHandler::touchDragMulti()
     touchSeq.press(1, p1, window).press(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QVERIFY(!dragHandler1->active());
-    QCOMPARE(dragHandler1->point().position(), ball1Center);
-    QCOMPARE(dragHandler1->point().pressPosition(), ball1Center);
-    QCOMPARE(dragHandler1->point().scenePosition(), scenePressPos1);
-    QCOMPARE(dragHandler1->point().scenePressPosition(), scenePressPos1);
+    QCOMPARE(centroidChangedSpy1.count(), 1);
+    QCOMPARE(dragHandler1->centroid().position(), ball1Center);
+    QCOMPARE(dragHandler1->centroid().pressPosition(), ball1Center);
+    QCOMPARE(dragHandler1->centroid().scenePosition(), scenePressPos1);
+    QCOMPARE(dragHandler1->centroid().scenePressPosition(), scenePressPos1);
     QVERIFY(!dragHandler2->active());
-    QCOMPARE(dragHandler2->point().position(), ball2Center);
-    QCOMPARE(dragHandler2->point().pressPosition(), ball2Center);
-    QCOMPARE(dragHandler2->point().scenePosition(), scenePressPos2);
-    QCOMPARE(dragHandler2->point().scenePressPosition(), scenePressPos2);
+    QCOMPARE(centroidChangedSpy2.count(), 1);
+    QCOMPARE(dragHandler2->centroid().position(), ball2Center);
+    QCOMPARE(dragHandler2->centroid().pressPosition(), ball2Center);
+    QCOMPARE(dragHandler2->centroid().scenePosition(), scenePressPos2);
+    QCOMPARE(dragHandler2->centroid().scenePressPosition(), scenePressPos2);
     p1 += QPoint(dragThreshold, 0);
     p2 += QPoint(0, dragThreshold);
     touchSeq.move(1, p1, window).move(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QVERIFY(!dragHandler1->active());
+    QCOMPARE(centroidChangedSpy1.count(), 2);
+    QCOMPARE(dragHandler1->centroid().position(), ball1Center + QPointF(dragThreshold, 0));
+    QCOMPARE(dragHandler1->centroid().pressPosition(), ball1Center);
+    QCOMPARE(dragHandler1->centroid().scenePosition().toPoint(), p1);
+    QCOMPARE(dragHandler1->centroid().scenePressPosition(), scenePressPos1);
+    QVERIFY(!dragHandler2->active());
+    QCOMPARE(centroidChangedSpy2.count(), 2);
+    QCOMPARE(dragHandler2->centroid().position(), ball2Center + QPointF(0, dragThreshold));
+    QCOMPARE(dragHandler2->centroid().pressPosition(), ball2Center);
+    QCOMPARE(dragHandler2->centroid().scenePosition().toPoint(), p2);
+    QCOMPARE(dragHandler2->centroid().scenePressPosition(), scenePressPos2);
     p1 += QPoint(1, 0);
     p2 += QPoint(0, 1);
     touchSeq.move(1, p1, window).move(2, p2, window).commit();
@@ -285,37 +300,37 @@ void tst_DragHandler::touchDragMulti()
     QCOMPARE(dragHandler1->translation().x(), 0.0);
     QPointF sceneGrabPos1 = p1;
     QPointF sceneGrabPos2 = p2;
-    QCOMPARE(dragHandler1->point().sceneGrabPosition(), sceneGrabPos1);
-    QCOMPARE(dragHandler2->point().sceneGrabPosition(), sceneGrabPos2);
+    QCOMPARE(dragHandler1->centroid().sceneGrabPosition(), sceneGrabPos1);
+    QCOMPARE(dragHandler2->centroid().sceneGrabPosition(), sceneGrabPos2);
     p1 += QPoint(19, 0);
     p2 += QPoint(0, 19);
     QVERIFY(dragHandler2->active());
     QCOMPARE(translationChangedSpy2.count(), 0);
     QCOMPARE(dragHandler2->translation().x(), 0.0);
-    QCOMPARE(dragHandler2->point().sceneGrabPosition(), sceneGrabPos2);
+    QCOMPARE(dragHandler2->centroid().sceneGrabPosition(), sceneGrabPos2);
     touchSeq.move(1, p1, window).move(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QVERIFY(dragHandler1->active());
     QVERIFY(dragHandler2->active());
-    QCOMPARE(dragHandler1->point().position(), ball1Center);
-    QCOMPARE(dragHandler1->point().pressPosition(), ball1Center);
-    QCOMPARE(dragHandler1->point().scenePosition(), ball1->mapToScene(ball1Center));
-    QCOMPARE(dragHandler1->point().scenePressPosition(), scenePressPos1);
-    QCOMPARE(dragHandler1->point().sceneGrabPosition(), sceneGrabPos1);
+    QCOMPARE(dragHandler1->centroid().position(), ball1Center);
+    QCOMPARE(dragHandler1->centroid().pressPosition(), ball1Center);
+    QCOMPARE(dragHandler1->centroid().scenePosition(), ball1->mapToScene(ball1Center));
+    QCOMPARE(dragHandler1->centroid().scenePressPosition(), scenePressPos1);
+    QCOMPARE(dragHandler1->centroid().sceneGrabPosition(), sceneGrabPos1);
     QCOMPARE(dragHandler1->translation().x(), dragThreshold + 20.0);
     QCOMPARE(dragHandler1->translation().y(), 0.0);
-    QCOMPARE(dragHandler2->point().position(), ball2Center);
-    QCOMPARE(dragHandler2->point().pressPosition(), ball2Center);
-    QCOMPARE(dragHandler2->point().scenePosition(), ball2->mapToScene(ball2Center));
-    QCOMPARE(dragHandler2->point().scenePressPosition(), scenePressPos2);
-    QCOMPARE(dragHandler2->point().sceneGrabPosition(), sceneGrabPos2);
+    QCOMPARE(dragHandler2->centroid().position(), ball2Center);
+    QCOMPARE(dragHandler2->centroid().pressPosition(), ball2Center);
+    QCOMPARE(dragHandler2->centroid().scenePosition(), ball2->mapToScene(ball2Center));
+    QCOMPARE(dragHandler2->centroid().scenePressPosition(), scenePressPos2);
+    QCOMPARE(dragHandler2->centroid().sceneGrabPosition(), sceneGrabPos2);
     QCOMPARE(dragHandler2->translation().x(), 0.0);
     QCOMPARE(dragHandler2->translation().y(), dragThreshold + 20.0);
     touchSeq.release(1, p1, window).stationary(2).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!dragHandler1->active());
     QVERIFY(dragHandler2->active());
-    QCOMPARE(dragHandler1->point().pressedButtons(), Qt::NoButton);
+    QCOMPARE(dragHandler1->centroid().pressedButtons(), Qt::NoButton);
     QCOMPARE(ball1->mapToScene(ball1Center).toPoint(), p1);
     QCOMPARE(translationChangedSpy1.count(), 1);
     touchSeq.release(2, p2, window).commit();
@@ -454,7 +469,12 @@ void tst_DragHandler::touchPassiveGrabbers()
 
     QQuickDragHandler *dragHandler = nullptr;
     for (QQuickPointerHandler *handler: expectedPassiveGrabbers) {
-        QCOMPARE(static_cast<QQuickSinglePointHandler *>(handler)->point().scenePressPosition(), p1);
+        QPointF scenePressPos;
+        if (QQuickMultiPointHandler *mph = qmlobject_cast<QQuickMultiPointHandler *>(handler))
+            scenePressPos = mph->centroid().scenePressPosition();
+        else
+            scenePressPos = static_cast<QQuickSinglePointHandler *>(handler)->point().scenePressPosition();
+        QCOMPARE(scenePressPos, p1);
         QQuickDragHandler *dh = qmlobject_cast<QQuickDragHandler *>(handler);
         if (dh)
             dragHandler = dh;

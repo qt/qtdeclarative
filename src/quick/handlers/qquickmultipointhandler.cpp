@@ -59,10 +59,10 @@ QT_BEGIN_NAMESPACE
     for any type of handler which requires and acts upon a specific number
     of multiple touchpoints.
 */
-QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int minimumPointCount)
+QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int minimumPointCount, int maximumPointCount)
     : QQuickPointerDeviceHandler(parent)
     , m_minimumPointCount(minimumPointCount)
-    , m_maximumPointCount(-1)
+    , m_maximumPointCount(maximumPointCount)
 {
 }
 
@@ -117,7 +117,25 @@ void QQuickMultiPointHandler::onActiveChanged()
 {
     if (active()) {
         m_centroid.m_sceneGrabPosition = m_centroid.m_scenePosition;
+    } else {
+        // Don't call m_centroid.reset() here, because in a QML onActiveChanged
+        // callback, we'd like to see what the position _was_, what the velocity _was_, etc.
+        // (having them undefined is not useful)
+        // But pressedButtons and pressedModifiers are meant to be more real-time than those
+        // (which seems a bit inconsistent, from one side).
+        m_centroid.m_pressedButtons = Qt::NoButton;
+        m_centroid.m_pressedModifiers = Qt::NoModifier;
     }
+}
+
+void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *)
+{
+    // If another handler or item takes over this set of points, assume it has
+    // decided that it's the better fit for them. Don't immediately re-grab
+    // at the next opportunity. This should help to avoid grab cycles
+    // (e.g. between DragHandler and PinchHandler).
+    if (stateChange == QQuickEventPoint::UngrabExclusive || stateChange == QQuickEventPoint::CancelGrabExclusive)
+        m_currentPoints.clear();
 }
 
 QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointerEvent *event)
@@ -279,7 +297,7 @@ bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
     bool allowed = true;
     for (QQuickEventPoint* point : points) {
-        if (!canGrab(point)) {
+        if (point->exclusiveGrabber() != this && !canGrab(point)) {
             allowed = false;
             break;
         }
@@ -289,6 +307,12 @@ bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
             setExclusiveGrab(point);
     }
     return allowed;
+}
+
+void QQuickMultiPointHandler::moveTarget(QPointF pos)
+{
+    target()->setPosition(pos);
+    m_centroid.m_position = target()->mapFromScene(m_centroid.m_scenePosition);
 }
 
 QT_END_NAMESPACE

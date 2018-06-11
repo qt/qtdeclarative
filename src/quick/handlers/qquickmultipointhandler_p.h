@@ -66,7 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHand
     Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged)
 
 public:
-    explicit QQuickMultiPointHandler(QObject *parent = nullptr, int minimumPointCount = 2);
+    explicit QQuickMultiPointHandler(QObject *parent = nullptr, int minimumPointCount = 2, int maximumPointCount = -1);
     ~QQuickMultiPointHandler();
 
     int minimumPointCount() const { return m_minimumPointCount; }
@@ -94,6 +94,7 @@ protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     void onActiveChanged() override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
     bool hasCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
     qreal averageTouchPointDistance(const QPointF &ref);
@@ -104,6 +105,7 @@ protected:
     static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
     void acceptPoints(const QVector<QQuickEventPoint *> &points);
     bool grabPoints(QVector<QQuickEventPoint *> points);
+    void moveTarget(QPointF pos);
 
 protected:
     QVector<QQuickHandlerPoint> m_currentPoints;

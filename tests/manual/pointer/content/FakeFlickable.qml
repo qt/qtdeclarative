@@ -67,7 +67,7 @@ Item {
 
         DragHandler {
             id: dragHandler
-            onActiveChanged: if (!active) anim.restart(point.velocity)
+            onActiveChanged: if (!active) anim.restart(centroid.velocity)
         }
         MomentumAnimation {
             id: anim

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -43,6 +43,10 @@
 
 QT_BEGIN_NAMESPACE
 
+static const qreal DragAngleToleranceDegrees = 10;
+
+Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
+
 /*!
     \qmltype DragHandler
     \instantiates QQuickDragHandler
@@ -71,13 +75,21 @@ QT_BEGIN_NAMESPACE
 
     \snippet pointerHandlers/dragHandlerNullTarget.qml 0
 
+    If minimumPointCount and maximumPointCount are set to values larger than 1,
+    the user will need to drag that many fingers in the same direction to start
+    dragging. A multi-finger drag gesture can be detected independently of both
+    a (default) single-finger DragHandler and a PinchHandler on the same Item,
+    and thus can be used to adjust some other feature independently of the
+    usual pinch behavior: for example adjust a tilt transformation, or adjust
+    some other numeric value.
+
     At this time, drag-and-drop is not yet supported.
 
     \sa Drag, MouseArea
 */
 
 QQuickDragHandler::QQuickDragHandler(QObject *parent)
-    : QQuickSinglePointHandler(parent)
+    : QQuickMultiPointHandler(parent, 1, 1)
 {
 }
 
@@ -85,22 +97,15 @@ QQuickDragHandler::~QQuickDragHandler()
 {
 }
 
-bool QQuickDragHandler::wantsEventPoint(QQuickEventPoint *point)
-{
-    // If we've already been interested in a point, stay interested, even if it has strayed outside bounds.
-    return ((point->state() != QQuickEventPoint::Pressed && this->point().id() == point->pointId())
-            || QQuickSinglePointHandler::wantsEventPoint(point));
-}
-
-bool QQuickDragHandler::targetContains(QQuickEventPoint *point)
+bool QQuickDragHandler::targetContainsCentroid()
 {
     Q_ASSERT(parentItem() && target());
-    return target()->contains(localTargetPosition(point));
+    return target()->contains(targetCentroidPosition());
 }
 
-QPointF QQuickDragHandler::localTargetPosition(QQuickEventPoint *point)
+QPointF QQuickDragHandler::targetCentroidPosition()
 {
-    QPointF pos = point->position();
+    QPointF pos = m_centroid.position();
     if (target() != parentItem())
         pos = parentItem()->mapToItem(target(), pos);
     return pos;
@@ -108,82 +113,137 @@ QPointF QQuickDragHandler::localTargetPosition(QQuickEventPoint *point)
 
 void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
 {
+    QQuickMultiPointHandler::onGrabChanged(grabber, stateChange, point);
     if (grabber == this && stateChange == QQuickEventPoint::GrabExclusive) {
         // In case the grab got handed over from another grabber, we might not get the Press.
         if (!m_pressedInsideTarget) {
             if (target())
                 m_pressTargetPos = QPointF(target()->width(), target()->height()) / 2;
-            m_pressScenePos = point->scenePosition();
         } else if (m_pressTargetPos.isNull()) {
             if (target())
-                m_pressTargetPos = localTargetPosition(point);
-            m_pressScenePos = point->scenePosition();
+                m_pressTargetPos = targetCentroidPosition();
         }
     }
-    QQuickSinglePointHandler::onGrabChanged(grabber, stateChange, point);
 }
 
 void QQuickDragHandler::onActiveChanged()
 {
-    if (!active()) {
+    QQuickMultiPointHandler::onActiveChanged();
+    if (active()) {
+        if (auto parent = parentItem()) {
+            if (currentEvent()->asPointerTouchEvent())
+                parent->setKeepTouchGrab(true);
+            // tablet and mouse are treated the same by Item's legacy event handling, and
+            // touch becomes synth-mouse for Flickable, so we need to prevent stealing
+            // mouse grab too, whenever dragging occurs in an enabled direction
+            parent->setKeepMouseGrab(true);
+        }
+    } else {
         m_pressTargetPos = QPointF();
-        m_pressScenePos = m_pressTargetPos;
         m_pressedInsideTarget = false;
+        if (auto parent = parentItem()) {
+            parent->setKeepTouchGrab(false);
+            parent->setKeepMouseGrab(false);
+        }
     }
 }
 
-void QQuickDragHandler::handleEventPoint(QQuickEventPoint *point)
+void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
-    point->setAccepted();
-    switch (point->state()) {
-    case QQuickEventPoint::Pressed:
-        if (target()) {
-            m_pressedInsideTarget = targetContains(point);
-            m_pressTargetPos = localTargetPosition(point);
-        }
-        m_pressScenePos = point->scenePosition();
-        setPassiveGrab(point);
-        break;
-    case QQuickEventPoint::Updated: {
-        QVector2D accumulatedDragDelta = QVector2D(point->scenePosition() - m_pressScenePos);
-        if (active()) {
-            // update translation property. Make sure axis is respected for it.
-            if (!m_xAxis.enabled())
-                accumulatedDragDelta.setX(0);
-            if (!m_yAxis.enabled())
-                accumulatedDragDelta.setY(0);
-            setTranslation(accumulatedDragDelta);
+    QQuickMultiPointHandler::handlePointerEventImpl(event);
+    event->setAccepted(true);
 
-            if (target() && target()->parentItem()) {
-                const QPointF newTargetTopLeft = localTargetPosition(point) - m_pressTargetPos;
-                const QPointF xformOrigin = target()->transformOriginPoint();
-                const QPointF targetXformOrigin = newTargetTopLeft + xformOrigin;
-                QPointF pos = target()->parentItem()->mapFromItem(target(), targetXformOrigin);
-                pos -= xformOrigin;
-                QPointF targetItemPos = target()->position();
-                if (!m_xAxis.enabled())
-                    pos.setX(targetItemPos.x());
-                if (!m_yAxis.enabled())
-                    pos.setY(targetItemPos.y());
-                enforceAxisConstraints(&pos);
-                moveTarget(pos, point);
+    if (active()) {
+        // Calculate drag delta, taking into account the axis enabled constraint
+        // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
+        QVector2D accumulatedDragDelta = QVector2D(m_centroid.scenePosition() - m_centroid.scenePressPosition());
+        if (!m_xAxis.enabled())
+            accumulatedDragDelta.setX(0);
+        if (!m_yAxis.enabled())
+            accumulatedDragDelta.setY(0);
+        setTranslation(accumulatedDragDelta);
+    } else {
+        // Check that all points have been dragged past the drag threshold,
+        // to the extent that the constraints allow,
+        // and in approximately the same direction
+        qreal minAngle =  361;
+        qreal maxAngle = -361;
+        bool allOverThreshold = !event->isReleaseEvent();
+        QVector <QQuickEventPoint *> chosenPoints;
+
+        if (event->isPressEvent())
+            m_pressedInsideTarget = target() && m_currentPoints.count() > 0;
+
+        for (const QQuickHandlerPoint &p : m_currentPoints) {
+            if (!allOverThreshold)
+                break;
+            QQuickEventPoint *point = event->pointById(p.id());
+            chosenPoints << point;
+            setPassiveGrab(point);
+            // Calculate drag delta, taking into account the axis enabled constraint
+            // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
+            QVector2D accumulatedDragDelta = QVector2D(point->scenePosition() - point->scenePressPosition());
+            if (!m_xAxis.enabled()) {
+                // If horizontal dragging is disallowed, but the user is dragging
+                // mostly horizontally, then don't activate.
+                if (qAbs(accumulatedDragDelta.x()) > qAbs(accumulatedDragDelta.y()))
+                    accumulatedDragDelta.setY(0);
+                accumulatedDragDelta.setX(0);
             }
-        } else if (!point->exclusiveGrabber() &&
-                   ((m_xAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta.x(), Qt::XAxis, point)) ||
-                    (m_yAxis.enabled() && QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta.y(), Qt::YAxis, point)))) {
-            setExclusiveGrab(point);
-            if (auto parent = parentItem()) {
-                if (point->pointerEvent()->asPointerTouchEvent())
-                    parent->setKeepTouchGrab(true);
-                // tablet and mouse are treated the same by Item's legacy event handling, and
-                // touch becomes synth-mouse for Flickable, so we need to prevent stealing
-                // mouse grab too, whenever dragging occurs in an enabled direction
-                parent->setKeepMouseGrab(true);
+            if (!m_yAxis.enabled()) {
+                // If vertical dragging is disallowed, but the user is dragging
+                // mostly vertically, then don't activate.
+                if (qAbs(accumulatedDragDelta.y()) > qAbs(accumulatedDragDelta.x()))
+                    accumulatedDragDelta.setX(0);
+                accumulatedDragDelta.setY(0);
+            }
+            qreal angle = std::atan2(accumulatedDragDelta.y(), accumulatedDragDelta.x()) * 180 / M_PI;
+            bool overThreshold = QQuickWindowPrivate::dragOverThreshold(accumulatedDragDelta);
+            qCDebug(lcDragHandler) << "movement" << accumulatedDragDelta << "angle" << angle << "of point" << point
+                                   << "pressed @" << point->scenePressPosition() << "over threshold?" << overThreshold;
+            minAngle = qMin(angle, minAngle);
+            maxAngle = qMax(angle, maxAngle);
+            if (allOverThreshold && !overThreshold)
+                allOverThreshold = false;
+
+            if (event->isPressEvent()) {
+                // m_pressedInsideTarget should stay true iff ALL points in which DragHandler is interested
+                // have been pressed inside the target() Item.  (E.g. in a Slider the parent might be the
+                // whole control while the target is just the knob.)
+                if (target()) {
+                    const QPointF localPressPos = target()->mapFromScene(point->scenePressPosition());
+                    m_pressedInsideTarget &= target()->contains(localPressPos);
+                    m_pressTargetPos = targetCentroidPosition();
+                }
+                // QQuickWindowPrivate::deliverToPassiveGrabbers() skips subsequent delivery if the event is filtered.
+                // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
+                // So we have to compensate by accepting the event here to avoid any parent Flickable from
+                // getting the event via direct delivery and grabbing too soon.
+                point->setAccepted(event->asPointerMouseEvent()); // stop propagation iff it's a mouse event
             }
         }
-    } break;
-    default:
-        break;
+        if (allOverThreshold) {
+            qreal angleDiff = maxAngle - minAngle;
+            if (angleDiff > 180)
+                angleDiff = 360 - angleDiff;
+            qCDebug(lcDragHandler) << "angle min" << minAngle << "max" << maxAngle << "range" << angleDiff;
+            if (angleDiff < DragAngleToleranceDegrees && grabPoints(chosenPoints))
+                setActive(true);
+        }
+    }
+    if (active() && target() && target()->parentItem()) {
+        const QPointF newTargetTopLeft = targetCentroidPosition() - m_pressTargetPos;
+        const QPointF xformOrigin = target()->transformOriginPoint();
+        const QPointF targetXformOrigin = newTargetTopLeft + xformOrigin;
+        QPointF pos = target()->parentItem()->mapFromItem(target(), targetXformOrigin);
+        pos -= xformOrigin;
+        QPointF targetItemPos = target()->position();
+        if (!m_xAxis.enabled())
+            pos.setX(targetItemPos.x());
+        if (!m_yAxis.enabled())
+            pos.setY(targetItemPos.y());
+        enforceAxisConstraints(&pos);
+        moveTarget(pos);
     }
 }
 

@@ -302,6 +302,7 @@ public:
                 QQuickWindowPrivate::dragOverThreshold(delta.y(), Qt::YAxis, point));
     }
 
+    static bool dragOverThreshold(QVector2D delta);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

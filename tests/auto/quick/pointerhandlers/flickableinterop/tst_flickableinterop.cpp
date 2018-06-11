@@ -93,7 +93,7 @@ void tst_FlickableInterop::createView(QScopedPointer<QQuickView> &window, const 
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-    QVERIFY(window->rootObject() != 0);
+    QVERIFY(window->rootObject() != nullptr);
 }
 
 void tst_FlickableInterop::initTestCase()

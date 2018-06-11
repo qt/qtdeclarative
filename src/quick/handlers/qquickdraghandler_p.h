@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -51,12 +51,12 @@
 // We mean it.
 //
 
-#include "qquicksinglepointhandler_p.h"
+#include "qquickmultipointhandler_p.h"
 #include "qquickdragaxis_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickSinglePointHandler
+class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
@@ -67,7 +67,7 @@ public:
     explicit QQuickDragHandler(QObject *parent = nullptr);
     ~QQuickDragHandler();
 
-    void handleEventPoint(QQuickEventPoint *point) override;
+    void handlePointerEventImpl(QQuickPointerEvent *event) override;
 
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
@@ -82,18 +82,16 @@ Q_SIGNALS:
     void translationChanged();
 
 protected:
-    bool wantsEventPoint(QQuickEventPoint *point) override;
     void onActiveChanged() override;
     void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
 
 private:
     void ungrab();
     void enforceAxisConstraints(QPointF *localPos);
-    bool targetContains(QQuickEventPoint *point);
-    QPointF localTargetPosition(QQuickEventPoint *point);
+    bool targetContainsCentroid();
+    QPointF targetCentroidPosition();
 
 private:
-    QPointF m_pressScenePos;
     QPointF m_pressTargetPos;   // We must also store the local targetPos, because we cannot deduce
                                 // the press target pos from the scene pos in case there was e.g a
                                 // flick in one of the ancestors during the drag.

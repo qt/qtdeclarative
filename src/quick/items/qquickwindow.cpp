@@ -2511,6 +2511,12 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
     int pointCount = event->pointCount();
     QVector<QQuickItem *> targetItems;
     bool isTouchEvent = (event->asPointerTouchEvent() != nullptr);
+    if (isTouchEvent && event->isPressEvent()) {
+        // When a second point is pressed, we're starting over with delivery, so
+        // don't let prior conception of which one is acting as a mouse interfere
+        touchMouseId = -1;
+        touchMouseDevice = nullptr;
+    }
     for (int i = 0; i < pointCount; ++i) {
         auto point = event->point(i);
         point->setAccepted(false); // because otherwise touchEventForItem will ignore it
@@ -2975,6 +2981,12 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;
+}
+
+bool QQuickWindowPrivate::dragOverThreshold(QVector2D delta)
+{
+    int threshold = qApp->styleHints()->startDragDistance();
+    return qAbs(delta.x()) > threshold || qAbs(delta.y()) > threshold;
 }
 
 /*!

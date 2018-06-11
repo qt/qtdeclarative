@@ -39,20 +39,21 @@ Item {
 
         Rectangle {
             id: ball
-            objectName: "Ball " + index
+            objectName: "Ball " + (index + 1)
             color: dragHandler.active ? "blue" : "lightsteelblue"
             width: 80; height: 80; x: 200 + index * 200; y: 200; radius: width / 2
             onParentChanged: console.log(this + " parent " + parent)
 
             DragHandler {
                 id: dragHandler
-                objectName: "DragHandler " + index
+                objectName: "DragHandler " + (index + 1)
             }
 
             Text {
                 color: "white"
                 anchors.centerIn: parent
-                text: dragHandler.point.position.x.toFixed(1) + "," + dragHandler.point.position.y.toFixed(1)
+                horizontalAlignment: Text.AlignHCenter
+                text: ball.objectName + "\n" + dragHandler.centroid.position.x.toFixed(1) + "," + dragHandler.centroid.position.y.toFixed(1)
             }
         }
     }
