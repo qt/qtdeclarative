@@ -77,7 +77,8 @@ public:
     int visibleItemCount = 5;
     bool wrap = true;
     bool explicitWrap = false;
-    bool ignoreWrapChanges = false;
+    bool modelBeingSet = false;
+    bool currentIndexSetDuringModelChange = false;
     QQuickItem *view = nullptr;
     QQuickItem *viewContentItem = nullptr;
     ContentItemType viewContentItemType = UnsupportedContentItemType;
@@ -104,11 +105,17 @@ public:
     void setupViewData(QQuickItem *newControlContentItem);
     void syncCurrentIndex();
 
+    enum PropertyChangeReason {
+        UserChange,
+        InternalChange
+    };
+
+    void setCurrentIndex(int newCurrentIndex, PropertyChangeReason changeReason = InternalChange);
     void setCount(int newCount);
     void setWrapBasedOnCount();
     void setWrap(bool shouldWrap, bool isExplicit);
-    void lockWrap();
-    void unlockWrap();
+    void beginSetModel();
+    void endSetModel();
 
     void itemChildAdded(QQuickItem *, QQuickItem *) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *) override;

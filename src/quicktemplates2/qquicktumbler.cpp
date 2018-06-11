@@ -185,12 +185,17 @@ void QQuickTumblerPrivate::_q_updateItemWidths()
 void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
 {
     Q_Q(QQuickTumbler);
-    if (view && !ignoreCurrentIndexChanges) {
-        const int oldCurrentIndex = currentIndex;
-        currentIndex = view->property("currentIndex").toInt();
-        if (oldCurrentIndex != currentIndex)
-            emit q->currentIndexChanged();
+    if (!view || ignoreCurrentIndexChanges || currentIndexSetDuringModelChange) {
+        // If the user set currentIndex in the onModelChanged handler,
+        // we have to respect that currentIndex by ignoring changes in the view
+        // until the model has finished being set.
+        return;
     }
+
+    const int oldCurrentIndex = currentIndex;
+    currentIndex = view->property("currentIndex").toInt();
+    if (oldCurrentIndex != currentIndex)
+        emit q->currentIndexChanged();
 }
 
 void QQuickTumblerPrivate::_q_onViewCountChanged()
@@ -205,7 +210,7 @@ void QQuickTumblerPrivate::_q_onViewCountChanged()
         if (pendingCurrentIndex != -1) {
             // If there was an attempt to set currentIndex at creation, try to finish that attempt now.
             // componentComplete() is too early, because the count might only be known sometime after completion.
-            q->setCurrentIndex(pendingCurrentIndex);
+            setCurrentIndex(pendingCurrentIndex);
             // If we could successfully set the currentIndex, consider it done.
             // Otherwise, we'll try again later in updatePolish().
             if (currentIndex == pendingCurrentIndex)
@@ -215,10 +220,10 @@ void QQuickTumblerPrivate::_q_onViewCountChanged()
         } else if (currentIndex == -1) {
             // If new items were added and our currentIndex was -1, we must
             // enforce our rule of a non-negative currentIndex when count > 0.
-            q->setCurrentIndex(0);
+            setCurrentIndex(0);
         }
     } else {
-        q->setCurrentIndex(-1);
+        setCurrentIndex(-1);
     }
 }
 
@@ -297,17 +302,19 @@ void QQuickTumbler::setModel(const QVariant &model)
     if (model == d->model)
         return;
 
-    d->lockWrap();
+    d->beginSetModel();
 
     d->model = model;
     emit modelChanged();
 
-    d->unlockWrap();
+    d->endSetModel();
+
+    d->currentIndexSetDuringModelChange = false;
 
     // Don't try to correct the currentIndex if count() isn't known yet.
     // We can check in setupViewData() instead.
     if (isComponentComplete() && d->view && count() == 0)
-        setCurrentIndex(-1);
+        d->setCurrentIndex(-1);
 }
 
 /*!
@@ -339,49 +346,9 @@ int QQuickTumbler::currentIndex() const
 void QQuickTumbler::setCurrentIndex(int currentIndex)
 {
     Q_D(QQuickTumbler);
-    if (currentIndex == d->currentIndex || currentIndex < -1)
-        return;
-
-    if (!isComponentComplete()) {
-        // Views can't set currentIndex until they're ready.
-        d->pendingCurrentIndex = currentIndex;
-        return;
-    }
-
-    // -1 doesn't make sense for a non-empty Tumbler, because unlike
-    // e.g. ListView, there's always one item selected.
-    // Wait until the component has finished before enforcing this rule, though,
-    // because the count might not be known yet.
-    if ((d->count > 0 && currentIndex == -1) || (currentIndex >= d->count)) {
-        return;
-    }
-
-    // The view might not have been created yet, as is the case
-    // if you create a Tumbler component and pass e.g. { currentIndex: 2 }
-    // to createObject().
-    if (d->view) {
-        // Only actually set our currentIndex if the view was able to set theirs.
-        bool couldSet = false;
-        if (d->count == 0 && currentIndex == -1) {
-            // PathView insists on using 0 as the currentIndex when there are no items.
-            couldSet = true;
-        } else {
-            d->ignoreCurrentIndexChanges = true;
-            d->ignoreSignals = true;
-            d->view->setProperty("currentIndex", currentIndex);
-            d->ignoreSignals = false;
-            d->ignoreCurrentIndexChanges = false;
-
-            couldSet = d->view->property("currentIndex").toInt() == currentIndex;
-        }
-
-        if (couldSet) {
-            // The view's currentIndex might not have actually changed, but ours has,
-            // and that's what user code sees.
-            d->currentIndex = currentIndex;
-            emit currentIndexChanged();
-        }
-    }
+    if (d->modelBeingSet)
+        d->currentIndexSetDuringModelChange = true;
+    d->setCurrentIndex(currentIndex, QQuickTumblerPrivate::UserChange);
 }
 
 /*!
@@ -643,6 +610,64 @@ void QQuickTumblerPrivate::syncCurrentIndex()
         q->polish();
 }
 
+void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
+    QQuickTumblerPrivate::PropertyChangeReason changeReason)
+{
+    Q_Q(QQuickTumbler);
+    if (newCurrentIndex == currentIndex || newCurrentIndex < -1)
+        return;
+
+    if (!q->isComponentComplete()) {
+        // Views can't set currentIndex until they're ready.
+        pendingCurrentIndex = newCurrentIndex;
+        return;
+    }
+
+    if (modelBeingSet && changeReason == UserChange) {
+        // If modelBeingSet is true and the user set the currentIndex,
+        // the model is in the process of being set and the user has set
+        // the currentIndex in onModelChanged. We have to queue the currentIndex
+        // change until we're ready.
+        pendingCurrentIndex = newCurrentIndex;
+        return;
+    }
+
+    // -1 doesn't make sense for a non-empty Tumbler, because unlike
+    // e.g. ListView, there's always one item selected.
+    // Wait until the component has finished before enforcing this rule, though,
+    // because the count might not be known yet.
+    if ((count > 0 && newCurrentIndex == -1) || (newCurrentIndex >= count)) {
+        return;
+    }
+
+    // The view might not have been created yet, as is the case
+    // if you create a Tumbler component and pass e.g. { currentIndex: 2 }
+    // to createObject().
+    if (view) {
+        // Only actually set our currentIndex if the view was able to set theirs.
+        bool couldSet = false;
+        if (count == 0 && newCurrentIndex == -1) {
+            // PathView insists on using 0 as the currentIndex when there are no items.
+            couldSet = true;
+        } else {
+            ignoreCurrentIndexChanges = true;
+            ignoreSignals = true;
+            view->setProperty("currentIndex", newCurrentIndex);
+            ignoreSignals = false;
+            ignoreCurrentIndexChanges = false;
+
+            couldSet = view->property("currentIndex").toInt() == newCurrentIndex;
+        }
+
+        if (couldSet) {
+            // The view's currentIndex might not have actually changed, but ours has,
+            // and that's what user code sees.
+            currentIndex = newCurrentIndex;
+            emit q->currentIndexChanged();
+        }
+    }
+}
+
 void QQuickTumblerPrivate::setCount(int newCount)
 {
     if (newCount == count)
@@ -658,7 +683,7 @@ void QQuickTumblerPrivate::setCount(int newCount)
 
 void QQuickTumblerPrivate::setWrapBasedOnCount()
 {
-    if (count == 0 || explicitWrap || ignoreWrapChanges)
+    if (count == 0 || explicitWrap || modelBeingSet)
         return;
 
     setWrap(count >= visibleItemCount, false);
@@ -703,17 +728,17 @@ void QQuickTumblerPrivate::setWrap(bool shouldWrap, bool isExplicit)
     if (q->isComponentComplete() || contentItem)
         setupViewData(contentItem);
 
-    q->setCurrentIndex(oldCurrentIndex);
+    setCurrentIndex(oldCurrentIndex);
 }
 
-void QQuickTumblerPrivate::lockWrap()
+void QQuickTumblerPrivate::beginSetModel()
 {
-    ignoreWrapChanges = true;
+    modelBeingSet = true;
 }
 
-void QQuickTumblerPrivate::unlockWrap()
+void QQuickTumblerPrivate::endSetModel()
 {
-    ignoreWrapChanges = false;
+    modelBeingSet = false;
     setWrapBasedOnCount();
 }
 
@@ -749,12 +774,12 @@ void QQuickTumbler::updatePolish()
         // If there is a pending currentIndex at this stage, it means that
         // the view wouldn't set our currentIndex in _q_onViewCountChanged
         // because it wasn't ready. Try one last time here.
-        setCurrentIndex(d->pendingCurrentIndex);
+        d->setCurrentIndex(d->pendingCurrentIndex);
 
         if (d->currentIndex != d->pendingCurrentIndex && d->currentIndex == -1) {
             // If we *still* couldn't set it, it's probably invalid.
             // See if we can at least enforce our rule of "non-negative currentIndex when count > 0" instead.
-            setCurrentIndex(0);
+            d->setCurrentIndex(0);
         }
 
         d->pendingCurrentIndex = -1;

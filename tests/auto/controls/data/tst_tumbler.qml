@@ -1112,4 +1112,70 @@ TestCase {
         var label = row.label;
         compare(label.text, "2");
     }
+
+    Component {
+        id: setCurrentIndexOnImperativeModelChangeComponent
+
+        Tumbler {
+            onModelChanged: currentIndex = model - 2
+        }
+    }
+
+    function test_setCurrentIndexOnImperativeModelChange() {
+        var tumbler = createTemporaryObject(setCurrentIndexOnImperativeModelChangeComponent, testCase);
+        verify(tumbler);
+
+        tumbler.model = 4
+        compare(tumbler.count, 4);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "count", 4);
+
+        // 4 - 2 = 2
+        compare(tumbler.currentIndex, 2);
+
+        ++tumbler.model;
+        compare(tumbler.count, 5);
+        compare(tumbler.wrap, true);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "count", 5);
+        // 5 - 2 = 3
+        compare(tumbler.currentIndex, 3);
+    }
+
+    Component {
+        id: setCurrentIndexOnDeclarativeModelChangeComponent
+
+        Item {
+            property alias tumbler: tumbler
+
+            property int setting: 4
+
+            Tumbler {
+                id: tumbler
+                model: setting
+                onModelChanged: currentIndex = model - 2
+            }
+        }
+    }
+
+    function test_setCurrentIndexOnDeclarativeModelChange() {
+        var root = createTemporaryObject(setCurrentIndexOnDeclarativeModelChangeComponent, testCase);
+        verify(root);
+
+        var tumbler = root.tumbler;
+        compare(tumbler.count, 4);
+        compare(tumbler.wrap, false);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "count", 4);
+        // 4 - 2 = 2
+        compare(tumbler.currentIndex, 2);
+
+        ++root.setting;
+        compare(tumbler.count, 5);
+        compare(tumbler.wrap, true);
+        tumblerView = findView(tumbler);
+        tryCompare(tumblerView, "count", 5);
+        // 5 - 2 = 3
+        compare(tumbler.currentIndex, 3);
+    }
 }
