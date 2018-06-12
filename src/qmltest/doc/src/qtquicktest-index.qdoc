@@ -146,6 +146,11 @@
             \li Name
             \li Purpose
         \row
+        \row
+            \li void applicationAvailable()
+            \li Called right after the QApplication object was instantiated.
+                Use this function to setup everything that is not related
+                to QML directly.
             \li void qmlEngineAvailable(QQmlEngine*)
             \li Called when the QML engine is available.
                 Any \l {QQmlEngine::addImportPath}{import paths},
