@@ -2452,6 +2452,9 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
             ut->startAnimations();
     }
 
+    // In webOS we already have the alternative to the issue that this
+    // wanted to address and thus skipping this part won't break anything.
+#if !defined(Q_OS_WEBOS)
     // Once per frame, if any items are dirty, send a synthetic hover,
     // in case items have changed position, visibility, etc.
     // For instance, during animation (including the case of a ListView
@@ -2463,6 +2466,7 @@ void QQuickWindowPrivate::flushFrameSynchronousEvents()
         if (!delivered)
             clearHover(); // take care of any exits
     }
+#endif
 }
 
 QQuickPointerEvent *QQuickWindowPrivate::queryPointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType) const
