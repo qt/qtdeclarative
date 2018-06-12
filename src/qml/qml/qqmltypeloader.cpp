@@ -860,12 +860,22 @@ void QQmlTypeLoaderThread::loadWithCachedUnitAsync(QQmlDataBlob *b, const QV4::C
 void QQmlTypeLoaderThread::callCompleted(QQmlDataBlob *b)
 {
     b->addref();
+#ifdef QT_NO_THREAD
+    if (!isThisThread())
+        postMethodToThread(&This::callCompletedMain, b);
+    return;
+#endif
     postMethodToMain(&This::callCompletedMain, b);
 }
 
 void QQmlTypeLoaderThread::callDownloadProgressChanged(QQmlDataBlob *b, qreal p)
 {
     b->addref();
+#ifdef QT_NO_THREAD
+    if (!isThisThread())
+        postMethodToThread(&This::callDownloadProgressChangedMain, b, p);
+    return;
+#endif
     postMethodToMain(&This::callDownloadProgressChangedMain, b, p);
 }
 
