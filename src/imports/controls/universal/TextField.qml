@@ -77,6 +77,7 @@ T.TextField {
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
+        renderType: control.renderType
     }
 
     background: Rectangle {

@@ -72,8 +72,8 @@ T.TextField {
         color: control.Material.hintTextColor
         verticalAlignment: control.verticalAlignment
         elide: Text.ElideRight
+        renderType: control.renderType
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
-
     }
 
     background: Rectangle {
