@@ -64,6 +64,7 @@
 #include <QtGui/private/qdatabuffer_p.h>
 #include <private/qopenglcontext_p.h>
 #include <private/qdistancefield_p.h>
+#include <private/qintrusivelist_p.h>
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
@@ -404,7 +405,9 @@ public:
     virtual ~QSGDistanceFieldGlyphConsumer() {}
 
     virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
+    QIntrusiveListNode node;
 };
+typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphConsumer::node> QSGDistanceFieldGlyphConsumerList;
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
@@ -465,8 +468,8 @@ public:
 
     void update();
 
-    void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.append(node); }
-    void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.removeOne(node); }
+    void registerGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.insert(node); }
+    void unregisterGlyphNode(QSGDistanceFieldGlyphConsumer *node) { m_registeredNodes.remove(node); }
 
     virtual void registerOwnerElement(QQuickItem *ownerElement);
     virtual void unregisterOwnerElement(QQuickItem *ownerElement);
@@ -522,7 +525,7 @@ private:
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;
     QSet<glyph_t> m_populatingGlyphs;
-    QLinkedList<QSGDistanceFieldGlyphConsumer*> m_registeredNodes;
+    QSGDistanceFieldGlyphConsumerList m_registeredNodes;
 
     static Texture s_emptyTexture;
 };
