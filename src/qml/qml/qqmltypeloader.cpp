@@ -357,9 +357,8 @@ qreal QQmlDataBlob::progress() const
 
 /*!
 Returns the physical url of the data.  Initially this is the same as
-finalUrl(), but if a network redirect happens while fetching the data, this url
-is updated to reflect the new location. Also, if a URL interceptor is set, it
-will work on this URL and leave finalUrl() alone.
+finalUrl(), but if a URL interceptor is set, it will work on this URL
+and leave finalUrl() alone.
 
 \sa finalUrl()
 */
@@ -380,8 +379,12 @@ QString QQmlDataBlob::urlString() const
 Returns the logical URL to be used for resolving further URLs referred to in
 the code.
 
-This is the blob url passed to the constructor.  If a network redirect
-happens while fetching the data, this url remains the same.
+This is the blob url passed to the constructor. If a URL interceptor rewrites
+the URL, this one stays the same. If a network redirect happens while fetching
+the data, this url is updated to reflect the new location. Therefore, if both
+an interception and a redirection happen, the final url will indirectly
+incorporate the result of the interception, potentially breaking further
+lookups.
 
 \sa url()
 */
@@ -1195,15 +1198,15 @@ void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
         QVariant redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
         if (redirect.isValid()) {
             QUrl url = reply->url().resolved(redirect.toUrl());
-            blob->m_url = url;
-            blob->m_urlString.clear();
+            blob->m_finalUrl = url;
+            blob->m_finalUrlString.clear();
 
             QNetworkReply *reply = m_thread->networkAccessManager()->get(QNetworkRequest(url));
             QObject *nrp = m_thread->networkReplyProxy();
             QObject::connect(reply, SIGNAL(finished()), nrp, SLOT(finished()));
             m_networkReplies.insert(reply, blob);
 #ifdef DATABLOB_DEBUG
-            qWarning("QQmlDataBlob: redirected to %s", qPrintable(blob->urlString()));
+            qWarning("QQmlDataBlob: redirected to %s", qPrintable(blob->finalUrlString()));
 #endif
             return;
         }

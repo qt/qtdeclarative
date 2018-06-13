@@ -33,6 +33,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
+#include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
 
 class tst_QQMLTypeLoader : public QQmlDataTest
@@ -48,6 +49,7 @@ private slots:
     void keepSingleton();
     void keepRegistrations();
     void intercept();
+    void redirect();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -408,6 +410,22 @@ void tst_QQMLTypeLoader::intercept()
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/Fast.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/GenericView.qml"));
     QVERIFY(factory.loadedFiles.contains(QLatin1String(QT_TESTCASE_BUILDDIR) + "/Slow/qmldir"));
+}
+
+void tst_QQMLTypeLoader::redirect()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    QVERIFY(server.serveDirectory(dataDirectory()));
+    server.addRedirect("Base.qml", server.urlString("/redirected/Redirected.qml"));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(server.urlString("/Load.qml"), QQmlComponent::Asynchronous);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QObject *object = component.create();
+    QTRY_COMPARE(object->property("xy").toInt(), 323232);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
