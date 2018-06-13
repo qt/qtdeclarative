@@ -360,7 +360,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         stream << "    QHash<QString, const QQmlPrivate::CachedQmlUnit*> resourcePathToCachedUnit;\n";
         stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "};\n\n";
-        stream << "Q_GLOBAL_STATIC(Registry, unitRegistry);\n";
+        stream << "Q_GLOBAL_STATIC(Registry, unitRegistry)\n";
         stream << "\n\n";
 
         stream << "Registry::Registry() {\n";
@@ -410,7 +410,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
                 stream << "    Q_INIT_RESOURCE(" << qtResourceNameForFile(newResourceFile) << ");\n";
             stream << "    return 1;\n";
             stream << "}\n";
-            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << initFunction << "));\n";
+            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << initFunction << "))\n";
 
             const QString cleanupFunction = QLatin1String("qCleanupResources_") + suffix;
             stream << QStringLiteral("int QT_MANGLE_NAMESPACE(%1)() {\n").arg(cleanupFunction);
