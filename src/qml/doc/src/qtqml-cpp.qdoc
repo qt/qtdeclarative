@@ -34,16 +34,12 @@
 To include the definitions of the module's classes, use the
 following directive:
 
-\code
-#include <QtQml>
-\endcode
+\snippet code/doc_src_qtqml.cpp 0
 
 To link against the module, add this line to your \l qmake \c
 .pro file:
 
-\code
-QT += qml
-\endcode
+\snippet code/doc_src_qtqml.pro 0
 
 For more information on the Qt QML module, see the
 \l{Qt QML} module documentation.
