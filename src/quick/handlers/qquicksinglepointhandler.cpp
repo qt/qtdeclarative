@@ -79,16 +79,23 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         // It's expected to be an update or a release.
         // If we no longer want it, cancel the grab.
         int candidatePointCount = 0;
+        bool missing = true;
         QQuickEventPoint *point = nullptr;
         int c = event->pointCount();
         for (int i = 0; i < c; ++i) {
             QQuickEventPoint *p = event->point(i);
+            const bool found = (p->pointId() == m_pointInfo.m_id);
+            if (found)
+                missing = false;
             if (wantsEventPoint(p)) {
                 ++candidatePointCount;
-                if (p->pointId() == m_pointInfo.m_id)
+                if (found)
                     point = p;
             }
         }
+        if (missing)
+            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << m_pointInfo.m_id
+                << "is missing from current event, but was neither canceled nor released";
         if (point) {
             if (candidatePointCount == 1 || (candidatePointCount > 1 && m_ignoreAdditionalPoints)) {
                 point->setAccepted();
@@ -97,8 +104,6 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
                 point->cancelAllGrabs(this);
             }
         } else {
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << hex << m_pointInfo.m_id
-                << "is missing from current event, but was neither canceled nor released";
             return false;
         }
     } else {
