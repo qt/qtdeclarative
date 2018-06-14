@@ -877,6 +877,24 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallContextObjectProperty)
 
+    MOTH_BEGIN_INSTR(CallWithSpread)
+        STORE_IP();
+        acc = Runtime::method_callWithSpread(engine, STACK_VALUE(func), STACK_VALUE(thisObject), stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallWithSpread)
+
+    MOTH_BEGIN_INSTR(Construct)
+        STORE_IP();
+        acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(Construct)
+
+    MOTH_BEGIN_INSTR(ConstructWithSpread)
+        STORE_IP();
+        acc = Runtime::method_constructWithSpread(engine, STACK_VALUE(func), stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(ConstructWithSpread)
+
     MOTH_BEGIN_INSTR(SetUnwindHandler)
         frame.unwindHandler = offset ? code + offset : nullptr;
     MOTH_END_INSTR(SetUnwindHandler)
@@ -1061,12 +1079,6 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         acc = ACC.toObject(engine)->asReturnedValue();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ToObject)
-
-    MOTH_BEGIN_INSTR(Construct)
-        STORE_IP();
-        acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(Construct)
 
     MOTH_BEGIN_INSTR(Jump)
         code += offset;

@@ -99,9 +99,11 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, callElement, (ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)) \
     F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
     F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, Value *argv, int argc)) \
+    F(ReturnedValue, callWithSpread, (ExecutionEngine *engine, const Value &func, const Value &thisObject, Value *argv, int argc)) \
     \
     /* construct */ \
     F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
+    F(ReturnedValue, constructWithSpread, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
     \
     /* load & store */ \
     F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \

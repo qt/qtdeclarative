@@ -1256,12 +1256,80 @@ ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engi
     return fo->call(qmlContextValue, argv, argc);
 }
 
+struct CallArgs {
+    Value *argv;
+    int argc;
+};
+
+static CallArgs createSpreadArguments(Scope &scope, Value *argv, int argc)
+{
+    ScopedValue it(scope);
+    ScopedValue done(scope);
+
+    int argCount = 0;
+
+    Value *v = scope.alloc<Scope::Uninitialized>();
+    Value *arguments = v;
+    for (int i = 0; i < argc; ++i) {
+        if (!argv[i].isEmpty()) {
+            *v = argv[i];
+            ++argCount;
+            v = scope.alloc<Scope::Uninitialized>();
+            continue;
+        }
+        // spread element
+        ++i;
+        it = Runtime::method_getIterator(scope.engine, argv[i], /* ForInIterator */ 1);
+        if (scope.engine->hasException)
+            return { nullptr, 0 };
+        while (1) {
+            done = Runtime::method_iteratorNext(scope.engine, it, v);
+            if (scope.engine->hasException)
+                return { nullptr, 0 };
+            Q_ASSERT(done->isBoolean());
+            if (done->booleanValue())
+                break;
+            ++argCount;
+            v = scope.alloc<Scope::Uninitialized>();
+        }
+    }
+    return { arguments, argCount };
+}
+
+ReturnedValue Runtime::method_callWithSpread(ExecutionEngine *engine, const Value &function, const Value &thisObject, Value *argv, int argc)
+{
+    Q_ASSERT(argc >= 1);
+    if (!function.isFunctionObject())
+        return engine->throwTypeError();
+
+    Scope scope(engine);
+    CallArgs arguments = createSpreadArguments(scope, argv, argc);
+    if (engine->hasException)
+        return Encode::undefined();
+
+    return static_cast<const FunctionObject &>(function).call(&thisObject, arguments.argv, arguments.argc);
+}
+
 ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
 {
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
     return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc);
+}
+
+ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
+{
+    Q_UNIMPLEMENTED();
+    if (!function.isFunctionObject())
+        return engine->throwTypeError();
+
+    Scope scope(engine);
+    CallArgs arguments = createSpreadArguments(scope, argv, argc);
+    if (engine->hasException)
+        return Encode::undefined();
+
+    return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)

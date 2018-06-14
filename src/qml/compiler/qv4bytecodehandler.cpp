@@ -263,6 +263,15 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(CallContextObjectProperty)
         COLLECTOR_END_INSTR(CallContextObjectProperty)
 
+        COLLECTOR_BEGIN_INSTR(CallWithSpread)
+        COLLECTOR_END_INSTR(CallWithSpread)
+
+        COLLECTOR_BEGIN_INSTR(Construct)
+        COLLECTOR_END_INSTR(Construct)
+
+        COLLECTOR_BEGIN_INSTR(ConstructWithSpread)
+        COLLECTOR_END_INSTR(ConstructWithSpread)
+
         COLLECTOR_BEGIN_INSTR(SetUnwindHandler)
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(SetUnwindHandler)
@@ -354,9 +363,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(ToObject)
         COLLECTOR_END_INSTR(ToObject)
-
-        COLLECTOR_BEGIN_INSTR(Construct)
-        COLLECTOR_END_INSTR(Construct)
 
         COLLECTOR_BEGIN_INSTR(Jump)
             addLabel(code - start + offset);

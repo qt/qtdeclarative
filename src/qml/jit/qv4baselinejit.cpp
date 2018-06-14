@@ -532,6 +532,45 @@ void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int 
     as->checkException();
 }
 
+
+void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passRegAsArg(thisObject, 2);
+    as->passRegAsArg(func, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_callWithSpread, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+
+void BaselineJIT::generate_Construct(int func, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(4);
+    as->passInt32AsArg(argc, 3);
+    as->passRegAsArg(argv, 2);
+    as->passRegAsArg(func, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_construct, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(4);
+    as->passInt32AsArg(argc, 3);
+    as->passRegAsArg(argv, 2);
+    as->passRegAsArg(func, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_constructWithSpread, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_SetUnwindHandler(int offset)
 {
     if (offset)
@@ -839,18 +878,6 @@ void BaselineJIT::generate_ToObject()
     JIT_GENERATE_RUNTIME_CALL(ToObjectHelper, Assembler::ResultInAccumulator);
     as->checkException();
 
-}
-
-void BaselineJIT::generate_Construct(int func, int argc, int argv)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(4);
-    as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
-    as->passRegAsArg(func, 1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Runtime::method_construct, Assembler::ResultInAccumulator);
-    as->checkException();
 }
 
 void BaselineJIT::generate_Jump(int offset) { as->jump(instructionOffset() + offset); }

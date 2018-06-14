@@ -376,6 +376,18 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallContextObjectProperty)
 
+        MOTH_BEGIN_INSTR(CallWithSpread)
+            d << "new" << dumpRegister(func, nFormals) << dumpRegister(thisObject, nFormals) << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallWithSpread)
+
+        MOTH_BEGIN_INSTR(Construct)
+            d << "new" << dumpRegister(func, nFormals) << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(Construct)
+
+        MOTH_BEGIN_INSTR(ConstructWithSpread)
+            d << "new" << dumpRegister(func, nFormals) << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(ConstructWithSpread)
+
         MOTH_BEGIN_INSTR(SetUnwindHandler)
             if (offset)
                 d << ABSOLUTE_OFFSET();
@@ -485,10 +497,6 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
 
         MOTH_BEGIN_INSTR(ToObject)
         MOTH_END_INSTR(ToObject)
-
-        MOTH_BEGIN_INSTR(Construct)
-            d << "new" << dumpRegister(func, nFormals) << dumpArguments(argc, argv, nFormals);
-        MOTH_END_INSTR(Construct)
 
         MOTH_BEGIN_INSTR(Jump)
             d << ABSOLUTE_OFFSET();

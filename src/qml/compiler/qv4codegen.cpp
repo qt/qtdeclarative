@@ -1610,6 +1610,7 @@ bool Codegen::visit(CallExpression *ast)
     RegisterScope scope(this);
 
     Reference base = expression(ast->base);
+
     if (hasError)
         return false;
     switch (base.type) {
@@ -1626,9 +1627,35 @@ bool Codegen::visit(CallExpression *ast)
         break;
     }
 
+    int thisObject = bytecodeGenerator->newRegister();
+    int functionObject = bytecodeGenerator->newRegister();
+
     auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
+
+    if (calldata.hasSpread) {
+        Reference baseObject = base.baseObject();
+        if (!baseObject.isStackSlot()) {
+            baseObject.storeOnStack(thisObject);
+            baseObject = Reference::fromStackSlot(this, thisObject);
+        }
+        if (!base.isStackSlot()) {
+            base.storeOnStack(functionObject);
+            base = Reference::fromStackSlot(this, functionObject);
+        }
+
+        Instruction::CallWithSpread call;
+        call.func = base.stackSlot();
+        call.thisObject = baseObject.stackSlot();
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
+
+        _expr.setResult(Reference::fromAccumulator(this));
+        return false;
+
+    }
 
     handleCall(base, calldata);
     return false;
@@ -1707,36 +1734,41 @@ void Codegen::handleCall(Reference &base, Arguments calldata)
 
 Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
 {
+    bool hasSpread = false;
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
         if (it->isSpreadElement) {
-            throwSyntaxError(it->firstSourceLocation(), QLatin1String("'...' in argument lists is unimplemented."));
-            return { 0, 0 };
+            hasSpread = true;
+            ++argc;
         }
         ++argc;
     }
 
     if (!argc)
-        return { 0, 0 };
+        return { 0, 0, false };
 
     int calldata = bytecodeGenerator->newRegisterArray(argc);
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
+        if (it->isSpreadElement) {
+            Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
+            ++argc;
+        }
         RegisterScope scope(this);
         Reference e = expression(it->expression);
         if (hasError)
             break;
-        if (!argc && !it->next) {
+        if (!argc && !it->next && !hasSpread) {
             // avoid copy for functions taking a single argument
             if (e.isStackSlot())
-                return { 1, e.stackSlot() };
+                return { 1, e.stackSlot(), hasSpread };
         }
         (void) e.storeOnStack(calldata + argc);
         ++argc;
     }
 
-    return { argc, calldata };
+    return { argc, calldata, hasSpread };
 }
 
 Codegen::Arguments Codegen::pushTemplateArgs(TemplateLiteral *args)
@@ -1746,7 +1778,7 @@ Codegen::Arguments Codegen::pushTemplateArgs(TemplateLiteral *args)
         ++argc;
 
     if (!argc)
-        return { 0, 0 };
+        return { 0, 0, false };
 
     int calldata = bytecodeGenerator->newRegisterArray(argc);
 
@@ -1760,7 +1792,7 @@ Codegen::Arguments Codegen::pushTemplateArgs(TemplateLiteral *args)
         ++argc;
     }
 
-    return { argc, calldata };
+    return { argc, calldata, false };
 }
 
 bool Codegen::visit(ConditionalExpression *ast)
@@ -2096,11 +2128,19 @@ bool Codegen::visit(NewMemberExpression *ast)
     if (hasError)
         return false;
 
-    Instruction::Construct create;
-    create.func = base.stackSlot();
-    create.argc = calldata.argc;
-    create.argv = calldata.argv;
-    bytecodeGenerator->addInstruction(create);
+    if (calldata.hasSpread) {
+        Instruction::ConstructWithSpread create;
+        create.func = base.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    } else {
+        Instruction::Construct create;
+        create.func = base.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    }
     _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
@@ -3638,6 +3678,28 @@ Codegen::Reference Codegen::Reference::storeConsumeAccumulator() const
 {
     storeAccumulator(); // it doesn't matter what happens here, just do it.
     return Reference();
+}
+
+Codegen::Reference Codegen::Reference::baseObject() const
+{
+    if (type == Reference::QmlScopeObject || type == Reference::QmlContextObject) {
+        return Reference::fromStackSlot(codegen, qmlBase.stackSlot());
+    } else if (type == Reference::Member) {
+        RValue rval = propertyBase;
+        if (!rval.isValid())
+            return Reference::fromConst(codegen, Encode::undefined());
+        if (rval.isAccumulator())
+            return Reference::fromAccumulator(codegen);
+        if (rval.isStackSlot())
+            Reference::fromStackSlot(codegen, rval.stackSlot());
+        if (rval.isConst())
+            return Reference::fromConst(codegen, rval.constantValue());
+        Q_UNREACHABLE();
+    } else if (type == Reference::Subscript) {
+        return Reference::fromStackSlot(codegen, elementBase.stackSlot());
+    } else {
+        return Reference::fromConst(codegen, Encode::undefined());
+    }
 }
 
 Codegen::Reference Codegen::Reference::storeOnStack() const

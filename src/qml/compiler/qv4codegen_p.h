@@ -325,6 +325,8 @@ public:
         Q_REQUIRED_RESULT Reference storeRetainAccumulator() const;
         Reference storeConsumeAccumulator() const;
 
+        Q_REQUIRED_RESULT Reference baseObject() const;
+
         bool storeWipesAccumulator() const;
         void loadInAccumulator() const;
 
@@ -637,7 +639,7 @@ public:
 
     Reference binopHelper(QSOperator::Op oper, Reference &left, Reference &right);
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
-    struct Arguments { int argc; int argv; };
+    struct Arguments { int argc; int argv; bool hasSpread; };
     Arguments pushArgs(AST::ArgumentList *args);
     void handleCall(Reference &base, Arguments calldata);
 

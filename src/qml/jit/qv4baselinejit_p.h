@@ -126,6 +126,9 @@ public:
     void generate_CallGlobalLookup(int index, int argc, int argv) override;
     void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
+    void generate_CallWithSpread(int func, int thisObject, int argc, int argv) override;
+    void generate_Construct(int func, int argc, int argv) override;
+    void generate_ConstructWithSpread(int func, int argc, int argv) override;
     void generate_SetUnwindHandler(int offset) override;
     void generate_UnwindDispatch() override;
     void generate_UnwindToLabel(int level, int offset) override;
@@ -156,7 +159,6 @@ public:
     void generate_CreateRestParameter(int argIndex) override;
     void generate_ConvertThisToObject() override;
     void generate_ToObject() override;
-    void generate_Construct(int func, int argc, int argv) override;
     void generate_Jump(int offset) override;
     void generate_JumpTrue(int offset) override;
     void generate_JumpFalse(int offset) override;

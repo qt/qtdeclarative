@@ -109,6 +109,9 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
 #define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
+#define INSTR_CallWithSpread(op) INSTRUCTION(op, CallWithSpread, 4, func, thisObject, argc, argv)
+#define INSTR_Construct(op) INSTRUCTION(op, Construct, 3, func, argc, argv)
+#define INSTR_ConstructWithSpread(op) INSTRUCTION(op, ConstructWithSpread, 3, func, argc, argv)
 #define INSTR_SetUnwindHandler(op) INSTRUCTION(op, SetUnwindHandler, 1, offset)
 #define INSTR_UnwindDispatch(op) INSTRUCTION(op, UnwindDispatch, 0)
 #define INSTR_UnwindToLabel(op) INSTRUCTION(op, UnwindToLabel, 2, level, offset)
@@ -139,7 +142,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CreateRestParameter(op) INSTRUCTION(op, CreateRestParameter, 1, argIndex)
 #define INSTR_ConvertThisToObject(op) INSTRUCTION(op, ConvertThisToObject, 0)
 #define INSTR_ToObject(op) INSTRUCTION(op, ToObject, 0)
-#define INSTR_Construct(op) INSTRUCTION(op, Construct, 3, func, argc, argv)
 #define INSTR_Jump(op) INSTRUCTION(op, Jump, 1, offset)
 #define INSTR_JumpTrue(op) INSTRUCTION(op, JumpTrue, 1, offset)
 #define INSTR_JumpFalse(op) INSTRUCTION(op, JumpFalse, 1, offset)
@@ -235,6 +237,9 @@ QT_BEGIN_NAMESPACE
     F(CallGlobalLookup) \
     F(CallScopeObjectProperty) \
     F(CallContextObjectProperty) \
+    F(CallWithSpread) \
+    F(Construct) \
+    F(ConstructWithSpread) \
     F(SetUnwindHandler) \
     F(UnwindDispatch) \
     F(UnwindToLabel) \
@@ -265,7 +270,6 @@ QT_BEGIN_NAMESPACE
     F(CreateRestParameter) \
     F(ConvertThisToObject) \
     F(ToObject) \
-    F(Construct) \
     F(Jump) \
     F(JumpTrue) \
     F(JumpFalse) \
