@@ -1355,7 +1355,10 @@ void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *bindingFunction)
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 {
     QV4::CppStackFrame *frame = engine()->currentStackFrame;
-    return QQmlSourceLocation(frame->source(), frame->lineNumber(), 0);
+    if (frame->v4Function) // synchronous loading:
+        return QQmlSourceLocation(frame->source(), frame->lineNumber(), 0);
+    else // async loading:
+        return bindingFunction()->function->sourceLocation();
 }
 
 DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
