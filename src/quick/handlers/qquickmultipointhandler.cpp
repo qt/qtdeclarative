@@ -81,7 +81,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         return true;
 #endif
 
-    if (sameAsCurrentPoints(event))
+    if (hasCurrentPoints(event))
         return true;
 
     const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
@@ -199,11 +199,11 @@ void QQuickMultiPointHandler::setPointDistanceThreshold(qreal pointDistanceThres
     emit pointDistanceThresholdChanged();
 }
 
-bool QQuickMultiPointHandler::sameAsCurrentPoints(QQuickPointerEvent *event)
+bool QQuickMultiPointHandler::hasCurrentPoints(QQuickPointerEvent *event)
 {
     bool ret = true;
     int c = event->pointCount();
-    if (c != m_currentPoints.size())
+    if (c < m_currentPoints.size())
         return false;
     // TODO optimize: either ensure the points are sorted,
     // or use std::equal with a predicate

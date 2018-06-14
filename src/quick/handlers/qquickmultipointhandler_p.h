@@ -98,7 +98,7 @@ protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
     void onActiveChanged() override;
-    bool sameAsCurrentPoints(QQuickPointerEvent *event);
+    bool hasCurrentPoints(QQuickPointerEvent *event);
     QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
     qreal averageTouchPointDistance(const QPointF &ref);
     qreal averageStartingDistance(const QPointF &ref);
