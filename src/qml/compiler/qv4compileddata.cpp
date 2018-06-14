@@ -78,23 +78,6 @@ namespace CompiledData {
 
 static_assert(sizeof(Unit::libraryVersionHash) >= QML_COMPILE_HASH_LENGTH + 1, "Compile hash length exceeds reserved size in data structure. Please adjust and bump the format version");
 
-#if !defined(V4_BOOTSTRAP)
-static QString cacheFilePath(const QUrl &url)
-{
-    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
-    const QString localCachePath = localSourcePath + QLatin1Char('c');
-#ifndef Q_OS_ANDROID
-    if (QFile::exists(localCachePath) || QFileInfo(QFileInfo(localSourcePath).dir().absolutePath()).isWritable())
-        return localCachePath;
-#endif
-    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
-    fileNameHash.addData(localSourcePath.toUtf8());
-    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
-    QDir::root().mkpath(directory);
-    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + QFileInfo(localCachePath).completeSuffix();
-}
-#endif
-
 CompilationUnit::CompilationUnit(const Unit *unitData)
 {
     data = unitData;
@@ -107,6 +90,17 @@ CompilationUnit::~CompilationUnit()
     if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
         free(const_cast<Unit *>(data));
     data = nullptr;
+}
+
+QString CompilationUnit::localCacheFilePath(const QUrl &url)
+{
+    const QString localSourcePath = QQmlFile::urlToLocalFileOrQrc(url);
+    const QString cacheFileSuffix = QFileInfo(localSourcePath + QLatin1Char('c')).completeSuffix();
+    QCryptographicHash fileNameHash(QCryptographicHash::Sha1);
+    fileNameHash.addData(localSourcePath.toUtf8());
+    QString directory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/qmlcache/");
+    QDir::root().mkpath(directory);
+    return directory + QString::fromUtf8(fileNameHash.result().toHex()) + QLatin1Char('.') + cacheFileSuffix;
 }
 
 QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
@@ -361,7 +355,11 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeS
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(cacheFilePath(url), sourceTimeStamp, errorString);
+    QString cachePath = sourcePath + QLatin1Char('c');
+    if (!QFile::exists(cachePath))
+        cachePath = localCacheFilePath(url);
+
+    CompiledData::Unit *mappedUnit = cacheFile->open(cachePath, sourceTimeStamp, errorString);
     if (!mappedUnit)
         return false;
 
@@ -423,7 +421,7 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
-    const QString outputFileName = cacheFilePath(unitUrl);
+    const QString outputFileName = localCacheFilePath(unitUrl);
 #endif
 
 #if QT_CONFIG(temporaryfile)

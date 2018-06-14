@@ -1055,6 +1055,8 @@ public:
 
     bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
 
+    static QString localCacheFilePath(const QUrl &url);
+
 protected:
     void linkBackendToEngine(QV4::ExecutionEngine *engine);
 #endif // V4_BOOTSTRAP
