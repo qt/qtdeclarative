@@ -525,6 +525,8 @@ protected:
     void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
     void destructurePattern(AST::Pattern *p, const Reference &rhs);
 
+    Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);
+
     // Hook provided to implement QML lookup semantics
     virtual Reference fallbackNameLookup(const QString &name);
     virtual void beginFunctionBodyHook() {}

@@ -341,6 +341,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = ic->addMember(id_length()->identifier(), Attr_ReadOnly_ButConfigurable, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
     classes[Class_ScriptFunction] = ic->d();
+    ic = ic->changeVTable(ConstructorFunction::staticVTable());
+    classes[Class_ConstructorFunction] = ic->d();
     ic = ic->changeVTable(GeneratorFunction::staticVTable());
     classes[Class_GeneratorFunction] = ic->d();
     classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->identifier(), Attr_NotEnumerable, &index);

@@ -121,6 +121,9 @@ protected:
     bool visit(AST::FunctionDeclaration *ast) override;
     void endVisit(AST::FunctionDeclaration *) override;
 
+    bool visit(AST::ClassExpression *ast) override;
+    void endVisit(AST::ClassExpression *) override;
+
     bool visit(AST::DoWhileStatement *ast) override;
     bool visit(AST::ForStatement *ast) override;
     void endVisit(AST::ForStatement *) override;

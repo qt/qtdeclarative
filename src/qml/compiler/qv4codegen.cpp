@@ -545,6 +545,23 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
     }
 }
 
+Codegen::Reference Codegen::referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name)
+{
+    AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(name);
+    Reference property;
+    if (cname) {
+        Reference computedName = expression(cname->expression);
+        if (hasError)
+            return Reference();
+        computedName = computedName.storeOnStack();
+        property = Reference::fromSubscript(object, computedName).asLValue();
+    } else {
+        QString propertyName = name->asString();
+        property = Reference::fromMember(object, propertyName);
+    }
+    return property;
+}
+
 void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternPropertyList *bindingList)
 {
     RegisterScope scope(this);
@@ -552,18 +569,9 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
     for (PatternPropertyList *it = bindingList; it; it = it->next) {
         PatternProperty *p = it->property;
         RegisterScope scope(this);
-        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
-        Reference property;
-        if (cname) {
-            Reference computedName = expression(cname->expression);
-            if (hasError)
-                return;
-            computedName = computedName.storeOnStack();
-            property = Reference::fromSubscript(object, computedName).asLValue();
-        } else {
-            QString propertyName = p->name->asString();
-            property = Reference::fromMember(object, propertyName);
-        }
+        Reference property = referenceForPropertyName(object, p->name);
+        if (hasError)
+            return;
         initializeAndDestructureBindingElement(p, property);
         if (hasError)
             return;
@@ -812,7 +820,100 @@ bool Codegen::visit(VariableDeclarationList *)
 
 bool Codegen::visit(ClassExpression *ast)
 {
-    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Support for 'class' is unimplemented."));
+    Compiler::Class jsClass;
+    jsClass.name = ast->name.toString();
+    registerString(jsClass.name);
+
+    Reference outerVar = referenceForName(ast->name.toString(), true);
+
+    ClassElementList *constructor = nullptr;
+    int nComputedNames = 0;
+    int nStaticComputedNames = 0;
+
+    RegisterScope scope(this);
+    ControlFlowBlock controlFlow(this, ast);
+
+    for (auto *member = ast->elements; member; member = member->next) {
+        PatternProperty *p = member->property;
+        FunctionExpression *f = p->initializer->asFunctionDefinition();
+        Q_ASSERT(f);
+        AST::ComputedPropertyName *cname = AST::cast<ComputedPropertyName *>(p->name);
+        if (cname) {
+            ++nComputedNames;
+            if (member->isStatic)
+                ++nStaticComputedNames;
+        }
+        QString name = p->name->asString();
+        Compiler::Class::Method::Type type = Compiler::Class::Method::Regular;
+        if (p->type == PatternProperty::Getter)
+            type = Compiler::Class::Method::Getter;
+        else if (p->type == PatternProperty::Setter)
+            type = Compiler::Class::Method::Setter;
+        Compiler::Class::Method m{ name, type, defineFunction(name, f, f->formals, f->body)};
+
+        if (!member->isStatic && name == QStringLiteral("constructor")) {
+            if (constructor) {
+                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a multiple constructors in a class."));
+                return false;
+            }
+            if (m.type != Compiler::Class::Method::Regular) {
+                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a getter or setter named 'constructor'."));
+                return false;
+            }
+            constructor = member;
+            jsClass.constructorIndex = m.functionIndex;
+            continue;
+        }
+
+        if (member->isStatic)
+            jsClass.staticMethods << m;
+        else
+            jsClass.methods << m;
+    }
+
+    int classIndex = _module->classes.size();
+    _module->classes.append(jsClass);
+
+    Reference heritage = Reference::fromStackSlot(this);
+    if (ast->heritage) {
+        bytecodeGenerator->setLocation(ast->heritage->firstSourceLocation());
+        Reference r = expression(ast->heritage);
+        if (hasError)
+            return false;
+        r.storeOnStack(heritage.stackSlot());
+    } else {
+        Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).loadInAccumulator();
+        heritage.storeConsumeAccumulator();
+    }
+
+    int computedNames = nComputedNames ? bytecodeGenerator->newRegisterArray(nComputedNames) : 0;
+    int currentStaticName = computedNames;
+    int currentNonStaticName = computedNames + nStaticComputedNames;
+
+    for (auto *member = ast->elements; member; member = member->next) {
+        AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(member->property->name);
+        if (!cname)
+            continue;
+        RegisterScope scope(this);
+        bytecodeGenerator->setLocation(cname->firstSourceLocation());
+        Reference computedName = expression(cname->expression);
+        if (hasError)
+            return false;
+        computedName.storeOnStack(member->isStatic ? currentStaticName++ : currentNonStaticName++);
+    }
+
+    Instruction::CreateClass createClass;
+    createClass.classIndex = classIndex;
+    createClass.heritage = heritage.stackSlot();
+    createClass.computedNames = computedNames;
+
+    bytecodeGenerator->addInstruction(createClass);
+
+    Reference ctor = referenceForName(ast->name.toString(), true);
+    (void) ctor.storeRetainAccumulator();
+    (void) outerVar.storeRetainAccumulator();
+
+    _expr.setResult(Reference::fromAccumulator(this));
     return false;
 }
 

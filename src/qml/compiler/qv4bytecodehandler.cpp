@@ -349,6 +349,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(DefineObjectLiteral)
         COLLECTOR_END_INSTR(DefineObjectLiteral)
 
+        COLLECTOR_BEGIN_INSTR(CreateClass)
+        COLLECTOR_END_INSTR(CreateClass)
+
         COLLECTOR_BEGIN_INSTR(CreateMappedArgumentsObject)
         COLLECTOR_END_INSTR(CreateMappedArgumentsObject)
 

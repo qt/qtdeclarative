@@ -105,6 +105,7 @@ struct Q_QML_EXPORT EngineBase {
         Class_StringObject,
         Class_SymbolObject,
         Class_ScriptFunction,
+        Class_ConstructorFunction,
         Class_ObjectProto,
         Class_RegExp,
         Class_RegExpObject,

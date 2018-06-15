@@ -179,6 +179,11 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
+Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function)
+{
+    return scope->engine()->memoryManager->allocate<ConstructorFunction>(scope, function);
+}
+
 Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount)
 {
     Scope scope(engine);
@@ -488,6 +493,13 @@ Heap::InternalClass *ScriptFunction::classForConstructor() const
     d()->cachedClassForConstructor.set(scope.engine, ic->d());
 
     return ic->d();
+}
+
+DEFINE_OBJECT_VTABLE(ConstructorFunction);
+
+ReturnedValue ConstructorFunction::call(const FunctionObject *f, const Value *, const Value *, int)
+{
+    return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
 }
 
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);

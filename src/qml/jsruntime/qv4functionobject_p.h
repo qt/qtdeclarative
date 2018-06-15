@@ -120,6 +120,10 @@ DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
     void init(QV4::ExecutionContext *scope, Function *function);
 };
 
+struct ConstructorFunction : ScriptFunction
+{
+};
+
 #define BoundFunctionMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, target) \
     Member(class, HeapValue, HeapValue, boundThis) \
@@ -165,6 +169,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
@@ -232,6 +237,11 @@ struct ScriptFunction : FunctionObject {
     Heap::InternalClass *classForConstructor() const;
 };
 
+struct ConstructorFunction : ScriptFunction {
+    V4_OBJECT2(ConstructorFunction, ScriptFunction)
+    V4_INTERNALCLASS(ConstructorFunction)
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
 
 struct BoundFunction: FunctionObject {
     V4_OBJECT2(BoundFunction, FunctionObject)

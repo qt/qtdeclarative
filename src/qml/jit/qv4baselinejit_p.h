@@ -154,6 +154,7 @@ public:
     void generate_DeclareVar(int varName, int isDeletable) override;
     void generate_DefineArray(int argc, int args) override;
     void generate_DefineObjectLiteral(int internalClassId, int argc, int args) override;
+    void generate_CreateClass(int classIndex, int heritage, int computedNames) override;
     void generate_CreateMappedArgumentsObject() override;
     void generate_CreateUnmappedArgumentsObject() override;
     void generate_CreateRestParameter(int argIndex) override;

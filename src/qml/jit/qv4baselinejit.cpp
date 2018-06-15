@@ -817,6 +817,17 @@ void BaselineJIT::generate_DefineObjectLiteral(int internalClassId, int argc, in
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_objectLiteral, Assembler::ResultInAccumulator);
 }
+
+void BaselineJIT::generate_CreateClass(int classIndex, int heritage, int computedNames)
+{
+    as->prepareCallWithArgCount(4);
+    as->passRegAsArg(computedNames, 3);
+    as->passRegAsArg(heritage, 2);
+    as->passInt32AsArg(classIndex, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_createClass, Assembler::ResultInAccumulator);
+}
+
 void BaselineJIT::generate_CreateMappedArgumentsObject()
 {
     as->prepareCallWithArgCount(1);

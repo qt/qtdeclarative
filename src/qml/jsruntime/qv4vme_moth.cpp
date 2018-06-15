@@ -964,6 +964,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
         acc = Runtime::method_objectLiteral(engine, internalClassId, argc, arguments);
     MOTH_END_INSTR(DefineObjectLiteral)
 
+    MOTH_BEGIN_INSTR(CreateClass)
+        acc = Runtime::method_createClass(engine, classIndex, STACK_VALUE(heritage), stack + computedNames);
+    MOTH_END_INSTR(CreateClass)
+
     MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
         acc = Runtime::method_createMappedArgumentsObject(engine);
     MOTH_END_INSTR(CreateMappedArgumentsObject)

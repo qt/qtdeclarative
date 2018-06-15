@@ -224,6 +224,24 @@ bool ScanFunctions::visit(FunctionExpression *ast)
     return enterFunction(ast, /*enterName*/ false);
 }
 
+bool ScanFunctions::visit(ClassExpression *ast)
+{
+    if (!ast->name.isEmpty())
+        _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
+
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%Class"));
+    _context->isStrict = true;
+    _context->hasNestedFunctions = true;
+    if (!ast->name.isEmpty())
+        _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
+    return true;
+}
+
+void ScanFunctions::endVisit(ClassExpression *)
+{
+    leaveEnvironment();
+}
+
 bool ScanFunctions::visit(TemplateLiteral *ast)
 {
     while (ast) {
@@ -590,12 +608,12 @@ void ScanFunctions::calcEscapingVariables()
     if (showEscapingVars) {
         qDebug() << "==== escaping variables ====";
         for (Context *c : qAsConst(m->contextMap)) {
-            qDebug() << "Context" << c << c->name << "requiresExecutionContext" << c->requiresExecutionContext;
+            qDebug() << "Context" << c << c->name << "requiresExecutionContext" << c->requiresExecutionContext << "isStrict" << c->isStrict;
             qDebug() << "    parent:" << c->parent;
             if (c->argumentsCanEscape)
                 qDebug() << "    Arguments escape";
             for (auto it = c->members.constBegin(); it != c->members.constEnd(); ++it) {
-                qDebug() << "    " << it.key() << it.value().canEscape << "isLexicallyScoped:" << it.value().isLexicallyScoped();
+                qDebug() << "    " << it.key() << it.value().index << it.value().canEscape << "isLexicallyScoped:" << it.value().isLexicallyScoped();
             }
         }
     }

@@ -482,6 +482,12 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
               << ", " << dumpRegister(args, nFormals);
         MOTH_END_INSTR(DefineObjectLiteral)
 
+        MOTH_BEGIN_INSTR(CreateClass)
+            d << classIndex
+              << ", " << dumpRegister(heritage, nFormals)
+              << ", " << dumpRegister(computedNames, nFormals);
+        MOTH_END_INSTR(CreateClass)
+
         MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
         MOTH_END_INSTR(CreateMappedArgumentsObject)
 

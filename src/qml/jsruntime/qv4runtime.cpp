@@ -1482,6 +1482,67 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
     return o.asReturnedValue();
 }
 
+ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classIndex, const Value &heritage, const Value *computedNames)
+{
+    const CompiledData::CompilationUnit *unit = engine->currentStackFrame->v4Function->compilationUnit;
+    const QV4::CompiledData::Class *cls = unit->data->classAt(classIndex);
+
+    if (!heritage.isEmpty()) {
+        // ####
+        return engine->throwTypeError(QStringLiteral("classes with heritage not yet supported."));
+    }
+
+    Scope scope(engine);
+    ScopedString name(scope, unit->runtimeStrings[cls->nameIndex]);
+    // ### fix heritage
+    ScopedObject protoParent(scope, engine->objectPrototype());
+    ScopedObject constructorParent(scope, engine->functionPrototype());
+
+    ScopedObject proto(scope, engine->newObject());
+    proto->setPrototypeUnchecked(protoParent);
+    ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
+
+    ScopedFunctionObject constructor(scope);
+    if (cls->constructorFunction != UINT_MAX) {
+        QV4::Function *f = unit->runtimeFunctions[cls->constructorFunction];
+        Q_ASSERT(f);
+        constructor = FunctionObject::createConstructorFunction(current, f)->asReturnedValue();
+    } else {
+        // ####
+        return engine->throwTypeError(QStringLiteral("default constructor not implemented"));
+    }
+    constructor->setPrototypeUnchecked(constructorParent);
+    constructor->defineDefaultProperty(engine->id_prototype(), proto);
+    proto->defineDefaultProperty(engine->id_constructor(), constructor);
+
+
+    ScopedFunctionObject function(scope);
+    for (uint i = 0; i < cls->nStaticMethods; ++i) {
+        name = unit->runtimeStrings[cls->nameTable()[i]];
+        QV4::Function *f = unit->runtimeFunctions[cls->methodTable()[i]];
+        Q_ASSERT(f);
+        function = FunctionObject::createScriptFunction(current, f)->asReturnedValue();
+        constructor->defineDefaultProperty(name, function);
+    }
+
+    for (uint i = 0; i < cls->nMethods; ++i) {
+        name = unit->runtimeStrings[cls->nameTable()[i + cls->nStaticMethods]];
+        name->makeIdentifier();
+        if (name->identifier() == engine->id_empty()->identifier()) {
+            name = computedNames->toPropertyKey(engine);
+            if (engine->hasException)
+                return Encode::undefined();
+            ++computedNames;
+        }
+        QV4::Function *f = unit->runtimeFunctions[cls->methodTable()[i + cls->nStaticMethods]];
+        Q_ASSERT(f);
+        function = FunctionObject::createScriptFunction(current, f)->asReturnedValue();
+        proto->defineDefaultProperty(name, function);
+    }
+
+    return constructor->asReturnedValue();
+}
+
 QV4::ReturnedValue Runtime::method_createMappedArgumentsObject(ExecutionEngine *engine)
 {
     Q_ASSERT(engine->currentContext()->d()->type == Heap::ExecutionContext::Type_CallContext);

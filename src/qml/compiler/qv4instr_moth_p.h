@@ -137,6 +137,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_DeclareVar(op) INSTRUCTION(op, DeclareVar, 2, varName, isDeletable)
 #define INSTR_DefineArray(op) INSTRUCTION(op, DefineArray, 2, argc, args)
 #define INSTR_DefineObjectLiteral(op) INSTRUCTION(op, DefineObjectLiteral, 3, internalClassId, argc, args)
+#define INSTR_CreateClass(op) INSTRUCTION(op, CreateClass, 3, classIndex, heritage, computedNames)
 #define INSTR_CreateMappedArgumentsObject(op) INSTRUCTION(op, CreateMappedArgumentsObject, 0)
 #define INSTR_CreateUnmappedArgumentsObject(op) INSTRUCTION(op, CreateUnmappedArgumentsObject, 0)
 #define INSTR_CreateRestParameter(op) INSTRUCTION(op, CreateRestParameter, 1, argIndex)
@@ -265,6 +266,7 @@ QT_BEGIN_NAMESPACE
     F(DeclareVar) \
     F(DefineArray) \
     F(DefineObjectLiteral) \
+    F(CreateClass) \
     F(CreateMappedArgumentsObject) \
     F(CreateUnmappedArgumentsObject) \
     F(CreateRestParameter) \

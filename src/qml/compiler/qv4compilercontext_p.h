@@ -79,6 +79,24 @@ enum class ContextType {
 
 struct Context;
 
+struct Class {
+    struct Method {
+        enum Type {
+            Regular,
+            Getter,
+            Setter
+        };
+        QString name;
+        Type type;
+        int functionIndex;
+    };
+
+    QString name;
+    int constructorIndex = -1;
+    QVector<Method> staticMethods;
+    QVector<Method> methods;
+};
+
 struct Module {
     Module(bool debugMode)
         : debugMode(debugMode)
@@ -92,6 +110,7 @@ struct Module {
     QHash<QQmlJS::AST::Node *, Context *> contextMap;
     QList<Context *> functions;
     QList<Context *> blocks;
+    QVector<Class> classes;
     Context *rootContext;
     QString fileName;
     QString finalUrl;

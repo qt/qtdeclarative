@@ -227,34 +227,41 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(c->locals.at(i));
     }
 
-    Q_ALLOCA_VAR(quint32_le, blockAndFunctionOffsets, (module->functions.size() + module->blocks.size()) * sizeof(quint32_le));
+    Q_ALLOCA_VAR(quint32_le, blockClassAndFunctionOffsets, (module->functions.size() + module->classes.size() + module->blocks.size()) * sizeof(quint32_le));
     uint jsClassDataOffset = 0;
 
     char *dataPtr;
     CompiledData::Unit *unit;
     {
-        QV4::CompiledData::Unit tempHeader = generateHeader(option, blockAndFunctionOffsets, &jsClassDataOffset);
+        QV4::CompiledData::Unit tempHeader = generateHeader(option, blockClassAndFunctionOffsets, &jsClassDataOffset);
         dataPtr = reinterpret_cast<char *>(malloc(tempHeader.unitSize));
         memset(dataPtr, 0, tempHeader.unitSize);
         memcpy(&unit, &dataPtr, sizeof(CompiledData::Unit*));
         memcpy(unit, &tempHeader, sizeof(tempHeader));
     }
 
-    memcpy(dataPtr + unit->offsetToFunctionTable, blockAndFunctionOffsets, unit->functionTableSize * sizeof(quint32_le));
-    memcpy(dataPtr + unit->offsetToBlockTable, blockAndFunctionOffsets + unit->functionTableSize, unit->blockTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToFunctionTable, blockClassAndFunctionOffsets, unit->functionTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToClassTable, blockClassAndFunctionOffsets + unit->functionTableSize, unit->classTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToBlockTable, blockClassAndFunctionOffsets + unit->functionTableSize + unit->classTableSize, unit->blockTableSize * sizeof(quint32_le));
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *function = module->functions.at(i);
         if (function == module->rootContext)
             unit->indexOfRootFunction = i;
 
-        writeFunction(dataPtr + blockAndFunctionOffsets[i], function);
+        writeFunction(dataPtr + blockClassAndFunctionOffsets[i], function);
+    }
+
+    for (int i = 0; i < module->classes.size(); ++i) {
+        const Class &c = module->classes.at(i);
+
+        writeClass(dataPtr + blockClassAndFunctionOffsets[i + module->functions.size()], c);
     }
 
     for (int i = 0; i < module->blocks.size(); ++i) {
         Context *block = module->blocks.at(i);
 
-        writeBlock(dataPtr + blockAndFunctionOffsets[i + module->functions.size()], block);
+        writeBlock(dataPtr + blockClassAndFunctionOffsets[i + module->classes.size() + module->functions.size()], block);
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
@@ -389,6 +396,45 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     memcpy(f + function->codeOffset, irFunction->code.constData(), irFunction->code.size());
 }
 
+void QV4::Compiler::JSUnitGenerator::writeClass(char *b, const QV4::Compiler::Class &c)
+{
+    QV4::CompiledData::Class *cls = reinterpret_cast<QV4::CompiledData::Class *>(b);
+
+    quint32 currentOffset = sizeof(QV4::CompiledData::Class);
+
+    QVector<Class::Method> allMethods = c.staticMethods;
+    allMethods += c.methods;
+
+    cls->constructorFunction = c.constructorIndex;
+    cls->nameIndex = getStringId(c.name);
+    cls->nMethods = c.methods.size();
+    cls->nStaticMethods = c.staticMethods.size();
+    cls->nameTableOffset = currentOffset;
+    quint32_le *names = reinterpret_cast<quint32_le *>(b + currentOffset);
+    currentOffset += allMethods.size() * sizeof(quint32);
+    cls->methodTableOffset = currentOffset;
+    quint32_le *methods = reinterpret_cast<quint32_le *>(b + currentOffset);
+    currentOffset += cls->nMethods * sizeof(quint32);
+
+    // write methods
+    for (int i = 0; i < allMethods.size(); ++i) {
+        names[i] = getStringId(allMethods.at(i).name);
+        methods[i] = allMethods.at(i).functionIndex;
+        // ### fix getter and setter methods
+    }
+
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+    if (showCode) {
+        qDebug() << "=== Class " << stringForIndex(cls->nameIndex) << "static methods" << cls->nStaticMethods << "methods" << cls->nMethods;
+        qDebug() << "    constructor:" << cls->constructorFunction;
+        for (uint i = 0; i < cls->nStaticMethods; ++i)
+            qDebug() << "    " << i << ": static" << stringForIndex(cls->nameTable()[i]);
+        for (uint i = 0; i < cls->nMethods; ++i)
+            qDebug() << "    " << i << ": " << stringForIndex(cls->nameTable()[cls->nStaticMethods + i]);
+        qDebug();
+    }
+}
+
 void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context *irBlock) const
 {
     QV4::CompiledData::Block *block = reinterpret_cast<QV4::CompiledData::Block *>(b);
@@ -433,6 +479,10 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.offsetToFunctionTable = nextOffset;
     nextOffset += unit.functionTableSize * sizeof(uint);
 
+    unit.classTableSize = module->classes.size();
+    unit.offsetToClassTable = nextOffset;
+    nextOffset += unit.classTableSize * sizeof(uint);
+
     unit.blockTableSize = module->blocks.size();
     unit.offsetToBlockTable = nextOffset;
     nextOffset += unit.blockTableSize * sizeof(uint);
@@ -471,6 +521,14 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
                                                                  qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
     }
     blockAndFunctionOffsets += module->functions.size();
+
+    for (int i = 0; i < module->classes.size(); ++i) {
+        const Class &c = module->classes.at(i);
+        blockAndFunctionOffsets[i] = nextOffset;
+
+        nextOffset += QV4::CompiledData::Class::calculateSize(c.staticMethods.size(), c.methods.size());
+    }
+    blockAndFunctionOffsets += module->classes.size();
 
     for (int i = 0; i < module->blocks.size(); ++i) {
         Context *c = module->blocks.at(i);
