@@ -914,7 +914,7 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         qreal tempPosition = isContentFlowReversed() ? -position()-size() : position();
         if (snapMode == QQuickGridView::SnapOneRow && moveReason == Mouse) {
             // if we've been dragged < rowSize()/2 then bias towards the next row
-            qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+            qreal dist = data.move.value() - data.pressPos;
             qreal bias = 0;
             if (data.velocity > 0 && dist > QML_FLICK_SNAPONETHRESHOLD && dist < rowSize()/2)
                 bias = rowSize()/2;
@@ -1013,7 +1013,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (data.move.value() < minExtent) {
             if (snapMode == QQuickGridView::SnapOneRow) {
                 // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal dist = data.move.value() - data.pressPos;
                 qreal bias = dist < rowSize()/2 ? rowSize()/2 : 0;
                 if (isContentFlowReversed())
                     bias = -bias;
@@ -1030,7 +1030,7 @@ bool QQuickGridViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (data.move.value() > maxExtent) {
             if (snapMode == QQuickGridView::SnapOneRow) {
                 // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal dist = data.move.value() - data.pressPos;
                 qreal bias = -dist < rowSize()/2 ? rowSize()/2 : 0;
                 if (isContentFlowReversed())
                     bias = -bias;

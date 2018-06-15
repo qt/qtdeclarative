@@ -5514,38 +5514,45 @@ void tst_QQuickListView::snapOneItem_data()
     QTest::addColumn<qreal>("snapAlignment");
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
+    QTest::addColumn<qreal>("flickSlowdown");
 
     QTest::newRow("vertical, top to bottom")
         << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 560.0 << 0.0 << 1.0;
 
     QTest::newRow("vertical, bottom to top")
         << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -560.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -560.0 - 240.0 << -240.0 << 1.0;
 
     QTest::newRow("horizontal, left to right")
         << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 560.0 << 0.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 560.0 << 0.0 << 1.0;
 
     QTest::newRow("horizontal, right to left")
         << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -560.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -560.0 - 240.0 << -240.0 << 1.0;
 
     QTest::newRow("vertical, top to bottom, enforce range")
         << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
+        << QPoint(20, 200) << QPoint(20, 20) << 180.0 << 580.0 << -20.0 << 1.0;
 
     QTest::newRow("vertical, bottom to top, enforce range")
         << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -580.0 - 240.0 << -220.0;
+        << QPoint(20, 20) << QPoint(20, 200) << -420.0 << -580.0 - 240.0 << -220.0 << 1.0;
 
     QTest::newRow("horizontal, left to right, enforce range")
         << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 580.0 << -20.0;
+        << QPoint(200, 20) << QPoint(20, 20) << 180.0 << 580.0 << -20.0 << 1.0;
 
     QTest::newRow("horizontal, right to left, enforce range")
         << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -580.0 - 240.0 << -220.0;
+        << QPoint(20, 20) << QPoint(200, 20) << -420.0 << -580.0 - 240.0 << -220.0 << 1.0;
+
+    // Using e.g. 120 rather than 95 always went to the next item.
+    // Ensure this further movement has the same behavior
+    QTest::newRow("vertical, top to bottom, no more blindspot")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 200) << QPoint(20, 95) << 180.0 << 560.0 << 0.0 << 6.0;
 }
 
 void tst_QQuickListView::snapOneItem()
@@ -5559,6 +5566,9 @@ void tst_QQuickListView::snapOneItem()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+    QFETCH(qreal, flickSlowdown);
+
+    qreal flickDuration = 180 * flickSlowdown;
 
     QQuickView *window = getView();
     QQuickViewTestUtil::moveMouseAway(window);
@@ -5583,7 +5593,7 @@ void tst_QQuickListView::snapOneItem()
     QSignalSpy currentIndexSpy(listview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits the next item boundary
-    flick(window, flickStart, flickEnd, 180);
+    flick(window, flickStart, flickEnd, flickDuration);
     QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(listview->contentY(), snapAlignment);
@@ -5597,7 +5607,7 @@ void tst_QQuickListView::snapOneItem()
 
     // flick to end
     do {
-        flick(window, flickStart, flickEnd, 180);
+        flick(window, flickStart, flickEnd, flickDuration);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
@@ -5615,7 +5625,7 @@ void tst_QQuickListView::snapOneItem()
 
     // flick to start
     do {
-        flick(window, flickEnd, flickStart, 180);
+        flick(window, flickEnd, flickStart, flickDuration);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()

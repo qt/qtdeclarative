@@ -1501,7 +1501,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         qreal tempPosition = isContentFlowReversed() ? -position()-size() : position();
         if (snapMode == QQuickListView::SnapOneItem && moveReason == Mouse) {
             // if we've been dragged < averageSize/2 then bias towards the next item
-            qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+            qreal dist = data.move.value() - data.pressPos;
             qreal bias = 0;
             if (data.velocity > 0 && dist > QML_FLICK_SNAPONETHRESHOLD && dist < averageSize/2)
                 bias = averageSize/2;
@@ -1599,7 +1599,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (data.move.value() < minExtent) {
             if (snapMode == QQuickListView::SnapOneItem && !hData.flicking && !vData.flicking) {
                 // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal dist = data.move.value() - data.pressPos;
                 qreal bias = dist < averageSize/2 ? averageSize/2 : 0;
                 if (isContentFlowReversed())
                     bias = -bias;
@@ -1616,7 +1616,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
         if (data.move.value() > maxExtent) {
             if (snapMode == QQuickListView::SnapOneItem && !hData.flicking && !vData.flicking) {
                 // if we've been dragged < averageSize/2 then bias towards the next item
-                qreal dist = data.move.value() - (data.pressPos - data.dragStartOffset);
+                qreal dist = data.move.value() - data.pressPos;
                 qreal bias = -dist < averageSize/2 ? averageSize/2 : 0;
                 if (isContentFlowReversed())
                     bias = -bias;

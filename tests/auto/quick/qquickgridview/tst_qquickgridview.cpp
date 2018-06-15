@@ -4387,24 +4387,30 @@ void tst_QQuickGridView::snapOneRow_data()
     QTest::addColumn<qreal>("snapAlignment");
     QTest::addColumn<qreal>("endExtent");
     QTest::addColumn<qreal>("startExtent");
+    QTest::addColumn<qreal>("flickSlowdown");
 
     QTest::newRow("vertical, left to right") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
+        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 240.0 << 0.0 << 1.0;
 
     QTest::newRow("horizontal, left to right") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
-        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0;
+        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 240.0 << 0.0 << 1.0;
 
     QTest::newRow("horizontal, right to left") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::NoHighlightRange)
-        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 << -240.0;
+        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 << -240.0 << 1.0;
 
     QTest::newRow("vertical, left to right, enforce range") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
+        << QPoint(20, 160) << QPoint(20, 20) << 100.0 << 340.0 << -20.0 << 1.0;
 
     QTest::newRow("horizontal, left to right, enforce range") << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0;
+        << QPoint(160, 20) << QPoint(20, 20) << 100.0 << 340.0 << -20.0 << 1.0;
 
     QTest::newRow("horizontal, right to left, enforce range") << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << int(QQuickItemView::StrictlyEnforceRange)
-        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0;
+        << QPoint(20, 20) << QPoint(160, 20) << -340.0 << -240.0 - 240.0 - 100.0 << -220.0 << 1.0;
+
+    // Using e.g. 120 rather than 95 always went to the next row.
+    // Ensure this further movement has the same behavior
+    QTest::newRow("vertical, left to right, no more blindspot") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
+        << QPoint(20, 160) << QPoint(20, 95) << 100.0 << 240.0 << 0.0 << 4.0;
 }
 
 void tst_QQuickGridView::snapOneRow()
@@ -4417,6 +4423,9 @@ void tst_QQuickGridView::snapOneRow()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+    QFETCH(qreal, flickSlowdown);
+
+    qreal flickDuration = 180 * flickSlowdown;
 
     QQuickView *window = getView();
     QQuickViewTestUtil::moveMouseAway(window);
@@ -4439,7 +4448,7 @@ void tst_QQuickGridView::snapOneRow()
     QSignalSpy currentIndexSpy(gridview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits next row boundary
-    flick(window, flickStart, flickEnd, 180);
+    flick(window, flickStart, flickEnd, flickDuration);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), snapAlignment);
@@ -4453,7 +4462,7 @@ void tst_QQuickGridView::snapOneRow()
 
     // flick to end
     do {
-        flick(window, flickStart, flickEnd, 180);
+        flick(window, flickStart, flickEnd, flickDuration);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYEnd()
@@ -4471,7 +4480,7 @@ void tst_QQuickGridView::snapOneRow()
 
     // flick to start
     do {
-        flick(window, flickEnd, flickStart, 180);
+        flick(window, flickEnd, flickStart, flickDuration);
         QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     } while (flow == QQuickGridView::FlowLeftToRight
            ? !gridview->isAtYBeginning()
