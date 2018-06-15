@@ -294,7 +294,7 @@ Heap::InternalClass *InternalClass::changeMember(Identifier identifier, Property
         for (uint i = 0; i < size; ++i) {
             Identifier identifier = nameMap.at(i);
             PropertyHash::Entry e = { identifier, newClass->size };
-            if (!identifier.isValid())
+            if (i && !identifier.isValid())
                 e.identifier = nameMap.at(i - 1);
             newClass->propertyTable.addEntry(e, newClass->size);
             newClass->nameMap.add(newClass->size, identifier);

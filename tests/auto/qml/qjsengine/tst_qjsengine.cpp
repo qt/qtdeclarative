@@ -972,6 +972,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "Float64Array"
         << "Set"
         << "Map"
+        << "Reflect"
         ;
     QSet<QString> actualNames;
     {

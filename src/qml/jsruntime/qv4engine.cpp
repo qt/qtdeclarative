@@ -72,6 +72,7 @@
 #include "qv4iterator_p.h"
 #include "qv4stringiterator_p.h"
 #include "qv4generatorobject_p.h"
+#include "qv4reflect_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -530,6 +531,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocate<MathObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocate<JsonObject>()));
+    globalObject->defineDefaultProperty(QStringLiteral("Reflect"), (o = memoryManager->allocate<Reflect>()));
 
     globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
     globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
