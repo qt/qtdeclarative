@@ -4411,6 +4411,10 @@ void tst_QQuickGridView::snapOneRow_data()
     // Ensure this further movement has the same behavior
     QTest::newRow("vertical, left to right, no more blindspot") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 160) << QPoint(20, 95) << 100.0 << 240.0 << 0.0 << 4.0;
+
+    // StrictlyEnforceRange should not override valid SnapOneItem decisions
+    QTest::newRow("vertical, left to right, no more blindspot, enforce range") << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 160) << QPoint(20, 95) << 100.0 << 340.0 << -20.0 << 4.0;
 }
 
 void tst_QQuickGridView::snapOneRow()

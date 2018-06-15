@@ -5553,6 +5553,11 @@ void tst_QQuickListView::snapOneItem_data()
     QTest::newRow("vertical, top to bottom, no more blindspot")
         << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::NoHighlightRange)
         << QPoint(20, 200) << QPoint(20, 95) << 180.0 << 560.0 << 0.0 << 6.0;
+
+    // StrictlyEnforceRange should not override valid SnapOneItem decisions
+    QTest::newRow("vertical, top to bottom, no more blindspot, enforce range")
+        << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom << int(QQuickItemView::StrictlyEnforceRange)
+        << QPoint(20, 200) << QPoint(20, 95) << 180.0 << 580.0 << -20.0 << 6.0;
 }
 
 void tst_QQuickListView::snapOneItem()

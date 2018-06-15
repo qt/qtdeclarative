@@ -925,13 +925,13 @@ void QQuickGridViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             tempPosition -= bias;
         }
         FxViewItem *topItem = snapItemAt(tempPosition+highlightRangeStart);
-        if (strictHighlightRange && currentItem && (!topItem || topItem->index != currentIndex)) {
+        if (strictHighlightRange && currentItem && (!topItem || (topItem->index != currentIndex && fixupMode == Immediate))) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
             topItem = currentItem;
         }
         FxViewItem *bottomItem = snapItemAt(tempPosition+highlightRangeEnd);
-        if (strictHighlightRange && currentItem && (!bottomItem || bottomItem->index != currentIndex)) {
+        if (strictHighlightRange && currentItem && (!bottomItem || (bottomItem->index != currentIndex && fixupMode == Immediate))) {
             // StrictlyEnforceRange always keeps an item in range
             updateHighlight();
             bottomItem = currentItem;
