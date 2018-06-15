@@ -83,6 +83,7 @@ public:
 
             free(_blocks);
         }
+        qDeleteAll(strings);
     }
 
     inline void *allocate(size_t size)
@@ -103,6 +104,11 @@ public:
     }
 
     template <typename Tp> Tp *New() { return new (this->allocate(sizeof(Tp))) Tp(); }
+
+    QStringRef newString(const QString &string) {
+        strings.append(new QString(string));
+        return QStringRef(strings.last());
+    }
 
 private:
     Q_NEVER_INLINE void *allocate_helper(size_t size)
@@ -143,6 +149,7 @@ private:
     int _blockCount = -1;
     char *_ptr = nullptr;
     char *_end = nullptr;
+    QVector<QString*> strings;
 
     enum
     {

@@ -469,7 +469,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         }
 
         if (paramList)
-            paramList = paramList->finish();
+            paramList = paramList->finish(pool);
 
         QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
         QQmlJS::AST::FunctionDeclaration *functionDeclaration = nullptr;

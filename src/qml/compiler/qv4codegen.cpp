@@ -472,7 +472,7 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
 {
     if (!p->bindingIdentifier.isNull())
-        return referenceForName(p->bindingIdentifier, true);
+        return referenceForName(p->bindingIdentifier.toString(), true);
     if (!p->bindingTarget || p->destructuringPattern())
         return Codegen::Reference::fromStackSlot(this);
     Reference lhs = expression(p->bindingTarget);
@@ -2656,7 +2656,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
             Q_UNREACHABLE();
         }
 
-        Reference arg = referenceForName(e->bindingIdentifier, true);
+        Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
         if (e->type == PatternElement::RestElement) {
             Q_ASSERT(!formals->next);
             Instruction::CreateRestParameter rest;

@@ -1471,7 +1471,7 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN T_RPAREN;
 CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN BindingRestElement T_RPAREN;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(2).PatternElement))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(2).PatternElement))->finish(pool);
         sym(1).Node = node;
         coverExpressionErrorLocation = loc(2);
         coverExpressionType = CE_FormalParameterList;
@@ -1491,7 +1491,7 @@ CoverParenthesizedExpressionAndArrowParameterList: T_LPAREN Expression_In T_COMM
         }
         coverExpressionErrorLocation = loc(4);
         coverExpressionType = CE_FormalParameterList;
-        sym(1).Node = list->finish();
+        sym(1).Node = list->finish(pool);
     } break;
 ./
 
@@ -3551,7 +3551,7 @@ FormalParameters: ;
 FormalParameters: BindingRestElement;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish(pool);
         sym(1).Node = node;
     } break;
 ./
@@ -3561,14 +3561,14 @@ FormalParameters: FormalParameterList;
 FormalParameters: FormalParameterList T_COMMA;
 /.
     case $rule_number: {
-        sym(1).Node = sym(1).FormalParameterList->finish();
+        sym(1).Node = sym(1).FormalParameterList->finish(pool);
     } break;
 ./
 
 FormalParameters: FormalParameterList T_COMMA BindingRestElement;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).PatternElement))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(sym(1).FormalParameterList, sym(3).PatternElement))->finish(pool);
         sym(1).Node = node;
     } break;
 ./
@@ -3646,7 +3646,7 @@ ArrowParameters: BindingIdentifier;
     case $rule_number: {
         AST::PatternElement *e = new (pool) AST::PatternElement(stringRef(1), nullptr, AST::PatternElement::Binding);
         e->identifierToken = loc(1);
-        sym(1).FormalParameterList = (new (pool) AST::FormalParameterList(nullptr, e))->finish();
+        sym(1).FormalParameterList = (new (pool) AST::FormalParameterList(nullptr, e))->finish(pool);
     } break;
 ./
 
@@ -3662,7 +3662,7 @@ ArrowParameters: CoverParenthesizedExpressionAndArrowParameterList;
                 syntaxError(loc(1), "Invalid Arrow parameter list.");
                 return false;
             }
-            sym(1).Node = list->finish();
+            sym(1).Node = list->finish(pool);
         }
     } break;
 ./
@@ -3744,7 +3744,7 @@ MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN 
 PropertySetParameterList: FormalParameter;
 /.
     case $rule_number: {
-        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish();
+        AST::FormalParameterList *node = (new (pool) AST::FormalParameterList(nullptr, sym(1).PatternElement))->finish(pool);
         sym(1).Node = node;
     } break;
 ./

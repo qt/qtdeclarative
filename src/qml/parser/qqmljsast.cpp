@@ -422,7 +422,7 @@ bool PatternElement::convertLiteralToAssignmentPattern(MemoryPool *pool, SourceL
     }
 
     if (auto *i = cast<IdentifierExpression *>(lhs)) {
-        bindingIdentifier = i->name.toString();
+        bindingIdentifier = i->name;
         identifierToken = i->identifierToken;
         return true;
     }
@@ -959,7 +959,7 @@ QStringList FormalParameterList::formals() const
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element) {
-            QString name = it->element->bindingIdentifier;
+            QString name = it->element->bindingIdentifier.toString();
             int duplicateIndex = formals.indexOf(name);
             if (duplicateIndex >= 0) {
                 // change the name of the earlier argument to enforce the lookup semantics from the spec
@@ -993,7 +993,7 @@ void FormalParameterList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-FormalParameterList *FormalParameterList::finish()
+FormalParameterList *FormalParameterList::finish(QQmlJS::MemoryPool *pool)
 {
     FormalParameterList *front = next;
     next = nullptr;
@@ -1001,7 +1001,7 @@ FormalParameterList *FormalParameterList::finish()
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element && it->element->bindingIdentifier.isEmpty())
-            it->element->bindingIdentifier = QLatin1String("arg#") + QString::number(i);
+            it->element->bindingIdentifier = pool->newString(QLatin1String("arg#") + QString::number(i));
         ++i;
     }
     return front;
@@ -1220,7 +1220,7 @@ void PatternElement::boundNames(QStringList *names)
         else if (PatternPropertyList *p = propertyList())
             p->boundNames(names);
     } else {
-        names->append(bindingIdentifier);
+        names->append(bindingIdentifier.toString());
     }
 }
 

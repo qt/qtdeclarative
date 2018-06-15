@@ -360,7 +360,7 @@ bool ScanFunctions::visit(Catch *ast)
     TemporaryBoolAssignment allowFuncDecls(_allowFuncDecls, _context->isStrict ? false : _allowFuncDecls);
     enterEnvironment(ast, ContextType::Block, QStringLiteral("%CatchBlock"));
     _context->isCatchBlock = true;
-    QString caughtVar = ast->patternElement->bindingIdentifier;
+    QString caughtVar = ast->patternElement->bindingIdentifier.toString();
     if (caughtVar.isEmpty())
         caughtVar = QStringLiteral("@caught");
     _context->addLocalVar(caughtVar, Context::MemberType::VariableDefinition, VariableScope::Let);

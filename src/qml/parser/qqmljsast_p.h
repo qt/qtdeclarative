@@ -671,7 +671,7 @@ public:
     { kind = K; }
 
     PatternElement(const QStringRef &n, ExpressionNode *i = nullptr, Type t = Binding)
-        : bindingIdentifier(n.toString()), initializer(i), type(t)
+        : bindingIdentifier(n), initializer(i), type(t)
     {
         Q_ASSERT(t >= RestElement);
         kind = K;
@@ -705,7 +705,7 @@ public:
 
 // attributes
     SourceLocation identifierToken;
-    QString bindingIdentifier;
+    QStringRef bindingIdentifier;
     ExpressionNode *bindingTarget = nullptr;
     ExpressionNode *initializer = nullptr;
     Type type = Literal;
@@ -2212,7 +2212,7 @@ public:
     SourceLocation lastSourceLocation() const override
     { return next ? next->lastSourceLocation() : element->lastSourceLocation(); }
 
-    FormalParameterList *finish();
+    FormalParameterList *finish(MemoryPool *pool);
 
 // attributes
     PatternElement *element = nullptr;
