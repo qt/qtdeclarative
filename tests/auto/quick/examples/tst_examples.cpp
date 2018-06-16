@@ -74,7 +74,6 @@ tst_examples::tst_examples()
 {
     // Add files to exclude here
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
-    excludedFiles << "examples/quick/demos/photosurface/photosurface.qml"; // root item is Window rather than Item
 
     // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
@@ -91,9 +90,6 @@ tst_examples::tst_examples()
     excludedFiles << "examples/quick/shapes/content/interactive.qml"; // relies on resources
 
 #ifdef QT_NO_XMLPATTERNS
-    excludedDirs << "demos/twitter";
-    excludedDirs << "demos/flickr";
-    excludedDirs << "demos/photoviewer";
     excludedFiles << "snippets/qml/xmlrole.qml";
     excludedFiles << "particles/itemparticle/particleview.qml";
     excludedFiles << "views/visualdatamodel/slideshow.qml";

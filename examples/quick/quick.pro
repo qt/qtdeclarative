@@ -24,8 +24,7 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
-            shapes \
-            demos
+            shapes
 
 #OpenGL Support Required
 qtConfig(opengl(es1|es2)?) {
