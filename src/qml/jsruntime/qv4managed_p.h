@@ -196,6 +196,7 @@ public:
         Type_ArgumentsObject,
         Type_JsonObject,
         Type_MathObject,
+        Type_ProxyObject,
 
         Type_ExecutionContext,
         Type_InternalClass,

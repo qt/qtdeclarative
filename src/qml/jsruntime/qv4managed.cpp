@@ -118,6 +118,9 @@ QString Managed::className() const
     case Type_JsonObject:
         s = "JSON";
         break;
+    case Type_ProxyObject:
+        s = "ProxyObject";
+        break;
     case Type_MathObject:
         s = "Math";
         break;

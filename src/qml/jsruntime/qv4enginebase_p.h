@@ -115,6 +115,7 @@ struct Q_QML_EXPORT EngineBase {
         Class_ErrorObjectWithMessage,
         Class_ErrorProto,
         Class_QmlContextWrapper,
+        Class_ProxyObject,
         Class_Symbol,
         NClasses
     };

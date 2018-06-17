@@ -368,6 +368,7 @@ public:
         Symbol_toPrimitive,
         Symbol_toStringTag,
         Symbol_unscopables,
+        Symbol_revokableProxy,
         NJSSymbols
     };
     Value *jsSymbols;
@@ -425,6 +426,7 @@ public:
     Symbol *symbol_toPrimitive() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_toPrimitive); }
     Symbol *symbol_toStringTag() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_toStringTag); }
     Symbol *symbol_unscopables() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_unscopables); }
+    Symbol *symbol_revokableProxy() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_revokableProxy); }
 
 #ifndef V4_BOOTSTRAP
     QIntrusiveList<CompiledData::CompilationUnit, &CompiledData::CompilationUnit::nextCompilationUnit> compilationUnits;
