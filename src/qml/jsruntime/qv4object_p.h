@@ -173,10 +173,9 @@ struct ObjectVTable
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     bool (*put)(Managed *, StringOrSymbol *name, const Value &value);
     bool (*putIndexed)(Managed *, uint index, const Value &value);
-    PropertyAttributes (*query)(const Managed *, StringOrSymbol *name);
-    PropertyAttributes (*queryIndexed)(const Managed *, uint index);
     bool (*deleteProperty)(Managed *m, StringOrSymbol *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
+    PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
     qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
@@ -192,10 +191,9 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     getIndexed,                                 \
     put,                                        \
     putIndexed,                                 \
-    query,                                      \
-    queryIndexed,                               \
     deleteProperty,                             \
     deleteIndexedProperty,                      \
+    getOwnProperty,                             \
     getLength,                                  \
     advanceIterator,                            \
     instanceOf                                  \
@@ -243,17 +241,15 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::Object *prototype() const { return d()->prototype(); }
     bool setPrototype(Object *proto);
 
-    void getOwnProperty(StringOrSymbol *name, PropertyAttributes *attrs, Property *p = nullptr);
-    void getOwnProperty(uint index, PropertyAttributes *attrs, Property *p = nullptr);
+    PropertyAttributes getOwnProperty(Identifier id, Property *p = nullptr) {
+        return vtable()->getOwnProperty(this, id, p);
+    }
 
     PropertyIndex getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs);
     PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
 
     bool hasProperty(StringOrSymbol *name) const;
     bool hasProperty(uint index) const;
-
-    bool hasOwnProperty(StringOrSymbol *name) const;
-    bool hasOwnProperty(uint index) const;
 
     bool __defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs);
@@ -418,10 +414,6 @@ public:
         return ret;
     }
 
-    PropertyAttributes query(StringOrSymbol *name) const
-    { return vtable()->query(this, name); }
-    PropertyAttributes queryIndexed(uint index) const
-    { return vtable()->queryIndexed(this, index); }
     bool deleteProperty(StringOrSymbol *name)
     { return vtable()->deleteProperty(this, name); }
     bool deleteIndexedProperty(uint index)
@@ -439,10 +431,9 @@ protected:
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool put(Managed *m, StringOrSymbol *name, const Value &value);
     static bool putIndexed(Managed *m, uint index, const Value &value);
-    static PropertyAttributes query(const Managed *m, StringOrSymbol *name);
-    static PropertyAttributes queryIndexed(const Managed *m, uint index);
     static bool deleteProperty(Managed *m, StringOrSymbol *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
+    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static qint64 getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);

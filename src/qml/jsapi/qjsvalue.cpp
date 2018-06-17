@@ -1291,7 +1291,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
         return false;
 
     ScopedString s(scope, engine->newIdentifier(name));
-    return o->hasOwnProperty(s);
+    return o->getOwnProperty(s->identifier()) != Attr_Invalid;
 }
 
 /*!

@@ -250,6 +250,14 @@ void Heap::StringOrSymbol::createHashValue() const
     stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
 }
 
+Identifier StringOrSymbol::toPropertyKey() const {
+    uint index = asArrayIndex();
+    if (index < UINT_MAX)
+        return Identifier::fromArrayIndex(index);
+    makeIdentifier();
+    return identifier();
+}
+
 uint String::getLength(const Managed *m)
 {
     return static_cast<const String *>(m)->d()->length();

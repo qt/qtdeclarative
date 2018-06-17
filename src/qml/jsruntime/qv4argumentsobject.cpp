@@ -202,19 +202,19 @@ bool ArgumentsObject::deleteIndexedProperty(Managed *m, uint index)
     return Object::deleteIndexedProperty(m, index);
 }
 
-PropertyAttributes ArgumentsObject::queryIndexed(const Managed *m, uint index)
+PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, Identifier id, Property *p)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (args->fullyCreated())
-        return Object::queryIndexed(m, index);
+    if (!id.isArrayIndex() || args->fullyCreated())
+        return Object::getOwnProperty(m, id, p);
 
-    uint numAccessors = qMin(args->d()->nFormals, args->context()->argc());
+    uint index = id.asArrayIndex();
     uint argCount = args->context()->argc();
     if (index >= argCount)
         return PropertyAttributes();
-    if (index >= numAccessors)
-        return Attr_Data;
-    return Attr_Accessor;
+    if (p)
+        p->value = args->context()->args()[index];
+    return Attr_Data;
 }
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);

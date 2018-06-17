@@ -167,9 +167,8 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    PropertyAttributes attrs;
     ScopedProperty desc(scope);
-    O->getOwnProperty(name, &attrs, desc);
+    PropertyAttributes attrs = O->getOwnProperty(name->toPropertyKey(), desc);
     return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
@@ -237,9 +236,8 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
         for (quint32 i = 0; i < length; ++i) {
             nextKey = Value::fromReturnedValue(keys->getIndexed(i)).toString(scope.engine);
 
-            PropertyAttributes attrs;
             ScopedProperty prop(scope);
-            from->getOwnProperty(nextKey, &attrs, prop);
+            PropertyAttributes attrs = from->getOwnProperty(nextKey->toPropertyKey(), prop);
 
             if (attrs == PropertyFlag::Attr_Invalid)
                 continue;
@@ -592,9 +590,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, co
     ScopedObject O(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    bool r = O->hasOwnProperty(P);
-    if (!r)
-        r = !O->query(P).isEmpty();
+    bool r = O->getOwnProperty(P->toPropertyKey()) != Attr_Invalid;
     return Encode(r);
 }
 
@@ -627,8 +623,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject 
     ScopedObject o(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    PropertyAttributes attrs;
-    o->getOwnProperty(p, &attrs);
+    PropertyAttributes attrs = o->getOwnProperty(p->toPropertyKey());
     return Encode(attrs.isEnumerable());
 }
 

@@ -44,6 +44,16 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+bool Identifier::isString() const
+{
+    return isValid() && asHeapObject()->internalClass->vtable->isString;
+}
+
+bool Identifier::isSymbol() const
+{
+    return isValid() && !asHeapObject()->internalClass->vtable->isString && asHeapObject()->internalClass->vtable->isStringOrSymbol;
+}
+
 QString Identifier::toQString() const
 {
     if (isArrayIndex())

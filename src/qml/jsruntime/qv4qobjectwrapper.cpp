@@ -733,25 +733,29 @@ bool QObjectWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
     return true;
 }
 
-PropertyAttributes QObjectWrapper::query(const Managed *m, StringOrSymbol *name)
+PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, Identifier id, Property *p)
 {
-    if (name->isSymbol())
-        return QV4::Object::query(m, name);
-    String *n = static_cast<String *>(name);
+    if (id.isString()) {
+        QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+        const QObject *thatObject = that->d()->object();
+        if (!QQmlData::wasDeleted(thatObject)) {
+            Scope scope(m);
+            ScopedString n(scope, id.asHeapObject());
+            QQmlContextData *qmlContext = scope.engine->callingQmlContext();
+            QQmlPropertyData local;
+            if (that->findProperty(scope.engine, qmlContext, n, IgnoreRevision, &local)
+                    || n->equals(scope.engine->id_destroy()) || n->equals(scope.engine->id_toString())) {
+                if (p) {
+                    // ### probably not the fastest implementation
+                    bool hasProperty;
+                    p->value = that->getQmlProperty(qmlContext, n, IgnoreRevision, &hasProperty, /*includeImports*/ true);
+                }
+                return QV4::Attr_Data;
+            }
+        }
+    }
 
-    const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
-    const QObject *thatObject = that->d()->object();
-    if (QQmlData::wasDeleted(thatObject))
-        return QV4::Object::query(m, name);
-
-    ExecutionEngine *engine = that->engine();
-    QQmlContextData *qmlContext = engine->callingQmlContext();
-    QQmlPropertyData local;
-    if (that->findProperty(engine, qmlContext, n, IgnoreRevision, &local)
-        || n->equals(engine->id_destroy()) || n->equals(engine->id_toString()))
-        return QV4::Attr_Data;
-    else
-        return QV4::Object::query(m, name);
+    return QV4::Object::getOwnProperty(m, id, p);
 }
 
 void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)

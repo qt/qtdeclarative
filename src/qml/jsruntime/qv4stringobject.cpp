@@ -118,9 +118,8 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
         while (it->arrayIndex < slen) {
             *index = it->arrayIndex;
             ++it->arrayIndex;
-            PropertyAttributes a;
             Property pd;
-            s->getOwnProperty(*index, &a, &pd);
+            PropertyAttributes a = s->getOwnProperty(Identifier::fromArrayIndex(*index), &pd);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                 *attrs = a;
                 p->copy(&pd, a);

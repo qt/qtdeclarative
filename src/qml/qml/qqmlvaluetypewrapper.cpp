@@ -241,17 +241,17 @@ bool QQmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QQmlValueTypeWrapper::query(const Managed *m, StringOrSymbol *name)
+PropertyAttributes QQmlValueTypeWrapper::getOwnProperty(Managed *m, Identifier id, Property *p)
 {
-    if (name->isSymbol())
-        return Object::query(m, name);
+    if (id.isString()) {
+        Scope scope(m);
+        ScopedString n(scope, id.asHeapObject());
+        const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
+        QQmlPropertyData *result = r->d()->propertyCache()->property(n.getPointer(), nullptr, nullptr);
+        return result ? Attr_Data : Attr_Invalid;
+    }
 
-    String *n = static_cast<String *>(name);
-    Q_ASSERT(m->as<const QQmlValueTypeWrapper>());
-    const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
-
-    QQmlPropertyData *result = r->d()->propertyCache()->property(n, nullptr, nullptr);
-    return result ? Attr_Data : Attr_Invalid;
+    return QV4::Object::getOwnProperty(m, id, p);
 }
 
 void QQmlValueTypeWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)

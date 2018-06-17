@@ -178,6 +178,8 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
 
     uint asArrayIndex() const;
 
+    Identifier toPropertyKey() const;
+
     inline QString toQString() const {
         return d()->toQString();
     }

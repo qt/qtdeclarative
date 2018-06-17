@@ -247,7 +247,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 mappedValue = *nextValue;
             }
 
-            if (!a->hasOwnProperty(k)) {
+            if (a->getOwnProperty(Identifier::fromArrayIndex(k)) == Attr_Invalid) {
                 a->arraySet(k, mappedValue);
             } else {
                 // Don't return: we need to close the iterator.
@@ -289,7 +289,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 mappedValue = kValue;
             }
 
-            if (a->hasOwnProperty(k))
+            if (a->getOwnProperty(Identifier::fromArrayIndex(k)) != Attr_Invalid)
                 return scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
 
             a->arraySet(k, mappedValue);
@@ -318,7 +318,7 @@ ReturnedValue ArrayPrototype::method_of(const FunctionObject *builtin, const Val
 
     int k = 0;
     while (k < argc) {
-        if (a->hasOwnProperty(k)) {
+        if (a->getOwnProperty(Identifier::fromArrayIndex(k)) != Attr_Invalid) {
             return scope.engine->throwTypeError(QString::fromLatin1("Cannot redefine property: %1").arg(k));
         }
         a->arraySet(k, argv[k]);

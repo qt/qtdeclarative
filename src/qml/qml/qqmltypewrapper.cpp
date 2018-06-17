@@ -350,15 +350,18 @@ bool QQmlTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
     return false;
 }
 
-PropertyAttributes QQmlTypeWrapper::query(const Managed *m, StringOrSymbol *name)
+PropertyAttributes QQmlTypeWrapper::getOwnProperty(Managed *m, Identifier id, Property *p)
 {
-    if (name->isSymbol())
-        return Object::query(m, name);
-    String *n = static_cast<String *>(name);
-    // ### Implement more efficiently.
-    bool hasProperty = false;
-    static_cast<Object *>(const_cast<Managed*>(m))->get(n, &hasProperty);
-    return hasProperty ? Attr_Data : Attr_Invalid;
+    if (id.isString()) {
+        Scope scope(m);
+        ScopedString n(scope, id.asHeapObject());
+        // ### Implement more efficiently.
+        bool hasProperty = false;
+        static_cast<Object *>(m)->get(n, &hasProperty);
+        return hasProperty ? Attr_Data : Attr_Invalid;
+    }
+
+    return QV4::Object::getOwnProperty(m, id, p);
 }
 
 bool QQmlTypeWrapper::isEqualTo(Managed *a, Managed *b)

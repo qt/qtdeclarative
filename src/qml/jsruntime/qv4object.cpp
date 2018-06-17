@@ -278,50 +278,6 @@ void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttribut
     }
 }
 
-// Section 8.12.1
-void Object::getOwnProperty(StringOrSymbol *name, PropertyAttributes *attrs, Property *p)
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return getOwnProperty(idx, attrs, p);
-
-    name->makeIdentifier();
-    Identifier id = name->identifier();
-
-    uint member = internalClass()->find(id);
-    if (member < UINT_MAX) {
-        *attrs = internalClass()->propertyData[member];
-        if (p) {
-            p->value = *propertyData(member);
-            if (attrs->isAccessor())
-                p->set = *propertyData(member + SetterOffset);
-        }
-        return;
-    }
-
-    if (attrs)
-        *attrs = Attr_Invalid;
-    return;
-}
-
-void Object::getOwnProperty(uint index, PropertyAttributes *attrs, Property *p)
-{
-    if (arrayData()) {
-        if (arrayData()->getProperty(index, p, attrs))
-            return;
-    }
-    if (isStringObject()) {
-        *attrs = Attr_NotConfigurable|Attr_NotWritable;
-        if (p)
-            p->value = static_cast<StringObject *>(this)->getIndex(index);
-        return;
-    }
-
-    if (attrs)
-        *attrs = Attr_Invalid;
-    return;
-}
-
 // Section 8.12.2
 PropertyIndex Object::getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs)
 {
@@ -378,7 +334,7 @@ bool Object::hasProperty(StringOrSymbol *name) const
     Scope scope(engine());
     ScopedObject o(scope, d());
     while (o) {
-        if (o->hasOwnProperty(name))
+        if (o->getOwnProperty(name->toPropertyKey()) != Attr_Invalid)
             return true;
 
         o = o->prototype();
@@ -392,42 +348,12 @@ bool Object::hasProperty(uint index) const
     Scope scope(engine());
     ScopedObject o(scope, d());
     while (o) {
-        if (o->hasOwnProperty(index))
-                return true;
+        if (o->getOwnProperty(Identifier::fromArrayIndex(index)) != Attr_Invalid)
+            return true;
 
         o = o->prototype();
     }
 
-    return false;
-}
-
-bool Object::hasOwnProperty(StringOrSymbol *name) const
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return hasOwnProperty(idx);
-
-    name->makeIdentifier();
-    Identifier id = name->identifier();
-
-    if (internalClass()->find(id) < UINT_MAX)
-        return true;
-    if (!query(name).isEmpty())
-        return true;
-    return false;
-}
-
-bool Object::hasOwnProperty(uint index) const
-{
-    if (arrayData() && !arrayData()->isEmpty(index))
-        return true;
-
-    if (isStringObject()) {
-        if (index < static_cast<const StringObject *>(this)->length())
-            return true;
-    }
-    if (!queryIndexed(index).isEmpty())
-        return true;
     return false;
 }
 
@@ -459,36 +385,6 @@ bool Object::put(Managed *m, StringOrSymbol *name, const Value &value)
 bool Object::putIndexed(Managed *m, uint index, const Value &value)
 {
     return static_cast<Object *>(m)->internalPutIndexed(index, value);
-}
-
-PropertyAttributes Object::query(const Managed *m, StringOrSymbol *name)
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return queryIndexed(m, idx);
-
-    name->makeIdentifier();
-    Identifier id = name->identifier();
-
-    const Object *o = static_cast<const Object *>(m);
-    idx = o->internalClass()->find(id);
-    if (idx < UINT_MAX)
-        return o->internalClass()->propertyData[idx];
-
-    return Attr_Invalid;
-}
-
-PropertyAttributes Object::queryIndexed(const Managed *m, uint index)
-{
-    const Object *o = static_cast<const Object *>(m);
-    if (o->arrayData() && !o->arrayData()->isEmpty(index))
-        return o->arrayData()->attributes(index);
-
-    if (o->isStringObject()) {
-        if (index < static_cast<const StringObject *>(o)->length())
-            return (Attr_NotWritable|Attr_NotConfigurable);
-    }
-    return Attr_Invalid;
 }
 
 bool Object::deleteProperty(Managed *m, StringOrSymbol *name)
@@ -1103,6 +999,42 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     }
 
     return Encode(false);
+}
+
+PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p)
+{
+    PropertyAttributes attrs;
+    Object *o = static_cast<Object *>(m);
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        if (o->arrayData()) {
+            if (o->arrayData()->getProperty(index, p, &attrs))
+                return attrs;
+        }
+        if (o->isStringObject()) {
+            if (index >= static_cast<const StringObject *>(m)->length())
+                return Attr_Invalid;
+            attrs = Attr_NotConfigurable|Attr_NotWritable;
+            if (p)
+                p->value = static_cast<StringObject *>(o)->getIndex(index);
+            return attrs;
+        }
+    } else {
+        Q_ASSERT(id.asHeapObject());
+
+        uint member = o->internalClass()->find(id);
+        if (member < UINT_MAX) {
+            attrs = o->internalClass()->propertyData[member];
+            if (p) {
+                p->value = *o->propertyData(member);
+                if (attrs.isAccessor())
+                    p->set = *o->propertyData(member + SetterOffset);
+            }
+            return attrs;
+        }
+    }
+
+    return Attr_Invalid;
 }
 
 bool Object::setArrayLength(uint newLen)

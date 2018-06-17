@@ -195,7 +195,7 @@ protected:
 
     static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static bool put(Managed *m, StringOrSymbol *name, const Value &value);
-    static PropertyAttributes query(const Managed *, StringOrSymbol *name);
+    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

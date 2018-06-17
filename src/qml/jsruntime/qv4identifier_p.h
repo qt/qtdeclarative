@@ -73,6 +73,9 @@ struct Identifier
     static Identifier fromHeapObject(Heap::Base *b) { return Identifier{ reinterpret_cast<quintptr>(b) }; }
     Heap::Base *asHeapObject() const { return (id & 1) ? nullptr : reinterpret_cast<Heap::Base *>(id); }
 
+    bool isString() const;
+    bool isSymbol() const;
+
     Q_QML_EXPORT QString toQString() const;
 
     bool operator ==(const Identifier &other) const { return id == other.id; }

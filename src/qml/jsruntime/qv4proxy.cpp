@@ -81,8 +81,7 @@ ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *has
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes;
-    target->getOwnProperty(name, &attributes, targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
     if (attributes != Attr_Invalid && !attributes.isConfigurable()) {
         if (attributes.isData() && !attributes.isWritable()) {
             if (!trapResult->sameValue(targetDesc->value))
@@ -131,8 +130,7 @@ bool ProxyObject::put(Managed *m, StringOrSymbol *name, const Value &value)
     if (!trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes;
-    target->getOwnProperty(name, &attributes, targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
     if (attributes != Attr_Invalid && !attributes.isConfigurable()) {
         if (attributes.isData() && !attributes.isWritable()) {
             if (!value.sameValue(targetDesc->value))
@@ -179,8 +177,7 @@ bool ProxyObject::deleteProperty(Managed *m, StringOrSymbol *name)
     if (!trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes;
-    target->getOwnProperty(name, &attributes, targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
     if (attributes == Attr_Invalid)
         return true;
     if (!attributes.isConfigurable())
