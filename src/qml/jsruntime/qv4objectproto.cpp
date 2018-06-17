@@ -737,13 +737,13 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
     desc->set = Primitive::emptyValue();
     ScopedValue tmp(scope);
 
-    if (o->hasProperty(engine->id_enumerable()))
+    if (o->hasProperty(engine->id_enumerable()->toPropertyKey()))
         attrs->setEnumerable((tmp = o->get(engine->id_enumerable()))->toBoolean());
 
-    if (o->hasProperty(engine->id_configurable()))
+    if (o->hasProperty(engine->id_configurable()->toPropertyKey()))
         attrs->setConfigurable((tmp = o->get(engine->id_configurable()))->toBoolean());
 
-    if (o->hasProperty(engine->id_get())) {
+    if (o->hasProperty(engine->id_get()->toPropertyKey())) {
         ScopedValue get(scope, o->get(engine->id_get()));
         FunctionObject *f = get->as<FunctionObject>();
         if (f || get->isUndefined()) {
@@ -755,7 +755,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->hasProperty(engine->id_set())) {
+    if (o->hasProperty(engine->id_set()->toPropertyKey())) {
         ScopedValue set(scope, o->get(engine->id_set()));
         FunctionObject *f = set->as<FunctionObject>();
         if (f || set->isUndefined()) {
@@ -767,7 +767,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
         attrs->setType(PropertyAttributes::Accessor);
     }
 
-    if (o->hasProperty(engine->id_writable())) {
+    if (o->hasProperty(engine->id_writable()->toPropertyKey())) {
         if (attrs->isAccessor()) {
             engine->throwTypeError();
             return;
@@ -777,7 +777,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
         desc->value = Primitive::undefinedValue();
     }
 
-    if (o->hasProperty(engine->id_value())) {
+    if (o->hasProperty(engine->id_value()->toPropertyKey())) {
         if (attrs->isAccessor()) {
             engine->throwTypeError();
             return;

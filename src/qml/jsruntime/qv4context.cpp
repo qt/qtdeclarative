@@ -209,7 +209,7 @@ bool ExecutionContext::deleteProperty(String *name)
             if (ctx->activation) {
                 Scope scope(this);
                 ScopedObject object(scope, ctx->activation);
-                if (object && object->hasProperty(name))
+                if (object && object->hasProperty(name->toPropertyKey()))
                     return object->deleteProperty(name);
             }
             break;
@@ -236,7 +236,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
         case Heap::ExecutionContext::Type_WithContext: {
             Scope scope(v4);
             ScopedObject w(scope, ctx->activation);
-            if (w->hasProperty(name)) {
+            if (w->hasProperty(name->toPropertyKey())) {
                 if (!w->put(name, value))
                     return TypeError;
                 return NoError;

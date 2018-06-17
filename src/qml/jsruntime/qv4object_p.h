@@ -175,6 +175,7 @@ struct ObjectVTable
     bool (*putIndexed)(Managed *, uint index, const Value &value);
     bool (*deleteProperty)(Managed *m, StringOrSymbol *name);
     bool (*deleteIndexedProperty)(Managed *m, uint index);
+    bool (*hasProperty)(const Managed *m, Identifier id);
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
     qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
@@ -193,6 +194,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     putIndexed,                                 \
     deleteProperty,                             \
     deleteIndexedProperty,                      \
+    hasProperty,                                \
     getOwnProperty,                             \
     getLength,                                  \
     advanceIterator,                            \
@@ -248,8 +250,9 @@ struct Q_QML_EXPORT Object: Managed {
     PropertyIndex getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs);
     PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
 
-    bool hasProperty(StringOrSymbol *name) const;
-    bool hasProperty(uint index) const;
+    bool hasProperty(Identifier id) const {
+        return vtable()->hasProperty(this, id);
+    }
 
     bool __defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
     bool __defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs);
@@ -433,6 +436,7 @@ protected:
     static bool putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteProperty(Managed *m, StringOrSymbol *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static qint64 getLength(const Managed *m);

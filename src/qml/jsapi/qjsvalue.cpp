@@ -1269,8 +1269,8 @@ bool QJSValue::hasProperty(const QString &name) const
     if (!o)
         return false;
 
-    ScopedString s(scope, engine->newIdentifier(name));
-    return o->hasProperty(s);
+    ScopedString s(scope, engine->newString(name));
+    return o->hasProperty(s->toPropertyKey());
 }
 
 /*!

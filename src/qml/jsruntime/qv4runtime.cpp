@@ -374,7 +374,7 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
     ScopedStringOrSymbol s(scope, left.toPropertyKey(engine));
     if (scope.hasException())
         return Encode::undefined();
-    bool r = ro->hasProperty(s);
+    bool r = ro->hasProperty(s->toPropertyKey());
     return Encode(r);
 }
 

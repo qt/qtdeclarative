@@ -325,38 +325,6 @@ PropertyIndex Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
     return { nullptr, 0 };
 }
 
-bool Object::hasProperty(StringOrSymbol *name) const
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return hasProperty(idx);
-
-    Scope scope(engine());
-    ScopedObject o(scope, d());
-    while (o) {
-        if (o->getOwnProperty(name->toPropertyKey()) != Attr_Invalid)
-            return true;
-
-        o = o->prototype();
-    }
-
-    return false;
-}
-
-bool Object::hasProperty(uint index) const
-{
-    Scope scope(engine());
-    ScopedObject o(scope, d());
-    while (o) {
-        if (o->getOwnProperty(Identifier::fromArrayIndex(index)) != Attr_Invalid)
-            return true;
-
-        o = o->prototype();
-    }
-
-    return false;
-}
-
 ReturnedValue Object::callAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
@@ -999,6 +967,21 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     }
 
     return Encode(false);
+}
+
+bool Object::hasProperty(const Managed *m, Identifier id)
+{
+    Scope scope(m->engine());
+    ScopedObject o(scope, m);
+    ScopedProperty p(scope);
+    while (o) {
+        if (o->getOwnProperty(id, p) != Attr_Invalid)
+            return true;
+
+        o = o->prototype();
+    }
+
+    return false;
 }
 
 PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p)
