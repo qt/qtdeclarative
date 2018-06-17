@@ -193,6 +193,8 @@ ReturnedValue ObjectPrototype::method_getOwnPropertySymbols(const FunctionObject
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0].toObject(scope.engine));
+    if (!O)
+        return Encode::undefined();
     Heap::InternalClass *ic = O->d()->internalClass;
     ScopedValue n(scope);
     ScopedArrayObject array(scope, scope.engine->newArrayObject());
