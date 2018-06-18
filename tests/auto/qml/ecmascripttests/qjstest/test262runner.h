@@ -97,7 +97,7 @@ public:
     void cat();
     bool run();
 
-    void report();
+    bool report();
 
 private:
     friend class SingleTest;

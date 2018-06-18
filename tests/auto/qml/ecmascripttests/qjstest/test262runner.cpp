@@ -123,17 +123,17 @@ bool Test262Runner::run()
     if (threadPool)
         threadPool->waitForDone();
 
-    report();
+    const bool testsOk = report();
 
     if (flags & WriteTestExpectations)
         writeTestExpectations();
     else if (flags & UpdateTestExpectations)
         updateTestExpectations();
 
-    return true;
+    return testsOk;
 }
 
-void Test262Runner::report()
+bool Test262Runner::report()
 {
     qDebug() << "Test execution summary:";
     qDebug() << "    Executed" << testCases.size() << "test cases.";
@@ -170,6 +170,7 @@ void Test262Runner::report()
         for (const QString &f : qAsConst(unexpectedPasses))
             qDebug() << "        " << f;
     }
+    return crashes.isEmpty() && unexpectedFailures.isEmpty() && unexpectedPasses.isEmpty();
 }
 
 bool Test262Runner::loadTests()
