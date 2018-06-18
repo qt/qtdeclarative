@@ -56,7 +56,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
     \instantiates QQuickTouchPoint
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief Describes a touch point in a MultiPointTouchArea
+    \brief Describes a touch point in a MultiPointTouchArea.
 
     The TouchPoint type contains information about a touch point, such as the current
     position, pressure, and area.
@@ -291,7 +291,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     \instantiates QQuickGrabGestureEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief The parameter given with the gestureStarted signal
+    \brief The parameter given with the gestureStarted signal.
 
     The GestureEvent object has the current touch points, which you may choose
     to interpret as a gesture, and an invokable method to grab the involved
@@ -328,7 +328,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-input
-    \brief Enables handling of multiple touch points
+    \brief Enables handling of multiple touch points.
 
 
     A MultiPointTouchArea is an invisible item that is used to track multiple touch points.

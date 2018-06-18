@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For applying friction proportional to the particle's current velocity
+    \brief For applying friction proportional to the particle's current velocity.
 
 */
 

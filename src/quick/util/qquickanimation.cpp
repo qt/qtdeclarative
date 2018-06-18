@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickAbstractAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
-    \brief Is the base of all QML animations
+    \brief Is the base of all QML animations.
 
     The Animation type cannot be used directly in a QML file.  It exists
     to provide a set of common properties and methods, available across all the
@@ -669,7 +669,7 @@ QQuickAbstractAnimation::ThreadingModel QQuickAbstractAnimation::threadingModel(
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits Animation
-    \brief Provides a pause for an animation
+    \brief Provides a pause for an animation.
 
     When used in a SequentialAnimation, PauseAnimation is a step when
     nothing happens, for a specified duration.
@@ -740,7 +740,7 @@ QAbstractAnimationJob* QQuickPauseAnimation::transition(QQuickStateActions &acti
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
-    \brief Animates changes in color values
+    \brief Animates changes in color values.
 
     ColorAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a color value changes.
@@ -898,7 +898,7 @@ void QActionAnimation::debugAnimation(QDebug d) const
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits Animation
-    \brief Defines scripts to be run during an animation
+    \brief Defines scripts to be run during an animation.
 
     ScriptAction can be used to run a script at a specific point in an animation.
 
@@ -1041,7 +1041,7 @@ QAbstractAnimationJob* QQuickScriptAction::transition(QQuickStateActions &action
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits Animation
-    \brief Specifies immediate property changes during animation
+    \brief Specifies immediate property changes during animation.
 
     PropertyAction is used to specify an immediate property change during an
     animation. The property change is not animated.
@@ -1302,7 +1302,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
-    \brief Animates changes in qreal-type values
+    \brief Animates changes in qreal-type values.
 
     NumberAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a numerical value changes.
@@ -1415,7 +1415,7 @@ void QQuickNumberAnimation::setTo(qreal t)
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
-    \brief Animates changes in QVector3d values
+    \brief Animates changes in QVector3d values.
 
     Vector3dAnimation is a specialized PropertyAnimation that defines an
     animation to be applied when a Vector3d value changes.
@@ -1492,7 +1492,7 @@ void QQuickVector3dAnimation::setTo(QVector3D t)
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits PropertyAnimation
-    \brief Animates changes in rotation values
+    \brief Animates changes in rotation values.
 
     RotationAnimation is a specialized PropertyAnimation that gives control
     over the direction of rotation during an animation.
@@ -1734,7 +1734,7 @@ QQmlListProperty<QQuickAbstractAnimation> QQuickAnimationGroup::animations()
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits Animation
-    \brief Allows animations to be run sequentially
+    \brief Allows animations to be run sequentially.
 
     The SequentialAnimation and ParallelAnimation types allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
@@ -1828,7 +1828,7 @@ QAbstractAnimationJob* QQuickSequentialAnimation::transition(QQuickStateActions 
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits Animation
-    \brief Enables animations to be run in parallel
+    \brief Enables animations to be run in parallel.
 
     The SequentialAnimation and ParallelAnimation types allow multiple
     animations to be run together. Animations defined in a SequentialAnimation
@@ -1991,7 +1991,7 @@ void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
-    \brief Animates changes in property values
+    \brief Animates changes in property values.
 
     PropertyAnimation provides a way to animate changes to a property's value.
 

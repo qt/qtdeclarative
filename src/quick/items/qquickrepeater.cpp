@@ -72,7 +72,7 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     \ingroup qtquick-models
     \ingroup qtquick-positioning
     \inherits Item
-    \brief Instantiates a number of Item-based components using a provided model
+    \brief Instantiates a number of Item-based components using a provided model.
 
     The Repeater type is used to create a large number of
     similar items. Like other view types, a Repeater has a \l model and a \l delegate:

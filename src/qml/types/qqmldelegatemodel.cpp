@@ -164,7 +164,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     \instantiates QQmlDelegateModel
     \inqmlmodule QtQuick
     \ingroup qtquick-models
-    \brief Encapsulates a model and delegate
+    \brief Encapsulates a model and delegate.
 
     The VisualDataModel type encapsulates a model and the delegate that will
     be instantiated for items in a model.
@@ -179,7 +179,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
     \qmltype DelegateModel
     \instantiates QQmlDelegateModel
     \inqmlmodule QtQml.Models
-    \brief Encapsulates a model and delegate
+    \brief Encapsulates a model and delegate.
 
     The DelegateModel type encapsulates a model and the delegate that will
     be instantiated for items in the model.
@@ -2291,7 +2291,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     \instantiates QQmlDelegateModelGroup
     \inqmlmodule QtQuick
     \ingroup qtquick-models
-    \brief Encapsulates a filtered set of visual data items
+    \brief Encapsulates a filtered set of visual data items.
 
     The VisualDataGroup type provides a means to address the model data of a
     model's delegate items, as well as sort and filter these delegate items.
@@ -2307,7 +2307,7 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     \instantiates QQmlDelegateModelGroup
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
-    \brief Encapsulates a filtered set of visual data items
+    \brief Encapsulates a filtered set of visual data items.
 
     The DelegateModelGroup type provides a means to address the model data of a
     DelegateModel's delegate items, as well as sort and filter these delegate

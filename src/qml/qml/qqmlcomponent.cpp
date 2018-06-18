@@ -89,7 +89,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \since 5.0
     \inmodule QtQml
 
-    \brief The QQmlComponent class encapsulates a QML component definition
+    \brief The QQmlComponent class encapsulates a QML component definition.
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
 
@@ -183,7 +183,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \instantiates QQmlComponent
     \ingroup qml-utility-elements
     \inqmlmodule QtQml
-    \brief Encapsulates a QML component definition
+    \brief Encapsulates a QML component definition.
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
 

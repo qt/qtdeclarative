@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Accessible
     \instantiates QQuickAccessibleAttached
-    \brief Enables accessibility of QML items
+    \brief Enables accessibility of QML items.
 
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility

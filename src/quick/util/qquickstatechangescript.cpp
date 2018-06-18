@@ -69,7 +69,7 @@ public:
     \instantiates QQuickStateChangeScript
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Specifies how to run a script in a state
+    \brief Specifies how to run a script in a state.
 
     A StateChangeScript is run upon entering a state. You can optionally use
     ScriptAction to specify the point in the transition at which

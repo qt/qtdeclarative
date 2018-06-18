@@ -43,7 +43,7 @@
     \qmltype ParticleGroup
     \instantiates QQuickParticleGroup
     \inqmlmodule QtQuick.Particles
-    \brief For setting attributes on a logical particle group
+    \brief For setting attributes on a logical particle group.
     \ingroup qtquick-particles
 
     This element allows you to set timed transitions on particle groups.

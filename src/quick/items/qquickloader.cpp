@@ -170,7 +170,7 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \ingroup qtquick-dynamic
     \inherits Item
 
-    \brief Allows dynamic loading of a subtree from a URL or Component
+    \brief Allows dynamic loading of a subtree from a URL or Component.
 
     Loader is used to dynamically load QML components.
 

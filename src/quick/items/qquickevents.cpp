@@ -57,7 +57,7 @@ Q_LOGGING_CATEGORY(lcPointerGrab, "qt.quick.pointer.grab")
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
-    \brief Provides information about a key event
+    \brief Provides information about a key event.
 
     For example, the following changes the Item's state property when the Enter
     key is pressed:
@@ -182,7 +182,7 @@ Item {
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
-    \brief Provides information about a mouse event
+    \brief Provides information about a mouse event.
 
     The position of the mouse can be found via the \l {Item::x} {x} and \l {Item::y} {y} properties.
     The button that caused the event is available via the \l button property.
@@ -349,7 +349,7 @@ Item {
     \instantiates QQuickWheelEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief Provides information about a mouse wheel event
+    \brief Provides information about a mouse wheel event.
 
     The position of the mouse can be found via the
     \l {Item::x} {x} and \l {Item::y} {y} properties.
@@ -474,7 +474,7 @@ Item {
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
-    \brief Provides information about a pointing device
+    \brief Provides information about a pointing device.
 
     A pointing device can be a mouse, a touchscreen, or a stylus on a graphics
     tablet.
@@ -668,7 +668,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
     \instantiates QQuickEventPoint
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief Provides information about an individual point within a PointerEvent
+    \brief Provides information about an individual point within a PointerEvent.
 
     A PointerEvent contains an EventPoint for each point of contact: one corresponding
     to the mouse cursor, or one for each finger touching a touchscreen.
@@ -1031,7 +1031,7 @@ void QQuickEventPoint::setAccepted(bool accepted)
     \instantiates QQuickEventTouchPoint
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief Provides information about an individual touch point within a PointerEvent
+    \brief Provides information about an individual touch point within a PointerEvent.
 
     \sa PointerEvent, PointerHandler
 */
@@ -1186,7 +1186,7 @@ QVector2D QQuickEventPoint::estimatedVelocity() const
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
-    \brief Provides information about an event from a pointing device
+    \brief Provides information about an event from a pointing device.
 
     A PointerEvent is an event describing contact or movement across a surface,
     provided by a mouse, a touchpoint (single finger on a touchscreen), or a

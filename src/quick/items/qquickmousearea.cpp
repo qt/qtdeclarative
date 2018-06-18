@@ -196,7 +196,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
     \instantiates QQuickMouseArea
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief Enables simple mouse handling
+    \brief Enables simple mouse handling.
     \inherits Item
 
     A MouseArea is an invisible item that is typically used in conjunction with

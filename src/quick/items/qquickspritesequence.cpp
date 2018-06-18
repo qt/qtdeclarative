@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \inherits Item
-    \brief Draws a sprite animation
+    \brief Draws a sprite animation.
 
     SpriteSequence renders and controls a list of animations defined
     by \l Sprite types.

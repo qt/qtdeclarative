@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction
-    \brief For specifying a direction towards the target point
+    \brief For specifying a direction towards the target point.
 
 */
 /*!

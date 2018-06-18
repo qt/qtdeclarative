@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief Provides fluid-like forces from a noise image
+    \brief Provides fluid-like forces from a noise image.
 
     The Turbulence Element scales the noise source over the area it affects,
     and uses the curl of that source to generate force vectors.

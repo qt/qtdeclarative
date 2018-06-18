@@ -28,7 +28,7 @@
     \title QML Examples - Internationalization
     \example qml-i18n
     \image qml-i18n-example.png
-    \brief This is an internationalization example
+    \brief This is an internationalization example.
 
  The QML runtime automatically loads a translation from the i18n subdirectory of the root
  QML file, based on the system language.

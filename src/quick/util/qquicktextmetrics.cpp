@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \since 5.4
     \ingroup qtquick-text-utility
-    \brief Provides metrics for a given font and text
+    \brief Provides metrics for a given font and text.
 
     TextMetrics calculates various properties of a given string of text for a
     particular font.

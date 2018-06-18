@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For applying random particle trajectory
+    \brief For applying random particle trajectory.
 
 */
 /*!

@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-animation-properties
     \since 5.0
     \inherits Animation
-    \brief Animates changes in parent values
+    \brief Animates changes in parent values.
 
     ParentAnimation is used to animate a parent change for an \l Item.
 
@@ -418,7 +418,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
-    \brief Animates changes in anchor values
+    \brief Animates changes in anchor values.
 
     AnchorAnimation is used to animate an anchor change.
 
@@ -565,7 +565,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     \ingroup qtquick-animation-properties
     \inherits Animation
     \since 5.0
-    \brief Animates an item along a path
+    \brief Animates an item along a path.
 
     When used in a transition, the path can be specified without start
     or end points, for example:

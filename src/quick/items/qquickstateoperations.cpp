@@ -149,7 +149,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent, QQuickItem *s
     \instantiates QQuickParentChange
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Specifies how to reparent an Item in a state change
+    \brief Specifies how to reparent an Item in a state change.
 
     ParentChange reparents an item while preserving its visual appearance (position, size,
     rotation, and scale) on screen. You can then specify a transition to move/resize/rotate/scale
@@ -555,7 +555,7 @@ void QQuickParentChange::rewind()
     \instantiates QQuickAnchorChanges
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Specifies how to change the anchors of an item in a state
+    \brief Specifies how to change the anchors of an item in a state.
 
     The AnchorChanges type is used to modify the anchors of an item in a \l State.
 

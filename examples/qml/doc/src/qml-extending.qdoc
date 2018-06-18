@@ -28,7 +28,7 @@
 /*!
 \example referenceexamples/adding
 \title Extending QML - Adding Types Example
-\brief Exporting C++ Classes
+\brief Exporting C++ Classes.
 \ingroup qmlextendingexamples
 
 The Adding Types Example shows how to add a new object type, \c Person, to QML.
@@ -65,7 +65,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 /*!
 \example referenceexamples/extended
 \title Extending QML - Extension Objects Example
-\brief Extension Objects
+\brief Extension Objects.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -96,7 +96,7 @@ not be accessible to the QML engine.
 /*!
 \example referenceexamples/properties
 \title Extending QML - Object and List Property Types Example
-\brief Exporting C++ Properties
+\brief Exporting C++ Properties.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -146,7 +146,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 /*!
 \example referenceexamples/coercion
 \title Extending QML - Inheritance and Coercion Example
-\brief C++ Inheritance and Coercion
+\brief C++ Inheritance and Coercion.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -211,7 +211,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 /*!
 \example referenceexamples/default
 \title Extending QML - Default Property Example
-\brief Default Property
+\brief Default Property.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -249,7 +249,7 @@ loads and runs the QML snippet shown at the beginning of this page.
 /*!
 \example referenceexamples/grouped
 \title Extending QML - Grouped Properties Example
-\brief Grouped Properties
+\brief Grouped Properties.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -265,7 +265,7 @@ This example builds on:
 /*!
 \example referenceexamples/attached
 \title Extending QML - Attached Properties Example
-\brief Attached Properties
+\brief Attached Properties.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -282,7 +282,7 @@ This example builds on:
 /*!
 \example referenceexamples/signal
 \title Extending QML - Signal Support Example
-\brief Signal Support
+\brief Signal Support.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -300,7 +300,7 @@ This example builds on:
 /*!
 \example referenceexamples/methods
 \title Extending QML - Methods Example
-\brief Methods Support
+\brief Methods Support.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -324,7 +324,7 @@ In \c example.qml, the \c invite() method is called in the \l [QML]{QtQml::Compo
 /*!
 \example referenceexamples/valuesource
 \title Extending QML - Property Value Source Example
-\brief Property Value Source
+\brief Property Value Source.
 \ingroup qmlextendingexamples
 
 This example builds on:
@@ -343,7 +343,7 @@ This example builds on:
 /*!
 \example referenceexamples/binding
 \title Extending QML - Binding Example
-\brief Binding
+\brief Binding.
 \ingroup qmlextendingexamples
 
 This example builds on:

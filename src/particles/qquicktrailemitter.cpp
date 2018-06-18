@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickTrailEmitter
     \inqmlmodule QtQuick.Particles
     \inherits QQuickParticleEmitter
-    \brief Emits logical particles from other logical particles
+    \brief Emits logical particles from other logical particles.
     \ingroup qtquick-particles
 
     This element emits logical particles into the ParticleSystem, with the

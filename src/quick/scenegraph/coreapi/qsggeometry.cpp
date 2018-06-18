@@ -115,7 +115,7 @@ const QSGGeometry::AttributeSet &QSGGeometry::defaultAttributes_ColoredPoint2D()
 
 /*!
     \class QSGGeometry::Attribute
-    \brief The QSGGeometry::Attribute describes a single vertex attribute in a QSGGeometry
+    \brief The QSGGeometry::Attribute describes a single vertex attribute in a QSGGeometry.
     \inmodule QtQuick
 
     The QSGGeometry::Attribute struct describes the attribute register position,

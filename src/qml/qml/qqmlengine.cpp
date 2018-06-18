@@ -156,7 +156,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
     \instantiates QObject
   \inqmlmodule QtQml
   \ingroup qml-utility-elements
-  \brief A basic QML type
+  \brief A basic QML type.
 
   The QtObject type is a non-visual element which contains only the
   objectName property.

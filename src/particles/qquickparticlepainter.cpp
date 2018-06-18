@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickParticlePainter
     \inqmlmodule QtQuick.Particles
     \inherits Item
-    \brief For specifying how to paint particles
+    \brief For specifying how to paint particles.
     \ingroup qtquick-particles
 
     The default implementation paints nothing. See the subclasses if you want to

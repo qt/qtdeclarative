@@ -123,7 +123,7 @@ public:
     \instantiates QQuickDrag
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief For specifying drag and drop events for moved Items
+    \brief For specifying drag and drop events for moved Items.
 
     Using the Drag attached property, any Item can be made a source of drag and drop
     events within a scene.

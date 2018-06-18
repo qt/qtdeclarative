@@ -176,7 +176,7 @@ void QQmlIncubatorPrivate::clear()
 
 /*!
 \class QQmlIncubationController
-\brief QQmlIncubationController instances drive the progress of QQmlIncubators
+\brief QQmlIncubationController instances drive the progress of QQmlIncubators.
 \inmodule QtQml
 
 In order to behave asynchronously and not introduce stutters or freezes in an application,

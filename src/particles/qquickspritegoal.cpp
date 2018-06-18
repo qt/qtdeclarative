@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-images-sprites
     \inherits Affector
-    \brief For changing the state of a sprite particle
+    \brief For changing the state of a sprite particle.
 
 */
 /*!

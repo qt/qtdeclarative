@@ -88,7 +88,7 @@ struct PlainVertices {
     \instantiates QQuickCustomParticle
     \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
-    \brief For specifying shaders to paint particles
+    \brief For specifying shaders to paint particles.
     \ingroup qtquick-particles
 
     \note The maximum number of custom particles is limited to 16383.

@@ -121,7 +121,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     \instantiates QQuickState
     \inqmlmodule QtQuick
     \ingroup qtquick-states
-    \brief Defines configurations of objects and properties
+    \brief Defines configurations of objects and properties.
 
     A \e state is a set of batched changes from the default configuration.
 

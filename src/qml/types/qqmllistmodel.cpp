@@ -1693,7 +1693,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     \instantiates QQmlListModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
-    \brief Defines a free-form list data source
+    \brief Defines a free-form list data source.
 
     The ListModel is a simple container of ListElement definitions, each
     containing data roles. The contents can be defined dynamically, or
@@ -2725,7 +2725,7 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
     \qmltype ListElement
     \instantiates QQmlListElement
     \inqmlmodule QtQml.Models
-    \brief Defines a data item in a ListModel
+    \brief Defines a data item in a ListModel.
     \ingroup qtquick-models
 
     List elements are defined inside ListModel definitions, and represent items in a

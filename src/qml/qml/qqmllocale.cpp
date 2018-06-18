@@ -715,7 +715,7 @@ V4_DEFINE_EXTENSION(QV4LocaleDataDeletable, localeV4Data);
     \qmltype Locale
     \instantiates QQmlLocale
     \inqmlmodule QtQml
-    \brief Provides locale specific properties and formatted data
+    \brief Provides locale specific properties and formatted data.
 
     The Locale object may only be created via the \l{QtQml::Qt::locale()}{Qt.locale()} function.
     It cannot be created directly.
