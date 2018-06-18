@@ -567,9 +567,6 @@ built-ins/Object/entries/primitive-symbols.js fails
 built-ins/Object/entries/symbols-omitted.js fails
 built-ins/Object/entries/tamper-with-global-object.js fails
 built-ins/Object/entries/tamper-with-object-keys.js fails
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-191.js fails
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-194.js fails
-built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-201.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-212.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-213.js fails
 built-ins/Object/getOwnPropertyDescriptor/15.2.3.3-4-214.js fails
@@ -856,7 +853,6 @@ built-ins/Proxy/isExtensible/return-same-result-from-target.js fails
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js fails
 built-ins/Proxy/isExtensible/trap-is-not-callable.js fails
 built-ins/Proxy/isExtensible/trap-is-undefined.js fails
-built-ins/Proxy/length.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertynames.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-keys.js fails
@@ -1965,7 +1961,6 @@ built-ins/WeakSet/prototype/prototype-attributes.js fails
 built-ins/WeakSet/symbol-disallowed-as-weakset-key.js fails
 built-ins/WeakSet/undefined-newtarget.js fails
 built-ins/WeakSet/weakset.js fails
-built-ins/eval/length-non-configurable.js fails
 built-ins/global/global-object.js fails
 built-ins/global/property-descriptor.js fails
 built-ins/isFinite/toprimitive-not-callable-throws.js fails

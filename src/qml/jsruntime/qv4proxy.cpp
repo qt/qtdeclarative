@@ -318,6 +318,7 @@ void Heap::Proxy::init(QV4::ExecutionContext *ctx)
     Scope scope(ctx);
     Scoped<QV4::Proxy> ctor(scope, this);
     ctor->defineDefaultProperty(QStringLiteral("revocable"), QV4::Proxy::method_revocable, 2);
+    ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(2));
 }
 
 ReturnedValue Proxy::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)

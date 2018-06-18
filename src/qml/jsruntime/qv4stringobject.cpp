@@ -219,7 +219,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     setProperty(scope.engine, Heap::StringObject::LengthPropertyIndex, Primitive::fromInt32(0));
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), StringCtor::method_fromCharCode, 1);
     ctor->defineDefaultProperty(QStringLiteral("fromCodePoint"), StringCtor::method_fromCodePoint, 1);
 

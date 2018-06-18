@@ -335,7 +335,7 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
     Scope s(scope);
     Heap::FunctionObject::init(scope, s.engine->id_eval());
     ScopedFunctionObject f(s, this);
-    f->defineReadonlyProperty(s.engine->id_length(), Primitive::fromInt32(1));
+    f->defineReadonlyConfigurableProperty(s.engine->id_length(), Primitive::fromInt32(1));
 }
 
 ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc, bool directCall) const

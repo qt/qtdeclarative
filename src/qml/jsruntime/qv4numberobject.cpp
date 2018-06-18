@@ -95,7 +95,7 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
 
     ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qt_qnan()));
     ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
