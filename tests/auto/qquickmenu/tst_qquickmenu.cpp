@@ -84,6 +84,8 @@ private slots:
     void subMenuPosition_data();
     void subMenuPosition();
     void addRemoveSubMenus();
+    void scrollable_data();
+    void scrollable();
 };
 
 void tst_QQuickMenu::defaults()
@@ -1307,6 +1309,31 @@ void tst_QQuickMenu::addRemoveSubMenus()
     QVERIFY(subSubMenu1.isNull());
     QCoreApplication::sendPostedEvents(subSubMenu1Item, QEvent::DeferredDelete);
     QVERIFY(subSubMenu1Item.isNull());
+}
+
+void tst_QQuickMenu::scrollable_data()
+{
+    QTest::addColumn<QString>("qmlFilePath");
+
+    QTest::addRow("Window") << QString::fromLatin1("windowScrollable.qml");
+    QTest::addRow("ApplicationWindow") << QString::fromLatin1("applicationWindowScrollable.qml");
+}
+
+void tst_QQuickMenu::scrollable()
+{
+    QFETCH(QString, qmlFilePath);
+
+    QQuickApplicationHelper helper(this, qmlFilePath);
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    QQuickItem *contentItem = menu->contentItem();
+    QCOMPARE(contentItem->property("interactive").toBool(), true);
 }
 
 QTEST_MAIN(tst_QQuickMenu)
