@@ -350,8 +350,8 @@ inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performF
 #endif
 
     ASSERT(m_size <= INT_MAX);
-    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
     MacroAssembler::cacheFlush(code(), m_size);
+    ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
 }
 
 template <typename MacroAssembler>
@@ -418,8 +418,8 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
     this->m_completed = true;
 #endif
 
-    ExecutableAllocator::makeExecutable(code(), m_initialSize);
     MacroAssembler::cacheFlush(code(), m_size);
+    ExecutableAllocator::makeExecutable(code(), m_initialSize);
 }
 
 template <typename MacroAssembler>
