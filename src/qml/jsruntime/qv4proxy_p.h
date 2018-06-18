@@ -91,6 +91,8 @@ struct ProxyObject: Object {
     static bool putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteProperty(Managed *m, StringOrSymbol *name);
     static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool hasProperty(const Managed *m, Identifier id);
+    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
 
     // those might require a second proxy object that derives from FunctionObject...
 //    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);

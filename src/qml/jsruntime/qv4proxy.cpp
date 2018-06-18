@@ -41,6 +41,7 @@
 #include "qv4proxy_p.h"
 #include "qv4symbol_p.h"
 #include "qv4jscall_p.h"
+#include "qv4objectproto_p.h"
 
 using namespace QV4;
 
@@ -190,6 +191,112 @@ bool ProxyObject::deleteIndexedProperty(Managed *m, uint index)
     Scope scope(m);
     ScopedString name(scope, Primitive::fromUInt32(index).toString(scope.engine));
     return deleteProperty(m, name);
+}
+
+bool ProxyObject::hasProperty(const Managed *m, Identifier id)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler)
+        return scope.engine->throwTypeError();
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString hasProp(scope, scope.engine->newString(QStringLiteral("has")));
+    ScopedValue trap(scope, handler->get(hasProp));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (trap->isUndefined())
+        return target->hasProperty(m, id);
+    if (!trap->isFunctionObject())
+        return scope.engine->throwTypeError();
+
+    JSCallData cdata(scope, 2, nullptr, handler);
+    cdata.args[0] = target;
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    bool result = trapResult->toBoolean();
+    if (!result) {
+        ScopedProperty targetDesc(scope);
+        PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
+        if (attributes != Attr_Invalid) {
+            if (!attributes.isConfigurable() || !target->isExtensible())
+                return scope.engine->throwTypeError();
+        }
+    }
+    return result;
+}
+
+PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Property *p)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler) {
+        scope.engine->throwTypeError();
+        return Attr_Invalid;
+    }
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString deleteProp(scope, scope.engine->newString(QStringLiteral("getOwnPropertyDescriptor")));
+    ScopedValue trap(scope, handler->get(deleteProp));
+    if (scope.hasException())
+        return Attr_Invalid;
+    if (trap->isUndefined())
+        return target->getOwnProperty(id, p);
+    if (!trap->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return Attr_Invalid;
+    }
+
+    JSCallData cdata(scope, 2, nullptr, handler);
+    cdata.args[0] = target;
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (!trapResult->isObject() && !trapResult->isUndefined()) {
+        scope.engine->throwTypeError();
+        return Attr_Invalid;
+    }
+
+    ScopedProperty targetDesc(scope);
+    PropertyAttributes targetAttributes = target->getOwnProperty(id, targetDesc);
+    if (trapResult->isUndefined()) {
+        p->value = Encode::undefined();
+        if (targetAttributes == Attr_Invalid) {
+            p->value = Encode::undefined();
+            return Attr_Invalid;
+        }
+        if (!targetAttributes.isConfigurable() || !target->isExtensible()) {
+            scope.engine->throwTypeError();
+            return Attr_Invalid;
+        }
+        return Attr_Invalid;
+    }
+
+    //bool extensibleTarget = target->isExtensible();
+    ScopedProperty resultDesc(scope);
+    PropertyAttributes resultAttributes;
+    ObjectPrototype::toPropertyDescriptor(scope.engine, trapResult, resultDesc, &resultAttributes);
+    resultDesc->fullyPopulated(&resultAttributes);
+
+    // ###
+    //Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
+    //If valid is false, throw a TypeError exception.
+
+    if (!resultAttributes.isConfigurable()) {
+        if (targetAttributes == Attr_Invalid || !targetAttributes.isConfigurable()) {
+            scope.engine->throwTypeError();
+            return Attr_Invalid;
+        }
+    }
+
+    p->value = resultDesc->value;
+    p->set = resultDesc->set;
+    return resultAttributes;
 }
 
 //ReturnedValue ProxyObject::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
