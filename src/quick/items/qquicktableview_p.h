@@ -60,7 +60,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTableViewAttached;
 class QQuickTableViewPrivate;
-class QQmlChangeSet;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
 {
@@ -75,7 +74,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged)
     Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged)
     Q_PROPERTY(int cacheBuffer READ cacheBuffer WRITE setCacheBuffer NOTIFY cacheBufferChanged)
-
+    Q_PROPERTY(QJSValue rowHeightProvider READ rowHeightProvider WRITE setRowHeightProvider NOTIFY rowHeightProviderChanged)
+    Q_PROPERTY(QJSValue columnWidthProvider READ columnWidthProvider WRITE setColumnWidthProvider NOTIFY columnWidthProviderChanged)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
 
@@ -106,6 +106,12 @@ public:
     int cacheBuffer() const;
     void setCacheBuffer(int newBuffer);
 
+    QJSValue rowHeightProvider() const;
+    void setRowHeightProvider(QJSValue provider);
+
+    QJSValue columnWidthProvider() const;
+    void setColumnWidthProvider(QJSValue provider);
+
     QVariant model() const;
     void setModel(const QVariant &newModel);
 
@@ -124,6 +130,8 @@ Q_SIGNALS:
     void leftMarginChanged();
     void rightMarginChanged();
     void cacheBufferChanged();
+    void rowHeightProviderChanged();
+    void columnWidthProviderChanged();
     void modelChanged();
     void delegateChanged();
 

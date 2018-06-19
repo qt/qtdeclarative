@@ -85,6 +85,14 @@ private slots:
     void emptyModel();
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
+    void checkColumnWidthWithoutProvider();
+    void checkColumnWidthProvider();
+    void checkColumnWidthProviderInvalidReturnValues();
+    void checkColumnWidthProviderNotCallable();
+    void checkRowHeightWithoutProvider();
+    void checkRowHeightProvider();
+    void checkRowHeightProviderInvalidReturnValues();
+    void checkRowHeightProviderNotCallable();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -181,6 +189,8 @@ void tst_QQuickTableView::checkZeroSizedDelegate()
     view->rootObject()->setProperty("delegateWidth", 0);
     view->rootObject()->setProperty("delegateHeight", 0);
 
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicit"));
+
     WAIT_UNTIL_POLISHED;
 
     auto items = tableViewPrivate->loadedItems;
@@ -213,6 +223,163 @@ void tst_QQuickTableView::checkImplicitSizeDelegate()
         QCOMPARE(item->width(), 90);
         QCOMPARE(item->height(), 60);
     }
+}
+
+void tst_QQuickTableView::checkColumnWidthWithoutProvider()
+{
+    // Checks that a function isn't assigned to the columnWidthProvider property
+    // and that the column width is equal to the implicitWidth of the delegate.
+    LOAD_TABLEVIEW("alternatingrowheightcolumnwidth.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+    QVERIFY(tableView->columnWidthProvider().isUndefined());
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        // expectedWidth mirrors the implicit width of the delegate
+        qreal expectedWidth = fxItem->cell.x() % 2 ? 30 : 40;
+        QCOMPARE(fxItem->item->width(), expectedWidth);
+    }
+}
+
+void tst_QQuickTableView::checkColumnWidthProvider()
+{
+    // Check that you can assign a function to the columnWidthProvider property, and
+    // that it's used to control (and override) the width of the columns.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+    QVERIFY(tableView->columnWidthProvider().isCallable());
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        // expectedWidth mirrors the expected return value of the assigned javascript function
+        qreal expectedWidth = fxItem->cell.x() + 10;
+        QCOMPARE(fxItem->item->width(), expectedWidth);
+    }
+}
+
+void tst_QQuickTableView::checkColumnWidthProviderInvalidReturnValues()
+{
+    // Check that we fall back to use default columns widths, if you
+    // assign a function to columnWidthProvider that returns invalid values.
+    LOAD_TABLEVIEW("usefaultyrowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Provider.*valid"));
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), kDefaultColumnWidth);
+}
+
+void tst_QQuickTableView::checkColumnWidthProviderNotCallable()
+{
+    // Check that we fall back to use default columns widths, if you
+    // assign something to columnWidthProvider that is not callable.
+    LOAD_TABLEVIEW("usefaultyrowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+    tableView->setRowHeightProvider(QJSValue());
+    tableView->setColumnWidthProvider(QJSValue(10));
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".Provider.*function"));
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), kDefaultColumnWidth);
+}
+
+void tst_QQuickTableView::checkRowHeightWithoutProvider()
+{
+    // Checks that a function isn't assigned to the rowHeightProvider property
+    // and that the row height is equal to the implicitHeight of the delegate.
+    LOAD_TABLEVIEW("alternatingrowheightcolumnwidth.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    QVERIFY(tableView->rowHeightProvider().isUndefined());
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        // expectedHeight mirrors the implicit height of the delegate
+        qreal expectedHeight = fxItem->cell.y() % 2 ? 30 : 40;
+        QCOMPARE(fxItem->item->height(), expectedHeight);
+    }
+}
+
+void tst_QQuickTableView::checkRowHeightProvider()
+{
+    // Check that you can assign a function to the columnWidthProvider property, and
+    // that it's used to control (and override) the width of the columns.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+    QVERIFY(tableView->rowHeightProvider().isCallable());
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        // expectedWidth mirrors the expected return value of the assigned javascript function
+        qreal expectedHeight = fxItem->cell.y() + 10;
+        QCOMPARE(fxItem->item->height(), expectedHeight);
+    }
+}
+
+void tst_QQuickTableView::checkRowHeightProviderInvalidReturnValues()
+{
+    // Check that we fall back to use default row heights, if you
+    // assign a function to rowHeightProvider that returns invalid values.
+    LOAD_TABLEVIEW("usefaultyrowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Provider.*valid"));
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
+}
+
+void tst_QQuickTableView::checkRowHeightProviderNotCallable()
+{
+    // Check that we fall back to use default row heights, if you
+    // assign something to rowHeightProvider that is not callable.
+    LOAD_TABLEVIEW("usefaultyrowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    tableView->setColumnWidthProvider(QJSValue());
+    tableView->setRowHeightProvider(QJSValue(10));
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Provider.*function"));
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
 }
 
 void tst_QQuickTableView::noDelegate()

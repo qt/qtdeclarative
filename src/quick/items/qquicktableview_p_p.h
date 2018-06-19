@@ -161,28 +161,6 @@ public:
         }
     };
 
-    struct ColumnRowSize
-    {
-        // ColumnRowSize is a helper class for storing row heights
-        // and column widths. We calculate the average width of a column
-        // the first time it's scrolled into view based on the size of
-        // the loaded items in the new column. Since we never load more items
-        // that what fits inside the viewport (cachebuffer aside), this calculation
-        // would be different depending on which row you were at when the column
-        // was scrolling in. To avoid that a column resizes when it's scrolled
-        // in and out and in again, we store its width. But to avoid storing
-        // the width for all columns, we choose to only store the width if it
-        // differs from the column(s) to the left. The same logic applies for row heights.
-        // 'index' translates to either 'row' or 'column'.
-        int index;
-        qreal size;
-
-        static bool lessThan(const ColumnRowSize& a, const ColumnRowSize& b)
-        {
-            return a.index < b.index;
-        }
-    };
-
 public:
     QQuickTableViewPrivate();
     ~QQuickTableViewPrivate() override;
@@ -230,9 +208,10 @@ public:
     bool tableInvalid = false;
     bool tableRebuilding = false;
     bool columnRowPositionsInvalid = false;
+    bool layoutWarningIssued = false;
 
-    QVector<ColumnRowSize> columnWidths;
-    QVector<ColumnRowSize> rowHeights;
+    QJSValue rowHeightProvider;
+    QJSValue columnWidthProvider;
 
     const static QPoint kLeft;
     const static QPoint kRight;
@@ -249,15 +228,12 @@ public:
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
 
-    void calculateColumnWidthsAfterRebuilding();
-    void calculateRowHeightsAfterRebuilding();
-    void calculateColumnWidth(int column);
-    void calculateRowHeight(int row);
-    void calculateEdgeSizeFromLoadRequest();
+    qreal sizeHintForColumn(int column);
+    qreal sizeHintForRow(int row);
     void calculateTableSize();
 
-    qreal columnWidth(int column);
-    qreal rowHeight(int row);
+    qreal resolveColumnWidth(int column);
+    qreal resolveRowHeight(int row);
 
     void relayoutTable();
     void relayoutTableItems();
@@ -346,7 +322,5 @@ public:
 
     QPoint cell;
 };
-
-Q_DECLARE_TYPEINFO(QQuickTableViewPrivate::ColumnRowSize, Q_PRIMITIVE_TYPE);
 
 QT_END_NAMESPACE
