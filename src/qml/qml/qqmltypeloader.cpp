@@ -1832,15 +1832,7 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         if (*value)
             absoluteFilePath = path;
     } else {
-        bool exists = false;
-#ifdef Q_OS_UNIX
-        struct stat statBuf;
-        // XXX Avoid encoding entire path. Should store encoded dirpath in cache
-        if (::stat(QFile::encodeName(path).constData(), &statBuf) == 0)
-            exists = S_ISREG(statBuf.st_mode);
-#else
-        exists = QFile::exists(path);
-#endif
+        bool exists = QFile::exists(path);
         fileSet->insert(fileName, new bool(exists));
         if (exists)
             absoluteFilePath = path;

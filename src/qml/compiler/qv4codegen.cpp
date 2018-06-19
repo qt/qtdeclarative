@@ -2360,6 +2360,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _module->blocks.append(_context);
         _context->blockIndex = _module->blocks.count() - 1;
     }
+    if (_module->debugMode) // allow the debugger to see overwritten arguments
+        _context->argumentsCanEscape = true;
 
     // When a user writes the following QML signal binding:
     //    onSignal: function() { doSomethingUsefull }

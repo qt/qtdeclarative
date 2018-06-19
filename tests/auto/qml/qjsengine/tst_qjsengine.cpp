@@ -201,6 +201,7 @@ private slots:
 
     void basicBlockMergeAfterLoopPeeling();
 
+    void modulusCrash();
     void malformedExpression();
 
     void scriptScopes();
@@ -4146,6 +4147,15 @@ void tst_QJSEngine::basicBlockMergeAfterLoopPeeling()
     "}\n");
     QVERIFY(!ok.isCallable());
 
+}
+
+void tst_QJSEngine::modulusCrash()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(
+    "var a = -2147483648; var b = -1; var c = a % b; c;"
+    );
+    QVERIFY(result.isNumber() && result.toNumber() == 0.);
 }
 
 void tst_QJSEngine::malformedExpression()

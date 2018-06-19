@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static const int MAX_PACKET_SIZE = 0x7FFFFFFF;
-
 /*!
   \class QPacketProtocol
   \internal
@@ -246,7 +244,7 @@ void QPacketProtocol::readyToRead()
             }
 
             // Check sizing constraints
-            if (d->inProgressSize > MAX_PACKET_SIZE) {
+            if (d->inProgressSize < qint32(sizeof(qint32))) {
                 disconnect(d->dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
                 disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
                 disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
