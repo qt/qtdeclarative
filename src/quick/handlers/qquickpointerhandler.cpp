@@ -57,8 +57,8 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
     \ingroup qtquick-handlers
     \brief Abstract handler for pointer events.
 
-    PointerHandler is the base class handler (not registered as a QML type) for
-    pointer events without regard to source (touch, mouse or graphics tablet).
+    PointerHandler is the base class Input Handler (not registered as a QML type) for
+    events from any kind of pointing device (touch, mouse or graphics tablet).
 */
 
 QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
@@ -115,12 +115,12 @@ void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
 
 /*!
     Notification that the grab has changed in some way which is relevant to this handler.
-    The \a grabber (subject) will be the PointerHandler whose state is changing,
+    The \a grabber (subject) will be the Input Handler whose state is changing,
     or null if the state change regards an Item.
     The \a stateChange (verb) tells what happened.
     The \a point (object) is the point that was grabbed or ungrabbed.
     EventPoint has the sole responsibility to call this function.
-    The PointerHandler must react in whatever way is appropriate, and must
+    The Input Handler must react in whatever way is appropriate, and must
     emit the relevant signals (for the benefit of QML code).
     A subclass is allowed to override this virtual function, but must always
     call its parent class's implementation in addition to (usually after)
@@ -164,10 +164,10 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
 /*!
     Acquire or give up a passive grab of the given \a point, according to the \a grab state.
 
-    Unlike the exclusive grab, multiple PointerHandlers can have passive grabs
+    Unlike the exclusive grab, multiple Input Handlers can have passive grabs
     simultaneously. This means that each of them will receive further events
-    when the \a point moves, and when it is finally released. Typically a
-    PointerHandler should acquire a passive grab as soon as a point is pressed,
+    when the \a point moves, and when it is finally released. Typically an
+    Input Handler should acquire a passive grab as soon as a point is pressed,
     if the handler's constraints do not clearly rule out any interest in that
     point. For example, DragHandler needs a passive grab in order to watch the
     movement of a point to see whether it will be dragged past the drag
@@ -464,7 +464,7 @@ bool QQuickPointerHandler::wantsEventPoint(QQuickEventPoint *point)
     \readonly
     \qmlproperty bool QtQuick::PointerHandler::active
 
-    This holds true whenever this PointerHandler has taken sole responsibility
+    This holds true whenever this Input Handler has taken sole responsibility
     for handing one or more EventPoints, by successfully taking an exclusive
     grab of those points. This means that it is keeping its properties
     up-to-date according to the movements of those Event Points and actively

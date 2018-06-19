@@ -61,7 +61,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     \brief Handler for pinch gestures.
 
     PinchHandler is a handler that interprets a multi-finger gesture to
-    interactively rotate, zoom, and drag an Item. Like other Pointer Handlers,
+    interactively rotate, zoom, and drag an Item. Like other Input Handlers,
     by default it is fully functional, and manipulates its \l target,
     which is the Item within which it is declared.
 

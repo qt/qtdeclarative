@@ -97,7 +97,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet pointerHandlers/pointHandler.qml 0
 
-    Like all pointer handlers, a PointHandler has a \l target property, which
+    Like all input handlers, a PointHandler has a \l target property, which
     may be used as a convenient place to put a point-tracking Item; but
     PointHandler will not automatically manipulate the \c target item in any way.
     You need to use bindings to make it react to the \l point.

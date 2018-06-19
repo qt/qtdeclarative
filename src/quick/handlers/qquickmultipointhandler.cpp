@@ -133,7 +133,7 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
      If a smaller number of touchpoints are in contact with the
      \l {PointerHandler::parent}{parent}, they will be ignored.
 
-     Any ignored points are eligible to activate other Pointer Handlers that
+     Any ignored points are eligible to activate other Input Handlers that
      have different constraints, on the same Item or on other Items.
 
      The default value is 2.
@@ -159,7 +159,7 @@ void QQuickMultiPointHandler::setMinimumPointCount(int c)
      chosen in the order that they are pressed, and the remaining points will
      be ignored.
 
-     Any ignored points are eligible to activate other Pointer Handlers that
+     Any ignored points are eligible to activate other Input Handlers that
      have different constraints, on the same Item or on other Items.
 
      The default value is the same as \l minimumPointCount.

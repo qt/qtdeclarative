@@ -65,7 +65,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     value is DragThreshold, which requires the press and release to be close
     together in both space and time.  In this case, DragHandler is able to
     function using only a passive grab, and therefore does not interfere with
-    event delivery to any other Items or Pointer Handlers.  So the default
+    event delivery to any other Items or Input Handlers.  So the default
     gesturePolicy is useful when you want to modify behavior of an existing
     control or Item by adding a TapHandler with bindings and/or JavaScript
     callbacks.
@@ -237,7 +237,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            threshold (QStyleHints::startDragDistance), the tap gesture is
            canceled, even if the button or finger is still pressed. This policy
            can be useful whenever TapHandler needs to cooperate with other
-           pointer handlers (for example \l DragHandler) or event-handling Items
+           input handlers (for example \l DragHandler) or event-handling Items
            (for example QtQuick Controls), because in this case TapHandler
            will not take the exclusive grab, but merely a passive grab.
 

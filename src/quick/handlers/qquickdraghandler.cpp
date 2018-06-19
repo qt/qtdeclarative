@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \brief Handler for dragging.
 
     DragHandler is a handler that is used to interactively move an Item.
-    Like other Pointer Handlers, by default it is fully functional, and
+    Like other Input Handlers, by default it is fully functional, and
     manipulates its \l {PointerHandler::target} {target}.
 
     \snippet pointerHandlers/dragHandler.qml 0
