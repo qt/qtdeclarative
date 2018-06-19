@@ -401,7 +401,7 @@ ReturnedValue ObjectPrototype::method_preventExtensions(const FunctionObject *b,
     if (!o)
         return argv[0].asReturnedValue();
 
-    o->setInternalClass(o->internalClass()->nonExtensible());
+    o->preventExtensions();
     return o.asReturnedValue();
 }
 

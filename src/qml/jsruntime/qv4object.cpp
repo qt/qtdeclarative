@@ -1025,6 +1025,14 @@ bool Object::isExtensible(const Managed *m)
     return m->d()->internalClass->extensible;
 }
 
+bool Object::preventExtensions(Managed *m)
+{
+    Q_ASSERT(m->isObject());
+    Object *o = static_cast<Object *>(m);
+    o->setInternalClass(o->internalClass()->nonExtensible());
+    return true;
+}
+
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());

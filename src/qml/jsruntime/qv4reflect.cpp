@@ -232,8 +232,7 @@ ReturnedValue Reflect::method_preventExtensions(const FunctionObject *f, const V
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, static_cast<const Object *>(argv));
-    o->setInternalClass(o->internalClass()->nonExtensible());
-    return Encode(true);
+    return Encode(o->preventExtensions());
 }
 
 ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const Value *argv, int argc)

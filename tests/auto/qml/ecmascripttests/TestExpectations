@@ -867,12 +867,7 @@ built-ins/Proxy/ownKeys/return-type-throws-undefined.js fails
 built-ins/Proxy/ownKeys/trap-is-not-callable-realm.js fails
 built-ins/Proxy/ownKeys/trap-is-not-callable.js fails
 built-ins/Proxy/ownKeys/trap-is-undefined.js fails
-built-ins/Proxy/preventExtensions/call-parameters.js fails
-built-ins/Proxy/preventExtensions/null-handler.js fails
-built-ins/Proxy/preventExtensions/return-false.js fails
-built-ins/Proxy/preventExtensions/return-true-target-is-extensible.js fails
 built-ins/Proxy/preventExtensions/trap-is-not-callable-realm.js fails
-built-ins/Proxy/preventExtensions/trap-is-not-callable.js fails
 built-ins/Proxy/proxy-no-prototype.js fails
 built-ins/Proxy/revocable/revocation-function-name.js fails
 built-ins/Proxy/revocable/revocation-function-nonconstructor.js fails
@@ -882,6 +877,7 @@ built-ins/Proxy/setPrototypeOf/call-parameters.js fails
 built-ins/Proxy/setPrototypeOf/internals-call-order.js fails
 built-ins/Proxy/setPrototypeOf/not-extensible-target-not-same-target-prototype.js fails
 built-ins/Proxy/setPrototypeOf/not-extensible-target-same-target-prototype.js fails
+built-ins/Proxy/setPrototypeOf/return-abrupt-from-target-getprototypeof.js fails
 built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js fails
 built-ins/Proxy/setPrototypeOf/toboolean-trap-result-true-target-is-extensible.js fails
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js fails
@@ -891,7 +887,6 @@ built-ins/Reflect/construct/newtarget-is-not-constructor-throws.js fails
 built-ins/Reflect/construct/return-with-newtarget-argument.js fails
 built-ins/Reflect/get/return-value-from-receiver.js fails
 built-ins/Reflect/ownKeys/return-on-corresponding-order.js fails
-built-ins/Reflect/preventExtensions/return-boolean-from-proxy-object.js fails
 built-ins/Reflect/set/creates-a-data-descriptor.js fails
 built-ins/Reflect/set/different-property-descriptors.js fails
 built-ins/Reflect/set/receiver-is-not-object.js fails
