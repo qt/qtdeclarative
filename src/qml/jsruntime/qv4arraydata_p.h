@@ -92,7 +92,7 @@ namespace Heap {
 
 #define ArrayDataMembers(class, Member) \
     Member(class, NoMark, ushort, type) \
-    Member(class, NoMark, ushort, needsMark) \
+    Member(class, NoMark, ushort, unused) \
     Member(class, NoMark, uint, offset) \
     Member(class, NoMark, PropertyAttributes *, attrs) \
     Member(class, NoMark, SparseArray *, sparse) \
@@ -147,8 +147,6 @@ struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
     const Value &data(uint index) const { return values[mappedIndex(index)]; }
     void setData(EngineBase *e, uint index, Value newVal) {
-        if (newVal.isManaged())
-            needsMark = true;
         values.set(e, mappedIndex(index), newVal);
     }
 

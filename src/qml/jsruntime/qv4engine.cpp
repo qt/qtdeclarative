@@ -599,12 +599,6 @@ Heap::ArrayObject *ExecutionEngine::newArrayObject(const Value *values, int leng
         // this doesn't require a write barrier, things will be ok, when the new array data gets inserted into
         // the parent object
         memcpy(&d->values.values, values, length*sizeof(Value));
-        for (int i = 0; i < length; ++i) {
-            if (values[i].isManaged()) {
-                d->needsMark = true;
-                break;
-            }
-        }
         a->d()->arrayData.set(this, d);
         a->setArrayLengthUnchecked(length);
     }

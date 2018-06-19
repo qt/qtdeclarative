@@ -168,8 +168,6 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
     }
     newData->setAlloc(alloc);
     newData->setType(newType);
-    if (d)
-        newData->d()->needsMark = d->d()->needsMark;
     newData->setAttrs(enforceAttributes ? reinterpret_cast<PropertyAttributes *>(newData->d()->values.values + alloc) : nullptr);
     o->setArrayData(newData);
 
@@ -192,8 +190,6 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         memcpy(newData->d()->values.values, d->d()->values.values + offset, sizeof(Value)*toCopy);
     }
 
-    if (newType != Heap::ArrayData::Simple)
-        newData->d()->needsMark = true;
     if (newType != Heap::ArrayData::Sparse)
         return;
 
