@@ -1473,7 +1473,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
             pd->value = Primitive::emptyValue();
             pd->set = args[2];
         }
-        bool ok = o->__defineOwnProperty__(scope.engine, name, pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
+        bool ok = o->defineOwnProperty(name->toPropertyKey(), pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
         if (!ok)
             return engine->throwTypeError();
 

@@ -146,7 +146,7 @@ struct ArgumentsObject: Object {
         return m->vtable() == staticVTable();
     }
 
-    bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
+    static bool defineOwnProperty(Managed *m, Identifier id, const Property *desc, PropertyAttributes attrs);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool putIndexed(Managed *m, uint index, const Value &value);
     static bool deleteProperty(Managed *m, Identifier id);

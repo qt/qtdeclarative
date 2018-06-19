@@ -120,45 +120,49 @@ void ArgumentsObject::fullyCreate()
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs)
+bool ArgumentsObject::defineOwnProperty(Managed *m, Identifier id, const Property *desc, PropertyAttributes attrs)
 {
-    fullyCreate();
+    if (!id.isArrayIndex())
+        return Object::defineOwnProperty(m, id, desc, attrs);
 
-    Scope scope(engine);
+    ArgumentsObject *a = static_cast<ArgumentsObject *>(m);
+    a->fullyCreate();
+
+    uint index = id.asArrayIndex();
+    Scope scope(m);
     ScopedProperty map(scope);
     PropertyAttributes mapAttrs;
-    uint numAccessors = qMin(d()->nFormals, context()->argc());
+    uint numAccessors = qMin(a->d()->nFormals, a->context()->argc());
     bool isMapped = false;
-    if (arrayData() && index < numAccessors &&
-        arrayData()->attributes(index).isAccessor() &&
-        arrayData()->get(index) == scope.engine->argumentsAccessors[index].getter()->asReturnedValue())
+    if (a->arrayData() && index < numAccessors &&
+        a->arrayData()->attributes(index).isAccessor() &&
+        a->arrayData()->get(index) == scope.engine->argumentsAccessors[index].getter()->asReturnedValue())
         isMapped = true;
 
     if (isMapped) {
-        Q_ASSERT(arrayData());
-        mapAttrs = arrayData()->attributes(index);
-        arrayData()->getProperty(index, map, &mapAttrs);
-        setArrayAttributes(index, Attr_Data);
-        PropertyIndex arrayIndex{ arrayData(), arrayData()->values.values + arrayData()->mappedIndex(index) };
-        arrayIndex.set(scope.engine, d()->mappedArguments->values[index]);
+        Q_ASSERT(a->arrayData());
+        mapAttrs = a->arrayData()->attributes(index);
+        a->arrayData()->getProperty(index, map, &mapAttrs);
+        a->setArrayAttributes(index, Attr_Data);
+        PropertyIndex arrayIndex{ a->arrayData(), a->arrayData()->values.values + a->arrayData()->mappedIndex(index) };
+        arrayIndex.set(scope.engine, a->d()->mappedArguments->values[index]);
     }
 
-    bool result = Object::defineOwnProperty2(scope.engine, index, desc, attrs);
-    if (!result) {
+    bool result = Object::defineOwnProperty(m, id, desc, attrs);
+    if (!result)
         return false;
-    }
 
     if (isMapped && attrs.isData()) {
-        Q_ASSERT(arrayData());
+        Q_ASSERT(a->arrayData());
         ScopedFunctionObject setter(scope, map->setter());
         JSCallData jsCallData(scope, 1);
-        *jsCallData->thisObject = this->asReturnedValue();
+        *jsCallData->thisObject = a->asReturnedValue();
         jsCallData->args[0] = desc->value;
         setter->call(jsCallData);
 
         if (attrs.isWritable()) {
-            setArrayAttributes(index, mapAttrs);
-            arrayData()->setProperty(engine, index, map);
+            a->setArrayAttributes(index, mapAttrs);
+            a->arrayData()->setProperty(m->engine(), index, map);
         }
     }
 

@@ -178,12 +178,13 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         ctx = ctx->d()->outer;
     }
 
-    if (activation->getOwnProperty(name->toPropertyKey()) != Attr_Invalid)
+    Identifier id = name->toPropertyKey();
+    if (activation->getOwnProperty(id) != Attr_Invalid)
         return;
     ScopedProperty desc(scope);
     PropertyAttributes attrs(Attr_Data);
     attrs.setConfigurable(deletable);
-    if (!activation->__defineOwnProperty__(scope.engine, name, desc, attrs))
+    if (!activation->defineOwnProperty(id, desc, attrs))
         scope.engine->throwTypeError();
 }
 

@@ -131,7 +131,7 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    bool result = O->__defineOwnProperty__(scope.engine, name, pd, attrs);
+    bool result = O->defineOwnProperty(name->toPropertyKey(), pd, attrs);
 
     return Encode(result);
 }

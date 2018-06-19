@@ -295,7 +295,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    if (!O->__defineOwnProperty__(scope.engine, name, pd, attrs))
+    if (!O->defineOwnProperty(name->toPropertyKey(), pd, attrs))
         THROW_TYPE_ERROR();
 
     return O.asReturnedValue();
@@ -332,9 +332,9 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
         return QV4::Encode::undefined();
         bool ok;
         if (name)
-            ok = O->__defineOwnProperty__(scope.engine, name, n, nattrs);
+            ok = O->defineOwnProperty(name->toPropertyKey(), n, nattrs);
         else
-            ok = O->__defineOwnProperty__(scope.engine, index, n, nattrs);
+            ok = O->defineOwnProperty(Identifier::fromArrayIndex(index), n, nattrs);
         if (!ok)
             THROW_TYPE_ERROR();
     }
@@ -644,7 +644,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(const FunctionObject *b, cons
     ScopedProperty pd(scope);
     pd->value = f;
     pd->set = Primitive::emptyValue();
-    bool ok = o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    bool ok = o->defineOwnProperty(prop->toPropertyKey(), pd, Attr_Accessor);
     if (!ok)
         THROW_TYPE_ERROR();
     RETURN_UNDEFINED();
@@ -674,7 +674,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(const FunctionObject *b, cons
     ScopedProperty pd(scope);
     pd->value = Primitive::emptyValue();
     pd->set = f;
-    bool ok = o->__defineOwnProperty__(scope.engine, prop, pd, Attr_Accessor);
+    bool ok = o->defineOwnProperty(prop->toPropertyKey(), pd, Attr_Accessor);
     if (!ok)
         THROW_TYPE_ERROR();
     RETURN_UNDEFINED();

@@ -176,6 +176,7 @@ struct ObjectVTable
     bool (*deleteProperty)(Managed *m, Identifier id);
     bool (*hasProperty)(const Managed *m, Identifier id);
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
+    bool (*defineOwnProperty)(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
     bool (*isExtensible)(const Managed *);
     bool (*preventExtensions)(Managed *);
     Heap::Object *(*getPrototypeOf)(const Managed *);
@@ -198,6 +199,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     deleteProperty,                             \
     hasProperty,                                \
     getOwnProperty,                             \
+    defineOwnProperty,                          \
     isExtensible,                               \
     preventExtensions,                          \
     getPrototypeOf,                             \
@@ -258,11 +260,9 @@ struct Q_QML_EXPORT Object: Managed {
         return vtable()->hasProperty(this, id);
     }
 
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
-    bool __defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs);
-    bool defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs);
+    bool defineOwnProperty(Identifier id, const Property *p, PropertyAttributes attrs) {
+        return vtable()->defineOwnProperty(this, id, p, attrs);
+    }
 
     //
     // helpers
@@ -443,6 +443,7 @@ protected:
     static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
+    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
     static Heap::Object *getPrototypeOf(const Managed *);
@@ -452,6 +453,7 @@ protected:
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
 
 private:
+    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
     ReturnedValue internalGet(StringOrSymbol *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
     bool internalPut(StringOrSymbol *name, const Value &value);
@@ -532,6 +534,9 @@ struct ArrayObject: Object {
     static qint64 getLength(const Managed *m);
 
     QStringList toQStringList() const;
+protected:
+    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
+
 };
 
 inline void Object::setArrayLengthUnchecked(uint l)

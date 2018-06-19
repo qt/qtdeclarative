@@ -661,110 +661,7 @@ bool Object::internalDeleteProperty(Identifier id)
     return true;
 }
 
-// Section 8.12.9
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, StringOrSymbol *name, const Property *p, PropertyAttributes attrs)
-{
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return __defineOwnProperty__(engine, idx, p, attrs);
-
-    Scope scope(engine);
-    name->makeIdentifier();
-
-    uint memberIndex;
-
-    if (isArrayObject() && name->identifier() == engine->id_length()->identifier()) {
-        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == internalClass()->find(engine->id_length()->identifier()));
-        ScopedProperty lp(scope);
-        PropertyAttributes cattrs;
-        getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
-        if (attrs.isEmpty() || p->isSubset(attrs, lp, cattrs))
-            return true;
-        if (!cattrs.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
-            return false;
-        bool succeeded = true;
-        if (attrs.type() == PropertyAttributes::Data) {
-            bool ok;
-            uint l = p->value.asArrayLength(&ok);
-            if (!ok) {
-                ScopedValue v(scope, p->value);
-                engine->throwRangeError(v);
-                return false;
-            }
-            succeeded = setArrayLength(l);
-        }
-        if (attrs.hasWritable() && !attrs.isWritable()) {
-            cattrs.setWritable(false);
-            Heap::InternalClass::changeMember(this, engine->id_length()->identifier(), cattrs);
-        }
-        if (!succeeded)
-            return false;
-        return true;
-    }
-
-    // Clause 1
-    memberIndex = internalClass()->find(name->identifier());
-
-    if (memberIndex == UINT_MAX) {
-        // clause 3
-        if (!isExtensible())
-            return false;
-        // clause 4
-        ScopedProperty pd(scope);
-        pd->copy(p, attrs);
-        pd->fullyPopulated(&attrs);
-        insertMember(name, pd, attrs);
-        return true;
-    }
-
-    return __defineOwnProperty__(engine, memberIndex, name, p, attrs);
-}
-
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
-{
-    // 15.4.5.1, 4b
-    if (isArrayObject() && index >= getLength() && !internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
-        return false;
-
-    if (ArgumentsObject::isNonStrictArgumentsObject(this))
-        return static_cast<ArgumentsObject *>(this)->defineOwnProperty(engine, index, p, attrs);
-
-    return defineOwnProperty2(engine, index, p, attrs);
-}
-
-bool Object::defineOwnProperty2(ExecutionEngine *engine, uint index, const Property *p, PropertyAttributes attrs)
-{
-    bool hasProperty = 0;
-
-    // Clause 1
-    if (arrayData()) {
-        hasProperty = arrayData()->mappedIndex(index) != UINT_MAX;
-        if (!hasProperty && isStringObject())
-            hasProperty = (index < static_cast<StringObject *>(this)->length());
-    }
-
-    if (!hasProperty) {
-        // clause 3
-        if (!isExtensible())
-            return false;
-        // clause 4
-        Scope scope(engine);
-        ScopedProperty pp(scope);
-        pp->copy(p, attrs);
-        pp->fullyPopulated(&attrs);
-        if (attrs == Attr_Data) {
-            ScopedValue v(scope, pp->value);
-            arraySet(index, v);
-        } else {
-            arraySet(index, pp, attrs);
-        }
-        return true;
-    }
-
-    return __defineOwnProperty__(engine, index, nullptr, p, attrs);
-}
-
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs)
+bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
@@ -851,15 +748,6 @@ bool Object::__defineOwnProperty__(ExecutionEngine *engine, uint index, StringOr
     }
     return true;
 }
-
-
-bool Object::__defineOwnProperty__(ExecutionEngine *engine, const QString &name, const Property *p, PropertyAttributes attrs)
-{
-    Scope scope(engine);
-    ScopedString s(scope, engine->newString(name));
-    return __defineOwnProperty__(engine, s, p, attrs);
-}
-
 
 void Object::copyArrayData(Object *other)
 {
@@ -989,6 +877,58 @@ PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p
     return Attr_Invalid;
 }
 
+bool Object::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+{
+    Object *o = static_cast<Object *>(m);
+    Scope scope(o);
+
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+
+        bool hasProperty = false;
+
+        if (o->arrayData()) {
+            hasProperty = o->arrayData()->mappedIndex(index) != UINT_MAX;
+            if (!hasProperty && o->isStringObject())
+                hasProperty = (index < static_cast<StringObject *>(o)->length());
+        }
+
+        if (!hasProperty) {
+            if (!o->isExtensible())
+                return false;
+
+            ScopedProperty pp(scope);
+            pp->copy(p, attrs);
+            pp->fullyPopulated(&attrs);
+            if (attrs == Attr_Data) {
+                ScopedValue v(scope, pp->value);
+                o->arraySet(index, v);
+            } else {
+                o->arraySet(index, pp, attrs);
+            }
+            return true;
+        }
+
+        return o->internalDefineOwnProperty(scope.engine, index, nullptr, p, attrs);
+    }
+
+    uint memberIndex = o->internalClass()->find(id);
+    Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+
+    if (memberIndex == UINT_MAX) {
+        if (!o->isExtensible())
+            return false;
+
+        ScopedProperty pd(scope);
+        pd->copy(p, attrs);
+        pd->fullyPopulated(&attrs);
+        o->insertMember(name, pd, attrs);
+        return true;
+    }
+
+    return o->internalDefineOwnProperty(scope.engine, memberIndex, name, p, attrs);
+}
+
 bool Object::isExtensible(const Managed *m)
 {
     return m->d()->internalClass->extensible;
@@ -1102,4 +1042,58 @@ QStringList ArrayObject::toQStringList() const
         result.append(v->toQStringNoThrow());
     }
     return result;
+}
+
+bool ArrayObject::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+{
+    Q_ASSERT(m->isArrayObject());
+    ArrayObject *a = static_cast<ArrayObject *>(m);
+
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        uint len = a->getLength();
+        if (index >= len && !a->internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
+            return false;
+
+        bool succeeded = Object::defineOwnProperty(m, id, p, attrs);
+        if (!succeeded)
+            return false;
+
+        if (index >= len)
+            a->setArrayLengthUnchecked(index + 1);
+
+        return true;
+    }
+
+    ExecutionEngine *engine = m->engine();
+    if (id == engine->id_length()->identifier()) {
+        Scope scope(engine);
+        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == a->internalClass()->find(engine->id_length()->identifier()));
+        ScopedProperty lp(scope);
+        PropertyAttributes cattrs;
+        a->getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
+        if (attrs.isEmpty() || p->isSubset(attrs, lp, cattrs))
+            return true;
+        if (!cattrs.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
+            return false;
+        bool succeeded = true;
+        if (attrs.type() == PropertyAttributes::Data) {
+            bool ok;
+            uint l = p->value.asArrayLength(&ok);
+            if (!ok) {
+                ScopedValue v(scope, p->value);
+                engine->throwRangeError(v);
+                return false;
+            }
+            succeeded = a->setArrayLength(l);
+        }
+        if (attrs.hasWritable() && !attrs.isWritable()) {
+            cattrs.setWritable(false);
+            Heap::InternalClass::changeMember(a, engine->id_length()->identifier(), cattrs);
+        }
+        if (!succeeded)
+            return false;
+        return true;
+    }
+    return Object::defineOwnProperty(m, id, p, attrs);
 }
