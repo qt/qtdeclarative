@@ -68,7 +68,7 @@ ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *has
     ScopedValue trap(scope, handler->get(scope.engine->id_get()));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->get(name, hasProperty);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
@@ -116,7 +116,7 @@ bool ProxyObject::put(Managed *m, StringOrSymbol *name, const Value &value)
     ScopedValue trap(scope, handler->get(scope.engine->id_set()));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->put(name, value);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
@@ -164,7 +164,7 @@ bool ProxyObject::deleteProperty(Managed *m, StringOrSymbol *name)
     ScopedValue trap(scope, handler->get(deleteProp));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->deleteProperty(name);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
@@ -207,7 +207,7 @@ bool ProxyObject::hasProperty(const Managed *m, Identifier id)
     ScopedValue trap(scope, handler->get(hasProp));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->hasProperty(m, id);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
@@ -245,7 +245,7 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Proper
     ScopedValue trap(scope, handler->get(deleteProp));
     if (scope.hasException())
         return Attr_Invalid;
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->getOwnProperty(id, p);
     if (!trap->isFunctionObject()) {
         scope.engine->throwTypeError();
@@ -313,7 +313,7 @@ bool ProxyObject::isExtensible(const Managed *m)
     ScopedValue trap(scope, handler->get(hasProp));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->isExtensible();
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
@@ -344,7 +344,7 @@ bool ProxyObject::preventExtensions(Managed *m)
     ScopedValue trap(scope, handler->get(hasProp));
     if (scope.hasException())
         return Encode::undefined();
-    if (trap->isUndefined())
+    if (trap->isNullOrUndefined())
         return target->preventExtensions();
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
