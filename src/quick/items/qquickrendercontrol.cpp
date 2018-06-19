@@ -187,7 +187,6 @@ void QQuickRenderControlPrivate::windowDestroyed()
 {
     if (window) {
         rc->invalidate();
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
         delete QQuickWindowPrivate::get(window)->animationController;
         QQuickWindowPrivate::get(window)->animationController = nullptr;
