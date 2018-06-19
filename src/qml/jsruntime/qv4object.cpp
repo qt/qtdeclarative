@@ -983,14 +983,6 @@ PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p
             if (o->arrayData()->getProperty(index, p, &attrs))
                 return attrs;
         }
-        if (o->isStringObject()) {
-            if (index >= static_cast<const StringObject *>(m)->length())
-                return Attr_Invalid;
-            attrs = Attr_NotConfigurable|Attr_NotWritable;
-            if (p)
-                p->value = static_cast<StringObject *>(o)->getIndex(index);
-            return attrs;
-        }
     } else {
         Q_ASSERT(id.asHeapObject());
 

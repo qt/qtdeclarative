@@ -137,6 +137,26 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
     return Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
+PropertyAttributes StringObject::getOwnProperty(Managed *m, Identifier id, Property *p)
+{
+    PropertyAttributes attributes = Object::getOwnProperty(m, id, p);
+    if (attributes != Attr_Invalid)
+        return attributes;
+
+    Object *o = static_cast<Object *>(m);
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        if (o->isStringObject()) {
+            if (index >= static_cast<const StringObject *>(m)->length())
+                return Attr_Invalid;
+            if (p)
+                p->value = static_cast<StringObject *>(o)->getIndex(index);
+            return Attr_NotConfigurable|Attr_NotWritable;
+        }
+    }
+    return Attr_Invalid;
+}
+
 DEFINE_OBJECT_VTABLE(StringCtor);
 
 void Heap::StringCtor::init(QV4::ExecutionContext *scope)

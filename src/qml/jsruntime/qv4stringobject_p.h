@@ -98,10 +98,11 @@ struct StringObject: Object {
         return d()->length();
     }
 
-    static bool deleteIndexedProperty(Managed *m, uint index);
-
+    using Object::getOwnProperty;
 protected:
+    static bool deleteIndexedProperty(Managed *m, uint index);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
+    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
 };
 
 struct StringCtor: FunctionObject
