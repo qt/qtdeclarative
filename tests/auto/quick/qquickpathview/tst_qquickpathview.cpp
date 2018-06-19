@@ -144,6 +144,7 @@ private slots:
     void movementDirection_data();
     void movementDirection();
     void removePath();
+    void objectModelMove();
 };
 
 class TestObject : public QObject
@@ -2518,6 +2519,53 @@ void tst_QQuickPathView::removePath()
 
     QVERIFY(QMetaObject::invokeMethod(pathview, "removePath"));
     QVERIFY(QMetaObject::invokeMethod(pathview, "setPath"));
+}
+
+/*
+    Tests that moving items in an ObjectModel and then deleting the view
+    doesn't cause heap-use-after-free when run through ASAN.
+
+    The test case is based on a Qt Quick Controls 2 test where the issue was
+    discovered.
+*/
+void tst_QQuickPathView::objectModelMove()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("objectModelMove.qml"));
+    window->show();
+
+    // Create the view.
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "newView"));
+    QPointer<QQuickPathView> pathView = window->rootObject()->property("pathViewItem").value<QQuickPathView*>();
+    QVERIFY(pathView);
+    QCOMPARE(pathView->count(), 3);
+    pathView->highlightItem()->setObjectName("highlight");
+
+    // Move an item from index 0 to 1.
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "move"));
+    QCOMPARE(pathView->count(), 3);
+
+    // Keep track of the amount of listeners
+    QVector<QString> itemObjectNames;
+    itemObjectNames << QLatin1String("red") << QLatin1String("green") << QLatin1String("blue");
+    QVector<QQuickItem*> childItems;
+    for (const QString itemObjectName : qAsConst(itemObjectNames)) {
+        QQuickItem *childItem = findItem<QQuickItem>(pathView, itemObjectName);
+        QVERIFY(childItem);
+        childItems.append(childItem);
+    }
+
+    // Destroy the view (via destroy()).
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "destroyView"));
+    // Ensure that the view has been destroyed. This check is also necessary in order for
+    // ASAN to complain (it will complain after the test function has finished).
+    QTRY_VERIFY(pathView.isNull());
+    // By this point, all of its cached items should have been released,
+    // which means none of the items should have any listeners.
+    for (const auto childItem : qAsConst(childItems)) {
+        const QQuickItemPrivate *childItemPrivate = QQuickItemPrivate::get(childItem);
+        QCOMPARE(childItemPrivate->changeListeners.size(), 0);
+    }
 }
 
 QTEST_MAIN(tst_QQuickPathView)
