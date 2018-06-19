@@ -1020,6 +1020,11 @@ PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p
     return Attr_Invalid;
 }
 
+bool Object::isExtensible(const Managed *m)
+{
+    return m->d()->internalClass->extensible;
+}
+
 bool Object::setArrayLength(uint newLen)
 {
     Q_ASSERT(isArrayObject());

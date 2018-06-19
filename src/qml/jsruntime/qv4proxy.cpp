@@ -299,6 +299,37 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Proper
     return resultAttributes;
 }
 
+bool ProxyObject::isExtensible(const Managed *m)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler)
+        return scope.engine->throwTypeError();
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString hasProp(scope, scope.engine->newString(QStringLiteral("isExtensible")));
+    ScopedValue trap(scope, handler->get(hasProp));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (trap->isUndefined())
+        return target->isExtensible();
+    if (!trap->isFunctionObject())
+        return scope.engine->throwTypeError();
+
+    JSCallData cdata(scope, 1, nullptr, handler);
+    cdata.args[0] = target;
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    bool result = trapResult->toBoolean();
+    if (result != target->isExtensible()) {
+        scope.engine->throwTypeError();
+        return false;
+    }
+    return result;
+}
+
 //ReturnedValue ProxyObject::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 //{
 

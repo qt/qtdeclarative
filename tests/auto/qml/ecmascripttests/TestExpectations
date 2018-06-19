@@ -795,7 +795,6 @@ built-ins/Proxy/create-target-is-not-constructor.js fails
 built-ins/Proxy/defineProperty/call-parameters.js fails
 built-ins/Proxy/defineProperty/desc-realm.js fails
 built-ins/Proxy/defineProperty/null-handler-realm.js fails
-built-ins/Proxy/defineProperty/null-handler.js fails
 built-ins/Proxy/defineProperty/return-boolean-and-define-target.js fails
 built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js fails
 built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable.js fails
@@ -806,7 +805,6 @@ built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor.js fails
 built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js fails
 built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor.js fails
 built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js fails
-built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible.js fails
 built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js fails
 built-ins/Proxy/defineProperty/trap-is-not-callable.js fails
 built-ins/Proxy/defineProperty/trap-is-undefined.js fails
@@ -845,14 +843,7 @@ built-ins/Proxy/has/return-is-abrupt-with.js sloppyFails
 built-ins/Proxy/has/trap-is-not-callable-realm.js fails
 built-ins/Proxy/has/trap-is-not-callable-using-with.js sloppyFails
 built-ins/Proxy/has/trap-is-undefined.js fails
-built-ins/Proxy/isExtensible/call-parameters.js fails
-built-ins/Proxy/isExtensible/null-handler.js fails
-built-ins/Proxy/isExtensible/return-is-boolean.js fails
-built-ins/Proxy/isExtensible/return-is-different-from-target.js fails
-built-ins/Proxy/isExtensible/return-same-result-from-target.js fails
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js fails
-built-ins/Proxy/isExtensible/trap-is-not-callable.js fails
-built-ins/Proxy/isExtensible/trap-is-undefined.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertynames.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-keys.js fails
@@ -891,7 +882,6 @@ built-ins/Proxy/setPrototypeOf/call-parameters.js fails
 built-ins/Proxy/setPrototypeOf/internals-call-order.js fails
 built-ins/Proxy/setPrototypeOf/not-extensible-target-not-same-target-prototype.js fails
 built-ins/Proxy/setPrototypeOf/not-extensible-target-same-target-prototype.js fails
-built-ins/Proxy/setPrototypeOf/null-handler.js fails
 built-ins/Proxy/setPrototypeOf/toboolean-trap-result-false.js fails
 built-ins/Proxy/setPrototypeOf/toboolean-trap-result-true-target-is-extensible.js fails
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js fails

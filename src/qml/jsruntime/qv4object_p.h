@@ -177,6 +177,7 @@ struct ObjectVTable
     bool (*deleteIndexedProperty)(Managed *m, uint index);
     bool (*hasProperty)(const Managed *m, Identifier id);
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
+    bool (*isExtensible)(const Managed *);
     qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
@@ -196,6 +197,7 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     deleteIndexedProperty,                      \
     hasProperty,                                \
     getOwnProperty,                             \
+    isExtensible,                               \
     getLength,                                  \
     advanceIterator,                            \
     instanceOf                                  \
@@ -301,7 +303,7 @@ struct Q_QML_EXPORT Object: Managed {
     }
     void insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes);
 
-    bool isExtensible() const { return d()->internalClass->extensible; }
+    bool isExtensible() const { return vtable()->isExtensible(this); }
 
     // Array handling
 
@@ -438,6 +440,7 @@ protected:
     static bool deleteIndexedProperty(Managed *m, uint index);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
+    static bool isExtensible(const Managed *m);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static qint64 getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
