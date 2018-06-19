@@ -240,7 +240,11 @@ void QQuickPathViewPrivate::clear()
         releaseItem(currentItem);
         currentItem = nullptr;
     }
+
     for (QQuickItem *p : qAsConst(items))
+        releaseItem(p);
+
+    for (QQuickItem *p : qAsConst(itemCache))
         releaseItem(p);
 
     if (requestedIndex >= 0) {
@@ -250,6 +254,7 @@ void QQuickPathViewPrivate::clear()
     }
 
     items.clear();
+    itemCache.clear();
     tl.clear();
 }
 
