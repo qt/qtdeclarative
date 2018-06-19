@@ -173,8 +173,7 @@ struct ObjectVTable
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
     bool (*put)(Managed *, StringOrSymbol *name, const Value &value);
     bool (*putIndexed)(Managed *, uint index, const Value &value);
-    bool (*deleteProperty)(Managed *m, StringOrSymbol *name);
-    bool (*deleteIndexedProperty)(Managed *m, uint index);
+    bool (*deleteProperty)(Managed *m, Identifier id);
     bool (*hasProperty)(const Managed *m, Identifier id);
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
     bool (*isExtensible)(const Managed *);
@@ -197,7 +196,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     put,                                        \
     putIndexed,                                 \
     deleteProperty,                             \
-    deleteIndexedProperty,                      \
     hasProperty,                                \
     getOwnProperty,                             \
     isExtensible,                               \
@@ -427,10 +425,8 @@ public:
         return ret;
     }
 
-    bool deleteProperty(StringOrSymbol *name)
-    { return vtable()->deleteProperty(this, name); }
-    bool deleteIndexedProperty(uint index)
-    { return vtable()->deleteIndexedProperty(this, index); }
+    bool deleteProperty(Identifier id)
+    { return vtable()->deleteProperty(this, id); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     qint64 getLength() const { return vtable()->getLength(this); }
@@ -444,8 +440,7 @@ protected:
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool put(Managed *m, StringOrSymbol *name, const Value &value);
     static bool putIndexed(Managed *m, uint index, const Value &value);
-    static bool deleteProperty(Managed *m, StringOrSymbol *name);
-    static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static bool isExtensible(const Managed *m);
@@ -461,8 +456,7 @@ private:
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
     bool internalPut(StringOrSymbol *name, const Value &value);
     bool internalPutIndexed(uint index, const Value &value);
-    bool internalDeleteProperty(StringOrSymbol *name);
-    bool internalDeleteIndexedProperty(uint index);
+    bool internalDeleteProperty(Identifier id);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;

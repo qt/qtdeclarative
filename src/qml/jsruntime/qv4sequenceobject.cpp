@@ -569,8 +569,14 @@ public:
     { return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
-    static bool deleteIndexedProperty(QV4::Managed *that, uint index)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index); }
+    static bool deleteProperty(QV4::Managed *that, Identifier id)
+    {
+        if (id.isArrayIndex()) {
+            uint index = id.asArrayIndex();
+            return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index);
+        }
+        return Object::deleteProperty(that, id);
+    }
     static bool isEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
     static void advanceIterator(Managed *that, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)

@@ -100,7 +100,7 @@ struct StringObject: Object {
 
     using Object::getOwnProperty;
 protected:
-    static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool deleteProperty(Managed *m, Identifier id);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
 };

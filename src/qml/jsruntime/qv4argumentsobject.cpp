@@ -194,12 +194,12 @@ bool ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
     return true;
 }
 
-bool ArgumentsObject::deleteIndexedProperty(Managed *m, uint index)
+bool ArgumentsObject::deleteProperty(Managed *m, Identifier id)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (!args->fullyCreated())
         args->fullyCreate();
-    return Object::deleteIndexedProperty(m, index);
+    return Object::deleteProperty(m, id);
 }
 
 PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, Identifier id, Property *p)

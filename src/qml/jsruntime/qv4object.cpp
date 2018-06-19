@@ -344,14 +344,9 @@ bool Object::putIndexed(Managed *m, uint index, const Value &value)
     return static_cast<Object *>(m)->internalPutIndexed(index, value);
 }
 
-bool Object::deleteProperty(Managed *m, StringOrSymbol *name)
+bool Object::deleteProperty(Managed *m, Identifier id)
 {
-    return static_cast<Object *>(m)->internalDeleteProperty(name);
-}
-
-bool Object::deleteIndexedProperty(Managed *m, uint index)
-{
-    return static_cast<Object *>(m)->internalDeleteIndexedProperty(index);
+    return static_cast<Object *>(m)->internalDeleteProperty(id);
 }
 
 void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
@@ -636,17 +631,23 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(StringOrSymbol *name)
+bool Object::internalDeleteProperty(Identifier id)
 {
     if (internalClass()->engine->hasException)
         return false;
 
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return deleteIndexedProperty(idx);
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        Scope scope(engine());
+        if (scope.engine->hasException)
+            return false;
 
-    name->makeIdentifier();
-    Identifier id = name->identifier();
+        Scoped<ArrayData> ad(scope, arrayData());
+        if (!ad || ad->vtable()->del(this, index))
+            return true;
+
+        return false;
+    }
 
     uint memberIdx = internalClass()->find(id);
     if (memberIdx != UINT_MAX) {
@@ -658,19 +659,6 @@ bool Object::internalDeleteProperty(StringOrSymbol *name)
     }
 
     return true;
-}
-
-bool Object::internalDeleteIndexedProperty(uint index)
-{
-    Scope scope(engine());
-    if (scope.engine->hasException)
-        return false;
-
-    Scoped<ArrayData> ad(scope, arrayData());
-    if (!ad || ad->vtable()->del(this, index))
-        return true;
-
-    return false;
 }
 
 // Section 8.12.9

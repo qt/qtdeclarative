@@ -331,12 +331,13 @@ bool Runtime::method_deleteProperty(ExecutionEngine *engine, const Value &base, 
 
     uint n = index.asArrayIndex();
     if (n < UINT_MAX)
-        return o->deleteIndexedProperty(n);
+        return o->deleteProperty(Identifier::fromArrayIndex(n));
 
-    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
+    Scoped<StringOrSymbol> key(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return false;
-    return o->deleteProperty(name);
+    Identifier id = key->toPropertyKey();
+    return o->deleteProperty(id);
 }
 
 bool Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)

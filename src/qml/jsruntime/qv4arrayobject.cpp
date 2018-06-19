@@ -450,7 +450,7 @@ ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const V
             instance->setIndexed(to, fromVal, QV4::Object::DoThrowOnRejection);
             CHECK_EXCEPTION();
         } else {
-            bool didDelete = instance->deleteIndexedProperty(to);
+            bool didDelete = instance->deleteProperty(Identifier::fromArrayIndex(to));
             CHECK_EXCEPTION();
             if (!didDelete) {
                 return scope.engine->throwTypeError();
@@ -624,7 +624,7 @@ ReturnedValue ArrayPrototype::method_pop(const FunctionObject *b, const Value *t
     ScopedValue result(scope, instance->getIndexed(len - 1));
     CHECK_EXCEPTION();
 
-    if (!instance->deleteIndexedProperty(len - 1))
+    if (!instance->deleteProperty(Identifier::fromArrayIndex(len - 1)))
         return scope.engine->throwTypeError();
 
     if (instance->isArrayObject())
@@ -715,12 +715,12 @@ ReturnedValue ArrayPrototype::method_reverse(const FunctionObject *b, const Valu
         if (hiExists)
             ok = instance->putIndexed(lo, hval);
         else
-            ok = instance->deleteIndexedProperty(lo);
+            ok = instance->deleteProperty(Identifier::fromArrayIndex(lo));
         if (ok) {
             if (loExists)
                 ok = instance->putIndexed(hi, lval);
             else
-                ok = instance->deleteIndexedProperty(hi);
+                ok = instance->deleteProperty(Identifier::fromArrayIndex(hi));
         }
         if (!ok)
             return scope.engine->throwTypeError();
@@ -763,11 +763,11 @@ ReturnedValue ArrayPrototype::method_shift(const FunctionObject *b, const Value 
             if (exists)
                 ok = instance->putIndexed(k - 1, v);
             else
-                ok = instance->deleteIndexedProperty(k - 1);
+                ok = instance->deleteProperty(Identifier::fromArrayIndex(k - 1));
             if (!ok)
                 return scope.engine->throwTypeError();
         }
-        bool ok = instance->deleteIndexedProperty(len - 1);
+        bool ok = instance->deleteProperty(Identifier::fromArrayIndex(len - 1));
         if (!ok)
             return scope.engine->throwTypeError();
     }
@@ -891,12 +891,12 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
             if (exists)
                 ok = instance->putIndexed(k + itemCount, v);
             else
-                ok = instance->deleteIndexedProperty(k + itemCount);
+                ok = instance->deleteProperty(Identifier::fromArrayIndex(k + itemCount));
             if (!ok)
                 return scope.engine->throwTypeError();
         }
         for (uint k = len; k > len - deleteCount + itemCount; --k) {
-            if (!instance->deleteIndexedProperty(k - 1))
+            if (!instance->deleteProperty(Identifier::fromArrayIndex(k - 1)))
                 return scope.engine->throwTypeError();
         }
     } else if (itemCount > deleteCount) {
@@ -909,7 +909,7 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
             if (exists)
                 ok = instance->putIndexed(k + itemCount - 1, v);
             else
-                ok = instance->deleteIndexedProperty(k + itemCount - 1);
+                ok = instance->deleteProperty(Identifier::fromArrayIndex(k + itemCount - 1));
             if (!ok)
                 return scope.engine->throwTypeError();
             --k;
@@ -949,7 +949,7 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
             if (exists)
                 ok = instance->putIndexed(k + argc - 1, v);
             else
-                ok = instance->deleteIndexedProperty(k + argc - 1);
+                ok = instance->deleteProperty(Identifier::fromArrayIndex(k + argc - 1));
             if (!ok)
                 return scope.engine->throwTypeError();
         }

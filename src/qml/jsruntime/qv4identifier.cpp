@@ -54,6 +54,13 @@ bool Identifier::isSymbol() const
     return isValid() && !asHeapObject()->internalClass->vtable->isString && asHeapObject()->internalClass->vtable->isStringOrSymbol;
 }
 
+Heap::StringOrSymbol *Identifier::toStringOrSymbol(ExecutionEngine *e)
+{
+    if (isArrayIndex())
+        return Primitive::fromUInt32(asArrayIndex()).toString(e);
+    return static_cast<Heap::StringOrSymbol *>(asHeapObject());
+}
+
 QString Identifier::toQString() const
 {
     if (isArrayIndex())

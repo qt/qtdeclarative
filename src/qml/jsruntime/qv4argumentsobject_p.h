@@ -149,7 +149,7 @@ struct ArgumentsObject: Object {
     bool defineOwnProperty(ExecutionEngine *engine, uint index, const Property *desc, PropertyAttributes attrs);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
     static bool putIndexed(Managed *m, uint index, const Value &value);
-    static bool deleteIndexedProperty(Managed *m, uint index);
+    static bool deleteProperty(Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static qint64 getLength(const Managed *m);
 

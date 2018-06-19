@@ -97,16 +97,16 @@ uint Heap::StringObject::length() const
     return string->length();
 }
 
-bool StringObject::deleteIndexedProperty(Managed *m, uint index)
+bool StringObject::deleteProperty(Managed *m, Identifier id)
 {
-    ExecutionEngine *v4 = static_cast<StringObject *>(m)->engine();
-    Scope scope(v4);
-    Scoped<StringObject> o(scope, m->as<StringObject>());
-    Q_ASSERT(!!o);
-
-    if (index < static_cast<uint>(o->d()->string->toQString().length()))
-        return false;
-    return true;
+    Q_ASSERT(m->as<StringObject>());
+    if (id.isArrayIndex()) {
+        StringObject *o = static_cast<StringObject *>(m);
+        uint index = id.asArrayIndex();
+        if (index < static_cast<uint>(o->d()->string->toQString().length()))
+            return false;
+    }
+    return Object::deleteProperty(m, id);
 }
 
 void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)

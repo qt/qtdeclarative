@@ -1249,7 +1249,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     ScopedString s(scope, engine->newString(name));
-    return o->deleteProperty(s);
+    return o->deleteProperty(s->toPropertyKey());
 }
 
 /*!

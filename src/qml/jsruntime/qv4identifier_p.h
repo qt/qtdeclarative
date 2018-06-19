@@ -77,6 +77,7 @@ struct Identifier
     bool isSymbol() const;
 
     Q_QML_EXPORT QString toQString() const;
+    Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
 
     bool operator ==(const Identifier &other) const { return id == other.id; }
     bool operator !=(const Identifier &other) const { return id != other.id; }

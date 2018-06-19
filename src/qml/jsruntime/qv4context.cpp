@@ -210,7 +210,7 @@ bool ExecutionContext::deleteProperty(String *name)
                 Scope scope(this);
                 ScopedObject object(scope, ctx->activation);
                 if (object && object->hasProperty(name->toPropertyKey()))
-                    return object->deleteProperty(name);
+                    return object->deleteProperty(name->toPropertyKey());
             }
             break;
         }

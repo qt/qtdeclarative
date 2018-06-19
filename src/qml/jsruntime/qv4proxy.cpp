@@ -150,7 +150,7 @@ bool ProxyObject::putIndexed(Managed *m, uint index, const Value &value)
     return put(m, name, value);
 }
 
-bool ProxyObject::deleteProperty(Managed *m, StringOrSymbol *name)
+bool ProxyObject::deleteProperty(Managed *m, Identifier id)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -165,32 +165,25 @@ bool ProxyObject::deleteProperty(Managed *m, StringOrSymbol *name)
     if (scope.hasException())
         return Encode::undefined();
     if (trap->isNullOrUndefined())
-        return target->deleteProperty(name);
+        return target->deleteProperty(id);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
     JSCallData cdata(scope, 3, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = name;
+    cdata.args[1] = id.toStringOrSymbol(scope.engine);
     cdata.args[2] = o->d(); // ### fix receiver handling
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     if (!trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
     if (attributes == Attr_Invalid)
         return true;
     if (!attributes.isConfigurable())
         return scope.engine->throwTypeError();
     return true;
-}
-
-bool ProxyObject::deleteIndexedProperty(Managed *m, uint index)
-{
-    Scope scope(m);
-    ScopedString name(scope, Primitive::fromUInt32(index).toString(scope.engine));
-    return deleteProperty(m, name);
 }
 
 bool ProxyObject::hasProperty(const Managed *m, Identifier id)
