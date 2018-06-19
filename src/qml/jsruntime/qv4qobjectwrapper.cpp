@@ -2093,7 +2093,7 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
     }
     Scoped<QMetaObjectWrapper> metaObject(scope, this);
     object->defineDefaultProperty(v4->id_constructor(), metaObject);
-    object->setPrototype(const_cast<QMetaObjectWrapper*>(this));
+    object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
     return object.asReturnedValue();
 
 }

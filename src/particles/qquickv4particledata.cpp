@@ -520,7 +520,7 @@ QQuickV4ParticleData::QQuickV4ParticleData(QV4::ExecutionEngine* v4, QQuickParti
     QV4ParticleDataDeletable *d = particleV4Data(scope.engine);
     QV4::ScopedObject o(scope, v4->memoryManager->allocate<QV4ParticleData>(datum, system));
     QV4::ScopedObject p(scope, d->proto.value());
-    o->setPrototype(p);
+    o->setPrototypeUnchecked(p);
     m_v4Value = o;
 }
 

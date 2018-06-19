@@ -828,7 +828,7 @@ QV4::ReturnedValue QQmlLocale::wrap(ExecutionEngine *v4, const QLocale &locale)
     QV4::Scoped<QQmlLocaleData> wrapper(scope, v4->memoryManager->allocate<QQmlLocaleData>());
     *wrapper->d()->locale = locale;
     QV4::ScopedObject p(scope, d->prototype.value());
-    wrapper->setPrototype(p);
+    wrapper->setPrototypeOf(p);
     return wrapper.asReturnedValue();
 }
 

@@ -223,13 +223,13 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
     QV4::Scope scope(v4);
 
     bool instanceOfObject = false;
-    QV4::ScopedObject p(scope, object->prototype());
+    QV4::ScopedObject p(scope, object->getPrototypeOf());
     while (p) {
         if (p->d() == v4->objectPrototype()->d()) {
             instanceOfObject = true;
             break;
         }
-        p = p->prototype();
+        p = p->getPrototypeOf();
     }
     if (!instanceOfObject)
         return;

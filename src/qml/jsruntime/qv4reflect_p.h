@@ -73,7 +73,7 @@ struct Reflect : Object {
     static ReturnedValue method_deleteProperty(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getOwnPropertyDescriptor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *, const Value *argv, int argc);
     static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_isExtensible(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_ownKeys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

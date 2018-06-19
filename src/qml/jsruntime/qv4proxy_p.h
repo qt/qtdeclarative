@@ -95,6 +95,8 @@ struct ProxyObject: Object {
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
+    static Heap::Object *getPrototypeOf(const Managed *);
+    static bool setPrototypeOf(Managed *, const Object *);
 
     // those might require a second proxy object that derives from FunctionObject...
 //    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);

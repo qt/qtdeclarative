@@ -175,12 +175,14 @@ ReturnedValue Reflect::method_getOwnPropertyDescriptor(const FunctionObject *f, 
     return ObjectPrototype::method_getOwnPropertyDescriptor(f, thisObject, argv, argc);
 }
 
-ReturnedValue Reflect::method_getPrototypeOf(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue Reflect::method_getPrototypeOf(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     if (!argc || !argv[0].isObject())
         return f->engine()->throwTypeError();
 
-    return ObjectPrototype::method_getPrototypeOf(f, thisObject, argv, argc);
+    const Object *o = static_cast<const Object *>(argv);
+    Heap::Object *p = o->getPrototypeOf();
+    return (p ? p->asReturnedValue() : Encode::null());
 }
 
 ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -260,10 +262,13 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
     return Encode(result);
 }
 
-ReturnedValue Reflect::method_setPrototypeOf(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue Reflect::method_setPrototypeOf(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    if (argc < 2 || !argv[0].isObject())
+    if (argc < 2 || !argv[0].isObject() || (!argv[1].isNull() && !argv[1].isObject()))
         return f->engine()->throwTypeError();
 
-    return ObjectPrototype::method_setPrototypeOf(f, thisObject, argv, argc);
+    Scope scope(f);
+    ScopedObject o(scope, static_cast<const Object *>(argv));
+    const Object *proto = argv[1].isNull() ? nullptr : static_cast<const Object *>(argv + 1);
+    return Encode(o->setPrototypeOf(proto));
 }

@@ -611,7 +611,7 @@ ReturnedValue Node::create(ExecutionEngine *v4, NodeImpl *data)
 
     switch (data->type) {
     case NodeImpl::Attr:
-        instance->setPrototype((p = Attr::prototype(v4)));
+        instance->setPrototypeUnchecked((p = Attr::prototype(v4)));
         break;
     case NodeImpl::Comment:
     case NodeImpl::Document:
@@ -623,13 +623,13 @@ ReturnedValue Node::create(ExecutionEngine *v4, NodeImpl *data)
     case NodeImpl::ProcessingInstruction:
         return Encode::undefined();
     case NodeImpl::CDATA:
-        instance->setPrototype((p = CDATA::prototype(v4)));
+        instance->setPrototypeUnchecked((p = CDATA::prototype(v4)));
         break;
     case NodeImpl::Text:
-        instance->setPrototype((p = Text::prototype(v4)));
+        instance->setPrototypeUnchecked((p = Text::prototype(v4)));
         break;
     case NodeImpl::Element:
-        instance->setPrototype((p = Element::prototype(v4)));
+        instance->setPrototypeUnchecked((p = Element::prototype(v4)));
         break;
     }
 
@@ -643,7 +643,7 @@ ReturnedValue Element::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(engine)));
+        p->setPrototypeUnchecked((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("tagName"), NodePrototype::method_get_nodeName, nullptr);
         d->elementPrototype.set(engine, p);
         engine->v8Engine->freezeObject(p);
@@ -658,7 +658,7 @@ ReturnedValue Attr::prototype(ExecutionEngine *engine)
         Scope scope(engine);
         ScopedObject p(scope, engine->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(engine)));
+        p->setPrototypeUnchecked((pp = NodePrototype::getProto(engine)));
         p->defineAccessorProperty(QStringLiteral("name"), method_name, nullptr);
         p->defineAccessorProperty(QStringLiteral("value"), method_value, nullptr);
         p->defineAccessorProperty(QStringLiteral("ownerElement"), method_ownerElement, nullptr);
@@ -715,7 +715,7 @@ ReturnedValue CharacterData::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(v4)));
+        p->setPrototypeUnchecked((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("data"), NodePrototype::method_get_nodeValue, nullptr);
         p->defineAccessorProperty(QStringLiteral("length"), method_length, nullptr);
         d->characterDataPrototype.set(v4, p);
@@ -751,7 +751,7 @@ ReturnedValue Text::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = CharacterData::prototype(v4)));
+        p->setPrototypeUnchecked((pp = CharacterData::prototype(v4)));
         p->defineAccessorProperty(QStringLiteral("isElementContentWhitespace"), method_isElementContentWhitespace, nullptr);
         p->defineAccessorProperty(QStringLiteral("wholeText"), method_wholeText, nullptr);
         d->textPrototype.set(v4, p);
@@ -768,7 +768,7 @@ ReturnedValue CDATA::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = Text::prototype(v4)));
+        p->setPrototypeUnchecked((pp = Text::prototype(v4)));
         d->cdataPrototype.set(v4, p);
         v4->v8Engine->freezeObject(p);
     }
@@ -782,7 +782,7 @@ ReturnedValue Document::prototype(ExecutionEngine *v4)
         Scope scope(v4);
         ScopedObject p(scope, v4->newObject());
         ScopedObject pp(scope);
-        p->setPrototype((pp = NodePrototype::getProto(v4)));
+        p->setPrototypeUnchecked((pp = NodePrototype::getProto(v4)));
         p->defineAccessorProperty(QStringLiteral("xmlVersion"), method_xmlVersion, nullptr);
         p->defineAccessorProperty(QStringLiteral("xmlEncoding"), method_xmlEncoding, nullptr);
         p->defineAccessorProperty(QStringLiteral("xmlStandalone"), method_xmlStandalone, nullptr);
@@ -879,7 +879,7 @@ ReturnedValue Document::load(ExecutionEngine *v4, const QByteArray &data)
     ScopedObject instance(scope, v4->memoryManager->allocate<Node>(document));
     document->release(); // the GC should own the NodeImpl via Node now
     ScopedObject p(scope);
-    instance->setPrototype((p = Document::prototype(v4)));
+    instance->setPrototypeUnchecked((p = Document::prototype(v4)));
     return instance.asReturnedValue();
 }
 
@@ -1650,7 +1650,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         QQmlXMLHttpRequest *r = new QQmlXMLHttpRequest(scope.engine->v8Engine->networkAccessManager(), scope.engine);
         Scoped<QQmlXMLHttpRequestWrapper> w(scope, scope.engine->memoryManager->allocate<QQmlXMLHttpRequestWrapper>(r));
         ScopedObject proto(scope, ctor->d()->proto);
-        w->setPrototype(proto);
+        w->setPrototypeUnchecked(proto);
         return w.asReturnedValue();
     }
 

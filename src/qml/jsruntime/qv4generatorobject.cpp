@@ -78,9 +78,9 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     Scope scope(context);
     Scoped<GeneratorFunction> g(scope, context->engine()->memoryManager->allocate<GeneratorFunction>(context, function));
     ScopedObject proto(scope, scope.engine->newObject());
-    proto->setPrototype(scope.engine->generatorPrototype());
+    proto->setPrototypeOf(scope.engine->generatorPrototype());
     g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);
-    g->setPrototype(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
+    g->setPrototypeOf(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
     return g->d();
 }
 
@@ -104,7 +104,7 @@ ReturnedValue GeneratorFunction::call(const FunctionObject *f, const Value *this
 
     Scope scope(gf);
     Scoped<GeneratorObject> g(scope, scope.engine->memoryManager->allocManaged<GeneratorObject>(requiredMemory, scope.engine->classes[EngineBase::Class_GeneratorObject]));
-    g->setPrototype(ScopedObject(scope, gf->get(scope.engine->id_prototype())));
+    g->setPrototypeOf(ScopedObject(scope, gf->get(scope.engine->id_prototype())));
 
     Heap::GeneratorObject *gp = g->d();
     gp->stack.size = stackSize;
@@ -160,7 +160,7 @@ void GeneratorPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctorProto->defineDefaultProperty(engine->symbol_toStringTag(), (v = engine->newIdentifier(QStringLiteral("GeneratorFunction"))), Attr_ReadOnly_ButConfigurable);
     ctorProto->defineDefaultProperty(engine->id_prototype(), (v = this), Attr_ReadOnly_ButConfigurable);
 
-    setPrototype(engine->iteratorPrototype());
+    setPrototypeOf(engine->iteratorPrototype());
     defineDefaultProperty(QStringLiteral("constructor"), ctorProto, Attr_ReadOnly_ButConfigurable);
     defineDefaultProperty(QStringLiteral("next"), method_next, 1);
     defineDefaultProperty(QStringLiteral("return"), method_return, 1);

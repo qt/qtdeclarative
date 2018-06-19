@@ -109,7 +109,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
                         shadowed = true;
                         break;
                     }
-                    o = o->prototype();
+                    o = o->getPrototypeOf();
                 }
                 if (shadowed)
                     continue;
@@ -118,7 +118,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
         }
 
         if (flags & WithProtoChain)
-            current->setM(co->prototype());
+            current->setM(co->getPrototypeOf());
         else
             current->setM(nullptr);
 

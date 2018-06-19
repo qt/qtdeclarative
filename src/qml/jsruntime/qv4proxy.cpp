@@ -361,6 +361,89 @@ bool ProxyObject::preventExtensions(Managed *m)
     return result;
 }
 
+Heap::Object *ProxyObject::getPrototypeOf(const Managed *m)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("getPrototypeOf")));
+    ScopedValue trap(scope, handler->get(name));
+    if (scope.hasException())
+        return nullptr;
+    if (trap->isNullOrUndefined())
+        return target->getPrototypeOf();
+    if (!trap->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    JSCallData cdata(scope, 1, nullptr, handler);
+    cdata.args[0] = target;
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (!trapResult->isNull() && !trapResult->isObject()) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    Heap::Object *proto = trapResult->isNull() ? nullptr : static_cast<Heap::Object *>(trapResult->heapObject());
+    if (!target->isExtensible()) {
+        Heap::Object *targetProto = target->getPrototypeOf();
+        if (proto != targetProto) {
+            scope.engine->throwTypeError();
+            return nullptr;
+        }
+    }
+    return proto;
+}
+
+bool ProxyObject::setPrototypeOf(Managed *m, const Object *p)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler) {
+        scope.engine->throwTypeError();
+        return false;
+    }
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("setPrototypeOf")));
+    ScopedValue trap(scope, handler->get(name));
+    if (scope.hasException())
+        return false;
+    if (trap->isNullOrUndefined())
+        return target->setPrototypeOf(p);
+    if (!trap->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return false;
+    }
+
+    JSCallData cdata(scope, 2, nullptr, handler);
+    cdata.args[0] = target;
+    cdata.args[1] = p ? p->asReturnedValue() : Encode::null();
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    bool result = trapResult->toBoolean();
+    if (!result)
+        return false;
+    if (!target->isExtensible()) {
+        Heap::Object *targetProto = target->getPrototypeOf();
+        if (p->d() != targetProto) {
+            scope.engine->throwTypeError();
+            return false;
+        }
+    }
+    return true;
+}
+
 //ReturnedValue ProxyObject::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 //{
 

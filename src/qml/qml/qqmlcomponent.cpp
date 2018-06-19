@@ -1409,7 +1409,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
 
     QV4::Scoped<QV4::QmlIncubatorObject> r(scope, v4->memoryManager->allocate<QV4::QmlIncubatorObject>(mode));
     QV4::ScopedObject p(scope, e->incubationProto.value());
-    r->setPrototype(p);
+    r->setPrototypeOf(p);
 
     if (!valuemap->isUndefined())
         r->d()->valuemap.set(scope.engine, valuemap);

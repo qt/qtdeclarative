@@ -1638,7 +1638,7 @@ void tst_QJSValue::getSetPrototype_evalCyclicPrototype()
     QJSEngine eng;
     QJSValue ret = eng.evaluate("o = { }; p = { }; o.__proto__ = p; p.__proto__ = o");
     QCOMPARE(ret.isError(), true);
-    QCOMPARE(ret.toString(), QLatin1String("TypeError: Cyclic __proto__ value"));
+    QCOMPARE(ret.toString(), QLatin1String("TypeError: Could not change prototype."));
 }
 
 void tst_QJSValue::getSetPrototype_eval()

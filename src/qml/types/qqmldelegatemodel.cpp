@@ -2563,7 +2563,7 @@ QQmlV4Handle QQmlDelegateModelGroup::get(int index)
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, v4->memoryManager->allocate<QQmlDelegateModelItemObject>(cacheItem));
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
-    o->setPrototype(p);
+    o->setPrototypeOf(p);
     ++cacheItem->scriptRef;
 
     return QQmlV4Handle(o);
@@ -3395,7 +3395,7 @@ public:
 
         QV4::ScopedObject changeProto(scope, engineData(v4)->changeProto.value());
         QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, QQmlDelegateModelGroupChange::create(v4));
-        object->setPrototype(changeProto);
+        object->setPrototypeOf(changeProto);
         object->d()->change = change;
 
         if (hasProperty)

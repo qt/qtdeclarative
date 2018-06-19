@@ -71,7 +71,7 @@ ReturnedValue ObjectCtor::callAsConstructor(const FunctionObject *f, const Value
         ScopedObject obj(scope, scope.engine->newObject());
         ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
         if (!!proto)
-            obj->setPrototype(proto);
+            obj->setPrototypeOf(proto);
         return obj.asReturnedValue();
     } else {
         return argv[0].toObject(v4)->asReturnedValue();
@@ -136,7 +136,7 @@ ReturnedValue ObjectPrototype::method_getPrototypeOf(const FunctionObject *b, co
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    ScopedObject p(scope, o->prototype());
+    ScopedObject p(scope, o->getPrototypeOf());
     return (!!p ? p->asReturnedValue() : Encode::null());
 }
 
@@ -264,7 +264,7 @@ ReturnedValue ObjectPrototype::method_create(const FunctionObject *builtin, cons
     ScopedObject O(scope, argv[0]);
 
     ScopedObject newObject(scope, scope.engine->newObject());
-    newObject->setPrototype(O);
+    newObject->setPrototypeOf(O);
 
 
     if (argc > 1 && !argv[1].isUndefined()) {
@@ -516,17 +516,10 @@ ReturnedValue ObjectPrototype::method_setPrototypeOf(const FunctionObject *f, co
         return argv[0].asReturnedValue();
 
     ScopedObject o(scope, argv[0]);
-    ScopedObject p(scope, argv[1]);
-    Q_ASSERT(!!o);
-
-    if (o->prototype() != p->d()) {
-        bool ok = false;
-        if (o->isExtensible()) {
-            ok = o->setPrototype(p);
-        }
-        if (!ok)
-            return scope.engine->throwTypeError(QStringLiteral("Object.setPrototypeOf: Could not change prototype"));
-    }
+    const Object *p = argv[1].isNull() ? nullptr : static_cast<const Object *>(argv + 1);
+    bool ok = o->setPrototypeOf(p);
+    if (!ok)
+        return scope.engine->throwTypeError(QStringLiteral("Could not change prototype."));
     return o->asReturnedValue();
 }
 
@@ -604,11 +597,11 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
     ScopedObject O(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    ScopedObject proto(scope, V->prototype());
+    ScopedObject proto(scope, V->getPrototypeOf());
     while (proto) {
         if (O->d() == proto->d())
             return Encode(true);
-        proto = proto->prototype();
+        proto = proto->getPrototypeOf();
     }
     return Encode(false);
 }
@@ -694,32 +687,21 @@ ReturnedValue ObjectPrototype::method_get_proto(const FunctionObject *b, const V
     if (!o)
         THROW_TYPE_ERROR();
 
-    return Encode(o->prototype());
+    return Encode(o->getPrototypeOf());
 }
 
 ReturnedValue ObjectPrototype::method_set_proto(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     ScopedObject o(scope, thisObject);
-    if (!o || !argc)
+    if (!o || !argc || (!argv[0].isObject() && !argv[0].isNull()))
         THROW_TYPE_ERROR();
 
-    if (argv[0].isNull()) {
-        o->setPrototype(nullptr);
-        RETURN_UNDEFINED();
-    }
-
-    ScopedObject p(scope, argv[0]);
-    bool ok = false;
-    if (!!p) {
-        if (o->prototype() == p->d()) {
-            ok = true;
-        } else if (o->isExtensible()) {
-            ok = o->setPrototype(p);
-        }
-    }
+    const Object *p = argv[0].isNull() ? nullptr : static_cast<const Object *>(argv);
+    bool ok = o->setPrototypeOf(p);
     if (!ok)
-        return scope.engine->throwTypeError(QStringLiteral("Cyclic __proto__ value"));
+        return scope.engine->throwTypeError(QStringLiteral("Could not change prototype."));
+    return Encode::undefined();
     RETURN_UNDEFINED();
 }
 

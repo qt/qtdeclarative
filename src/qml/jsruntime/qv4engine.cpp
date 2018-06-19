@@ -402,7 +402,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[URIErrorProto] = memoryManager->allocObject<URIErrorPrototype>(ic->d());
 
     jsObjects[VariantProto] = memoryManager->allocate<VariantPrototype>();
-    Q_ASSERT(variantPrototype()->prototype() == objectPrototype()->d());
+    Q_ASSERT(variantPrototype()->getPrototypeOf() == objectPrototype()->d());
 
 #if QT_CONFIG(qml_sequence_object)
     ic = newInternalClass(SequencePrototype::staticVTable(), SequencePrototype::defaultPrototype(this));
@@ -1849,7 +1849,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
         } else if (Object *o = value->objectValue()) {
             // Look in the prototype chain.
             QV4::Scope scope(this);
-            QV4::ScopedObject proto(scope, o->prototype());
+            QV4::ScopedObject proto(scope, o->getPrototypeOf());
             while (proto) {
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
@@ -1870,7 +1870,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
                         *reinterpret_cast<void* *>(data) = var.data();
                     return true;
                 }
-                proto = proto->prototype();
+                proto = proto->getPrototypeOf();
             }
         }
     } else if (value->isNull() && name.endsWith('*')) {

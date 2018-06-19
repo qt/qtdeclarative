@@ -323,7 +323,7 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
         if (query.exec()) {
             QV4::Scoped<QQmlSqlDatabaseWrapper> rows(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
             QV4::ScopedObject p(scope, databaseData(scope.engine)->rowsProto.value());
-            rows->setPrototype(p.getPointer());
+            rows->setPrototypeUnchecked(p.getPointer());
             rows->d()->type = Heap::QQmlSqlDatabaseWrapper::Rows;
             *rows->d()->database = db;
             *rows->d()->sqlQuery = query;
@@ -397,7 +397,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(const FunctionObject *b, const
 
     Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
     ScopedObject p(scope, databaseData(scope.engine)->queryProto.value());
-    w->setPrototype(p.getPointer());
+    w->setPrototypeUnchecked(p.getPointer());
     w->d()->type = Heap::QQmlSqlDatabaseWrapper::Query;
     *w->d()->database = db;
     *w->d()->version = *r->d()->version;
@@ -449,7 +449,7 @@ static ReturnedValue qmlsqldatabase_transaction_shared(const FunctionObject *b, 
 
     Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
     QV4::ScopedObject p(scope, databaseData(scope.engine)->queryProto.value());
-    w->setPrototype(p.getPointer());
+    w->setPrototypeUnchecked(p.getPointer());
     w->d()->type = Heap::QQmlSqlDatabaseWrapper::Query;
     *w->d()->database = db;
     *w->d()->version = *r->d()->version;
@@ -773,7 +773,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 
     QV4::Scoped<QQmlSqlDatabaseWrapper> db(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
     QV4::ScopedObject p(scope, databaseData(scope.engine)->databaseProto.value());
-    db->setPrototype(p.getPointer());
+    db->setPrototypeUnchecked(p.getPointer());
     *db->d()->database = database;
     *db->d()->version = version;
 

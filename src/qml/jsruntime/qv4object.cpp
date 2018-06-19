@@ -93,19 +93,6 @@ void Heap::Object::setUsedAsProto()
     internalClass.set(internalClass->engine, internalClass->asProtoClass());
 }
 
-bool Object::setPrototype(Object *proto)
-{
-    Heap::Object *p = proto ? proto->d() : nullptr;
-    Heap::Object *pp = p;
-    while (pp) {
-        if (pp == d())
-            return false;
-        pp = pp->prototype();
-    }
-    setInternalClass(internalClass()->changePrototype(p));
-    return true;
-}
-
 ReturnedValue Object::getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
@@ -276,6 +263,11 @@ void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttribut
     } else {
         setProperty(idx, p->value);
     }
+}
+
+void Object::setPrototypeUnchecked(const Object *p)
+{
+    setInternalClass(internalClass()->changePrototype(p ? p->d() : nullptr));
 }
 
 // Section 8.12.2
@@ -484,7 +476,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
                 return str.asReturnedValue();
             }
         }
-        o = o->prototype();
+        o = o->getPrototypeOf();
     }
 
     if (exists) {
@@ -543,13 +535,13 @@ bool Object::internalPut(StringOrSymbol *name, const Value &value)
             memberIndex.set(engine, value);
         }
         return true;
-    } else if (!prototype()) {
+    } else if (!getPrototypeOf()) {
         if (!isExtensible())
             return false;
     } else {
         // clause 4
         Scope scope(engine);
-        memberIndex = ScopedObject(scope, prototype())->getValueOrSetter(name, &attrs);
+        memberIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(name, &attrs);
         if (!memberIndex.isNull()) {
             if (attrs.isAccessor()) {
                 if (!memberIndex->as<FunctionObject>())
@@ -608,13 +600,13 @@ bool Object::internalPutIndexed(uint index, const Value &value)
 
         arrayIndex.set(engine, value);
         return true;
-    } else if (!prototype()) {
+    } else if (!getPrototypeOf()) {
         if (!isExtensible())
             return false;
     } else {
         // clause 4
         Scope scope(engine);
-        arrayIndex = ScopedObject(scope, prototype())->getValueOrSetter(index, &attrs);
+        arrayIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(index, &attrs);
         if (!arrayIndex.isNull()) {
             if (attrs.isAccessor()) {
                 if (!arrayIndex->as<FunctionObject>())
@@ -978,7 +970,7 @@ bool Object::hasProperty(const Managed *m, Identifier id)
         if (o->getOwnProperty(id, p) != Attr_Invalid)
             return true;
 
-        o = o->prototype();
+        o = o->getPrototypeOf();
     }
 
     return false;
@@ -1030,6 +1022,34 @@ bool Object::preventExtensions(Managed *m)
     Q_ASSERT(m->isObject());
     Object *o = static_cast<Object *>(m);
     o->setInternalClass(o->internalClass()->nonExtensible());
+    return true;
+}
+
+Heap::Object *Object::getPrototypeOf(const Managed *m)
+{
+    return m->internalClass()->prototype;
+}
+
+bool Object::setPrototypeOf(Managed *m, const Object *proto)
+{
+    Q_ASSERT(m->isObject());
+    Object *o = static_cast<Object *>(m);
+    Heap::Object *current = o->internalClass()->prototype;
+    Heap::Object *protod = proto ? proto->d() : nullptr;
+    if (current == protod)
+        return true;
+    if (!o->internalClass()->extensible)
+        return false;
+    Heap::Object *p = protod;
+    while (p) {
+        if (p == o->d())
+            return false;
+        if (reinterpret_cast<const ObjectVTable *>(p->vtable())->getPrototypeOf !=
+                reinterpret_cast<const ObjectVTable *>(Object::staticVTable())->getPrototypeOf)
+            break;
+        p = p->prototype();
+    }
+    o->setInternalClass(o->internalClass()->changePrototype(protod));
     return true;
 }
 

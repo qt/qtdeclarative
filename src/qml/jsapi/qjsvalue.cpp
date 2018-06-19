@@ -852,7 +852,7 @@ QJSValue QJSValue::prototype() const
     ScopedObject o(scope, QJSValuePrivate::getValue(this)->as<QV4::Object>());
     if (!o)
         return QJSValue();
-    ScopedObject p(scope, o->prototype());
+    ScopedObject p(scope, o->getPrototypeOf());
     if (!p)
         return QJSValue(NullValue);
     return QJSValue(o->internalClass()->engine, p.asReturnedValue());
@@ -884,7 +884,7 @@ void QJSValue::setPrototype(const QJSValue& prototype)
     if (!val)
         return;
     if (val->isNull()) {
-        o->setPrototype(nullptr);
+        o->setPrototypeOf(nullptr);
         return;
     }
 
@@ -895,7 +895,7 @@ void QJSValue::setPrototype(const QJSValue& prototype)
         qWarning("QJSValue::setPrototype() failed: cannot set a prototype created in a different engine");
         return;
     }
-    if (!o->setPrototype(p))
+    if (!o->setPrototypeOf(p))
         qWarning("QJSValue::setPrototype() failed: cyclic prototype value");
 }
 

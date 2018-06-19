@@ -410,9 +410,9 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(3));
     ctor->defineReadonlyProperty(engine->id_prototype(), *this);
     ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
-    ctor->setPrototype(engine->intrinsicTypedArrayCtor());
+    ctor->setPrototypeOf(engine->intrinsicTypedArrayCtor());
 
-    setPrototype(engine->intrinsicTypedArrayPrototype());
+    setPrototypeOf(engine->intrinsicTypedArrayPrototype());
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
 }

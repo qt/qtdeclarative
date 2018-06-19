@@ -179,6 +179,8 @@ struct ObjectVTable
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
     bool (*isExtensible)(const Managed *);
     bool (*preventExtensions)(Managed *);
+    Heap::Object *(*getPrototypeOf)(const Managed *);
+    bool (*setPrototypeOf)(Managed *, const Object *);
     qint64 (*getLength)(const Managed *m);
     void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
@@ -200,6 +202,8 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     getOwnProperty,                             \
     isExtensible,                               \
     preventExtensions,                          \
+    getPrototypeOf,                             \
+    setPrototypeOf,                             \
     getLength,                                  \
     advanceIterator,                            \
     instanceOf                                  \
@@ -244,8 +248,6 @@ struct Q_QML_EXPORT Object: Managed {
     void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
-    Heap::Object *prototype() const { return d()->prototype(); }
-    bool setPrototype(Object *proto);
 
     PropertyAttributes getOwnProperty(Identifier id, Property *p = nullptr) {
         return vtable()->getOwnProperty(this, id, p);
@@ -307,6 +309,9 @@ struct Q_QML_EXPORT Object: Managed {
 
     bool isExtensible() const { return vtable()->isExtensible(this); }
     bool preventExtensions() { return vtable()->preventExtensions(this); }
+    Heap::Object *getPrototypeOf() const { return vtable()->getPrototypeOf(this); }
+    bool setPrototypeOf(const Object *p) { return vtable()->setPrototypeOf(this, p); }
+    void setPrototypeUnchecked(const Object *p);
 
     // Array handling
 
@@ -366,7 +371,7 @@ public:
         Scope scope(engine());
         ScopedObject p(scope, this);
 
-        while ((p = p->prototype()))
+        while ((p = p->getPrototypeOf()))
             if (p->arrayData())
                 return true;
 
@@ -445,6 +450,8 @@ protected:
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
+    static Heap::Object *getPrototypeOf(const Managed *);
+    static bool setPrototypeOf(Managed *, const Object *);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static qint64 getLength(const Managed *m);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
