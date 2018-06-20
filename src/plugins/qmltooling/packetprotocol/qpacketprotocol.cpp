@@ -40,6 +40,8 @@
 #include "qpacketprotocol_p.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QtEndian>
+
 #include <private/qiodevice_p.h>
 #include <private/qobject_p.h>
 
@@ -104,7 +106,7 @@ class QPacketProtocolPrivate : public QObjectPrivate
 public:
     QPacketProtocolPrivate(QIODevice *dev);
 
-    QList<qint64> sendingPackets;
+    QList<qint32> sendingPackets;
     QList<QByteArray> packets;
     QByteArray inProgress;
     qint32 inProgressSize;
@@ -135,14 +137,20 @@ QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
 void QPacketProtocol::send(const QByteArray &data)
 {
     Q_D(QPacketProtocol);
+    static const qint32 maxSize = std::numeric_limits<qint32>::max() - sizeof(qint32);
 
     if (data.isEmpty())
         return; // We don't send empty packets
-    qint64 sendSize = data.size() + sizeof(qint32);
 
+    if (data.size() > maxSize) {
+        emit invalidPacket();
+        return;
+    }
+
+    qint32 sendSize = data.size() + sizeof(qint32);
     d->sendingPackets.append(sendSize);
-    qint32 sendSize32 = sendSize;
-    qint64 writeBytes = d->dev->write((char *)&sendSize32, sizeof(qint32));
+    qint32 sendSizeLE = qToLittleEndian(sendSize);
+    qint64 writeBytes = d->dev->write((char *)&sendSizeLE, sizeof(qint32));
     Q_UNUSED(writeBytes);
     Q_ASSERT(writeBytes == sizeof(qint32));
     writeBytes = d->dev->write(data);
@@ -236,7 +244,9 @@ void QPacketProtocol::readyToRead()
                 return;
 
             // Read size header
-            const qint64 read = d->dev->read((char *)&d->inProgressSize, sizeof(qint32));
+            qint32 inProgressSizeLE;
+            const qint64 read = d->dev->read((char *)&inProgressSizeLE, sizeof(qint32));
+            d->inProgressSize = qFromLittleEndian(inProgressSizeLE);
 
             // Check sizing constraints
             if (read != sizeof(qint32) || d->inProgressSize < read) {
