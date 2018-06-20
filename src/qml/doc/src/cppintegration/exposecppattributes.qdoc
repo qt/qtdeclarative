@@ -255,9 +255,6 @@ type, and so cannot provide the necessary QML property characteristics
 through the Qt meta object system, such as signal notifications when a list
 is modified.
 
-QQmlListProperty is a template class that can be conveniently constructed from
-a QList value.
-
 For example, the \c MessageBoard class below has a \c messages property of
 type QQmlListProperty that stores a list of \c Message instances:
 
