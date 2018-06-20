@@ -292,6 +292,60 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Proper
     return resultAttributes;
 }
 
+bool ProxyObject::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler) {
+        scope.engine->throwTypeError();
+        return false;
+    }
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString prop(scope, scope.engine->newString(QStringLiteral("defineProperty")));
+    ScopedValue trap(scope, handler->get(prop));
+    if (scope.hasException())
+        return false;
+    if (trap->isNullOrUndefined())
+        return target->defineOwnProperty(id, p, attrs);
+    if (!trap->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return false;
+    }
+
+    JSCallData cdata(scope, 3, nullptr, handler);
+    cdata.args[0] = target;
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+    cdata.args[2] = ObjectPrototype::fromPropertyDescriptor(scope.engine, p, attrs);
+
+    ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    bool result = trapResult->toBoolean();
+    if (!result)
+        return false;
+
+    ScopedProperty targetDesc(scope);
+    PropertyAttributes targetAttributes = target->getOwnProperty(id, targetDesc);
+    bool extensibleTarget = target->isExtensible();
+    bool settingConfigFalse = attrs.hasConfigurable() && !attrs.isConfigurable();
+    if (targetAttributes == Attr_Invalid) {
+        if (!extensibleTarget || settingConfigFalse) {
+            scope.engine->throwTypeError();
+            return false;
+        }
+    } else {
+        // ###
+        // if IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false throw a type error.
+        if (settingConfigFalse && targetAttributes.isConfigurable()) {
+            scope.engine->throwTypeError();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ProxyObject::isExtensible(const Managed *m)
 {
     Scope scope(m);

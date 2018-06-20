@@ -92,6 +92,7 @@ struct ProxyObject: Object {
     static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
+    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
     static Heap::Object *getPrototypeOf(const Managed *);
