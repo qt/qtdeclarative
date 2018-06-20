@@ -40,6 +40,8 @@
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 class tst_qquickpositioners : public QQmlDataTest
 {
     Q_OBJECT
@@ -4011,15 +4013,19 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
 {
     QQuickView *window = new QQuickView(nullptr);
-    qDebug() << "1";
+    qCDebug(lcTests) << "created window";
 
     window->setSource(QUrl::fromLocalFile(filename));
-    qDebug() << "2";
+    qCDebug(lcTests) << "loaded content from" << filename;
     window->show();
-    qDebug() << "3";
+    qCDebug(lcTests) << "window shown";
+    bool exposed = true;
     if (wait)
-        QTest::qWaitForWindowExposed(window); //It may not relayout until the next frame, so it needs to be drawn
-    qDebug() << "4";
+        exposed = QTest::qWaitForWindowExposed(window); //It may not relayout until the next frame, so it needs to be drawn
+    if (exposed)
+        qCDebug(lcTests) << "window exposed";
+    else
+        qCWarning(lcTests) << "window NOT exposed";
 
     return window;
 }
