@@ -1296,6 +1296,16 @@ void ClassExpression::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void ClassDeclaration::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(heritage, visitor);
+        accept(elements, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 void ClassElementList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {

@@ -169,6 +169,7 @@ public:
         Kind_FunctionDeclaration,
         Kind_FunctionExpression,
         Kind_ClassExpression,
+        Kind_ClassDeclaration,
         Kind_IdentifierExpression,
         Kind_IdentifierPropertyName,
         Kind_ComputedPropertyName,
@@ -2245,6 +2246,19 @@ public:
     SourceLocation lbraceToken;
     SourceLocation rbraceToken;
 };
+
+class QML_PARSER_EXPORT ClassDeclaration: public ClassExpression
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ClassDeclaration)
+
+    ClassDeclaration(const QStringRef &n, ExpressionNode *heritage, ClassElementList *elements)
+        : ClassExpression(n, heritage, elements)
+        { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+};
+
 
 class QML_PARSER_EXPORT ClassElementList : public Node
 {

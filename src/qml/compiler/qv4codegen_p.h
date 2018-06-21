@@ -600,6 +600,7 @@ protected:
     bool visit(AST::FunctionDeclaration *ast) override;
     bool visit(AST::YieldExpression *ast) override;
     bool visit(AST::ClassExpression *ast) override;
+    bool visit(AST::ClassDeclaration *ast) override;
 
     // statements
     bool visit(AST::Block *ast) override;

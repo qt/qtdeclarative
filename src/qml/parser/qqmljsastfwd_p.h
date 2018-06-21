@@ -162,6 +162,7 @@ class Program;
 class DebuggerStatement;
 class NestedExpression;
 class ClassExpression;
+class ClassDeclaration;
 class ClassElementList;
 
 // ui elements

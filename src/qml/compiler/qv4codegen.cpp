@@ -916,9 +916,16 @@ bool Codegen::visit(ClassExpression *ast)
 
     Reference ctor = referenceForName(ast->name.toString(), true);
     (void) ctor.storeRetainAccumulator();
-    (void) outerVar.storeRetainAccumulator();
 
     _expr.setResult(Reference::fromAccumulator(this));
+    return false;
+}
+
+bool Codegen::visit(ClassDeclaration *ast)
+{
+    Reference outerVar = referenceForName(ast->name.toString(), true);
+    visit(static_cast<ClassExpression *>(ast));
+    (void) outerVar.storeRetainAccumulator();
     return false;
 }
 

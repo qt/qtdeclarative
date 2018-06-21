@@ -3372,7 +3372,6 @@ language/statements/class/definition/accessors.js fails
 language/statements/class/definition/basics.js fails
 language/statements/class/definition/class-method-returns-promise.js fails
 language/statements/class/definition/constructor-property.js fails
-language/statements/class/definition/constructor.js fails
 language/statements/class/definition/fn-name-accessor-get.js fails
 language/statements/class/definition/fn-name-accessor-set.js fails
 language/statements/class/definition/fn-name-gen-method.js fails
@@ -4098,7 +4097,6 @@ language/statements/class/meth-static-dflt-params-trailing-comma.js fails
 language/statements/class/meth-static-params-trailing-comma-multiple.js fails
 language/statements/class/meth-static-params-trailing-comma-single.js fails
 language/statements/class/method-length-dflt.js fails
-language/statements/class/name-binding/basic.js fails
 language/statements/class/name-binding/const.js fails
 language/statements/class/name-binding/expression.js fails
 language/statements/class/name-binding/in-extends-expression-assigned.js fails

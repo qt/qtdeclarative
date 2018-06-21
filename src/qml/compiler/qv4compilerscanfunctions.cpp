@@ -226,6 +226,21 @@ bool ScanFunctions::visit(FunctionExpression *ast)
 
 bool ScanFunctions::visit(ClassExpression *ast)
 {
+    enterEnvironment(ast, ContextType::Block, QStringLiteral("%Class"));
+    _context->isStrict = true;
+    _context->hasNestedFunctions = true;
+    if (!ast->name.isEmpty())
+        _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
+    return true;
+}
+
+void ScanFunctions::endVisit(ClassExpression *)
+{
+    leaveEnvironment();
+}
+
+bool ScanFunctions::visit(ClassDeclaration *ast)
+{
     if (!ast->name.isEmpty())
         _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
 
@@ -237,7 +252,7 @@ bool ScanFunctions::visit(ClassExpression *ast)
     return true;
 }
 
-void ScanFunctions::endVisit(ClassExpression *)
+void ScanFunctions::endVisit(ClassDeclaration *)
 {
     leaveEnvironment();
 }

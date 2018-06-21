@@ -3863,7 +3863,17 @@ YieldExpression_In: T_YIELD AssignmentExpression_In;
 
 
 ClassDeclaration: T_CLASS BindingIdentifier ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
-/.  case $rule_number: Q_FALLTHROUGH(); ./
+/.
+    case $rule_number: {
+        AST::ClassDeclaration *node = new (pool) AST::ClassDeclaration(stringRef(2), sym(3).Expression, sym(5).ClassElementList);
+        node->classToken = loc(1);
+        node->identifierToken = loc(2);
+        node->lbraceToken = loc(4);
+        node->rbraceToken = loc(6);
+        sym(1).Node = node;
+    } break;
+./
+
 ClassExpression: T_CLASS BindingIdentifier ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
 /.
     case $rule_number: {
@@ -3877,7 +3887,16 @@ ClassExpression: T_CLASS BindingIdentifier ClassHeritageOpt ClassLBrace ClassBod
 ./
 
 ClassDeclaration_Default: T_CLASS ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
-/.  case $rule_number: Q_FALLTHROUGH(); ./
+/.
+    case $rule_number: {
+        AST::ClassDeclaration *node = new (pool) AST::ClassDeclaration(QStringRef(), sym(2).Expression, sym(4).ClassElementList);
+        node->classToken = loc(1);
+        node->lbraceToken = loc(3);
+        node->rbraceToken = loc(5);
+        sym(1).Node = node;
+    } break;
+./
+
 ClassExpression: T_CLASS ClassHeritageOpt ClassLBrace ClassBodyOpt ClassRBrace;
 /.
     case $rule_number: {

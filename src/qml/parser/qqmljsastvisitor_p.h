@@ -326,6 +326,9 @@ public:
     virtual bool visit(ClassExpression *) { return true; }
     virtual void endVisit(ClassExpression *) {}
 
+    virtual bool visit(ClassDeclaration *) { return true; }
+    virtual void endVisit(ClassDeclaration *) {}
+
     virtual bool visit(ClassElementList *) { return true; }
     virtual void endVisit(ClassElementList *) {}
 
