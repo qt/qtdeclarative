@@ -554,7 +554,7 @@ void ScanFunctions::calcEscapingVariables()
     for (Context *c : qAsConst(m->contextMap)) {
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             c->allVarsEscape = false;
-        if (!c->parent || m->debugMode)
+        if (c->contextType == ContextType::Global || (!c->isStrict && c->contextType == ContextType::Eval) || m->debugMode)
             c->allVarsEscape = true;
         if (c->allVarsEscape) {
             if (c->parent) {
