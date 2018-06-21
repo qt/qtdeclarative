@@ -415,14 +415,14 @@ QModelIndex QQuickFolderListModel::index(int row, int , const QModelIndex &) con
 }
 
 /*!
-    \qmlproperty string FolderListModel::folder
+    \qmlproperty url FolderListModel::folder
 
-    The \a folder property holds a URL for the folder that the model is
-    currently providing.
+    The \a folder property holds a URL for the folder that the model
+    currently provides.
 
     The value must be a \c file: or \c qrc: URL, or a relative URL.
 
-    By default, the value is an invalid URL.
+    The default value is an invalid URL.
 */
 QUrl QQuickFolderListModel::folder() const
 {
