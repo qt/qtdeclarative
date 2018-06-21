@@ -589,6 +589,8 @@ void QQuickStyle::addStylePath(const QString &path)
     if (url.isRelative() || url.scheme() == QLatin1String("file")
             || (url.scheme().length() == 1 && QFile::exists(path)) ) {  // windows path
         styleSpec()->customStylePaths.prepend(QDir(path).canonicalPath());
+    } else if (url.scheme() == QLatin1String("qrc")) {
+        styleSpec()->customStylePaths.prepend(QLatin1Char(':') + url.path());
     } else {
         styleSpec()->customStylePaths.prepend(path);
     }

@@ -55,6 +55,8 @@ private slots:
     void commandLineArgument();
     void environmentVariables();
     void availableStyles();
+    void qrcStylePaths_data();
+    void qrcStylePaths();
 
 private:
     void loadControls();
@@ -164,6 +166,43 @@ void tst_QQuickStyle::availableStyles()
     // QTBUG-60973
     for (const QString &style : styles) {
         QVERIFY2(!style.endsWith(".dSYM"), qPrintable(style));
+    }
+}
+
+void tst_QQuickStyle::qrcStylePaths_data()
+{
+    QTest::addColumn<QString>("stylePath");
+    QTest::addColumn<QString>("expectedStyleName");
+
+    QTest::addRow("qrc:/qrcStyles1") << QString::fromLatin1("qrc:/qrcStyles1") << QString::fromLatin1("QrcStyle1");
+    QTest::addRow(":/qrcStyles2") << QString::fromLatin1(":/qrcStyles2") << QString::fromLatin1("QrcStyle2");
+}
+
+void tst_QQuickStyle::qrcStylePaths()
+{
+    QFETCH(QString, stylePath);
+    QFETCH(QString, expectedStyleName);
+
+    QQuickStyle::addStylePath(stylePath);
+
+    const QStringList paths = QQuickStylePrivate::stylePaths();
+    QString expectedStylePath = stylePath;
+    if (expectedStylePath.startsWith(QLatin1String("qrc")))
+        expectedStylePath.remove(0, 3);
+    if (!paths.contains(expectedStylePath)) {
+        QString message;
+        QDebug stream(&message);
+        stream.nospace() << "QQuickStylePrivate::stylePaths() doesn't contain " << expectedStylePath << ":\n" << paths;
+        QFAIL(qPrintable(message));
+    }
+
+    const QStringList styles = QQuickStyle::availableStyles();
+    QVERIFY(!styles.isEmpty());
+    if (!styles.contains(expectedStyleName)) {
+        QString message;
+        QDebug stream(&message);
+        stream.nospace() << "QQuickStyle::availableStyles() doesn't contain " << expectedStyleName << ":\n" << styles;
+        QFAIL(qPrintable(message));
     }
 }
 
