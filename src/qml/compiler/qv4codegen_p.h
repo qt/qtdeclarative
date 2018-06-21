@@ -212,7 +212,7 @@ public:
                 return false;
             }
         }
-        bool isConst() const { return type == Const; }
+        bool isConstant() const { return type == Const; }
         bool isAccumulator() const { return type == Accumulator; }
         bool isStackSlot() const { return type == StackSlot; }
         bool isRegister() const {
@@ -366,6 +366,7 @@ public:
         QString name;
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
+        bool isReferenceToConst = false;
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;
@@ -520,9 +521,9 @@ protected:
     void variableDeclarationList(AST::VariableDeclarationList *ast);
 
     Reference targetForPatternElement(AST::PatternElement *p);
-    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef = Reference());
-    void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList);
-    void destructureElementList(const Reference &array, AST::PatternElementList *bindingList);
+    void initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &baseRef = Reference(), bool isDefinition = false);
+    void destructurePropertyList(const Reference &object, AST::PatternPropertyList *bindingList, bool isDefinition = false);
+    void destructureElementList(const Reference &array, AST::PatternElementList *bindingList, bool isDefinition = false);
     void destructurePattern(AST::Pattern *p, const Reference &rhs);
 
     Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);

@@ -230,7 +230,7 @@ bool ScanFunctions::visit(ClassExpression *ast)
     _context->isStrict = true;
     _context->hasNestedFunctions = true;
     if (!ast->name.isEmpty())
-        _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
+        _context->addLocalVar(ast->name.toString(), Context::VariableDefinition, AST::VariableScope::Const);
     return true;
 }
 
@@ -248,7 +248,7 @@ bool ScanFunctions::visit(ClassDeclaration *ast)
     _context->isStrict = true;
     _context->hasNestedFunctions = true;
     if (!ast->name.isEmpty())
-        _context->addLocalVar(ast->name.toString(), Context::VariableDeclaration, AST::VariableScope::Let);
+        _context->addLocalVar(ast->name.toString(), Context::VariableDefinition, AST::VariableScope::Const);
     return true;
 }
 

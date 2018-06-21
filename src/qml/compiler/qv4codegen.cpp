@@ -152,7 +152,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         return _expr.result();
 
 #ifndef V4_BOOTSTRAP
-    if (expr.isConst()) {
+    if (expr.isConstant()) {
         auto v = Value::fromReturnedValue(expr.constant);
         if (v.isNumber()) {
             switch (op) {
@@ -459,7 +459,7 @@ void Codegen::variableDeclaration(PatternElement *ast)
 
     if (!ast->initializer)
         return;
-    initializeAndDestructureBindingElement(ast, Reference());
+    initializeAndDestructureBindingElement(ast, Reference(), /*isDefinition*/ true);
 }
 
 void Codegen::variableDeclarationList(VariableDeclarationList *ast)
@@ -482,12 +482,14 @@ Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
     return lhs;
 }
 
-void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base)
+void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base, bool isDefinition)
 {
     Q_ASSERT(e->type == AST::PatternElement::Binding || e->type == AST::PatternElement::RestElement);
     RegisterScope scope(this);
     Reference baseRef = (base.isAccumulator()) ? base.storeOnStack() : base;
     Reference varToStore = targetForPatternElement(e);
+    if (isDefinition)
+        varToStore.isReferenceToConst = false;
     if (hasError)
         return;
 
@@ -533,9 +535,9 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
     if (!varToStore.isStackSlot())
         varToStore = varToStore.storeOnStack();
     if (PatternElementList *l = e->elementList()) {
-        destructureElementList(varToStore, l);
+        destructureElementList(varToStore, l, isDefinition);
     } else if (PatternPropertyList *p = e->propertyList()) {
-        destructurePropertyList(varToStore, p);
+        destructurePropertyList(varToStore, p, isDefinition);
     } else if (e->bindingTarget) {
         // empty binding pattern. For spec compatibility, try to coerce the argument to an object
         varToStore.loadInAccumulator();
@@ -562,7 +564,7 @@ Codegen::Reference Codegen::referenceForPropertyName(const Codegen::Reference &o
     return property;
 }
 
-void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternPropertyList *bindingList)
+void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternPropertyList *bindingList, bool isDefinition)
 {
     RegisterScope scope(this);
 
@@ -572,13 +574,13 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
         Reference property = referenceForPropertyName(object, p->name);
         if (hasError)
             return;
-        initializeAndDestructureBindingElement(p, property);
+        initializeAndDestructureBindingElement(p, property, isDefinition);
         if (hasError)
             return;
     }
 }
 
-void Codegen::destructureElementList(const Codegen::Reference &array, PatternElementList *bindingList)
+void Codegen::destructureElementList(const Codegen::Reference &array, PatternElementList *bindingList, bool isDefinition)
 {
     RegisterScope scope(this);
 
@@ -619,7 +621,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
 
         if (e->type == PatternElement::RestElement) {
             bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
-            initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this));
+            initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
             hasRest = true;
         } else {
             Instruction::IteratorNext next;
@@ -628,7 +630,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
             bool last = !p->next || (!p->next->elision && !p->next->element);
             if (last)
                 iteratorDone.storeConsumeAccumulator();
-            initializeAndDestructureBindingElement(e, iteratorValue);
+            initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
             if (hasError) {
                 end.link();
                 return;
@@ -824,8 +826,6 @@ bool Codegen::visit(ClassExpression *ast)
     jsClass.name = ast->name.toString();
     registerString(jsClass.name);
 
-    Reference outerVar = referenceForName(ast->name.toString(), true);
-
     ClassElementList *constructor = nullptr;
     int nComputedNames = 0;
     int nStaticComputedNames = 0;
@@ -915,6 +915,7 @@ bool Codegen::visit(ClassExpression *ast)
     bytecodeGenerator->addInstruction(createClass);
 
     Reference ctor = referenceForName(ast->name.toString(), true);
+    ctor.isReferenceToConst = false; // this is the definition
     (void) ctor.storeRetainAccumulator();
 
     _expr.setResult(Reference::fromAccumulator(this));
@@ -1285,7 +1286,7 @@ bool Codegen::visit(BinaryExpression *ast)
     case QSOperator::BitAnd:
     case QSOperator::BitOr:
     case QSOperator::BitXor:
-        if (left.isConst()) {
+        if (left.isConstant()) {
             Reference right = expression(ast->right);
             if (hasError)
                 return false;
@@ -1346,7 +1347,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::Sub: {
-        if (right.isConst() && right.constant == Encode(int(1))) {
+        if (right.isConstant() && right.constant == Encode(int(1))) {
             left.loadInAccumulator();
             bytecodeGenerator->addInstruction(Instruction::Decrement());
         } else {
@@ -1391,9 +1392,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     }
     case QSOperator::BitAnd:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
-            if (left.isConst()) {
+            if (left.isConstant()) {
                 int result = Primitive::fromReturnedValue(left.constant).toInt32() & rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
@@ -1409,9 +1410,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         }
         break;
     case QSOperator::BitOr:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
-            if (left.isConst()) {
+            if (left.isConstant()) {
                 int result = Primitive::fromReturnedValue(left.constant).toInt32() | rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
@@ -1427,9 +1428,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         }
         break;
     case QSOperator::BitXor:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
-            if (left.isConst()) {
+            if (left.isConstant()) {
                 int result = Primitive::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
@@ -1445,7 +1446,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         }
         break;
     case QSOperator::URShift:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::UShrConst ushr;
             ushr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
@@ -1458,7 +1459,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         }
         break;
     case QSOperator::RShift:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShrConst shr;
             shr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
@@ -1471,7 +1472,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         }
         break;
     case QSOperator::LShift:
-        if (right.isConst()) {
+        if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShlConst shl;
             shl.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
@@ -1610,12 +1611,12 @@ static QSOperator::Op operatorForSwappedOperands(QSOperator::Op oper)
 
 Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Reference &right)
 {
-    if (left.isConst()) {
+    if (left.isConstant()) {
         oper = operatorForSwappedOperands(oper);
         qSwap(left, right);
     }
 
-    if (right.isConst() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
+    if (right.isConstant() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
         Value c = Primitive::fromReturnedValue(right.constant);
         if (c.isNull() || c.isUndefined()) {
             left.loadInAccumulator();
@@ -2155,6 +2156,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
         if (r.isStackSlot() && _volatileMemoryLocations.isVolatile(name))
             r.isVolatile = true;
         r.isArgOrEval = resolved.isArgOrEval;
+        r.isReferenceToConst = resolved.isConst;
         return r;
     }
 
@@ -3018,7 +3020,7 @@ bool Codegen::visit(ForEachStatement *ast)
                     lhs.storeConsumeAccumulator();
                 }
             } else if (PatternElement *p = AST::cast<PatternElement *>(ast->lhs)) {
-                initializeAndDestructureBindingElement(p, lhsValue);
+                initializeAndDestructureBindingElement(p, lhsValue, /*isDefinition =*/ true);
                 if (hasError)
                     goto error;
             } else {
@@ -3711,6 +3713,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     isArgOrEval = other.isArgOrEval;
     codegen = other.codegen;
     isReadonly = other.isReadonly;
+    isReferenceToConst = other.isReferenceToConst;
     stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
     isVolatile = other.isVolatile;
     global = other.global;
@@ -3836,7 +3839,7 @@ Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
     }
 
     Reference slot = Reference::fromStackSlot(codegen, slotIndex);
-    if (isConst()) {
+    if (isConstant()) {
         Instruction::MoveConst move;
         move.constIndex = codegen->registerConstant(constant);
         move.destTemp = slot.stackSlot();
@@ -3886,6 +3889,20 @@ bool Codegen::Reference::storeWipesAccumulator() const
 
 void Codegen::Reference::storeAccumulator() const
 {
+    if (isReferenceToConst) {
+        // throw a type error
+        RegisterScope scope(codegen);
+        Reference r = codegen->referenceForName(QStringLiteral("TypeError"), false);
+        r = r.storeOnStack();
+        Instruction::Construct construct;
+        construct.func = r.stackSlot();
+        construct.argc = 0;
+        construct.argv = 0;
+        codegen->bytecodeGenerator->addInstruction(construct);
+        Instruction::ThrowException throwException;
+        codegen->bytecodeGenerator->addInstruction(throwException);
+        return;
+    }
     switch (type) {
     case StackSlot: {
         Instruction::StoreReg store;

@@ -2071,7 +2071,6 @@ language/expressions/assignment/dstr-array-elem-iter-rtrn-close-null.js fails
 language/expressions/assignment/dstr-array-elem-iter-rtrn-close.js fails
 language/expressions/assignment/dstr-array-elem-iter-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-elem-iter-thrw-close.js fails
-language/expressions/assignment/dstr-array-elem-put-const.js fails
 language/expressions/assignment/dstr-array-elem-put-let.js fails
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-err.js fails
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-rtrn-close-null.js fails
@@ -2089,17 +2088,14 @@ language/expressions/assignment/dstr-array-rest-iter-rtrn-close.js fails
 language/expressions/assignment/dstr-array-rest-iter-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-rest-iter-thrw-close.js fails
 language/expressions/assignment/dstr-array-rest-lref-err.js fails
-language/expressions/assignment/dstr-array-rest-put-const.js fails
 language/expressions/assignment/dstr-array-rest-put-let.js fails
 language/expressions/assignment/dstr-obj-empty-null.js fails
 language/expressions/assignment/dstr-obj-empty-undef.js fails
 language/expressions/assignment/dstr-obj-id-init-fn-name-class.js fails
 language/expressions/assignment/dstr-obj-id-init-let.js fails
-language/expressions/assignment/dstr-obj-id-put-const.js fails
 language/expressions/assignment/dstr-obj-id-put-let.js fails
 language/expressions/assignment/dstr-obj-prop-elem-init-fn-name-class.js fails
 language/expressions/assignment/dstr-obj-prop-elem-init-let.js fails
-language/expressions/assignment/dstr-obj-prop-put-const.js fails
 language/expressions/assignment/dstr-obj-prop-put-let.js fails
 language/expressions/assignment/fn-name-class.js fails
 language/expressions/assignment/fn-name-lhs-cover.js fails
@@ -4097,7 +4093,6 @@ language/statements/class/meth-static-dflt-params-trailing-comma.js fails
 language/statements/class/meth-static-params-trailing-comma-multiple.js fails
 language/statements/class/meth-static-params-trailing-comma-single.js fails
 language/statements/class/method-length-dflt.js fails
-language/statements/class/name-binding/const.js fails
 language/statements/class/name-binding/expression.js fails
 language/statements/class/name-binding/in-extends-expression-assigned.js fails
 language/statements/class/name-binding/in-extends-expression-grouped.js fails
@@ -4253,7 +4248,6 @@ language/statements/const/function-local-use-before-initialization-in-prior-stat
 language/statements/const/global-closure-get-before-initialization.js fails
 language/statements/const/global-use-before-initialization-in-declaration-statement.js fails
 language/statements/const/global-use-before-initialization-in-prior-statement.js fails
-language/statements/const/syntax/const-invalid-assignment-next-expression-for.js fails
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-in.js fails
 language/statements/const/syntax/const-invalid-assignment-statement-body-for-of.js fails
 language/statements/do-while/tco-body.js strictFails
@@ -4275,7 +4269,6 @@ language/statements/for-of/dstr-array-elem-iter-rtrn-close-null.js fails
 language/statements/for-of/dstr-array-elem-iter-rtrn-close.js fails
 language/statements/for-of/dstr-array-elem-iter-thrw-close-err.js fails
 language/statements/for-of/dstr-array-elem-iter-thrw-close.js fails
-language/statements/for-of/dstr-array-elem-put-const.js fails
 language/statements/for-of/dstr-array-elem-put-let.js fails
 language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-err.js fails
 language/statements/for-of/dstr-array-elem-trlg-iter-list-rtrn-close-null.js fails
@@ -4293,7 +4286,6 @@ language/statements/for-of/dstr-array-rest-iter-rtrn-close.js fails
 language/statements/for-of/dstr-array-rest-iter-thrw-close-err.js fails
 language/statements/for-of/dstr-array-rest-iter-thrw-close.js fails
 language/statements/for-of/dstr-array-rest-lref-err.js fails
-language/statements/for-of/dstr-array-rest-put-const.js fails
 language/statements/for-of/dstr-array-rest-put-let.js fails
 language/statements/for-of/dstr-const-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/for-of/dstr-const-obj-ptrn-id-init-fn-name-class.js fails
@@ -4303,11 +4295,9 @@ language/statements/for-of/dstr-obj-empty-null.js fails
 language/statements/for-of/dstr-obj-empty-undef.js fails
 language/statements/for-of/dstr-obj-id-init-fn-name-class.js fails
 language/statements/for-of/dstr-obj-id-init-let.js fails
-language/statements/for-of/dstr-obj-id-put-const.js fails
 language/statements/for-of/dstr-obj-id-put-let.js fails
 language/statements/for-of/dstr-obj-prop-elem-init-fn-name-class.js fails
 language/statements/for-of/dstr-obj-prop-elem-init-let.js fails
-language/statements/for-of/dstr-obj-prop-put-const.js fails
 language/statements/for-of/dstr-obj-prop-put-let.js fails
 language/statements/for-of/dstr-var-ary-ptrn-elem-id-init-fn-name-class.js fails
 language/statements/for-of/dstr-var-obj-ptrn-id-init-fn-name-class.js fails

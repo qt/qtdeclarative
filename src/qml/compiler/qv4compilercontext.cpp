@@ -125,6 +125,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
             result.type = m.canEscape ? ResolvedName::Local : ResolvedName::Stack;
             result.scope = scope;
             result.index = m.index;
+            result.isConst = (m.scope == VariableScope::Const);
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             return result;
@@ -135,11 +136,13 @@ Context::ResolvedName Context::resolveName(const QString &name)
                 result.index = argIdx + c->locals.size();
                 result.scope = scope;
                 result.type = ResolvedName::Local;
+                result.isConst = false;
                 return result;
             } else {
                 result.index = argIdx + sizeof(CallData)/sizeof(Value) - 1;
                 result.scope = 0;
                 result.type = ResolvedName::Stack;
+                result.isConst = false;
                 return result;
             }
         }

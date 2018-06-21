@@ -293,6 +293,7 @@ struct Context {
         };
         Type type = Unresolved;
         bool isArgOrEval = false;
+        bool isConst = false;
         int scope = -1;
         int index = -1;
         bool isValid() const { return type != Unresolved; }
