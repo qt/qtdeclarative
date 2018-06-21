@@ -851,24 +851,29 @@ bool Codegen::visit(ClassExpression *ast)
             type = Compiler::Class::Method::Setter;
         Compiler::Class::Method m{ name, type, defineFunction(name, f, f->formals, f->body)};
 
-        if (!member->isStatic && name == QStringLiteral("constructor")) {
-            if (constructor) {
-                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a multiple constructors in a class."));
+        if (member->isStatic) {
+            if (name == QStringLiteral("prototype")) {
+                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a static method named 'prototype'."));
                 return false;
             }
-            if (m.type != Compiler::Class::Method::Regular) {
-                throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a getter or setter named 'constructor'."));
-                return false;
-            }
-            constructor = member;
-            jsClass.constructorIndex = m.functionIndex;
-            continue;
-        }
-
-        if (member->isStatic)
             jsClass.staticMethods << m;
-        else
+        } else {
+            if (name == QStringLiteral("constructor")) {
+                if (constructor) {
+                    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a multiple constructors in a class."));
+                    return false;
+                }
+                if (m.type != Compiler::Class::Method::Regular) {
+                    throwSyntaxError(ast->firstSourceLocation(), QLatin1String("Cannot declare a getter or setter named 'constructor'."));
+                    return false;
+                }
+                constructor = member;
+                jsClass.constructorIndex = m.functionIndex;
+                continue;
+            }
+
             jsClass.methods << m;
+        }
     }
 
     int classIndex = _module->classes.size();
