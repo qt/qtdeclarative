@@ -386,7 +386,8 @@ QImage QQuickRenderControl::grab()
         cd->syncSceneGraph();
         d->rc->endSync();
         render();
-        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), false, false);
+        const bool alpha = d->window->format().alphaBufferSize() > 0 && d->window->color().alpha() < 255;
+        grabContent = qt_gl_read_framebuffer(d->window->size() * d->window->effectiveDevicePixelRatio(), alpha, alpha);
         if (QQuickRenderControl::renderWindowFor(d->window)) {
             grabContent.setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
         }
