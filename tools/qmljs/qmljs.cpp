@@ -80,6 +80,15 @@ int main(int argc, char *argv[])
     bool cache = false;
 
     if (!args.isEmpty()) {
+        if (args.constFirst() == QLatin1String("--jit")) {
+            qputenv("QV4_JIT_CALL_THRESHOLD", QByteArray("0"));
+            args.removeFirst();
+        }
+        if (args.constFirst() == QLatin1String("--interpret")) {
+            qputenv("QV4_FORCE_INTERPRETER", QByteArray("1"));
+            args.removeFirst();
+        }
+
         if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
             args.removeFirst();
