@@ -153,6 +153,12 @@ int QQuickViewTestUtil::QaimModel::rowCount(const QModelIndex &parent) const
     return list.count();
 }
 
+int QQuickViewTestUtil::QaimModel::columnCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent);
+    return columns;
+}
+
 QHash<int,QByteArray> QQuickViewTestUtil::QaimModel::roleNames() const
 {
     QHash<int,QByteArray> roles = QAbstractListModel::roleNames();
@@ -174,7 +180,7 @@ QVariant QQuickViewTestUtil::QaimModel::data(const QModelIndex &index, int role)
 
 int QQuickViewTestUtil::QaimModel::count() const
 {
-    return rowCount();
+    return rowCount() * columnCount();
 }
 
 QString QQuickViewTestUtil::QaimModel::name(int index) const

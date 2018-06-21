@@ -118,6 +118,7 @@ private slots:
     void noCurrentIndex();
     void keyNavigation();
     void keyNavigation_data();
+    void checkCountForMultiColumnModels();
     void enforceRange();
     void enforceRange_withoutHighlight();
     void spacing();
@@ -1853,6 +1854,38 @@ void tst_QQuickListView::swapWithFirstItem()
     QTRY_COMPARE(listview->contentY(), qreal(0));
 
     delete testObject;
+}
+
+void tst_QQuickListView::checkCountForMultiColumnModels()
+{
+    // Check that a list view will only load items for the first
+    // column, even if the model reports that it got several columns.
+    // We test this since QQmlDelegateModel has been changed to
+    // also understand multi-column models, but this should not affect ListView.
+    QScopedPointer<QQuickView> window(createView());
+
+    const int rowCount = 10;
+    const int columnCount = 10;
+
+    QaimModel model;
+    model.columns = columnCount;
+    for (int i = 0; i < rowCount; i++)
+        model.addItem("Item" + QString::number(i), "");
+
+    QQmlContext *ctxt = window->rootContext();
+    ctxt->setContextProperty("testModel", &model);
+
+    QScopedPointer<TestObject> testObject(new TestObject);
+    ctxt->setContextProperty("testObject", testObject.data());
+
+    window->setSource(testFileUrl("listviewtest.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+
+    QCOMPARE(listview->count(), rowCount);
 }
 
 void tst_QQuickListView::enforceRange()

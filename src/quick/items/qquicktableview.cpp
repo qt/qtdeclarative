@@ -42,6 +42,7 @@
 
 #include <QtCore/qtimer.h>
 #include <QtQml/private/qqmldelegatemodel_p.h>
+#include <QtQml/private/qqmldelegatemodel_p_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQml/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
@@ -1392,6 +1393,7 @@ void QQuickTableView::setModel(const QVariant &newModel)
     } else {
         if (!d->delegateModel)
             d->createWrapperModel();
+        QQmlDelegateModelPrivate::get(d->delegateModel)->m_useFirstColumnOnly = false;
         d->delegateModel->setModel(effectiveModelVariant);
     }
 

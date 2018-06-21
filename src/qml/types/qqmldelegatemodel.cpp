@@ -213,6 +213,7 @@ QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
     , m_transaction(false)
     , m_incubatorCleanupScheduled(false)
     , m_waitingToFetchMore(false)
+    , m_useFirstColumnOnly(true)
     , m_cacheItems(nullptr)
     , m_items(nullptr)
     , m_persistedItems(nullptr)
@@ -225,6 +226,11 @@ QQmlDelegateModelPrivate::~QQmlDelegateModelPrivate()
 
     if (m_cacheMetaType)
         m_cacheMetaType->release();
+}
+
+int QQmlDelegateModelPrivate::adaptorModelCount() const
+{
+    return m_useFirstColumnOnly ? m_adaptorModel.rowCount() : m_adaptorModel.count();
 }
 
 void QQmlDelegateModelPrivate::requestMoreIfNecessary()
@@ -336,7 +342,7 @@ void QQmlDelegateModel::componentComplete()
         static_cast<QQmlPartsModel *>(d->m_pendingParts.first())->updateFilterGroup();
 
     QVector<Compositor::Insert> inserts;
-    d->m_count = d->m_adaptorModel.count();
+    d->m_count = d->adaptorModelCount();
     d->m_compositor.append(
             &d->m_adaptorModel,
             0,
@@ -383,7 +389,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
     }
 
     if (d->m_complete) {
-        _q_itemsInserted(0, d->m_adaptorModel.count());
+        _q_itemsInserted(0, d->adaptorModelCount());
         d->requestMoreIfNecessary();
     }
 }
@@ -475,7 +481,7 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
         if (d->m_adaptorModel.canFetchMore())
             d->m_adaptorModel.fetchMore();
         if (d->m_complete) {
-            const int newCount = d->m_adaptorModel.count();
+            const int newCount = d->adaptorModelCount();
             if (oldCount)
                 _q_itemsRemoved(0, oldCount);
             if (newCount)
@@ -1545,7 +1551,7 @@ void QQmlDelegateModel::_q_modelReset()
     d->m_adaptorModel.rootIndex = QModelIndex();
 
     if (d->m_complete) {
-        d->m_count = d->m_adaptorModel.count();
+        d->m_count = d->adaptorModelCount();
 
         const QList<QQmlDelegateModelItem *> cache = d->m_cache;
         for (int i = 0, c = cache.count();  i < c; ++i) {

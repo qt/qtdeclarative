@@ -302,6 +302,8 @@ public:
 
     bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
 
+    int adaptorModelCount() const;
+
     static void group_append(QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group);
     static int group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);
     static QQmlDelegateModelGroup *group_at(QQmlListProperty<QQmlDelegateModelGroup> *property, int index);
@@ -334,6 +336,7 @@ public:
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
     bool m_waitingToFetchMore : 1;
+    bool m_useFirstColumnOnly : 1;
 
     union {
         struct {
