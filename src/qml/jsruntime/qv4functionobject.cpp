@@ -79,7 +79,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
-    f->init(name, false);
+    if (name)
+        f->setName(name);
 }
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
@@ -91,8 +92,14 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
     ScopedFunctionObject f(s, this);
-    f->init(name, createProto);
+    if (name)
+        f->setName(name);
+
+    if (createProto)
+        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
 }
+
+
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
@@ -105,7 +112,11 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
     Scope s(scope->engine());
     ScopedString name(s, function->name());
     ScopedFunctionObject f(s, this);
-    f->init(name, createProto);
+    if (name)
+        f->setName(name);
+
+    if (createProto)
+        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
@@ -140,28 +151,16 @@ void Heap::FunctionObject::destroy()
     Object::destroy();
 }
 
-void FunctionObject::init(String *n, bool createProto)
-{
-    Scope s(internalClass()->engine);
-    ScopedValue protectThis(s, this);
-
-    if (createProto)
-        createDefaultPrototypeProperty();
-
-    if (n)
-        defineReadonlyConfigurableProperty(s.engine->id_name(), *n);
-}
-
-void FunctionObject::createDefaultPrototypeProperty()
+void FunctionObject::createDefaultPrototypeProperty(uint protoSlot, uint protoConstructorSlot)
 {
     Scope s(this);
 
-    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->identifier()) == Heap::FunctionObject::Index_Prototype);
-    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->identifier()) == Heap::FunctionObject::Index_ProtoConstructor);
+    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->identifier()) == protoSlot);
+    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->identifier()) == protoConstructorSlot);
 
     ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
-    proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
-    setProperty(Heap::FunctionObject::Index_Prototype, proto);
+    proto->setProperty(protoConstructorSlot, d());
+    setProperty(protoSlot, proto);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -485,7 +484,10 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedFunctionObject f(s, this);
 
     ScopedString name(s, function->name());
-    f->init(name, true);
+    if (name)
+        f->setName(name);
+    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
+
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->identifier()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(int(function->compiledFunction->length)));
 }

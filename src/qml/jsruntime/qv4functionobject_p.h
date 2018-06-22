@@ -163,9 +163,10 @@ struct Q_QML_EXPORT FunctionObject: Object {
     unsigned int formalParameterCount() const { return d()->formalParameterCount(); }
     unsigned int varCount() const { return d()->varCount(); }
 
-    void init(String *name, bool createProto);
-
-    void createDefaultPrototypeProperty();
+    void setName(String *name) {
+        defineReadonlyConfigurableProperty(engine()->id_name(), *name);
+    }
+    void createDefaultPrototypeProperty(uint protoSlot, uint protoConstructorSlot);
 
     inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     ReturnedValue callAsConstructor(const Value *argv, int argc) const {
