@@ -68,7 +68,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
+class Q_QML_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
 {
 public:
     class Accessors
@@ -78,7 +78,7 @@ public:
         virtual ~Accessors();
         virtual int rowCount(const QQmlAdaptorModel &) const { return 0; }
         virtual int columnCount(const QQmlAdaptorModel &) const { return 0; }
-        virtual void cleanup(QQmlAdaptorModel &, QQmlDelegateModel * = nullptr) const {}
+        virtual void cleanup(QQmlAdaptorModel &) const {}
 
         virtual QVariant value(const QQmlAdaptorModel &, int, const QString &) const {
             return QVariant(); }
@@ -114,8 +114,8 @@ public:
     ~QQmlAdaptorModel();
 
     inline QVariant model() const { return list.list(); }
-    void setModel(const QVariant &variant, QQmlDelegateModel *vdm, QQmlEngine *engine);
-    void invalidateModel(QQmlDelegateModel *vdm);
+    void setModel(const QVariant &variant, QObject *parent, QQmlEngine *engine);
+    void invalidateModel();
 
     bool isValid() const;
     int count() const;
@@ -125,6 +125,7 @@ public:
     int columnAt(int index) const;
     int indexAt(int row, int column) const;
 
+    inline bool adaptsAim() const { return qobject_cast<QAbstractItemModel *>(object()); }
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
 

@@ -462,26 +462,8 @@ public:
         return model.aim()->columnCount(model.rootIndex);
     }
 
-    void cleanup(QQmlAdaptorModel &model, QQmlDelegateModel *vdm) const override
+    void cleanup(QQmlAdaptorModel &) const override
     {
-        QAbstractItemModel * const aim = model.aim();
-        if (aim && vdm) {
-            QObject::disconnect(aim, SIGNAL(rowsInserted(QModelIndex,int,int)),
-                                vdm, SLOT(_q_rowsInserted(QModelIndex,int,int)));
-            QObject::disconnect(aim, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-                                vdm, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
-            QObject::disconnect(aim, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-                                vdm, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
-            QObject::disconnect(aim, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
-                                vdm, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
-            QObject::disconnect(aim, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-                                vdm, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-            QObject::disconnect(aim, SIGNAL(modelReset()),
-                                vdm, SLOT(_q_modelReset()));
-            QObject::disconnect(aim, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
-                                vdm, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
-        }
-
         const_cast<VDMAbstractItemModelDataType *>(this)->release();
     }
 
@@ -783,7 +765,7 @@ public:
         metaObject = builder.toMetaObject();
     }
 
-    void cleanup(QQmlAdaptorModel &, QQmlDelegateModel *) const override
+    void cleanup(QQmlAdaptorModel &) const override
     {
         const_cast<VDMObjectDelegateDataType *>(this)->release();
     }
@@ -917,50 +899,34 @@ QQmlAdaptorModel::~QQmlAdaptorModel()
     accessors->cleanup(*this);
 }
 
-void QQmlAdaptorModel::setModel(const QVariant &variant, QQmlDelegateModel *vdm, QQmlEngine *engine)
+void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *parent, QQmlEngine *engine)
 {
-    accessors->cleanup(*this, vdm);
+    accessors->cleanup(*this);
 
     list.setList(variant, engine);
 
     if (QObject *object = qvariant_cast<QObject *>(list.list())) {
-        setObject(object, vdm);
-        if (QAbstractItemModel *model = qobject_cast<QAbstractItemModel *>(object)) {
+        setObject(object, parent);
+        if (qobject_cast<QAbstractItemModel *>(object))
             accessors = new VDMAbstractItemModelDataType(this);
-
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsInserted(QModelIndex,int,int)),
-                              vdm, QQmlDelegateModel, SLOT(_q_rowsInserted(QModelIndex,int,int)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsRemoved(QModelIndex,int,int)),
-                              vdm,  QQmlDelegateModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-                              vdm,  QQmlDelegateModel, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
-                              vdm, QQmlDelegateModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-                              vdm, QQmlDelegateModel, SLOT(_q_rowsMoved(QModelIndex,int,int,QModelIndex,int)));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(modelReset()),
-                              vdm, QQmlDelegateModel, SLOT(_q_modelReset()));
-            qmlobject_connect(model, QAbstractItemModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
-                              vdm, QQmlDelegateModel, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
-        } else {
+        else
             accessors = new VDMObjectDelegateDataType;
-        }
     } else if (list.type() == QQmlListAccessor::ListProperty) {
-        setObject(static_cast<const QQmlListReference *>(variant.constData())->object(), vdm);
+        setObject(static_cast<const QQmlListReference *>(variant.constData())->object(), parent);
         accessors = new VDMObjectDelegateDataType;
     } else if (list.type() != QQmlListAccessor::Invalid
             && list.type() != QQmlListAccessor::Instance) { // Null QObject
-        setObject(nullptr, vdm);
+        setObject(nullptr, parent);
         accessors = &qt_vdm_list_accessors;
     } else {
-        setObject(nullptr, vdm);
+        setObject(nullptr, parent);
         accessors = &qt_vdm_null_accessors;
     }
 }
 
-void QQmlAdaptorModel::invalidateModel(QQmlDelegateModel *vdm)
+void QQmlAdaptorModel::invalidateModel()
 {
-    accessors->cleanup(*this, vdm);
+    accessors->cleanup(*this);
     accessors = &qt_vdm_null_accessors;
     // Don't clear the model object as we still need the guard to clear the list variant if the
     // object is destroyed.

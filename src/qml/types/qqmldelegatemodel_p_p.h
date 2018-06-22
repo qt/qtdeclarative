@@ -262,6 +262,8 @@ public:
 
     void init();
     void connectModel(QQmlAdaptorModel *model);
+    void connectToAbstractItemModel();
+    void disconnectFromAbstractItemModel();
 
     void requestMoreIfNecessary();
     QObject *object(Compositor::Group group, int index, QQmlIncubator::IncubationMode incubationMode);
