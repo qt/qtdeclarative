@@ -362,9 +362,32 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
+struct LazyScope
+{
+    ExecutionEngine *engine = nullptr;
+    Value *stackMark = nullptr;
+    ~LazyScope() {
+        if (engine)
+            engine->jsStackTop = stackMark;
+    }
+    template <typename T>
+    void set(Value **scopedValue, T value, ExecutionEngine *e) {
+        if (!engine) {
+            engine = e;
+            stackMark = engine->jsStackTop;
+        }
+        if (!*scopedValue)
+            *scopedValue = e->jsAlloca(1);
+        **scopedValue = value;
+    }
+};
 
 static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
 {
+    LazyScope scope;
+    Value *lhsGuard = nullptr;
+    Value *rhsGuard = nullptr;
+
   redo:
     if (lhs.asReturnedValue() == rhs.asReturnedValue())
         return !lhs.isNaN();
@@ -401,11 +424,13 @@ static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
             if (l->internalClass->vtable->isStringOrSymbol == r->internalClass->vtable->isStringOrSymbol)
                 return static_cast<QV4::Managed &>(lhs).isEqualTo(&static_cast<QV4::Managed &>(rhs));
             if (l->internalClass->vtable->isStringOrSymbol) {
-                rhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT));
+                scope.set(&rhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT), r->internalClass->engine);
+                rhs = rhsGuard->asReturnedValue();
                 break;
             } else {
                 Q_ASSERT(r->internalClass->vtable->isStringOrSymbol);
-                lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+                scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), l->internalClass->engine);
+                lhs = lhsGuard->asReturnedValue();
                 break;
             }
             return false;
@@ -419,10 +444,12 @@ static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
             rhs = Primitive::fromDouble(rhs.int_32());
             // fall through
         default: // double
-            if (lhs.m()->internalClass->vtable->isStringOrSymbol)
+            if (lhs.m()->internalClass->vtable->isStringOrSymbol) {
                 return lhs.m()->internalClass->vtable->isString ? (RuntimeHelpers::toNumber(lhs) == rhs.doubleValue()) : false;
-            else
-                lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT));
+            } else {
+                scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), lhs.m()->internalClass->engine);
+                lhs = lhsGuard->asReturnedValue();
+            }
         }
         goto redo;
     case QV4::Value::QT_Empty:
