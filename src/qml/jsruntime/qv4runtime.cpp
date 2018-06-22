@@ -1493,7 +1493,9 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     }
 
     Scope scope(engine);
-    ScopedString name(scope, unit->runtimeStrings[cls->nameIndex]);
+    ScopedString name(scope);
+    if (cls->nameIndex != UINT_MAX)
+        name = unit->runtimeStrings[cls->nameIndex];
     // ### fix heritage
     ScopedObject protoParent(scope, engine->objectPrototype());
     ScopedObject constructorParent(scope, engine->functionPrototype());
@@ -1508,36 +1510,53 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         Q_ASSERT(f);
         constructor = FunctionObject::createConstructorFunction(current, f)->asReturnedValue();
     } else {
-        // ####
-        return engine->throwTypeError(QStringLiteral("default constructor not implemented"));
+        constructor = engine->memoryManager->allocate<DefaultClassConstructorFunction>();
     }
     constructor->setPrototypeUnchecked(constructorParent);
     constructor->defineDefaultProperty(engine->id_prototype(), proto);
     proto->defineDefaultProperty(engine->id_constructor(), constructor);
 
 
+    ScopedObject receiver(scope, *constructor);
+    ScopedStringOrSymbol propertyName(scope);
     ScopedFunctionObject function(scope);
-    for (uint i = 0; i < cls->nStaticMethods; ++i) {
-        name = unit->runtimeStrings[cls->nameTable()[i]];
-        QV4::Function *f = unit->runtimeFunctions[cls->methodTable()[i]];
-        Q_ASSERT(f);
-        function = FunctionObject::createScriptFunction(current, f)->asReturnedValue();
-        constructor->defineDefaultProperty(name, function);
-    }
-
-    for (uint i = 0; i < cls->nMethods; ++i) {
-        name = unit->runtimeStrings[cls->nameTable()[i + cls->nStaticMethods]];
-        name->makeIdentifier();
-        if (name->identifier() == engine->id_empty()->identifier()) {
-            name = computedNames->toPropertyKey(engine);
+    ScopedProperty property(scope);
+    const CompiledData::Method *methods = cls->methodTable();
+    for (uint i = 0; i < cls->nStaticMethods + cls->nMethods; ++i) {
+        if (i == cls->nStaticMethods)
+            receiver = proto;
+        if (methods[i].name == UINT_MAX) {
+            propertyName = computedNames->toPropertyKey(engine);
             if (engine->hasException)
                 return Encode::undefined();
             ++computedNames;
+        } else {
+            propertyName = unit->runtimeStrings[methods[i].name];
         }
-        QV4::Function *f = unit->runtimeFunctions[cls->methodTable()[i + cls->nStaticMethods]];
+        Identifier id = propertyName->toPropertyKey();
+        QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);
-        function = FunctionObject::createScriptFunction(current, f)->asReturnedValue();
-        proto->defineDefaultProperty(name, function);
+        function = FunctionObject::createScriptFunction(current, f);
+        Q_ASSERT(function);
+        PropertyAttributes attributes;
+        switch (methods[i].type) {
+        case CompiledData::Method::Getter:
+            property->setGetter(function);
+            property->set = Primitive::emptyValue();
+            attributes = Attr_Accessor|Attr_NotEnumerable;
+            break;
+        case CompiledData::Method::Setter:
+            property->value = Primitive::emptyValue();
+            property->setSetter(function);
+            attributes = Attr_Accessor|Attr_NotEnumerable;
+            break;
+        default: // Regular
+            property->value = function;
+            property->set = Primitive::emptyValue();
+            attributes = Attr_Data|Attr_NotEnumerable;
+            break;
+        }
+        receiver->defineOwnProperty(id, property, attributes);
     }
 
     return constructor->asReturnedValue();

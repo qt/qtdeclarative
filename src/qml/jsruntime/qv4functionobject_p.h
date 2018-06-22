@@ -124,6 +124,10 @@ struct ConstructorFunction : ScriptFunction
 {
 };
 
+struct DefaultClassConstructorFunction : FunctionObject
+{
+};
+
 #define BoundFunctionMembers(class, Member) \
     Member(class, Pointer, FunctionObject *, target) \
     Member(class, HeapValue, HeapValue, boundThis) \
@@ -240,6 +244,12 @@ struct ScriptFunction : FunctionObject {
 struct ConstructorFunction : ScriptFunction {
     V4_OBJECT2(ConstructorFunction, ScriptFunction)
     V4_INTERNALCLASS(ConstructorFunction)
+    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct DefaultClassConstructorFunction : FunctionObject {
+    V4_OBJECT2(DefaultClassConstructorFunction, FunctionObject)
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

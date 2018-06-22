@@ -502,6 +502,22 @@ ReturnedValue ConstructorFunction::call(const FunctionObject *f, const Value *, 
     return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
 }
 
+DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);
+
+ReturnedValue DefaultClassConstructorFunction::callAsConstructor(const FunctionObject *f, const Value *, int)
+{
+    Scope scope(f);
+    ScopedObject proto(scope, f->get(scope.engine->id_prototype()));
+    ScopedObject c(scope, scope.engine->newObject());
+    c->setPrototypeUnchecked(proto);
+    return c->asReturnedValue();
+}
+
+ReturnedValue DefaultClassConstructorFunction::call(const FunctionObject *f, const Value *, const Value *, int)
+{
+    return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
+}
+
 DEFINE_OBJECT_VTABLE(IndexedBuiltinFunction);
 
 DEFINE_OBJECT_VTABLE(BoundFunction);

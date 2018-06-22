@@ -396,6 +396,10 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     memcpy(f + function->codeOffset, irFunction->code.constData(), irFunction->code.size());
 }
 
+static_assert(int(QV4::Compiler::Class::Method::Regular) == int(QV4::CompiledData::Method::Regular), "Incompatible layout");
+static_assert(int(QV4::Compiler::Class::Method::Getter) == int(QV4::CompiledData::Method::Getter), "Incompatible layout");
+static_assert(int(QV4::Compiler::Class::Method::Setter) == int(QV4::CompiledData::Method::Setter), "Incompatible layout");
+
 void QV4::Compiler::JSUnitGenerator::writeClass(char *b, const QV4::Compiler::Class &c)
 {
     QV4::CompiledData::Class *cls = reinterpret_cast<QV4::CompiledData::Class *>(b);
@@ -406,31 +410,40 @@ void QV4::Compiler::JSUnitGenerator::writeClass(char *b, const QV4::Compiler::Cl
     allMethods += c.methods;
 
     cls->constructorFunction = c.constructorIndex;
-    cls->nameIndex = getStringId(c.name);
+    cls->nameIndex = c.nameIndex;
     cls->nMethods = c.methods.size();
     cls->nStaticMethods = c.staticMethods.size();
-    cls->nameTableOffset = currentOffset;
-    quint32_le *names = reinterpret_cast<quint32_le *>(b + currentOffset);
-    currentOffset += allMethods.size() * sizeof(quint32);
     cls->methodTableOffset = currentOffset;
-    quint32_le *methods = reinterpret_cast<quint32_le *>(b + currentOffset);
-    currentOffset += cls->nMethods * sizeof(quint32);
+    CompiledData::Method *method = reinterpret_cast<CompiledData::Method *>(b + currentOffset);
 
     // write methods
     for (int i = 0; i < allMethods.size(); ++i) {
-        names[i] = getStringId(allMethods.at(i).name);
-        methods[i] = allMethods.at(i).functionIndex;
-        // ### fix getter and setter methods
+        method->name = allMethods.at(i).nameIndex;
+        method->type = allMethods.at(i).type;
+        method->function = allMethods.at(i).functionIndex;
+        ++method;
     }
 
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
         qDebug() << "=== Class " << stringForIndex(cls->nameIndex) << "static methods" << cls->nStaticMethods << "methods" << cls->nMethods;
         qDebug() << "    constructor:" << cls->constructorFunction;
-        for (uint i = 0; i < cls->nStaticMethods; ++i)
-            qDebug() << "    " << i << ": static" << stringForIndex(cls->nameTable()[i]);
-        for (uint i = 0; i < cls->nMethods; ++i)
-            qDebug() << "    " << i << ": " << stringForIndex(cls->nameTable()[cls->nStaticMethods + i]);
+        const char *staticString = ": static ";
+        for (uint i = 0; i < cls->nStaticMethods + cls->nMethods; ++i) {
+            if (i == cls->nStaticMethods)
+                staticString = ": ";
+            const char *type;
+            switch (cls->methodTable()[i].type) {
+            case CompiledData::Method::Getter:
+                type = "get "; break;
+            case CompiledData::Method::Setter:
+                type = "set "; break;
+            default:
+                type = "";
+
+            }
+            qDebug() << "    " << i << staticString << type << stringForIndex(cls->methodTable()[i].name) << cls->methodTable()[i].function;
+        }
         qDebug();
     }
 }

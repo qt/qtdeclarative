@@ -823,8 +823,7 @@ bool Codegen::visit(VariableDeclarationList *)
 bool Codegen::visit(ClassExpression *ast)
 {
     Compiler::Class jsClass;
-    jsClass.name = ast->name.toString();
-    registerString(jsClass.name);
+    jsClass.nameIndex = registerString(ast->name.toString());
 
     ClassElementList *constructor = nullptr;
     int nComputedNames = 0;
@@ -844,12 +843,13 @@ bool Codegen::visit(ClassExpression *ast)
                 ++nStaticComputedNames;
         }
         QString name = p->name->asString();
+        uint nameIndex = cname ? UINT_MAX : registerString(name);
         Compiler::Class::Method::Type type = Compiler::Class::Method::Regular;
         if (p->type == PatternProperty::Getter)
             type = Compiler::Class::Method::Getter;
         else if (p->type == PatternProperty::Setter)
             type = Compiler::Class::Method::Setter;
-        Compiler::Class::Method m{ name, type, defineFunction(name, f, f->formals, f->body)};
+        Compiler::Class::Method m{ nameIndex, type, static_cast<uint>(defineFunction(name, f, f->formals, f->body)) };
 
         if (member->isStatic) {
             if (name == QStringLiteral("prototype")) {

@@ -86,13 +86,13 @@ struct Class {
             Getter,
             Setter
         };
-        QString name;
+        uint nameIndex;
         Type type;
-        int functionIndex;
+        uint functionIndex;
     };
 
-    QString name;
-    int constructorIndex = -1;
+    uint nameIndex;
+    uint constructorIndex = UINT_MAX;
     QVector<Method> staticMethods;
     QVector<Method> methods;
 };
