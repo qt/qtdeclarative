@@ -167,16 +167,16 @@ static ReturnedValue throwLowercaseEnumError(QV4::ExecutionEngine *v4, String *n
     return v4->throwTypeError(message);
 }
 
-ReturnedValue QQmlTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue QQmlTypeWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlTypeWrapper>());
 
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
 
     QV4::ExecutionEngine *v4 = static_cast<const QQmlTypeWrapper *>(m)->engine();
     QV4::Scope scope(v4);
+    ScopedString name(scope, id.asHeapObject());
 
     Scoped<QQmlTypeWrapper> w(scope, static_cast<const QQmlTypeWrapper *>(m));
 
@@ -272,7 +272,7 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *ha
                 return create(scope.engine, object, r.type, w->d()->mode);
             } else if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
-                return scripts->getIndexed(r.scriptIndex);
+                return scripts->get(r.scriptIndex);
             } else if (r.importNamespace) {
                 return create(scope.engine, object, context->imports, r.importNamespace);
             }
@@ -288,7 +288,7 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *ha
     }
 
     bool ok = false;
-    const ReturnedValue result = Object::get(m, name, &ok);
+    const ReturnedValue result = Object::get(m, id, receiver, &ok);
     if (hasProperty)
         *hasProperty = ok;
 
@@ -428,16 +428,16 @@ QQmlType Heap::QQmlScopedEnumWrapper::type() const
     return QQmlType(typePrivate);
 }
 
-ReturnedValue QQmlScopedEnumWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue QQmlScopedEnumWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlScopedEnumWrapper>());
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
 
     const QQmlScopedEnumWrapper *resource = static_cast<const QQmlScopedEnumWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
+    ScopedString name(scope, id.asHeapObject());
 
     QQmlType type = resource->d()->type();
     int index = resource->d()->scopeEnumIndex;

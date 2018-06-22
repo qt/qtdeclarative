@@ -55,7 +55,7 @@ void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handl
     this->handler.set(e, handler->d());
 }
 
-ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
+ReturnedValue ProxyObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -69,7 +69,7 @@ ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *has
     if (scope.hasException())
         return Encode::undefined();
     if (trap->isNullOrUndefined())
-        return target->get(name, hasProperty);
+        return target->get(id, receiver, hasProperty);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
     if (hasProperty)
@@ -77,12 +77,12 @@ ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *has
 
     JSCallData cdata(scope, 3, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = name;
-    cdata.args[2] = o->d(); // ### fix receiver handling
+    cdata.args[1] = id.toStringOrSymbol(scope.engine);
+    cdata.args[2] = *receiver;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
     if (attributes != Attr_Invalid && !attributes.isConfigurable()) {
         if (attributes.isData() && !attributes.isWritable()) {
             if (!trapResult->sameValue(targetDesc->value))
@@ -94,13 +94,6 @@ ReturnedValue ProxyObject::get(const Managed *m, StringOrSymbol *name, bool *has
         }
    }
     return trapResult->asReturnedValue();
-}
-
-ReturnedValue ProxyObject::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    Scope scope(m);
-    ScopedString name(scope, Primitive::fromUInt32(index).toString(scope.engine));
-    return get(m, name, hasProperty);
 }
 
 bool ProxyObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)

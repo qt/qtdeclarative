@@ -389,7 +389,7 @@ ReturnedValue Lookup::getterIndexed(Lookup *l, ExecutionEngine *engine, const Va
                 if (!s->data(l->indexedLookup.index).isEmpty())
                     return s->data(l->indexedLookup.index).asReturnedValue();
         }
-        return o->getIndexed(l->indexedLookup.index);
+        return o->get(l->indexedLookup.index);
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);

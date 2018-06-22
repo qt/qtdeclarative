@@ -803,7 +803,7 @@ void tst_qqmlcontext::contextLeak()
         {
             QV4::Scope scope(ddata->jsWrapper.engine());
             QV4::ScopedValue scriptContextWrapper(scope);
-            scriptContextWrapper = context->importedScripts.valueRef()->as<QV4::Object>()->getIndexed(0);
+            scriptContextWrapper = context->importedScripts.valueRef()->as<QV4::Object>()->get(uint(0));
             scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
         }
     }

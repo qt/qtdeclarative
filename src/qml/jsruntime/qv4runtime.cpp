@@ -619,7 +619,7 @@ static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engin
             return v->asReturnedValue();
     }
 
-    return o->getIndexed(idx);
+    return o->get(idx);
 }
 
 static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, const Value &object, const Value &index)
@@ -643,14 +643,6 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
         return Encode::undefined();
     return o->get(name);
 }
-
-/* load element:
-
-  Managed *m = object.heapObject();
-  if (m)
-     return m->internalClass->getIndexed(m, index);
-  return getIndexedFallback(object, index);
-*/
 
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {

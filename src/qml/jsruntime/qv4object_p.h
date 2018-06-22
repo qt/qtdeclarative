@@ -169,8 +169,7 @@ struct ObjectVTable
     VTable vTable;
     ReturnedValue (*call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
-    ReturnedValue (*get)(const Managed *, StringOrSymbol *name, bool *hasProperty);
-    ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
+    ReturnedValue (*get)(const Managed *, Identifier id, const Value *receiver, bool *hasProperty);
     bool (*put)(Managed *, Identifier id, const Value &value, Value *receiver);
     bool (*deleteProperty)(Managed *m, Identifier id);
     bool (*hasProperty)(const Managed *m, Identifier id);
@@ -192,7 +191,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     call,                                       \
     callAsConstructor,                          \
     get,                                        \
-    getIndexed,                                 \
     put,                                        \
     deleteProperty,                             \
     hasProperty,                                \
@@ -373,10 +371,14 @@ public:
         return false;
     }
 
-    inline ReturnedValue get(StringOrSymbol *name, bool *hasProperty = nullptr) const
-    { return vtable()->get(this, name, hasProperty); }
-    inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
-    { return vtable()->getIndexed(this, idx, hasProperty); }
+    inline ReturnedValue get(StringOrSymbol *name, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, name->toPropertyKey(), receiver, hasProperty); }
+    inline ReturnedValue get(uint idx, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, Identifier::fromArrayIndex(idx), receiver, hasProperty); }
+    QT_DEPRECATED inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
+    { return get(idx, hasProperty); }
+    inline ReturnedValue get(Identifier id, const Value *receiver = nullptr, bool *hasProperty = nullptr) const
+    { if (!receiver) receiver = this; return vtable()->get(this, id, receiver, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
     inline bool put(StringOrSymbol *name, const Value &v, Value *receiver = nullptr)
@@ -437,8 +439,7 @@ public:
 protected:
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver,bool *hasProperty);
     static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
     static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
@@ -454,8 +455,8 @@ protected:
 
 private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
-    ReturnedValue internalGet(StringOrSymbol *name, bool *hasProperty) const;
-    ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
+    ReturnedValue internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const;
+    ReturnedValue internalGetIndexed(uint index, const Value *receiver, bool *hasProperty) const;
     bool internalPut(Identifier id, const Value &value, Value *receiver);
     bool internalDeleteProperty(Identifier id);
 

@@ -377,7 +377,7 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
                 arguments[i] = Primitive::undefinedValue();
         } else {
             for (quint32 i = 0; i < len; ++i)
-                arguments[i] = arr->getIndexed(i);
+                arguments[i] = arr->get(i);
         }
     }
 

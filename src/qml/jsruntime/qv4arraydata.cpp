@@ -585,7 +585,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
     if (!other || ArgumentsObject::isNonStrictArgumentsObject(otherObj)) {
         ScopedValue v(scope);
         for (uint i = 0; i < n; ++i)
-            obj->arraySet(oldSize + i, (v = otherObj->getIndexed(i)));
+            obj->arraySet(oldSize + i, (v = otherObj->get(i)));
     } else if (other && other->isSparse()) {
         Heap::SparseArrayData *os = static_cast<Heap::SparseArrayData *>(other->d());
         if (other->hasAttributes()) {

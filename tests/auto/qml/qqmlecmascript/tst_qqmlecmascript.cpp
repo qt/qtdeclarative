@@ -4152,7 +4152,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
         QV4::Scoped<QV4::QQmlContextWrapper> qml(scope);
         for (quint32 i = 0; i < scripts->getLength(); ++i) {
             QQmlContextData *scriptContext, *newContext;
-            qml = scripts->getIndexed(i);
+            qml = scripts->get(i);
 
             scriptContext = qml ? qml->getContext() : nullptr;
             qml = QV4::Encode::undefined();
@@ -4164,7 +4164,7 @@ void tst_qqmlecmascript::verifyContextLifetime(QQmlContextData *ctxt) {
             }
 
             ctxt->engine->collectGarbage();
-            qml = scripts->getIndexed(i);
+            qml = scripts->get(i);
             newContext = qml ? qml->getContext() : nullptr;
             QCOMPARE(scriptContext, newContext);
         }

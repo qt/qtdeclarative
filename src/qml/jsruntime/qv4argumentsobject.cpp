@@ -169,20 +169,18 @@ bool ArgumentsObject::defineOwnProperty(Managed *m, Identifier id, const Propert
     return result;
 }
 
-ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *hasProperty)
+ReturnedValue ArgumentsObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (args->fullyCreated())
-        return Object::getIndexed(m, index, hasProperty);
-
-    if (index < static_cast<uint>(args->context()->argc())) {
-        if (hasProperty)
-            *hasProperty = true;
-        return args->context()->args()[index].asReturnedValue();
+    if (id.isArrayIndex() && !args->fullyCreated()) {
+        uint index = id.asArrayIndex();
+        if (index < static_cast<uint>(args->context()->argc())) {
+            if (hasProperty)
+                *hasProperty = true;
+            return args->context()->args()[index].asReturnedValue();
+        }
     }
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
+    return Object::get(m, id, receiver, hasProperty);
 }
 
 bool ArgumentsObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)

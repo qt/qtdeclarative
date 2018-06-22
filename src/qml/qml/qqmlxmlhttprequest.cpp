@@ -228,8 +228,7 @@ public:
     static ReturnedValue create(ExecutionEngine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
 };
 
 void Heap::NamedNodeMap::init(NodeImpl *data, const QList<NodeImpl *> &list)
@@ -250,8 +249,7 @@ public:
     V4_NEEDS_DESTROY
 
     // JS API
-    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
 
     // C++ API
     static ReturnedValue create(ExecutionEngine *, NodeImpl *);
@@ -888,38 +886,33 @@ bool Node::isNull() const
     return d()->d == nullptr;
 }
 
-ReturnedValue NamedNodeMap::getIndexed(const Managed *m, uint index, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
+
     const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
-    if ((int)index < r->d()->list().count()) {
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+
+        if ((int)index < r->d()->list().count()) {
+            if (hasProperty)
+                *hasProperty = true;
+            return Node::create(v4, r->d()->list().at(index));
+        }
         if (hasProperty)
-            *hasProperty = true;
-        return Node::create(v4, r->d()->list().at(index));
+            *hasProperty = false;
+        return Encode::undefined();
     }
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
-}
 
-ReturnedValue NamedNodeMap::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
-{
-    Q_ASSERT(m->as<NamedNodeMap>());
+    if (id.isSymbol())
+        return Object::get(m, id, receiver, hasProperty);
 
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
-
-    const NamedNodeMap *r = static_cast<const NamedNodeMap *>(m);
-    QV4::ExecutionEngine *v4 = r->engine();
-
-    name->makeIdentifier();
-    if (name->equals(v4->id_length()))
+    if (id == v4->id_length()->identifier())
         return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
 
-    QString str = name->toQString();
+    QString str = id.toQString();
     for (int ii = 0; ii < r->d()->list().count(); ++ii) {
         if (r->d()->list().at(ii)->name == str) {
             if (hasProperty)
@@ -938,33 +931,27 @@ ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QL
     return (v4->memoryManager->allocate<NamedNodeMap>(data, list))->asReturnedValue();
 }
 
-ReturnedValue NodeList::getIndexed(const Managed *m, uint index, bool *hasProperty)
+ReturnedValue NodeList::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
     const NodeList *r = static_cast<const NodeList *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
 
-    if ((int)index < r->d()->d->children.count()) {
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        if ((int)index < r->d()->d->children.count()) {
+            if (hasProperty)
+                *hasProperty = true;
+            return Node::create(v4, r->d()->d->children.at(index));
+        }
         if (hasProperty)
-            *hasProperty = true;
-        return Node::create(v4, r->d()->d->children.at(index));
+            *hasProperty = false;
+        return Encode::undefined();
     }
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
-}
 
-ReturnedValue NodeList::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
-{
-    Q_ASSERT(m->as<NodeList>());
-    const NodeList *r = static_cast<const NodeList *>(m);
-    QV4::ExecutionEngine *v4 = r->engine();
-
-    name->makeIdentifier();
-
-    if (name->identifier() == v4->id_length()->identifier())
+    if (id == v4->id_length()->identifier())
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
-    return Object::get(m, name, hasProperty);
+    return Object::get(m, id, receiver, hasProperty);
 }
 
 ReturnedValue NodeList::create(ExecutionEngine *v4, NodeImpl *data)

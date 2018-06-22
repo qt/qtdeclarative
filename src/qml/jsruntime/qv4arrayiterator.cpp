@@ -86,7 +86,7 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
         return IteratorPrototype::createIterResultObject(scope.engine, Primitive::fromInt32(index), false);
     }
 
-    ReturnedValue elementValue = a->getIndexed(index);
+    ReturnedValue elementValue = a->get(index);
     CHECK_EXCEPTION();
 
     if (itemKind == ValueIteratorKind) {

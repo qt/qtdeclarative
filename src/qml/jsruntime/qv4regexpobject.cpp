@@ -439,12 +439,12 @@ ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Val
     return Encode::undefined();
 }
 
-template <int index>
+template <uint index>
 ReturnedValue RegExpPrototype::method_get_lastMatch_n(const FunctionObject *b, const Value *, const Value *, int)
 {
     Scope scope(b);
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(scope.engine->regExpCtor())->lastMatch());
-    ScopedValue res(scope, lastMatch ? lastMatch->getIndexed(index) : Encode::undefined());
+    ScopedValue res(scope, lastMatch ? lastMatch->get(index) : Encode::undefined());
     if (res->isUndefined())
         res = scope.engine->newString();
     return res->asReturnedValue();
@@ -454,7 +454,7 @@ ReturnedValue RegExpPrototype::method_get_lastParen(const FunctionObject *b, con
 {
     Scope scope(b);
     ScopedArrayObject lastMatch(scope, static_cast<RegExpCtor*>(scope.engine->regExpCtor())->lastMatch());
-    ScopedValue res(scope, lastMatch ? lastMatch->getIndexed(lastMatch->getLength() - 1) : Encode::undefined());
+    ScopedValue res(scope, lastMatch ? lastMatch->get(lastMatch->getLength() - 1) : Encode::undefined());
     if (res->isUndefined())
         res = scope.engine->newString();
     return res->asReturnedValue();

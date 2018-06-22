@@ -277,7 +277,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
         ScopedValue mappedValue(scope, Primitive::undefinedValue());
         ScopedValue kValue(scope);
         while (k < len) {
-            kValue = arrayLike->getIndexed(k);
+            kValue = arrayLike->get(k);
             CHECK_EXCEPTION();
 
             if (mapfn) {
@@ -383,7 +383,7 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
         } else if (eltAsObj && eltAsObj->isListType()) {
             const uint startIndex = result->getLength();
             for (int i = 0, len = eltAsObj->getLength(); i < len; ++i) {
-                entry = eltAsObj->getIndexed(i);
+                entry = eltAsObj->get(i);
                 // spec says not to throw if this fails
                 result->put(startIndex + i, entry);
             }
@@ -444,7 +444,7 @@ ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const V
 
     while (count > 0) {
         bool fromPresent = false;
-        ScopedValue fromVal(scope, instance->getIndexed(from, &fromPresent));
+        ScopedValue fromVal(scope, instance->get(from, &fromPresent));
 
         if (fromPresent) {
             instance->setIndexed(to, fromVal, QV4::Object::DoThrowOnRejection);
@@ -496,7 +496,7 @@ ReturnedValue ArrayPrototype::method_find(const FunctionObject *b, const Value *
     ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
 
     for (uint k = 0; k < len; ++k) {
-        arguments[0] = instance->getIndexed(k);
+        arguments[0] = instance->get(k);
         CHECK_EXCEPTION();
 
         arguments[1] = Primitive::fromDouble(k);
@@ -530,7 +530,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const FunctionObject *b, const Va
     ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
 
     for (uint k = 0; k < len; ++k) {
-        arguments[0] = instance->getIndexed(k);
+        arguments[0] = instance->get(k);
         CHECK_EXCEPTION();
 
         arguments[1] = Primitive::fromDouble(k);
@@ -576,7 +576,7 @@ ReturnedValue ArrayPrototype::method_join(const FunctionObject *b, const Value *
             if (i)
                 R += r4;
 
-            e = a->getIndexed(i);
+            e = a->get(i);
             CHECK_EXCEPTION();
             if (!e->isNullOrUndefined())
                 R += e->toQString();
@@ -621,7 +621,7 @@ ReturnedValue ArrayPrototype::method_pop(const FunctionObject *b, const Value *t
         RETURN_UNDEFINED();
     }
 
-    ScopedValue result(scope, instance->getIndexed(len - 1));
+    ScopedValue result(scope, instance->get(len - 1));
     CHECK_EXCEPTION();
 
     if (!instance->deleteProperty(Identifier::fromArrayIndex(len - 1)))
@@ -708,8 +708,8 @@ ReturnedValue ArrayPrototype::method_reverse(const FunctionObject *b, const Valu
     ScopedValue hval(scope);
     for (; lo < hi; ++lo, --hi) {
         bool loExists, hiExists;
-        lval = instance->getIndexed(lo, &loExists);
-        hval = instance->getIndexed(hi, &hiExists);
+        lval = instance->get(lo, &loExists);
+        hval = instance->get(hi, &hiExists);
         CHECK_EXCEPTION();
         bool ok;
         if (hiExists)
@@ -751,13 +751,13 @@ ReturnedValue ArrayPrototype::method_shift(const FunctionObject *b, const Value 
     if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len && instance->arrayData()->type != Heap::ArrayData::Custom) {
         result = instance->arrayData()->vtable()->pop_front(instance);
     } else {
-        result = instance->getIndexed(0);
+        result = instance->get(uint(0));
         CHECK_EXCEPTION();
         ScopedValue v(scope);
         // do it the slow way
         for (uint k = 1; k < len; ++k) {
             bool exists;
-            v = instance->getIndexed(k, &exists);
+            v = instance->get(k, &exists);
             CHECK_EXCEPTION();
             bool ok;
             if (exists)
@@ -815,7 +815,7 @@ ReturnedValue ArrayPrototype::method_slice(const FunctionObject *b, const Value 
     uint n = 0;
     for (uint i = start; i < end; ++i) {
         bool exists;
-        v = o->getIndexed(i, &exists);
+        v = o->get(i, &exists);
         CHECK_EXCEPTION();
         if (exists)
             result->arraySet(n, v);
@@ -874,7 +874,7 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
     ScopedValue v(scope);
     for (uint i = 0; i < deleteCount; ++i) {
         bool exists;
-        v = instance->getIndexed(start + i, &exists);
+        v = instance->get(start + i, &exists);
         CHECK_EXCEPTION();
         if (exists)
             newArray->arrayPut(i, v);
@@ -885,7 +885,7 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
     if (itemCount < deleteCount) {
         for (uint k = start; k < len - deleteCount; ++k) {
             bool exists;
-            v = instance->getIndexed(k + deleteCount, &exists);
+            v = instance->get(k + deleteCount, &exists);
             CHECK_EXCEPTION();
             bool ok;
             if (exists)
@@ -903,7 +903,7 @@ ReturnedValue ArrayPrototype::method_splice(const FunctionObject *b, const Value
         uint k = len - deleteCount;
         while (k > start) {
             bool exists;
-            v = instance->getIndexed(k + deleteCount - 1, &exists);
+            v = instance->get(k + deleteCount - 1, &exists);
             CHECK_EXCEPTION();
             bool ok;
             if (exists)
@@ -944,7 +944,7 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
         ScopedValue v(scope);
         for (uint k = len; k > 0; --k) {
             bool exists;
-            v = instance->getIndexed(k - 1, &exists);
+            v = instance->get(k - 1, &exists);
             bool ok;
             if (exists)
                 ok = instance->put(k + argc - 1, v);
@@ -999,7 +999,7 @@ ReturnedValue ArrayPrototype::method_includes(const FunctionObject *b, const Val
     }
 
     while (k < len) {
-        ScopedValue val(scope, instance->getIndexed(k));
+        ScopedValue val(scope, instance->get(k));
         if (val->sameValueZero(argv[0])) {
             return Encode(true);
         }
@@ -1037,7 +1037,7 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
         ScopedValue v(scope);
         for (uint k = fromIndex; k < len; ++k) {
             bool exists;
-            v = instance->getIndexed(k, &exists);
+            v = instance->get(k, &exists);
             if (exists && RuntimeHelpers::strictEqual(v, searchValue))
                 return Encode(k);
         }
@@ -1051,7 +1051,7 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
         // lets be safe and slow
         for (uint i = fromIndex; i < len; ++i) {
             bool exists;
-            value = instance->getIndexed(i, &exists);
+            value = instance->get(i, &exists);
             CHECK_EXCEPTION();
             if (exists && RuntimeHelpers::strictEqual(value, searchValue))
                 return Encode(i);
@@ -1123,7 +1123,7 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(const FunctionObject *b, const 
     for (uint k = fromIndex; k > 0;) {
         --k;
         bool exists;
-        v = instance->getIndexed(k, &exists);
+        v = instance->get(k, &exists);
         CHECK_EXCEPTION();
         if (exists && RuntimeHelpers::strictEqual(v, searchValue))
             return Encode(k);
@@ -1151,7 +1151,7 @@ ReturnedValue ArrayPrototype::method_every(const FunctionObject *b, const Value 
     bool ok = true;
     for (uint k = 0; ok && k < len; ++k) {
         bool exists;
-        arguments[0] = instance->getIndexed(k, &exists);
+        arguments[0] = instance->get(k, &exists);
         if (!exists)
             continue;
 
@@ -1218,7 +1218,7 @@ ReturnedValue ArrayPrototype::method_some(const FunctionObject *b, const Value *
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        arguments[0] = instance->getIndexed(k, &exists);
+        arguments[0] = instance->get(k, &exists);
         if (!exists)
             continue;
 
@@ -1249,7 +1249,7 @@ ReturnedValue ArrayPrototype::method_forEach(const FunctionObject *b, const Valu
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        arguments[0] = instance->getIndexed(k, &exists);
+        arguments[0] = instance->get(k, &exists);
         if (!exists)
             continue;
 
@@ -1287,7 +1287,7 @@ ReturnedValue ArrayPrototype::method_map(const FunctionObject *b, const Value *t
 
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        arguments[0] = instance->getIndexed(k, &exists);
+        arguments[0] = instance->get(k, &exists);
         if (!exists)
             continue;
 
@@ -1322,7 +1322,7 @@ ReturnedValue ArrayPrototype::method_filter(const FunctionObject *b, const Value
     uint to = 0;
     for (uint k = 0; k < len; ++k) {
         bool exists;
-        arguments[0] = instance->getIndexed(k, &exists);
+        arguments[0] = instance->get(k, &exists);
         if (!exists)
             continue;
 
@@ -1359,7 +1359,7 @@ ReturnedValue ArrayPrototype::method_reduce(const FunctionObject *b, const Value
     } else {
         bool kPresent = false;
         while (k < len && !kPresent) {
-            v = instance->getIndexed(k, &kPresent);
+            v = instance->get(k, &kPresent);
             if (kPresent)
                 acc = v;
             ++k;
@@ -1372,7 +1372,7 @@ ReturnedValue ArrayPrototype::method_reduce(const FunctionObject *b, const Value
 
     while (k < len) {
         bool kPresent;
-        v = instance->getIndexed(k, &kPresent);
+        v = instance->get(k, &kPresent);
         if (kPresent) {
             arguments[0] = acc;
             arguments[1] = v;
@@ -1412,7 +1412,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
     } else {
         bool kPresent = false;
         while (k > 0 && !kPresent) {
-            v = instance->getIndexed(k - 1, &kPresent);
+            v = instance->get(k - 1, &kPresent);
             if (kPresent)
                 acc = v;
             --k;
@@ -1425,7 +1425,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
 
     while (k > 0) {
         bool kPresent;
-        v = instance->getIndexed(k - 1, &kPresent);
+        v = instance->get(k - 1, &kPresent);
         if (kPresent) {
             arguments[0] = acc;
             arguments[1] = v;

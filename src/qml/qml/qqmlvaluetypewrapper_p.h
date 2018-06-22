@@ -106,7 +106,7 @@ public:
     int typeId() const;
     bool write(QObject *target, int propertyIndex) const;
 
-    static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
     static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
     static bool isEqualTo(Managed *m, Managed *other);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);

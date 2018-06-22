@@ -197,21 +197,21 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
     return Encode::undefined();
 }
 
-ReturnedValue QtObject::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
+ReturnedValue QtObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     bool hasProp = false;
     if (hasProperty == nullptr) {
         hasProperty = &hasProp;
     }
 
-    ReturnedValue ret = QV4::Object::get(m, name, hasProperty);
+    ReturnedValue ret = QV4::Object::get(m, id, receiver, hasProperty);
     if (*hasProperty) {
         return ret;
     }
 
     auto that = static_cast<const QtObject*>(m);
     if (!that->d()->isComplete()) {
-        const QString key = name->toQString();
+        const QString key = id.toQString();
         ret = that->findAndAdd(&key, *hasProperty);
     }
 

@@ -400,7 +400,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
     QV4::ScopedObject array(scope, m_values.value());
     if (deduplicate) {
         for (Ref i = 0; i < array->getLength(); ++i) {
-            if (array->getIndexed(i) == value.rawValue() && !m_specialRefs.contains(i))
+            if (array->get(i) == value.rawValue() && !m_specialRefs.contains(i))
                 return i;
         }
     }
@@ -415,7 +415,7 @@ QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
     QV4::Scope scope(engine());
     QV4::ScopedObject array(scope, m_values.value());
     Q_ASSERT(ref < array->getLength());
-    return array->getIndexed(ref, nullptr);
+    return array->get(ref, nullptr);
 }
 
 // TODO: Drop this method once we don't need to support namesAsObjects anymore

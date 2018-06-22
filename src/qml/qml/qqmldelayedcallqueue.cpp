@@ -71,7 +71,7 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
         *jsCallData->thisObject = QV4::Encode::undefined();
 
         for (int i = 0; i < argCount; i++) {
-            jsCallData->args[i] = array->getIndexed(i);
+            jsCallData->args[i] = array->get(i);
         }
 
         callback->call(jsCallData);

@@ -234,7 +234,7 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
         ScopedString nextKey(scope);
         ScopedValue propValue(scope);
         for (quint32 i = 0; i < length; ++i) {
-            nextKey = Value::fromReturnedValue(keys->getIndexed(i)).toString(scope.engine);
+            nextKey = Value::fromReturnedValue(keys->get(i)).toString(scope.engine);
 
             ScopedProperty prop(scope);
             PropertyAttributes attrs = from->getOwnProperty(nextKey->toPropertyKey(), prop);

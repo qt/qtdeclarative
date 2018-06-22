@@ -147,7 +147,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
 };
 
 }
@@ -237,12 +237,16 @@ static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, 
     }
 }
 
-ReturnedValue QQmlSqlDatabaseWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
+ReturnedValue QQmlSqlDatabaseWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
+    if (!id.isArrayIndex())
+        return Object::get(m, id, receiver, hasProperty);
+
+    uint index = id.asArrayIndex();
     Q_ASSERT(m->as<QQmlSqlDatabaseWrapper>());
     const QQmlSqlDatabaseWrapper *r = static_cast<const QQmlSqlDatabaseWrapper *>(m);
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
-        return Object::getIndexed(m, index, hasProperty);
+        return Object::get(m, id, receiver, hasProperty);
 
     return qmlsqldatabase_rows_index(r, r->engine(), index, hasProperty);
 }
@@ -297,7 +301,7 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
                 quint32 size = array->getLength();
                 QV4::ScopedValue v(scope);
                 for (quint32 ii = 0; ii < size; ++ii) {
-                    query.bindValue(ii, toSqlVariant(scope.engine, (v = array->getIndexed(ii))));
+                    query.bindValue(ii, toSqlVariant(scope.engine, (v = array->get(ii))));
                 }
             } else if (values->as<Object>()) {
                 ScopedObject object(scope, values);

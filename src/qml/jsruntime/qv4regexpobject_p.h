@@ -165,7 +165,7 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_compile(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    template <int index>
+    template <uint index>
     static ReturnedValue method_get_lastMatch_n(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_lastParen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_input(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -587,7 +587,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
 
             int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
-                o = a->getIndexed(j);
+                o = a->get(j);
                 subModel->append(o);
             }
 
@@ -668,7 +668,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
 
                 int arrayLength = a->getLength();
                 for (int j=0 ; j < arrayLength ; ++j) {
-                    o = a->getIndexed(j);
+                    o = a->get(j);
                     subModel->append(o);
                 }
 
@@ -1422,7 +1422,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
             ListModel *subModel = new ListModel(role.subLayout, nullptr);
             int arrayLength = a->getLength();
             for (int j=0 ; j < arrayLength ; ++j) {
-                o = a->getIndexed(j);
+                o = a->get(j);
                 subModel->append(o);
             }
             roleIndex = setListProperty(role, subModel);
@@ -1584,16 +1584,17 @@ bool ModelObject::put(Managed *m, Identifier id, const Value &value, Value *rece
     return true;
 }
 
-ReturnedValue ModelObject::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue ModelObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
 
     const ModelObject *that = static_cast<const ModelObject*>(m);
+    Scope scope(that);
+    ScopedString name(scope, id.asHeapObject());
     const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
     if (!role)
-        return QObjectWrapper::get(m, name, hasProperty);
+        return QObjectWrapper::get(m, id, receiver, hasProperty);
     if (hasProperty)
         *hasProperty = true;
 
@@ -2343,7 +2344,7 @@ void QQmlListModel::insert(QQmlV4Function *args)
             int objectArrayLength = objectArray->getLength();
             emitItemsAboutToBeInserted(index, objectArrayLength);
             for (int i=0 ; i < objectArrayLength ; ++i) {
-                argObject = objectArray->getIndexed(i);
+                argObject = objectArray->get(i);
 
                 if (m_dynamicRoles) {
                     m_modelObjects.insert(index+i, DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));
@@ -2455,7 +2456,7 @@ void QQmlListModel::append(QQmlV4Function *args)
                 emitItemsAboutToBeInserted(index, objectArrayLength);
 
                 for (int i=0 ; i < objectArrayLength ; ++i) {
-                    argObject = objectArray->getIndexed(i);
+                    argObject = objectArray->get(i);
 
                     if (m_dynamicRoles) {
                         m_modelObjects.append(DynamicRoleModelNode::create(scope.engine->variantMapFromJS(argObject), this));

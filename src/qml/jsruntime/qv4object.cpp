@@ -317,14 +317,13 @@ ReturnedValue Object::call(const FunctionObject *f, const Value *, const Value *
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
+ReturnedValue Object::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
-    return static_cast<const Object *>(m)->internalGet(name, hasProperty);
-}
-
-ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
+    if (id.isArrayIndex())
+        return static_cast<const Object *>(m)->internalGetIndexed(id.asArrayIndex(), receiver, hasProperty);
+    Scope scope(m);
+    Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+    return static_cast<const Object *>(m)->internalGet(name, receiver, hasProperty);
 }
 
 bool Object::put(Managed *m, Identifier id, const Value &value, Value *receiver)
@@ -409,11 +408,9 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(StringOrSymbol *name, bool *hasProperty) const
+ReturnedValue Object::internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const
 {
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return getIndexed(idx, hasProperty);
+    Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
     name->makeIdentifier();
     Identifier id = name->identifier();
@@ -424,7 +421,7 @@ ReturnedValue Object::internalGet(StringOrSymbol *name, bool *hasProperty) const
         if (idx < UINT_MAX) {
             if (hasProperty)
                 *hasProperty = true;
-            return getValue(*o->propertyData(idx), o->internalClass->propertyData.at(idx));
+            return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
         }
 
         o = o->prototype();
@@ -435,7 +432,7 @@ ReturnedValue Object::internalGet(StringOrSymbol *name, bool *hasProperty) const
     return Encode::undefined();
 }
 
-ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
+ReturnedValue Object::internalGetIndexed(uint index, const Value *receiver, bool *hasProperty) const
 {
     PropertyAttributes attrs;
     Scope scope(engine());
@@ -462,7 +459,7 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
     if (exists) {
         if (hasProperty)
             *hasProperty = true;
-        return getValue(pd->value, attrs);
+        return Object::getValue(*receiver, pd->value, attrs);
     }
 
     if (hasProperty)
@@ -696,7 +693,7 @@ void Object::copyArrayData(Object *other)
 
         ScopedValue v(scope);
         for (uint i = 0; i < len; ++i) {
-            arraySet(i, (v = other->getIndexed(i)));
+            arraySet(i, (v = other->get(i)));
         }
     } else if (!other->arrayData()) {
         ;
@@ -973,7 +970,7 @@ QStringList ArrayObject::toQStringList() const
 
     uint length = getLength();
     for (uint i = 0; i < length; ++i) {
-        v = const_cast<ArrayObject *>(this)->getIndexed(i);
+        v = const_cast<ArrayObject *>(this)->get(i);
         result.append(v->toQStringNoThrow());
     }
     return result;

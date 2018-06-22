@@ -138,8 +138,9 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     Heap::TypedArray::Type arrayType() const {
         return static_cast<Heap::TypedArray::Type>(d()->arrayType);
     }
+    using Object::get;
 
-    static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
     static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
 };
 

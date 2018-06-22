@@ -388,7 +388,7 @@ public:
         float matVals[16];
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < 16; ++i) {
-            v = array->getIndexed(i);
+            v = array->get(i);
             if (!v->isNumber())
                 return QMatrix4x4();
             matVals[i] = v->asDouble();

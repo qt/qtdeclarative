@@ -359,16 +359,17 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
     return Encode(b->engine()->newString(result));
 }
 
-ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
 
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
 
     const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
+    Scope scope(v4);
+    ScopedString name(scope, id.asHeapObject());
 
     // Note: readReferenceValue() can change the reference->type.
     if (const QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
@@ -376,9 +377,9 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, StringOrSymbol *n, boo
             return Primitive::undefinedValue().asReturnedValue();
     }
 
-    QQmlPropertyData *result = r->d()->propertyCache()->property(name, nullptr, nullptr);
+    QQmlPropertyData *result = r->d()->propertyCache()->property(name.getPointer(), nullptr, nullptr);
     if (!result)
-        return Object::get(m, name, hasProperty);
+        return Object::get(m, id, receiver, hasProperty);
 
     if (hasProperty)
         *hasProperty = true;

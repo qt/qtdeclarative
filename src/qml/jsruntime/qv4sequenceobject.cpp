@@ -538,7 +538,7 @@ public:
         quint32 length = array->getLength();
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i)
-            result.push_back(convertValueToElement<typename Container::value_type>((v = array->getIndexed(i))));
+            result.push_back(convertValueToElement<typename Container::value_type>((v = array->get(i))));
         return QVariant::fromValue(result);
     }
 
@@ -563,8 +563,12 @@ public:
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 
-    static QV4::ReturnedValue getIndexed(const QV4::Managed *that, uint index, bool *hasProperty)
-    { return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
+    static QV4::ReturnedValue get(const QV4::Managed *that, Identifier id, const Value *receiver, bool *hasProperty)
+    {
+        if (!id.isArrayIndex())
+            return Object::get(that, id, receiver, hasProperty);
+        return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
+    }
     static bool put(Managed *that, Identifier id, const QV4::Value &value, Value *receiver)
     {
         if (id.isArrayIndex())

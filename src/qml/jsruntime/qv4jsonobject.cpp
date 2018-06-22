@@ -847,7 +847,7 @@ QString Stringify::JA(Object *a)
     ScopedValue v(scope);
     for (uint i = 0; i < len; ++i) {
         bool exists;
-        v = a->getIndexed(i, &exists);
+        v = a->get(i, &exists);
         if (!exists) {
             partial += QStringLiteral("null");
             continue;
@@ -919,7 +919,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
             stringify.propertyList = static_cast<QV4::String *>(scope.alloc(arrayLen));
             for (uint i = 0; i < arrayLen; ++i) {
                 Value *v = stringify.propertyList + i;
-                *v = o->getIndexed(i);
+                *v = o->get(i);
                 if (v->as<NumberObject>() || v->as<StringObject>() || v->isNumber())
                     *v = v->toString(scope.engine);
                 if (!v->isString()) {
@@ -1081,7 +1081,7 @@ QJsonArray JsonObject::toJsonArray(const ArrayObject *a, V4ObjectSet &visitedObj
     ScopedValue v(scope);
     quint32 length = a->getLength();
     for (quint32 i = 0; i < length; ++i) {
-        v = a->getIndexed(i);
+        v = a->get(i);
         if (v->as<FunctionObject>())
             v = Encode::null();
         result.append(toJsonValue(v, visitedObjects));

@@ -415,7 +415,7 @@ void Collector::collect(QJsonArray *out, const QString &parentIName, const QStri
             if (isExpanded(iname)) {
                 QJsonArray children;
                 for (uint i = 0; i < n; ++i) {
-                    QV4::ReturnedValue v = array->getIndexed(i);
+                    QV4::ReturnedValue v = array->get(i);
                     QV4::ScopedValue sval(scope, v);
                     collect(&children, iname, QString::number(i), *sval);
                 }

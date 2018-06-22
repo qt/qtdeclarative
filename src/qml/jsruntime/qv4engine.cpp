@@ -1260,7 +1260,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             uint length = a->getLength();
             QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
             for (uint ii = 0; ii < length; ++ii) {
-                qobjectWrapper = a->getIndexed(ii);
+                qobjectWrapper = a->get(ii);
                 if (!!qobjectWrapper) {
                     list << qobjectWrapper->object();
                 } else {
@@ -1347,7 +1347,7 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
 
         int length = a->getLength();
         for (int ii = 0; ii < length; ++ii) {
-            v = a->getIndexed(ii);
+            v = a->get(ii);
             list << ::toVariant(e, v, -1, /*createJSValueForObjects*/false, visitedObjects);
         }
 

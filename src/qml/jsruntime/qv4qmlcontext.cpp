@@ -78,26 +78,25 @@ void Heap::QQmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
 
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
 
     const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
     if (resource->d()->isNullWrapper)
-        return Object::get(m, name, hasProperty);
+        return Object::get(m, id, receiver, hasProperty);
 
     if (v4->callingQmlContext() != *resource->d()->context)
-        return Object::get(m, name, hasProperty);
+        return Object::get(m, id, receiver, hasProperty);
 
     bool hasProp = false;
-    ScopedValue result(scope, Object::get(m, name, &hasProp));
+    ScopedValue result(scope, Object::get(m, id, receiver, &hasProp));
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
@@ -125,6 +124,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, StringOrSymbol *n, bool 
 
     QObject *scopeObject = resource->getScopeObject();
 
+    ScopedString name(scope, id.asHeapObject());
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(name, QQmlImport::AllowRecursion);
@@ -135,7 +135,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, StringOrSymbol *n, bool 
             if (r.scriptIndex != -1) {
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 if (scripts)
-                    return scripts->getIndexed(r.scriptIndex);
+                    return scripts->get(r.scriptIndex);
                 return QV4::Encode::null();
             } else if (r.type.isValid()) {
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);

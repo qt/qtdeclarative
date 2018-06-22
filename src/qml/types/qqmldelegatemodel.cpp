@@ -1857,7 +1857,7 @@ int QQmlDelegateModelItemMetaType::parseGroups(const QV4::Value &groups) const
         QV4::ScopedValue v(scope);
         uint arrayLength = array->getLength();
         for (uint i = 0; i < arrayLength; ++i) {
-            v = array->getIndexed(i);
+            v = array->get(i);
             const QString groupName = v->toQString();
             int index = groupNames.indexOf(groupName);
             if (index != -1)
@@ -3383,44 +3383,43 @@ public:
     quint32 count() const { return d()->changes->count(); }
     const QQmlChangeSet::Change &at(int index) const { return d()->changes->at(index); }
 
-    static QV4::ReturnedValue getIndexed(const QV4::Managed *m, uint index, bool *hasProperty)
+    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::Identifier id, const QV4::Value *receiver, bool *hasProperty)
     {
-        Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
-        QV4::ExecutionEngine *v4 = static_cast<const QQmlDelegateModelGroupChangeArray *>(m)->engine();
-        QV4::Scope scope(v4);
-        QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<const QQmlDelegateModelGroupChangeArray *>(m));
+        if (id.isArrayIndex()) {
+            uint index = id.asArrayIndex();
+            Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
+            QV4::ExecutionEngine *v4 = static_cast<const QQmlDelegateModelGroupChangeArray *>(m)->engine();
+            QV4::Scope scope(v4);
+            QV4::Scoped<QQmlDelegateModelGroupChangeArray> array(scope, static_cast<const QQmlDelegateModelGroupChangeArray *>(m));
 
-        if (index >= array->count()) {
+            if (index >= array->count()) {
+                if (hasProperty)
+                    *hasProperty = false;
+                return QV4::Primitive::undefinedValue().asReturnedValue();
+            }
+
+            const QQmlChangeSet::Change &change = array->at(index);
+
+            QV4::ScopedObject changeProto(scope, engineData(v4)->changeProto.value());
+            QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, QQmlDelegateModelGroupChange::create(v4));
+            object->setPrototypeOf(changeProto);
+            object->d()->change = change;
+
             if (hasProperty)
-                *hasProperty = false;
-            return QV4::Primitive::undefinedValue().asReturnedValue();
+                *hasProperty = true;
+            return object.asReturnedValue();
         }
 
-        const QQmlChangeSet::Change &change = array->at(index);
-
-        QV4::ScopedObject changeProto(scope, engineData(v4)->changeProto.value());
-        QV4::Scoped<QQmlDelegateModelGroupChange> object(scope, QQmlDelegateModelGroupChange::create(v4));
-        object->setPrototypeOf(changeProto);
-        object->d()->change = change;
-
-        if (hasProperty)
-            *hasProperty = true;
-        return object.asReturnedValue();
-    }
-
-    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::StringOrSymbol *name, bool *hasProperty)
-    {
         Q_ASSERT(m->as<QQmlDelegateModelGroupChangeArray>());
         const QQmlDelegateModelGroupChangeArray *array = static_cast<const QQmlDelegateModelGroupChangeArray *>(m);
 
-        name->makeIdentifier();
-        if (name->identifier() == array->engine()->id_length()->identifier()) {
+        if (id == array->engine()->id_length()->identifier()) {
             if (hasProperty)
                 *hasProperty = true;
             return QV4::Encode(array->count());
         }
 
-        return Object::get(m, name, hasProperty);
+        return Object::get(m, id, receiver, hasProperty);
     }
 };
 

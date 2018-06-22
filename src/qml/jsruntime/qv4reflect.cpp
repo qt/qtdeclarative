@@ -78,7 +78,7 @@ static CallArgs createListFromArrayLike(Scope &scope, const Object *o)
     Value *arguments = scope.alloc(len);
 
     for (int i = 0; i < len; ++i) {
-        arguments[i] = o->getIndexed(i);
+        arguments[i] = o->get(i);
         if (scope.hasException())
             return { nullptr, 0 };
     }
@@ -148,7 +148,6 @@ ReturnedValue Reflect::method_deleteProperty(const FunctionObject *f, const Valu
 
 ReturnedValue Reflect::method_get(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    // ### Fix third receiver argument
     Scope scope(f);
     if (!argc || !argv[0].isObject())
         return scope.engine->throwTypeError();
@@ -156,15 +155,12 @@ ReturnedValue Reflect::method_get(const FunctionObject *f, const Value *, const 
     ScopedObject o(scope, static_cast<const Object *>(argv));
     Value undef = Primitive::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
-
-    uint n = index->asArrayIndex();
-    if (n < UINT_MAX)
-        return Encode(o->getIndexed(n));
-
     ScopedStringOrSymbol name(scope, index->toPropertyKey(scope.engine));
-    if (scope.engine->hasException)
-        return false;
-    return Encode(o->get(name));
+    if (scope.hasException())
+        return Encode::undefined();
+    ScopedValue receiver(scope, argc > 2 ? argv[2] : *o);
+
+    return Encode(o->get(name->toPropertyKey(), receiver));
 }
 
 ReturnedValue Reflect::method_getOwnPropertyDescriptor(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -198,7 +194,7 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
     bool hasProperty = false;
     uint n = index->asArrayIndex();
     if (n < UINT_MAX) {
-        (void) o->getIndexed(n, &hasProperty);
+        (void) o->get(n, &hasProperty);
         return Encode(hasProperty);
     }
 
@@ -239,7 +235,6 @@ ReturnedValue Reflect::method_preventExtensions(const FunctionObject *f, const V
 
 ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    // ### Fix third receiver argument
     Scope scope(f);
     if (!argc || !argv[0].isObject())
         return scope.engine->throwTypeError();

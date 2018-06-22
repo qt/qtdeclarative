@@ -336,7 +336,7 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const V
     char *b = newBuffer->d()->data->data();
     ScopedValue val(scope);
     while (idx < l) {
-        val = o->getIndexed(idx);
+        val = o->get(idx);
         array->d()->type->write(scope.engine, b, 0, val);
         if (scope.engine->hasException)
             return Encode::undefined();
@@ -367,8 +367,12 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
     return e->memoryManager->allocObject<TypedArray>(ic->d(), t);
 }
 
-ReturnedValue TypedArray::getIndexed(const Managed *m, uint index, bool *hasProperty)
+ReturnedValue TypedArray::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
+    if (!id.isArrayIndex())
+        return Object::get(m, id, receiver, hasProperty);
+
+    uint index = id.asArrayIndex();
     Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
 
@@ -535,7 +539,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
         char *b = buffer->d()->data->data() + a->d()->byteOffset + offset*elementSize;
         ScopedValue val(scope);
         while (idx < l) {
-            val = o->getIndexed(idx);
+            val = o->get(idx);
             a->d()->type->write(scope.engine, b, 0, val);
             if (scope.engine->hasException)
                 RETURN_UNDEFINED();

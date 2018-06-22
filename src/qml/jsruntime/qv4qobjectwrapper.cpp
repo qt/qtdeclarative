@@ -314,7 +314,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 }
             }
         }
-        return QV4::Object::get(this, name, hasProperty);
+        return QV4::Object::get(this, name->identifier(), this, hasProperty);
     }
 
     QQmlData *ddata = QQmlData::get(d()->object(), false);
@@ -693,12 +693,14 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(const Managed *m, StringOrSymbol *name, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
-    if (name->isSymbol())
-        return Object::get(m, name, hasProperty);
-    String *n = static_cast<String *>(name);
+    if (!id.isString())
+        return Object::get(m, id, receiver, hasProperty);
+
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
+    Scope scope(that);
+    ScopedString n(scope, id.asHeapObject());
     QQmlContextData *qmlContext = that->engine()->callingQmlContext();
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
@@ -1708,7 +1710,7 @@ void CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
             uint length = array->getLength();
             for (uint ii = 0; ii < length; ++ii)  {
                 QObject *o = nullptr;
-                qobjectWrapper = array->getIndexed(ii);
+                qobjectWrapper = array->get(ii);
                 if (!!qobjectWrapper)
                     o = qobjectWrapper->object();
                 qlistPtr->append(o);

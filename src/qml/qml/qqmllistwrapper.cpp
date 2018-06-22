@@ -102,47 +102,32 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(const Managed *m, StringOrSymbol *n, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
-
-    if (n->isSymbol())
-        return Object::get(m, n, hasProperty);
-    String *name = static_cast<String *>(n);
-
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
     QV4::ExecutionEngine *v4 = w->engine();
 
-    if (name->equals(v4->id_length()) && !w->d()->object.isNull()) {
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
         quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-        return Primitive::fromUInt32(count).asReturnedValue();
-    }
+        if (index < count && w->d()->property().at) {
+            if (hasProperty)
+                *hasProperty = true;
+            return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
+        }
 
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return getIndexed(m, idx, hasProperty);
-
-    return Object::get(m, name, hasProperty);
-}
-
-ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *hasProperty)
-{
-    Q_UNUSED(hasProperty);
-
-    Q_ASSERT(m->as<QmlListWrapper>());
-    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
-    QV4::ExecutionEngine *v4 = w->engine();
-
-    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-    if (index < count && w->d()->property().at) {
         if (hasProperty)
-            *hasProperty = true;
-        return QV4::QObjectWrapper::wrap(v4, w->d()->property().at(&w->d()->property(), index));
+            *hasProperty = false;
+        return Primitive::undefinedValue().asReturnedValue();
+    } else if (id.isString()) {
+        if (id == v4->id_length()->identifier() && !w->d()->object.isNull()) {
+            quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+            return Primitive::fromUInt32(count).asReturnedValue();
+        }
     }
 
-    if (hasProperty)
-        *hasProperty = false;
-    return Primitive::undefinedValue().asReturnedValue();
+    return Object::get(m, id, receiver, hasProperty);
 }
 
 bool QmlListWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
