@@ -389,9 +389,6 @@ struct ControlFlowFinally : public ControlFlowUnwind
         Codegen::RegisterScope scope(cg);
 
         insideFinally = true;
-        int exceptionTemp = generator()->newRegister();
-        Instruction::GetException instr;
-        generator()->addInstruction(instr);
         int returnValueTemp = -1;
         if (cg->requiresReturnValue) {
             returnValueTemp = generator()->newRegister();
@@ -400,13 +397,14 @@ struct ControlFlowFinally : public ControlFlowUnwind
             move.destReg = returnValueTemp;
             generator()->addInstruction(move);
         }
+        int exceptionTemp = generator()->newRegister();
+        Instruction::GetException instr;
+        generator()->addInstruction(instr);
         Reference::fromStackSlot(cg, exceptionTemp).storeConsumeAccumulator();
 
         generator()->setUnwindHandler(parentUnwindHandler());
         cg->statement(finally->statement);
         insideFinally = false;
-
-        Reference::fromStackSlot(cg, exceptionTemp).loadInAccumulator();
 
         if (cg->requiresReturnValue) {
             Instruction::MoveReg move;
@@ -414,6 +412,7 @@ struct ControlFlowFinally : public ControlFlowUnwind
             move.destReg = cg->_returnAddress;
             generator()->addInstruction(move);
         }
+        Reference::fromStackSlot(cg, exceptionTemp).loadInAccumulator();
         Instruction::SetException setException;
         generator()->addInstruction(setException);
 
