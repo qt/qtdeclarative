@@ -1485,15 +1485,10 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
     return o.asReturnedValue();
 }
 
-ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classIndex, const Value &heritage, const Value *computedNames)
+ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classIndex, const Value &superClass, const Value *computedNames)
 {
     const CompiledData::CompilationUnit *unit = engine->currentStackFrame->v4Function->compilationUnit;
     const QV4::CompiledData::Class *cls = unit->data->classAt(classIndex);
-
-    if (!heritage.isEmpty()) {
-        // ####
-        return engine->throwTypeError(QStringLiteral("classes with heritage not yet supported."));
-    }
 
     Scope scope(engine);
     ScopedString name(scope);
@@ -1502,6 +1497,21 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     // ### fix heritage
     ScopedObject protoParent(scope, engine->objectPrototype());
     ScopedObject constructorParent(scope, engine->functionPrototype());
+    if (!superClass.isEmpty()) {
+        if (superClass.isNull()) {
+            protoParent = Encode::null();
+        } else {
+            // ### check that the heritage object is a constructor
+            if (!superClass.isFunctionObject())
+                return engine->throwTypeError(QStringLiteral("The superclass is not a function object."));
+            const FunctionObject *s = static_cast<const FunctionObject *>(&superClass);
+            ScopedValue result(scope, s->get(scope.engine->id_prototype()));
+            if (!result->isObject() && !result->isNull())
+                return engine->throwTypeError(QStringLiteral("The value of the superclass's prototype property is not an object."));
+            protoParent = *result;
+            constructorParent = superClass;
+        }
+    }
 
     ScopedObject proto(scope, engine->newObject());
     proto->setPrototypeUnchecked(protoParent);
