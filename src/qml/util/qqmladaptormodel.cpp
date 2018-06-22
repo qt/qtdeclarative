@@ -96,7 +96,7 @@ public:
     QQmlDMCachedModelData(
             QQmlDelegateModelItemMetaType *metaType,
             VDMModelDelegateDataType *dataType,
-            int index);
+            int index, int row, int column);
 
     int metaCall(QMetaObject::Call call, int id, void **arguments);
 
@@ -262,9 +262,8 @@ public:
     bool hasModelData;
 };
 
-QQmlDMCachedModelData::QQmlDMCachedModelData(
-        QQmlDelegateModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index)
-    : QQmlDelegateModelItem(metaType, index)
+QQmlDMCachedModelData::QQmlDMCachedModelData(QQmlDelegateModelItemMetaType *metaType, VDMModelDelegateDataType *dataType, int index, int row, int column)
+    : QQmlDelegateModelItem(metaType, index, row, column)
     , type(dataType)
 {
     if (index == -1)
@@ -326,12 +325,12 @@ void QQmlDMCachedModelData::setValue(const QString &role, const QVariant &value)
     }
 }
 
-bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &, int idx)
+bool QQmlDMCachedModelData::resolveIndex(const QQmlAdaptorModel &adaptorModel, int idx)
 {
     if (index == -1) {
         Q_ASSERT(idx >= 0);
         cachedData.clear();
-        setModelIndex(idx);
+        setModelIndex(idx, adaptorModel.rowAt(idx), adaptorModel.columnAt(idx));
         const QMetaObject *meta = metaObject();
         const int propertyCount = type->propertyRoles.count();
         for (int i = 0; i < propertyCount; ++i)
@@ -404,8 +403,8 @@ public:
     QQmlDMAbstractItemModelData(
             QQmlDelegateModelItemMetaType *metaType,
             VDMModelDelegateDataType *dataType,
-            int index)
-        : QQmlDMCachedModelData(metaType, dataType, index)
+            int index, int row, int column)
+        : QQmlDMCachedModelData(metaType, dataType, index, row, column)
     {
     }
 
@@ -526,12 +525,12 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            int index) const override
+            int index, int row, int column) const override
     {
         VDMAbstractItemModelDataType *dataType = const_cast<VDMAbstractItemModelDataType *>(this);
         if (!metaObject)
             dataType->initializeMetaType(model);
-        return new QQmlDMAbstractItemModelData(metaType, dataType, index);
+        return new QQmlDMAbstractItemModelData(metaType, dataType, index, row, column);
     }
 
     void initializeMetaType(QQmlAdaptorModel &model)
@@ -572,8 +571,8 @@ class QQmlDMListAccessorData : public QQmlDelegateModelItem
     Q_OBJECT
     Q_PROPERTY(QVariant modelData READ modelData WRITE setModelData NOTIFY modelDataChanged)
 public:
-    QQmlDMListAccessorData(QQmlDelegateModelItemMetaType *metaType, int index, const QVariant &value)
-        : QQmlDelegateModelItem(metaType, index)
+    QQmlDMListAccessorData(QQmlDelegateModelItemMetaType *metaType, int index, int row, int column, const QVariant &value)
+        : QQmlDelegateModelItem(metaType, index, row, column)
         , cachedData(value)
     {
     }
@@ -678,11 +677,11 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            int index) const override
+            int index, int row, int column) const override
     {
         return new QQmlDMListAccessorData(
                 metaType,
-                index,
+                index, row, column,
                 index >= 0 && index < model.list.count() ? model.list.at(index) : QVariant());
     }
 };
@@ -701,7 +700,7 @@ public:
     QQmlDMObjectData(
             QQmlDelegateModelItemMetaType *metaType,
             VDMObjectDelegateDataType *dataType,
-            int index,
+            int index, int row, int column,
             QObject *object);
 
     QObject *modelData() const { return object; }
@@ -767,13 +766,13 @@ public:
     QQmlDelegateModelItem *createItem(
             QQmlAdaptorModel &model,
             QQmlDelegateModelItemMetaType *metaType,
-            int index) const override
+            int index, int row, int column) const override
     {
         VDMObjectDelegateDataType *dataType = const_cast<VDMObjectDelegateDataType *>(this);
         if (!metaObject)
             dataType->initializeMetaType(model);
         return index >= 0 && index < model.list.count()
-                ? new QQmlDMObjectData(metaType, dataType, index, qvariant_cast<QObject *>(model.list.at(index)))
+                ? new QQmlDMObjectData(metaType, dataType, index, row, column, qvariant_cast<QObject *>(model.list.at(index)))
                 : nullptr;
     }
 
@@ -887,12 +886,11 @@ public:
     VDMObjectDelegateDataType *m_type;
 };
 
-QQmlDMObjectData::QQmlDMObjectData(
-        QQmlDelegateModelItemMetaType *metaType,
+QQmlDMObjectData::QQmlDMObjectData(QQmlDelegateModelItemMetaType *metaType,
         VDMObjectDelegateDataType *dataType,
-        int index,
+        int index, int row, int column,
         QObject *object)
-    : QQmlDelegateModelItem(metaType, index)
+    : QQmlDelegateModelItem(metaType, index, row, column)
     , object(object)
 {
     new QQmlDMObjectDataMetaObject(this, dataType);

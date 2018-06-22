@@ -99,7 +99,7 @@ class QQmlDelegateModelItem : public QObject
     Q_PROPERTY(int column MEMBER column NOTIFY columnChanged)
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
-    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex);
+    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex, int row, int column);
     ~QQmlDelegateModelItem();
 
     void referenceObject() { ++objectRef; }
@@ -123,7 +123,7 @@ public:
     int groupIndex(Compositor::Group group);
 
     int modelIndex() const { return index; }
-    virtual void setModelIndex(int idx);
+    virtual void setModelIndex(int idx, int newRow, int newColumn);
 
     virtual QV4::ReturnedValue get() { return QV4::QObjectWrapper::wrap(v4, this); }
 
