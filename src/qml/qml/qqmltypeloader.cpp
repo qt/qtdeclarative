@@ -2897,7 +2897,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     }
     QV4::ScopedValue v(scope);
     for (int ii = 0; ii < scripts.count(); ++ii)
-        scriptsArray->putIndexed(ii, (v = scripts.at(ii)->scriptData()->scriptValueForContext(ctxt)));
+        scriptsArray->put(ii, (v = scripts.at(ii)->scriptData()->scriptValueForContext(ctxt)));
 
     if (!hasEngine())
         initialize(parentCtxt->engine);

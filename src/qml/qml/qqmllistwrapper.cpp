@@ -145,12 +145,13 @@ ReturnedValue QmlListWrapper::getIndexed(const Managed *m, uint index, bool *has
     return Primitive::undefinedValue().asReturnedValue();
 }
 
-bool QmlListWrapper::put(Managed *m, StringOrSymbol *name, const Value &value)
+bool QmlListWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
-    Q_UNUSED(name);
+    Q_UNUSED(id);
     Q_UNUSED(value);
+    Q_UNUSED(receiver);
     return false;
 }
 

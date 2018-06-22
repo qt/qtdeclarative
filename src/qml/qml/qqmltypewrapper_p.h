@@ -113,7 +113,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
 
 
     static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
-    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
+    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
     static bool isEqualTo(Managed *that, Managed *o);
     static ReturnedValue instanceOf(const Object *typeObject, const Value &var);

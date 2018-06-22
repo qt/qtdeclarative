@@ -248,17 +248,12 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
     Value undef = Primitive::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
     const Value &val = argc > 2 ? argv[2] : undef;
+    ScopedValue receiver(scope, argc >3 ? argv[3] : argv[0]);
 
-    uint n = index->asArrayIndex();
-    if (n < UINT_MAX) {
-        bool result = o->putIndexed(n, val);
-        return Encode(result);
-    }
-
-    ScopedStringOrSymbol name(scope, index->toPropertyKey(scope.engine));
+    Scoped<StringOrSymbol> propertyKey(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
-    bool result = o->put(name, val);
+    bool result = o->put(propertyKey->toPropertyKey(), val, receiver);
     return Encode(result);
 }
 

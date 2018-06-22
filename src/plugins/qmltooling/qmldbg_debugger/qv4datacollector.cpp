@@ -394,7 +394,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
         { std::swap(*hasExceptionLoc, hadException); }
     };
 
-    // if we wouldn't do this, the putIndexed won't work.
+    // if we wouldn't do this, the put won't work.
     ExceptionStateSaver resetExceptionState(engine());
     QV4::Scope scope(engine());
     QV4::ScopedObject array(scope, m_values.value());
@@ -405,7 +405,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
         }
     }
     Ref ref = array->getLength();
-    array->putIndexed(ref, value);
+    array->put(ref, value);
     Q_ASSERT(array->getLength() - 1 == ref);
     return ref;
 }

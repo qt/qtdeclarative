@@ -87,8 +87,7 @@ struct ProxyObject: Object {
 
     static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
+    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
     static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);

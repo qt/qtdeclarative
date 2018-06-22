@@ -99,7 +99,7 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
     void setReadOnly(bool b) { d()->readOnly = b; }
 
     static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
-    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
+    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
 };
 
 struct Q_QML_EXPORT QmlContext : public ExecutionContext

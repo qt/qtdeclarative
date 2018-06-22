@@ -268,50 +268,43 @@ void Object::setPrototypeUnchecked(const Object *p)
 }
 
 // Section 8.12.2
-PropertyIndex Object::getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs)
+PropertyIndex Object::getValueOrSetter(Identifier id, PropertyAttributes *attrs)
 {
-    Q_ASSERT(name->asArrayIndex() == UINT_MAX);
-
-    name->makeIdentifier();
-    Identifier id = name->identifier();
-
-    Heap::Object *o = d();
-    while (o) {
-        uint idx = o->internalClass->find(id);
-        if (idx < UINT_MAX) {
-            *attrs = o->internalClass->propertyData[idx];
-            return o->writablePropertyData(attrs->isAccessor() ? idx + SetterOffset : idx );
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        Heap::Object *o = d();
+        while (o) {
+            if (o->arrayData) {
+                uint idx = o->arrayData->mappedIndex(index);
+                if (idx != UINT_MAX) {
+                    *attrs = o->arrayData->attributes(index);
+                    return { o->arrayData , o->arrayData->values.values + (attrs->isAccessor() ? idx + SetterOffset : idx) };
+                }
+            }
+            if (o->vtable()->type == Type_StringObject) {
+                if (index < static_cast<const Heap::StringObject *>(o)->length()) {
+                    // this is an evil hack, but it works, as the method is only ever called from put,
+                    // where we don't use the returned pointer there for non writable attributes
+                    *attrs = (Attr_NotWritable|Attr_NotConfigurable);
+                    return { reinterpret_cast<Heap::ArrayData *>(0x1), nullptr };
+                }
+            }
+            o = o->prototype();
         }
+    } else {
+        Heap::Object *o = d();
+        while (o) {
+            uint idx = o->internalClass->find(id);
+            if (idx < UINT_MAX) {
+                *attrs = o->internalClass->propertyData[idx];
+                return o->writablePropertyData(attrs->isAccessor() ? idx + SetterOffset : idx );
+            }
 
-        o = o->prototype();
+            o = o->prototype();
+        }
     }
     *attrs = Attr_Invalid;
     return { nullptr, nullptr };
-}
-
-PropertyIndex Object::getValueOrSetter(uint index, PropertyAttributes *attrs)
-{
-    Heap::Object *o = d();
-    while (o) {
-        if (o->arrayData) {
-            uint idx = o->arrayData->mappedIndex(index);
-            if (idx != UINT_MAX) {
-                *attrs = o->arrayData->attributes(index);
-                return { o->arrayData , o->arrayData->values.values + (attrs->isAccessor() ? idx + SetterOffset : idx) };
-            }
-        }
-        if (o->vtable()->type == Type_StringObject) {
-            if (index < static_cast<const Heap::StringObject *>(o)->length()) {
-                // this is an evil hack, but it works, as the method is only ever called from putIndexed,
-                // where we don't use the returned pointer there for non writable attributes
-                *attrs = (Attr_NotWritable|Attr_NotConfigurable);
-                return { reinterpret_cast<Heap::ArrayData *>(0x1), 0 };
-            }
-        }
-        o = o->prototype();
-    }
-    *attrs = Attr_Invalid;
-    return { nullptr, 0 };
 }
 
 ReturnedValue Object::callAsConstructor(const FunctionObject *f, const Value *, int)
@@ -334,14 +327,9 @@ ReturnedValue Object::getIndexed(const Managed *m, uint index, bool *hasProperty
     return static_cast<const Object *>(m)->internalGetIndexed(index, hasProperty);
 }
 
-bool Object::put(Managed *m, StringOrSymbol *name, const Value &value)
+bool Object::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
-    return static_cast<Object *>(m)->internalPut(name, value);
-}
-
-bool Object::putIndexed(Managed *m, uint index, const Value &value)
-{
-    return static_cast<Object *>(m)->internalPutIndexed(index, value);
+    return static_cast<Object *>(m)->internalPut(id, value, receiver);
 }
 
 bool Object::deleteProperty(Managed *m, Identifier id)
@@ -484,31 +472,39 @@ ReturnedValue Object::internalGetIndexed(uint index, bool *hasProperty) const
 
 
 // Section 8.12.5
-bool Object::internalPut(StringOrSymbol *name, const Value &value)
+bool Object::internalPut(Identifier id, const Value &value, Value *receiver)
 {
     ExecutionEngine *engine = this->engine();
     if (engine->hasException)
         return false;
 
-    uint idx = name->asArrayIndex();
-    if (idx != UINT_MAX)
-        return putIndexed(idx, value);
+    uint index = id.asArrayIndex();
+    Scope scope(engine);
 
-    name->makeIdentifier();
-    Identifier id = name->identifier();
-
-    PropertyIndex memberIndex{nullptr, nullptr};
-    uint member = internalClass()->find(id);
     PropertyAttributes attrs;
-    if (member < UINT_MAX) {
-        attrs = internalClass()->propertyData[member];
-        memberIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
+    PropertyIndex propertyIndex{nullptr, nullptr};
+
+    if (index != UINT_MAX) {
+        if (arrayData())
+            propertyIndex = arrayData()->getValueOrSetter(index, &attrs);
+
+        if (propertyIndex.isNull() && isStringObject()) {
+            if (index < static_cast<StringObject *>(this)->length())
+                // not writable
+                return false;
+        }
+    } else {
+        uint member = internalClass()->find(id);
+        if (member < UINT_MAX) {
+            attrs = internalClass()->propertyData[member];
+            propertyIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
+        }
     }
 
     // clause 1
-    if (!memberIndex.isNull()) {
+    if (!propertyIndex.isNull()) {
         if (attrs.isAccessor()) {
-            if (memberIndex->as<FunctionObject>())
+            if (propertyIndex->as<FunctionObject>())
                 goto cont;
             return false;
         } else if (!attrs.isWritable())
@@ -524,7 +520,7 @@ bool Object::internalPut(StringOrSymbol *name, const Value &value)
             if (!ok)
                 return false;
         } else {
-            memberIndex.set(engine, value);
+            propertyIndex.set(engine, value);
         }
         return true;
     } else if (!getPrototypeOf()) {
@@ -532,11 +528,10 @@ bool Object::internalPut(StringOrSymbol *name, const Value &value)
             return false;
     } else {
         // clause 4
-        Scope scope(engine);
-        memberIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(name, &attrs);
-        if (!memberIndex.isNull()) {
+        propertyIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(id, &attrs);
+        if (!propertyIndex.isNull()) {
             if (attrs.isAccessor()) {
-                if (!memberIndex->as<FunctionObject>())
+                if (!propertyIndex->as<FunctionObject>())
                     return false;
             } else if (!isExtensible() || !attrs.isWritable()) {
                 return false;
@@ -549,84 +544,24 @@ bool Object::internalPut(StringOrSymbol *name, const Value &value)
     cont:
 
     // Clause 5
-    if (!memberIndex.isNull() && attrs.isAccessor()) {
-        Q_ASSERT(memberIndex->as<FunctionObject>());
+    if (!propertyIndex.isNull() && attrs.isAccessor()) {
+        Q_ASSERT(propertyIndex->as<FunctionObject>());
 
         Scope scope(engine);
-        ScopedFunctionObject setter(scope, *memberIndex);
+        ScopedFunctionObject setter(scope, *propertyIndex);
         JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
-        *jsCallData->thisObject = this;
+        *jsCallData->thisObject = *receiver;
         setter->call(jsCallData);
         return !engine->hasException;
     }
 
-    insertMember(name, value);
-    return true;
-}
-
-bool Object::internalPutIndexed(uint index, const Value &value)
-{
-    ExecutionEngine *engine = this->engine();
-    if (engine->hasException)
-        return false;
-
-    PropertyAttributes attrs;
-
-    PropertyIndex arrayIndex = arrayData() ? arrayData()->getValueOrSetter(index, &attrs) : PropertyIndex{ nullptr, 0 };
-
-    if (arrayIndex.isNull() && isStringObject()) {
-        if (index < static_cast<StringObject *>(this)->length())
-            // not writable
-            return false;
-    }
-
-    // clause 1
-    if (!arrayIndex.isNull()) {
-        if (attrs.isAccessor()) {
-            if (arrayIndex->as<FunctionObject>())
-                goto cont;
-            return false;
-        } else if (!attrs.isWritable())
-            return false;
-
-        arrayIndex.set(engine, value);
-        return true;
-    } else if (!getPrototypeOf()) {
-        if (!isExtensible())
-            return false;
+    if (index != UINT_MAX) {
+        arraySet(index, value);
     } else {
-        // clause 4
-        Scope scope(engine);
-        arrayIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(index, &attrs);
-        if (!arrayIndex.isNull()) {
-            if (attrs.isAccessor()) {
-                if (!arrayIndex->as<FunctionObject>())
-                    return false;
-            } else if (!isExtensible() || !attrs.isWritable()) {
-                return false;
-            }
-        } else if (!isExtensible()) {
-            return false;
-        }
+        Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+        insertMember(name, value);
     }
-
-    cont:
-
-    // Clause 5
-    if (!arrayIndex.isNull() && attrs.isAccessor()) {
-        Q_ASSERT(arrayIndex->as<FunctionObject>());
-
-        Scope scope(engine);
-        ScopedFunctionObject setter(scope, *arrayIndex);
-        JSCallData jsCallData(scope, 1);
-        jsCallData->args[0] = value;
-        *jsCallData->thisObject = this;
-        setter->call(jsCallData);
-        return !engine->hasException;
-    }
-
-    arraySet(index, value);
     return true;
 }
 

@@ -384,8 +384,12 @@ ReturnedValue TypedArray::getIndexed(const Managed *m, uint index, bool *hasProp
     return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
-bool TypedArray::putIndexed(Managed *m, uint index, const Value &value)
+bool TypedArray::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
+    if (!id.isArrayIndex())
+        return Object::put(m, id, value, receiver);
+
+    uint index = id.asArrayIndex();
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     if (v4->hasException)
         return false;

@@ -229,13 +229,12 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, StringOrSymbol *n, bool 
     return Encode::undefined();
 }
 
-bool QQmlContextWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
+bool QQmlContextWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
 
-    if (n->isSymbol())
-        return Object::put(m, n, value);
-    String *name = static_cast<String *>(n);
+    if (id.isSymbol() || id.isArrayIndex())
+        return Object::put(m, id, value, receiver);
 
     QQmlContextWrapper *resource = static_cast<QQmlContextWrapper *>(m);
     ExecutionEngine *v4 = resource->engine();
@@ -244,21 +243,20 @@ bool QQmlContextWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
         return false;
     QV4::Scoped<QQmlContextWrapper> wrapper(scope, resource);
 
-    name->makeIdentifier();
-    uint member = wrapper->internalClass()->find(name->identifier());
+    uint member = wrapper->internalClass()->find(id);
     if (member < UINT_MAX)
         return wrapper->putValue(member, value);
 
     if (wrapper->d()->isNullWrapper) {
         if (wrapper && wrapper->d()->readOnly) {
-            QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
+            QString error = QLatin1String("Invalid write to global property \"") + id.toQString() +
                             QLatin1Char('"');
             ScopedString e(scope, v4->newString(error));
             v4->throwError(e);
             return false;
         }
 
-        return Object::put(m, name, value);
+        return Object::put(m, id, value, receiver);
     }
 
     // It's possible we could delay the calculation of the "actual" context (in the case
@@ -272,6 +270,7 @@ bool QQmlContextWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
     // See QV8ContextWrapper::Getter for resolution order
 
     QObject *scopeObject = wrapper->getScopeObject();
+    ScopedString name(scope, id.asHeapObject());
 
     while (context) {
         const QV4::IdentifierHash &properties = context->propertyNames();
@@ -302,7 +301,7 @@ bool QQmlContextWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
         return false;
     }
 
-    return Object::put(m, name, value);
+    return Object::put(m, id, value, receiver);
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)

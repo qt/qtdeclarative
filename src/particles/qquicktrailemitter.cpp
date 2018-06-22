@@ -273,7 +273,7 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
             QV4::ScopedArrayObject array(scope, v4->newArrayObject(toEmit.size()));
             QV4::ScopedValue v(scope);
             for (int i=0; i<toEmit.size(); i++)
-                array->putIndexed(i, (v = toEmit[i]->v4Value(m_system)));
+                array->put(i, (v = toEmit[i]->v4Value(m_system)));
 
             if (isEmitFollowConnected())
                 emitFollowParticles(QQmlV4Handle(array), d->v4Value(m_system));//A chance for many arbitrary JS changes

@@ -117,9 +117,7 @@ struct SymbolObject : Object
     V4_INTERNALCLASS(SymbolObject)
     V4_PROTOTYPE(symbolPrototype)
 
-    static bool put(Managed *, StringOrSymbol *, const Value &) { return false; }
-    static bool putIndexed(Managed *, uint, const Value &) { return false; }
-
+    static bool put(Managed *, Identifier, const Value &, Value *) { return false; }
 };
 
 }

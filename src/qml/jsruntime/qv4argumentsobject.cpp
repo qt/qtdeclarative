@@ -185,17 +185,20 @@ ReturnedValue ArgumentsObject::getIndexed(const Managed *m, uint index, bool *ha
     return Encode::undefined();
 }
 
-bool ArgumentsObject::putIndexed(Managed *m, uint index, const Value &value)
+bool ArgumentsObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->argc()))
-        args->fullyCreate();
+    if (id.isArrayIndex()) {
+        uint index = id.asArrayIndex();
+        if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->argc()))
+            args->fullyCreate();
 
-    if (args->fullyCreated())
-        return Object::putIndexed(m, index, value);
-
-    args->context()->setArg(index, value);
-    return true;
+        if (!args->fullyCreated()) {
+            args->context()->setArg(index, value);
+            return true;
+        }
+    }
+    return Object::put(m, id, value, receiver);
 }
 
 bool ArgumentsObject::deleteProperty(Managed *m, Identifier id)

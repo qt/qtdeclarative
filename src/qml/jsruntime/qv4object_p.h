@@ -171,8 +171,7 @@ struct ObjectVTable
     ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
     ReturnedValue (*get)(const Managed *, StringOrSymbol *name, bool *hasProperty);
     ReturnedValue (*getIndexed)(const Managed *, uint index, bool *hasProperty);
-    bool (*put)(Managed *, StringOrSymbol *name, const Value &value);
-    bool (*putIndexed)(Managed *, uint index, const Value &value);
+    bool (*put)(Managed *, Identifier id, const Value &value, Value *receiver);
     bool (*deleteProperty)(Managed *m, Identifier id);
     bool (*hasProperty)(const Managed *m, Identifier id);
     PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
@@ -195,7 +194,6 @@ const QV4::ObjectVTable classname::static_vtbl =    \
     get,                                        \
     getIndexed,                                 \
     put,                                        \
-    putIndexed,                                 \
     deleteProperty,                             \
     hasProperty,                                \
     getOwnProperty,                             \
@@ -253,8 +251,7 @@ struct Q_QML_EXPORT Object: Managed {
         return vtable()->getOwnProperty(this, id, p);
     }
 
-    PropertyIndex getValueOrSetter(StringOrSymbol *name, PropertyAttributes *attrs);
-    PropertyIndex getValueOrSetter(uint index, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(Identifier id, PropertyAttributes *attrs);
 
     bool hasProperty(Identifier id) const {
         return vtable()->hasProperty(this, id);
@@ -382,10 +379,14 @@ public:
     { return vtable()->getIndexed(this, idx, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
-    inline bool put(StringOrSymbol *name, const Value &v)
-    { return vtable()->put(this, name, v); }
-    inline bool putIndexed(uint idx, const Value &v)
-    { return vtable()->putIndexed(this, idx, v); }
+    inline bool put(StringOrSymbol *name, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, name->toPropertyKey(), v, receiver); }
+    inline bool put(uint idx, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, Identifier::fromArrayIndex(idx), v, receiver); }
+    QT_DEPRECATED inline bool putIndexed(uint idx, const Value &v)
+    { return put(idx, v); }
+    inline bool put(Identifier id, const Value &v, Value *receiver = nullptr)
+    { if (!receiver) receiver = this; return vtable()->put(this, id, v, receiver); }
 
     enum ThrowOnFailure {
         DoThrowOnRejection,
@@ -396,7 +397,7 @@ public:
     // which is much more efficient for the array case.
     inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
     {
-        bool ret = vtable()->putIndexed(this, idx, v);
+        bool ret = vtable()->put(this, Identifier::fromArrayIndex(idx), v, this);
         // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
         if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
             ExecutionEngine *e = engine();
@@ -412,7 +413,7 @@ public:
     // ES6: 7.3.3 Set (O, P, V, Throw)
     inline bool set(StringOrSymbol *name, const Value &v, ThrowOnFailure shouldThrow)
     {
-        bool ret = vtable()->put(this, name, v);
+        bool ret = vtable()->put(this, name->toPropertyKey(), v, this);
         // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
         if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
             ExecutionEngine *e = engine();
@@ -438,8 +439,7 @@ protected:
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue get(const Managed *m, StringOrSymbol *name, bool *hasProperty);
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, StringOrSymbol *name, const Value &value);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
+    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
     static bool deleteProperty(Managed *m, Identifier id);
     static bool hasProperty(const Managed *m, Identifier id);
     static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
@@ -456,8 +456,7 @@ private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
     ReturnedValue internalGet(StringOrSymbol *name, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, bool *hasProperty) const;
-    bool internalPut(StringOrSymbol *name, const Value &value);
-    bool internalPutIndexed(uint index, const Value &value);
+    bool internalPut(Identifier id, const Value &value, Value *receiver);
     bool internalDeleteProperty(Identifier id);
 
     friend struct ObjectIterator;

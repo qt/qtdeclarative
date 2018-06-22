@@ -140,7 +140,7 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     }
 
     static ReturnedValue getIndexed(const Managed *m, uint index, bool *hasProperty);
-    static bool putIndexed(Managed *m, uint index, const Value &value);
+    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
 };
 
 struct IntrinsicTypedArrayCtor: FunctionObject

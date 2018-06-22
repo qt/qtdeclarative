@@ -422,11 +422,10 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, StringOrSymbol *n, boo
 #undef VALUE_TYPE_ACCESSOR
 }
 
-bool QQmlValueTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
+bool QQmlValueTypeWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
-    if (n->isSymbol())
-        return Object::put(m, n, value);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::put(m, id, value, receiver);
 
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
     ExecutionEngine *v4 = static_cast<QQmlValueTypeWrapper *>(m)->engine();
@@ -448,8 +447,10 @@ bool QQmlValueTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value
         writeBackPropertyType = writebackProperty.userType();
     }
 
+    ScopedString name(scope, id.asHeapObject());
+
     const QMetaObject *metaObject = r->d()->propertyCache()->metaObject();
-    const QQmlPropertyData *pd = r->d()->propertyCache()->property(name, nullptr, nullptr);
+    const QQmlPropertyData *pd = r->d()->propertyCache()->property(name.getPointer(), nullptr, nullptr);
     if (!pd)
         return false;
 

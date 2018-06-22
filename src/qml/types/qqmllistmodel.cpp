@@ -1564,24 +1564,23 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
 
 namespace QV4 {
 
-bool ModelObject::put(Managed *m, StringOrSymbol *n, const Value &value)
+bool ModelObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
-    if (n->isSymbol())
-        return Object::put(m, n, value);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::put(m, id, value, receiver);
+    QString propName = id.toQString();
 
     ModelObject *that = static_cast<ModelObject*>(m);
 
     ExecutionEngine *eng = that->engine();
     const int elementIndex = that->d()->elementIndex();
-    const QString propName = name->toQString();
     int roleIndex = that->d()->m_model->m_listModel->setExistingProperty(elementIndex, propName, value, eng);
     if (roleIndex != -1)
         that->d()->m_model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
 
     ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
     if (mo->initialized())
-        mo->emitPropertyNotification(name->toQString().toUtf8());
+        mo->emitPropertyNotification(propName.toUtf8());
     return true;
 }
 

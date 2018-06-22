@@ -186,7 +186,7 @@ void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, const QV4
     QV4::ScopedArrayObject array(scope, engine->newArrayObject(length));
     uint i = 0;
     for (int j = offset, ej = argc; j < ej; ++i, ++j)
-        array->putIndexed(i, argv[j]);
+        array->put(i, argv[j]);
     dfc.m_args.set(engine, array);
 }
 

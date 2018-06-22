@@ -1110,7 +1110,7 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
                 qmlerror->put((s = v4->newString(QStringLiteral("columnNumber"))), (v = QV4::Primitive::fromInt32(error.column())));
                 qmlerror->put((s = v4->newString(QStringLiteral("fileName"))), (v = v4->newString(error.url().toString())));
                 qmlerror->put((s = v4->newString(QStringLiteral("message"))), (v = v4->newString(error.description())));
-                qmlerrors->putIndexed(ii, qmlerror);
+                qmlerrors->put(ii, qmlerror);
             }
 
             v = v4->newString(errorstr);

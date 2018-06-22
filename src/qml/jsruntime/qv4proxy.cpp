@@ -103,7 +103,7 @@ ReturnedValue ProxyObject::getIndexed(const Managed *m, uint index, bool *hasPro
     return get(m, name, hasProperty);
 }
 
-bool ProxyObject::put(Managed *m, StringOrSymbol *name, const Value &value)
+bool ProxyObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -117,21 +117,21 @@ bool ProxyObject::put(Managed *m, StringOrSymbol *name, const Value &value)
     if (scope.hasException())
         return Encode::undefined();
     if (trap->isNullOrUndefined())
-        return target->put(name, value);
+        return target->put(id, value, receiver);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
     JSCallData cdata(scope, 4, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = name;
+    cdata.args[1] = id.toStringOrSymbol(scope.engine);
     cdata.args[2] = value;
-    cdata.args[3] = o->d(); // ### fix receiver handling
+    cdata.args[3] = *receiver;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     if (!trapResult->toBoolean())
         return false;
     ScopedProperty targetDesc(scope);
-    PropertyAttributes attributes = target->getOwnProperty(name->toPropertyKey(), targetDesc);
+    PropertyAttributes attributes = target->getOwnProperty(id, targetDesc);
     if (attributes != Attr_Invalid && !attributes.isConfigurable()) {
         if (attributes.isData() && !attributes.isWritable()) {
             if (!value.sameValue(targetDesc->value))
@@ -141,13 +141,6 @@ bool ProxyObject::put(Managed *m, StringOrSymbol *name, const Value &value)
             return scope.engine->throwTypeError();
     }
     return true;
-}
-
-bool ProxyObject::putIndexed(Managed *m, uint index, const Value &value)
-{
-    Scope scope(m);
-    ScopedString name(scope, Primitive::fromUInt32(index).toString(scope.engine));
-    return put(m, name, value);
 }
 
 bool ProxyObject::deleteProperty(Managed *m, Identifier id)

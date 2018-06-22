@@ -1209,10 +1209,8 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     }
 
     QV4::ScopedValue v(scope, QJSValuePrivate::convertedToValue(engine, value));
-    if (arrayIndex != UINT_MAX)
-        o->putIndexed(arrayIndex, v);
-    else
-        o->put(engine->id_uintMax(), v);
+    Identifier id = arrayIndex != UINT_MAX ? Identifier::fromArrayIndex(arrayIndex) : engine->id_uintMax()->identifier();
+    o->put(id, v);
     if (engine->hasException)
         engine->catchException();
 }

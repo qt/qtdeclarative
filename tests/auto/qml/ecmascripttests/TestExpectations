@@ -858,7 +858,6 @@ built-ins/Reflect/set/creates-a-data-descriptor.js fails
 built-ins/Reflect/set/different-property-descriptors.js fails
 built-ins/Reflect/set/receiver-is-not-object.js fails
 built-ins/Reflect/set/return-false-if-target-is-not-writable.js fails
-built-ins/Reflect/set/set-value-on-accessor-descriptor-with-receiver.js fails
 built-ins/Reflect/set/set-value-on-data-descriptor.js fails
 built-ins/Reflect/set/symbol-property.js fails
 built-ins/RegExp/15.10.4.1-1.js fails

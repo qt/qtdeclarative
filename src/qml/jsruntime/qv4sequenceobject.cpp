@@ -565,8 +565,12 @@ public:
 
     static QV4::ReturnedValue getIndexed(const QV4::Managed *that, uint index, bool *hasProperty)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(index, hasProperty); }
-    static bool putIndexed(Managed *that, uint index, const QV4::Value &value)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(index, value); }
+    static bool put(Managed *that, Identifier id, const QV4::Value &value, Value *receiver)
+    {
+        if (id.isArrayIndex())
+            return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(id.asArrayIndex(), value);
+        return Object::put(that, id, value, receiver);
+    }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
     static bool deleteProperty(QV4::Managed *that, Identifier id)

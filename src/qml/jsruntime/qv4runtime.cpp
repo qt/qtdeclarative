@@ -689,7 +689,7 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
                 return true;
             }
         }
-        return o->putIndexed(idx, value);
+        return o->put(idx, value);
     }
 
     ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));

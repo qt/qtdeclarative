@@ -264,7 +264,7 @@ bool JsonParser::parseMember(Object *o)
     ScopedString s(scope, engine->newIdentifier(key));
     uint idx = s->asArrayIndex();
     if (idx < UINT_MAX) {
-        o->putIndexed(idx, val);
+        o->put(idx, val);
     } else {
         o->insertMember(s, val);
     }

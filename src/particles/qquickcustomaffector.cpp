@@ -154,7 +154,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     QV4::ScopedArrayObject array(scope, v4->newArrayObject(toAffect.size()));
     QV4::ScopedValue v(scope);
     for (int i=0; i<toAffect.size(); i++)
-        array->putIndexed(i, (v = toAffect[i]->v4Value(m_system)));
+        array->put(i, (v = toAffect[i]->v4Value(m_system)));
 
     if (dt >= simulationCutoff || dt <= simulationDelta) {
         affectProperties(toAffect, dt);

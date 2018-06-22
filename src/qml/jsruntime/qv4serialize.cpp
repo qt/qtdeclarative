@@ -332,7 +332,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
         ScopedValue v(scope);
         for (quint32 ii = 0; ii < size; ++ii) {
             v = deserialize(data, engine);
-            a->putIndexed(ii, v);
+            a->put(ii, v);
         }
         return a.asReturnedValue();
     }

@@ -304,20 +304,20 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, StringOrSymbol *n, bool *ha
 }
 
 
-bool QQmlTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
+bool QQmlTypeWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
-    if (n->isSymbol())
-        return Object::put(m, n, value);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::put(m, id, value, receiver);
+
 
     Q_ASSERT(m->as<QQmlTypeWrapper>());
     QQmlTypeWrapper *w = static_cast<QQmlTypeWrapper *>(m);
-    QV4::ExecutionEngine *v4 = w->engine();
-    if (v4->hasException)
+    QV4::Scope scope(w);
+    if (scope.engine->hasException)
         return false;
 
-    QV4::Scope scope(v4);
-    QQmlContextData *context = v4->callingQmlContext();
+    ScopedString name(scope, id.asHeapObject());
+    QQmlContextData *context = scope.engine->callingQmlContext();
 
     QQmlType type = w->d()->type();
     if (type.isValid() && !type.isSingleton() && w->d()->object) {
@@ -325,7 +325,7 @@ bool QQmlTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
         QQmlEngine *e = scope.engine->qmlEngine();
         QObject *ao = qmlAttachedPropertiesObjectById(type.attachedPropertiesId(QQmlEnginePrivate::get(e)), object);
         if (ao)
-            return QV4::QObjectWrapper::setQmlProperty(v4, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, ao, name, QV4::QObjectWrapper::IgnoreRevision, value);
         return false;
     } else if (type.isSingleton()) {
         QQmlEngine *e = scope.engine->qmlEngine();
@@ -334,12 +334,12 @@ bool QQmlTypeWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
 
         QObject *qobjectSingleton = siinfo->qobjectApi(e);
         if (qobjectSingleton) {
-            return QV4::QObjectWrapper::setQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
+            return QV4::QObjectWrapper::setQmlProperty(scope.engine, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, value);
         } else if (!siinfo->scriptApi(e).isUndefined()) {
-            QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
+            QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(scope.engine, siinfo->scriptApi(e)));
             if (!apiprivate) {
                 QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
-                v4->throwError(error);
+                scope.engine->throwError(error);
                 return false;
             } else {
                 return apiprivate->put(name, value);

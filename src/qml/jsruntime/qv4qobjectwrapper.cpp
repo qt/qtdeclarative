@@ -703,30 +703,30 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, StringOrSymbol *name, b
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-bool QObjectWrapper::put(Managed *m, StringOrSymbol *n, const Value &value)
+bool QObjectWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
 {
-    if (n->isSymbol())
-        return Object::put(m, n, value);
-    String *name = static_cast<String *>(n);
+    if (!id.isString())
+        return Object::put(m, id, value, receiver);
 
+    Scope scope(m);
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    ExecutionEngine *v4 = that->engine();
+    ScopedString name(scope, id.asHeapObject());
 
-    if (v4->hasException || QQmlData::wasDeleted(that->d()->object()))
+    if (scope.engine->hasException || QQmlData::wasDeleted(that->d()->object()))
         return false;
 
-    QQmlContextData *qmlContext = v4->callingQmlContext();
-    if (!setQmlProperty(v4, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
+    QQmlContextData *qmlContext = scope.engine->callingQmlContext();
+    if (!setQmlProperty(scope.engine, qmlContext, that->d()->object(), name, QV4::QObjectWrapper::IgnoreRevision, value)) {
         QQmlData *ddata = QQmlData::get(that->d()->object());
         // Types created by QML are not extensible at run-time, but for other QObjects we can store them
         // as regular JavaScript properties, like on JavaScript objects.
         if (ddata && ddata->context) {
             QString error = QLatin1String("Cannot assign to non-existent property \"") +
                             name->toQString() + QLatin1Char('\"');
-            v4->throwError(error);
+            scope.engine->throwError(error);
             return false;
         } else {
-            return QV4::Object::put(m, name, value);
+            return QV4::Object::put(m, id, value, receiver);
         }
     }
 
