@@ -362,122 +362,6 @@ static inline const QV4::Value &constant(Function *function, int index)
     return function->compilationUnit->constants[index];
 }
 
-struct LazyScope
-{
-    ExecutionEngine *engine = nullptr;
-    Value *stackMark = nullptr;
-    ~LazyScope() {
-        if (engine)
-            engine->jsStackTop = stackMark;
-    }
-    template <typename T>
-    void set(Value **scopedValue, T value, ExecutionEngine *e) {
-        if (!engine) {
-            engine = e;
-            stackMark = engine->jsStackTop;
-        }
-        if (!*scopedValue)
-            *scopedValue = e->jsAlloca(1);
-        **scopedValue = value;
-    }
-};
-
-static bool compareEqual(QV4::Value lhs, QV4::Value rhs)
-{
-    LazyScope scope;
-    Value *lhsGuard = nullptr;
-    Value *rhsGuard = nullptr;
-
-  redo:
-    if (lhs.asReturnedValue() == rhs.asReturnedValue())
-        return !lhs.isNaN();
-
-    int lt = lhs.quickType();
-    int rt = rhs.quickType();
-    if (rt < lt) {
-        qSwap(lhs, rhs);
-        qSwap(lt, rt);
-    }
-
-    switch (lt) {
-    case QV4::Value::QT_ManagedOrUndefined:
-        if (lhs.isUndefined())
-            return rhs.isNullOrUndefined();
-        Q_FALLTHROUGH();
-    case QV4::Value::QT_ManagedOrUndefined1:
-    case QV4::Value::QT_ManagedOrUndefined2:
-    case QV4::Value::QT_ManagedOrUndefined3:
-        // LHS: Managed
-        switch (rt) {
-        case QV4::Value::QT_ManagedOrUndefined:
-            if (rhs.isUndefined())
-                return false;
-            Q_FALLTHROUGH();
-        case QV4::Value::QT_ManagedOrUndefined1:
-        case QV4::Value::QT_ManagedOrUndefined2:
-        case QV4::Value::QT_ManagedOrUndefined3: {
-            // RHS: Managed
-            Heap::Base *l = lhs.m();
-            Heap::Base *r = rhs.m();
-            Q_ASSERT(l);
-            Q_ASSERT(r);
-            if (l->internalClass->vtable->isStringOrSymbol == r->internalClass->vtable->isStringOrSymbol)
-                return static_cast<QV4::Managed &>(lhs).isEqualTo(&static_cast<QV4::Managed &>(rhs));
-            if (l->internalClass->vtable->isStringOrSymbol) {
-                scope.set(&rhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(rhs), PREFERREDTYPE_HINT), r->internalClass->engine);
-                rhs = rhsGuard->asReturnedValue();
-                break;
-            } else {
-                Q_ASSERT(r->internalClass->vtable->isStringOrSymbol);
-                scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), l->internalClass->engine);
-                lhs = lhsGuard->asReturnedValue();
-                break;
-            }
-            return false;
-        }
-        case QV4::Value::QT_Empty:
-            Q_UNREACHABLE();
-        case QV4::Value::QT_Null:
-            return false;
-        case QV4::Value::QT_Bool:
-        case QV4::Value::QT_Int:
-            rhs = Primitive::fromDouble(rhs.int_32());
-            // fall through
-        default: // double
-            if (lhs.m()->internalClass->vtable->isStringOrSymbol) {
-                return lhs.m()->internalClass->vtable->isString ? (RuntimeHelpers::toNumber(lhs) == rhs.doubleValue()) : false;
-            } else {
-                scope.set(&lhsGuard, RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(lhs), PREFERREDTYPE_HINT), lhs.m()->internalClass->engine);
-                lhs = lhsGuard->asReturnedValue();
-            }
-        }
-        goto redo;
-    case QV4::Value::QT_Empty:
-        Q_UNREACHABLE();
-    case QV4::Value::QT_Null:
-        return rhs.isNull();
-    case QV4::Value::QT_Bool:
-    case QV4::Value::QT_Int:
-        switch (rt) {
-        case QV4::Value::QT_ManagedOrUndefined:
-        case QV4::Value::QT_ManagedOrUndefined1:
-        case QV4::Value::QT_ManagedOrUndefined2:
-        case QV4::Value::QT_ManagedOrUndefined3:
-        case QV4::Value::QT_Empty:
-        case QV4::Value::QT_Null:
-            Q_UNREACHABLE();
-        case QV4::Value::QT_Bool:
-        case QV4::Value::QT_Int:
-            return lhs.int_32() == rhs.int_32();
-        default: // double
-            return lhs.int_32() == rhs.doubleValue();
-        }
-    default: // double
-        Q_ASSERT(rhs.isDouble());
-        return lhs.doubleValue() == rhs.doubleValue();
-    }
-}
-
 static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 {
   redo:
@@ -1177,7 +1061,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
             acc = Encode(left.int_32() == ACC.int_32());
         } else {
             STORE_ACC();
-            acc = Encode(compareEqual(left, accumulator));
+            acc = Encode(bool(Runtime::method_compareEqual(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpEq)
@@ -1188,7 +1072,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
             acc = Encode(bool(left.int_32() != ACC.int_32()));
         } else {
             STORE_ACC();
-            acc = Encode(!compareEqual(left, accumulator));
+            acc = Encode(bool(!Runtime::method_compareEqual(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpNe)
