@@ -210,9 +210,9 @@ void tst_MptaInterop::touchesThenPinch()
         if (!pinchStoleGrab && pointerEvent->point(0)->exclusiveGrabber() == pinch)
             pinchStoleGrab = i;
     }
-    qCDebug(lcPointerTests) << "pinch started after" << pinchStoleGrab << "moves; ended with scale" << pinch->scale() << "rot" << pinch->rotation();
+    qCDebug(lcPointerTests) << "pinch started after" << pinchStoleGrab << "moves; ended with scale" << pinch->activeScale() << "rot" << pinch->rotation();
     QTRY_VERIFY(pinch->rotation() > 4);
-    QVERIFY(pinch->scale() > 1);
+    QVERIFY(pinch->activeScale() > 1);
 
     // Press one more point (pinkie finger)
     QPoint p4 = mpta->mapToScene(QPointF(300, 200)).toPoint();

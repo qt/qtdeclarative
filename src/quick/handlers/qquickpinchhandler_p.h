@@ -67,6 +67,7 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
     Q_PROPERTY(PinchOrigin pinchOrigin READ pinchOrigin WRITE setPinchOrigin NOTIFY pinchOriginChanged)
     Q_PROPERTY(qreal scale READ scale NOTIFY updated)
+    Q_PROPERTY(qreal activeScale READ activeScale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
     Q_PROPERTY(qreal minimumX READ minimumX WRITE setMinimumX NOTIFY minimumXChanged)
@@ -99,7 +100,8 @@ public:
     void setPinchOrigin(PinchOrigin pinchOrigin);
 
     QVector2D translation() const { return m_activeTranslation; }
-    qreal scale() const { return m_activeScale; }
+    qreal scale() const { return m_accumulatedScale; }
+    qreal activeScale() const { return m_activeScale; }
     qreal rotation() const { return m_activeRotation; }
     qreal minimumX() const { return m_minimumX; }
     void setMinimumX(qreal minX);
@@ -130,6 +132,7 @@ protected:
 private:
     // properties
     qreal m_activeScale;
+    qreal m_accumulatedScale;
     qreal m_activeRotation;
     QVector2D m_activeTranslation;
 

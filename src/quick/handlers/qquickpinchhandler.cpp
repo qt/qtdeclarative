@@ -88,6 +88,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
     : QQuickMultiPointHandler(parent, 2)
     , m_activeScale(1)
+    , m_accumulatedScale(1)
     , m_activeRotation(0)
     , m_activeTranslation(0,0)
     , m_minimumScale(-qInf())
@@ -304,7 +305,7 @@ void QQuickPinchHandler::onActiveChanged()
             m_startMatrix.rotate(m_startRotation, 0, 0, -1);
             m_startMatrix.translate(-xformOrigin);
         } else {
-            m_startScale = 1;
+            m_startScale = m_accumulatedScale;
             m_startRotation = 0;
         }
         qCInfo(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
@@ -398,7 +399,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     const qreal totalRotation = m_startRotation + m_activeRotation;
     const qreal rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
     m_activeRotation += (rotation - totalRotation);   //adjust for the potential bounding above
-    const qreal scale = m_startScale * m_activeScale;
+    m_accumulatedScale = m_startScale * m_activeScale;
 
     if (target() && target()->parentItem()) {
         // 3. Drag/translate
@@ -422,7 +423,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
         target()->setPosition(pos);
         target()->setRotation(rotation);
-        target()->setScale(scale);
+        target()->setScale(m_accumulatedScale);
 
         // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
     } else {
@@ -431,7 +432,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
     qCDebug(lcPinchHandler) << "centroid" << m_centroid.scenePressPosition() << "->"  << m_centroid.scenePosition()
                             << ", distance" << m_startDistance << "->" << dist
-                            << ", startScale" << m_startScale << "->" << scale
+                            << ", startScale" << m_startScale << "->" << m_accumulatedScale
                             << ", activeRotation" << m_activeRotation
                             << ", rotation" << rotation
                             << " from " << event->device()->type();
@@ -452,11 +453,23 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     \readonly
     \qmlproperty real QtQuick::PinchHandler::scale
 
-    The scale factor. It is 1.0 when the gesture begins, increases as the
-    touchpoints are spread apart, and decreases as the touchpoints are brought
-    together. If \l target is not null, this will be automatically applied to its
-    \l {Item::scale}{scale}. Otherwise, bindings can be used to do arbitrary
-    things with this value.
+    The scale factor that will automatically be set on the \l target if it is not null.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+    While the pinch gesture is being performed, it is continuously multiplied by
+    \l activeScale; after the gesture ends, it stays the same; and when the next
+    pinch gesture begins, it begins to be multiplied by activeScale again.
+*/
+
+/*!
+    \readonly
+    \qmlproperty real QtQuick::PinchHandler::activeScale
+
+    The scale factor while the pinch gesture is being performed.
+    It is 1.0 when the gesture begins, increases as the touchpoints are spread
+    apart, and decreases as the touchpoints are brought together.
+    If \l target is not null, its \l {Item::scale}{scale} will be automatically
+    multiplied by this value.
+    Otherwise, bindings can be used to do arbitrary things with this value.
 */
 
 /*!

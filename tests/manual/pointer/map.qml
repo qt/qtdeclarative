@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -47,6 +47,12 @@ Item {
             fillMode: Image.PreserveAspectFit
             source: "resources/map.svgz"
             Component.onCompleted: { width = implicitWidth; height = implicitHeight }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: image.sourceSize.width + " x " + image.sourceSize.height +
+                  " scale " + map.scale.toFixed(2) + " active scale " + pinch.activeScale.toFixed(2)
         }
     }
 
