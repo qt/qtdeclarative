@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,46 +37,78 @@
 **
 ****************************************************************************/
 
-#include "qqmlmodelsmodule_p.h"
-#include <QtCore/qitemselectionmodel.h>
-#if QT_CONFIG(qml_list_model)
-#include <private/qqmllistmodel_p.h>
-#endif
-#if QT_CONFIG(qml_delegate_model)
-#include <private/qqmldelegatemodel_p.h>
-#include <private/qqmldelegatecomponent_p.h>
-#endif
-#include <private/qqmlobjectmodel_p.h>
-#include <private/qqmltablemodel_p.h>
+import QtQuick 2.12
+import QtQuick.Controls 2.3
+import QtQuick.Layouts 1.11
 
-QT_BEGIN_NAMESPACE
+ScrollView {
+    clip: true
 
-void QQmlModelsModule::defineModule()
-{
-    const char uri[] = "QtQml.Models";
+    function inputAsRow() {
+        return [
+            { checkable: checkableCheckBox.checked, checked: checkedCheckBox.checked },
+            { amount: amountSpinBox.value },
+            { fruitType: fruitTypeTextField.text },
+            { fruitName: fruitNameTextField.text },
+            { fruitPrice: parseFloat(fruitPriceTextField.text) },
+        ]
+    }
 
-#if QT_CONFIG(qml_list_model)
-    qmlRegisterType<QQmlListElement>(uri, 2, 1, "ListElement");
-    qmlRegisterCustomType<QQmlListModel>(uri, 2, 1, "ListModel", new QQmlListModelParser);
-#endif
-#if QT_CONFIG(qml_delegate_model)
-    qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
-    qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
-#endif
-    qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
-    qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
+    default property alias content: gridLayout.children
 
-    qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");
+    GridLayout {
+        id: gridLayout
+        columns: 2
+
+        RowLayout {
+            Layout.columnSpan: 2
+
+            Label {
+                text: "checkable"
+            }
+            CheckBox {
+                id: checkableCheckBox
+                checked: true
+            }
+
+            Label {
+                text: "checked"
+            }
+            CheckBox {
+                id: checkedCheckBox
+            }
+        }
+
+        Label {
+            text: "amount"
+        }
+        SpinBox {
+            id: amountSpinBox
+            value: 1
+        }
+
+        Label {
+            text: "fruitType"
+        }
+        TextField {
+            id: fruitTypeTextField
+            text: "Pear"
+        }
+
+        Label {
+            text: "fruitName"
+        }
+        TextField {
+            id: fruitNameTextField
+            text: "Williams"
+        }
+
+        Label {
+            text: "fruitPrice"
+        }
+        TextField {
+            id: fruitPriceTextField
+            text: "1.50"
+        }
+    }
 }
-
-void QQmlModelsModule::defineLabsModule()
-{
-    const char uri[] = "Qt.labs.qmlmodels";
-
-    qmlRegisterUncreatableType<QQmlAbstractDelegateComponent>(uri, 1, 0, "AbstractDelegateComponent", QQmlAbstractDelegateComponent::tr("Cannot create instance of abstract class AbstractDelegateComponent."));
-    qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
-    qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
-    qmlRegisterType<QQmlTableModel>(uri, 1, 0, "TableModel");
-}
-
-QT_END_NAMESPACE

@@ -74,6 +74,7 @@ tst_examples::tst_examples()
 {
     // Add files to exclude here
     excludedFiles << "snippets/qml/listmodel/listmodel.qml"; //Just a ListModel, no root QQuickItem
+    excludedFiles << "snippets/qml/tablemodel/fruit-example-delegatechooser.qml"; // Requires QtQuick.Controls import.
 
     // Add directories you want excluded here
     excludedDirs << "shared"; //Not an example
