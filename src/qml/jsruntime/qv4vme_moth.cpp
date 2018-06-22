@@ -559,12 +559,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
     MOTH_BEGIN_INSTR(LoadLocal)
         auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
+        Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);
         acc = cc->locals[index].asReturnedValue();
     MOTH_END_INSTR(LoadLocal)
 
     MOTH_BEGIN_INSTR(StoreLocal)
         CHECK_EXCEPTION;
         auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
+        Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);
         QV4::WriteBarrier::write(engine, cc, cc->locals.values[index].data_ptr(), acc);
     MOTH_END_INSTR(StoreLocal)
 
