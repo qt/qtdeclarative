@@ -680,6 +680,12 @@ struct PlatformAssembler64 : PlatformAssemblerCommon
         store64(AccumulatorRegister, addr);
     }
 
+    void moveReg(Address sourceRegAddress, Address destRegAddress)
+    {
+        load64(sourceRegAddress, ScratchRegister);
+        store64(ScratchRegister, destRegAddress);
+    }
+
     void loadString(int stringId)
     {
         loadAccumulator(loadStringAddress(stringId));
@@ -949,6 +955,16 @@ struct PlatformAssembler32 : PlatformAssemblerCommon
         store32(AccumulatorRegisterValue, addr);
         addr.offset += 4;
         store32(AccumulatorRegisterTag, addr);
+    }
+
+    void moveReg(Address sourceRegAddress, Address destRegAddress)
+    {
+        load32(sourceRegAddress, ReturnValueRegisterValue);
+        sourceRegAddress.offset += 4;
+        load32(sourceRegAddress, ReturnValueRegisterTag);
+        store32(ReturnValueRegisterValue, destRegAddress);
+        destRegAddress.offset += 4;
+        store32(ReturnValueRegisterTag, destRegAddress);
     }
 
     void loadString(int stringId)
@@ -1441,6 +1457,11 @@ void Assembler::copyConst(int constIndex, int destReg)
 void Assembler::loadReg(int reg)
 {
     pasm()->loadAccumulator(regAddr(reg));
+}
+
+void JIT::Assembler::moveReg(int sourceReg, int destReg)
+{
+    pasm()->moveReg(regAddr(sourceReg), regAddr(destReg));
 }
 
 void Assembler::storeReg(int reg)

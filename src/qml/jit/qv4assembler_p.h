@@ -90,6 +90,7 @@ public:
     void loadConst(int constIndex);
     void copyConst(int constIndex, int destReg);
     void loadReg(int reg);
+    void moveReg(int sourceReg, int destReg);
     void storeReg(int reg);
     void loadLocal(int index, int level = 0);
     void storeLocal(int index, int level = 0);

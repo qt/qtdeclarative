@@ -135,8 +135,8 @@ void BaselineJIT::generate_StoreReg(int reg)
 
 void BaselineJIT::generate_MoveReg(int srcReg, int destReg)
 {
-    as->loadReg(srcReg);
-    as->storeReg(destReg);
+    // Don't clobber the accumulator.
+    as->moveReg(srcReg, destReg);
 }
 
 void BaselineJIT::generate_LoadLocal(int index)
