@@ -145,18 +145,23 @@ void FunctionObject::init(String *n, bool createProto)
     Scope s(internalClass()->engine);
     ScopedValue protectThis(s, this);
 
-    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->identifier()) == Heap::FunctionObject::Index_Prototype);
-    if (createProto) {
-        ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
-        Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->identifier()) == Heap::FunctionObject::Index_ProtoConstructor);
-        proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
-        setProperty(Heap::FunctionObject::Index_Prototype, proto);
-    } else {
-        setProperty(Heap::FunctionObject::Index_Prototype, Primitive::undefinedValue());
-    }
+    if (createProto)
+        createDefaultPrototypeProperty();
 
     if (n)
         defineReadonlyConfigurableProperty(s.engine->id_name(), *n);
+}
+
+void FunctionObject::createDefaultPrototypeProperty()
+{
+    Scope s(this);
+
+    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->identifier()) == Heap::FunctionObject::Index_Prototype);
+    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->identifier()) == Heap::FunctionObject::Index_ProtoConstructor);
+
+    ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
+    proto->setProperty(Heap::FunctionObject::Index_ProtoConstructor, d());
+    setProperty(Heap::FunctionObject::Index_Prototype, proto);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -182,6 +187,11 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
 Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function)
 {
     return scope->engine()->memoryManager->allocate<ConstructorFunction>(scope, function);
+}
+
+Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function)
+{
+    return scope->engine()->memoryManager->allocate<MemberFunction>(scope, function);
 }
 
 Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount)
@@ -500,6 +510,13 @@ DEFINE_OBJECT_VTABLE(ConstructorFunction);
 ReturnedValue ConstructorFunction::call(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
+}
+
+DEFINE_OBJECT_VTABLE(MemberFunction);
+
+ReturnedValue MemberFunction::callAsConstructor(const FunctionObject *f, const Value *, int)
+{
+    return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
 }
 
 DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);

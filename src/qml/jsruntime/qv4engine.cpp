@@ -343,6 +343,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_ScriptFunction] = ic->d();
     ic = ic->changeVTable(ConstructorFunction::staticVTable());
     classes[Class_ConstructorFunction] = ic->d();
+    ic = ic->changeVTable(MemberFunction::staticVTable());
+    classes[Class_MemberFunction] = ic->d();
+    ic = ic->changeVTable(GeneratorFunction::staticVTable());
+    classes[Class_MemberFunction] = ic->d();
     ic = ic->changeVTable(GeneratorFunction::staticVTable());
     classes[Class_GeneratorFunction] = ic->d();
     classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->identifier(), Attr_NotEnumerable, &index);

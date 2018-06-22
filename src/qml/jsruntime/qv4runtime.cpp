@@ -1536,7 +1536,7 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         Identifier id = propertyName->toPropertyKey();
         QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);
-        function = FunctionObject::createScriptFunction(current, f);
+        function = FunctionObject::createMemberFunction(current, f);
         Q_ASSERT(function);
         PropertyAttributes attributes;
         switch (methods[i].type) {

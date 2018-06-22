@@ -124,6 +124,10 @@ struct ConstructorFunction : ScriptFunction
 {
 };
 
+struct MemberFunction : ScriptFunction
+{
+};
+
 struct DefaultClassConstructorFunction : FunctionObject
 {
 };
@@ -161,6 +165,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     void init(String *name, bool createProto);
 
+    void createDefaultPrototypeProperty();
+
     inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     ReturnedValue callAsConstructor(const Value *argv, int argc) const {
         return d()->jsConstruct(this, argv, argc);
@@ -174,6 +180,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
@@ -246,6 +253,13 @@ struct ConstructorFunction : ScriptFunction {
     V4_INTERNALCLASS(ConstructorFunction)
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
+
+struct MemberFunction : ScriptFunction {
+    V4_OBJECT2(MemberFunction, ScriptFunction)
+    V4_INTERNALCLASS(MemberFunction)
+    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+};
+
 
 struct DefaultClassConstructorFunction : FunctionObject {
     V4_OBJECT2(DefaultClassConstructorFunction, FunctionObject)
