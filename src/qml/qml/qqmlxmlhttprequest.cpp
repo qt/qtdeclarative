@@ -909,7 +909,7 @@ ReturnedValue NamedNodeMap::get(const Managed *m, PropertyKey id, const Value *r
     if (id.isSymbol())
         return Object::get(m, id, receiver, hasProperty);
 
-    if (id == v4->id_length()->identifier())
+    if (id == v4->id_length()->propertyKey())
         return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
 
     QString str = id.toQString();
@@ -949,7 +949,7 @@ ReturnedValue NodeList::get(const Managed *m, PropertyKey id, const Value *recei
         return Encode::undefined();
     }
 
-    if (id == v4->id_length()->identifier())
+    if (id == v4->id_length()->propertyKey())
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
     return Object::get(m, id, receiver, hasProperty);
 }

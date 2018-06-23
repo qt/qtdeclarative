@@ -133,7 +133,7 @@ void Heap::FunctionObject::init()
 
     Object::init();
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
-    Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()->identifier()) == Index_Prototype);
+    Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()->propertyKey()) == Index_Prototype);
     setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
@@ -155,8 +155,8 @@ void FunctionObject::createDefaultPrototypeProperty(uint protoSlot, uint protoCo
 {
     Scope s(this);
 
-    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->identifier()) == protoSlot);
-    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->identifier()) == protoConstructorSlot);
+    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->propertyKey()) == protoSlot);
+    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->propertyKey()) == protoConstructorSlot);
 
     ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
     proto->setProperty(protoConstructorSlot, d());
@@ -488,7 +488,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
         f->setName(name);
     f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
 
-    Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->identifier()) == Index_Length);
+    Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(int(function->compiledFunction->length)));
 }
 

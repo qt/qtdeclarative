@@ -1058,12 +1058,7 @@ QJSValue QJSValue::property(const QString& name) const
         return QJSValue();
 
     ScopedString s(scope, engine->newString(name));
-    uint idx = s->asArrayIndex();
-    if (idx < UINT_MAX)
-        return property(idx);
-
-    s->makeIdentifier();
-    QV4::ScopedValue result(scope, o->get(s));
+    QV4::ScopedValue result(scope, o->get(s->toPropertyKey()));
     if (engine->hasException)
         result = engine->catchException();
 
@@ -1148,15 +1143,8 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     }
 
     ScopedString s(scope, engine->newString(name));
-    uint idx = s->asArrayIndex();
-    if (idx < UINT_MAX) {
-        setProperty(idx, value);
-        return;
-    }
-
-    s->makeIdentifier();
     QV4::ScopedValue v(scope, QJSValuePrivate::convertedToValue(engine, value));
-    o->put(s, v);
+    o->put(s->toPropertyKey(), v);
     if (engine->hasException)
         engine->catchException();
 }
@@ -1209,7 +1197,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
     }
 
     QV4::ScopedValue v(scope, QJSValuePrivate::convertedToValue(engine, value));
-    PropertyKey id = arrayIndex != UINT_MAX ? PropertyKey::fromArrayIndex(arrayIndex) : engine->id_uintMax()->identifier();
+    PropertyKey id = arrayIndex != UINT_MAX ? PropertyKey::fromArrayIndex(arrayIndex) : engine->id_uintMax()->propertyKey();
     o->put(id, v);
     if (engine->hasException)
         engine->catchException();
@@ -1289,7 +1277,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
         return false;
 
     ScopedString s(scope, engine->newIdentifier(name));
-    return o->getOwnProperty(s->identifier()) != Attr_Invalid;
+    return o->getOwnProperty(s->propertyKey()) != Attr_Invalid;
 }
 
 /*!

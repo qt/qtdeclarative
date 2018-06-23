@@ -314,7 +314,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 }
             }
         }
-        return QV4::Object::get(this, name->identifier(), this, hasProperty);
+        return QV4::Object::get(this, name->propertyKey(), this, hasProperty);
     }
 
     QQmlData *ddata = QQmlData::get(d()->object(), false);

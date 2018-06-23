@@ -190,8 +190,7 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
 
 bool ExecutionContext::deleteProperty(String *name)
 {
-    name->makeIdentifier();
-    PropertyKey id = name->identifier();
+    PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
@@ -226,8 +225,7 @@ bool ExecutionContext::deleteProperty(String *name)
 
 ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
 {
-    name->makeIdentifier();
-    PropertyKey id = name->identifier();
+    PropertyKey id = name->toPropertyKey();
 
     QV4::ExecutionEngine *v4 = engine();
     Heap::ExecutionContext *ctx = d();
@@ -282,7 +280,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
 
 ReturnedValue ExecutionContext::getProperty(String *name)
 {
-    name->makeIdentifier();
+    PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
@@ -290,7 +288,6 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            PropertyKey id = name->identifier();
 
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
@@ -304,7 +301,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
                 Scope scope(this);
                 ScopedObject activation(scope, ctx->activation);
                 bool hasProperty = false;
-                ReturnedValue v = activation->get(name, &hasProperty);
+                ReturnedValue v = activation->get(id, nullptr, &hasProperty);
                 if (hasProperty)
                     return v;
             }
@@ -318,7 +315,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
 ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
 {
     base->setM(nullptr);
-    name->makeIdentifier();
+    PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
     for (; ctx; ctx = ctx->outer) {
@@ -326,8 +323,6 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            name->makeIdentifier();
-            PropertyKey id = name->identifier();
 
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX)
@@ -350,7 +345,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             Scope scope(this);
             ScopedObject o(scope, ctx->activation);
             bool hasProperty = false;
-            ReturnedValue v = o->get(name, &hasProperty);
+            ReturnedValue v = o->get(id, nullptr, &hasProperty);
             if (hasProperty) {
                 base->setM(o->d());
                 return v;

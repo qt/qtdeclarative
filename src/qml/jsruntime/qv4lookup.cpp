@@ -466,8 +466,8 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
     ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
 
     Heap::InternalClass *c = object->internalClass();
-    name->makeIdentifier();
-    uint idx = c->find(name->identifier());
+    PropertyKey key = name->toPropertyKey();
+    uint idx = c->find(key);
     if (idx != UINT_MAX) {
         if (object->isArrayObject() && idx == Heap::ArrayObject::LengthPropertyIndex) {
             setter = arrayLengthSetter;
@@ -485,7 +485,7 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
     }
 
     insertionLookup.protoId = c->protoId;
-    if (!object->put(name, value)) {
+    if (!object->put(key, value)) {
         setter = Lookup::setterFallback;
         return false;
     }
@@ -495,8 +495,7 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
         setter = setterFallback;
         return true;
     }
-    name->makeIdentifier();
-    idx = object->internalClass()->find(name->identifier());
+    idx = object->internalClass()->find(key);
     if (idx == UINT_MAX) { // ### can this even happen?
         setter = setterFallback;
         return false;

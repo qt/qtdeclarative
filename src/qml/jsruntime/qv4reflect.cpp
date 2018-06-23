@@ -192,16 +192,11 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
     Value undef = Primitive::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
 
-    bool hasProperty = false;
-    uint n = index->asArrayIndex();
-    if (n < UINT_MAX) {
-        (void) o->get(n, &hasProperty);
-        return Encode(hasProperty);
-    }
-
     ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
+
+    bool hasProperty = false;
     (void) o->get(name, nullptr, &hasProperty);
     return Encode(hasProperty);
 }

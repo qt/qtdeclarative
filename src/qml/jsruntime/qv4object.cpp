@@ -251,8 +251,8 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes)
 {
     uint idx;
-    s->makeIdentifier();
-    Heap::InternalClass::addMember(this, s->identifier(), attributes, &idx);
+    PropertyKey key = s->toPropertyKey();
+    Heap::InternalClass::addMember(this, key, attributes, &idx);
 
     if (attributes.isAccessor()) {
         setProperty(idx + GetterOffset, p->value);
@@ -410,10 +410,9 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 // Section 8.12.3
 ReturnedValue Object::internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const
 {
-    Q_ASSERT(name->asArrayIndex() == UINT_MAX);
+    PropertyKey id = name->toPropertyKey();
 
-    name->makeIdentifier();
-    PropertyKey id = name->identifier();
+    Q_ASSERT(!id.isArrayIndex());
 
     Heap::Object *o = d();
     while (o) {
@@ -506,7 +505,7 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
             return false;
         } else if (!attrs.isWritable())
             return false;
-        else if (isArrayObject() && id == engine->id_length()->identifier()) {
+        else if (isArrayObject() && id == engine->id_length()->propertyKey()) {
             bool ok;
             uint l = value.asArrayLength(&ok);
             if (!ok) {
@@ -672,7 +671,7 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
 
     current->merge(cattrs, p, attrs);
     if (member) {
-        Heap::InternalClass::changeMember(this, member->identifier(), cattrs);
+        Heap::InternalClass::changeMember(this, member->propertyKey(), cattrs);
         setProperty(index, current);
     } else {
         setArrayAttributes(index, cattrs);
@@ -998,9 +997,9 @@ bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *
     }
 
     ExecutionEngine *engine = m->engine();
-    if (id == engine->id_length()->identifier()) {
+    if (id == engine->id_length()->propertyKey()) {
         Scope scope(engine);
-        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == a->internalClass()->find(engine->id_length()->identifier()));
+        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == a->internalClass()->find(engine->id_length()->propertyKey()));
         ScopedProperty lp(scope);
         PropertyAttributes cattrs;
         a->getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
@@ -1021,7 +1020,7 @@ bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *
         }
         if (attrs.hasWritable() && !attrs.isWritable()) {
             cattrs.setWritable(false);
-            Heap::InternalClass::changeMember(a, engine->id_length()->identifier(), cattrs);
+            Heap::InternalClass::changeMember(a, engine->id_length()->propertyKey(), cattrs);
         }
         if (!succeeded)
             return false;

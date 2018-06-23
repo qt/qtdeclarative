@@ -166,7 +166,7 @@ uint String::toUInt(bool *ok) const
     return UINT_MAX;
 }
 
-void String::makeIdentifierImpl() const
+void String::createPropertyKeyImpl() const
 {
     if (!d()->text)
         d()->simplifyString();
@@ -251,11 +251,10 @@ void Heap::StringOrSymbol::createHashValue() const
 }
 
 PropertyKey StringOrSymbol::toPropertyKey() const {
-    uint index = asArrayIndex();
-    if (index < UINT_MAX)
-        return PropertyKey::fromArrayIndex(index);
-    makeIdentifier();
-    return identifier();
+    if (d()->identifier.isValid())
+        return d()->identifier;
+    createPropertyKey();
+    return propertyKey();
 }
 
 uint String::getLength(const Managed *m)

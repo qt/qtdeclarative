@@ -129,11 +129,11 @@ struct RegExpObject: Object {
     void initProperties();
 
     int lastIndex() const {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->identifier()));
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->propertyKey()));
         return propertyData(Index_LastIndex)->toInt32();
     }
     void setLastIndex(int index) {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->identifier()));
+        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->propertyKey()));
         return setProperty(Index_LastIndex, Primitive::fromInt32(index));
     }
 

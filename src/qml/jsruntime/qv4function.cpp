@@ -120,7 +120,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     ScopedString arg(scope);
     for (const QString &parameterName : parameterNames) {
         arg = engine->newIdentifier(parameterName);
-        internalClass = internalClass->addMember(arg->identifier(), Attr_NotConfigurable);
+        internalClass = internalClass->addMember(arg->propertyKey(), Attr_NotConfigurable);
     }
     nFormals = parameters.size();
 }

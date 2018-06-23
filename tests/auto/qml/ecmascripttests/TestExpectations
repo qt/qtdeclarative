@@ -390,15 +390,6 @@ built-ins/Date/UTC/year-offset.js fails
 built-ins/Date/proto-from-ctor-realm-one.js fails
 built-ins/Date/proto-from-ctor-realm-two.js fails
 built-ins/Date/proto-from-ctor-realm-zero.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-invalid.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-non-callable.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-default-first-valid.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-invalid.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-non-callable.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-number-first-valid.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-invalid.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-non-callable.js fails
-built-ins/Date/prototype/Symbol.toPrimitive/hint-string-first-valid.js fails
 built-ins/Date/prototype/toDateString/format.js fails
 built-ins/Date/prototype/toDateString/invalid-date.js fails
 built-ins/Date/prototype/toString/format.js fails

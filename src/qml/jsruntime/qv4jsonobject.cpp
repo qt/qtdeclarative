@@ -261,11 +261,12 @@ bool JsonParser::parseMember(Object *o)
     if (!parseValue(val))
         return false;
 
-    ScopedString s(scope, engine->newIdentifier(key));
-    uint idx = s->asArrayIndex();
-    if (idx < UINT_MAX) {
-        o->put(idx, val);
+    ScopedString s(scope, engine->newString(key));
+    PropertyKey skey = s->toPropertyKey();
+    if (skey.isArrayIndex()) {
+        o->put(skey.asArrayIndex(), val);
     } else {
+        // avoid trouble with properties named __proto__
         o->insertMember(s, val);
     }
 

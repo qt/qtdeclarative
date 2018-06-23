@@ -173,12 +173,12 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
         IsStringOrSymbol = true
     };
 
-    inline void makeIdentifier() const;
-    PropertyKey identifier() const { return d()->identifier; }
-
-    uint asArrayIndex() const;
-
+private:
+    inline void createPropertyKey() const;
+public:
+    PropertyKey propertyKey() const { Q_ASSERT(d()->identifier.isValid()); return d()->identifier; }
     PropertyKey toPropertyKey() const;
+
 
     inline QString toQString() const {
         return d()->toQString();
@@ -217,18 +217,10 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
     inline unsigned hashValue() const {
         return d()->hashValue();
     }
-    uint asArrayIndex() const {
-        if (subtype() >= Heap::String::StringType_Unknown)
-            d()->createHashValue();
-        Q_ASSERT(d()->subtype < Heap::String::StringType_Complex);
-        if (subtype() == Heap::String::StringType_ArrayIndex)
-            return d()->stringHash;
-        return UINT_MAX;
-    }
     uint toUInt(bool *ok) const;
 
     // slow path
-    Q_NEVER_INLINE void makeIdentifierImpl() const;
+    Q_NEVER_INLINE void createPropertyKeyImpl() const;
 
     static uint createHashValue(const QChar *ch, int length, uint *subtype)
     {
@@ -313,18 +305,11 @@ struct ComplexString : String {
 };
 
 inline
-void StringOrSymbol::makeIdentifier() const {
+void StringOrSymbol::createPropertyKey() const {
     if (d()->identifier.isValid())
         return;
     Q_ASSERT(isString());
-    static_cast<const String *>(this)->makeIdentifierImpl();
-}
-
-inline
-uint StringOrSymbol::asArrayIndex() const {
-    if (isString())
-        return static_cast<const String *>(this)->asArrayIndex();
-    return UINT_MAX;
+    static_cast<const String *>(this)->createPropertyKeyImpl();
 }
 
 template<>

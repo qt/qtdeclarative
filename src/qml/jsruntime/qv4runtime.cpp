@@ -329,10 +329,6 @@ bool Runtime::method_deleteProperty(ExecutionEngine *engine, const Value &base, 
         return Encode::undefined();
     Q_ASSERT(o);
 
-    uint n = index.asArrayIndex();
-    if (n < UINT_MAX)
-        return o->deleteProperty(PropertyKey::fromArrayIndex(n));
-
     ScopedPropertyKey key(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return false;
@@ -451,10 +447,10 @@ ReturnedValue RuntimeHelpers::ordinaryToPrimitive(ExecutionEngine *engine, const
     String *meth1 = engine->id_toString();
     String *meth2 = engine->id_valueOf();
 
-    if (typeHint->identifier() == engine->id_number()->identifier()) {
+    if (typeHint->propertyKey() == engine->id_number()->propertyKey()) {
         qSwap(meth1, meth2);
     } else {
-        Q_ASSERT(typeHint->identifier() == engine->id_string()->identifier());
+        Q_ASSERT(typeHint->propertyKey() == engine->id_string()->propertyKey());
     }
 
     Scope scope(engine);
@@ -1535,7 +1531,8 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
                 return Encode::undefined();
             ++computedNames;
         } else {
-            propertyName = PropertyKey::fromStringOrSymbol(unit->runtimeStrings[methods[i].name]);
+            name = unit->runtimeStrings[methods[i].name];
+            propertyName = name->toPropertyKey();
         }
         QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);

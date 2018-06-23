@@ -1524,10 +1524,10 @@ ReturnedValue DatePrototype::method_symbolToPrimitive(const FunctionObject *f, c
         return e->throwTypeError();
 
     String *hint = argv->stringValue();
-    PropertyKey id = hint->identifier();
-    if (id == e->id_default()->identifier())
+    PropertyKey id = hint->toPropertyKey();
+    if (id == e->id_default()->propertyKey())
         hint = e->id_string();
-    else if (id != e->id_string()->identifier() && id != e->id_number()->identifier())
+    else if (id != e->id_string()->propertyKey() && id != e->id_number()->propertyKey())
         return e->throwTypeError();
 
     return RuntimeHelpers::ordinaryToPrimitive(e, static_cast<const Object *>(thisObject), hint);

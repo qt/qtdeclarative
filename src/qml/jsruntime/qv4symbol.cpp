@@ -97,7 +97,7 @@ ReturnedValue SymbolCtor::method_keyFor(const FunctionObject *f, const Value *, 
     if (!argc || !argv[0].isSymbol())
         return e->throwTypeError(QLatin1String("Symbol.keyFor: Argument is not a symbol."));
     const Symbol &arg = static_cast<const Symbol &>(argv[0]);
-    Heap::Symbol *s = e->identifierTable->symbolForId(arg.identifier());
+    Heap::Symbol *s = e->identifierTable->symbolForId(arg.propertyKey());
     Q_ASSERT(!s || s == arg.d());
     if (s)
         return e->newString(arg.toQString().mid((1)))->asReturnedValue();
