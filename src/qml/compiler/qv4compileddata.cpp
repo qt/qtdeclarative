@@ -160,7 +160,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             const CompiledData::JSClassMember *member = data->jsClassAt(i, &memberCount);
             runtimeClasses[i] = engine->internalClasses(QV4::ExecutionEngine::Class_Object);
             for (int j = 0; j < memberCount; ++j, ++member)
-                runtimeClasses[i] = runtimeClasses[i]->addMember(engine->identifierTable->identifier(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
+                runtimeClasses[i] = runtimeClasses[i]->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[member->nameOffset]), member->isAccessor ? QV4::Attr_Accessor : QV4::Attr_Data);
         }
     }
 
@@ -392,7 +392,7 @@ void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
         // first locals
         const quint32_le *localsIndices = compiledBlock->localsTable();
         for (quint32 i = 0; i < compiledBlock->nLocals; ++i)
-            ic = ic->addMember(engine->identifierTable->identifier(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+            ic = ic->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
         runtimeBlocks[i] = ic->d();
     }
 }

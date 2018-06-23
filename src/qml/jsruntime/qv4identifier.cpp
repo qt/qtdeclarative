@@ -162,7 +162,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
     if (!d)
         return nullptr;
 
-    PropertyKey id = d->identifierTable->identifier(str);
+    PropertyKey id = d->identifierTable->asPropertyKey(str);
     return lookup(id);
 }
 
@@ -170,7 +170,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
         return nullptr;
-    PropertyKey id = d->identifierTable->identifier(str);
+    PropertyKey id = d->identifierTable->asPropertyKey(str);
     if (id.isValid())
         return lookup(id);
     return lookup(str->toQString());
@@ -179,13 +179,13 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 const PropertyKey IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
-    return d->identifierTable->identifier(str);
+    return d->identifierTable->asPropertyKey(str);
 }
 
 const PropertyKey IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
-    return d->identifierTable->identifier(str);
+    return d->identifierTable->asPropertyKey(str);
 }
 
 QString QV4::IdentifierHash::findId(int value) const

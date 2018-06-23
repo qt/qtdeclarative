@@ -66,11 +66,11 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        ic = ic->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const quint32_le *formalsIndices = compiledFunction->formalsTable();
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i)
-        ic = ic->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
+        ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i]]), Attr_NotConfigurable);
     internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;
@@ -114,7 +114,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i)
-        internalClass = internalClass->addMember(engine->identifierTable->identifier(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        internalClass = internalClass->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     Scope scope(engine);
     ScopedString arg(scope);

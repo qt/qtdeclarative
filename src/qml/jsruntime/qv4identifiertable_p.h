@@ -82,19 +82,19 @@ public:
     Heap::String *insertString(const QString &s);
     Heap::Symbol *insertSymbol(const QString &s);
 
-    PropertyKey identifier(const Heap::String *str) {
+    PropertyKey asPropertyKey(const Heap::String *str) {
         if (str->identifier.isValid())
             return str->identifier;
-        return identifierImpl(str);
+        return asPropertyKeyImpl(str);
     }
-    PropertyKey identifier(const QV4::String *str) {
-        return identifier(str->d());
+    PropertyKey asPropertyKey(const QV4::String *str) {
+        return asPropertyKey(str->d());
     }
 
-    PropertyKey identifier(const QString &s);
-    PropertyKey identifier(const char *s, int len);
+    PropertyKey asPropertyKey(const QString &s);
+    PropertyKey asPropertyKey(const char *s, int len);
 
-    PropertyKey identifierImpl(const Heap::String *str);
+    PropertyKey asPropertyKeyImpl(const Heap::String *str);
 
     Heap::StringOrSymbol *resolveId(PropertyKey i) const;
     Q_QML_PRIVATE_EXPORT Heap::String *stringForId(PropertyKey i) const;

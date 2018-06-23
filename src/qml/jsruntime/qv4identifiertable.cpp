@@ -190,7 +190,7 @@ Heap::Symbol *IdentifierTable::insertSymbol(const QString &s)
 }
 
 
-PropertyKey IdentifierTable::identifierImpl(const Heap::String *str)
+PropertyKey IdentifierTable::asPropertyKeyImpl(const Heap::String *str)
 {
     if (str->identifier.isValid())
         return str->identifier;
@@ -306,17 +306,17 @@ void IdentifierTable::sweep()
     size -= freed;
 }
 
-PropertyKey IdentifierTable::identifier(const QString &s)
+PropertyKey IdentifierTable::asPropertyKey(const QString &s)
 {
     return insertString(s)->identifier;
 }
 
-PropertyKey IdentifierTable::identifier(const char *s, int len)
+PropertyKey IdentifierTable::asPropertyKey(const char *s, int len)
 {
     uint subtype;
     uint hash = String::createHashValue(s, len, &subtype);
     if (hash == UINT_MAX)
-        return identifier(QString::fromUtf8(s, len));
+        return asPropertyKey(QString::fromUtf8(s, len));
 
     QLatin1String latin(s, len);
     uint idx = hash % alloc;

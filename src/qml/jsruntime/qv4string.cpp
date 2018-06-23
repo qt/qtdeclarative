@@ -171,7 +171,7 @@ void String::createPropertyKeyImpl() const
     if (!d()->text)
         d()->simplifyString();
     Q_ASSERT(d()->text);
-    engine()->identifierTable->identifier(this);
+    engine()->identifierTable->asPropertyKey(this);
 }
 
 void Heap::String::simplifyString() const

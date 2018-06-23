@@ -70,7 +70,7 @@ void Lookup::resolveProtoGetter(PropertyKey name, const Heap::Object *proto)
 ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *object)
 {
     Heap::Object *obj = object->d();
-    PropertyKey name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     if (name.isArrayIndex()) {
         indexedLookup.index = name.asArrayIndex();
         getter = getterIndexed;
@@ -131,7 +131,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
         primitiveLookup.proto = engine->numberPrototype()->d();
     }
 
-    PropertyKey name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     protoLookup.protoId = primitiveLookup.proto->internalClass->protoId;
     resolveProtoGetter(name, primitiveLookup.proto);
 
@@ -145,7 +145,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
 ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
 {
     Object *o = engine->globalObject;
-    PropertyKey name = engine->identifierTable->identifier(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
     protoLookup.protoId = o->internalClass()->protoId;
     resolveProtoGetter(name, o->d());
 
