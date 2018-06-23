@@ -38,7 +38,6 @@
 #include <QtQml/qqmlincubator.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
 #include <QtQml/private/qqmllistmodel_p.h>
-#include <QtQml/private/qqmldelegatemodel_p.h>
 
 #include "testmodel.h"
 
@@ -512,16 +511,11 @@ void tst_QQuickTableView::checkInitialAttachedProperties()
         const int contextIndex = context->contextProperty("index").toInt();
         const QPoint contextCell = getContextRowAndColumn(item.data());
         const QString contextModelData = context->contextProperty("modelData").toString();
-        const QQmlDelegateModelAttached *delegateModelAttached =
-                static_cast<QQmlDelegateModelAttached *>(
-                    qmlAttachedPropertiesObject<QQmlDelegateModel>(item));
-        const int contextItemsIndex = delegateModelAttached->property("itemsIndex").toInt();
 
         QCOMPARE(contextCell.y(), cell.y());
         QCOMPARE(contextCell.x(), cell.x());
         QCOMPARE(contextIndex, index);
         QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
-        QCOMPARE(contextItemsIndex, index);
     }
 }
 

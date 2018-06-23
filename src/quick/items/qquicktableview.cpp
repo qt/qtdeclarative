@@ -106,6 +106,8 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
     clear();
+    if (tableModel)
+        delete tableModel;
 }
 
 QString QQuickTableViewPrivate::tableLayoutToString() const
@@ -639,8 +641,8 @@ void QQuickTableViewPrivate::calculateTableSize()
     Q_Q(QQuickTableView);
     QSize prevTableSize = tableSize;
 
-    if (delegateModel)
-        tableSize = QSize(delegateModel->columns(), delegateModel->rows());
+    if (tableModel)
+        tableSize = QSize(tableModel->columns(), tableModel->rows());
     else if (model)
         tableSize = QSize(1, model->count());
     else
@@ -991,6 +993,9 @@ void QQuickTableViewPrivate::loadInitialTopLeftItem()
     if (model->count() == 0)
         return;
 
+    if (tableModel && !tableModel->delegate())
+        return;
+
     // Load top-left item. After loaded, loadItemsInsideRect() will take
     // care of filling out the rest of the table.
     loadRequest.begin(QPoint(0, 0), QQmlIncubator::AsynchronousIfNested);
@@ -1170,11 +1175,13 @@ void QQuickTableViewPrivate::updatePolish()
 void QQuickTableViewPrivate::createWrapperModel()
 {
     Q_Q(QQuickTableView);
-
-    delegateModel = new QQmlDelegateModel(qmlContext(q), q);
-    if (q->isComponentComplete())
-        delegateModel->componentComplete();
-    model = delegateModel;
+    // When the assigned model is not an instance model, we create a wrapper
+    // model (QQmlTableInstanceModel) that keeps a pointer to both the
+    // assigned model and the assigned delegate. This model will give us a
+    // common interface to any kind of model (js arrays, QAIM, number etc), and
+    // help us create delegate instances.
+    tableModel = new QQmlTableInstanceModel(qmlContext(q));
+    model = tableModel;
 }
 
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
@@ -1204,12 +1211,93 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     attached->setTableView(q_func());
 }
 
+void QQuickTableViewPrivate::connectToModel()
+{
+    Q_TABLEVIEW_ASSERT(model, "");
+
+    QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
+    QObjectPrivate::connect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+
+    if (auto const aim = model->abstractItemModel()) {
+        // When the model exposes a QAIM, we connect to it directly. This means that if the current model is
+        // a QQmlDelegateModel, we just ignore all the change sets it emits. In most cases, the model will instead
+        // be our own QQmlTableInstanceModel, which doesn't bother creating change sets at all. For models that are
+        // not based on QAIM (like QQmlObjectModel, QQmlListModel, javascript arrays etc), there is currently no way
+        // to modify the model at runtime without also re-setting the model on the view.
+        connect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
+        connect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
+        connect(aim, &QAbstractItemModel::rowsRemoved, this, &QQuickTableViewPrivate::rowsRemovedCallback);
+        connect(aim, &QAbstractItemModel::columnsInserted, this, &QQuickTableViewPrivate::columnsInsertedCallback);
+        connect(aim, &QAbstractItemModel::columnsRemoved, this, &QQuickTableViewPrivate::columnsRemovedCallback);
+    } else {
+        QObjectPrivate::connect(model, &QQmlInstanceModel::modelUpdated, this, &QQuickTableViewPrivate::modelUpdated);
+    }
+}
+
+void QQuickTableViewPrivate::disconnectFromModel()
+{
+    Q_TABLEVIEW_ASSERT(model, "");
+
+    QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
+    QObjectPrivate::disconnect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+
+    if (auto const aim = model->abstractItemModel()) {
+        disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
+        disconnect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
+        disconnect(aim, &QAbstractItemModel::rowsRemoved, this, &QQuickTableViewPrivate::rowsRemovedCallback);
+        disconnect(aim, &QAbstractItemModel::columnsInserted, this, &QQuickTableViewPrivate::columnsInsertedCallback);
+        disconnect(aim, &QAbstractItemModel::columnsRemoved, this, &QQuickTableViewPrivate::columnsRemovedCallback);
+    } else {
+        QObjectPrivate::disconnect(model, &QQmlInstanceModel::modelUpdated, this, &QQuickTableViewPrivate::modelUpdated);
+    }
+}
+
 void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 {
     Q_UNUSED(changeSet);
     Q_UNUSED(reset);
 
-    // TODO: implement fine-grained support for model changes
+    Q_TABLEVIEW_ASSERT(!model->abstractItemModel(), "");
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::dataChangedCallback(const QModelIndex &begin, const QModelIndex &, const QVector<int> &)
+{
+    if (begin.parent() != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::rowsInsertedCallback(const QModelIndex &parent, int, int)
+{
+    if (parent != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::rowsRemovedCallback(const QModelIndex &parent, int, int)
+{
+    if (parent != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::columnsInsertedCallback(const QModelIndex &parent, int, int)
+{
+    if (parent != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::columnsRemovedCallback(const QModelIndex &parent, int, int)
+{
+    if (parent != QModelIndex())
+        return;
+
     invalidateTable();
 }
 
@@ -1361,46 +1449,38 @@ void QQuickTableView::setModel(const QVariant &newModel)
 {
     Q_D(QQuickTableView);
 
+    if (d->model)
+        d->disconnectFromModel();
+
     d->modelVariant = newModel;
     QVariant effectiveModelVariant = d->modelVariant;
     if (effectiveModelVariant.userType() == qMetaTypeId<QJSValue>())
         effectiveModelVariant = effectiveModelVariant.value<QJSValue>().toVariant();
 
-    if (d->model) {
-        QObjectPrivate::disconnect(d->model, &QQmlInstanceModel::createdItem, d, &QQuickTableViewPrivate::itemCreatedCallback);
-        QObjectPrivate::disconnect(d->model, &QQmlInstanceModel::initItem, d, &QQuickTableViewPrivate::initItemCallback);
-        QObjectPrivate::disconnect(d->model, &QQmlInstanceModel::modelUpdated, d, &QQuickTableViewPrivate::modelUpdated);
-    }
-
     const auto instanceModel = qobject_cast<QQmlInstanceModel *>(qvariant_cast<QObject*>(effectiveModelVariant));
 
     if (instanceModel) {
-        if (d->delegateModel)
-            delete d->delegateModel;
+        if (d->tableModel) {
+            delete d->tableModel;
+            d->tableModel = nullptr;
+        }
         d->model = instanceModel;
-        d->delegateModel = qmlobject_cast<QQmlDelegateModel *>(instanceModel);
     } else {
-        if (!d->delegateModel)
+        if (!d->tableModel)
             d->createWrapperModel();
-        QQmlDelegateModelPrivate::get(d->delegateModel)->m_useFirstColumnOnly = false;
-        d->delegateModel->setModel(effectiveModelVariant);
+        d->tableModel->setModel(effectiveModelVariant);
     }
 
-    Q_ASSERT(d->model);
-    QObjectPrivate::connect(d->model, &QQmlInstanceModel::createdItem, d, &QQuickTableViewPrivate::itemCreatedCallback);
-    QObjectPrivate::connect(d->model, &QQmlInstanceModel::initItem, d, &QQuickTableViewPrivate::initItemCallback);
-    QObjectPrivate::connect(d->model, &QQmlInstanceModel::modelUpdated, d, &QQuickTableViewPrivate::modelUpdated);
-
+    d->connectToModel();
     d->invalidateTable();
-
     emit modelChanged();
 }
 
 QQmlComponent *QQuickTableView::delegate() const
 {
     Q_D(const QQuickTableView);
-    if (d->delegateModel)
-        return d->delegateModel->delegate();
+    if (d->tableModel)
+        return d->tableModel->delegate();
 
     return nullptr;
 }
@@ -1411,10 +1491,10 @@ void QQuickTableView::setDelegate(QQmlComponent *newDelegate)
     if (newDelegate == delegate())
         return;
 
-    if (!d->delegateModel)
+    if (!d->tableModel)
         d->createWrapperModel();
 
-    d->delegateModel->setDelegate(newDelegate);
+    d->tableModel->setDelegate(newDelegate);
     d->invalidateTable();
 
     emit delegateChanged();
@@ -1451,9 +1531,6 @@ void QQuickTableView::componentComplete()
 
     if (!d->model)
         setModel(QVariant());
-
-    if (d->delegateModel)
-        d->delegateModel->componentComplete();
 
     QQuickFlickable::componentComplete();
 }
