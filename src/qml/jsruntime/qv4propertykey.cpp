@@ -49,6 +49,16 @@ QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngi
     return static_cast<Heap::StringOrSymbol *>(asStringOrSymbol());
 }
 
+bool QV4::PropertyKey::isString() const {
+    Heap::StringOrSymbol *s = asStringOrSymbol();
+    return s && s->internalClass->vtable->isString;
+}
+
+bool QV4::PropertyKey::isSymbol() const {
+    Heap::Base *s = asStringOrSymbol();
+    return s && !s->internalClass->vtable->isString && s->internalClass->vtable->isStringOrSymbol;
+}
+
 QString QV4::PropertyKey::toQString() const
 {
     if (isArrayIndex())

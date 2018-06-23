@@ -367,7 +367,7 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
     return e->memoryManager->allocObject<TypedArray>(ic->d(), t);
 }
 
-ReturnedValue TypedArray::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue TypedArray::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isArrayIndex())
         return Object::get(m, id, receiver, hasProperty);
@@ -388,7 +388,7 @@ ReturnedValue TypedArray::get(const Managed *m, Identifier id, const Value *rece
     return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
-bool TypedArray::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool TypedArray::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isArrayIndex())
         return Object::put(m, id, value, receiver);

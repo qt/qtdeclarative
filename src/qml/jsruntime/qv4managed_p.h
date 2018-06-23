@@ -282,7 +282,7 @@ struct InternalClass : Managed
     Q_REQUIRED_RESULT Heap::InternalClass *changePrototype(Heap::Object *proto) {
         return d()->changePrototype(proto);
     }
-    Q_REQUIRED_RESULT Heap::InternalClass *addMember(Identifier identifier, PropertyAttributes data, uint *index = 0) {
+    Q_REQUIRED_RESULT Heap::InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, uint *index = 0) {
         return d()->addMember(identifier, data, index);
     }
 

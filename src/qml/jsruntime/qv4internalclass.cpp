@@ -77,7 +77,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     if (classSize < d->size || grow)
         detach(grow, classSize);
 
-    uint idx = entry.identifier.id % d->alloc;
+    uint idx = entry.identifier.id() % d->alloc;
     while (d->entries[idx].identifier.isValid()) {
         ++idx;
         idx %= d->alloc;
@@ -86,7 +86,7 @@ void PropertyHash::addEntry(const PropertyHash::Entry &entry, int classSize)
     ++d->size;
 }
 
-int PropertyHash::removeIdentifier(Identifier identifier, int classSize)
+int PropertyHash::removeIdentifier(PropertyKey identifier, int classSize)
 {
     int val = -1;
     PropertyHashData *dd = new PropertyHashData(d->numBits);
@@ -98,7 +98,7 @@ int PropertyHash::removeIdentifier(Identifier identifier, int classSize)
             val = e.index;
             continue;
         }
-        uint idx = e.identifier.id % dd->alloc;
+        uint idx = e.identifier.id() % dd->alloc;
         while (dd->entries[idx].identifier.isValid()) {
             ++idx;
             idx %= dd->alloc;
@@ -124,7 +124,7 @@ void PropertyHash::detach(bool grow, int classSize)
         const Entry &e = d->entries[i];
         if (!e.identifier.isValid() || e.index >= static_cast<unsigned>(classSize))
             continue;
-        uint idx = e.identifier.id % dd->alloc;
+        uint idx = e.identifier.id() % dd->alloc;
         while (dd->entries[idx].identifier.isValid()) {
             ++idx;
             idx %= dd->alloc;
@@ -143,7 +143,7 @@ void InternalClass::init(ExecutionEngine *engine)
 {
     Base::init();
     new (&propertyTable) PropertyHash();
-    new (&nameMap) SharedInternalClassData<Identifier>();
+    new (&nameMap) SharedInternalClassData<PropertyKey>();
     new (&propertyData) SharedInternalClassData<PropertyAttributes>();
     new (&transitions) std::vector<Transition>();
 
@@ -168,7 +168,7 @@ void InternalClass::init(Heap::InternalClass *other)
     Base::init();
     Q_ASSERT(!other->isFrozen);
     new (&propertyTable) PropertyHash(other->propertyTable);
-    new (&nameMap) SharedInternalClassData<Identifier>(other->nameMap);
+    new (&nameMap) SharedInternalClassData<PropertyKey>(other->nameMap);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(other->propertyData);
     new (&transitions) std::vector<Transition>();
 
@@ -197,7 +197,7 @@ void InternalClass::destroy()
         parent->removeChildEntry(this);
 
     propertyTable.~PropertyHash();
-    nameMap.~SharedInternalClassData<Identifier>();
+    nameMap.~SharedInternalClassData<PropertyKey>();
     propertyData.~SharedInternalClassData<PropertyAttributes>();
     transitions.~vector<Transition>();
     engine = nullptr;
@@ -225,7 +225,7 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
         o->setProperty(v4, size + 1, Primitive::undefinedValue());
 }
 
-void InternalClass::changeMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
+void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)
 {
     Q_ASSERT(id.isStringOrSymbol());
     uint idx;
@@ -261,12 +261,12 @@ static void addDummyEntry(InternalClass *newClass, PropertyHash::Entry e)
 {
     // add a dummy entry, since we need two entries for accessors
     newClass->propertyTable.addEntry(e, newClass->size);
-    newClass->nameMap.add(newClass->size, Identifier::invalid());
+    newClass->nameMap.add(newClass->size, PropertyKey::invalid());
     newClass->propertyData.add(newClass->size, PropertyAttributes());
     ++newClass->size;
 }
 
-Heap::InternalClass *InternalClass::changeMember(Identifier identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::changeMember(PropertyKey identifier, PropertyAttributes data, uint *index)
 {
     data.resolve();
     uint idx = find(identifier);
@@ -288,11 +288,11 @@ Heap::InternalClass *InternalClass::changeMember(Identifier identifier, Property
     if (data.isAccessor() != propertyData.at(idx).isAccessor()) {
         // this changes the layout of the class, so we need to rebuild the data
         newClass->propertyTable = PropertyHash();
-        newClass->nameMap = SharedInternalClassData<Identifier>();
+        newClass->nameMap = SharedInternalClassData<PropertyKey>();
         newClass->propertyData = SharedInternalClassData<PropertyAttributes>();
         newClass->size = 0;
         for (uint i = 0; i < size; ++i) {
-            Identifier identifier = nameMap.at(i);
+            PropertyKey identifier = nameMap.at(i);
             PropertyHash::Entry e = { identifier, newClass->size };
             if (i && !identifier.isValid())
                 e.identifier = nameMap.at(i - 1);
@@ -328,7 +328,7 @@ Heap::InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
     Q_ASSERT(prototype != proto);
     Q_ASSERT(!proto || proto->internalClass->isUsedAsProto);
 
-    Transition temp = { { Identifier::invalid() }, nullptr, Transition::PrototypeChange };
+    Transition temp = { { PropertyKey::invalid() }, nullptr, Transition::PrototypeChange };
     temp.prototype = proto;
 
     Transition &t = lookupOrInsertTransition(temp);
@@ -348,7 +348,7 @@ Heap::InternalClass *InternalClass::changeVTableImpl(const VTable *vt)
 {
     Q_ASSERT(vtable != vt);
 
-    Transition temp = { { Identifier::invalid() }, nullptr, Transition::VTableChange };
+    Transition temp = { { PropertyKey::invalid() }, nullptr, Transition::VTableChange };
     temp.vtable = vt;
 
     Transition &t = lookupOrInsertTransition(temp);
@@ -370,7 +370,7 @@ Heap::InternalClass *InternalClass::nonExtensible()
     if (!extensible)
         return this;
 
-    Transition temp = { { Identifier::invalid() }, nullptr, Transition::NotExtensible};
+    Transition temp = { { PropertyKey::invalid() }, nullptr, Transition::NotExtensible};
     Transition &t = lookupOrInsertTransition(temp);
     if (t.lookup)
         return t.lookup;
@@ -383,7 +383,7 @@ Heap::InternalClass *InternalClass::nonExtensible()
     return newClass;
 }
 
-void InternalClass::addMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
+void InternalClass::addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)
 {
     Q_ASSERT(id.isStringOrSymbol());
     data.resolve();
@@ -400,7 +400,7 @@ void InternalClass::addMember(QV4::Object *object, Identifier id, PropertyAttrib
     object->setInternalClass(newClass);
 }
 
-Heap::InternalClass *InternalClass::addMember(Identifier identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::addMember(PropertyKey identifier, PropertyAttributes data, uint *index)
 {
     Q_ASSERT(identifier.isStringOrSymbol());
     data.resolve();
@@ -411,7 +411,7 @@ Heap::InternalClass *InternalClass::addMember(Identifier identifier, PropertyAtt
     return addMemberImpl(identifier, data, index);
 }
 
-Heap::InternalClass *InternalClass::addMemberImpl(Identifier identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::addMemberImpl(PropertyKey identifier, PropertyAttributes data, uint *index)
 {
     Transition temp = { { identifier }, nullptr, (int)data.flags() };
     Transition &t = lookupOrInsertTransition(temp);
@@ -451,7 +451,7 @@ void InternalClass::removeChildEntry(InternalClass *child)
 
 }
 
-void InternalClass::removeMember(QV4::Object *object, Identifier identifier)
+void InternalClass::removeMember(QV4::Object *object, PropertyKey identifier)
 {
     Heap::InternalClass *oldClass = object->internalClass();
     Q_ASSERT(oldClass->propertyTable.lookup(identifier) < oldClass->size);
@@ -464,7 +464,7 @@ void InternalClass::removeMember(QV4::Object *object, Identifier identifier)
         Heap::InternalClass *newClass = oldClass->engine->newClass(oldClass);
         // simply make the entry inaccessible
         int idx = newClass->propertyTable.removeIdentifier(identifier, oldClass->size);
-        newClass->nameMap.set(idx, Identifier::invalid());
+        newClass->nameMap.set(idx, PropertyKey::invalid());
         newClass->propertyData.set(idx, PropertyAttributes());
         t.lookup = newClass;
         Q_ASSERT(t.lookup);
@@ -496,7 +496,7 @@ Heap::InternalClass *InternalClass::sealed()
         return this;
     }
 
-    Transition temp = { { Identifier::invalid() }, nullptr, InternalClassTransition::Sealed };
+    Transition temp = { { PropertyKey::invalid() }, nullptr, InternalClassTransition::Sealed };
     Transition &t = lookupOrInsertTransition(temp);
 
     if (t.lookup) {
@@ -542,7 +542,7 @@ Heap::InternalClass *InternalClass::frozen()
         return this;
     }
 
-    Transition temp = { { Identifier::invalid() }, nullptr, InternalClassTransition::Frozen };
+    Transition temp = { { PropertyKey::invalid() }, nullptr, InternalClassTransition::Frozen };
     Transition &t = lookupOrInsertTransition(temp);
 
     if (t.lookup) {
@@ -590,7 +590,7 @@ Heap::InternalClass *InternalClass::asProtoClass()
     if (isUsedAsProto)
         return this;
 
-    Transition temp = { { Identifier::invalid() }, nullptr, Transition::ProtoClass };
+    Transition temp = { { PropertyKey::invalid() }, nullptr, Transition::ProtoClass };
     Transition &t = lookupOrInsertTransition(temp);
     if (t.lookup)
         return t.lookup;
@@ -632,7 +632,7 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
         ic->parent->mark(stack);
 
     for (uint i = 0; i < ic->size; ++i) {
-        Identifier id = ic->nameMap.at(i);
+        PropertyKey id = ic->nameMap.at(i);
         if (Heap::Base *b = id.asStringOrSymbol())
             b->mark(stack);
     }

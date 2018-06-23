@@ -264,6 +264,9 @@ struct ScopedPropertyKey
     PropertyKey *operator->() {
         return ptr;
     }
+    operator PropertyKey() const {
+        return *ptr;
+    }
 
     PropertyKey *ptr;
 };

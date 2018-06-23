@@ -50,8 +50,7 @@
 // We mean it.
 //
 
-#include <private/qv4value_p.h>
-#include <private/qv4identifier_p.h>
+#include <private/qv4global_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,8 +58,9 @@ class QString;
 
 namespace QV4 {
 
-struct PropertyKey : private Value
+struct PropertyKey
 {
+private:
     // Property keys are Strings, Symbols or unsigned integers.
     // For convenience we derive them from Values, allowing us to store them
     // on the JS stack
@@ -71,46 +71,69 @@ struct PropertyKey : private Value
     // * If the key is a Symbol it simply points to the referenced symbol object
     // * if the key is an array index (a uint < UINT_MAX), it's encoded as an
     // integer value
-    int id;
+    quint64 val;
 
-    static PropertyKey invalid() { PropertyKey key; key.setRawValue(0); return key; }
-    static PropertyKey fromArrayIndex(uint idx) { PropertyKey key; key.setInt_32(static_cast<int>(idx)); return key; }
-    bool isStringOrSymbol() const { return isManaged(); }
-    uint asArrayIndex() const { return isManaged() ? std::numeric_limits<uint>::max() : value(); }
-    uint isArrayIndex() const { return !isManaged(); }
+    // Important: Always keep this in sync with the definitions for Integers and heap objects in Value
+    static const quint64 ArrayIndexMask = 0x3800000000000ull;
+    enum {
+        IsManagedOrUndefined_Shift = 64-15,
+    };
+    inline bool isManaged() const { return (val >> IsManagedOrUndefined_Shift) == 0; }
+    inline quint32 value() const { return val & quint64(~quint32(0)); }
+
+#if QT_POINTER_SIZE == 8
+    QML_NEARLY_ALWAYS_INLINE Heap::StringOrSymbol *m() const
+    {
+        Heap::StringOrSymbol *b;
+        memcpy(&b, &val, 8);
+        return b;
+    }
+    QML_NEARLY_ALWAYS_INLINE void setM(Heap::StringOrSymbol *b)
+    {
+        memcpy(&val, &b, 8);
+    }
+#elif QT_POINTER_SIZE == 4
+    QML_NEARLY_ALWAYS_INLINE Heap::StringOrSymbol *m() const
+    {
+        Q_STATIC_ASSERT(sizeof(Heap::StringOrSymbol*) == sizeof(quint32));
+        Heap::StringOrSymbol *b;
+        quint32 v = value();
+        memcpy(&b, &v, 4);
+        return b;
+    }
+    QML_NEARLY_ALWAYS_INLINE void setM(Heap::StringOrSymbol *b)
+    {
+        quint32 v;
+        memcpy(&v, &b, 4);
+        val = v;
+    }
+#endif
+
+public:
+    static PropertyKey invalid() { PropertyKey key; key.val = 0; return key; }
+    static PropertyKey fromArrayIndex(uint idx) { PropertyKey key; key.val = ArrayIndexMask | static_cast<quint64>(idx); return key; }
+    bool isStringOrSymbol() const { return isManaged() && val != 0; }
+    uint asArrayIndex() const { return (isManaged() || val == 0) ? std::numeric_limits<uint>::max() : static_cast<uint>(val & 0xffffffff); }
+    uint isArrayIndex() const { return !isManaged() && val != 0; }
+    bool isValid() const { return val != 0; }
     static PropertyKey fromStringOrSymbol(Heap::StringOrSymbol *b)
-    { PropertyKey key; key.setM(reinterpret_cast<Heap::Base *>(b)); return key; }
-    Heap::StringOrSymbol *asStringOrSymbol() const { return reinterpret_cast<Heap::StringOrSymbol *>(heapObject()); }
-
-    bool isString() const {
-        Heap::Base *s = heapObject();
-        return s && s->internalClass->vtable->isString;
+    { PropertyKey key; key.setM(b); return key; }
+    Heap::StringOrSymbol *asStringOrSymbol() const {
+        if (!isManaged())
+            return nullptr;
+        return m();
     }
 
-    bool isSymbol() const {
-        Heap::Base *s = heapObject();
-        return s && s->internalClass->vtable->isString && s->internalClass->vtable->isStringOrSymbol;
-    }
-
-    // ### temporary until we transitioned Identifier to PropertyKey
-    static PropertyKey fromIdentifier(Identifier id) {
-        if (id.isArrayIndex())
-            return PropertyKey::fromArrayIndex(id.asArrayIndex());
-        return PropertyKey::fromStringOrSymbol(id.asStringOrSymbol());
-    }
-
-    Identifier toIdentifier() const {
-        if (isArrayIndex())
-            return Identifier::fromArrayIndex(asArrayIndex());
-        return Identifier::fromStringOrSymbol(asStringOrSymbol());
-    }
+    bool isString() const;
+    bool isSymbol() const;
 
     Q_QML_EXPORT QString toQString() const;
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
+    quint64 id() const { return val; }
 
-    bool operator ==(const PropertyKey &other) const { return id == other.id; }
-    bool operator !=(const PropertyKey &other) const { return id != other.id; }
-    bool operator <(const PropertyKey &other) const { return id < other.id; }
+    bool operator ==(const PropertyKey &other) const { return val == other.val; }
+    bool operator !=(const PropertyKey &other) const { return val != other.val; }
+    bool operator <(const PropertyKey &other) const { return val < other.val; }
 };
 
 }

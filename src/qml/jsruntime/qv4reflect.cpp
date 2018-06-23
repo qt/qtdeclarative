@@ -132,7 +132,7 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    bool result = O->defineOwnProperty(name->toIdentifier(), pd, attrs);
+    bool result = O->defineOwnProperty(name, pd, attrs);
 
     return Encode(result);
 }
@@ -161,7 +161,7 @@ ReturnedValue Reflect::method_get(const FunctionObject *f, const Value *, const 
         return Encode::undefined();
     ScopedValue receiver(scope, argc > 2 ? argv[2] : *o);
 
-    return Encode(o->get(name->toIdentifier(), receiver));
+    return Encode(o->get(name, receiver));
 }
 
 ReturnedValue Reflect::method_getOwnPropertyDescriptor(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -202,7 +202,7 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
     ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
-    (void) o->get(name->toIdentifier(), nullptr, &hasProperty);
+    (void) o->get(name, nullptr, &hasProperty);
     return Encode(hasProperty);
 }
 
@@ -249,7 +249,7 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
     ScopedPropertyKey propertyKey(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
-    bool result = o->put(propertyKey->toIdentifier(), val, receiver);
+    bool result = o->put(propertyKey, val, receiver);
     return Encode(result);
 }
 

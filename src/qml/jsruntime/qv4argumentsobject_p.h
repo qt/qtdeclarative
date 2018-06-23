@@ -146,11 +146,11 @@ struct ArgumentsObject: Object {
         return m->vtable() == staticVTable();
     }
 
-    static bool defineOwnProperty(Managed *m, Identifier id, const Property *desc, PropertyAttributes attrs);
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, Identifier id);
-    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
+    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool deleteProperty(Managed *m, PropertyKey id);
+    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
     static qint64 getLength(const Managed *m);
 
     void fullyCreate();

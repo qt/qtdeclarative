@@ -44,33 +44,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-bool Identifier::isString() const
-{
-    return isStringOrSymbol() && asStringOrSymbol()->internalClass->vtable->isString;
-}
-
-bool Identifier::isSymbol() const
-{
-    return isStringOrSymbol() && !asStringOrSymbol()->internalClass->vtable->isString && asStringOrSymbol()->internalClass->vtable->isStringOrSymbol;
-}
-
-Heap::StringOrSymbol *Identifier::toStringOrSymbol(ExecutionEngine *e)
-{
-    if (isArrayIndex())
-        return Primitive::fromUInt32(asArrayIndex()).toString(e);
-    return static_cast<Heap::StringOrSymbol *>(asStringOrSymbol());
-}
-
-QString Identifier::toQString() const
-{
-    if (isArrayIndex())
-        return QString::number(asArrayIndex());
-    Heap::Base *b = asStringOrSymbol();
-    Q_ASSERT(b->internalClass->vtable->isStringOrSymbol);
-    Heap::StringOrSymbol *s = static_cast<Heap::StringOrSymbol *>(b);
-    return  s->toQString();
-}
-
 static const uchar prime_deltas[] = {
     0,  0,  1,  3,  1,  5,  3,  3,  1,  9,  7,  5,  3,  9, 25,  3,
     1, 21,  3, 21,  7, 15,  9,  5,  3, 29, 15,  0,  0,  0,  0,  0
@@ -128,7 +101,7 @@ void IdentifierHash::detach()
 }
 
 
-IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
+IdentifierHashEntry *IdentifierHash::addEntry(PropertyKey identifier)
 {
     Q_ASSERT(identifier.isStringOrSymbol());
 
@@ -144,7 +117,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
             const IdentifierHashEntry &e = d->entries[i];
             if (!e.identifier.isValid())
                 continue;
-            uint idx = e.identifier.id % newAlloc;
+            uint idx = e.identifier.id() % newAlloc;
             while (newEntries[idx].identifier.isValid()) {
                 ++idx;
                 idx %= newAlloc;
@@ -156,7 +129,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
         d->alloc = newAlloc;
     }
 
-    uint idx = identifier.id % d->alloc;
+    uint idx = identifier.id() % d->alloc;
     while (d->entries[idx].identifier.isValid()) {
         Q_ASSERT(d->entries[idx].identifier != identifier);
         ++idx;
@@ -167,13 +140,13 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
     return d->entries + idx;
 }
 
-const IdentifierHashEntry *IdentifierHash::lookup(Identifier identifier) const
+const IdentifierHashEntry *IdentifierHash::lookup(PropertyKey identifier) const
 {
     if (!d || !identifier.isStringOrSymbol())
         return nullptr;
     Q_ASSERT(d->entries);
 
-    uint idx = identifier.id % d->alloc;
+    uint idx = identifier.id() % d->alloc;
     while (1) {
         if (!d->entries[idx].identifier.isValid())
             return nullptr;
@@ -189,7 +162,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
     if (!d)
         return nullptr;
 
-    Identifier id = d->identifierTable->identifier(str);
+    PropertyKey id = d->identifierTable->identifier(str);
     return lookup(id);
 }
 
@@ -197,19 +170,19 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
         return nullptr;
-    Identifier id = d->identifierTable->identifier(str);
+    PropertyKey id = d->identifierTable->identifier(str);
     if (id.isValid())
         return lookup(id);
     return lookup(str->toQString());
 }
 
-const Identifier IdentifierHash::toIdentifier(const QString &str) const
+const PropertyKey IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);
 }
 
-const Identifier IdentifierHash::toIdentifier(Heap::String *str) const
+const PropertyKey IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->identifier(str);

@@ -693,7 +693,7 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isString())
         return Object::get(m, id, receiver, hasProperty);
@@ -705,7 +705,7 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, Identifier id, const Va
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-bool QObjectWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool QObjectWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
         return Object::put(m, id, value, receiver);
@@ -735,7 +735,7 @@ bool QObjectWrapper::put(Managed *m, Identifier id, const Value &value, Value *r
     return true;
 }
 
-PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         QObjectWrapper *that = static_cast<QObjectWrapper*>(m);

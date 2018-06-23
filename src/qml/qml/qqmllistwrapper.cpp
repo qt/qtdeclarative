@@ -102,7 +102,7 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue QmlListWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
@@ -130,7 +130,7 @@ ReturnedValue QmlListWrapper::get(const Managed *m, Identifier id, const Value *
     return Object::get(m, id, receiver, hasProperty);
 }
 
-bool QmlListWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool QmlListWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);

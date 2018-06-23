@@ -3383,7 +3383,7 @@ public:
     quint32 count() const { return d()->changes->count(); }
     const QQmlChangeSet::Change &at(int index) const { return d()->changes->at(index); }
 
-    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::Identifier id, const QV4::Value *receiver, bool *hasProperty)
+    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty)
     {
         if (id.isArrayIndex()) {
             uint index = id.asArrayIndex();

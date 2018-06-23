@@ -193,9 +193,9 @@ protected:
     static QQmlPropertyData *findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local);
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
-    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
     static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

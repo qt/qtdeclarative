@@ -55,7 +55,7 @@ void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handl
     this->handler.set(e, handler->d());
 }
 
-ReturnedValue ProxyObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue ProxyObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -96,7 +96,7 @@ ReturnedValue ProxyObject::get(const Managed *m, Identifier id, const Value *rec
     return trapResult->asReturnedValue();
 }
 
-bool ProxyObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool ProxyObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -136,7 +136,7 @@ bool ProxyObject::put(Managed *m, Identifier id, const Value &value, Value *rece
     return true;
 }
 
-bool ProxyObject::deleteProperty(Managed *m, Identifier id)
+bool ProxyObject::deleteProperty(Managed *m, PropertyKey id)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -172,7 +172,7 @@ bool ProxyObject::deleteProperty(Managed *m, Identifier id)
     return true;
 }
 
-bool ProxyObject::hasProperty(const Managed *m, Identifier id)
+bool ProxyObject::hasProperty(const Managed *m, PropertyKey id)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -208,7 +208,7 @@ bool ProxyObject::hasProperty(const Managed *m, Identifier id)
     return result;
 }
 
-PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes ProxyObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -278,7 +278,7 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Proper
     return resultAttributes;
 }
 
-bool ProxyObject::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+bool ProxyObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);

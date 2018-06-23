@@ -169,12 +169,12 @@ struct ObjectVTable
     VTable vTable;
     ReturnedValue (*call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
-    ReturnedValue (*get)(const Managed *, Identifier id, const Value *receiver, bool *hasProperty);
-    bool (*put)(Managed *, Identifier id, const Value &value, Value *receiver);
-    bool (*deleteProperty)(Managed *m, Identifier id);
-    bool (*hasProperty)(const Managed *m, Identifier id);
-    PropertyAttributes (*getOwnProperty)(Managed *m, Identifier id, Property *p);
-    bool (*defineOwnProperty)(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
+    ReturnedValue (*get)(const Managed *, PropertyKey id, const Value *receiver, bool *hasProperty);
+    bool (*put)(Managed *, PropertyKey id, const Value &value, Value *receiver);
+    bool (*deleteProperty)(Managed *m, PropertyKey id);
+    bool (*hasProperty)(const Managed *m, PropertyKey id);
+    PropertyAttributes (*getOwnProperty)(Managed *m, PropertyKey id, Property *p);
+    bool (*defineOwnProperty)(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
     bool (*isExtensible)(const Managed *);
     bool (*preventExtensions)(Managed *);
     Heap::Object *(*getPrototypeOf)(const Managed *);
@@ -245,17 +245,17 @@ struct Q_QML_EXPORT Object: Managed {
 
     const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
 
-    PropertyAttributes getOwnProperty(Identifier id, Property *p = nullptr) {
+    PropertyAttributes getOwnProperty(PropertyKey id, Property *p = nullptr) {
         return vtable()->getOwnProperty(this, id, p);
     }
 
-    PropertyIndex getValueOrSetter(Identifier id, PropertyAttributes *attrs);
+    PropertyIndex getValueOrSetter(PropertyKey id, PropertyAttributes *attrs);
 
-    bool hasProperty(Identifier id) const {
+    bool hasProperty(PropertyKey id) const {
         return vtable()->hasProperty(this, id);
     }
 
-    bool defineOwnProperty(Identifier id, const Property *p, PropertyAttributes attrs) {
+    bool defineOwnProperty(PropertyKey id, const Property *p, PropertyAttributes attrs) {
         return vtable()->defineOwnProperty(this, id, p, attrs);
     }
 
@@ -374,20 +374,20 @@ public:
     inline ReturnedValue get(StringOrSymbol *name, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
     { if (!receiver) receiver = this; return vtable()->get(this, name->toPropertyKey(), receiver, hasProperty); }
     inline ReturnedValue get(uint idx, bool *hasProperty = nullptr, const Value *receiver = nullptr) const
-    { if (!receiver) receiver = this; return vtable()->get(this, Identifier::fromArrayIndex(idx), receiver, hasProperty); }
+    { if (!receiver) receiver = this; return vtable()->get(this, PropertyKey::fromArrayIndex(idx), receiver, hasProperty); }
     QT_DEPRECATED inline ReturnedValue getIndexed(uint idx, bool *hasProperty = nullptr) const
     { return get(idx, hasProperty); }
-    inline ReturnedValue get(Identifier id, const Value *receiver = nullptr, bool *hasProperty = nullptr) const
+    inline ReturnedValue get(PropertyKey id, const Value *receiver = nullptr, bool *hasProperty = nullptr) const
     { if (!receiver) receiver = this; return vtable()->get(this, id, receiver, hasProperty); }
 
     // use the set variants instead, to customize throw behavior
     inline bool put(StringOrSymbol *name, const Value &v, Value *receiver = nullptr)
     { if (!receiver) receiver = this; return vtable()->put(this, name->toPropertyKey(), v, receiver); }
     inline bool put(uint idx, const Value &v, Value *receiver = nullptr)
-    { if (!receiver) receiver = this; return vtable()->put(this, Identifier::fromArrayIndex(idx), v, receiver); }
+    { if (!receiver) receiver = this; return vtable()->put(this, PropertyKey::fromArrayIndex(idx), v, receiver); }
     QT_DEPRECATED inline bool putIndexed(uint idx, const Value &v)
     { return put(idx, v); }
-    inline bool put(Identifier id, const Value &v, Value *receiver = nullptr)
+    inline bool put(PropertyKey id, const Value &v, Value *receiver = nullptr)
     { if (!receiver) receiver = this; return vtable()->put(this, id, v, receiver); }
 
     enum ThrowOnFailure {
@@ -399,7 +399,7 @@ public:
     // which is much more efficient for the array case.
     inline bool setIndexed(uint idx, const Value &v, ThrowOnFailure shouldThrow)
     {
-        bool ret = vtable()->put(this, Identifier::fromArrayIndex(idx), v, this);
+        bool ret = vtable()->put(this, PropertyKey::fromArrayIndex(idx), v, this);
         // ES6: 7.3.3, 6: If success is false and Throw is true, throw a TypeError exception.
         if (!ret && shouldThrow == ThrowOnFailure::DoThrowOnRejection) {
             ExecutionEngine *e = engine();
@@ -428,7 +428,7 @@ public:
         return ret;
     }
 
-    bool deleteProperty(Identifier id)
+    bool deleteProperty(PropertyKey id)
     { return vtable()->deleteProperty(this, id); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
@@ -439,12 +439,12 @@ public:
 protected:
     static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
     static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver,bool *hasProperty);
-    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, Identifier id);
-    static bool hasProperty(const Managed *m, Identifier id);
-    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
-    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
+    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool deleteProperty(Managed *m, PropertyKey id);
+    static bool hasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
     static Heap::Object *getPrototypeOf(const Managed *);
@@ -457,8 +457,8 @@ private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
     ReturnedValue internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const;
     ReturnedValue internalGetIndexed(uint index, const Value *receiver, bool *hasProperty) const;
-    bool internalPut(Identifier id, const Value &value, Value *receiver);
-    bool internalDeleteProperty(Identifier id);
+    bool internalPut(PropertyKey id, const Value &value, Value *receiver);
+    bool internalDeleteProperty(PropertyKey id);
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
@@ -535,7 +535,7 @@ struct ArrayObject: Object {
 
     QStringList toQStringList() const;
 protected:
-    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
+    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
 
 };
 

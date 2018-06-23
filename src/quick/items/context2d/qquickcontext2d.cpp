@@ -908,8 +908,8 @@ struct QQuickJSContext2DPixelData : public QV4::Object
     V4_OBJECT2(QQuickJSContext2DPixelData, QV4::Object)
     V4_NEEDS_DESTROY
 
-    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::Identifier id, const QV4::Value *receiver, bool *hasProperty);
-    static bool put(QV4::Managed *m, QV4::Identifier id, const QV4::Value &value, Value *receiver);
+    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty);
+    static bool put(QV4::Managed *m, QV4::PropertyKey  id, const QV4::Value &value, Value *receiver);
 
     static QV4::ReturnedValue proto_get_length(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 };
@@ -3130,7 +3130,7 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::proto_get_length(const QV4::Funct
     RETURN_RESULT(QV4::Encode(r->d()->image->width() * r->d()->image->height() * 4));
 }
 
-QV4::ReturnedValue QQuickJSContext2DPixelData::get(const QV4::Managed *m, QV4::Identifier id, const QV4::Value *receiver, bool *hasProperty)
+QV4::ReturnedValue QQuickJSContext2DPixelData::get(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty)
 {
     if (!id.isArrayIndex())
         return QV4::Object::get(m, id, receiver, hasProperty);
@@ -3166,7 +3166,7 @@ QV4::ReturnedValue QQuickJSContext2DPixelData::get(const QV4::Managed *m, QV4::I
     return QV4::Encode::undefined();
 }
 
-bool QQuickJSContext2DPixelData::put(QV4::Managed *m, QV4::Identifier id, const QV4::Value &value, QV4::Value *receiver)
+bool QQuickJSContext2DPixelData::put(QV4::Managed *m, QV4::PropertyKey id, const QV4::Value &value, QV4::Value *receiver)
 {
     if (!id.isArrayIndex())
         return Object::put(m, id, value, receiver);

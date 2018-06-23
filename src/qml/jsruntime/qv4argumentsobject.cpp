@@ -120,7 +120,7 @@ void ArgumentsObject::fullyCreate()
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(Managed *m, Identifier id, const Property *desc, PropertyAttributes attrs)
+bool ArgumentsObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs)
 {
     if (!id.isArrayIndex())
         return Object::defineOwnProperty(m, id, desc, attrs);
@@ -169,7 +169,7 @@ bool ArgumentsObject::defineOwnProperty(Managed *m, Identifier id, const Propert
     return result;
 }
 
-ReturnedValue ArgumentsObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue ArgumentsObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     if (id.isArrayIndex() && !args->fullyCreated()) {
@@ -183,7 +183,7 @@ ReturnedValue ArgumentsObject::get(const Managed *m, Identifier id, const Value 
     return Object::get(m, id, receiver, hasProperty);
 }
 
-bool ArgumentsObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool ArgumentsObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (id.isArrayIndex()) {
@@ -199,7 +199,7 @@ bool ArgumentsObject::put(Managed *m, Identifier id, const Value &value, Value *
     return Object::put(m, id, value, receiver);
 }
 
-bool ArgumentsObject::deleteProperty(Managed *m, Identifier id)
+bool ArgumentsObject::deleteProperty(Managed *m, PropertyKey id)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (!args->fullyCreated())
@@ -207,7 +207,7 @@ bool ArgumentsObject::deleteProperty(Managed *m, Identifier id)
     return Object::deleteProperty(m, id);
 }
 
-PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     if (!id.isArrayIndex() || args->fullyCreated())

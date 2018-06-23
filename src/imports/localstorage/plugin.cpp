@@ -147,7 +147,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 };
 
 }
@@ -237,7 +237,7 @@ static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, 
     }
 }
 
-ReturnedValue QQmlSqlDatabaseWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlSqlDatabaseWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isArrayIndex())
         return Object::get(m, id, receiver, hasProperty);

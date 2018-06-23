@@ -82,23 +82,23 @@ public:
     Heap::String *insertString(const QString &s);
     Heap::Symbol *insertSymbol(const QString &s);
 
-    Identifier identifier(const Heap::String *str) {
+    PropertyKey identifier(const Heap::String *str) {
         if (str->identifier.isValid())
             return str->identifier;
         return identifierImpl(str);
     }
-    Identifier identifier(const QV4::String *str) {
+    PropertyKey identifier(const QV4::String *str) {
         return identifier(str->d());
     }
 
-    Identifier identifier(const QString &s);
-    Identifier identifier(const char *s, int len);
+    PropertyKey identifier(const QString &s);
+    PropertyKey identifier(const char *s, int len);
 
-    Identifier identifierImpl(const Heap::String *str);
+    PropertyKey identifierImpl(const Heap::String *str);
 
-    Heap::StringOrSymbol *resolveId(Identifier i) const;
-    Q_QML_PRIVATE_EXPORT Heap::String *stringForId(Identifier i) const;
-    Q_QML_PRIVATE_EXPORT Heap::Symbol *symbolForId(Identifier i) const;
+    Heap::StringOrSymbol *resolveId(PropertyKey i) const;
+    Q_QML_PRIVATE_EXPORT Heap::String *stringForId(PropertyKey i) const;
+    Q_QML_PRIVATE_EXPORT Heap::Symbol *symbolForId(PropertyKey i) const;
 
     void markObjects(MarkStack *markStack);
     void sweep();

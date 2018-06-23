@@ -55,7 +55,7 @@ using namespace QV4;
 void Heap::StringOrSymbol::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     StringOrSymbol *s = static_cast<StringOrSymbol *>(that);
-    Heap::Base *id = s->identifier.asStringOrSymbol();
+    Heap::StringOrSymbol *id = s->identifier.asStringOrSymbol();
     if (id)
         id->mark(markStack);
 }
@@ -185,7 +185,7 @@ void Heap::String::simplifyString() const
     text = result.data_ptr();
     text->ref.ref();
     const ComplexString *cs = static_cast<const ComplexString *>(this);
-    identifier = Identifier::invalid();
+    identifier = PropertyKey::invalid();
     cs->left = cs->right = nullptr;
 
     internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(qptrdiff(text->size) * (qptrdiff)sizeof(QChar));
@@ -250,10 +250,10 @@ void Heap::StringOrSymbol::createHashValue() const
     stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
 }
 
-Identifier StringOrSymbol::toPropertyKey() const {
+PropertyKey StringOrSymbol::toPropertyKey() const {
     uint index = asArrayIndex();
     if (index < UINT_MAX)
-        return Identifier::fromArrayIndex(index);
+        return PropertyKey::fromArrayIndex(index);
     makeIdentifier();
     return identifier();
 }

@@ -1524,7 +1524,7 @@ ReturnedValue DatePrototype::method_symbolToPrimitive(const FunctionObject *f, c
         return e->throwTypeError();
 
     String *hint = argv->stringValue();
-    Identifier id = hint->identifier();
+    PropertyKey id = hint->identifier();
     if (id == e->id_default()->identifier())
         hint = e->id_string();
     else if (id != e->id_string()->identifier() && id != e->id_number()->identifier())

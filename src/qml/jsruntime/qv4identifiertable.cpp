@@ -81,7 +81,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
     if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->identifier = Identifier::fromStringOrSymbol(str);
+    str->identifier = PropertyKey::fromStringOrSymbol(str);
 
     bool grow = (alloc <= size*2);
 
@@ -110,7 +110,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
             Heap::StringOrSymbol *e = entriesById[i];
             if (!e)
                 continue;
-            uint idx = e->identifier.id % newAlloc;
+            uint idx = e->identifier.id() % newAlloc;
             while (newEntries[idx]) {
                 ++idx;
                 idx %= newAlloc;
@@ -130,7 +130,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
     }
     entriesByHash[idx] = str;
 
-    idx = str->identifier.id % alloc;
+    idx = str->identifier.id() % alloc;
     while (entriesById[idx]) {
         ++idx;
         idx %= alloc;
@@ -190,13 +190,13 @@ Heap::Symbol *IdentifierTable::insertSymbol(const QString &s)
 }
 
 
-Identifier IdentifierTable::identifierImpl(const Heap::String *str)
+PropertyKey IdentifierTable::identifierImpl(const Heap::String *str)
 {
     if (str->identifier.isValid())
         return str->identifier;
     uint hash = str->hashValue();
     if (str->subtype == Heap::String::StringType_ArrayIndex) {
-        str->identifier = Identifier::fromArrayIndex(hash);
+        str->identifier = PropertyKey::fromArrayIndex(hash);
         return str->identifier;
     }
 
@@ -214,7 +214,7 @@ Identifier IdentifierTable::identifierImpl(const Heap::String *str)
     return str->identifier;
 }
 
-Heap::StringOrSymbol *IdentifierTable::resolveId(Identifier i) const
+Heap::StringOrSymbol *IdentifierTable::resolveId(PropertyKey i) const
 {
     uint arrayIdx = i.asArrayIndex();
     if (arrayIdx < UINT_MAX)
@@ -222,7 +222,7 @@ Heap::StringOrSymbol *IdentifierTable::resolveId(Identifier i) const
     if (!i.isValid())
         return nullptr;
 
-    uint idx = i.id % alloc;
+    uint idx = i.id() % alloc;
     while (1) {
         Heap::StringOrSymbol *e = entriesById[idx];
         if (!e || e->identifier == i)
@@ -232,14 +232,14 @@ Heap::StringOrSymbol *IdentifierTable::resolveId(Identifier i) const
     }
 }
 
-Heap::String *IdentifierTable::stringForId(Identifier i) const
+Heap::String *IdentifierTable::stringForId(PropertyKey i) const
 {
     Heap::StringOrSymbol *s = resolveId(i);
     Q_ASSERT(s && s->internalClass->vtable->isString);
     return static_cast<Heap::String *>(s);
 }
 
-Heap::Symbol *IdentifierTable::symbolForId(Identifier i) const
+Heap::Symbol *IdentifierTable::symbolForId(PropertyKey i) const
 {
     Heap::StringOrSymbol *s = resolveId(i);
     Q_ASSERT(!s || !s->internalClass->vtable->isString);
@@ -300,18 +300,18 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
 void IdentifierTable::sweep()
 {
     int f = sweepTable<int>(entriesByHash, alloc, [](Heap::StringOrSymbol *entry) {return entry->hashValue(); });
-    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::StringOrSymbol *entry) {return entry->identifier.id; });
+    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::StringOrSymbol *entry) {return entry->identifier.id(); });
     Q_UNUSED(f);
     Q_ASSERT(f == freed);
     size -= freed;
 }
 
-Identifier IdentifierTable::identifier(const QString &s)
+PropertyKey IdentifierTable::identifier(const QString &s)
 {
     return insertString(s)->identifier;
 }
 
-Identifier IdentifierTable::identifier(const char *s, int len)
+PropertyKey IdentifierTable::identifier(const char *s, int len)
 {
     uint subtype;
     uint hash = String::createHashValue(s, len, &subtype);

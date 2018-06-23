@@ -241,7 +241,7 @@ bool QQmlValueTypeWrapper::isEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QQmlValueTypeWrapper::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes QQmlValueTypeWrapper::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         Scope scope(m);
@@ -359,7 +359,7 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
     return Encode(b->engine()->newString(result));
 }
 
-ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlValueTypeWrapper>());
 
@@ -423,7 +423,7 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, Identifier id, const V
 #undef VALUE_TYPE_ACCESSOR
 }
 
-bool QQmlValueTypeWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool QQmlValueTypeWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
         return Object::put(m, id, value, receiver);

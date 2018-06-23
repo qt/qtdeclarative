@@ -140,8 +140,8 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     }
     using Object::get;
 
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
 };
 
 struct IntrinsicTypedArrayCtor: FunctionObject

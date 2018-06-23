@@ -97,7 +97,7 @@ uint Heap::StringObject::length() const
     return string->length();
 }
 
-bool StringObject::deleteProperty(Managed *m, Identifier id)
+bool StringObject::deleteProperty(Managed *m, PropertyKey id)
 {
     Q_ASSERT(m->as<StringObject>());
     if (id.isArrayIndex()) {
@@ -119,7 +119,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
             *index = it->arrayIndex;
             ++it->arrayIndex;
             Property pd;
-            PropertyAttributes a = s->getOwnProperty(Identifier::fromArrayIndex(*index), &pd);
+            PropertyAttributes a = s->getOwnProperty(PropertyKey::fromArrayIndex(*index), &pd);
             if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
                 *attrs = a;
                 p->copy(&pd, a);
@@ -137,7 +137,7 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
     return Object::advanceIterator(m, it, name, index, p, attrs);
 }
 
-PropertyAttributes StringObject::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes StringObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attributes = Object::getOwnProperty(m, id, p);
     if (attributes != Attr_Invalid)

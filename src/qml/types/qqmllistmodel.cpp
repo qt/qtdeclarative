@@ -1564,7 +1564,7 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
 
 namespace QV4 {
 
-bool ModelObject::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool ModelObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
         return Object::put(m, id, value, receiver);
@@ -1584,7 +1584,7 @@ bool ModelObject::put(Managed *m, Identifier id, const Value &value, Value *rece
     return true;
 }
 
-ReturnedValue ModelObject::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue ModelObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isString())
         return Object::get(m, id, receiver, hasProperty);

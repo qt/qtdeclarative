@@ -238,7 +238,7 @@ QV4::PropertyKey Value::toPropertyKey(ExecutionEngine *e) const
         Scope scope(e);
         ScopedStringOrSymbol s(scope, this);
         s->makeIdentifier();
-        return PropertyKey::fromIdentifier(s->identifier());
+        return s->identifier();
     }
     Scope scope(e);
     ScopedValue v(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
@@ -248,7 +248,7 @@ QV4::PropertyKey Value::toPropertyKey(ExecutionEngine *e) const
         return PropertyKey::invalid();
     ScopedStringOrSymbol s(scope, v);
     s->makeIdentifier();
-    return PropertyKey::fromIdentifier(s->identifier());
+    return s->identifier();
 }
 #endif // V4_BOOTSTRAP
 

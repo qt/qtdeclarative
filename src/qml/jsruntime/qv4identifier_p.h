@@ -52,42 +52,14 @@
 
 #include <qstring.h>
 #include <private/qv4global_p.h>
+#include <private/qv4propertykey_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Identifier
-{
-    // id's are either pointers to Heap::String or Heap::Symbol from the Identifier table.
-    // For Symbol is can simply point to itself.
-    // This gives us automative GC'ing of identifiers
-    // In addition, an identifier can have the lowest bit set, and then indicates an array index
-    quint64 id;
-
-    static Identifier invalid() { return Identifier{ 0 }; }
-    static Identifier fromArrayIndex(uint idx) { return Identifier{ (quint64(idx) << 1) | 1 }; }
-    bool isStringOrSymbol() const { return id && !(id & 1); }
-    uint asArrayIndex() const { return (id & 1) ? (id >> 1) : std::numeric_limits<uint>::max(); }
-    uint isArrayIndex() const { return (id & 1); }
-    static Identifier fromStringOrSymbol(Heap::StringOrSymbol *b) { return Identifier{ reinterpret_cast<quintptr>(b) }; }
-    Heap::StringOrSymbol *asStringOrSymbol() const { return (id & 1) ? nullptr : reinterpret_cast<Heap::StringOrSymbol *>(id); }
-
-    bool isValid() const { return id != 0; }
-    bool isString() const;
-    bool isSymbol() const;
-
-    Q_QML_EXPORT QString toQString() const;
-    Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
-
-    bool operator ==(const Identifier &other) const { return id == other.id; }
-    bool operator !=(const Identifier &other) const { return id != other.id; }
-    bool operator <(const Identifier &other) const { return id < other.id; }
-};
-
-
 struct IdentifierHashEntry {
-    Identifier identifier;
+    PropertyKey identifier;
     int value;
 };
 
@@ -131,12 +103,12 @@ struct IdentifierHash
     QString findId(int value) const;
 
 protected:
-    IdentifierHashEntry *addEntry(Identifier i);
-    const IdentifierHashEntry *lookup(Identifier identifier) const;
+    IdentifierHashEntry *addEntry(PropertyKey i);
+    const IdentifierHashEntry *lookup(PropertyKey identifier) const;
     const IdentifierHashEntry *lookup(const QString &str) const;
     const IdentifierHashEntry *lookup(String *str) const;
-    const Identifier toIdentifier(const QString &str) const;
-    const Identifier toIdentifier(Heap::String *str) const;
+    const PropertyKey toIdentifier(const QString &str) const;
+    const PropertyKey toIdentifier(Heap::String *str) const;
 };
 
 

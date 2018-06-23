@@ -85,13 +85,13 @@ struct ProxyObject: Object {
     Q_MANAGED_TYPE(ProxyObject)
     V4_INTERNALCLASS(ProxyObject)
 
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static ReturnedValue get(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, Identifier id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, Identifier id);
-    static bool hasProperty(const Managed *m, Identifier id);
-    static PropertyAttributes getOwnProperty(Managed *m, Identifier id, Property *p);
-    static bool defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs);
+    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool deleteProperty(Managed *m, PropertyKey id);
+    static bool hasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
     static bool isExtensible(const Managed *m);
     static bool preventExtensions(Managed *);
     static Heap::Object *getPrototypeOf(const Managed *);

@@ -78,7 +78,7 @@ void Heap::QQmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
 
@@ -229,7 +229,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, Identifier id, const Val
     return Encode::undefined();
 }
 
-bool QQmlContextWrapper::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool QQmlContextWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     Q_ASSERT(m->as<QQmlContextWrapper>());
 

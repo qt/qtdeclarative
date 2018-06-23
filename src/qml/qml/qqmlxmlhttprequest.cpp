@@ -228,7 +228,7 @@ public:
     static ReturnedValue create(ExecutionEngine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 };
 
 void Heap::NamedNodeMap::init(NodeImpl *data, const QList<NodeImpl *> &list)
@@ -249,7 +249,7 @@ public:
     V4_NEEDS_DESTROY
 
     // JS API
-    static ReturnedValue get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 
     // C++ API
     static ReturnedValue create(ExecutionEngine *, NodeImpl *);
@@ -886,7 +886,7 @@ bool Node::isNull() const
     return d()->d == nullptr;
 }
 
-ReturnedValue NamedNodeMap::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue NamedNodeMap::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
 
@@ -931,7 +931,7 @@ ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QL
     return (v4->memoryManager->allocate<NamedNodeMap>(data, list))->asReturnedValue();
 }
 
-ReturnedValue NodeList::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue NodeList::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
     const NodeList *r = static_cast<const NodeList *>(m);

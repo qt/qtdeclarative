@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct ExecutionEngine;
-struct Identifier;
+struct PropertyKey;
 
 namespace Heap {
 
@@ -77,7 +77,7 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
     };
 
     mutable QStringData *text;
-    mutable Identifier identifier;
+    mutable PropertyKey identifier;
     mutable uint subtype;
     mutable uint stringHash;
 
@@ -174,11 +174,11 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
     };
 
     inline void makeIdentifier() const;
-    Identifier identifier() const { return d()->identifier; }
+    PropertyKey identifier() const { return d()->identifier; }
 
     uint asArrayIndex() const;
 
-    Identifier toPropertyKey() const;
+    PropertyKey toPropertyKey() const;
 
     inline QString toQString() const {
         return d()->toQString();

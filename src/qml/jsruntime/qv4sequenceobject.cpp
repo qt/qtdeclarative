@@ -563,13 +563,13 @@ public:
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 
-    static QV4::ReturnedValue get(const QV4::Managed *that, Identifier id, const Value *receiver, bool *hasProperty)
+    static QV4::ReturnedValue get(const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
     {
         if (!id.isArrayIndex())
             return Object::get(that, id, receiver, hasProperty);
         return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
     }
-    static bool put(Managed *that, Identifier id, const QV4::Value &value, Value *receiver)
+    static bool put(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver)
     {
         if (id.isArrayIndex())
             return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(id.asArrayIndex(), value);
@@ -577,7 +577,7 @@ public:
     }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
-    static bool deleteProperty(QV4::Managed *that, Identifier id)
+    static bool deleteProperty(QV4::Managed *that, PropertyKey id)
     {
         if (id.isArrayIndex()) {
             uint index = id.asArrayIndex();

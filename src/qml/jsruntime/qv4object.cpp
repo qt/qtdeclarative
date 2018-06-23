@@ -268,7 +268,7 @@ void Object::setPrototypeUnchecked(const Object *p)
 }
 
 // Section 8.12.2
-PropertyIndex Object::getValueOrSetter(Identifier id, PropertyAttributes *attrs)
+PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs)
 {
     if (id.isArrayIndex()) {
         uint index = id.asArrayIndex();
@@ -317,7 +317,7 @@ ReturnedValue Object::call(const FunctionObject *f, const Value *, const Value *
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::get(const Managed *m, Identifier id, const Value *receiver, bool *hasProperty)
+ReturnedValue Object::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (id.isArrayIndex())
         return static_cast<const Object *>(m)->internalGetIndexed(id.asArrayIndex(), receiver, hasProperty);
@@ -326,12 +326,12 @@ ReturnedValue Object::get(const Managed *m, Identifier id, const Value *receiver
     return static_cast<const Object *>(m)->internalGet(name, receiver, hasProperty);
 }
 
-bool Object::put(Managed *m, Identifier id, const Value &value, Value *receiver)
+bool Object::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     return static_cast<Object *>(m)->internalPut(id, value, receiver);
 }
 
-bool Object::deleteProperty(Managed *m, Identifier id)
+bool Object::deleteProperty(Managed *m, PropertyKey id)
 {
     return static_cast<Object *>(m)->internalDeleteProperty(id);
 }
@@ -383,7 +383,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
     }
 
     while (it->memberIndex < o->internalClass()->size) {
-        Identifier n = o->internalClass()->nameMap.at(it->memberIndex);
+        PropertyKey n = o->internalClass()->nameMap.at(it->memberIndex);
         if (!n.isStringOrSymbol() || !n.asStringOrSymbol()->internalClass->vtable->isString) {
             // accessor properties have a dummy entry with n == 0
             // symbol entries are supposed to be skipped
@@ -413,7 +413,7 @@ ReturnedValue Object::internalGet(StringOrSymbol *name, const Value *receiver, b
     Q_ASSERT(name->asArrayIndex() == UINT_MAX);
 
     name->makeIdentifier();
-    Identifier id = name->identifier();
+    PropertyKey id = name->identifier();
 
     Heap::Object *o = d();
     while (o) {
@@ -469,7 +469,7 @@ ReturnedValue Object::internalGetIndexed(uint index, const Value *receiver, bool
 
 
 // Section 8.12.5
-bool Object::internalPut(Identifier id, const Value &value, Value *receiver)
+bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
 {
     ExecutionEngine *engine = this->engine();
     if (engine->hasException)
@@ -563,7 +563,7 @@ bool Object::internalPut(Identifier id, const Value &value, Value *receiver)
 }
 
 // Section 8.12.7
-bool Object::internalDeleteProperty(Identifier id)
+bool Object::internalDeleteProperty(PropertyKey id)
 {
     if (internalClass()->engine->hasException)
         return false;
@@ -766,7 +766,7 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     return Encode(false);
 }
 
-bool Object::hasProperty(const Managed *m, Identifier id)
+bool Object::hasProperty(const Managed *m, PropertyKey id)
 {
     Scope scope(m->engine());
     ScopedObject o(scope, m);
@@ -781,7 +781,7 @@ bool Object::hasProperty(const Managed *m, Identifier id)
     return false;
 }
 
-PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p)
+PropertyAttributes Object::getOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attrs;
     Object *o = static_cast<Object *>(m);
@@ -809,7 +809,7 @@ PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p
     return Attr_Invalid;
 }
 
-bool Object::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+bool Object::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Object *o = static_cast<Object *>(m);
     Scope scope(o);
@@ -976,7 +976,7 @@ QStringList ArrayObject::toQStringList() const
     return result;
 }
 
-bool ArrayObject::defineOwnProperty(Managed *m, Identifier id, const Property *p, PropertyAttributes attrs)
+bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Q_ASSERT(m->isArrayObject());
     ArrayObject *a = static_cast<ArrayObject *>(m);

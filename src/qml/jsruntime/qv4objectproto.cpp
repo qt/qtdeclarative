@@ -169,7 +169,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
         return QV4::Encode::undefined();
 
     ScopedProperty desc(scope);
-    PropertyAttributes attrs = O->getOwnProperty(name->toIdentifier(), desc);
+    PropertyAttributes attrs = O->getOwnProperty(name, desc);
     return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
@@ -199,7 +199,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertySymbols(const FunctionObject
     ScopedValue n(scope);
     ScopedArrayObject array(scope, scope.engine->newArrayObject());
     for (uint i = 0; i < ic->size; ++i) {
-        Identifier id = ic->nameMap.at(i);
+        PropertyKey id = ic->nameMap.at(i);
         n = id.asStringOrSymbol();
         if (!n || !n->isSymbol())
             continue;
@@ -296,7 +296,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    if (!O->defineOwnProperty(name->toIdentifier(), pd, attrs))
+    if (!O->defineOwnProperty(name, pd, attrs))
         THROW_TYPE_ERROR();
 
     return O.asReturnedValue();
@@ -335,7 +335,7 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
         if (name)
             ok = O->defineOwnProperty(name->toPropertyKey(), n, nattrs);
         else
-            ok = O->defineOwnProperty(Identifier::fromArrayIndex(index), n, nattrs);
+            ok = O->defineOwnProperty(PropertyKey::fromArrayIndex(index), n, nattrs);
         if (!ok)
             THROW_TYPE_ERROR();
     }
@@ -584,7 +584,7 @@ ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, co
     ScopedObject O(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    bool r = O->getOwnProperty(P->toIdentifier()) != Attr_Invalid;
+    bool r = O->getOwnProperty(P) != Attr_Invalid;
     return Encode(r);
 }
 
@@ -617,7 +617,7 @@ ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject 
     ScopedObject o(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    PropertyAttributes attrs = o->getOwnProperty(p->toIdentifier());
+    PropertyAttributes attrs = o->getOwnProperty(p);
     return Encode(attrs.isEnumerable());
 }
 
