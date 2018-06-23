@@ -465,8 +465,6 @@ public:
         return static_cast<const T *>(managed());
     }
 
-    inline uint asArrayIndex() const;
-    inline bool asArrayIndex(uint &idx) const;
 #ifndef V4_BOOTSTRAP
     uint asArrayLength(bool *ok) const;
 #endif
@@ -552,36 +550,6 @@ inline double Value::toNumber() const
         return doubleValue();
     return toNumberImpl();
 }
-
-
-#ifndef V4_BOOTSTRAP
-inline uint Value::asArrayIndex() const
-{
-    if (Q_LIKELY(isPositiveInt())) {
-        return (uint)int_32();
-    }
-    if (Q_UNLIKELY(!isDouble()))
-        return UINT_MAX;
-    double d = doubleValue();
-    uint idx = (uint)d;
-    if (idx == d)
-        return idx;
-    return UINT_MAX;
-}
-
-inline bool Value::asArrayIndex(uint &idx) const
-{
-    if (Q_LIKELY(isPositiveInt())) {
-        idx = (uint)int_32();
-        return true;
-    }
-    if (Q_UNLIKELY(!isDouble()))
-        return false;
-    double d = doubleValue();
-    idx = (uint)d;
-    return (idx == d && idx != UINT_MAX);
-}
-#endif
 
 inline
 ReturnedValue Heap::Base::asReturnedValue() const

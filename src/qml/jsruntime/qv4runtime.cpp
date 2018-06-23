@@ -619,7 +619,8 @@ static Q_NEVER_INLINE ReturnedValue getElementIntFallback(ExecutionEngine *engin
 
 static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, const Value &object, const Value &index)
 {
-    Q_ASSERT(index.asArrayIndex() == UINT_MAX);
+    Q_ASSERT(!index.isPositiveInt());
+
     Scope scope(engine);
 
     ScopedObject o(scope, object);
@@ -641,8 +642,8 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
 
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
 {
-    uint idx = 0;
-    if (index.asArrayIndex(idx)) {
+    if (index.isPositiveInt()) {
+        uint idx = static_cast<uint>(index.int_32());
         if (Heap::Base *b = object.heapObject()) {
             if (b->internalClass->vtable->isObject) {
                 Heap::Object *o = static_cast<Heap::Object *>(b);
@@ -667,8 +668,8 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
     if (engine->hasException)
         return false;
 
-    uint idx = 0;
-    if (index.asArrayIndex(idx)) {
+    if (index.isPositiveInt()) {
+        uint idx = static_cast<uint>(index.int_32());
         if (o->d()->arrayData && o->d()->arrayData->type == Heap::ArrayData::Simple) {
             Heap::SimpleArrayData *s = o->d()->arrayData.cast<Heap::SimpleArrayData>();
             if (idx < s->values.size) {
@@ -687,8 +688,8 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
 
 void Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
-    uint idx = 0;
-    if (index.asArrayIndex(idx)) {
+    if (index.isPositiveInt()) {
+        uint idx = static_cast<uint>(index.int_32());
         if (Heap::Base *b = object.heapObject()) {
             if (b->internalClass->vtable->isObject) {
                 Heap::Object *o = static_cast<Heap::Object *>(b);

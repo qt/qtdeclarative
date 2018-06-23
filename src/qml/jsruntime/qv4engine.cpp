@@ -1398,9 +1398,6 @@ static QV4::ReturnedValue objectFromVariantMap(QV4::ExecutionEngine *e, const QV
     QV4::ScopedValue v(scope);
     for (QVariantMap::const_iterator iter = map.begin(), cend = map.end(); iter != cend; ++iter) {
         s = e->newString(iter.key());
-        uint idx = s->asArrayIndex();
-        if (idx > 16 && (!o->arrayData() || idx > o->arrayData()->length() * 2))
-            o->initSparseArray();
         o->put(s, (v = e->fromVariant(iter.value())));
     }
     return o.asReturnedValue();
@@ -1572,11 +1569,13 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, v4->newObject());
     QV4::ScopedString s(scope);
+    QV4::ScopedPropertyKey key(scope);
     QV4::ScopedValue v(scope);
     for (QVariantMap::const_iterator it = vmap.constBegin(), cend = vmap.constEnd(); it != cend; ++it) {
         s = v4->newIdentifier(it.key());
+        key = s->propertyKey();
         v = variantToJS(v4, it.value());
-        uint idx = s->asArrayIndex();
+        uint idx = key->asArrayIndex();
         if (idx < UINT_MAX)
             o->arraySet(idx, v);
         else
