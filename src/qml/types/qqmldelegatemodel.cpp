@@ -551,35 +551,6 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
 }
 
 /*!
-    \qmlproperty int QtQml.Models::DelegateModel::rows
-
-    Contains the number of rows in the model. If the model
-    is a list of items, it will be equal to the number of items
-    in the list.
-
-    \since QtQml.Models 2.12
-*/
-int QQmlDelegateModel::rows() const
-{
-    Q_D(const QQmlDelegateModel);
-    return d->m_adaptorModel.rowCount();
-}
-
-/*!
-    \qmlproperty int QtQml.Models::DelegateModel::columns
-
-    Contains the number of columns in the model. If the model
-    is a list of items, it will be equal to \c 1.
-
-    \since QtQml.Models 2.12
-*/
-int QQmlDelegateModel::columns() const
-{
-    Q_D(const QQmlDelegateModel);
-    return d->m_adaptorModel.columnCount();
-}
-
-/*!
     \qmlmethod QModelIndex QtQml.Models::DelegateModel::modelIndex(int index)
 
     QAbstractItemModel provides a hierarchical tree of data, whereas

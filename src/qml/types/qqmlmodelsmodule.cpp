@@ -59,7 +59,6 @@ void QQmlModelsModule::defineModule()
 #endif
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, 2, 1, "DelegateModel");
-    qmlRegisterType<QQmlDelegateModel,12>(uri, 2, 9, "DelegateModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, 2, 1, "DelegateModelGroup");
 #endif
     qmlRegisterType<QQmlObjectModel>(uri, 2, 1, "ObjectModel");
