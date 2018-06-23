@@ -213,7 +213,6 @@ QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
     , m_transaction(false)
     , m_incubatorCleanupScheduled(false)
     , m_waitingToFetchMore(false)
-    , m_useFirstColumnOnly(true)
     , m_cacheItems(nullptr)
     , m_items(nullptr)
     , m_persistedItems(nullptr)
@@ -230,7 +229,10 @@ QQmlDelegateModelPrivate::~QQmlDelegateModelPrivate()
 
 int QQmlDelegateModelPrivate::adaptorModelCount() const
 {
-    return m_useFirstColumnOnly ? m_adaptorModel.rowCount() : m_adaptorModel.count();
+    // QQmlDelegateModel currently only support list models.
+    // So even if a model is a table model, only the first
+    // column will be used.
+    return m_adaptorModel.rowCount();
 }
 
 void QQmlDelegateModelPrivate::requestMoreIfNecessary()
