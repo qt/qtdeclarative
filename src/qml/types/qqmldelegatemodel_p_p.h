@@ -68,7 +68,7 @@ typedef QQmlListCompositor Compositor;
 
 class QQmlDelegateModelAttachedMetaObject;
 
-class QQmlDelegateModelItemMetaType : public QQmlRefCount
+class Q_QML_PRIVATE_EXPORT QQmlDelegateModelItemMetaType : public QQmlRefCount
 {
 public:
     QQmlDelegateModelItemMetaType(QV4::ExecutionEngine *engine, QQmlDelegateModel *model, const QStringList &groupNames);
@@ -196,8 +196,8 @@ public:
     void statusChanged(Status) override;
     void setInitialState(QObject *) override;
 
-    QQmlDelegateModelItem *incubating;
-    QQmlDelegateModelPrivate *vdm;
+    QQmlDelegateModelItem *incubating = nullptr;
+    QQmlDelegateModelPrivate *vdm = nullptr;
     int index[QQmlListCompositor::MaximumGroupCount];
 };
 
