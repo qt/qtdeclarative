@@ -207,7 +207,7 @@ void QV8Engine::initializeGlobal()
 
     {
         for (uint i = 0; i < m_v4Engine->globalObject->internalClass()->size; ++i) {
-            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i).isValid()) {
+            if (m_v4Engine->globalObject->internalClass()->nameMap.at(i).isString()) {
                 QV4::Identifier id = m_v4Engine->globalObject->internalClass()->nameMap.at(i);
                 m_illegalNames.insert(id.toQString());
             }
@@ -241,7 +241,7 @@ static void freeze_recursive(QV4::ExecutionEngine *v4, QV4::Object *object)
 
     QV4::ScopedObject o(scope);
     for (uint i = 0; i < frozen->size; ++i) {
-        if (!frozen->nameMap.at(i).isValid())
+        if (!frozen->nameMap.at(i).isStringOrSymbol())
             continue;
         o = *object->propertyData(i);
         if (o)

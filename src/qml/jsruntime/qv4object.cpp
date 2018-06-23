@@ -322,7 +322,7 @@ ReturnedValue Object::get(const Managed *m, Identifier id, const Value *receiver
     if (id.isArrayIndex())
         return static_cast<const Object *>(m)->internalGetIndexed(id.asArrayIndex(), receiver, hasProperty);
     Scope scope(m);
-    Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+    Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
     return static_cast<const Object *>(m)->internalGet(name, receiver, hasProperty);
 }
 
@@ -384,7 +384,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
 
     while (it->memberIndex < o->internalClass()->size) {
         Identifier n = o->internalClass()->nameMap.at(it->memberIndex);
-        if (!n.isValid() || !n.asHeapObject()->internalClass->vtable->isString) {
+        if (!n.isStringOrSymbol() || !n.asStringOrSymbol()->internalClass->vtable->isString) {
             // accessor properties have a dummy entry with n == 0
             // symbol entries are supposed to be skipped
             ++it->memberIndex;
@@ -395,7 +395,7 @@ void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *
         PropertyAttributes a = o->internalClass()->propertyData[it->memberIndex];
         ++it->memberIndex;
         if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-            name->setM(n.asHeapObject());
+            name->setM(n.asStringOrSymbol());
             *attrs = a;
             pd->value = *o->propertyData(idx);
             if (a.isAccessor())
@@ -556,7 +556,7 @@ bool Object::internalPut(Identifier id, const Value &value, Value *receiver)
     if (index != UINT_MAX) {
         arraySet(index, value);
     } else {
-        Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+        Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
         insertMember(name, value);
     }
     return true;
@@ -792,7 +792,7 @@ PropertyAttributes Object::getOwnProperty(Managed *m, Identifier id, Property *p
                 return attrs;
         }
     } else {
-        Q_ASSERT(id.asHeapObject());
+        Q_ASSERT(id.asStringOrSymbol());
 
         uint member = o->internalClass()->find(id);
         if (member < UINT_MAX) {
@@ -845,7 +845,7 @@ bool Object::defineOwnProperty(Managed *m, Identifier id, const Property *p, Pro
     }
 
     uint memberIndex = o->internalClass()->find(id);
-    Scoped<StringOrSymbol> name(scope, id.asHeapObject());
+    Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
 
     if (memberIndex == UINT_MAX) {
         if (!o->isExtensible())

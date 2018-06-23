@@ -199,7 +199,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertySymbols(const FunctionObject
     ScopedArrayObject array(scope, scope.engine->newArrayObject());
     for (uint i = 0; i < ic->size; ++i) {
         Identifier id = ic->nameMap.at(i);
-        n = id.asHeapObject();
+        n = id.asStringOrSymbol();
         if (!n || !n->isSymbol())
             continue;
         array->push_back(n);

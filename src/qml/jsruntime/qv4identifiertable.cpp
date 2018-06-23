@@ -81,7 +81,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
     if (str->subtype == Heap::String::StringType_ArrayIndex)
         return;
 
-    str->identifier = Identifier::fromHeapObject(str);
+    str->identifier = Identifier::fromStringOrSymbol(str);
 
     bool grow = (alloc <= size*2);
 

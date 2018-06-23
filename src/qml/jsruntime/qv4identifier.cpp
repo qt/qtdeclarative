@@ -46,26 +46,26 @@ namespace QV4 {
 
 bool Identifier::isString() const
 {
-    return isValid() && asHeapObject()->internalClass->vtable->isString;
+    return isStringOrSymbol() && asStringOrSymbol()->internalClass->vtable->isString;
 }
 
 bool Identifier::isSymbol() const
 {
-    return isValid() && !asHeapObject()->internalClass->vtable->isString && asHeapObject()->internalClass->vtable->isStringOrSymbol;
+    return isStringOrSymbol() && !asStringOrSymbol()->internalClass->vtable->isString && asStringOrSymbol()->internalClass->vtable->isStringOrSymbol;
 }
 
 Heap::StringOrSymbol *Identifier::toStringOrSymbol(ExecutionEngine *e)
 {
     if (isArrayIndex())
         return Primitive::fromUInt32(asArrayIndex()).toString(e);
-    return static_cast<Heap::StringOrSymbol *>(asHeapObject());
+    return static_cast<Heap::StringOrSymbol *>(asStringOrSymbol());
 }
 
 QString Identifier::toQString() const
 {
     if (isArrayIndex())
         return QString::number(asArrayIndex());
-    Heap::Base *b = asHeapObject();
+    Heap::Base *b = asStringOrSymbol();
     Q_ASSERT(b->internalClass->vtable->isStringOrSymbol);
     Heap::StringOrSymbol *s = static_cast<Heap::StringOrSymbol *>(b);
     return  s->toQString();
@@ -130,7 +130,7 @@ void IdentifierHash::detach()
 
 IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
 {
-    Q_ASSERT(identifier.isValid());
+    Q_ASSERT(identifier.isStringOrSymbol());
 
     // fill up to max 50%
     bool grow = (d->alloc <= d->size*2);
@@ -169,7 +169,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(Identifier identifier)
 
 const IdentifierHashEntry *IdentifierHash::lookup(Identifier identifier) const
 {
-    if (!d || !identifier.isValid())
+    if (!d || !identifier.isStringOrSymbol())
         return nullptr;
     Q_ASSERT(d->entries);
 
@@ -232,7 +232,7 @@ void IdentifierHashData::markObjects(MarkStack *markStack) const
     IdentifierHashEntry *e = entries;
     IdentifierHashEntry *end = e + alloc;
     while (e < end) {
-        if (Heap::Base *o = e->identifier.asHeapObject())
+        if (Heap::Base *o = e->identifier.asStringOrSymbol())
             o->mark(markStack);
         ++e;
     }

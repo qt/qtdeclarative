@@ -245,7 +245,7 @@ PropertyAttributes QQmlValueTypeWrapper::getOwnProperty(Managed *m, Identifier i
 {
     if (id.isString()) {
         Scope scope(m);
-        ScopedString n(scope, id.asHeapObject());
+        ScopedString n(scope, id.asStringOrSymbol());
         const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
         QQmlPropertyData *result = r->d()->propertyCache()->property(n.getPointer(), nullptr, nullptr);
         return result ? Attr_Data : Attr_Invalid;
@@ -369,7 +369,7 @@ ReturnedValue QQmlValueTypeWrapper::get(const Managed *m, Identifier id, const V
     const QQmlValueTypeWrapper *r = static_cast<const QQmlValueTypeWrapper *>(m);
     QV4::ExecutionEngine *v4 = r->engine();
     Scope scope(v4);
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     // Note: readReferenceValue() can change the reference->type.
     if (const QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
@@ -448,7 +448,7 @@ bool QQmlValueTypeWrapper::put(Managed *m, Identifier id, const Value &value, Va
         writeBackPropertyType = writebackProperty.userType();
     }
 
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     const QMetaObject *metaObject = r->d()->propertyCache()->metaObject();
     const QQmlPropertyData *pd = r->d()->propertyCache()->property(name.getPointer(), nullptr, nullptr);

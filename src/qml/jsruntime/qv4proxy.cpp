@@ -193,7 +193,7 @@ bool ProxyObject::hasProperty(const Managed *m, Identifier id)
 
     JSCallData cdata(scope, 2, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     bool result = trapResult->toBoolean();
@@ -233,7 +233,7 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, Identifier id, Proper
 
     JSCallData cdata(scope, 2, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     if (!trapResult->isObject() && !trapResult->isUndefined()) {
@@ -303,7 +303,7 @@ bool ProxyObject::defineOwnProperty(Managed *m, Identifier id, const Property *p
 
     JSCallData cdata(scope, 3, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asHeapObject();
+    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
     cdata.args[2] = ObjectPrototype::fromPropertyDescriptor(scope.engine, p, attrs);
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));

@@ -700,7 +700,7 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, Identifier id, const Va
 
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     Scope scope(that);
-    ScopedString n(scope, id.asHeapObject());
+    ScopedString n(scope, id.asStringOrSymbol());
     QQmlContextData *qmlContext = that->engine()->callingQmlContext();
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
@@ -712,7 +712,7 @@ bool QObjectWrapper::put(Managed *m, Identifier id, const Value &value, Value *r
 
     Scope scope(m);
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     if (scope.engine->hasException || QQmlData::wasDeleted(that->d()->object()))
         return false;
@@ -742,7 +742,7 @@ PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, Identifier id, Pro
         const QObject *thatObject = that->d()->object();
         if (!QQmlData::wasDeleted(thatObject)) {
             Scope scope(m);
-            ScopedString n(scope, id.asHeapObject());
+            ScopedString n(scope, id.asStringOrSymbol());
             QQmlContextData *qmlContext = scope.engine->callingQmlContext();
             QQmlPropertyData local;
             if (that->findProperty(scope.engine, qmlContext, n, IgnoreRevision, &local)

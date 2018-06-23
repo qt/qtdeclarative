@@ -105,7 +105,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
                 bool shadowed = false;
                 while (o->d() != current->heapObject()) {
                     Identifier id = n ? (n->makeIdentifier(), n->identifier()) : Identifier::fromArrayIndex(*index);
-                    if ((id.isValid() ||id.isArrayIndex()) && o->getOwnProperty(id) != Attr_Invalid) {
+                    if (id.isValid() && o->getOwnProperty(id) != Attr_Invalid) {
                         shadowed = true;
                         break;
                     }

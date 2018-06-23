@@ -227,7 +227,7 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
 
 void InternalClass::changeMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
 {
-    Q_ASSERT(id.isValid());
+    Q_ASSERT(id.isStringOrSymbol());
     uint idx;
     Heap::InternalClass *oldClass = object->internalClass();
     Heap::InternalClass *newClass = oldClass->changeMember(id, data, &idx);
@@ -385,7 +385,7 @@ Heap::InternalClass *InternalClass::nonExtensible()
 
 void InternalClass::addMember(QV4::Object *object, Identifier id, PropertyAttributes data, uint *index)
 {
-    Q_ASSERT(id.isValid());
+    Q_ASSERT(id.isStringOrSymbol());
     data.resolve();
     if (object->internalClass()->propertyTable.lookup(id) < object->internalClass()->size) {
         changeMember(object, id, data, index);
@@ -402,7 +402,7 @@ void InternalClass::addMember(QV4::Object *object, Identifier id, PropertyAttrib
 
 Heap::InternalClass *InternalClass::addMember(Identifier identifier, PropertyAttributes data, uint *index)
 {
-    Q_ASSERT(identifier.isValid());
+    Q_ASSERT(identifier.isStringOrSymbol());
     data.resolve();
 
     if (propertyTable.lookup(identifier) < size)
@@ -633,7 +633,7 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
 
     for (uint i = 0; i < ic->size; ++i) {
         Identifier id = ic->nameMap.at(i);
-        if (Heap::Base *b = id.asHeapObject())
+        if (Heap::Base *b = id.asStringOrSymbol())
             b->mark(stack);
     }
 }

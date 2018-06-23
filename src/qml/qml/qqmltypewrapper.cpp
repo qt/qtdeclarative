@@ -176,7 +176,7 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, Identifier id, const Value 
 
     QV4::ExecutionEngine *v4 = static_cast<const QQmlTypeWrapper *>(m)->engine();
     QV4::Scope scope(v4);
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     Scoped<QQmlTypeWrapper> w(scope, static_cast<const QQmlTypeWrapper *>(m));
 
@@ -316,7 +316,7 @@ bool QQmlTypeWrapper::put(Managed *m, Identifier id, const Value &value, Value *
     if (scope.engine->hasException)
         return false;
 
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
     QQmlContextData *context = scope.engine->callingQmlContext();
 
     QQmlType type = w->d()->type();
@@ -354,7 +354,7 @@ PropertyAttributes QQmlTypeWrapper::getOwnProperty(Managed *m, Identifier id, Pr
 {
     if (id.isString()) {
         Scope scope(m);
-        ScopedString n(scope, id.asHeapObject());
+        ScopedString n(scope, id.asStringOrSymbol());
         // ### Implement more efficiently.
         bool hasProperty = false;
         static_cast<Object *>(m)->get(n, &hasProperty);
@@ -437,7 +437,7 @@ ReturnedValue QQmlScopedEnumWrapper::get(const Managed *m, Identifier id, const 
     const QQmlScopedEnumWrapper *resource = static_cast<const QQmlScopedEnumWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     QQmlType type = resource->d()->type();
     int index = resource->d()->scopeEnumIndex;

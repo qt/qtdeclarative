@@ -124,7 +124,7 @@ ReturnedValue QQmlContextWrapper::get(const Managed *m, Identifier id, const Val
 
     QObject *scopeObject = resource->getScopeObject();
 
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(name, QQmlImport::AllowRecursion);
@@ -270,7 +270,7 @@ bool QQmlContextWrapper::put(Managed *m, Identifier id, const Value &value, Valu
     // See QV8ContextWrapper::Getter for resolution order
 
     QObject *scopeObject = wrapper->getScopeObject();
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
 
     while (context) {
         const QV4::IdentifierHash &properties = context->propertyNames();

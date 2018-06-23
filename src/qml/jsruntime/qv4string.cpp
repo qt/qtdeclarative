@@ -55,7 +55,7 @@ using namespace QV4;
 void Heap::StringOrSymbol::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     StringOrSymbol *s = static_cast<StringOrSymbol *>(that);
-    Heap::Base *id = s->identifier.asHeapObject();
+    Heap::Base *id = s->identifier.asStringOrSymbol();
     if (id)
         id->mark(markStack);
 }

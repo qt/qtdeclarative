@@ -294,7 +294,7 @@ struct InternalClass : Base {
     static void removeMember(QV4::Object *object, Identifier identifier);
     uint find(const Identifier id)
     {
-        Q_ASSERT(id.isValid());
+        Q_ASSERT(id.isStringOrSymbol());
 
         uint index = propertyTable.lookup(id);
         if (index < size)

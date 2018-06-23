@@ -1591,7 +1591,7 @@ ReturnedValue ModelObject::get(const Managed *m, Identifier id, const Value *rec
 
     const ModelObject *that = static_cast<const ModelObject*>(m);
     Scope scope(that);
-    ScopedString name(scope, id.asHeapObject());
+    ScopedString name(scope, id.asStringOrSymbol());
     const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
     if (!role)
         return QObjectWrapper::get(m, id, receiver, hasProperty);

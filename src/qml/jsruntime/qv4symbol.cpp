@@ -50,7 +50,7 @@ DEFINE_OBJECT_VTABLE(SymbolObject);
 void Heap::Symbol::init(const QString &s)
 {
     Q_ASSERT(s.at(0) == QLatin1Char('@'));
-    identifier = Identifier::fromHeapObject(this);
+    identifier = Identifier::fromStringOrSymbol(this);
     QString desc(s);
     text = desc.data_ptr();
     text->ref.ref();

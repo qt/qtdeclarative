@@ -67,12 +67,13 @@ struct Identifier
 
     static Identifier invalid() { return Identifier{ 0 }; }
     static Identifier fromArrayIndex(uint idx) { return Identifier{ (quint64(idx) << 1) | 1 }; }
-    bool isValid() const { return id && !(id & 1); }
+    bool isStringOrSymbol() const { return id && !(id & 1); }
     uint asArrayIndex() const { return (id & 1) ? (id >> 1) : std::numeric_limits<uint>::max(); }
     uint isArrayIndex() const { return (id & 1); }
-    static Identifier fromHeapObject(Heap::Base *b) { return Identifier{ reinterpret_cast<quintptr>(b) }; }
-    Heap::Base *asHeapObject() const { return (id & 1) ? nullptr : reinterpret_cast<Heap::Base *>(id); }
+    static Identifier fromStringOrSymbol(Heap::StringOrSymbol *b) { return Identifier{ reinterpret_cast<quintptr>(b) }; }
+    Heap::StringOrSymbol *asStringOrSymbol() const { return (id & 1) ? nullptr : reinterpret_cast<Heap::StringOrSymbol *>(id); }
 
+    bool isValid() const { return id != 0; }
     bool isString() const;
     bool isSymbol() const;
 
