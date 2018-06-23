@@ -415,7 +415,7 @@ public:
             return reinterpret_cast<Heap::String *>(m());
         return toString(e, *this);
     }
-    Heap::StringOrSymbol *toPropertyKey(ExecutionEngine *e) const;
+    QV4::PropertyKey toPropertyKey(ExecutionEngine *e) const;
 
     static Heap::String *toString(ExecutionEngine *e, Value val);
     Heap::Object *toObject(ExecutionEngine *e) const {

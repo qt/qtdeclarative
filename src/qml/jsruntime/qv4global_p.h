@@ -200,6 +200,7 @@ namespace Heap {
 struct CppStackFrame;
 class MemoryManager;
 class ExecutableAllocator;
+struct PropertyKey;
 struct StringOrSymbol;
 struct String;
 struct Symbol;

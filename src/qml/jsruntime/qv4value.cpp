@@ -39,6 +39,7 @@
 #include <qv4engine_p.h>
 #include <qv4runtime_p.h>
 #include <qv4string_p.h>
+#include <qv4propertykey_p.h>
 #ifndef V4_BOOTSTRAP
 #include <qv4symbol_p.h>
 #include <qv4object_p.h>
@@ -229,15 +230,25 @@ QString Value::toQString() const
     } // switch
 }
 
-Heap::StringOrSymbol *Value::toPropertyKey(ExecutionEngine *e) const
+QV4::PropertyKey Value::toPropertyKey(ExecutionEngine *e) const
 {
+    if (isInteger() && int_32() >= 0)
+        return PropertyKey::fromArrayIndex(static_cast<uint>(int_32()));
+    if (isStringOrSymbol()) {
+        Scope scope(e);
+        ScopedStringOrSymbol s(scope, this);
+        s->makeIdentifier();
+        return PropertyKey::fromIdentifier(s->identifier());
+    }
     Scope scope(e);
     ScopedValue v(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
     if (!v->isStringOrSymbol())
         v = v->toString(e);
     if (e->hasException)
-        return nullptr;
-    return static_cast<Heap::StringOrSymbol *>(v->m());
+        return PropertyKey::invalid();
+    ScopedStringOrSymbol s(scope, v);
+    s->makeIdentifier();
+    return PropertyKey::fromIdentifier(s->identifier());
 }
 #endif // V4_BOOTSTRAP
 

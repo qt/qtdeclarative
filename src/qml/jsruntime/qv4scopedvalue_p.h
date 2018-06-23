@@ -53,6 +53,7 @@
 #include "qv4engine_p.h"
 #include "qv4value_p.h"
 #include "qv4property_p.h"
+#include "qv4propertykey_p.h"
 
 #ifdef V4_USE_VALGRIND
 #include <valgrind/memcheck.h>
@@ -239,6 +240,34 @@ struct ScopedValue
 
     Value *ptr;
 };
+
+
+struct ScopedPropertyKey
+{
+    ScopedPropertyKey(const Scope &scope)
+    {
+        ptr = reinterpret_cast<PropertyKey *>(scope.alloc<Scope::Uninitialized>());
+        *ptr = PropertyKey::invalid();
+    }
+
+    ScopedPropertyKey(const Scope &scope, const PropertyKey &v)
+    {
+        ptr = reinterpret_cast<PropertyKey *>(scope.alloc<Scope::Uninitialized>());
+        *ptr = v;
+    }
+
+    ScopedPropertyKey &operator=(const PropertyKey &other) {
+        *ptr = other;
+        return *this;
+    }
+
+    PropertyKey *operator->() {
+        return ptr;
+    }
+
+    PropertyKey *ptr;
+};
+
 
 template<typename T>
 struct Scoped

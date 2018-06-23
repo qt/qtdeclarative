@@ -333,11 +333,10 @@ bool Runtime::method_deleteProperty(ExecutionEngine *engine, const Value &base, 
     if (n < UINT_MAX)
         return o->deleteProperty(Identifier::fromArrayIndex(n));
 
-    Scoped<StringOrSymbol> key(scope, index.toPropertyKey(engine));
+    ScopedPropertyKey key(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return false;
-    Identifier id = key->toPropertyKey();
-    return o->deleteProperty(id);
+    return o->deleteProperty(key->toIdentifier());
 }
 
 bool Runtime::method_deleteName(ExecutionEngine *engine, int nameIndex)
@@ -372,10 +371,10 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
     if (!ro)
         return engine->throwTypeError();
     Scope scope(engine);
-    ScopedStringOrSymbol s(scope, left.toPropertyKey(engine));
+    ScopedPropertyKey s(scope, left.toPropertyKey(engine));
     if (scope.hasException())
         return Encode::undefined();
-    bool r = ro->hasProperty(s->toPropertyKey());
+    bool r = ro->hasProperty(s->toIdentifier());
     return Encode(r);
 }
 
@@ -638,10 +637,10 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
         Q_ASSERT(!!o); // can't fail as null/undefined is covered above
     }
 
-    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
+    ScopedPropertyKey name(scope, index.toPropertyKey(engine));
     if (scope.hasException())
         return Encode::undefined();
-    return o->get(name);
+    return o->get(name->toIdentifier());
 }
 
 ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &object, const Value &index)
@@ -684,10 +683,10 @@ static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Val
         return o->put(idx, value);
     }
 
-    ScopedStringOrSymbol name(scope, index.toPropertyKey(engine));
+    ScopedPropertyKey name(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return false;
-    return o->put(name, value);
+    return o->put(name->toIdentifier(), value);
 }
 
 void Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
@@ -1202,11 +1201,11 @@ ReturnedValue Runtime::method_callElement(ExecutionEngine *engine, Value *base, 
     ScopedValue thisObject(scope, base->toObject(engine));
     base = thisObject;
 
-    ScopedStringOrSymbol str(scope, index.toPropertyKey(engine));
+    ScopedPropertyKey str(scope, index.toPropertyKey(engine));
     if (engine->hasException)
         return Encode::undefined();
 
-    ScopedFunctionObject f(scope, static_cast<Object *>(base)->get(str));
+    ScopedFunctionObject f(scope, static_cast<Object *>(base)->get(str->toIdentifier()));
     if (!f)
         return engine->throwTypeError();
 
@@ -1452,7 +1451,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
     if (!additionalArgs)
         return o->asReturnedValue();
 
-    Scoped<StringOrSymbol> name(scope);
+    ScopedPropertyKey name(scope);
     ScopedProperty pd(scope);
     for (int i = 0; i < additionalArgs; ++i) {
         Q_ASSERT(args->isInteger());
@@ -1468,7 +1467,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
             pd->value = Primitive::emptyValue();
             pd->set = args[2];
         }
-        bool ok = o->defineOwnProperty(name->toPropertyKey(), pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
+        bool ok = o->defineOwnProperty(name->toIdentifier(), pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
         if (!ok)
             return engine->throwTypeError();
 
@@ -1523,7 +1522,7 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
 
 
     ScopedObject receiver(scope, *constructor);
-    ScopedStringOrSymbol propertyName(scope);
+    ScopedPropertyKey propertyName(scope);
     ScopedFunctionObject function(scope);
     ScopedProperty property(scope);
     const CompiledData::Method *methods = cls->methodTable();
@@ -1536,9 +1535,9 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
                 return Encode::undefined();
             ++computedNames;
         } else {
-            propertyName = unit->runtimeStrings[methods[i].name];
+            propertyName = PropertyKey::fromStringOrSymbol(unit->runtimeStrings[methods[i].name]);
         }
-        Identifier id = propertyName->toPropertyKey();
+        Identifier id = propertyName->toIdentifier();
         QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);
         function = FunctionObject::createMemberFunction(current, f);

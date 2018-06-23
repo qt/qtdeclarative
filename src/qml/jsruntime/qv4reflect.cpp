@@ -41,6 +41,7 @@
 #include "qv4symbol_p.h"
 #include "qv4runtimeapi_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4propertykey_p.h"
 
 using namespace QV4;
 
@@ -120,7 +121,7 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedStringOrSymbol name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -131,7 +132,7 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    bool result = O->defineOwnProperty(name->toPropertyKey(), pd, attrs);
+    bool result = O->defineOwnProperty(name->toIdentifier(), pd, attrs);
 
     return Encode(result);
 }
@@ -155,12 +156,12 @@ ReturnedValue Reflect::method_get(const FunctionObject *f, const Value *, const 
     ScopedObject o(scope, static_cast<const Object *>(argv));
     Value undef = Primitive::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
-    ScopedStringOrSymbol name(scope, index->toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
     ScopedValue receiver(scope, argc > 2 ? argv[2] : *o);
 
-    return Encode(o->get(name->toPropertyKey(), receiver));
+    return Encode(o->get(name->toIdentifier(), receiver));
 }
 
 ReturnedValue Reflect::method_getOwnPropertyDescriptor(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -198,10 +199,10 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
         return Encode(hasProperty);
     }
 
-    ScopedStringOrSymbol name(scope, index->toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
-    (void) o->get(name, &hasProperty);
+    (void) o->get(name->toIdentifier(), nullptr, &hasProperty);
     return Encode(hasProperty);
 }
 
@@ -245,10 +246,10 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
     const Value &val = argc > 2 ? argv[2] : undef;
     ScopedValue receiver(scope, argc >3 ? argv[3] : argv[0]);
 
-    Scoped<StringOrSymbol> propertyKey(scope, index->toPropertyKey(scope.engine));
+    ScopedPropertyKey propertyKey(scope, index->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return false;
-    bool result = o->put(propertyKey->toPropertyKey(), val, receiver);
+    bool result = o->put(propertyKey->toIdentifier(), val, receiver);
     return Encode(result);
 }
 

@@ -30,6 +30,7 @@ SOURCES += \
     $$PWD/qv4numberobject.cpp \
     $$PWD/qv4object.cpp \
     $$PWD/qv4objectproto.cpp \
+    $$PWD/qv4propertykey.cpp \
     $$PWD/qv4proxy.cpp \
     $$PWD/qv4qmlcontext.cpp \
     $$PWD/qv4reflect.cpp \
@@ -91,6 +92,7 @@ HEADERS += \
     $$PWD/qv4numberobject_p.h \
     $$PWD/qv4object_p.h \
     $$PWD/qv4objectproto_p.h \
+    $$PWD/qv4propertykey_p.h \
     $$PWD/qv4proxy_p.h \
     $$PWD/qv4qmlcontext_p.h \
     $$PWD/qv4reflect_p.h \

@@ -48,6 +48,7 @@
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
 #include "qv4symbol_p.h"
+#include "qv4propertykey_p.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QStringList>
@@ -163,12 +164,12 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
     ScopedValue v(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
-    ScopedStringOrSymbol name(scope, v->toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, v->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
     ScopedProperty desc(scope);
-    PropertyAttributes attrs = O->getOwnProperty(name->toPropertyKey(), desc);
+    PropertyAttributes attrs = O->getOwnProperty(name->toIdentifier(), desc);
     return fromPropertyDescriptor(scope.engine, desc, attrs);
 }
 
@@ -284,7 +285,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedStringOrSymbol name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -295,7 +296,7 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    if (!O->defineOwnProperty(name->toPropertyKey(), pd, attrs))
+    if (!O->defineOwnProperty(name->toIdentifier(), pd, attrs))
         THROW_TYPE_ERROR();
 
     return O.asReturnedValue();
@@ -577,13 +578,13 @@ ReturnedValue ObjectPrototype::method_valueOf(const FunctionObject *b, const Val
 ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedStringOrSymbol P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
     ScopedObject O(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    bool r = O->getOwnProperty(P->toPropertyKey()) != Attr_Invalid;
+    bool r = O->getOwnProperty(P->toIdentifier()) != Attr_Invalid;
     return Encode(r);
 }
 
@@ -609,14 +610,14 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
 ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedStringOrSymbol p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
     ScopedObject o(scope, thisObject->toObject(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-    PropertyAttributes attrs = o->getOwnProperty(p->toPropertyKey());
+    PropertyAttributes attrs = o->getOwnProperty(p->toIdentifier());
     return Encode(attrs.isEnumerable());
 }
 
