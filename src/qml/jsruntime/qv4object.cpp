@@ -307,17 +307,17 @@ PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs
     return { nullptr, nullptr };
 }
 
-ReturnedValue Object::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue Object::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Object::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue Object::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue Object::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (id.isArrayIndex())
         return static_cast<const Object *>(m)->internalGetIndexed(id.asArrayIndex(), receiver, hasProperty);
@@ -326,17 +326,17 @@ ReturnedValue Object::get(const Managed *m, PropertyKey id, const Value *receive
     return static_cast<const Object *>(m)->internalGet(name, receiver, hasProperty);
 }
 
-bool Object::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool Object::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     return static_cast<Object *>(m)->internalPut(id, value, receiver);
 }
 
-bool Object::deleteProperty(Managed *m, PropertyKey id)
+bool Object::virtualDeleteProperty(Managed *m, PropertyKey id)
 {
     return static_cast<Object *>(m)->internalDeleteProperty(id);
 }
 
-void Object::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
+void Object::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
     Object *o = static_cast<Object *>(m);
     name->setM(nullptr);
@@ -715,7 +715,7 @@ void Object::copyArrayData(Object *other)
     setArrayLengthUnchecked(other->getLength());
 }
 
-qint64 Object::getLength(const Managed *m)
+qint64 Object::virtualGetLength(const Managed *m)
 {
     Scope scope(static_cast<const Object *>(m)->engine());
     ScopedValue v(scope, static_cast<Object *>(const_cast<Managed *>(m))->get(scope.engine->id_length()));
@@ -723,7 +723,7 @@ qint64 Object::getLength(const Managed *m)
 }
 
 // 'var' is 'V' in 15.3.5.3.
-ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
+ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &var)
 {
     QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
 
@@ -765,7 +765,7 @@ ReturnedValue Object::instanceOf(const Object *typeObject, const Value &var)
     return Encode(false);
 }
 
-bool Object::hasProperty(const Managed *m, PropertyKey id)
+bool Object::virtualHasProperty(const Managed *m, PropertyKey id)
 {
     Scope scope(m->engine());
     ScopedObject o(scope, m);
@@ -780,7 +780,7 @@ bool Object::hasProperty(const Managed *m, PropertyKey id)
     return false;
 }
 
-PropertyAttributes Object::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes Object::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attrs;
     Object *o = static_cast<Object *>(m);
@@ -808,7 +808,7 @@ PropertyAttributes Object::getOwnProperty(Managed *m, PropertyKey id, Property *
     return Attr_Invalid;
 }
 
-bool Object::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
+bool Object::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Object *o = static_cast<Object *>(m);
     Scope scope(o);
@@ -860,12 +860,12 @@ bool Object::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, Pr
     return o->internalDefineOwnProperty(scope.engine, memberIndex, name, p, attrs);
 }
 
-bool Object::isExtensible(const Managed *m)
+bool Object::virtualIsExtensible(const Managed *m)
 {
     return m->d()->internalClass->extensible;
 }
 
-bool Object::preventExtensions(Managed *m)
+bool Object::virtualPreventExtensions(Managed *m)
 {
     Q_ASSERT(m->isObject());
     Object *o = static_cast<Object *>(m);
@@ -873,12 +873,12 @@ bool Object::preventExtensions(Managed *m)
     return true;
 }
 
-Heap::Object *Object::getPrototypeOf(const Managed *m)
+Heap::Object *Object::virtualGetPrototypeOf(const Managed *m)
 {
     return m->internalClass()->prototype;
 }
 
-bool Object::setPrototypeOf(Managed *m, const Object *proto)
+bool Object::virtualSetPrototypeOf(Managed *m, const Object *proto)
 {
     Q_ASSERT(m->isObject());
     Object *o = static_cast<Object *>(m);
@@ -952,7 +952,7 @@ void Heap::ArrayObject::init(const QStringList &list)
     a->setArrayLengthUnchecked(len);
 }
 
-qint64 ArrayObject::getLength(const Managed *m)
+qint64 ArrayObject::virtualGetLength(const Managed *m)
 {
     const ArrayObject *a = static_cast<const ArrayObject *>(m);
     return a->propertyData(Heap::ArrayObject::LengthPropertyIndex)->toLength();
@@ -974,7 +974,7 @@ QStringList ArrayObject::toQStringList() const
     return result;
 }
 
-bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
+bool ArrayObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Q_ASSERT(m->isArrayObject());
     ArrayObject *a = static_cast<ArrayObject *>(m);
@@ -985,7 +985,7 @@ bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *
         if (index >= len && !a->internalClass()->propertyData[Heap::ArrayObject::LengthPropertyIndex].isWritable())
             return false;
 
-        bool succeeded = Object::defineOwnProperty(m, id, p, attrs);
+        bool succeeded = Object::virtualDefineOwnProperty(m, id, p, attrs);
         if (!succeeded)
             return false;
 
@@ -1025,5 +1025,5 @@ bool ArrayObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *
             return false;
         return true;
     }
-    return Object::defineOwnProperty(m, id, p, attrs);
+    return Object::virtualDefineOwnProperty(m, id, p, attrs);
 }

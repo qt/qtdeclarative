@@ -229,13 +229,13 @@ void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
     Heap::FunctionObject::init(scope, name);
 }
 
-ReturnedValue ErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue ErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<ErrorObject>(f->engine(), v)->asReturnedValue();
 }
 
-ReturnedValue ErrorCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue ErrorCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     return f->callAsConstructor(argv, argc);
 }
@@ -245,7 +245,7 @@ void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("EvalError"));
 }
 
-ReturnedValue EvalErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<EvalErrorObject>(f->engine(), v)->asReturnedValue();
@@ -256,7 +256,7 @@ void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("RangeError"));
 }
 
-ReturnedValue RangeErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<RangeErrorObject>(f->engine(), v)->asReturnedValue();
@@ -267,7 +267,7 @@ void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("ReferenceError"));
 }
 
-ReturnedValue ReferenceErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<ReferenceErrorObject>(f->engine(), v)->asReturnedValue();
@@ -278,7 +278,7 @@ void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("SyntaxError"));
 }
 
-ReturnedValue SyntaxErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<SyntaxErrorObject>(f->engine(), v)->asReturnedValue();
@@ -289,7 +289,7 @@ void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("TypeError"));
 }
 
-ReturnedValue TypeErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<TypeErrorObject>(f->engine(), v)->asReturnedValue();
@@ -300,7 +300,7 @@ void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
     Heap::ErrorCtor::init(scope, QStringLiteral("URIError"));
 }
 
-ReturnedValue URIErrorCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue URIErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Value v = argc ? *argv : Primitive::undefinedValue();
     return ErrorObject::create<URIErrorObject>(f->engine(), v)->asReturnedValue();

@@ -183,7 +183,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     void destroyObject(bool lastCall);
 
 protected:
-    static bool isEqualTo(Managed *that, Managed *o);
+    static bool virtualIsEqualTo(Managed *that, Managed *o);
 
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired = true);
     static void setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value);
@@ -193,10 +193,10 @@ protected:
     static QQmlPropertyData *findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local);
     QQmlPropertyData *findProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 
     static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_disconnect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -237,7 +237,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     QV4::ReturnedValue method_toString(QV4::ExecutionEngine *engine) const;
     QV4::ReturnedValue method_destroy(QV4::ExecutionEngine *ctx, const Value *args, int argc) const;
 
-    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     ReturnedValue callInternal(const Value *thisObject, const Value *argv, int argc) const;
 
@@ -251,10 +251,11 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     V4_NEEDS_DESTROY
 
     static ReturnedValue create(ExecutionEngine *engine, const QMetaObject* metaObject);
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static bool isEqualTo(Managed *a, Managed *b);
-
     const QMetaObject *metaObject() const { return d()->metaObject; }
+
+protected:
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static bool virtualIsEqualTo(Managed *a, Managed *b);
 
 private:
     void init(ExecutionEngine *engine);

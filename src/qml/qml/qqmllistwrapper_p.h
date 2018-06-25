@@ -93,9 +93,9 @@ struct Q_QML_EXPORT QmlListWrapper : Object
 
     QVariant toVariant() const;
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
 };
 
 struct PropertyListPrototype : Object

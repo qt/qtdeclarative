@@ -147,7 +147,7 @@ public:
     ~QQmlSqlDatabaseWrapper() {
     }
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 };
 
 }
@@ -237,16 +237,16 @@ static ReturnedValue qmlsqldatabase_rows_index(const QQmlSqlDatabaseWrapper *r, 
     }
 }
 
-ReturnedValue QQmlSqlDatabaseWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlSqlDatabaseWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isArrayIndex())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     uint index = id.asArrayIndex();
     Q_ASSERT(m->as<QQmlSqlDatabaseWrapper>());
     const QQmlSqlDatabaseWrapper *r = static_cast<const QQmlSqlDatabaseWrapper *>(m);
     if (!r || r->d()->type != Heap::QQmlSqlDatabaseWrapper::Rows)
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     return qmlsqldatabase_rows_index(r, r->engine(), index, hasProperty);
 }

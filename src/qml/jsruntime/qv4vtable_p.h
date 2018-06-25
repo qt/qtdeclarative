@@ -118,25 +118,25 @@ struct VTable
 
 struct VTableBase {
 protected:
-    static constexpr VTable::Destroy destroy = nullptr;
-    static constexpr VTable::IsEqualTo isEqualTo = nullptr;
+    static constexpr VTable::Destroy virtualDestroy = nullptr;
+    static constexpr VTable::IsEqualTo virtualIsEqualTo = nullptr;
 
-    static constexpr VTable::Get get = nullptr;
-    static constexpr VTable::Put put = nullptr;
-    static constexpr VTable::DeleteProperty deleteProperty = nullptr;
-    static constexpr VTable::HasProperty hasProperty = nullptr;
-    static constexpr VTable::GetOwnProperty getOwnProperty = nullptr;
-    static constexpr VTable::DefineOwnProperty defineOwnProperty = nullptr;
-    static constexpr VTable::IsExtensible isExtensible = nullptr;
-    static constexpr VTable::PreventExtensions preventExtensions = nullptr;
-    static constexpr VTable::GetPrototypeOf getPrototypeOf = nullptr;
-    static constexpr VTable::SetPrototypeOf setPrototypeOf = nullptr;
-    static constexpr VTable::GetLength getLength = nullptr;
-    static constexpr VTable::AdvanceIterator advanceIterator = nullptr;
-    static constexpr VTable::InstanceOf instanceOf = nullptr;
+    static constexpr VTable::Get virtualGet = nullptr;
+    static constexpr VTable::Put virtualPut = nullptr;
+    static constexpr VTable::DeleteProperty virtualDeleteProperty = nullptr;
+    static constexpr VTable::HasProperty virtualHasProperty = nullptr;
+    static constexpr VTable::GetOwnProperty virtualGetOwnProperty = nullptr;
+    static constexpr VTable::DefineOwnProperty virtualDefineOwnProperty = nullptr;
+    static constexpr VTable::IsExtensible virtualIsExtensible = nullptr;
+    static constexpr VTable::PreventExtensions virtualPreventExtensions = nullptr;
+    static constexpr VTable::GetPrototypeOf virtualGetPrototypeOf = nullptr;
+    static constexpr VTable::SetPrototypeOf virtualSetPrototypeOf = nullptr;
+    static constexpr VTable::GetLength virtualGetLength = nullptr;
+    static constexpr VTable::AdvanceIterator virtualAdvanceIterator = nullptr;
+    static constexpr VTable::InstanceOf virtualInstanceOf = nullptr;
 
-    static constexpr VTable::Call call = nullptr;
-    static constexpr VTable::CallAsConstructor callAsConstructor = nullptr;
+    static constexpr VTable::Call virtualCall = nullptr;
+    static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
 };
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
@@ -156,26 +156,26 @@ protected:
     { 0, 0, 0, 0 },                         \
     #classname, \
     \
-    classname::destroy,                     \
+    classname::virtualDestroy,              \
     classname::Data::markObjects,           \
-    classname::isEqualTo,                   \
+    classname::virtualIsEqualTo,            \
     \
-    classname::get,                         \
-    classname::put,                         \
-    classname::deleteProperty,              \
-    classname::hasProperty,                 \
-    classname::getOwnProperty,              \
-    classname::defineOwnProperty,           \
-    classname::isExtensible,                \
-    classname::preventExtensions,           \
-    classname::getPrototypeOf,              \
-    classname::setPrototypeOf,              \
-    classname::getLength,                   \
-    classname::advanceIterator,             \
-    classname::instanceOf,                  \
+    classname::virtualGet,                  \
+    classname::virtualPut,                  \
+    classname::virtualDeleteProperty,       \
+    classname::virtualHasProperty,          \
+    classname::virtualGetOwnProperty,       \
+    classname::virtualDefineOwnProperty,    \
+    classname::virtualIsExtensible,         \
+    classname::virtualPreventExtensions,    \
+    classname::virtualGetPrototypeOf,       \
+    classname::virtualSetPrototypeOf,       \
+    classname::virtualGetLength,            \
+    classname::virtualAdvanceIterator,      \
+    classname::virtualInstanceOf,           \
     \
-    classname::call,                        \
-    classname::callAsConstructor,           \
+    classname::virtualCall,                 \
+    classname::virtualCallAsConstructor,    \
 }
 
 #define DEFINE_MANAGED_VTABLE(classname) \

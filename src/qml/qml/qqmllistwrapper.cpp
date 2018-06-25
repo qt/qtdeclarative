@@ -102,7 +102,7 @@ QVariant QmlListWrapper::toVariant() const
 }
 
 
-ReturnedValue QmlListWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
@@ -127,10 +127,10 @@ ReturnedValue QmlListWrapper::get(const Managed *m, PropertyKey id, const Value 
         }
     }
 
-    return Object::get(m, id, receiver, hasProperty);
+    return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
-bool QmlListWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     // doesn't do anything. Should we throw?
     Q_UNUSED(m);
@@ -140,7 +140,7 @@ bool QmlListWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *
     return false;
 }
 
-void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
+void QmlListWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name->setM(nullptr);
     *index = UINT_MAX;
@@ -154,7 +154,7 @@ void QmlListWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
         p->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), *index));
         return;
     }
-    return QV4::Object::advanceIterator(m, it, name, index, p, attrs);
+    return QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
 }
 
 void PropertyListPrototype::init(ExecutionEngine *)

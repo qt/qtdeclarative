@@ -167,12 +167,12 @@ static ReturnedValue throwLowercaseEnumError(QV4::ExecutionEngine *v4, String *n
     return v4->throwTypeError(message);
 }
 
-ReturnedValue QQmlTypeWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlTypeWrapper>());
 
     if (!id.isString())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     QV4::ExecutionEngine *v4 = static_cast<const QQmlTypeWrapper *>(m)->engine();
     QV4::Scope scope(v4);
@@ -288,7 +288,7 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, PropertyKey id, const Value
     }
 
     bool ok = false;
-    const ReturnedValue result = Object::get(m, id, receiver, &ok);
+    const ReturnedValue result = Object::virtualGet(m, id, receiver, &ok);
     if (hasProperty)
         *hasProperty = ok;
 
@@ -304,10 +304,10 @@ ReturnedValue QQmlTypeWrapper::get(const Managed *m, PropertyKey id, const Value
 }
 
 
-bool QQmlTypeWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
-        return Object::put(m, id, value, receiver);
+        return Object::virtualPut(m, id, value, receiver);
 
 
     Q_ASSERT(m->as<QQmlTypeWrapper>());
@@ -350,7 +350,7 @@ bool QQmlTypeWrapper::put(Managed *m, PropertyKey id, const Value &value, Value 
     return false;
 }
 
-PropertyAttributes QQmlTypeWrapper::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes QQmlTypeWrapper::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         Scope scope(m);
@@ -361,10 +361,10 @@ PropertyAttributes QQmlTypeWrapper::getOwnProperty(Managed *m, PropertyKey id, P
         return hasProperty ? Attr_Data : Attr_Invalid;
     }
 
-    return QV4::Object::getOwnProperty(m, id, p);
+    return QV4::Object::virtualGetOwnProperty(m, id, p);
 }
 
-bool QQmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
+bool QQmlTypeWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QV4::QQmlTypeWrapper>());
     QV4::QQmlTypeWrapper *qmlTypeWrapperA = static_cast<QV4::QQmlTypeWrapper *>(a);
@@ -376,7 +376,7 @@ bool QQmlTypeWrapper::isEqualTo(Managed *a, Managed *b)
     return false;
 }
 
-ReturnedValue QQmlTypeWrapper::instanceOf(const Object *typeObject, const Value &var)
+ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const Value &var)
 {
     Q_ASSERT(typeObject->as<QV4::QQmlTypeWrapper>());
     const QV4::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::QQmlTypeWrapper *>(typeObject);
@@ -428,11 +428,11 @@ QQmlType Heap::QQmlScopedEnumWrapper::type() const
     return QQmlType(typePrivate);
 }
 
-ReturnedValue QQmlScopedEnumWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlScopedEnumWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<QQmlScopedEnumWrapper>());
     if (!id.isString())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     const QQmlScopedEnumWrapper *resource = static_cast<const QQmlScopedEnumWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();

@@ -82,7 +82,7 @@ struct SymbolCtor : FunctionObject
 {
     V4_OBJECT2(SymbolCtor, FunctionObject)
 
-    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_for(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keyFor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
@@ -117,7 +117,7 @@ struct SymbolObject : Object
     V4_INTERNALCLASS(SymbolObject)
     V4_PROTOTYPE(symbolPrototype)
 
-    static bool put(Managed *, PropertyKey, const Value &, Value *) { return false; }
+    static bool virtualPut(Managed *, PropertyKey, const Value &, Value *) { return false; }
 };
 
 }

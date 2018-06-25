@@ -120,10 +120,10 @@ void ArgumentsObject::fullyCreate()
     d()->fullyCreated = true;
 }
 
-bool ArgumentsObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs)
+bool ArgumentsObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs)
 {
     if (!id.isArrayIndex())
-        return Object::defineOwnProperty(m, id, desc, attrs);
+        return Object::virtualDefineOwnProperty(m, id, desc, attrs);
 
     ArgumentsObject *a = static_cast<ArgumentsObject *>(m);
     a->fullyCreate();
@@ -148,7 +148,7 @@ bool ArgumentsObject::defineOwnProperty(Managed *m, PropertyKey id, const Proper
         arrayIndex.set(scope.engine, a->d()->mappedArguments->values[index]);
     }
 
-    bool result = Object::defineOwnProperty(m, id, desc, attrs);
+    bool result = Object::virtualDefineOwnProperty(m, id, desc, attrs);
     if (!result)
         return false;
 
@@ -169,7 +169,7 @@ bool ArgumentsObject::defineOwnProperty(Managed *m, PropertyKey id, const Proper
     return result;
 }
 
-ReturnedValue ArgumentsObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue ArgumentsObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     if (id.isArrayIndex() && !args->fullyCreated()) {
@@ -180,10 +180,10 @@ ReturnedValue ArgumentsObject::get(const Managed *m, PropertyKey id, const Value
             return args->context()->args()[index].asReturnedValue();
         }
     }
-    return Object::get(m, id, receiver, hasProperty);
+    return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
-bool ArgumentsObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool ArgumentsObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (id.isArrayIndex()) {
@@ -196,22 +196,22 @@ bool ArgumentsObject::put(Managed *m, PropertyKey id, const Value &value, Value 
             return true;
         }
     }
-    return Object::put(m, id, value, receiver);
+    return Object::virtualPut(m, id, value, receiver);
 }
 
-bool ArgumentsObject::deleteProperty(Managed *m, PropertyKey id)
+bool ArgumentsObject::virtualDeleteProperty(Managed *m, PropertyKey id)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
     if (!args->fullyCreated())
         args->fullyCreate();
-    return Object::deleteProperty(m, id);
+    return Object::virtualDeleteProperty(m, id);
 }
 
-PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes ArgumentsObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     if (!id.isArrayIndex() || args->fullyCreated())
-        return Object::getOwnProperty(m, id, p);
+        return Object::virtualGetOwnProperty(m, id, p);
 
     uint index = id.asArrayIndex();
     uint argCount = args->context()->argc();
@@ -224,7 +224,7 @@ PropertyAttributes ArgumentsObject::getOwnProperty(Managed *m, PropertyKey id, P
 
 DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
 
-ReturnedValue ArgumentsGetterFunction::call(const FunctionObject *getter, const Value *thisObject, const Value *, int)
+ReturnedValue ArgumentsGetterFunction::virtualCall(const FunctionObject *getter, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = getter->engine();
     Scope scope(v4);
@@ -239,7 +239,7 @@ ReturnedValue ArgumentsGetterFunction::call(const FunctionObject *getter, const 
 
 DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
 
-ReturnedValue ArgumentsSetterFunction::call(const FunctionObject *setter, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ArgumentsSetterFunction::virtualCall(const FunctionObject *setter, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = setter->engine();
     Scope scope(v4);
@@ -253,7 +253,7 @@ ReturnedValue ArgumentsSetterFunction::call(const FunctionObject *setter, const 
     return Encode::undefined();
 }
 
-qint64 ArgumentsObject::getLength(const Managed *m)
+qint64 ArgumentsObject::virtualGetLength(const Managed *m)
 {
     const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);
     return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->toLength();

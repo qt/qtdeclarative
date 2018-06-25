@@ -67,7 +67,7 @@ void Heap::SymbolObject::init(const QV4::Symbol *s)
     symbol.set(internalClass->engine, s->d());
 }
 
-ReturnedValue QV4::SymbolCtor::call(const QV4::FunctionObject *f, const QV4::Value *, const QV4::Value *argv, int argc)
+ReturnedValue QV4::SymbolCtor::virtualCall(const QV4::FunctionObject *f, const QV4::Value *, const QV4::Value *argv, int argc)
 {
     Scope scope(f);
     QString desc = QChar::fromLatin1('@');

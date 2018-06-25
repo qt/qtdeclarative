@@ -78,13 +78,13 @@ void Heap::NumberCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Number"));
 }
 
-ReturnedValue NumberCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue NumberCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     double dbl = argc ? argv[0].toNumber() : 0.;
     return Encode(f->engine()->newNumberObject(dbl));
 }
 
-ReturnedValue NumberCtor::call(const FunctionObject *, const Value *, const Value *argv, int argc)
+ReturnedValue NumberCtor::virtualCall(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     double dbl = argc ? argv[0].toNumber() : 0.;
     return Encode(dbl);

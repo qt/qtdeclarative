@@ -152,8 +152,8 @@ struct RegExpCtor: FunctionObject
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct RegExpPrototype: RegExpObject

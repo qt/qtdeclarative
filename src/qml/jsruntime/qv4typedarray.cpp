@@ -214,7 +214,7 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f->engine());
     const TypedArrayCtor *that = static_cast<const TypedArrayCtor *>(f);
@@ -348,7 +348,7 @@ ReturnedValue TypedArrayCtor::callAsConstructor(const FunctionObject *f, const V
     return array.asReturnedValue();
 }
 
-ReturnedValue TypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue TypedArrayCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("calling a TypedArray constructor without new is invalid"));
 }
@@ -367,10 +367,10 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
     return e->memoryManager->allocObject<TypedArray>(ic->d(), t);
 }
 
-ReturnedValue TypedArray::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isArrayIndex())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     uint index = id.asArrayIndex();
     Scope scope(static_cast<const Object *>(m)->engine());
@@ -388,10 +388,10 @@ ReturnedValue TypedArray::get(const Managed *m, PropertyKey id, const Value *rec
     return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
 }
 
-bool TypedArray::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isArrayIndex())
-        return Object::put(m, id, value, receiver);
+        return Object::virtualPut(m, id, value, receiver);
 
     uint index = id.asArrayIndex();
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
@@ -640,12 +640,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const Functio
     return a->engine()->newString(QString::fromLatin1(a->d()->type->name))->asReturnedValue();
 }
 
-ReturnedValue IntrinsicTypedArrayCtor::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue IntrinsicTypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue IntrinsicTypedArrayCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue IntrinsicTypedArrayCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }

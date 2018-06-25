@@ -314,7 +314,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
                 }
             }
         }
-        return QV4::Object::get(this, name->propertyKey(), this, hasProperty);
+        return QV4::Object::virtualGet(this, name->propertyKey(), this, hasProperty);
     }
 
     QQmlData *ddata = QQmlData::get(d()->object(), false);
@@ -667,7 +667,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int p
     return setProperty(engine, object, property, value);
 }
 
-bool QObjectWrapper::isEqualTo(Managed *a, Managed *b)
+bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QV4::QObjectWrapper>());
     QV4::QObjectWrapper *qobjectWrapper = static_cast<QV4::QObjectWrapper *>(a);
@@ -693,10 +693,10 @@ ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
     return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
 
-QV4::ReturnedValue QObjectWrapper::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+QV4::ReturnedValue QObjectWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isString())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
     Scope scope(that);
@@ -705,10 +705,10 @@ QV4::ReturnedValue QObjectWrapper::get(const Managed *m, PropertyKey id, const V
     return that->getQmlProperty(qmlContext, n, IgnoreRevision, hasProperty, /*includeImports*/ true);
 }
 
-bool QObjectWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
-        return Object::put(m, id, value, receiver);
+        return Object::virtualPut(m, id, value, receiver);
 
     Scope scope(m);
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
@@ -728,14 +728,14 @@ bool QObjectWrapper::put(Managed *m, PropertyKey id, const Value &value, Value *
             scope.engine->throwError(error);
             return false;
         } else {
-            return QV4::Object::put(m, id, value, receiver);
+            return QV4::Object::virtualPut(m, id, value, receiver);
         }
     }
 
     return true;
 }
 
-PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes QObjectWrapper::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
@@ -757,10 +757,10 @@ PropertyAttributes QObjectWrapper::getOwnProperty(Managed *m, PropertyKey id, Pr
         }
     }
 
-    return QV4::Object::getOwnProperty(m, id, p);
+    return QV4::Object::virtualGetOwnProperty(m, id, p);
 }
 
-void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
+void QObjectWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
@@ -811,7 +811,7 @@ void QObjectWrapper::advanceIterator(Managed *m, ObjectIterator *it, Value *name
             return;
         }
     }
-    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
+    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
 namespace QV4 {
@@ -1933,7 +1933,7 @@ QV4::ReturnedValue QObjectMethod::method_destroy(QV4::ExecutionEngine *engine, c
     return Encode::undefined();
 }
 
-ReturnedValue QObjectMethod::call(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue QObjectMethod::virtualCall(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc)
 {
     const QObjectMethod *This = static_cast<const QObjectMethod*>(m);
     return This->callInternal(thisObject, argv, argc);
@@ -2064,7 +2064,7 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
     }
 }
 
-ReturnedValue QMetaObjectWrapper::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue QMetaObjectWrapper::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(f);
     return This->constructInternal(argv, argc);
@@ -2170,7 +2170,7 @@ ReturnedValue QMetaObjectWrapper::callOverloadedConstructor(QV4::ExecutionEngine
     }
 }
 
-bool QMetaObjectWrapper::isEqualTo(Managed *a, Managed *b)
+bool QMetaObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QMetaObjectWrapper>());
     QMetaObjectWrapper *aMetaObject = a->as<QMetaObjectWrapper>();

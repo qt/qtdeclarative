@@ -100,17 +100,17 @@ struct StringObject: Object {
 
     using Object::getOwnProperty;
 protected:
-    static bool deleteProperty(Managed *m, PropertyKey id);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
 };
 
 struct StringCtor: FunctionObject
 {
     V4_OBJECT2(StringCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_fromCodePoint(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

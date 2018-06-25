@@ -73,7 +73,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
 #define V4_MANAGED_SIZE_TEST void __dataTest() { static_assert (sizeof(*this) == sizeof(Managed), "Classes derived from Managed can't have own data members."); }
 
-#define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->destroy(); }
+#define V4_NEEDS_DESTROY static void virtualDestroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->destroy(); }
 
 
 #define V4_MANAGED_ITSELF(DataClass, superClass) \
@@ -175,8 +175,6 @@ public:
     bool isEqualTo(const Managed *other) const
     { return d()->internalClass->vtable->isEqualTo(const_cast<Managed *>(this), const_cast<Managed *>(other)); }
 
-    static bool isEqualTo(Managed *m, Managed *other);
-
     bool inUse() const { return d()->inUse(); }
     bool markBit() const { return d()->isMarked(); }
     inline void mark(MarkStack *markStack);
@@ -191,6 +189,9 @@ public:
     template<typename T> inline const T *cast() const {
         return static_cast<const T *>(this);
     }
+
+protected:
+    static bool virtualIsEqualTo(Managed *m, Managed *other);
 
 private:
     friend class MemoryManager;

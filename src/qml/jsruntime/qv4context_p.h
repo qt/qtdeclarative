@@ -206,7 +206,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
 protected:
     // vtable method required for compilation
-    static bool deleteProperty(Managed *, PropertyKey) {
+    static bool virtualDeleteProperty(Managed *, PropertyKey) {
         Q_UNREACHABLE();
     }
 };

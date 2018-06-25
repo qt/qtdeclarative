@@ -63,7 +63,7 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
-ReturnedValue ObjectCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue ObjectCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = f->engine();
     const ObjectCtor *ctor = static_cast<const ObjectCtor *>(f);
@@ -79,7 +79,7 @@ ReturnedValue ObjectCtor::callAsConstructor(const FunctionObject *f, const Value
     }
 }
 
-ReturnedValue ObjectCtor::call(const FunctionObject *m, const Value *, const Value *argv, int argc)
+ReturnedValue ObjectCtor::virtualCall(const FunctionObject *m, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = m->engine();
     if (!argc || argv[0].isUndefined() || argv[0].isNull()) {

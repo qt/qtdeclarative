@@ -210,7 +210,7 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-ReturnedValue RegExpCtor::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
+ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
     Scope scope(fo->engine());
     ScopedValue r(scope, argc ? argv[0] : Primitive::undefinedValue());
@@ -259,14 +259,14 @@ ReturnedValue RegExpCtor::callAsConstructor(const FunctionObject *fo, const Valu
     return Encode(scope.engine->newRegExpObject(regexp));
 }
 
-ReturnedValue RegExpCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue RegExpCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     if (argc > 0 && argv[0].as<RegExpObject>()) {
         if (argc == 1 || argv[1].isUndefined())
             return Encode(argv[0]);
     }
 
-    return callAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc);
 }
 
 void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)

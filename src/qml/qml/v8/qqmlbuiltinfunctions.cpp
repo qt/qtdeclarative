@@ -197,14 +197,14 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
     return Encode::undefined();
 }
 
-ReturnedValue QtObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QtObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     bool hasProp = false;
     if (hasProperty == nullptr) {
         hasProperty = &hasProp;
     }
 
-    ReturnedValue ret = QV4::Object::get(m, id, receiver, hasProperty);
+    ReturnedValue ret = QV4::Object::virtualGet(m, id, receiver, hasProperty);
     if (*hasProperty) {
         return ret;
     }
@@ -218,14 +218,14 @@ ReturnedValue QtObject::get(const Managed *m, PropertyKey id, const Value *recei
     return ret;
 }
 
-void QtObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
+void QtObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     auto that = static_cast<QtObject*>(m);
     if (!that->d()->isComplete()) {
         that->addAll();
     }
 
-    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
+    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
 /*!

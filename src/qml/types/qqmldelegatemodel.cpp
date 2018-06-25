@@ -96,7 +96,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
         return scope->engine()->memoryManager->allocate<DelegateModelGroupFunction>(scope, flag, code);
     }
 
-    static ReturnedValue call(const QV4::FunctionObject *that, const Value *thisObject, const Value *argv, int argc)
+    static ReturnedValue virtualCall(const QV4::FunctionObject *that, const Value *thisObject, const Value *argv, int argc)
     {
         QV4::Scope scope(that->engine());
         QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<const DelegateModelGroupFunction *>(that));
@@ -3383,7 +3383,7 @@ public:
     quint32 count() const { return d()->changes->count(); }
     const QQmlChangeSet::Change &at(int index) const { return d()->changes->at(index); }
 
-    static QV4::ReturnedValue get(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty)
+    static QV4::ReturnedValue virtualGet(const QV4::Managed *m, QV4::PropertyKey id, const QV4::Value *receiver, bool *hasProperty)
     {
         if (id.isArrayIndex()) {
             uint index = id.asArrayIndex();
@@ -3419,7 +3419,7 @@ public:
             return QV4::Encode(array->count());
         }
 
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
     }
 };
 

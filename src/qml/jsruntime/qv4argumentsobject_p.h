@@ -109,7 +109,7 @@ struct ArgumentsGetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void
@@ -124,7 +124,7 @@ struct ArgumentsSetterFunction: FunctionObject
     V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
 
     uint index() const { return d()->index; }
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 inline void
@@ -146,12 +146,12 @@ struct ArgumentsObject: Object {
         return m->vtable() == staticVTable();
     }
 
-    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs);
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, PropertyKey id);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static qint64 getLength(const Managed *m);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static qint64 virtualGetLength(const Managed *m);
 
     void fullyCreate();
 

@@ -228,7 +228,7 @@ public:
     static ReturnedValue create(ExecutionEngine *, NodeImpl *, const QList<NodeImpl *> &);
 
     // JS API
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 };
 
 void Heap::NamedNodeMap::init(NodeImpl *data, const QList<NodeImpl *> &list)
@@ -249,7 +249,7 @@ public:
     V4_NEEDS_DESTROY
 
     // JS API
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 
     // C++ API
     static ReturnedValue create(ExecutionEngine *, NodeImpl *);
@@ -886,7 +886,7 @@ bool Node::isNull() const
     return d()->d == nullptr;
 }
 
-ReturnedValue NamedNodeMap::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue NamedNodeMap::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NamedNodeMap>());
 
@@ -907,7 +907,7 @@ ReturnedValue NamedNodeMap::get(const Managed *m, PropertyKey id, const Value *r
     }
 
     if (id.isSymbol())
-        return Object::get(m, id, receiver, hasProperty);
+        return Object::virtualGet(m, id, receiver, hasProperty);
 
     if (id == v4->id_length()->propertyKey())
         return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
@@ -931,7 +931,7 @@ ReturnedValue NamedNodeMap::create(ExecutionEngine *v4, NodeImpl *data, const QL
     return (v4->memoryManager->allocate<NamedNodeMap>(data, list))->asReturnedValue();
 }
 
-ReturnedValue NodeList::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue NodeList::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Q_ASSERT(m->as<NodeList>());
     const NodeList *r = static_cast<const NodeList *>(m);
@@ -951,7 +951,7 @@ ReturnedValue NodeList::get(const Managed *m, PropertyKey id, const Value *recei
 
     if (id == v4->id_length()->propertyKey())
         return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
-    return Object::get(m, id, receiver, hasProperty);
+    return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
 ReturnedValue NodeList::create(ExecutionEngine *v4, NodeImpl *data)
@@ -1629,7 +1629,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *, int)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
     {
         Scope scope(f->engine());
         const QQmlXMLHttpRequestCtor *ctor = static_cast<const QQmlXMLHttpRequestCtor *>(f);
@@ -1641,7 +1641,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
         return w.asReturnedValue();
     }
 
-    static ReturnedValue call(const FunctionObject *, const Value *, const Value *, int) {
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *, const Value *, int) {
         return Encode::undefined();
     }
 

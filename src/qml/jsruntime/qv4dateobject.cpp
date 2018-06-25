@@ -743,7 +743,7 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-ReturnedValue DateCtor::callAsConstructor(const FunctionObject *that, const Value *argv, int argc)
+ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc)
 {
     ExecutionEngine *e = that->engine();
     double t = 0;
@@ -783,7 +783,7 @@ ReturnedValue DateCtor::callAsConstructor(const FunctionObject *that, const Valu
     return Encode(e->newDateObject(Primitive::fromDouble(t)));
 }
 
-ReturnedValue DateCtor::call(const FunctionObject *m, const Value *, const Value *, int)
+ReturnedValue DateCtor::virtualCall(const FunctionObject *m, const Value *, const Value *, int)
 {
     ExecutionEngine *e = m->engine();
     double t = currentTime();

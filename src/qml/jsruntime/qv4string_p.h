@@ -237,8 +237,8 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
     bool startsWithUpper() const { return d()->startsWithUpper(); }
 
 protected:
-    static bool isEqualTo(Managed *that, Managed *o);
-    static qint64 getLength(const Managed *m);
+    static bool virtualIsEqualTo(Managed *that, Managed *o);
+    static qint64 virtualGetLength(const Managed *m);
 #endif
 
 public:

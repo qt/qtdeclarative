@@ -108,8 +108,8 @@ struct DateCtor: FunctionObject
 {
     V4_OBJECT2(DateCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int);
 };
 
 struct DatePrototype: Object

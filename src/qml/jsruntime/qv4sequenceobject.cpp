@@ -349,7 +349,7 @@ public:
 
         if (d()->isReference) {
             if (!d()->object) {
-                QV4::Object::advanceIterator(this, it, name, index, p, attrs);
+                QV4::Object::virtualAdvanceIterator(this, it, name, index, p, attrs);
                 return;
             }
             loadReference();
@@ -362,7 +362,7 @@ public:
             p->value = convertElementToValue(engine(), d()->container->at(*index));
             return;
         }
-        QV4::Object::advanceIterator(this, it, name, index, p, attrs);
+        QV4::Object::virtualAdvanceIterator(this, it, name, index, p, attrs);
     }
 
     bool containerDeleteIndexedProperty(uint index)
@@ -563,31 +563,31 @@ public:
         QMetaObject::metacall(d()->object, QMetaObject::WriteProperty, d()->propertyIndex, a);
     }
 
-    static QV4::ReturnedValue get(const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
+    static QV4::ReturnedValue virtualGet(const QV4::Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
     {
         if (!id.isArrayIndex())
-            return Object::get(that, id, receiver, hasProperty);
+            return Object::virtualGet(that, id, receiver, hasProperty);
         return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
     }
-    static bool put(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver)
+    static bool virtualPut(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver)
     {
         if (id.isArrayIndex())
             return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(id.asArrayIndex(), value);
-        return Object::put(that, id, value, receiver);
+        return Object::virtualPut(that, id, value, receiver);
     }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
     { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
-    static bool deleteProperty(QV4::Managed *that, PropertyKey id)
+    static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id)
     {
         if (id.isArrayIndex()) {
             uint index = id.asArrayIndex();
             return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index);
         }
-        return Object::deleteProperty(that, id);
+        return Object::virtualDeleteProperty(that, id);
     }
-    static bool isEqualTo(Managed *that, Managed *other)
+    static bool virtualIsEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static void advanceIterator(Managed *that, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
+    static void virtualAdvanceIterator(Managed *that, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
     { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, p, attrs); }
 
 };

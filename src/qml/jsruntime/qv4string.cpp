@@ -81,7 +81,7 @@ DEFINE_MANAGED_VTABLE(StringOrSymbol);
 DEFINE_MANAGED_VTABLE(String);
 
 
-bool String::isEqualTo(Managed *t, Managed *o)
+bool String::virtualIsEqualTo(Managed *t, Managed *o)
 {
     if (t == o)
         return true;
@@ -257,7 +257,7 @@ PropertyKey StringOrSymbol::toPropertyKey() const {
     return propertyKey();
 }
 
-qint64 String::getLength(const Managed *m)
+qint64 String::virtualGetLength(const Managed *m)
 {
     return static_cast<const String *>(m)->d()->length();
 }

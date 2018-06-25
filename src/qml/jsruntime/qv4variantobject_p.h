@@ -99,7 +99,8 @@ struct VariantObject : Object
     void addVmePropertyReference() const;
     void removeVmePropertyReference() const;
 
-    static bool isEqualTo(Managed *m, Managed *other);
+protected:
+    static bool virtualIsEqualTo(Managed *m, Managed *other);
 };
 
 struct VariantPrototype : VariantObject

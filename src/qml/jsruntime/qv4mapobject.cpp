@@ -53,7 +53,7 @@ void Heap::MapCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Map"));
 }
 
-ReturnedValue MapCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue MapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f);
     Scoped<MapObject> a(scope, scope.engine->memoryManager->allocate<MapObject>());
@@ -98,7 +98,7 @@ ReturnedValue MapCtor::callAsConstructor(const FunctionObject *f, const Value *a
     return a.asReturnedValue();
 }
 
-ReturnedValue MapCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue MapCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     Scope scope(f);
     return scope.engine->throwTypeError(QString::fromLatin1("Map requires new"));

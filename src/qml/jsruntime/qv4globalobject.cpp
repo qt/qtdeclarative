@@ -384,7 +384,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
 }
 
 
-ReturnedValue EvalFunction::call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue EvalFunction::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     // indirect call
     return static_cast<const EvalFunction *>(f)->evalCall(thisObject, argv, argc, false);

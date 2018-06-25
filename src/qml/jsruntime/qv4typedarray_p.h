@@ -140,24 +140,24 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
     }
     using Object::get;
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
 };
 
 struct IntrinsicTypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct TypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(TypedArrayCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct IntrinsicTypedArrayPrototype : Object

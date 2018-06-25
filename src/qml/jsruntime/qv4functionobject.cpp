@@ -73,7 +73,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
                                 ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
 {
     jsCall = code;
-    jsConstruct = QV4::FunctionObject::callAsConstructor;
+    jsConstruct = QV4::FunctionObject::virtualCallAsConstructor;
 
     Object::init();
     this->scope.set(scope->engine(), scope->d());
@@ -168,12 +168,12 @@ ReturnedValue FunctionObject::name() const
     return get(scope()->internalClass->engine->id_name());
 }
 
-ReturnedValue FunctionObject::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue FunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue FunctionObject::call(const FunctionObject *, const Value *, const Value *, int)
+ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *, const Value *, int)
 {
     return Encode::undefined();
 }
@@ -275,7 +275,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
     return cg.generateCompilationUnit();
 }
 
-ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     ExecutionEngine *engine = f->engine();
 
@@ -289,9 +289,9 @@ ReturnedValue FunctionCtor::callAsConstructor(const FunctionObject *f, const Val
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-ReturnedValue FunctionCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue FunctionCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
@@ -445,12 +445,12 @@ ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *f, con
     if (!o)
         return f->engine()->throwTypeError();
 
-    return Object::instanceOf(o, argv[0]);
+    return Object::virtualInstanceOf(o, argv[0]);
 }
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-ReturnedValue ScriptFunction::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
+ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = fo->engine();
     const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
@@ -467,7 +467,7 @@ ReturnedValue ScriptFunction::callAsConstructor(const FunctionObject *fo, const 
     return result;
 }
 
-ReturnedValue ScriptFunction::call(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
     return Moth::VME::exec(fo, thisObject, argv, argc);
 }
@@ -509,21 +509,21 @@ Heap::InternalClass *ScriptFunction::classForConstructor() const
 
 DEFINE_OBJECT_VTABLE(ConstructorFunction);
 
-ReturnedValue ConstructorFunction::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
 }
 
 DEFINE_OBJECT_VTABLE(MemberFunction);
 
-ReturnedValue MemberFunction::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue MemberFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
 }
 
 DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);
 
-ReturnedValue DefaultClassConstructorFunction::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     Scope scope(f);
     ScopedObject proto(scope, f->get(scope.engine->id_prototype()));
@@ -532,7 +532,7 @@ ReturnedValue DefaultClassConstructorFunction::callAsConstructor(const FunctionO
     return c->asReturnedValue();
 }
 
-ReturnedValue DefaultClassConstructorFunction::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue DefaultClassConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
 }
@@ -567,7 +567,7 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     f->insertMember(s.engine->id_caller(), pd, Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable);
 }
 
-ReturnedValue BoundFunction::call(const FunctionObject *fo, const Value *, const Value *argv, int argc)
+ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *, const Value *argv, int argc)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(fo);
     Scope scope(f->engine());
@@ -588,7 +588,7 @@ ReturnedValue BoundFunction::call(const FunctionObject *fo, const Value *, const
     return target->call(jsCallData);
 }
 
-ReturnedValue BoundFunction::callAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
+ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(fo);
     Scope scope(f->engine());

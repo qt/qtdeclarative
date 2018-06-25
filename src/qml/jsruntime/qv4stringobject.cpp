@@ -97,7 +97,7 @@ uint Heap::StringObject::length() const
     return string->length();
 }
 
-bool StringObject::deleteProperty(Managed *m, PropertyKey id)
+bool StringObject::virtualDeleteProperty(Managed *m, PropertyKey id)
 {
     Q_ASSERT(m->as<StringObject>());
     if (id.isArrayIndex()) {
@@ -106,10 +106,10 @@ bool StringObject::deleteProperty(Managed *m, PropertyKey id)
         if (index < static_cast<uint>(o->d()->string->toQString().length()))
             return false;
     }
-    return Object::deleteProperty(m, id);
+    return Object::virtualDeleteProperty(m, id);
 }
 
-void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
+void StringObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
 {
     name->setM(nullptr);
     StringObject *s = static_cast<StringObject *>(m);
@@ -134,12 +134,12 @@ void StringObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, 
         }
     }
 
-    return Object::advanceIterator(m, it, name, index, p, attrs);
+    return Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
 }
 
-PropertyAttributes StringObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes StringObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
-    PropertyAttributes attributes = Object::getOwnProperty(m, id, p);
+    PropertyAttributes attributes = Object::virtualGetOwnProperty(m, id, p);
     if (attributes != Attr_Invalid)
         return attributes;
 
@@ -164,7 +164,7 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-ReturnedValue StringCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(f)->engine();
     Scope scope(v4);
@@ -177,7 +177,7 @@ ReturnedValue StringCtor::callAsConstructor(const FunctionObject *f, const Value
     return Encode(v4->newStringObject(value));
 }
 
-ReturnedValue StringCtor::call(const FunctionObject *m, const Value *, const Value *argv, int argc)
+ReturnedValue StringCtor::virtualCall(const FunctionObject *m, const Value *, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = m->engine();
     if (!argc)
@@ -514,7 +514,7 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
     Scoped<RegExpObject> that(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!that) {
         // convert args[0] to a regexp
-        that = RegExpCtor::callAsConstructor(b, argv, argc);
+        that = RegExpCtor::virtualCallAsConstructor(b, argv, argc);
         if (v4->hasException)
             return Encode::undefined();
     }

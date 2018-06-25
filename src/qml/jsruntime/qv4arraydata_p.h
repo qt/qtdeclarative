@@ -215,17 +215,6 @@ struct Q_QML_EXPORT ArrayData : public Managed
     static void sort(ExecutionEngine *engine, Object *thisObject, const Value &comparefn, uint dataLen);
     static uint append(Object *obj, ArrayObject *otherObj, uint n);
     static void insert(Object *o, uint index, const Value *v, bool isAccessor = false);
-
-protected:
-    // Vtable methods required to get things to compile
-    static ReturnedValue get(const Managed *, PropertyKey, const Value *, bool *) {
-        Q_UNREACHABLE();
-        return Encode::undefined();
-    }
-    static bool put(Managed *, PropertyKey, const Value &, Value *) {
-        Q_UNREACHABLE();
-        return false;
-    }
 };
 
 struct Q_QML_EXPORT SimpleArrayData : public ArrayData
@@ -250,10 +239,6 @@ struct Q_QML_EXPORT SimpleArrayData : public ArrayData
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const Heap::ArrayData *d);
-
-protected:
-    using ArrayData::get;
-    using ArrayData::put;
 };
 
 struct Q_QML_EXPORT SparseArrayData : public ArrayData
@@ -280,10 +265,6 @@ struct Q_QML_EXPORT SparseArrayData : public ArrayData
     static ReturnedValue pop_front(Object *o);
     static uint truncate(Object *o, uint newLen);
     static uint length(const Heap::ArrayData *d);
-
-protected:
-    using ArrayData::get;
-    using ArrayData::put;
 };
 
 namespace Heap {

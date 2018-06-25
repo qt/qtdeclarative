@@ -54,7 +54,7 @@ void Heap::GeneratorFunctionCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("GeneratorFunction"));
 }
 
-ReturnedValue GeneratorFunctionCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     ExecutionEngine *engine = f->engine();
 
@@ -68,9 +68,9 @@ ReturnedValue GeneratorFunctionCtor::callAsConstructor(const FunctionObject *f, 
 }
 
 // 15.3.1: This is equivalent to new Function(...)
-ReturnedValue GeneratorFunctionCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue GeneratorFunctionCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc);
 }
 
 Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Function *function)
@@ -84,12 +84,12 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     return g->d();
 }
 
-ReturnedValue GeneratorFunction::callAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue GeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
 
-ReturnedValue GeneratorFunction::call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     const GeneratorFunction *gf = static_cast<const GeneratorFunction *>(f);
     Function *function = gf->function();

@@ -176,8 +176,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
         return d()->jsCall(this, thisObject, argv, argc);
     }
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function);
@@ -201,8 +201,8 @@ struct FunctionCtor: FunctionObject
 {
     V4_OBJECT2(FunctionCtor, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 protected:
     enum Type {
         Type_Function,
@@ -243,8 +243,8 @@ struct ScriptFunction : FunctionObject {
     V4_INTERNALCLASS(ScriptFunction)
     enum { NInlineProperties = 3 };
 
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     Heap::InternalClass *classForConstructor() const;
 };
@@ -252,20 +252,20 @@ struct ScriptFunction : FunctionObject {
 struct ConstructorFunction : ScriptFunction {
     V4_OBJECT2(ConstructorFunction, ScriptFunction)
     V4_INTERNALCLASS(ConstructorFunction)
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct MemberFunction : ScriptFunction {
     V4_OBJECT2(MemberFunction, ScriptFunction)
     V4_INTERNALCLASS(MemberFunction)
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
 };
 
 
 struct DefaultClassConstructorFunction : FunctionObject {
     V4_OBJECT2(DefaultClassConstructorFunction, FunctionObject)
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct BoundFunction: FunctionObject {
@@ -280,8 +280,8 @@ struct BoundFunction: FunctionObject {
     Value boundThis() const { return d()->boundThis; }
     Heap::MemberData *boundArgs() const { return d()->boundArgs; }
 
-    static ReturnedValue callAsConstructor(const FunctionObject *, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 }

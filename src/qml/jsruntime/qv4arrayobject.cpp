@@ -59,7 +59,7 @@ void Heap::ArrayCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Array"));
 }
 
-ReturnedValue ArrayCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue ArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     ExecutionEngine *v4 = static_cast<const ArrayCtor *>(f)->engine();
     Scope scope(v4);
@@ -84,9 +84,9 @@ ReturnedValue ArrayCtor::callAsConstructor(const FunctionObject *f, const Value 
     return a.asReturnedValue();
 }
 
-ReturnedValue ArrayCtor::call(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue ArrayCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return callAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc);
 }
 
 void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)

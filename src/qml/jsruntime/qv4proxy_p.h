@@ -85,29 +85,28 @@ struct ProxyObject: Object {
     Q_MANAGED_TYPE(ProxyObject)
     V4_INTERNALCLASS(ProxyObject)
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static ReturnedValue get(const Managed *m, uint index, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, PropertyKey id);
-    static bool hasProperty(const Managed *m, PropertyKey id);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
-    static bool isExtensible(const Managed *m);
-    static bool preventExtensions(Managed *);
-    static Heap::Object *getPrototypeOf(const Managed *);
-    static bool setPrototypeOf(Managed *, const Object *);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static bool virtualHasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    static bool virtualIsExtensible(const Managed *m);
+    static bool virtualPreventExtensions(Managed *);
+    static Heap::Object *virtualGetPrototypeOf(const Managed *);
+    static bool virtualSetPrototypeOf(Managed *, const Object *);
 
     // those might require a second proxy object that derives from FunctionObject...
-//    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-//    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+//    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+//    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Proxy : FunctionObject
 {
     V4_OBJECT2(Proxy, FunctionObject)
 
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_revocable(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 

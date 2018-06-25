@@ -360,21 +360,21 @@ public:
     { return vtable()->instanceOf(this, var); }
 
 protected:
-    static ReturnedValue callAsConstructor(const FunctionObject *f, const Value *argv, int argc);
-    static ReturnedValue call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static bool deleteProperty(Managed *m, PropertyKey id);
-    static bool hasProperty(const Managed *m, PropertyKey id);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
-    static bool isExtensible(const Managed *m);
-    static bool preventExtensions(Managed *);
-    static Heap::Object *getPrototypeOf(const Managed *);
-    static bool setPrototypeOf(Managed *, const Object *);
-    static void advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    static qint64 getLength(const Managed *m);
-    static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDeleteProperty(Managed *m, PropertyKey id);
+    static bool virtualHasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    static bool virtualIsExtensible(const Managed *m);
+    static bool virtualPreventExtensions(Managed *);
+    static Heap::Object *virtualGetPrototypeOf(const Managed *);
+    static bool virtualSetPrototypeOf(Managed *, const Object *);
+    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static qint64 virtualGetLength(const Managed *m);
+    static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
 
 private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
@@ -453,12 +453,11 @@ struct ArrayObject: Object {
 
     void init(ExecutionEngine *engine);
 
-    using Object::getLength;
-    static qint64 getLength(const Managed *m);
+    static qint64 virtualGetLength(const Managed *m);
 
     QStringList toQStringList() const;
 protected:
-    static bool defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
 
 };
 

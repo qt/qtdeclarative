@@ -53,7 +53,7 @@ void Heap::SetCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Set"));
 }
 
-ReturnedValue SetCtor::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f);
     Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());
@@ -89,7 +89,7 @@ ReturnedValue SetCtor::callAsConstructor(const FunctionObject *f, const Value *a
     return a.asReturnedValue();
 }
 
-ReturnedValue SetCtor::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue SetCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     Scope scope(f);
     return scope.engine->throwTypeError(QString::fromLatin1("Set requires new"));

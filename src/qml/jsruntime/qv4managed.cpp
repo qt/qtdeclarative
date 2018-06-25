@@ -138,7 +138,7 @@ QString Managed::className() const
     return QString::fromLatin1(s);
 }
 
-bool Managed::isEqualTo(Managed *, Managed *)
+bool Managed::virtualIsEqualTo(Managed *, Managed *)
 {
     return false;
 }

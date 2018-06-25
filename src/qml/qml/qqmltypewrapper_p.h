@@ -111,12 +111,12 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
     static ReturnedValue create(ExecutionEngine *, QObject *, const QQmlRefPointer<QQmlTypeNameCache> &, const QQmlImportRef *,
                                 Heap::QQmlTypeWrapper::TypeNameMode = Heap::QQmlTypeWrapper::IncludeEnums);
 
-
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static bool put(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static PropertyAttributes getOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static bool isEqualTo(Managed *that, Managed *o);
-    static ReturnedValue instanceOf(const Object *typeObject, const Value &var);
+protected:
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static bool virtualIsEqualTo(Managed *that, Managed *o);
+    static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
 };
 
 struct Q_QML_EXPORT QQmlScopedEnumWrapper : Object
@@ -124,7 +124,7 @@ struct Q_QML_EXPORT QQmlScopedEnumWrapper : Object
     V4_OBJECT2(QQmlScopedEnumWrapper, Object)
     V4_NEEDS_DESTROY
 
-    static ReturnedValue get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
+    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
 };
 
 }

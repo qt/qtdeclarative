@@ -70,7 +70,7 @@ bool VariantObject::Data::isScarce() const
     return t == QVariant::Pixmap || t == QVariant::Image;
 }
 
-bool VariantObject::isEqualTo(Managed *m, Managed *other)
+bool VariantObject::virtualIsEqualTo(Managed *m, Managed *other)
 {
     Q_ASSERT(m->as<QV4::VariantObject>());
     QV4::VariantObject *lv = static_cast<QV4::VariantObject *>(m);

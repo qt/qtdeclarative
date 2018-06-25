@@ -55,7 +55,7 @@ void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handl
     this->handler.set(e, handler->d());
 }
 
-ReturnedValue ProxyObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue ProxyObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -96,7 +96,7 @@ ReturnedValue ProxyObject::get(const Managed *m, PropertyKey id, const Value *re
     return trapResult->asReturnedValue();
 }
 
-bool ProxyObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool ProxyObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -136,7 +136,7 @@ bool ProxyObject::put(Managed *m, PropertyKey id, const Value &value, Value *rec
     return true;
 }
 
-bool ProxyObject::deleteProperty(Managed *m, PropertyKey id)
+bool ProxyObject::virtualDeleteProperty(Managed *m, PropertyKey id)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -172,7 +172,7 @@ bool ProxyObject::deleteProperty(Managed *m, PropertyKey id)
     return true;
 }
 
-bool ProxyObject::hasProperty(const Managed *m, PropertyKey id)
+bool ProxyObject::virtualHasProperty(const Managed *m, PropertyKey id)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -187,7 +187,7 @@ bool ProxyObject::hasProperty(const Managed *m, PropertyKey id)
     if (scope.hasException())
         return Encode::undefined();
     if (trap->isNullOrUndefined())
-        return target->hasProperty(m, id);
+        return target->hasProperty(id);
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
@@ -208,7 +208,7 @@ bool ProxyObject::hasProperty(const Managed *m, PropertyKey id)
     return result;
 }
 
-PropertyAttributes ProxyObject::getOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -278,7 +278,7 @@ PropertyAttributes ProxyObject::getOwnProperty(Managed *m, PropertyKey id, Prope
     return resultAttributes;
 }
 
-bool ProxyObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
+bool ProxyObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -332,7 +332,7 @@ bool ProxyObject::defineOwnProperty(Managed *m, PropertyKey id, const Property *
     return true;
 }
 
-bool ProxyObject::isExtensible(const Managed *m)
+bool ProxyObject::virtualIsExtensible(const Managed *m)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -363,7 +363,7 @@ bool ProxyObject::isExtensible(const Managed *m)
     return result;
 }
 
-bool ProxyObject::preventExtensions(Managed *m)
+bool ProxyObject::virtualPreventExtensions(Managed *m)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -394,7 +394,7 @@ bool ProxyObject::preventExtensions(Managed *m)
     return result;
 }
 
-Heap::Object *ProxyObject::getPrototypeOf(const Managed *m)
+Heap::Object *ProxyObject::virtualGetPrototypeOf(const Managed *m)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -436,7 +436,7 @@ Heap::Object *ProxyObject::getPrototypeOf(const Managed *m)
     return proto;
 }
 
-bool ProxyObject::setPrototypeOf(Managed *m, const Object *p)
+bool ProxyObject::virtualSetPrototypeOf(Managed *m, const Object *p)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -477,7 +477,7 @@ bool ProxyObject::setPrototypeOf(Managed *m, const Object *p)
     return true;
 }
 
-//ReturnedValue ProxyObject::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+//ReturnedValue ProxyObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 //{
 
 //}
@@ -499,7 +499,7 @@ void Heap::Proxy::init(QV4::ExecutionContext *ctx)
     ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(2));
 }
 
-ReturnedValue Proxy::callAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
 {
     Scope scope(f);
     if (argc < 2 || !argv[0].isObject() || !argv[1].isObject())
@@ -518,7 +518,7 @@ ReturnedValue Proxy::callAsConstructor(const FunctionObject *f, const Value *arg
     return o->asReturnedValue();
 }
 
-ReturnedValue Proxy::call(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Proxy::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError();
 }
@@ -526,7 +526,7 @@ ReturnedValue Proxy::call(const FunctionObject *f, const Value *, const Value *,
 ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedObject proxy(scope, Proxy::callAsConstructor(f, argv, argc));
+    ScopedObject proxy(scope, Proxy::virtualCallAsConstructor(f, argv, argc));
     if (scope.hasException())
         return Encode::undefined();
 

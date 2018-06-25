@@ -1564,10 +1564,10 @@ void ModelNodeMetaObject::emitDirectNotifies(const int *changedRoles, int roleCo
 
 namespace QV4 {
 
-bool ModelObject::put(Managed *m, PropertyKey id, const Value &value, Value *receiver)
+bool ModelObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isString())
-        return Object::put(m, id, value, receiver);
+        return Object::virtualPut(m, id, value, receiver);
     QString propName = id.toQString();
 
     ModelObject *that = static_cast<ModelObject*>(m);
@@ -1584,17 +1584,17 @@ bool ModelObject::put(Managed *m, PropertyKey id, const Value &value, Value *rec
     return true;
 }
 
-ReturnedValue ModelObject::get(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (!id.isString())
-        return Object::get(m, id, receiver, hasProperty);
+        return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
 
     const ModelObject *that = static_cast<const ModelObject*>(m);
     Scope scope(that);
     ScopedString name(scope, id.asStringOrSymbol());
     const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
     if (!role)
-        return QObjectWrapper::get(m, id, receiver, hasProperty);
+        return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
     if (hasProperty)
         *hasProperty = true;
 
@@ -1610,7 +1610,7 @@ ReturnedValue ModelObject::get(const Managed *m, PropertyKey id, const Value *re
     return that->engine()->fromVariant(value);
 }
 
-void ModelObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
+void ModelObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
 {
     ModelObject *that = static_cast<ModelObject*>(m);
     ExecutionEngine *v4 = that->engine();
@@ -1630,7 +1630,7 @@ void ModelObject::advanceIterator(Managed *m, ObjectIterator *it, Value *name, u
     // Fall back to QV4::Object as opposed to QV4::QObjectWrapper otherwise it will add
     // unnecessary entries that relate to the roles used. These just create extra work
     // later on as they will just be ignored.
-    QV4::Object::advanceIterator(m, it, name, index, p, attributes);
+    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
 DEFINE_OBJECT_VTABLE(ModelObject);
