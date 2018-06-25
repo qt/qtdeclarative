@@ -146,6 +146,12 @@ Heap::String *IdentifierTable::insertString(const QString &s)
 {
     uint subtype;
     uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    if (subtype == Heap::String::StringType_ArrayIndex) {
+        Heap::String *str = engine->newString(s);
+        str->stringHash = hash;
+        str->subtype = subtype;
+        return str;
+    }
     uint idx = hash % alloc;
     while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
