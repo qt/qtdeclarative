@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Window 2.1
+import QtQuick 2.12
+import QtQuick.Window 2.12
 
 Item {
     id: container

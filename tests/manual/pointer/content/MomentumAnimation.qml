@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
+import QtQuick 2.12
 
 ParallelAnimation {
     id: root

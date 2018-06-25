@@ -14,7 +14,6 @@ qtHaveModule(quick) {
     QT_FOR_CONFIG += quick-private
 
     SUBDIRS += \
-        handlers \
         layouts \
         qtquick2 \
         window \

@@ -26,8 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import Qt.labs.handlers 1.0
+import QtQuick 2.12
 import "qrc:/quick/shared/" as Examples
 import "content"
 

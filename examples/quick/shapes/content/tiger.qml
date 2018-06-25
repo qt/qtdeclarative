@@ -48,9 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.11
-import QtQuick.Shapes 1.11
-import Qt.labs.handlers 1.0
+import QtQuick 2.12
+import QtQuick.Shapes 1.12
 
 Shape {
     asynchronous: true

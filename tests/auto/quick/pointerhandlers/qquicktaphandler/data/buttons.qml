@@ -26,8 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import Qt.labs.handlers 1.0
+import QtQuick 2.12
 
 Item {
     width: 320

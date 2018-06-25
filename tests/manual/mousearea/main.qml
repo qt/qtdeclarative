@@ -26,9 +26,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.8
+import QtQuick 2.12
 import QtQuick.Window 2.2
-import Qt.labs.handlers 1.0
 import "qrc:/quick/shared/" as Examples
 
 Window {

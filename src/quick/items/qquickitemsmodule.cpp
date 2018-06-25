@@ -113,6 +113,12 @@
 #include <private/qqmlmetatype_p.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
+#include "handlers/qquickdraghandler_p.h"
+#include "handlers/qquickhoverhandler_p.h"
+#include "handlers/qquickpinchhandler_p.h"
+#include "handlers/qquickpointhandler_p.h"
+#include "handlers/qquicktaphandler_p.h"
+
 QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 QT_END_NAMESPACE
@@ -135,6 +141,9 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
                 win->setTransientParent(parentItem->window());
                 return QQmlPrivate::Parented;
             }
+        } else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(obj)) {
+            handler->setParent(parent);
+            return QQmlPrivate::Parented;
         }
         return QQmlPrivate::IncompatibleObject;
     } else if (QQuickWindow *parentWindow = qmlobject_cast<QQuickWindow *>(parent)) {
@@ -423,6 +432,33 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
 #endif
     qmlRegisterType<QQuickItem, 11>(uri, 2, 11,"Item");
 
+    // classes related to Input Handlers which are newly exposed since 5.12
+    qmlRegisterUncreatableType<QQuickPointerEvent>(uri, 2, 12, "PointerEvent",
+        QQuickPointerHandler::tr("PointerEvent is only available as a parameter of several signals in PointerHandler"));
+    qmlRegisterUncreatableType<QQuickPointerMouseEvent>(uri, 2, 12, "PointerMouseEvent",
+        QQuickPointerHandler::tr("PointerMouseEvent is only available as a parameter of several signals in PointerHandler"));
+    qmlRegisterUncreatableType<QQuickPointerTouchEvent>(uri, 2, 12, "PointerTouchEvent",
+        QQuickPointerHandler::tr("PointerTouchEvent is only available as a parameter of several signals in PointerHandler"));
+    qmlRegisterUncreatableType<QQuickEventPoint>(uri, 2, 12, "EventPoint",
+        QQuickPointerHandler::tr("EventPoint is only available as a member of PointerEvent"));
+    qmlRegisterUncreatableType<QQuickEventTouchPoint>(uri, 2, 12, "EventTouchPoint",
+        QQuickPointerHandler::tr("EventTouchPoint is only available as a member of PointerEvent"));
+    qmlRegisterUncreatableType<QQuickPointerDevice>(uri, 2, 12, "PointerDevice",
+        QQuickPointerHandler::tr("PointerDevice is only available as a property of PointerEvent"));
+
+    // Input Handlers are part of QtQuick, not a separate module, since 5.12
+    qmlRegisterUncreatableType<QQuickPointerHandler>(uri, 2, 12, "PointerHandler",
+        QQuickPointerHandler::tr("PointerHandler is an abstract base class"));
+    qmlRegisterType<QQuickPointHandler>(uri, 2, 12, "PointHandler");
+    qmlRegisterType<QQuickDragHandler>(uri, 2, 12, "DragHandler");
+    qmlRegisterUncreatableType<QQuickDragAxis>(uri, 2, 12, "DragAxis",
+        QQuickDragHandler::tr("DragAxis is only available as a grouped property of DragHandler"));
+    qmlRegisterType<QQuickHoverHandler>(uri, 2, 12, "HoverHandler");
+    qmlRegisterType<QQuickPinchHandler>(uri, 2, 12, "PinchHandler");
+    qmlRegisterType<QQuickTapHandler>(uri, 2, 12, "TapHandler");
+    qRegisterMetaType<QQuickHandlerPoint>();
+
+    // The rest of the 5.12 revisions
     qmlRegisterType<QQuickAnimatedSprite, 12>("QtQuick", 2, 12, "AnimatedSprite");
     qmlRegisterType<QQuickGradient, 12>(uri, 2, 12, "Gradient");
     qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");

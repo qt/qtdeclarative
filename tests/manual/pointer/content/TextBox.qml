@@ -25,7 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+
+import QtQuick 2.12
 
 Rectangle {
     id: r1

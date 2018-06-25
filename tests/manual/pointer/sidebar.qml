@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import Qt.labs.handlers 1.0
 import "content"
 
 Rectangle {
