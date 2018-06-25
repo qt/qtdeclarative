@@ -41,7 +41,6 @@
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
-#include <qpa/qplatformdrag.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <private/qquickitemchangelistener_p.h>
@@ -50,12 +49,13 @@
 #include <private/qv4scopedvalue_p.h>
 #include <QtCore/qmimedata.h>
 #include <QtQml/qqmlinfo.h>
-#include <QtGui/qdrag.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 
 #if QT_CONFIG(draganddrop)
+#include <qpa/qplatformdrag.h>
+#include <QtGui/qdrag.h>
 
 QT_BEGIN_NAMESPACE
 

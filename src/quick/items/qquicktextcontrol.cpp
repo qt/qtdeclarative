@@ -47,7 +47,6 @@
 #include <qfontmetrics.h>
 #include <qevent.h>
 #include <qdebug.h>
-#include <qdrag.h>
 #include <qclipboard.h>
 #include <qtimer.h>
 #include <qinputmethod.h>
