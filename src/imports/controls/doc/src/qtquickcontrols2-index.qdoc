@@ -65,6 +65,15 @@
 
     For more details, see \l {Getting Started with Qt Quick Controls 2}.
 
+    \section2 Building From Source
+
+    When building from source, ensure that the \l {Qt Graphical Effects} module
+    is also built, as Qt Quick Controls 2 requires it.
+
+    The \l {Qt Image Formats} module is recommended, but not
+    required. It provides support for the \c {.webp} format used by the
+    \l {Animated Images}{Imagine style}.
+
     \section1 Versions
 
     Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
