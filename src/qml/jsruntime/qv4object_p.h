@@ -64,9 +64,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
-
 namespace Heap {
 
 #define ObjectMembers(class, Member) \
@@ -140,80 +137,6 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
 };
 
 }
-
-#define V4_OBJECT2(DataClass, superClass) \
-    private: \
-        DataClass() Q_DECL_EQ_DELETE; \
-        Q_DISABLE_COPY(DataClass) \
-    public: \
-        Q_MANAGED_CHECK \
-        typedef QV4::Heap::DataClass Data; \
-        typedef superClass SuperClass; \
-        static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
-        V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
-        QV4::Heap::DataClass *d() const { \
-            QV4::Heap::DataClass *dptr = d_unchecked(); \
-            dptr->_checkIsInitialized(); \
-            return dptr; \
-        } \
-        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
-
-#define V4_PROTOTYPE(p) \
-    static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
-    { return e->p(); }
-
-struct ObjectVTable
-{
-    VTable vTable;
-    ReturnedValue (*call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    ReturnedValue (*callAsConstructor)(const FunctionObject *, const Value *argv, int argc);
-    ReturnedValue (*get)(const Managed *, PropertyKey id, const Value *receiver, bool *hasProperty);
-    bool (*put)(Managed *, PropertyKey id, const Value &value, Value *receiver);
-    bool (*deleteProperty)(Managed *m, PropertyKey id);
-    bool (*hasProperty)(const Managed *m, PropertyKey id);
-    PropertyAttributes (*getOwnProperty)(Managed *m, PropertyKey id, Property *p);
-    bool (*defineOwnProperty)(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
-    bool (*isExtensible)(const Managed *);
-    bool (*preventExtensions)(Managed *);
-    Heap::Object *(*getPrototypeOf)(const Managed *);
-    bool (*setPrototypeOf)(Managed *, const Object *);
-    qint64 (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
-};
-
-#define DEFINE_OBJECT_VTABLE_BASE(classname) \
-const QV4::ObjectVTable classname::static_vtbl =    \
-{     \
-    DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl.vTable), \
-    call,                                       \
-    callAsConstructor,                          \
-    get,                                        \
-    put,                                        \
-    deleteProperty,                             \
-    hasProperty,                                \
-    getOwnProperty,                             \
-    defineOwnProperty,                          \
-    isExtensible,                               \
-    preventExtensions,                          \
-    getPrototypeOf,                             \
-    setPrototypeOf,                             \
-    getLength,                                  \
-    advanceIterator,                            \
-    instanceOf                                  \
-}
-
-#define DEFINE_OBJECT_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
-
-#define DEFINE_OBJECT_TEMPLATE_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-template<> DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 struct Q_QML_EXPORT Object: Managed {
     V4_OBJECT2(Object, Object)

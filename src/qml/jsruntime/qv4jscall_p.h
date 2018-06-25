@@ -101,6 +101,8 @@ struct JSCallData {
 inline
 ReturnedValue FunctionObject::callAsConstructor(const JSCallData &data) const
 {
+    if (!d()->jsConstruct)
+        return engine()->throwTypeError(QStringLiteral("Object is not a constructor."));
     return d()->jsConstruct(this, data.args, data.argc);
 }
 

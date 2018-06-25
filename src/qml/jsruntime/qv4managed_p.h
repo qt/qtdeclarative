@@ -55,6 +55,7 @@
 #include "qv4enginebase_p.h"
 #include <private/qv4heap_p.h>
 #include <private/qv4writebarrier_p.h>
+#include <private/qv4vtable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,11 +71,7 @@ inline int qYouForgotTheQ_MANAGED_Macro(T, T) { return 0; }
 template <typename T1, typename T2>
 inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
-#ifdef Q_COMPILER_STATIC_ASSERT
-#define V4_MANAGED_SIZE_TEST void __dataTest() { Q_STATIC_ASSERT(sizeof(*this) == sizeof(Managed)); }
-#else
-#define V4_MANAGED_SIZE_TEST
-#endif
+#define V4_MANAGED_SIZE_TEST void __dataTest() { static_assert (sizeof(*this) == sizeof(Managed), "Classes derived from Managed can't have own data members."); }
 
 #define V4_NEEDS_DESTROY static void destroy(QV4::Heap::Base *b) { static_cast<Data *>(b)->destroy(); }
 
@@ -104,55 +101,6 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 #define Q_MANAGED_TYPE(type) \
     public: \
         enum { MyType = Type_##type };
-
-#define Q_VTABLE_FUNCTION(classname, func) \
-    (classname::func == QV4::Managed::func ? 0 : classname::func)
-
-// Q_VTABLE_FUNCTION triggers a bogus tautological-compare warning in GCC6+
-#if (defined(Q_CC_GNU) && Q_CC_GNU >= 600)
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-    QT_WARNING_PUSH; \
-    QT_WARNING_DISABLE_GCC("-Wtautological-compare")
-
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
-    ;QT_WARNING_POP
-#elif defined(Q_CC_CLANG) && Q_CC_CLANG >= 306
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-    QT_WARNING_PUSH; \
-    QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
-
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
-    ;QT_WARNING_POP
-#else
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
-#endif
-
-#define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
-{     \
-    parentVTable, \
-    (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
-    (sizeof(classname::Data) + (classname::NInlineProperties*sizeof(QV4::Value)) + QV4::Chunk::SlotSize - 1)/QV4::Chunk::SlotSize*QV4::Chunk::SlotSize/sizeof(QV4::Value) \
-        - (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
-    classname::IsExecutionContext,   \
-    classname::IsString,   \
-    classname::IsObject,   \
-    classname::IsFunctionObject,   \
-    classname::IsErrorObject,   \
-    classname::IsArrayData,   \
-    classname::IsStringOrSymbol,   \
-    classname::MyType,                          \
-    { 0, 0, 0, 0 },                                          \
-    #classname, \
-    Q_VTABLE_FUNCTION(classname, destroy),                                    \
-    classname::Data::markObjects,                                    \
-    isEqualTo                                  \
-} \
-
-#define DEFINE_MANAGED_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
 
 #define V4_INTERNALCLASS(c) \
     static Heap::InternalClass *defaultInternalClass(QV4::EngineBase *e) \

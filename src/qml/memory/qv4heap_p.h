@@ -54,6 +54,7 @@
 #include <private/qv4global_p.h>
 #include <private/qv4mmdefs_p.h>
 #include <private/qv4writebarrier_p.h>
+#include <private/qv4vtable_p.h>
 #include <QSharedPointer>
 
 // To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
@@ -63,26 +64,6 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-struct VTable
-{
-    const VTable * const parent;
-    quint32 inlinePropertyOffset : 16;
-    quint32 nInlineProperties : 16;
-    quint8 isExecutionContext;
-    quint8 isString;
-    quint8 isObject;
-    quint8 isFunctionObject;
-    quint8 isErrorObject;
-    quint8 isArrayData;
-    quint8 isStringOrSymbol;
-    quint8 type;
-    quint8 unused[4];
-    const char *className;
-    void (*destroy)(Heap::Base *);
-    void (*markObjects)(Heap::Base *, MarkStack *markStack);
-    bool (*isEqualTo)(Managed *m, Managed *other);
-};
 
 namespace Heap {
 
