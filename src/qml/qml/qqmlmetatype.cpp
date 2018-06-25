@@ -1873,7 +1873,7 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
     if (!module)
         return -1;
 
-    QQmlType type = module->type(QHashedStringRef(qmlName), versionMinor);
+    QQmlType type = module->type(QHashedStringRef(QString::fromUtf8(qmlName)), versionMinor);
     if (!type.isValid())
         return -1;
 
