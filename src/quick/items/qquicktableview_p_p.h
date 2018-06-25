@@ -246,8 +246,8 @@ public:
 public:
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
 
-    int modelIndexAtCell(const QPoint &cell);
-    QPoint cellAtModelIndex(int modelIndex);
+    int modelIndexAtCell(const QPoint &cell) const;
+    QPoint cellAtModelIndex(int modelIndex) const;
 
     void calculateColumnWidthsAfterRebuilding();
     void calculateRowHeightsAfterRebuilding();

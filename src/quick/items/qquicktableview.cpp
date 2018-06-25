@@ -142,7 +142,7 @@ QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject
     return static_cast<QQuickTableViewAttached *>(attachedObject);
 }
 
-int QQuickTableViewPrivate::modelIndexAtCell(const QPoint &cell)
+int QQuickTableViewPrivate::modelIndexAtCell(const QPoint &cell) const
 {
     int availableRows = tableSize.height();
     int modelIndex = cell.y() + (cell.x() * availableRows);
@@ -150,7 +150,7 @@ int QQuickTableViewPrivate::modelIndexAtCell(const QPoint &cell)
     return modelIndex;
 }
 
-QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex)
+QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex) const
 {
     int availableRows = tableSize.height();
     Q_TABLEVIEW_ASSERT(availableRows > 0, availableRows);
