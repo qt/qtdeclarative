@@ -86,7 +86,7 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
     \instantiates QQuickAnimatedImage
     \inqmlmodule QtQuick
     \inherits Image
-    \brief Plays animations stored as a series of images
+    \brief Plays animations stored as a series of images.
     \ingroup qtquick-visual
 
     The AnimatedImage type extends the features of the \l Image type, providing

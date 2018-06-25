@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-effects
-    \brief Applies custom shaders to a rectangle
+    \brief Applies custom shaders to a rectangle.
 
     The ShaderEffect type applies a custom
     \l{vertexShader}{vertex} and \l{fragmentShader}{fragment (pixel)} shader to a

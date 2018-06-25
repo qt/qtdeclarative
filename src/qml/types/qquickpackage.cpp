@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickPackage
     \inqmlmodule QtQuick
     \ingroup qtquick-views
-    \brief Specifies a collection of named items
+    \brief Specifies a collection of named items.
 
     The Package type is used in conjunction with
     DelegateModel to enable delegates with a shared context

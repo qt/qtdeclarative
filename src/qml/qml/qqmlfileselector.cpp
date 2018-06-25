@@ -52,7 +52,7 @@ Q_GLOBAL_STATIC(interceptorSelectorMap, interceptorInstances);
    \class QQmlFileSelector
    \since 5.2
    \inmodule QtQml
-   \brief A class for applying a QFileSelector to QML file loading
+   \brief A class for applying a QFileSelector to QML file loading.
 
   QQmlFileSelector will automatically apply a QFileSelector to
   qml file and asset paths.

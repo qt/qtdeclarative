@@ -1142,7 +1142,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \instantiates QQuickWindow
     \inqmlmodule QtQuick.Window
     \ingroup qtquick-visual
-    \brief Creates a new top-level window
+    \brief Creates a new top-level window.
 
     The Window object creates a new top-level window for a Qt Quick scene. It automatically sets up the
     window for use with \c {QtQuick 2.x} graphical types.
@@ -1179,7 +1179,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     \inmodule QtQuick
 
-    \brief The QQuickWindow class provides the window for displaying a graphical QML scene
+    \brief The QQuickWindow class provides the window for displaying a graphical QML scene.
 
     QQuickWindow provides the graphical scene management needed to interact with and display
     a scene of QQuickItems.
@@ -3617,7 +3617,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     \instantiates QQuickCloseEvent
     \inqmlmodule QtQuick.Window
     \ingroup qtquick-visual
-    \brief Notification that a \l Window is about to be closed
+    \brief Notification that a \l Window is about to be closed.
     \since 5.1
 
     Notification that a window is about to be closed by the windowing system

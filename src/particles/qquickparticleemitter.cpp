@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Emitter
     \instantiates QQuickParticleEmitter
     \inqmlmodule QtQuick.Particles
-    \brief Emits logical particles
+    \brief Emits logical particles.
     \ingroup qtquick-particles
 
     This element emits logical particles into the ParticleSystem, with the

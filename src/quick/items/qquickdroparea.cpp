@@ -93,7 +93,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
     \instantiates QQuickDropArea
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief For specifying drag and drop handling in an area
+    \brief For specifying drag and drop handling in an area.
 
     A DropArea is an invisible item which receives events when other items are
     dragged over it.
@@ -339,7 +339,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
     \instantiates QQuickDropEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
-    \brief Provides information about a drag event
+    \brief Provides information about a drag event.
 
     The position of the drag event can be obtained from the \l x and \l y
     properties, and the \l keys property identifies the drag keys of the event

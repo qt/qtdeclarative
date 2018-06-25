@@ -92,7 +92,7 @@ typedef QPair<int, int> QQuickXmlListRange;
     \qmltype XmlRole
     \instantiates QQuickXmlListModelRole
     \inqmlmodule QtQuick.XmlListModel
-    \brief For specifying a role to an XmlListModel
+    \brief For specifying a role to an XmlListModel.
     \ingroup qtquick-models
 
     \sa {Qt QML}
@@ -628,7 +628,7 @@ void QQuickXmlListModelPrivate::clear_role(QQmlListProperty<QQuickXmlListModelRo
     \qmltype XmlListModel
     \instantiates QQuickXmlListModel
     \inqmlmodule QtQuick.XmlListModel
-    \brief For specifying a read-only model using XPath expressions
+    \brief For specifying a read-only model using XPath expressions.
     \ingroup qtquick-models
 
 

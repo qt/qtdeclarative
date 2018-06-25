@@ -28,7 +28,7 @@
 /*!
     \qmltype Date
     \inqmlmodule QtQml
-    \brief Provides date functions
+    \brief Provides date functions.
 
     The QML Date object extends the
     \l{Mozilla Developer Network Date Reference}{JS Date object} with

@@ -43,7 +43,7 @@ import QtTest 1.1
 /*!
     \qmltype SignalSpy
     \inqmlmodule QtTest
-    \brief Enables introspection of signal emission
+    \brief Enables introspection of signal emission.
     \since 4.8
     \ingroup qtquicktest
 

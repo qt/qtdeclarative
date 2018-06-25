@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Particle
     \inqmlmodule QtQuick.Particles
-    \brief Represents particles manipulated by emitters and affectors
+    \brief Represents particles manipulated by emitters and affectors.
     \ingroup qtquick-particles
 
     Particle elements are always managed internally by the ParticleSystem and cannot be created in QML.

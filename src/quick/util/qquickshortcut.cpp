@@ -51,7 +51,7 @@
     \inqmlmodule QtQuick
     \since 5.5
     \ingroup qtquick-input
-    \brief Provides keyboard shortcuts
+    \brief Provides keyboard shortcuts.
 
     The Shortcut type provides a way of handling keyboard shortcuts. The shortcut can
     be set to one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts},

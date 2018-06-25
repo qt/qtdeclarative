@@ -45,7 +45,7 @@
     \qmltype LoggingCategory
     \ingroup qml-utility-elements
     \inqmlmodule QtQml
-    \brief Defines a logging category in QML
+    \brief Defines a logging category in QML.
     \since 5.8
 
     A logging category can be passed to console.log() and friends as the first argument.

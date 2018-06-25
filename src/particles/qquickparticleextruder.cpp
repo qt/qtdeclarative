@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
     \qmltype Shape
     \instantiates QQuickParticleExtruder
     \inqmlmodule QtQuick.Particles
-    \brief For specifying an area for affectors and emitters
+    \brief For specifying an area for affectors and emitters.
     \ingroup qtquick-particles
 
     The base class is just a rectangle.

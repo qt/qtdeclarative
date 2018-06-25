@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-effects
     \since 5.4
-    \brief Provides information about the used OpenGL version
+    \brief Provides information about the used OpenGL version.
 
     The OpenGLInfo attached type provides information about the OpenGL
     version being used to render the surface of the attachee item.

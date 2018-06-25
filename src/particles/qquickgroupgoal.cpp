@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Affector
-    \brief For changing the state of a group of a particle
+    \brief For changing the state of a group of a particle.
 
 */
 /*!

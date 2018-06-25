@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickMaskExtruder
     \inqmlmodule QtQuick.Particles
     \inherits Shape
-    \brief For representing an image as a shape to affectors and emitters
+    \brief For representing an image as a shape to affectors and emitters.
     \ingroup qtquick-particles
 
 */

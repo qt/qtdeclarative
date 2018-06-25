@@ -705,7 +705,7 @@ void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
     \instantiates QQuickPositionerAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-positioners
-    \brief Provides attached properties that contain details on where an item exists in a positioner
+    \brief Provides attached properties that contain details on where an item exists in a positioner.
 
     An object of type Positioner is attached to the top-level child item within a
     Column, Row, Flow or Grid. It provides properties that allow a child item to determine
@@ -789,7 +789,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in a column
+    \brief Positions its children in a column.
 
     Column is a type that positions its child items along a single column.
     It can be used as a convenient way to vertically position a series of items without
@@ -993,7 +993,7 @@ void QQuickColumn::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in a row
+    \brief Positions its children in a row.
 
     Row is a type that positions its child items along a single row.
     It can be used as a convenient way to horizontally position a series of items without
@@ -1281,7 +1281,7 @@ void QQuickRow::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children in grid formation
+    \brief Positions its children in grid formation.
 
     Grid is a type that positions its child items in grid formation.
 
@@ -1885,7 +1885,7 @@ void QQuickGrid::reportConflictingAnchors()
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
-    \brief Positions its children side by side, wrapping as necessary
+    \brief Positions its children side by side, wrapping as necessary.
 
     The Flow item positions its child items like words on a page, wrapping them
     to create rows or columns of items.

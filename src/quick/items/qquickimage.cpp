@@ -107,7 +107,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item
-    \brief Displays an image
+    \brief Displays an image.
 
     The Image type displays an image.
 

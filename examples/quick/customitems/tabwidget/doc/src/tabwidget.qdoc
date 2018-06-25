@@ -29,7 +29,7 @@
     \title TabWidget Example
     \example customitems/tabwidget
     \brief The TabWidget example shows how to create a tabwidget using property aliases
-    and QML Object default properties
+    and QML Object default properties.
 
     This example shows how to create a tab widget. It also demonstrates how
     \l {Property aliases}{property aliases} and

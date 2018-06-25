@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     \inherits SinglePointHandler
     \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
-    \brief Handler for dragging
+    \brief Handler for dragging.
 
     DragHandler is a handler that is used to interactively move an Item.
     Like other Pointer Handlers, by default it is fully functional, and

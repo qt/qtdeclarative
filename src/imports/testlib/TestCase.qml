@@ -46,7 +46,7 @@ import Qt.test.qtestroot 1.0
 /*!
     \qmltype TestCase
     \inqmlmodule QtTest
-    \brief Represents a unit test case
+    \brief Represents a unit test case.
     \since 4.8
     \ingroup qtquicktest
 

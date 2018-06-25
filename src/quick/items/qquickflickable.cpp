@@ -594,7 +594,7 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     \ingroup qtquick-input
     \ingroup qtquick-containers
 
-    \brief Provides a surface that can be "flicked"
+    \brief Provides a surface that can be "flicked".
     \inherits Item
 
     The Flickable item places its children on a surface that can be dragged
@@ -2678,15 +2678,13 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     if (hMovementEnding && d->hData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->hData.moving = false;
-        if (!d->scrollingPhase)
-            d->hMoved = false;
+        d->hMoved = false;
         emit movingHorizontallyChanged();
     }
     if (vMovementEnding && d->vData.moving
             && (!d->pressed && !d->stealMouse)) {
         d->vData.moving = false;
-        if (!d->scrollingPhase)
-            d->vMoved = false;
+        d->vMoved = false;
         emit movingVerticallyChanged();
     }
     if (wasMoving && !isMoving()) {

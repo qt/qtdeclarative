@@ -56,7 +56,6 @@
 #include <QImage>
 #include <QPainter>
 
-//![0]
 class ColorImageProvider : public QQuickImageProvider
 {
 public:
@@ -75,7 +74,6 @@ public:
         QPixmap pixmap(requestedSize.width() > 0 ? requestedSize.width() : width,
                        requestedSize.height() > 0 ? requestedSize.height() : height);
         pixmap.fill(QColor(id).rgba());
-//![0]
 
         // write the color name
         QPainter painter(&pixmap);
@@ -87,11 +85,9 @@ public:
             painter.scale(requestedSize.width() / width, requestedSize.height() / height);
         painter.drawText(QRectF(0, 0, width, height), Qt::AlignCenter, id);
 
-//![1]
         return pixmap;
     }
 };
-//![1]
 
 
 class ImageProviderExtensionPlugin : public QQmlExtensionPlugin

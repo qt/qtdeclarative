@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Shape
-    \brief Represents an ellipse to other particle system elements
+    \brief Represents an ellipse to other particle system elements.
 
     This shape can be used by Emitter subclasses and Affector subclasses to have
     them act upon an ellipse shaped area.

@@ -48,7 +48,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     \instantiates QQuickHandlerPoint
     \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
-    \brief An event point
+    \brief An event point.
 
     A QML representation of a QQuickEventPoint.
 

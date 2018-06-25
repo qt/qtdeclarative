@@ -58,7 +58,7 @@ public:
     \instantiates QQuickTranslate
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
-    \brief Provides a way to move an Item without changing its x or y properties
+    \brief Provides a way to move an Item without changing its x or y properties.
 
     The Translate type provides independent control over position in addition
     to the Item's x and y properties.
@@ -162,7 +162,7 @@ public:
     \instantiates QQuickScale
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
-    \brief Provides a way to scale an Item
+    \brief Provides a way to scale an Item.
 
     The Scale type provides a way to scale an \l Item through a scale-type
     transform.
@@ -304,7 +304,7 @@ public:
     \instantiates QQuickRotation
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
-    \brief Provides a way to rotate an Item
+    \brief Provides a way to rotate an Item.
 
     The Rotation type provides a way to rotate an \l Item through a
     rotation-type transform.
@@ -468,7 +468,7 @@ public:
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
     \since 5.3
-    \brief Provides a way to apply a 4x4 tranformation matrix to an \l Item
+    \brief Provides a way to apply a 4x4 tranformation matrix to an \l Item.
 
     The Matrix4x4 type provides a way to apply a transformation to an
     \l Item through a 4x4 matrix.

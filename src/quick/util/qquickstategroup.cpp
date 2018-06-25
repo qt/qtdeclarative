@@ -94,7 +94,7 @@ public:
     \instantiates QQuickStateGroup
     \inqmlmodule QtQuick
    \ingroup qtquick-states
-   \brief Provides built-in state support for non-Item types
+   \brief Provides built-in state support for non-Item types.
 
    Item (and all derived types) provides built in support for states and transitions
    via its \l{Item::state}{state}, \l{Item::states}{states} and \l{Item::transitions}{transitions} properties. StateGroup provides an easy way to

@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickAgeAffector
     \inqmlmodule QtQuick.Particles
     \inherits Affector
-    \brief For altering particle ages
+    \brief For altering particle ages.
     \ingroup qtquick-particles
 
     The Age affector allows you to alter where the particle is in its lifecycle. Common uses

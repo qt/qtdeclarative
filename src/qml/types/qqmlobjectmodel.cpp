@@ -176,7 +176,7 @@ public:
     \instantiates QQmlObjectModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
-    \brief Defines a set of items to be used as a model
+    \brief Defines a set of items to be used as a model.
 
     An ObjectModel contains the visual items to be used in a view.
     When an ObjectModel is used in a view, the view does not require
@@ -214,7 +214,7 @@ public:
     \qmltype VisualItemModel
     \instantiates QQmlObjectModel
     \inqmlmodule QtQuick
-    \brief Defines a set of objects to be used as a model
+    \brief Defines a set of objects to be used as a model.
 
     The VisualItemModel type contains the objects to be used
     as a model.

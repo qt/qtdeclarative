@@ -36,16 +36,12 @@
   To include the definitions of the module's classes, use the
   following directive:
 
-  \code
-  #include <QtQuick>
-  \endcode
+  \snippet code/doc_src_qtquick.cpp 0
 
   To link against the module, add this line to your \l qmake \c
   .pro file:
 
-  \code
-  QT += quick
-  \endcode
+  \snippet code/doc_src_qtquick.pro 0
 
   For more information on the Qt Quick module, see the
   \l{Qt Quick} module documentation.
