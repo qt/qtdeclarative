@@ -796,13 +796,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
-        acc = Runtime::method_construct(engine, STACK_VALUE(func), stack + argv, argc);
+        acc = Runtime::method_construct(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 
     MOTH_BEGIN_INSTR(ConstructWithSpread)
         STORE_IP();
-        acc = Runtime::method_constructWithSpread(engine, STACK_VALUE(func), stack + argv, argc);
+        acc = Runtime::method_constructWithSpread(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConstructWithSpread)
 

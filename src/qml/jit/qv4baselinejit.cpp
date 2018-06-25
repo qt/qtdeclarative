@@ -517,9 +517,11 @@ void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, in
 void BaselineJIT::generate_Construct(int func, int argc, int argv)
 {
     STORE_IP();
-    as->prepareCallWithArgCount(4);
-    as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
+    STORE_ACC();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passAccumulatorAsArg(2);
     as->passRegAsArg(func, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_construct, Assembler::ResultInAccumulator);
@@ -529,9 +531,11 @@ void BaselineJIT::generate_Construct(int func, int argc, int argv)
 void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
 {
     STORE_IP();
-    as->prepareCallWithArgCount(4);
-    as->passInt32AsArg(argc, 3);
-    as->passRegAsArg(argv, 2);
+    STORE_ACC();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passRegAsArg(argv, 3);
+    as->passAccumulatorAsArg(2);
     as->passRegAsArg(func, 1);
     as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_constructWithSpread, Assembler::ResultInAccumulator);

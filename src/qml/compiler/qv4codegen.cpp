@@ -2215,8 +2215,9 @@ bool Codegen::visit(NewExpression *ast)
     Reference base = expression(ast->expression);
     if (hasError)
         return false;
-    //### Maybe create a ConstructA that takes an accumulator?
+
     base = base.storeOnStack();
+    base.loadInAccumulator();
 
     Instruction::Construct create;
     create.func = base.stackSlot();
@@ -2242,6 +2243,8 @@ bool Codegen::visit(NewMemberExpression *ast)
     auto calldata = pushArgs(ast->arguments);
     if (hasError)
         return false;
+
+    base.loadInAccumulator();
 
     if (calldata.hasSpread) {
         Instruction::ConstructWithSpread create;

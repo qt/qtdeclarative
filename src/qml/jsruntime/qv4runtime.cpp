@@ -1302,19 +1302,21 @@ ReturnedValue Runtime::method_callWithSpread(ExecutionEngine *engine, const Valu
     return static_cast<const FunctionObject &>(function).call(&thisObject, arguments.argv, arguments.argc);
 }
 
-ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
+ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, const Value &/*newTarget*/, Value *argv, int argc)
 {
     if (!function.isFunctionObject())
         return engine->throwTypeError();
+    Q_ASSERT(function.sameValue(newTarget));
 
     return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc);
 }
 
-ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, Value *argv, int argc)
+ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, const Value &/*newTarget*/, Value *argv, int argc)
 {
     Q_UNIMPLEMENTED();
     if (!function.isFunctionObject())
         return engine->throwTypeError();
+    Q_ASSERT(function.sameValue(newTarget));
 
     Scope scope(engine);
     CallArgs arguments = createSpreadArguments(scope, argv, argc);
