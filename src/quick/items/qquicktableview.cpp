@@ -121,7 +121,7 @@ QString QQuickTableViewPrivate::tableLayoutToString() const
 
 void QQuickTableViewPrivate::dumpTable() const
 {
-    auto listCopy = loadedItems;
+    auto listCopy = loadedItems.values();
     std::stable_sort(listCopy.begin(), listCopy.end(),
         [](const FxTableItem *lhs, const FxTableItem *rhs)
         { return lhs->index < rhs->index; });
@@ -293,14 +293,9 @@ FxTableItem *QQuickTableViewPrivate::itemNextTo(const FxTableItem *fxTableItem, 
 
 FxTableItem *QQuickTableViewPrivate::loadedTableItem(const QPoint &cell) const
 {
-    for (int i = 0; i < loadedItems.count(); ++i) {
-        FxTableItem *item = loadedItems.at(i);
-        if (item->cell == cell)
-            return item;
-    }
-
-    Q_TABLEVIEW_UNREACHABLE(cell);
-    return nullptr;
+    const int modelIndex = modelIndexAtCell(cell);
+    Q_TABLEVIEW_ASSERT(loadedItems.contains(modelIndex), modelIndex << cell);
+    return loadedItems.value(modelIndex);
 }
 
 FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode)
@@ -402,9 +397,9 @@ void QQuickTableViewPrivate::clear()
 
 void QQuickTableViewPrivate::unloadItem(const QPoint &cell)
 {
-    FxTableItem *item = loadedTableItem(cell);
-    loadedItems.removeOne(item);
-    releaseItem(item);
+    const int modelIndex = modelIndexAtCell(cell);
+    Q_TABLEVIEW_ASSERT(loadedItems.contains(modelIndex), modelIndex << cell);
+    releaseItem(loadedItems.take(modelIndex));
 }
 
 void QQuickTableViewPrivate::unloadItems(const QLine &items)
@@ -932,7 +927,7 @@ void QQuickTableViewPrivate::processLoadRequest()
             return;
         }
 
-        loadedItems.append(fxTableItem);
+        loadedItems.insert(modelIndexAtCell(cell), fxTableItem);
         loadRequest.moveToNextCell();
     }
 

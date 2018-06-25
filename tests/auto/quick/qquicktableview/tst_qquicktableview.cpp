@@ -75,8 +75,6 @@ public:
     tst_QQuickTableView();
 
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
-    FxTableItem *findFxTableItem(int row, int column, const QList<FxTableItem *> items) const;
-    FxTableItem *findLoadedBottomRightItem(const QList<FxTableItem *> items) const;
 
 private slots:
     void initTestCase() override;
@@ -119,32 +117,6 @@ QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *o
 {
     QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
     return static_cast<QQuickTableViewAttached *>(attachedObject);
-}
-
-FxTableItem *tst_QQuickTableView::findFxTableItem(int row, int column, const QList<FxTableItem *> items) const
-{
-    for (int i = 0; i < items.count(); ++i) {
-        FxTableItem *fxitem = items[i];
-        auto attached = getAttachedObject(fxitem->item);
-        if (row == attached->row() && column == attached->column())
-            return fxitem;
-    }
-    return nullptr;
-}
-
-FxTableItem *tst_QQuickTableView::findLoadedBottomRightItem(const QList<FxTableItem *> items) const
-{
-    FxTableItem *bottomRightItem = nullptr;
-    int bottomRightIndex = 0;
-
-    for (int i = items.count() - 1; i > 0; --i) {
-        FxTableItem *fxitem = items[i];
-        if (fxitem->index > bottomRightIndex) {
-            bottomRightItem = fxitem;
-            bottomRightIndex = fxitem->index;
-        }
-    }
-    return bottomRightItem;
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -418,15 +390,13 @@ void tst_QQuickTableView::checkTableMargins()
 
     WAIT_UNTIL_POLISHED;
 
-    auto const items = tableViewPrivate->loadedItems;
+    QCOMPARE(tableViewPrivate->loadedTable.size(), tableSize);
 
-    auto const topLeftFxItem = findFxTableItem(0, 0, items);
-    auto const bottomRightFxItem = findFxTableItem(tableSize.height() - 1, tableSize.width() - 1, items);
-    QVERIFY(topLeftFxItem);
-    QVERIFY(bottomRightFxItem);
-
+    auto const topLeftFxItem = tableViewPrivate->loadedTableItem(QPoint(0, 0));
+    auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
     auto const topLeftItem = topLeftFxItem->item;
     auto const bottomRightItem = bottomRightFxItem->item;
+
     qreal leftSpace = topLeftItem->x();
     qreal topSpace = topLeftItem->y();
     qreal rightSpace = tableView->contentWidth() - (bottomRightItem->x() + bottomRightItem->width());
@@ -473,18 +443,14 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
 
     WAIT_UNTIL_POLISHED;
 
-    auto const items = tableViewPrivate->loadedItems;
-
-    auto const topLeftFxItem = findFxTableItem(0, 0, items);
-    QVERIFY(topLeftFxItem);
+    auto const topLeftFxItem = tableViewPrivate->loadedTableItem(QPoint(0, 0));
     auto const topLeftItem = topLeftFxItem->item;
 
     // Check that the top-left item are at the corner of the view
     QCOMPARE(topLeftItem->x(), margins.left());
     QCOMPARE(topLeftItem->y(), margins.top());
 
-    auto const bottomRightFxItem = findLoadedBottomRightItem(items);
-    QVERIFY(bottomRightFxItem);
+    auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
     auto const bottomRightItem = bottomRightFxItem->item;
     auto bottomRightAttached = getAttachedObject(bottomRightItem);
 
