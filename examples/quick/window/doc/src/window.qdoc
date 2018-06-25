@@ -27,7 +27,7 @@
 /*!
     \title Qt Quick Examples - Window and Screen
     \example window
-    \brief This example demonstrates the Window and Screen types in QML
+    \brief This example demonstrates the Window and Screen types in QML.
     \image qml-window-example.png
     \ingroup qtquickexamples
 

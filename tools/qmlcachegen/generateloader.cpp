@@ -35,6 +35,52 @@
 #include <QFileInfo>
 #include <QSaveFile>
 
+/*!
+ * \internal
+ * Mangles \a str to be a unique C++ identifier. Characters that are invalid for C++ identifiers
+ * are replaced by the pattern \c _0x<hex>_ where <hex> is the hexadecimal unicode
+ * representation of the character. As identifiers with leading underscores followed by either
+ * another underscore or a capital letter are reserved in C++, we also escape those, by escaping
+ * the first underscore, using the above method.
+ *
+ * \note
+ * Although C++11 allows for non-ascii (unicode) characters to be used in identifiers,
+ * many compilers forgot to read the spec and do not implement this. Some also do not
+ * implement C99 identifiers, because that is \e {at the implementation's discretion}. So,
+ * we are stuck with plain old boring identifiers.
+ */
+QString mangledIdentifier(const QString &str)
+{
+    Q_ASSERT(!str.isEmpty());
+
+    QString mangled;
+    mangled.reserve(str.size());
+
+    int i = 0;
+    if (str.startsWith(QLatin1Char('_')) && str.size() > 1) {
+        QChar ch = str.at(1);
+        if (ch == QLatin1Char('_')
+                || (ch >= QLatin1Char('A') && ch <= QLatin1Char('Z'))) {
+            mangled += QLatin1String("_0x5f_");
+            ++i;
+        }
+    }
+
+    for (int ei = str.length(); i != ei; ++i) {
+        auto c = str.at(i).unicode();
+        if ((c >= QLatin1Char('0') && c <= QLatin1Char('9'))
+            || (c >= QLatin1Char('a') && c <= QLatin1Char('z'))
+            || (c >= QLatin1Char('A') && c <= QLatin1Char('Z'))
+            || c == QLatin1Char('_')) {
+            mangled += c;
+        } else {
+            mangled += QLatin1String("_0x") + QString::number(c, 16) + QLatin1Char('_');
+        }
+    }
+
+    return mangled;
+}
+
 QString symbolNamespaceForPath(const QString &relativePath)
 {
     QFileInfo fi(relativePath);
@@ -47,12 +93,8 @@ QString symbolNamespaceForPath(const QString &relativePath)
     }
     symbol += fi.baseName();
     symbol += QLatin1Char('_');
-    symbol += fi.suffix();
-    symbol.replace(QLatin1Char('.'), QLatin1Char('_'));
-    symbol.replace(QLatin1Char('+'), QLatin1Char('_'));
-    symbol.replace(QLatin1Char('-'), QLatin1Char('_'));
-    symbol.replace(QLatin1Char(' '), QLatin1Char('_'));
-    return symbol;
+    symbol += fi.completeSuffix();
+    return mangledIdentifier(symbol);
 }
 
 struct VirtualDirectoryEntry
@@ -318,7 +360,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         stream << "    QHash<QString, const QQmlPrivate::CachedQmlUnit*> resourcePathToCachedUnit;\n";
         stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "};\n\n";
-        stream << "Q_GLOBAL_STATIC(Registry, unitRegistry);\n";
+        stream << "Q_GLOBAL_STATIC(Registry, unitRegistry)\n";
         stream << "\n\n";
 
         stream << "Registry::Registry() {\n";
@@ -368,7 +410,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
                 stream << "    Q_INIT_RESOURCE(" << qtResourceNameForFile(newResourceFile) << ");\n";
             stream << "    return 1;\n";
             stream << "}\n";
-            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << initFunction << "));\n";
+            stream << "Q_CONSTRUCTOR_FUNCTION(QT_MANGLE_NAMESPACE(" << initFunction << "))\n";
 
             const QString cleanupFunction = QLatin1String("qCleanupResources_") + suffix;
             stream << QStringLiteral("int QT_MANGLE_NAMESPACE(%1)() {\n").arg(cleanupFunction);

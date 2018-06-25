@@ -77,7 +77,7 @@ public:
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors
-    \brief Defines a default animation for a property change
+    \brief Defines a default animation for a property change.
 
     A Behavior defines the default animation to be applied whenever a
     particular property value changes.

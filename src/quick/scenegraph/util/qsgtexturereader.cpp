@@ -41,6 +41,8 @@
 
 #include <private/qtquickglobal_p.h>
 
+#include <private/qsgtexturefilehandler_p.h>
+
 #if QT_CONFIG(opengl)
 #include <private/qsgpkmhandler_p.h>
 #include <private/qsgktxhandler_p.h>

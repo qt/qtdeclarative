@@ -50,7 +50,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickSprite
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
-    \brief Specifies sprite animations
+    \brief Specifies sprite animations.
 
     Sprite defines a series of one or more frames to be animated and rendered by SpriteSequence.
     The sprites can be in the middle of an image file, or split along multiple rows, as long as they form

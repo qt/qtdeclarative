@@ -1144,7 +1144,7 @@ void QSGClipNode::setClipRect(const QRectF &rect)
 
 /*!
     \class QSGTransformNode
-    \brief The QSGTransformNode class implements transformations in the scene graph
+    \brief The QSGTransformNode class implements transformations in the scene graph.
 
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-nodes

@@ -73,7 +73,7 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item
-    \brief Displays multiple lines of editable formatted text
+    \brief Displays multiple lines of editable formatted text.
 
     The TextEdit item displays a block of editable, formatted text.
 

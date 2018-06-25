@@ -75,7 +75,7 @@ public:
     \instantiates QQmlConnections
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
-    \brief Describes generalized connections to signals
+    \brief Describes generalized connections to signals.
 
     A Connections object creates a connection to a QML signal.
 

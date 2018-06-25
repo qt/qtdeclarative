@@ -198,7 +198,7 @@ static void q_QFontLoaderFontsStaticReset()
     \instantiates QQuickFontLoader
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
-    \brief Allows fonts to be loaded by name or URL
+    \brief Allows fonts to be loaded by name or URL.
 
     The FontLoader type is used to load fonts by name or URL.
 

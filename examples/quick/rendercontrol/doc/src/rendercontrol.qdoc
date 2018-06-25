@@ -28,6 +28,6 @@
 /*!
     \title QQuickRenderControl Example
     \example rendercontrol
-    \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based OpenGL renderer
+    \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based OpenGL renderer.
     \image rendercontrol-example.jpg
 */

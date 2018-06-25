@@ -58,7 +58,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     \inherits MultiPointHandler
     \inqmlmodule Qt.labs.handlers
     \ingroup qtquick-handlers
-    \brief Handler for pinch gestures
+    \brief Handler for pinch gestures.
 
     PinchHandler is a handler that interprets a multi-finger gesture to
     interactively rotate, zoom, and drag an Item. Like other Pointer Handlers,

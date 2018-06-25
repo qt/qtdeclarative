@@ -96,7 +96,7 @@ void QQuickAnimationControllerPrivate::animationCurrentTimeChanged(QAbstractAnim
     \instantiates QQuickAnimationController
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-control
-    \brief Enables manual control of animations
+    \brief Enables manual control of animations.
 
     Normally animations are driven by an internal timer, but the AnimationController
     allows the given \a animation to be driven by a \a progress value explicitly.

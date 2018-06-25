@@ -27,7 +27,7 @@
 /*!
     \title Qt Quick Examples - XMLHttpRequest
     \example xmlhttprequest
-    \brief This is a collection of XMLHttpRequest examples
+    \brief This is a collection of XMLHttpRequest examples.
     \image qml-xmlhttprequest-example.png
 
     \e XMLHttpRequest contains a small QML example demonstrating \l{Qt QML}'s

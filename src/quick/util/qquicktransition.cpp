@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     \instantiates QQuickTransition
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
-    \brief Defines animated transitions that occur on state changes
+    \brief Defines animated transitions that occur on state changes.
 
     A Transition defines the animations to be applied when a \l State change occurs.
 

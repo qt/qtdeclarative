@@ -27,7 +27,7 @@
 /*!
     \title Qt Quick Layouts - Basic Example
     \example layouts
-    \brief Demonstrates how to use layout types to arrange a UI
+    \brief Demonstrates how to use layout types to arrange a UI.
     \image qtquicklayouts-example-layouts.png
     \ingroup qtquickexamples
 

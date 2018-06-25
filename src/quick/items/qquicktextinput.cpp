@@ -75,7 +75,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
     \ingroup qtquick-visual
     \ingroup qtquick-input
     \inherits Item
-    \brief Displays an editable line of text
+    \brief Displays an editable line of text.
 
     The TextInput type displays a single line of editable plain text.
 

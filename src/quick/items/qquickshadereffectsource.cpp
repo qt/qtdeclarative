@@ -102,7 +102,7 @@ public:
     \since 5.0
     \inherits Item
     \ingroup qtquick-effects
-    \brief Renders a \l {Qt Quick} item into a texture and displays it
+    \brief Renders a \l {Qt Quick} item into a texture and displays it.
 
     The ShaderEffectSource type renders \l sourceItem into a texture and
     displays it in the scene. \l sourceItem is drawn into the texture as though

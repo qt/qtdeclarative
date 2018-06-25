@@ -45,7 +45,7 @@
     \instantiates QQuickLineExtruder
     \inqmlmodule QtQuick.Particles
     \inherits Shape
-    \brief Represents a line for affectors and emitters
+    \brief Represents a line for affectors and emitters.
     \ingroup qtquick-particles
 
 */

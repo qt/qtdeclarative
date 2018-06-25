@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \since 5.0
-    \brief Provides 2D context for shapes on a Canvas item
+    \brief Provides 2D context for shapes on a Canvas item.
 
     The Context2D object can be created by \c Canvas item's \c getContext()
     method:
@@ -3044,7 +3044,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawImage(const QV4::Funct
     \qmltype CanvasImageData
     \inqmlmodule QtQuick
     \ingroup qtquick-canvas
-    \brief Contains image pixel data in RGBA order
+    \brief Contains image pixel data in RGBA order.
 
      The CanvasImageData object holds the image pixel data.
 
@@ -3106,7 +3106,7 @@ QV4::ReturnedValue QQuickJSContext2DImageData::method_get_data(const QV4::Functi
     \qmltype CanvasPixelArray
     \inqmlmodule QtQuick
     \ingroup qtquick-canvas
-    \brief Provides ordered and indexed access to the components of each pixel in image data
+    \brief Provides ordered and indexed access to the components of each pixel in image data.
 
   The CanvasPixelArray object provides ordered, indexed access to the color components of each pixel of the image data.
   The CanvasPixelArray can be accessed as normal Javascript array.
@@ -3372,7 +3372,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_putImageData(const QV4::Fu
     \inqmlmodule QtQuick
     \since 5.0
     \ingroup qtquick-canvas
-    \brief Provides an opaque CanvasGradient interface
+    \brief Provides an opaque CanvasGradient interface.
   */
 
 /*!

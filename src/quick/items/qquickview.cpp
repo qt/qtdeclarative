@@ -136,11 +136,7 @@ void QQuickViewPrivate::itemGeometryChanged(QQuickItem *resizeItem, QQuickGeomet
 
     Typical usage:
 
-    \code
-    QQuickView *view = new QQuickView;
-    view->setSource(QUrl::fromLocalFile("myqmlfile.qml"));
-    view->show();
-    \endcode
+    \snippet qquickview-ex.cpp 0
 
     To receive errors related to loading and executing QML with QQuickView,
     you can connect to the statusChanged() signal and monitor for QQuickView::Error.

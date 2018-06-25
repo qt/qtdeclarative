@@ -91,7 +91,7 @@ public:
     \inherits Item
     \ingroup qtquick-input
     \ingroup qtquick-containers
-    \brief Provides a surface that can be flipped
+    \brief Provides a surface that can be flipped.
 
     Flipable is an item that can be visibly "flipped" between its front and
     back sides, like a card. It may used together with \l Rotation, \l State

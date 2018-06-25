@@ -87,7 +87,7 @@ public:
     \instantiates QQmlTimer
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
-    \brief Triggers a handler at a specified interval
+    \brief Triggers a handler at a specified interval.
 
     A Timer can be used to trigger an action either once, or repeatedly
     at a given interval.

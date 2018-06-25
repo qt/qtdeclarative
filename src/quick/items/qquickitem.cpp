@@ -114,7 +114,7 @@ void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1
     \instantiates QQuickTransform
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-transforms
-    \brief For specifying advanced transformations on Items
+    \brief For specifying advanced transformations on Items.
 
     The Transform type is a base type which cannot be instantiated directly.
     The following concrete Transform types are available:
@@ -357,7 +357,7 @@ void QQuickItemKeyFilter::componentComplete()
     \instantiates QQuickKeyNavigationAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief Supports key navigation by arrow keys
+    \brief Supports key navigation by arrow keys.
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
     focusable items.  The KeyNavigation attached property enables this behavior by providing a
@@ -816,7 +816,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     \instantiates QQuickKeysAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-input
-    \brief Provides key handling to Items
+    \brief Provides key handling to Items.
 
     All visual primitives support key handling via the Keys
     attached property.  Keys can be handled via the onPressed
@@ -1507,7 +1507,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \inqmlmodule QtQuick
     \ingroup qtquick-positioners
     \ingroup qml-utility-elements
-    \brief Property used to mirror layout behavior
+    \brief Property used to mirror layout behavior.
 
     The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
     \l{Item Positioners}{positioner} types (such as \l Row and \l Grid)
@@ -1924,7 +1924,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \inherits QtObject
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
-    \brief A basic visual QML type
+    \brief A basic visual QML type.
 
     The Item type is the base type for all visual items in Qt Quick.
 

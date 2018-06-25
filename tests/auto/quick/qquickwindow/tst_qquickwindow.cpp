@@ -501,7 +501,7 @@ void tst_qquickwindow::openglContextCreatedSignal()
     if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
-    QVERIFY(spy.size() > 0);
+    QTRY_VERIFY(spy.size() > 0);
 
     QVariant ctx = spy.at(0).at(0);
     QCOMPARE(qvariant_cast<QOpenGLContext *>(ctx), window.openglContext());

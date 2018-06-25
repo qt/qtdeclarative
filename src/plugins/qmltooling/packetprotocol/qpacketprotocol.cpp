@@ -40,6 +40,8 @@
 #include "qpacketprotocol_p.h"
 
 #include <QtCore/QElapsedTimer>
+#include <QtCore/QtEndian>
+
 #include <private/qiodevice_p.h>
 #include <private/qobject_p.h>
 
@@ -107,7 +109,7 @@ public:
     bool writeToDevice(const char *bytes, qint64 size);
     bool readFromDevice(char *buffer, qint64 size);
 
-    QList<qint64> sendingPackets;
+    QList<qint32> sendingPackets;
     QList<QByteArray> packets;
     QByteArray inProgress;
     qint32 inProgressSize;
@@ -138,16 +140,23 @@ QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
 void QPacketProtocol::send(const QByteArray &data)
 {
     Q_D(QPacketProtocol);
+    static const qint32 maxSize = std::numeric_limits<qint32>::max() - sizeof(qint32);
 
     if (data.isEmpty())
         return; // We don't send empty packets
-    const qint32 sendSize = data.size() + static_cast<qint32>(sizeof(qint32));
 
-    d->sendingPackets.append(sendSize);
-    if (!d->writeToDevice((const char *)&sendSize, sizeof(qint32))
-            || !d->writeToDevice(data.data(), data.size())) {
+    if (data.size() > maxSize) {
         emit error();
         return;
+    }
+
+    const qint32 sendSize = data.size() + static_cast<qint32>(sizeof(qint32));
+    d->sendingPackets.append(sendSize);
+
+    qint32 sendSizeLE = qToLittleEndian(sendSize);
+    if (!d->writeToDevice((const char *)&sendSizeLE, sizeof(qint32))
+            || !d->writeToDevice(data.data(), data.size())) {
+        emit error();
     }
 }
 
@@ -238,10 +247,12 @@ void QPacketProtocol::readyToRead()
                 return;
 
             // Read size header
-            if (!d->readFromDevice((char *)&d->inProgressSize, sizeof(qint32))) {
+            qint32 inProgressSizeLE;
+            if (!d->readFromDevice((char *)&inProgressSizeLE, sizeof(qint32))) {
                 emit error();
                 return;
             }
+            d->inProgressSize = qFromLittleEndian(inProgressSizeLE);
 
             // Check sizing constraints
             if (d->inProgressSize < qint32(sizeof(qint32))) {

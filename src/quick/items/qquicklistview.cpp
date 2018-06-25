@@ -1743,7 +1743,7 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
     \inqmlmodule QtQuick
     \ingroup qtquick-views
     \inherits Flickable
-    \brief Provides a list view of items provided by a model
+    \brief Provides a list view of items provided by a model.
 
     A ListView displays data from models created from built-in QML types like ListModel
     and XmlListModel, or custom model classes defined in C++ that inherit from
