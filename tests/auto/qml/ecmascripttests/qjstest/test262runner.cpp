@@ -610,6 +610,7 @@ TestData Test262Runner::getTestData(const TestCase &testCase)
         exit(1);
     }
     QByteArray content = testFile.readAll();
+    content.replace(QByteArrayLiteral("\r\n"), "\n");
 
 //    qDebug() << "parsing test file" << test;
 
