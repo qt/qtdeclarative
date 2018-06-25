@@ -43,26 +43,7 @@
 
 using namespace QV4;
 
-
-const VTable Managed::static_vtbl =
-{
-    nullptr,
-    0,
-    0,
-    Managed::IsExecutionContext,
-    Managed::IsString,
-    Managed::IsObject,
-    Managed::IsFunctionObject,
-    Managed::IsErrorObject,
-    Managed::IsArrayData,
-    Managed::IsStringOrSymbol,
-    Managed::MyType,
-    { 0, 0, 0, 0 },
-    "Managed",
-    nullptr,
-    nullptr /*markObjects*/,
-    isEqualTo
-};
+DEFINE_MANAGED_VTABLE(Managed);
 
 DEFINE_MANAGED_VTABLE(InternalClass);
 

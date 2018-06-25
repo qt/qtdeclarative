@@ -257,7 +257,7 @@ PropertyKey StringOrSymbol::toPropertyKey() const {
     return propertyKey();
 }
 
-uint String::getLength(const Managed *m)
+qint64 String::getLength(const Managed *m)
 {
     return static_cast<const String *>(m)->d()->length();
 }

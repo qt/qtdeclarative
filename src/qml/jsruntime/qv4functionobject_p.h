@@ -70,8 +70,8 @@ namespace Heap {
 #define FunctionObjectMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, scope) \
     Member(class, NoMark, Function *, function) \
-    Member(class, NoMark, jsCallFunction, jsCall) \
-    Member(class, NoMark, jsConstructFunction, jsConstruct)
+    Member(class, NoMark, VTable::Call, jsCall) \
+    Member(class, NoMark, VTable::CallAsConstructor, jsConstruct)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARKOBJECTS(FunctionObject);
@@ -182,7 +182,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function);
-    static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount);
+    static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;

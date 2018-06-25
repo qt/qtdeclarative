@@ -238,7 +238,7 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
 
 protected:
     static bool isEqualTo(Managed *that, Managed *o);
-    static uint getLength(const Managed *m);
+    static qint64 getLength(const Managed *m);
 #endif
 
 public:

@@ -59,6 +59,25 @@ namespace QV4 {
 struct VTable
 {
     typedef void (*Destroy)(Heap::Base *);
+    typedef void (*MarkObjects)(Heap::Base *, MarkStack *markStack);
+    typedef bool (*IsEqualTo)(Managed *m, Managed *other);
+
+    typedef ReturnedValue (*Get)(const Managed *, PropertyKey id, const Value *receiver, bool *hasProperty);
+    typedef bool (*Put)(Managed *, PropertyKey id, const Value &value, Value *receiver);
+    typedef bool (*DeleteProperty)(Managed *m, PropertyKey id);
+    typedef bool (*HasProperty)(const Managed *m, PropertyKey id);
+    typedef PropertyAttributes (*GetOwnProperty)(Managed *m, PropertyKey id, Property *p);
+    typedef bool (*DefineOwnProperty)(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+    typedef bool (*IsExtensible)(const Managed *);
+    typedef bool (*PreventExtensions)(Managed *);
+    typedef Heap::Object *(*GetPrototypeOf)(const Managed *);
+    typedef bool (*SetPrototypeOf)(Managed *, const Object *);
+    typedef qint64 (*GetLength)(const Managed *m);
+    typedef void (*AdvanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
+
+    typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc);
 
     const VTable * const parent;
     quint32 inlinePropertyOffset : 16;
@@ -73,33 +92,52 @@ struct VTable
     quint8 type;
     quint8 unused[4];
     const char *className;
+
     Destroy destroy;
-    void (*markObjects)(Heap::Base *, MarkStack *markStack);
-    bool (*isEqualTo)(Managed *m, Managed *other);
+    MarkObjects markObjects;
+    IsEqualTo isEqualTo;
+
+    Get get;
+    Put put;
+    DeleteProperty deleteProperty;
+    HasProperty hasProperty;
+    GetOwnProperty getOwnProperty;
+    DefineOwnProperty defineOwnProperty;
+    IsExtensible isExtensible;
+    PreventExtensions preventExtensions;
+    GetPrototypeOf getPrototypeOf;
+    SetPrototypeOf setPrototypeOf;
+    GetLength getLength;
+    AdvanceIterator advanceIterator;
+    InstanceOf instanceOf;
+
+    Call call;
+    CallAsConstructor callAsConstructor;
 };
 
-#define Q_VTABLE_FUNCTION(classname, func) \
-    (classname::func == QV4::Managed::func ? 0 : classname::func)
 
-// Q_VTABLE_FUNCTION triggers a bogus tautological-compare warning in GCC6+
-#if (defined(Q_CC_GNU) && Q_CC_GNU >= 600)
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-    QT_WARNING_PUSH; \
-    QT_WARNING_DISABLE_GCC("-Wtautological-compare")
+struct VTableBase {
+protected:
+    static constexpr VTable::Destroy destroy = nullptr;
+    static constexpr VTable::IsEqualTo isEqualTo = nullptr;
 
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
-    ;QT_WARNING_POP
-#elif defined(Q_CC_CLANG) && Q_CC_CLANG >= 306
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-    QT_WARNING_PUSH; \
-    QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
+    static constexpr VTable::Get get = nullptr;
+    static constexpr VTable::Put put = nullptr;
+    static constexpr VTable::DeleteProperty deleteProperty = nullptr;
+    static constexpr VTable::HasProperty hasProperty = nullptr;
+    static constexpr VTable::GetOwnProperty getOwnProperty = nullptr;
+    static constexpr VTable::DefineOwnProperty defineOwnProperty = nullptr;
+    static constexpr VTable::IsExtensible isExtensible = nullptr;
+    static constexpr VTable::PreventExtensions preventExtensions = nullptr;
+    static constexpr VTable::GetPrototypeOf getPrototypeOf = nullptr;
+    static constexpr VTable::SetPrototypeOf setPrototypeOf = nullptr;
+    static constexpr VTable::GetLength getLength = nullptr;
+    static constexpr VTable::AdvanceIterator advanceIterator = nullptr;
+    static constexpr VTable::InstanceOf instanceOf = nullptr;
 
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF \
-    ;QT_WARNING_POP
-#else
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON
-#define QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
-#endif
+    static constexpr VTable::Call call = nullptr;
+    static constexpr VTable::CallAsConstructor callAsConstructor = nullptr;
+};
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
 {     \
@@ -107,25 +145,41 @@ struct VTable
     (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
     (sizeof(classname::Data) + (classname::NInlineProperties*sizeof(QV4::Value)) + QV4::Chunk::SlotSize - 1)/QV4::Chunk::SlotSize*QV4::Chunk::SlotSize/sizeof(QV4::Value) \
         - (sizeof(classname::Data) + sizeof(QV4::Value) - 1)/sizeof(QV4::Value), \
-    classname::IsExecutionContext,   \
-    classname::IsString,   \
-    classname::IsObject,   \
-    classname::IsFunctionObject,   \
-    classname::IsErrorObject,   \
-    classname::IsArrayData,   \
-    classname::IsStringOrSymbol,   \
-    classname::MyType,                          \
-    { 0, 0, 0, 0 },                                          \
+    classname::IsExecutionContext,          \
+    classname::IsString,                    \
+    classname::IsObject,                    \
+    classname::IsFunctionObject,            \
+    classname::IsErrorObject,               \
+    classname::IsArrayData,                 \
+    classname::IsStringOrSymbol,            \
+    classname::MyType,                      \
+    { 0, 0, 0, 0 },                         \
     #classname, \
-    Q_VTABLE_FUNCTION(classname, destroy),                                    \
-    classname::Data::markObjects,                                    \
-    isEqualTo                                  \
-} \
+    \
+    classname::destroy,                     \
+    classname::Data::markObjects,           \
+    classname::isEqualTo,                   \
+    \
+    classname::get,                         \
+    classname::put,                         \
+    classname::deleteProperty,              \
+    classname::hasProperty,                 \
+    classname::getOwnProperty,              \
+    classname::defineOwnProperty,           \
+    classname::isExtensible,                \
+    classname::preventExtensions,           \
+    classname::getPrototypeOf,              \
+    classname::setPrototypeOf,              \
+    classname::getLength,                   \
+    classname::advanceIterator,             \
+    classname::instanceOf,                  \
+    \
+    classname::call,                        \
+    classname::callAsConstructor,           \
+}
 
 #define DEFINE_MANAGED_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
+const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 0)
 
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
@@ -135,8 +189,8 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
         Q_MANAGED_CHECK \
         typedef QV4::Heap::DataClass Data; \
         typedef superClass SuperClass; \
-        static const QV4::ObjectVTable static_vtbl; \
-        static inline const QV4::VTable *staticVTable() { return &static_vtbl.vTable; } \
+        static const QV4::VTable static_vtbl; \
+        static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
         QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
         QV4::Heap::DataClass *d() const { \
@@ -150,60 +204,15 @@ QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \
     { return e->p(); }
 
-typedef ReturnedValue (*jsCallFunction)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-typedef ReturnedValue (*jsConstructFunction)(const FunctionObject *, const Value *argv, int argc);
-
-struct ObjectVTable
-{
-    VTable vTable;
-    jsCallFunction call;
-    jsConstructFunction callAsConstructor;
-    ReturnedValue (*get)(const Managed *, PropertyKey id, const Value *receiver, bool *hasProperty);
-    bool (*put)(Managed *, PropertyKey id, const Value &value, Value *receiver);
-    bool (*deleteProperty)(Managed *m, PropertyKey id);
-    bool (*hasProperty)(const Managed *m, PropertyKey id);
-    PropertyAttributes (*getOwnProperty)(Managed *m, PropertyKey id, Property *p);
-    bool (*defineOwnProperty)(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
-    bool (*isExtensible)(const Managed *);
-    bool (*preventExtensions)(Managed *);
-    Heap::Object *(*getPrototypeOf)(const Managed *);
-    bool (*setPrototypeOf)(Managed *, const Object *);
-    qint64 (*getLength)(const Managed *m);
-    void (*advanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
-    ReturnedValue (*instanceOf)(const Object *typeObject, const Value &var);
-};
 
 #define DEFINE_OBJECT_VTABLE_BASE(classname) \
-const QV4::ObjectVTable classname::static_vtbl =    \
-{     \
-    DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl.vTable), \
-    call,                                       \
-    callAsConstructor,                          \
-    get,                                        \
-    put,                                        \
-    deleteProperty,                             \
-    hasProperty,                                \
-    getOwnProperty,                             \
-    defineOwnProperty,                          \
-    isExtensible,                               \
-    preventExtensions,                          \
-    getPrototypeOf,                             \
-    setPrototypeOf,                             \
-    getLength,                                  \
-    advanceIterator,                            \
-    instanceOf                                  \
-}
+    const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, (std::is_same<classname::SuperClass, Object>::value) ? nullptr : &classname::SuperClass::static_vtbl)
 
 #define DEFINE_OBJECT_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
+DEFINE_OBJECT_VTABLE_BASE(classname)
 
 #define DEFINE_OBJECT_TEMPLATE_VTABLE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_ON \
-template<> DEFINE_OBJECT_VTABLE_BASE(classname) \
-QT_WARNING_SUPPRESS_GCC_TAUTOLOGICAL_COMPARE_OFF
-
+template<> DEFINE_OBJECT_VTABLE_BASE(classname)
 
 }
 

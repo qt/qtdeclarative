@@ -203,6 +203,12 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
 
     inline CallContext *asCallContext();
     inline const CallContext *asCallContext() const;
+
+protected:
+    // vtable method required for compilation
+    static bool deleteProperty(Managed *, PropertyKey) {
+        Q_UNREACHABLE();
+    }
 };
 
 struct Q_QML_EXPORT CallContext : public ExecutionContext

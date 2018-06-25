@@ -144,7 +144,7 @@ void Object::defineDefaultProperty(const QString &name, const Value &value, Prop
     defineDefaultProperty(s, value, attributes);
 }
 
-void Object::defineDefaultProperty(const QString &name, jsCallFunction code,
+void Object::defineDefaultProperty(const QString &name, VTable::Call code,
                                    int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
@@ -154,7 +154,7 @@ void Object::defineDefaultProperty(const QString &name, jsCallFunction code,
     defineDefaultProperty(s, function, attributes);
 }
 
-void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, jsCallFunction code,
+void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, VTable::Call code,
                                    int argumentCount, PropertyAttributes attributes)
 {
     ExecutionEngine *e = engine();
@@ -163,7 +163,7 @@ void Object::defineDefaultProperty(StringOrSymbol *nameOrSymbol, jsCallFunction 
     defineDefaultProperty(nameOrSymbol, function, attributes);
 }
 
-void Object::defineAccessorProperty(const QString &name, jsCallFunction getter, jsCallFunction setter)
+void Object::defineAccessorProperty(const QString &name, VTable::Call getter, VTable::Call setter)
 {
     ExecutionEngine *e = engine();
     Scope scope(e);
@@ -171,7 +171,7 @@ void Object::defineAccessorProperty(const QString &name, jsCallFunction getter, 
     defineAccessorProperty(s, getter, setter);
 }
 
-void Object::defineAccessorProperty(StringOrSymbol *name, jsCallFunction getter, jsCallFunction setter)
+void Object::defineAccessorProperty(StringOrSymbol *name, VTable::Call getter, VTable::Call setter)
 {
     ExecutionEngine *v4 = engine();
     QV4::Scope scope(v4);
@@ -892,8 +892,7 @@ bool Object::setPrototypeOf(Managed *m, const Object *proto)
     while (p) {
         if (p == o->d())
             return false;
-        if (reinterpret_cast<const ObjectVTable *>(p->vtable())->getPrototypeOf !=
-                reinterpret_cast<const ObjectVTable *>(Object::staticVTable())->getPrototypeOf)
+        if (p->vtable()->getPrototypeOf != Object::staticVTable()->getPrototypeOf)
             break;
         p = p->prototype();
     }

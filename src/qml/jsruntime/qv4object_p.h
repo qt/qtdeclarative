@@ -166,7 +166,7 @@ struct Q_QML_EXPORT Object: Managed {
     void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
     void setProperty(ExecutionEngine *engine, uint index, Heap::Base *b) const { d()->setProperty(engine, index, b); }
 
-    const ObjectVTable *vtable() const { return reinterpret_cast<const ObjectVTable *>(d()->vtable()); }
+    const VTable *vtable() const { return d()->vtable(); }
 
     PropertyAttributes getOwnProperty(PropertyKey id, Property *p = nullptr) {
         return vtable()->getOwnProperty(this, id, p);
@@ -199,12 +199,12 @@ struct Q_QML_EXPORT Object: Managed {
         insertMember(name, value, attributes);
     }
     void defineDefaultProperty(const QString &name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
-    void defineDefaultProperty(const QString &name, jsCallFunction code,
+    void defineDefaultProperty(const QString &name, VTable::Call code,
                                int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
-    void defineDefaultProperty(StringOrSymbol *name, jsCallFunction code,
+    void defineDefaultProperty(StringOrSymbol *name, VTable::Call code,
                                int argumentCount = 0, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable);
-    void defineAccessorProperty(const QString &name, jsCallFunction getter, jsCallFunction setter);
-    void defineAccessorProperty(StringOrSymbol *name, jsCallFunction getter, jsCallFunction setter);
+    void defineAccessorProperty(const QString &name, VTable::Call getter, VTable::Call setter);
+    void defineAccessorProperty(StringOrSymbol *name, VTable::Call getter, VTable::Call setter);
     /* Fixed: Writable: false, Enumerable: false, Configurable: false */
     void defineReadonlyProperty(const QString &name, const Value &value);
     void defineReadonlyProperty(String *name, const Value &value);

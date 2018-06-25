@@ -85,8 +85,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
 {
-    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
-    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
+    jsCall = vtable()->call;
+    jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
     this->scope.set(scope->engine(), scope->d());
@@ -103,8 +103,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
 {
-    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
-    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
+    jsCall = vtable()->call;
+    jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
     setFunction(function);
@@ -128,8 +128,8 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &nam
 
 void Heap::FunctionObject::init()
 {
-    jsCall = reinterpret_cast<const ObjectVTable *>(vtable())->call;
-    jsConstruct = reinterpret_cast<const ObjectVTable *>(vtable())->callAsConstructor;
+    jsCall = vtable()->call;
+    jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
@@ -193,7 +193,7 @@ Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *sco
     return scope->engine()->memoryManager->allocate<MemberFunction>(scope, function);
 }
 
-Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, jsCallFunction code, int argumentCount)
+Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount)
 {
     Scope scope(engine);
     ScopedString name(scope, nameOrSymbol);
