@@ -81,7 +81,7 @@ struct MapCtor: FunctionObject
 {
     V4_OBJECT2(MapCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

@@ -360,7 +360,7 @@ public:
     { return vtable()->instanceOf(this, var); }
 
 protected:
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);

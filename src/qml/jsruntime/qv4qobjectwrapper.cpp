@@ -2064,7 +2064,7 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
     }
 }
 
-ReturnedValue QMetaObjectWrapper::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue QMetaObjectWrapper::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     const QMetaObjectWrapper *This = static_cast<const QMetaObjectWrapper*>(f);
     return This->constructInternal(argv, argc);

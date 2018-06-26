@@ -97,7 +97,7 @@ struct ProxyObject: Object {
     static bool virtualSetPrototypeOf(Managed *, const Object *);
 
     // those might require a second proxy object that derives from FunctionObject...
-//    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+//    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 //    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
@@ -105,7 +105,7 @@ struct Proxy : FunctionObject
 {
     V4_OBJECT2(Proxy, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_revocable(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -1302,16 +1302,16 @@ ReturnedValue Runtime::method_callWithSpread(ExecutionEngine *engine, const Valu
     return static_cast<const FunctionObject &>(function).call(&thisObject, arguments.argv, arguments.argc);
 }
 
-ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, const Value &/*newTarget*/, Value *argv, int argc)
+ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &function, const Value &newTarget, Value *argv, int argc)
 {
     if (!function.isFunctionObject())
         return engine->throwTypeError();
     Q_ASSERT(function.sameValue(newTarget));
 
-    return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc);
+    return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc, &newTarget);
 }
 
-ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, const Value &/*newTarget*/, Value *argv, int argc)
+ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, const Value &newTarget, Value *argv, int argc)
 {
     Q_UNIMPLEMENTED();
     if (!function.isFunctionObject())
@@ -1323,7 +1323,7 @@ ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const
     if (engine->hasException)
         return Encode::undefined();
 
-    return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc);
+    return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc, &newTarget);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)

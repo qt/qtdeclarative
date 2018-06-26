@@ -53,7 +53,7 @@ void Heap::MapCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Map"));
 }
 
-ReturnedValue MapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue MapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     Scope scope(f);
     Scoped<MapObject> a(scope, scope.engine->memoryManager->allocate<MapObject>());

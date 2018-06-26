@@ -152,7 +152,7 @@ struct RegExpCtor: FunctionObject
     int lastMatchStart() { return d()->lastMatchStart; }
     int lastMatchEnd() { return d()->lastMatchEnd; }
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

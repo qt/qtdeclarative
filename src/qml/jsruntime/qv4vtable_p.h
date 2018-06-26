@@ -77,7 +77,7 @@ struct VTable
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc);
+    typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
 
     const VTable * const parent;
     quint32 inlinePropertyOffset : 16;

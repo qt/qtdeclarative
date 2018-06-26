@@ -412,7 +412,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
         } \
     } while (false)
 
-QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
+QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObject, const QV4::Value *argv, int argc, const Value *newTarget)
 {
     qt_v4ResolvePendingBreakpointsHook();
     ExecutionEngine *engine;
@@ -449,6 +449,7 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
         callData->function = fo ? fo->asReturnedValue() : Encode::undefined();
         callData->context = scope;
         callData->accumulator = Encode::undefined();
+        callData->newTarget = newTarget ? *newTarget : Primitive::undefinedValue();
         callData->thisObject = thisObject ? *thisObject : Primitive::undefinedValue();
         if (argc > int(function->nFormals))
             argc = int(function->nFormals);

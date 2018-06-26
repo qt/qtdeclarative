@@ -78,7 +78,7 @@ struct ArrayBufferCtor: FunctionObject
 {
     V4_OBJECT2(ArrayBufferCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_isView(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

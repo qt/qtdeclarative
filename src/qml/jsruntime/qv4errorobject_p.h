@@ -229,7 +229,7 @@ struct ErrorCtor: FunctionObject
 {
     V4_OBJECT2(ErrorCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
@@ -237,42 +237,42 @@ struct EvalErrorCtor: ErrorCtor
 {
     V4_OBJECT2(EvalErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(RangeErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
     V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
     V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
     V4_OBJECT2(TypeErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
     V4_OBJECT2(URIErrorCtor, ErrorCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 

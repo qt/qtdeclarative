@@ -1629,7 +1629,7 @@ struct QQmlXMLHttpRequestCtor : public FunctionObject
 {
     V4_OBJECT2(QQmlXMLHttpRequestCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
     {
         Scope scope(f->engine());
         const QQmlXMLHttpRequestCtor *ctor = static_cast<const QQmlXMLHttpRequestCtor *>(f);

@@ -164,7 +164,7 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(f)->engine();
     Scope scope(v4);
@@ -514,7 +514,7 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
     Scoped<RegExpObject> that(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!that) {
         // convert args[0] to a regexp
-        that = RegExpCtor::virtualCallAsConstructor(b, argv, argc);
+        that = RegExpCtor::virtualCallAsConstructor(b, argv, argc, b);
         if (v4->hasException)
             return Encode::undefined();
     }

@@ -95,7 +95,7 @@ struct GeneratorFunctionCtor : FunctionCtor
 {
     V4_OBJECT2(GeneratorFunctionCtor, FunctionCtor)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
@@ -105,7 +105,7 @@ struct GeneratorFunction : ScriptFunction
     V4_INTERNALCLASS(GeneratorFunction)
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

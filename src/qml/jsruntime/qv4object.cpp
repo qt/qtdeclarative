@@ -307,7 +307,7 @@ PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs
     return { nullptr, nullptr };
 }
 
-ReturnedValue Object::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue Object::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     return f->engine()->throwTypeError();
 }

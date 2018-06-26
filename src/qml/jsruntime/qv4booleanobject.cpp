@@ -50,7 +50,7 @@ void Heap::BooleanCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Boolean"));
 }
 
-ReturnedValue BooleanCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc)
+ReturnedValue BooleanCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *)
 {
     bool n = argc ? argv[0].toBoolean() : false;
     return Encode(that->engine()->newBooleanObject(n));

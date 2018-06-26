@@ -416,10 +416,6 @@ built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js f
 built-ins/Function/prototype/Symbol.hasInstance/value-non-obj.js fails
 built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js fails
 built-ins/Function/prototype/bind/get-fn-realm.js fails
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget-bound.js fails
-built-ins/Function/prototype/bind/instance-construct-newtarget-boundtarget.js fails
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-new.js fails
-built-ins/Function/prototype/bind/instance-construct-newtarget-self-reflect.js fails
 built-ins/Function/prototype/bind/instance-name-chained.js fails
 built-ins/Function/prototype/bind/instance-name-non-string.js fails
 built-ins/Function/prototype/bind/instance-name.js fails
@@ -1959,6 +1955,8 @@ language/computed-property-names/object/method/super.js fails
 language/eval-code/direct/lex-env-no-init-cls.js fails
 language/eval-code/direct/lex-env-no-init-const.js fails
 language/eval-code/direct/lex-env-no-init-let.js fails
+language/eval-code/direct/new.target.js fails
+language/eval-code/direct/new.target-arrow.js fails
 language/eval-code/direct/new.target-fn.js fails
 language/eval-code/direct/non-definable-function-with-function.js sloppyFails
 language/eval-code/direct/non-definable-function-with-variable.js sloppyFails
@@ -1974,6 +1972,7 @@ language/eval-code/indirect/always-non-strict.js strictFails
 language/eval-code/indirect/lex-env-no-init-cls.js fails
 language/eval-code/indirect/lex-env-no-init-const.js fails
 language/eval-code/indirect/lex-env-no-init-let.js fails
+language/eval-code/indirect/new.target.js fails
 language/eval-code/indirect/non-definable-function-with-function.js sloppyFails
 language/eval-code/indirect/non-definable-function-with-variable.js sloppyFails
 language/eval-code/indirect/non-definable-global-function.js fails
@@ -2959,17 +2958,9 @@ language/expressions/instanceof/prototype-getter-with-object-throws.js fails
 language/expressions/instanceof/prototype-getter-with-object.js fails
 language/expressions/logical-and/tco-right.js strictFails
 language/expressions/logical-or/tco-right.js strictFails
-language/expressions/new.target/asi.js fails
-language/expressions/new.target/value-via-call.js fails
-language/expressions/new.target/value-via-fpapply.js fails
-language/expressions/new.target/value-via-fpcall.js fails
-language/expressions/new.target/value-via-member.js fails
-language/expressions/new.target/value-via-new.js fails
-language/expressions/new.target/value-via-reflect-apply.js fails
 language/expressions/new.target/value-via-reflect-construct.js fails
 language/expressions/new.target/value-via-super-call.js fails
 language/expressions/new.target/value-via-super-property.js fails
-language/expressions/new.target/value-via-tagged-template.js fails
 language/expressions/new/non-ctor-err-realm.js fails
 language/expressions/object/concise-generator.js fails
 language/expressions/object/dstr-gen-meth-ary-ptrn-elem-id-init-fn-name-class.js fails

@@ -743,7 +743,7 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc)
+ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *)
 {
     ExecutionEngine *e = that->engine();
     double t = 0;

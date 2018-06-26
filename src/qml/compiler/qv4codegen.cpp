@@ -2036,7 +2036,9 @@ bool Codegen::visit(FieldMemberExpression *ast)
                 throwSyntaxError(ast->identifierToken, QLatin1String("Expected 'target' after 'new.'."));
                 return false;
             }
-            throwSyntaxError(ast->identifierToken, QLatin1String("Support for 'new.target' unimplemented."));
+            Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
+            _expr.setResult(r);
+            return false;
         }
     }
 

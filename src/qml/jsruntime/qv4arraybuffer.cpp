@@ -53,7 +53,7 @@ void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
 }
 
-ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     ExecutionEngine *v4 = f->engine();
     Scope scope(v4);
@@ -76,7 +76,7 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
 
 ReturnedValue ArrayBufferCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return virtualCallAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc, f);
 }
 
 ReturnedValue ArrayBufferCtor::method_isView(const FunctionObject *, const Value *, const Value *argv, int argc)

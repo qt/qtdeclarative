@@ -214,7 +214,7 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     Scope scope(f->engine());
     const TypedArrayCtor *that = static_cast<const TypedArrayCtor *>(f);
@@ -640,7 +640,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const Functio
     return a->engine()->newString(QString::fromLatin1(a->d()->type->name))->asReturnedValue();
 }
 
-ReturnedValue IntrinsicTypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue IntrinsicTypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     return f->engine()->throwTypeError();
 }

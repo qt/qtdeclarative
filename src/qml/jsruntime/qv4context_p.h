@@ -64,13 +64,15 @@ struct CallData
         Context = 1,
         Accumulator = 2,
         This = 3,
-        Argc = 4
+        NewTarget = 4,
+        Argc = 5
     };
 
     Value function;
     Value context;
     Value accumulator;
     Value thisObject;
+    Value newTarget;
     Value _argc;
 
     int argc() const {
@@ -94,7 +96,7 @@ struct CallData
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
 Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args) == 5*sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, args) == 6*sizeof(Value));
 
 namespace Heap {
 

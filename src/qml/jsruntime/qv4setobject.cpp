@@ -53,7 +53,7 @@ void Heap::SetCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Set"));
 }
 
-ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     Scope scope(f);
     Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());

@@ -254,7 +254,7 @@ struct Q_QML_EXPORT QMetaObjectWrapper : public QV4::FunctionObject
     const QMetaObject *metaObject() const { return d()->metaObject; }
 
 protected:
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static bool virtualIsEqualTo(Managed *a, Managed *b);
 
 private:

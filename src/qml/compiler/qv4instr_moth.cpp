@@ -147,6 +147,8 @@ QString dumpRegister(int reg, int nFormals)
         return QStringLiteral("(context)");
     else if (reg == CallData::Accumulator)
         return QStringLiteral("(accumulator)");
+    else if (reg == CallData::NewTarget)
+        return QStringLiteral("(new.target)");
     else if (reg == CallData::This)
         return QStringLiteral("(this)");
     else if (reg == CallData::Argc)

@@ -70,7 +70,7 @@ struct ObjectCtor: FunctionObject
 {
     V4_OBJECT2(ObjectCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc);
 };
 

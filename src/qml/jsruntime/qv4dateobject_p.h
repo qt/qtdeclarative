@@ -108,7 +108,7 @@ struct DateCtor: FunctionObject
 {
     V4_OBJECT2(DateCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int);
 };
 

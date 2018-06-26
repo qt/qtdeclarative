@@ -168,7 +168,7 @@ ReturnedValue FunctionObject::name() const
     return get(scope()->internalClass->engine->id_name());
 }
 
-ReturnedValue FunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue FunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     return f->engine()->throwTypeError();
 }
@@ -275,7 +275,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
     return cg.generateCompilationUnit();
 }
 
-ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     ExecutionEngine *engine = f->engine();
 
@@ -291,7 +291,7 @@ ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, co
 // 15.3.1: This is equivalent to new Function(...)
 ReturnedValue FunctionCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return virtualCallAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc, f);
 }
 
 DEFINE_OBJECT_VTABLE(FunctionPrototype);
@@ -450,7 +450,7 @@ ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *f, con
 
 DEFINE_OBJECT_VTABLE(ScriptFunction);
 
-ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
+ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *v4 = fo->engine();
     const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
@@ -458,7 +458,7 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     Scope scope(v4);
     ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(f->classForConstructor()));
 
-    ReturnedValue result = Moth::VME::exec(fo, thisObject, argv, argc);
+    ReturnedValue result = Moth::VME::exec(fo, thisObject, argv, argc, newTarget);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -516,14 +516,14 @@ ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Va
 
 DEFINE_OBJECT_VTABLE(MemberFunction);
 
-ReturnedValue MemberFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue MemberFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
 }
 
 DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);
 
-ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     Scope scope(f);
     ScopedObject proto(scope, f->get(scope.engine->id_prototype()));
@@ -588,7 +588,7 @@ ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *
     return target->call(jsCallData);
 }
 
-ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc)
+ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *)
 {
     const BoundFunction *f = static_cast<const BoundFunction *>(fo);
     Scope scope(f->engine());

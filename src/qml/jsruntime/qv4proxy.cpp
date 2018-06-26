@@ -477,7 +477,7 @@ bool ProxyObject::virtualSetPrototypeOf(Managed *m, const Object *p)
     return true;
 }
 
-//ReturnedValue ProxyObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+//ReturnedValue ProxyObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 //{
 
 //}
@@ -499,7 +499,7 @@ void Heap::Proxy::init(QV4::ExecutionContext *ctx)
     ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(2));
 }
 
-ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     Scope scope(f);
     if (argc < 2 || !argv[0].isObject() || !argv[1].isObject())
@@ -526,7 +526,7 @@ ReturnedValue Proxy::virtualCall(const FunctionObject *f, const Value *, const V
 ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedObject proxy(scope, Proxy::virtualCallAsConstructor(f, argv, argc));
+    ScopedObject proxy(scope, Proxy::virtualCallAsConstructor(f, argv, argc, f));
     if (scope.hasException())
         return Encode::undefined();
 

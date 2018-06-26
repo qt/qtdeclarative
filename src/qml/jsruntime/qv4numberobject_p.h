@@ -79,7 +79,7 @@ struct NumberCtor: FunctionObject
 {
     V4_OBJECT2(NumberCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 

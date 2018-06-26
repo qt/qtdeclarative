@@ -54,7 +54,7 @@ void Heap::GeneratorFunctionCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("GeneratorFunction"));
 }
 
-ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc)
+ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
     ExecutionEngine *engine = f->engine();
 
@@ -70,7 +70,7 @@ ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObje
 // 15.3.1: This is equivalent to new Function(...)
 ReturnedValue GeneratorFunctionCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return virtualCallAsConstructor(f, argv, argc);
+    return virtualCallAsConstructor(f, argv, argc, f);
 }
 
 Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Function *function)
@@ -84,7 +84,7 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     return g->d();
 }
 
-ReturnedValue GeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int)
+ReturnedValue GeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
 {
     return f->engine()->throwTypeError();
 }
