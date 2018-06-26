@@ -2521,7 +2521,11 @@ void QQuickListView::setHighlightResizeDuration(int duration)
     the view.
     \li ListView.SnapOneItem - the view settles no more than one item away from the first
     visible item at the time the mouse button is released.  This mode is particularly
-    useful for moving one page at a time.
+    useful for moving one page at a time. When SnapOneItem is enabled, the ListView will
+    show a stronger affinity to neighboring items when movement occurs. For example, a
+    short drag that snaps back to the current item with SnapToItem might snap to a
+    neighboring item with SnapOneItem.
+
     \endlist
 
     \c snapMode does not affect the \l currentIndex.  To update the
