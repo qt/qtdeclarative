@@ -111,6 +111,8 @@ public:
 
     QV4::ExecutionEngine *handle() const { return m_v4Engine; }
 
+    void throwError(const QString &message);
+
 private:
     QJSValue create(int type, const void *ptr);
 

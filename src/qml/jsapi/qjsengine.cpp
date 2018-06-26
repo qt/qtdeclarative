@@ -738,6 +738,74 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     \sa toScriptValue()
 */
 
+/*!
+    Throws a run-time error (exception) with the given \a message.
+
+    This method is the C++ counterpart of a \c throw() expression in
+    JavaScript. It enables C++ code to report run-time errors to QJSEngine.
+    Therefore it should only be called from C++ code that was invoked by a
+    JavaScript function through QJSEngine.
+
+    When returning from C++, the engine will interrupt the normal flow of
+    execution and call the the next pre-registered exception handler with
+    an error object that contains the given \a message. The error object
+    will point to the location of the top-most context on the JavaScript
+    caller stack; specifically, it will have properties \c lineNumber,
+    \c fileName and \c stack. These properties are described in
+    \l{Script Exceptions}.
+
+    In the following example a C++ method in \e FileAccess.cpp throws an error
+    in \e qmlFile.qml at the position where \c readFileAsText() is called:
+
+    \code
+    // qmlFile.qml
+    function someFunction() {
+      ...
+      var text = FileAccess.readFileAsText("/path/to/file.txt");
+    }
+    \endcode
+
+    \code
+    // FileAccess.cpp
+    // Assuming that FileAccess is a QObject-derived class that has been
+    // registered as a singleton type and provides an invokable method
+    // readFileAsText()
+
+    QJSValue FileAccess::readFileAsText(const QString & filePath) {
+      QFile file(filePath);
+
+      if (!file.open(QIODevice::ReadOnly)) {
+        jsEngine->throwError(file.errorString());
+        return QString();
+      }
+
+      ...
+      return content;
+    }
+    \endcode
+
+    It is also possible to catch the thrown error in JavaScript:
+    \code
+    // qmlFile.qml
+    function someFunction() {
+      ...
+      var text;
+      try {
+        text = FileAccess.readFileAsText("/path/to/file.txt");
+      } catch (error) {
+        console.warn("In " + error.fileName + ":" + "error.lineNumber" +
+                     ": " + error.message);
+      }
+    }
+    \endcode
+
+    \since Qt 5.12
+    \sa {Script Exceptions}
+*/
+void QJSEngine::throwError(const QString &message)
+{
+    m_v4Engine->throwError(message);
+}
 
 QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
 {

@@ -219,6 +219,11 @@ private slots:
     void protoChanges_QTBUG68369();
     void multilineStrings();
 
+    void throwError();
+
+public:
+    Q_INVOKABLE QJSValue throwingCppMethod();
+
 signals:
     void testSignal();
 };
@@ -4289,6 +4294,36 @@ void tst_QJSEngine::multilineStrings()
     QVERIFY(result.isString());
     QVERIFY(result.toString() == QStringLiteral("a\nb"));
 
+}
+
+void tst_QJSEngine::throwError()
+{
+    QJSEngine engine;
+    QJSValue wrappedThis = engine.newQObject(this);
+    QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    engine.globalObject().setProperty("testCase", wrappedThis);
+
+    QJSValue result = engine.evaluate(
+                "function test(){\n"
+                "try {\n"
+                "    return testCase.throwingCppMethod();\n"
+                "} catch (error) {\n"
+                "    return error;\n"
+                "}\n"
+                "return \"not reached!\";\n"
+                "}\n"
+                "test();"
+    );
+    QVERIFY(result.isError());
+    QCOMPARE(result.property("lineNumber").toString(), "3");
+    QCOMPARE(result.property("message").toString(), "blub");
+    QVERIFY(!result.property("stack").isUndefined());
+}
+
+QJSValue tst_QJSEngine::throwingCppMethod()
+{
+    qjsEngine(this)->throwError("blub");
+    return QJSValue(47);
 }
 
 QTEST_MAIN(tst_QJSEngine)
