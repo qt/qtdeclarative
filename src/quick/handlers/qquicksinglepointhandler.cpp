@@ -61,7 +61,6 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 
 QQuickSinglePointHandler::QQuickSinglePointHandler(QObject *parent)
   : QQuickPointerDeviceHandler(parent)
-  , m_acceptedButtons(Qt::LeftButton)
   , m_ignoreAdditionalPoints(false)
 {
 }
@@ -71,7 +70,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
     if (event->device()->pointerType() != QQuickPointerDevice::Finger &&
-            (event->buttons() & m_acceptedButtons) == 0 && (event->button() & m_acceptedButtons) == 0)
+            (event->buttons() & acceptedButtons()) == 0 && (event->button() & acceptedButtons()) == 0)
         return false;
 
     if (m_pointInfo.m_id) {
@@ -188,44 +187,6 @@ void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
 void QQuickSinglePointHandler::setPointId(int id)
 {
     m_pointInfo.m_id = id;
-}
-
-/*!
-    \qmlproperty int QtQuick::SinglePointHandler::acceptedButtons
-
-    The mouse buttons which can activate this Pointer Handler.
-
-    By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
-    It can be set to an OR combination of mouse buttons, and will ignore events
-    from other buttons.
-
-    For example, a control could be made to respond to left and right clicks
-    in different ways, with two handlers:
-
-    \qml
-    Item {
-        TapHandler {
-            onTapped: console.log("left clicked")
-        }
-        TapHandler {
-            acceptedButtons: Qt.RightButton
-            onTapped: console.log("right clicked")
-        }
-    }
-    \endqml
-
-    \note Tapping on a touchscreen or tapping the stylus on a graphics tablet
-    emulates clicking the left mouse button. This behavior can be altered via
-    \l {PointerDeviceHandler::acceptedDevices}{acceptedDevices} or
-    \l {PointerDeviceHandler::acceptedPointerTypes}{acceptedPointerTypes}.
-*/
-void QQuickSinglePointHandler::setAcceptedButtons(Qt::MouseButtons buttons)
-{
-    if (m_acceptedButtons == buttons)
-        return;
-
-    m_acceptedButtons = buttons;
-    emit acceptedButtonsChanged();
 }
 
 void QQuickSinglePointHandler::reset()

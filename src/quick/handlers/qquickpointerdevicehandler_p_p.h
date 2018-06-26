@@ -66,6 +66,7 @@ public:
 
     QQuickPointerDevice::DeviceTypes acceptedDevices = QQuickPointerDevice::AllDevices;
     QQuickPointerDevice::PointerTypes acceptedPointerTypes = QQuickPointerDevice::AllPointerTypes;
+    Qt::MouseButtons acceptedButtons = Qt::LeftButton;
     Qt::KeyboardModifiers acceptedModifiers = Qt::KeyboardModifierMask;
 };
 

@@ -84,6 +84,51 @@ QQuickPointerDevice::PointerTypes QQuickPointerDeviceHandler::acceptedPointerTyp
     return d->acceptedPointerTypes;
 }
 
+/*!
+    \qmlproperty int QtQuick::PointerDeviceHandler::acceptedButtons
+
+    The mouse buttons which can activate this Pointer Handler.
+
+    By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    It can be set to an OR combination of mouse buttons, and will ignore events
+    from other buttons.
+
+    For example, a control could be made to respond to left and right clicks
+    in different ways, with two handlers:
+
+    \qml
+    Item {
+        TapHandler {
+            onTapped: console.log("left clicked")
+        }
+        TapHandler {
+            acceptedButtons: Qt.RightButton
+            onTapped: console.log("right clicked")
+        }
+    }
+    \endqml
+
+    \note Tapping on a touchscreen or tapping the stylus on a graphics tablet
+    emulates clicking the left mouse button. This behavior can be altered via
+    \l {PointerDeviceHandler::acceptedDevices}{acceptedDevices} or
+    \l {PointerDeviceHandler::acceptedPointerTypes}{acceptedPointerTypes}.
+*/
+Qt::MouseButtons QQuickPointerDeviceHandler::acceptedButtons() const
+{
+    Q_D(const QQuickPointerDeviceHandler);
+    return d->acceptedButtons;
+}
+
+void QQuickPointerDeviceHandler::setAcceptedButtons(Qt::MouseButtons buttons)
+{
+    Q_D(QQuickPointerDeviceHandler);
+    if (d->acceptedButtons == buttons)
+        return;
+
+    d->acceptedButtons = buttons;
+    emit acceptedButtonsChanged();
+}
+
 Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
 {
     Q_D(const QQuickPointerDeviceHandler);

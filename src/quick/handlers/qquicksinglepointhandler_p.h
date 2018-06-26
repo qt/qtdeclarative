@@ -59,21 +59,16 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
 public:
     explicit QQuickSinglePointHandler(QObject *parent = nullptr);
     virtual ~QQuickSinglePointHandler() { }
-
-    Qt::MouseButtons acceptedButtons() const { return m_acceptedButtons; }
-    void setAcceptedButtons(Qt::MouseButtons buttons);
 
     QQuickHandlerPoint point() const { return m_pointInfo; }
 
 Q_SIGNALS:
     void pointChanged();
     void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
-    void acceptedButtonsChanged();
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
@@ -94,7 +89,6 @@ private:
 
 private:
     QQuickHandlerPoint m_pointInfo;
-    Qt::MouseButtons m_acceptedButtons;
     bool m_ignoreAdditionalPoints : 1;
 };
 
