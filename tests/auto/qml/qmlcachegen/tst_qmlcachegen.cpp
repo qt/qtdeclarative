@@ -253,7 +253,7 @@ void tst_qmlcachegen::errorOnArgumentsInSignalHandler()
 
     QByteArray errorOutput;
     QVERIFY(!generateCache(testFilePath, &errorOutput));
-    QVERIFY2(errorOutput.contains("error: The use of the arguments object in signal handlers is"), errorOutput);
+    QVERIFY2(errorOutput.contains("error: The use of eval() or the use of the arguments object in signal handlers is"), errorOutput);
 }
 
 void tst_qmlcachegen::aheadOfTimeCompilation()

@@ -147,11 +147,13 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc, 
                 if (compiledFunction->column > 0)
                     error->message += QString::number(compiledFunction->column) + QLatin1Char(':');
 
-                error->message += QLatin1String(" error: The use of the arguments object in signal handlers is\n"
-                                                "not supported when compiling qml files ahead of time, because it may be ambiguous if\n"
-                                                "any signal parameter is called \"arguments\". Unfortunately we cannot distinguish\n"
-                                                "between it being a parameter or the JavaScript arguments object at this point.\n"
-                                                "Consider renaming the parameter of the signal if applicable.");
+                error->message += QLatin1String(" error: The use of eval() or the use of the arguments object in signal handlers is\n"
+                                                "not supported when compiling qml files ahead of time. That is because it's ambiguous if \n"
+                                                "any signal parameter is called \"arguments\". Similarly the string passed to eval might use\n"
+                                                "\"arguments\". Unfortunately we cannot distinguish between it being a parameter or the\n"
+                                                "JavaScript arguments object at this point.\n"
+                                                "Consider renaming the parameter of the signal if applicable or moving the code into a\n"
+                                                "helper function.");
                 return false;
             }
         }
