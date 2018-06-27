@@ -1174,7 +1174,10 @@ void QQmlTypeLoader::loadThread(QQmlDataBlob *blob)
 }
 
 #define DATALOADER_MAXIMUM_REDIRECT_RECURSION 16
+
+#ifndef TYPELOADER_MINIMUM_TRIM_THRESHOLD
 #define TYPELOADER_MINIMUM_TRIM_THRESHOLD 64
+#endif
 
 #if QT_CONFIG(qml_network)
 void QQmlTypeLoader::networkReplyFinished(QNetworkReply *reply)
