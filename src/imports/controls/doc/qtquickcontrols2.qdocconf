@@ -51,6 +51,10 @@ sourcedirs += ../../../quicktemplates2 \
               ../../templates/doc/src \
               src
 
+# Exclude .qml files from the doc build to prevent conflicts with .qml files
+# in style-specific directories; all types are documented in .cpp/.qdoc files
+excludefiles = *.qml
+
 imagedirs += images \
              ..
 
