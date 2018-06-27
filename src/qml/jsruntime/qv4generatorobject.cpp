@@ -132,7 +132,7 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     gp->cppFrame.parent = engine->currentStackFrame;
     engine->currentStackFrame = &gp->cppFrame;
 
-    Moth::VME::interpret(gp->cppFrame, function->codeData);
+    Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
     gp->state = GeneratorState::SuspendedStart;
 
     engine->currentStackFrame = gp->cppFrame.parent;
@@ -236,7 +236,7 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
     gp->cppFrame.jsFrame->accumulator = arg;
 
     Scope scope(engine);
-    ScopedValue result(scope, Moth::VME::interpret(gp->cppFrame, code));
+    ScopedValue result(scope, Moth::VME::interpret(&gp->cppFrame, engine, code));
 
     engine->currentStackFrame = gp->cppFrame.parent;
 

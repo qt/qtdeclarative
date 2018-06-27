@@ -391,7 +391,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
     }
 }
 
-#define STORE_IP() frame.instructionPointer = int(code - function->codeData);
+#define STORE_IP() frame->instructionPointer = int(code - function->codeData);
 #define STORE_ACC() accumulator = acc;
 #define ACC Primitive::fromReturnedValue(acc)
 #define VALUE_TO_INT(i, val) \
@@ -411,6 +411,39 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
             i = Double::toInt32(d); \
         } \
     } while (false)
+
+ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
+{
+    CHECK_STACK_LIMITS(engine);
+
+    Function *function = frame->v4Function;
+    Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
+    QV4::Debugging::Debugger *debugger = engine->debugger();
+
+#ifdef V4_ENABLE_JIT
+    if (debugger == nullptr) {
+        if (function->jittedCode == nullptr) {
+            if (engine->canJIT(function))
+                QV4::JIT::BaselineJIT(function).generate();
+            else
+                ++function->interpreterCallCount;
+        }
+        if (function->jittedCode != nullptr)
+            return function->jittedCode(frame, engine);
+    }
+#endif // V4_ENABLE_JIT
+
+    // interpreter
+    if (debugger)
+        debugger->enteringFunction();
+
+    ReturnedValue result = interpret(frame, engine, function->codeData);
+
+    if (debugger)
+        debugger->leavingFunction(result);
+
+    return result;
+}
 
 QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObject, const QV4::Value *argv, int argc, const Value *newTarget)
 {
@@ -467,46 +500,21 @@ QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObj
         frame.jsFrame = callData;
         engine->currentStackFrame = &frame;
     }
-    CHECK_STACK_LIMITS(engine);
 
-    Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
-    QV4::Debugging::Debugger *debugger = engine->debugger();
+    ReturnedValue result = exec(&frame, engine);
 
-#ifdef V4_ENABLE_JIT
-    if (function->jittedCode == nullptr && debugger == nullptr) {
-        if (engine->canJIT(function))
-            QV4::JIT::BaselineJIT(function).generate();
-        else
-            ++function->interpreterCallCount;
-    }
-#endif // V4_ENABLE_JIT
-
-    if (debugger)
-        debugger->enteringFunction();
-
-    ReturnedValue result;
-    if (function->jittedCode != nullptr && debugger == nullptr) {
-        result = function->jittedCode(&frame, engine);
-    } else {
-    // interpreter
-        result = interpret(frame, function->codeData);
-    }
-
-    if (QV4::Debugging::Debugger *debugger = engine->debugger())
-        debugger->leavingFunction(result);
     engine->currentStackFrame = frame.parent;
     engine->jsStackTop = stack;
 
     return result;
 }
 
-QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
+QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *code)
 {
-    QV4::Function *function = frame.v4Function;
-    QV4::Value &accumulator = frame.jsFrame->accumulator;
+    QV4::Function *function = frame->v4Function;
+    QV4::Value &accumulator = frame->jsFrame->accumulator;
     QV4::ReturnedValue acc = accumulator.asReturnedValue();
-    Value *stack = reinterpret_cast<Value *>(frame.jsFrame);
-    ExecutionEngine *engine = function->internalClass->engine;
+    Value *stack = reinterpret_cast<Value *>(frame->jsFrame);
 
     MOTH_JUMP_TABLE;
 
@@ -704,7 +712,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(LoadIdObject)
 
     MOTH_BEGIN_INSTR(Yield)
-        frame.yield = code;
+        frame->yield = code;
         return acc;
     MOTH_END_INSTR(Yield)
 
@@ -808,22 +816,22 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(ConstructWithSpread)
 
     MOTH_BEGIN_INSTR(SetUnwindHandler)
-        frame.unwindHandler = offset ? code + offset : nullptr;
+        frame->unwindHandler = offset ? code + offset : nullptr;
     MOTH_END_INSTR(SetUnwindHandler)
 
     MOTH_BEGIN_INSTR(UnwindDispatch)
         CHECK_EXCEPTION;
-        if (frame.unwindLevel) {
-            --frame.unwindLevel;
-            if (frame.unwindLevel)
+        if (frame->unwindLevel) {
+            --frame->unwindLevel;
+            if (frame->unwindLevel)
                 goto handleUnwind;
-            code = frame.unwindLabel;
+            code = frame->unwindLabel;
         }
     MOTH_END_INSTR(UnwindDispatch)
 
     MOTH_BEGIN_INSTR(UnwindToLabel)
-        frame.unwindLevel = level;
-        frame.unwindLabel = code + offset;
+        frame->unwindLevel = level;
+        frame->unwindLabel = code + offset;
         goto handleUnwind;
     MOTH_END_INSTR(UnwindToLabel)
 
@@ -853,7 +861,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(CreateCallContext)
-        stack[CallData::Context] = ExecutionContext::newCallContext(&frame);
+        stack[CallData::Context] = ExecutionContext::newCallContext(frame);
     MOTH_END_INSTR(CreateCallContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)
@@ -1371,11 +1379,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame &frame, const char *code)
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
     handleUnwind:
-        Q_ASSERT(engine->hasException || frame.unwindLevel);
-        if (!frame.unwindHandler) {
+        Q_ASSERT(engine->hasException || frame->unwindLevel);
+        if (!frame->unwindHandler) {
             acc = Encode::undefined();
             return acc;
         }
-        code = frame.unwindHandler;
+        code = frame->unwindHandler;
     }
 }
