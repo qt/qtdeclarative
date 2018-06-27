@@ -55,6 +55,7 @@
 #include "qv4functionobject_p.h"
 #include "qv4context_p.h"
 #include "qv4scopedvalue_p.h"
+#include "qv4stackframe_p.h"
 
 QT_BEGIN_NAMESPACE
 

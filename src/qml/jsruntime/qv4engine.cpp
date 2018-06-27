@@ -74,6 +74,7 @@
 #include "qv4generatorobject_p.h"
 #include "qv4reflect_p.h"
 #include "qv4proxy_p.h"
+#include "qv4stackframe_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -898,37 +899,6 @@ QQmlContextData *ExecutionEngine::callingQmlContext() const
         return nullptr;
 
     return ctx->qml()->context->contextData();
-}
-
-QString CppStackFrame::source() const
-{
-    return v4Function ? v4Function->sourceFile() : QString();
-}
-
-QString CppStackFrame::function() const
-{
-    return v4Function ? v4Function->name()->toQString() : QString();
-}
-
-int CppStackFrame::lineNumber() const
-{
-    if (!v4Function)
-        return -1;
-
-    auto findLine = [](const CompiledData::CodeOffsetToLine &entry, uint offset) {
-        return entry.codeOffset < offset;
-    };
-
-    const QV4::CompiledData::Function *cf = v4Function->compiledFunction;
-    uint offset = instructionPointer;
-    const CompiledData::CodeOffsetToLine *lineNumbers = cf->lineNumberTable();
-    uint nLineNumbers = cf->nLineNumbers;
-    const CompiledData::CodeOffsetToLine *line = std::lower_bound(lineNumbers, lineNumbers + nLineNumbers, offset, findLine) - 1;
-    return line->line;
-}
-
-ReturnedValue CppStackFrame::thisObject() const {
-    return jsFrame->thisObject.asReturnedValue();
 }
 
 StackTrace ExecutionEngine::stackTrace(int frameLimit) const

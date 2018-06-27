@@ -66,6 +66,7 @@
 #endif
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
+#include <private/qv4stackframe_p.h>
 
 QT_BEGIN_NAMESPACE
 

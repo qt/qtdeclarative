@@ -56,7 +56,6 @@
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
 
-
 #ifndef V4_BOOTSTRAP
 #  include "qv4function_p.h"
 #  include <private/qv8engine_p.h>
@@ -88,35 +87,6 @@ struct CompilationUnit;
 }
 
 struct Function;
-
-struct Q_QML_EXPORT CppStackFrame {
-    CppStackFrame *parent;
-    Function *v4Function;
-    CallData *jsFrame;
-    const Value *originalArguments;
-    int originalArgumentsCount;
-    int instructionPointer;
-    const char *yield;
-    const char *unwindHandler;
-    const char *unwindLabel;
-    int unwindLevel;
-
-    QString source() const;
-    QString function() const;
-    inline QV4::ExecutionContext *context() const {
-        return static_cast<ExecutionContext *>(&jsFrame->context);
-    }
-    int lineNumber() const;
-
-    inline QV4::Heap::CallContext *callContext() const {
-        Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
-        while (ctx->type != Heap::ExecutionContext::Type_CallContext)
-            ctx = ctx->outer;
-        return static_cast<Heap::CallContext *>(ctx);
-    }
-    ReturnedValue thisObject() const;
-};
-
 
 
 struct Q_QML_EXPORT ExecutionEngine : public EngineBase

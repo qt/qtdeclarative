@@ -44,6 +44,7 @@
 #include "qv4assembler_p.h"
 #include <private/qv4function_p.h>
 #include <private/qv4runtime_p.h>
+#include <private/qv4stackframe_p.h>
 
 #include <wtf/Vector.h>
 #include <assembler/MacroAssembler.h>

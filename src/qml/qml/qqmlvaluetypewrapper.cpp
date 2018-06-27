@@ -39,7 +39,6 @@
 
 #include "qqmlvaluetypewrapper_p.h"
 #include <private/qv8engine_p.h>
-
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlglobal_p.h>
@@ -49,6 +48,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4stackframe_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <QtCore/qloggingcategory.h>

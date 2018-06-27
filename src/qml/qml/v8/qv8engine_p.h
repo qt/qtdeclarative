@@ -67,6 +67,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4identifier_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4stackframe_p.h>
 #include <private/qqmldelayedcallqueue_p.h>
 
 QT_BEGIN_NAMESPACE

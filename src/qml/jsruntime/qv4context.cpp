@@ -48,6 +48,7 @@
 #include "qv4errorobject_p.h"
 #include "qv4string_p.h"
 #include "qv4qmlcontext_p.h"
+#include "qv4stackframe_p.h"
 
 using namespace QV4;
 

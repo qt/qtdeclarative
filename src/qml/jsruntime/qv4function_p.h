@@ -51,7 +51,6 @@
 //
 
 #include "qv4global_p.h"
-#include <private/qqmlglobal_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4context_p.h>
 #include <private/qv4vme_moth_p.h>
@@ -61,6 +60,8 @@ class MacroAssemblerCodeRef;
 }
 
 QT_BEGIN_NAMESPACE
+
+struct QQmlSourceLocation;
 
 namespace QV4 {
 
@@ -100,10 +101,7 @@ struct Q_QML_EXPORT Function {
     inline bool isArrowFunction() const { return compiledFunction->flags & CompiledData::Function::IsArrowFunction; }
     inline bool isGenerator() const { return compiledFunction->flags & CompiledData::Function::IsGenerator; }
 
-    QQmlSourceLocation sourceLocation() const
-    {
-        return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
-    }
+    QQmlSourceLocation sourceLocation() const;
 
     Function *nestedFunction() const
     {

@@ -57,46 +57,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct CallData
-{
-    enum Offsets {
-        Function = 0,
-        Context = 1,
-        Accumulator = 2,
-        This = 3,
-        NewTarget = 4,
-        Argc = 5
-    };
-
-    Value function;
-    Value context;
-    Value accumulator;
-    Value thisObject;
-    Value newTarget;
-    Value _argc;
-
-    int argc() const {
-        Q_ASSERT(_argc.isInteger());
-        return _argc.int_32();
-    }
-
-    void setArgc(int argc) {
-        Q_ASSERT(argc >= 0);
-        _argc.setInt_32(argc);
-    }
-
-    inline ReturnedValue argument(int i) const {
-        return i < argc() ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
-    }
-
-    Value args[1];
-
-    static Q_DECL_CONSTEXPR int HeaderSize() { return offsetof(CallData, args) / sizeof(QV4::Value); }
-};
-
-Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args) == 6*sizeof(Value));
 
 namespace Heap {
 

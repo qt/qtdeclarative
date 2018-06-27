@@ -47,6 +47,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <assembler/MacroAssemblerCodeRef.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -123,6 +124,11 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
         internalClass = internalClass->addMember(arg->propertyKey(), Attr_NotConfigurable);
     }
     nFormals = parameters.size();
+}
+
+QQmlSourceLocation Function::sourceLocation() const
+{
+    return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
 }
 
 QT_END_NAMESPACE
