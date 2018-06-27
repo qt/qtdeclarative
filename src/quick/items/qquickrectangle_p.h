@@ -122,6 +122,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged REVISION 12)
     Q_CLASSINFO("DefaultProperty", "stops")
 
+    Q_ENUMS(QGradient::Preset)
 public:
     QQuickGradient(QObject *parent=nullptr);
     ~QQuickGradient() override;
@@ -157,7 +158,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRectangle : public QQuickItem
     Q_OBJECT
 
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-    Q_PROPERTY(QQuickGradient *gradient READ gradient WRITE setGradient RESET resetGradient)
+    Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
 public:
@@ -168,8 +169,8 @@ public:
 
     QQuickPen *border();
 
-    QQuickGradient *gradient() const;
-    void setGradient(QQuickGradient *gradient);
+    QJSValue gradient() const;
+    void setGradient(const QJSValue &gradient);
     void resetGradient();
 
     qreal radius() const;

@@ -209,15 +209,15 @@ void tst_qquickdesignersupport::objectProperties()
 
 
     //Read gradient property as QObject
-    int propertyIndex = rectangleItem->metaObject()->indexOfProperty("gradient");
+    int propertyIndex = rectangleItem->metaObject()->indexOfProperty("containmentMask");
     QVERIFY(propertyIndex > 0);
     QMetaProperty metaProperty = rectangleItem->metaObject()->property(propertyIndex);
     QVERIFY(metaProperty.isValid());
 
     QVERIFY(QQuickDesignerSupportProperties::isPropertyQObject(metaProperty));
 
-    QObject*gradient = QQuickDesignerSupportProperties::readQObjectProperty(metaProperty, rectangleItem);
-    QVERIFY(gradient);
+    QObject *containmentItem = QQuickDesignerSupportProperties::readQObjectProperty(metaProperty, rectangleItem);
+    QVERIFY(containmentItem);
 
 
     //The width property is not a QObject
@@ -450,7 +450,7 @@ void tst_qquickdesignersupport::testNotifyPropertyChangeCallBack()
 
     QQuickDesignerSupportMetaInfo::registerNotifyPropertyChangeCallBack(notifyPropertyChangeCallBackPointer);
 
-    rectangle->setProperty("gradient", QVariant::fromValue<QQuickGradient *>(gradient));
+    rectangle->setProperty("gradient", QVariant::fromValue<QJSValue>(view->engine()->newQObject(gradient)));
 
     QVERIFY(s_object);
     QCOMPARE(s_object, rootItem);

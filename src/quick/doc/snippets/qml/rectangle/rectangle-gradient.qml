@@ -80,5 +80,17 @@ Rectangle {
     }
 }
 //! [rectangles]
+
+//! [presets]
+Rectangle {
+    y: 0; width: 80; height: 80
+    gradient: Gradient.NightFade
+}
+
+Rectangle {
+    y: 0; width: 80; height: 80
+    gradient: "NightFade"
+}
+//! [presets]
 }
 }

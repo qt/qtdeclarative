@@ -40,8 +40,12 @@
 #include "qquickrectangle_p.h"
 #include "qquickrectangle_p_p.h"
 
+#include <QtQml/qqmlinfo.h>
+
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
+
+#include <private/qqmlmetatype_p.h>
 
 #include <QtGui/qpixmapcache.h>
 #include <QtCore/qmath.h>
@@ -393,7 +397,7 @@ QQuickPen *QQuickRectangle::border()
 }
 
 /*!
-    \qmlproperty Gradient QtQuick::Rectangle::gradient
+    \qmlproperty any QtQuick::Rectangle::gradient
 
     The gradient to use to fill the rectangle.
 
@@ -407,37 +411,66 @@ QQuickPen *QQuickRectangle::border()
     \snippet qml/rectangle/rectangle-gradient.qml rectangles
     \clearfloat
 
+    The property also accepts gradient presets from QGradient::Preset. Note however
+    that due to Rectangle only supporting simple vertical or horizontal gradients,
+    any preset with an unsupported angle will revert to the closest representation.
+
+    \snippet qml/rectangle/rectangle-gradient.qml presets
+    \clearfloat
+
     If both a gradient and a color are specified, the gradient will be used.
 
     \sa Gradient, color
 */
-QQuickGradient *QQuickRectangle::gradient() const
+QJSValue QQuickRectangle::gradient() const
 {
     Q_D(const QQuickRectangle);
     return d->gradient;
 }
 
-void QQuickRectangle::setGradient(QQuickGradient *gradient)
+void QQuickRectangle::setGradient(const QJSValue &gradient)
 {
     Q_D(QQuickRectangle);
-    if (d->gradient == gradient)
+    if (d->gradient.equals(gradient))
         return;
-    static int updatedSignalIdx = -1;
-    if (updatedSignalIdx < 0)
-        updatedSignalIdx = QMetaMethod::fromSignal(&QQuickGradient::updated).methodIndex();
+
+    static int updatedSignalIdx = QMetaMethod::fromSignal(&QQuickGradient::updated).methodIndex();
     if (d->doUpdateSlotIdx < 0)
         d->doUpdateSlotIdx = QQuickRectangle::staticMetaObject.indexOfSlot("doUpdate()");
-    if (d->gradient)
-        QMetaObject::disconnect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
-    d->gradient = gradient;
-    if (d->gradient)
-        QMetaObject::connect(d->gradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
+
+    if (auto oldGradient = qobject_cast<QQuickGradient*>(d->gradient.toQObject()))
+        QMetaObject::disconnect(oldGradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
+
+    if (gradient.isQObject()) {
+        if (auto newGradient = qobject_cast<QQuickGradient*>(gradient.toQObject())) {
+            d->gradient = gradient;
+            QMetaObject::connect(newGradient, updatedSignalIdx, this, d->doUpdateSlotIdx);
+        } else {
+            qmlWarning(this) << "Can't assign "
+                << QQmlMetaType::prettyTypeName(gradient.toQObject()) << " to gradient property";
+            d->gradient = QJSValue();
+        }
+    } else if (gradient.isNumber() || gradient.isString()) {
+        QGradient preset(gradient.toVariant().value<QGradient::Preset>());
+        if (preset.type() != QGradient::NoGradient) {
+            d->gradient = gradient;
+        } else {
+            qmlWarning(this) << "No such gradient preset '" << gradient.toString() << "'";
+            d->gradient = QJSValue();
+        }
+    } else if (gradient.isNull() || gradient.isUndefined()) {
+        d->gradient = gradient;
+    } else {
+        qmlWarning(this) << "Unknown gradient type. Expected int, string, or Gradient";
+        d->gradient = QJSValue();
+    }
+
     update();
 }
 
 void QQuickRectangle::resetGradient()
 {
-    setGradient(nullptr);
+    setGradient(QJSValue());
 }
 
 /*!
@@ -534,9 +567,31 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     QGradientStops stops;
     bool vertical = true;
-    if (d->gradient) {
-        stops = d->gradient->gradientStops();
-        vertical = d->gradient->orientation() == QQuickGradient::Vertical;
+    if (d->gradient.isQObject()) {
+        auto gradient = qobject_cast<QQuickGradient*>(d->gradient.toQObject());
+        Q_ASSERT(gradient);
+        stops = gradient->gradientStops();
+        vertical = gradient->orientation() == QQuickGradient::Vertical;
+    } else if (d->gradient.isNumber() || d->gradient.isString()) {
+        QGradient preset(d->gradient.toVariant().value<QGradient::Preset>());
+        if (preset.type() == QGradient::LinearGradient) {
+            auto linearGradient = static_cast<QLinearGradient&>(preset);
+            const QPointF start = linearGradient.start();
+            const QPointF end = linearGradient.finalStop();
+            vertical = qAbs(start.y() - end.y()) >= qAbs(start.x() - end.x());
+            stops = linearGradient.stops();
+            if ((vertical && start.y() > end.y()) || (!vertical && start.x() > end.x())) {
+                // QSGInternalRectangleNode doesn't support stops in the wrong order,
+                // so we need to manually reverse them here.
+                QGradientStops reverseStops;
+                for (auto it = stops.rbegin(); it != stops.rend(); ++it) {
+                    auto stop = *it;
+                    stop.first = 1 - stop.first;
+                    reverseStops.append(stop);
+                }
+                stops = reverseStops;
+            }
+        }
     }
     rectangle->setGradientStops(stops);
     rectangle->setGradientVertical(vertical);
