@@ -41,6 +41,7 @@
 #include "qquicktableview_p_p.h"
 
 #include <QtCore/qtimer.h>
+#include <QtCore/qdir.h>
 #include <QtQml/private/qqmldelegatemodel_p.h>
 #include <QtQml/private/qqmldelegatemodel_p_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
@@ -131,9 +132,10 @@ void QQuickTableViewPrivate::dumpTable() const
         qWarning() << static_cast<FxTableItem *>(listCopy.at(i))->cell;
     qWarning() << tableLayoutToString();
 
-    QString filename = QStringLiteral("QQuickTableView_dumptable_capture.png");
-    if (q_func()->window()->grabWindow().save(filename))
-        qWarning() << "Window capture saved to:" << filename;
+    const QString filename = QStringLiteral("QQuickTableView_dumptable_capture.png");
+    const QString path = QDir::current().absoluteFilePath(filename);
+    if (q_func()->window()->grabWindow().save(path))
+        qWarning() << "Window capture saved to:" << path;
 }
 
 QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject *object) const
