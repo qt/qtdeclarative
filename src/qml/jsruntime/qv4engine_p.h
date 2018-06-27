@@ -477,10 +477,7 @@ public:
     void setProfiler(Profiling::Profiler *profiler);
 #endif // QT_CONFIG(qml_debug)
 
-    void setCurrentContext(Heap::ExecutionContext *context);
-    ExecutionContext *currentContext() const {
-        return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
-    }
+    ExecutionContext *currentContext() const;
 
     // ensure we always get odd prototype IDs. This helps make marking in QV4::Lookup fast
     quintptr newProtoId() { return (protoIdCount += 2); }
@@ -612,11 +609,6 @@ struct NoThrowEngine : public ExecutionEngine
 struct NoThrowEngine;
 #endif
 
-
-inline void ExecutionEngine::setCurrentContext(Heap::ExecutionContext *context)
-{
-    currentStackFrame->jsFrame->context = context;
-}
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);

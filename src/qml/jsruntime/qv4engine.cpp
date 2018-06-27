@@ -611,6 +611,11 @@ ExecutionEngine::~ExecutionEngine()
     delete [] argumentsAccessors;
 }
 
+ExecutionContext *ExecutionEngine::currentContext() const
+{
+    return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
+}
+
 #if QT_CONFIG(qml_debug)
 void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
