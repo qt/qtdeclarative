@@ -40,6 +40,7 @@
 #define QV4STACKFRAME_H
 
 #include <private/qv4context_p.h>
+#include <private/qv4enginebase_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qv4function_p.h>
 #endif
@@ -90,6 +91,8 @@ Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
 Q_STATIC_ASSERT(offsetof(CallData, args) == 6*sizeof(Value));
 
 struct Q_QML_EXPORT CppStackFrame {
+    EngineBase *engine;
+    Value *savedStackTop;
     CppStackFrame *parent;
     Function *v4Function;
     CallData *jsFrame;
@@ -101,9 +104,56 @@ struct Q_QML_EXPORT CppStackFrame {
     const char *unwindLabel;
     int unwindLevel;
 
+    void init(EngineBase *engine, Function *v4Function, const Value *argv, int argc) {
+        this->engine = engine;
+
+        this->v4Function = v4Function;
+        originalArguments = argv;
+        originalArgumentsCount = argc;
+        instructionPointer = 0;
+        yield = nullptr;
+        unwindHandler = nullptr;
+        unwindLabel = nullptr;
+        unwindLevel = 0;
+    }
+
+    void push() {
+        parent = engine->currentStackFrame;
+        engine->currentStackFrame = this;
+        savedStackTop = engine->jsStackTop;
+    }
+
+    void pop() {
+        engine->currentStackFrame = parent;
+        engine->jsStackTop = savedStackTop;
+    }
+
 #ifndef V4_BOOTSTRAP
-    uint requiredJSStackFrameSize() {
+    static uint requiredJSStackFrameSize(Function *v4Function) {
         return CallData::HeaderSize() + v4Function->compiledFunction->nRegisters;
+    }
+    uint requiredJSStackFrameSize() const {
+        return requiredJSStackFrameSize(v4Function);
+    }
+    void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
+                      const Value &thisObject, const Value &newTarget = Primitive::undefinedValue())
+    {
+        jsFrame = reinterpret_cast<CallData *>(stackSpace);
+        jsFrame->function = function;
+        jsFrame->context = scope->asReturnedValue();
+        jsFrame->accumulator = Encode::undefined();
+        jsFrame->thisObject = thisObject;
+        jsFrame->newTarget = newTarget;
+
+        uint argc = uint(originalArgumentsCount);
+        if (argc > v4Function->nFormals)
+            argc = v4Function->nFormals;
+        jsFrame->setArgc(argc);
+
+        memcpy(jsFrame->args, originalArguments, argc*sizeof(Value));
+        const Value *end = jsFrame->args + v4Function->compiledFunction->nRegisters;
+        for (Value *v = jsFrame->args + argc; v < end; ++v)
+            *v = Encode::undefined();
     }
 #endif
 

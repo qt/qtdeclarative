@@ -96,9 +96,8 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     ExecutionEngine *engine = gf->engine();
 
     // We need to set up a separate stack for the generator, as it's being re-entered
-    uint stackSize = argc; // space for the original arguments
-    int jsStackFrameSize = offsetof(CallData, args)/sizeof(Value) + function->compiledFunction->nRegisters;
-    stackSize += jsStackFrameSize;
+    uint stackSize = argc // space for the original arguments
+                   + CppStackFrame::requiredJSStackFrameSize(function); // space for the JS stack frame
 
     size_t requiredMemory = sizeof(GeneratorObject::Data) - sizeof(Value) + sizeof(Value) * stackSize;
 
@@ -112,30 +111,17 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
 
     // copy original arguments
     memcpy(gp->stack.values, argv, argc*sizeof(Value));
-    gp->cppFrame.originalArguments = gp->stack.values;
-    gp->cppFrame.originalArgumentsCount = argc;
+    gp->cppFrame.init(engine, function, gp->stack.values, argc);
+    gp->cppFrame.setupJSFrame(&gp->stack.values[argc], *gf, gf->scope(),
+                              thisObject ? *thisObject : Primitive::undefinedValue(),
+                              Primitive::undefinedValue());
 
-    // setup JS stack frame
-    CallData *callData = reinterpret_cast<CallData *>(&gp->stack.values[argc]);
-    callData->function = *gf;
-    callData->context = gf->scope();
-    callData->accumulator = Encode::undefined();
-    callData->thisObject = thisObject ? *thisObject : Primitive::undefinedValue();
-    if (argc > int(function->nFormals))
-        argc = int(function->nFormals);
-    callData->setArgc(argc);
-    memcpy(callData->args, argv, argc*sizeof(Value));
-
-    gp->cppFrame.v4Function = function;
-    gp->cppFrame.instructionPointer = 0;
-    gp->cppFrame.jsFrame = callData;
-    gp->cppFrame.parent = engine->currentStackFrame;
-    engine->currentStackFrame = &gp->cppFrame;
+    gp->cppFrame.push();
 
     Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
     gp->state = GeneratorState::SuspendedStart;
 
-    engine->currentStackFrame = gp->cppFrame.parent;
+    gp->cppFrame.pop();
     return g->asReturnedValue();
 }
 

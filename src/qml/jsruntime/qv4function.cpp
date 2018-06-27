@@ -47,16 +47,35 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <assembler/MacroAssemblerCodeRef.h>
+#include <private/qv4vme_moth_p.h>
 #include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
+ReturnedValue Function::call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+    ExecutionEngine *engine = context->engine();
+    CppStackFrame frame;
+    frame.init(engine, this, argv, argc);
+    frame.setupJSFrame(engine->jsStackTop, Primitive::undefinedValue(), context->d(),
+                       thisObject ? *thisObject : Primitive::undefinedValue(),
+                       Primitive::undefinedValue());
+
+    frame.push();
+    engine->jsStackTop += frame.requiredJSStackFrameSize();
+
+    ReturnedValue result = Moth::VME::exec(&frame, engine);
+
+    frame.pop();
+
+    return result;
+}
+
 Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
-        : compiledFunction(function)
-        , compilationUnit(unit)
-        , codeData(function->code())
+    : compiledFunction(function)
+    , compilationUnit(unit)
+    , codeData(function->code())
         , jittedCode(nullptr)
         , codeRef(nullptr)
         , hasQmlDependencies(function->hasQmlDependencies())

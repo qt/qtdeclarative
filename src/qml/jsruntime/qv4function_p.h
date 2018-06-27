@@ -53,7 +53,6 @@
 #include "qv4global_p.h"
 #include <private/qv4compileddata_p.h>
 #include <private/qv4context_p.h>
-#include <private/qv4vme_moth_p.h>
 
 namespace JSC {
 class MacroAssemblerCodeRef;
@@ -69,9 +68,7 @@ struct Q_QML_EXPORT Function {
     const CompiledData::Function *compiledFunction;
     CompiledData::CompilationUnit *compilationUnit;
 
-    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
-        return Moth::VME::exec(this, thisObject, argv, argc, context);
-    }
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context);
 
     const char *codeData;
 

@@ -58,6 +58,7 @@
 #include "private/qlocale_tools_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
 #include <private/qv4jscall_p.h>
+#include <private/qv4vme_moth_p.h>
 
 #include <QtCore/QDebug>
 #include <algorithm>
@@ -458,7 +459,18 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     Scope scope(v4);
     ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(f->classForConstructor()));
 
-    ReturnedValue result = Moth::VME::exec(fo, thisObject, argv, argc, newTarget);
+    CppStackFrame frame;
+    frame.init(v4, f->function(), argv, argc);
+    frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
+                       thisObject,
+                       newTarget ? *newTarget : Primitive::undefinedValue());
+
+    frame.push();
+    v4->jsStackTop += frame.requiredJSStackFrameSize();
+
+    ReturnedValue result = Moth::VME::exec(&frame, v4);
+
+    frame.pop();
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -469,7 +481,21 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
 
 ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    return Moth::VME::exec(fo, thisObject, argv, argc);
+    ExecutionEngine *engine = fo->engine();
+    CppStackFrame frame;
+    frame.init(engine, fo->function(), argv, argc);
+    frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
+                       thisObject ? *thisObject : Primitive::undefinedValue(),
+                       Primitive::undefinedValue());
+
+    frame.push();
+    engine->jsStackTop += frame.requiredJSStackFrameSize();
+
+    ReturnedValue result = Moth::VME::exec(&frame, engine);
+
+    frame.pop();
+
+    return result;
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)

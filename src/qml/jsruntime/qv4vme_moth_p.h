@@ -65,14 +65,7 @@ public:
         QV4::Function *function;
         const QV4::ExecutionContext *scope;
     };
-    static inline
-    QV4::ReturnedValue exec(Function *v4Function, const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
-        ExecData data{v4Function, context};
-        quintptr d = reinterpret_cast<quintptr>(&data) | 0x1;
-        return exec(reinterpret_cast<const FunctionObject *>(d), thisObject, argv, argc);
-    }
     static QV4::ReturnedValue exec(CppStackFrame *frame, ExecutionEngine *engine);
-    static QV4::ReturnedValue exec(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc, const Value *newTarget = nullptr);
     static QV4::ReturnedValue interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *codeEntry);
 };
 

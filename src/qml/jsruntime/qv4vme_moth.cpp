@@ -414,6 +414,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 
 ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 {
+    qt_v4ResolvePendingBreakpointsHook();
     CHECK_STACK_LIMITS(engine);
 
     Function *function = frame->v4Function;
@@ -441,70 +442,6 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 
     if (debugger)
         debugger->leavingFunction(result);
-
-    return result;
-}
-
-QV4::ReturnedValue VME::exec(const FunctionObject *fo, const QV4::Value *thisObject, const QV4::Value *argv, int argc, const Value *newTarget)
-{
-    qt_v4ResolvePendingBreakpointsHook();
-    ExecutionEngine *engine;
-    QV4::Value *stack;
-    CppStackFrame frame;
-    frame.originalArguments = argv;
-    frame.originalArgumentsCount = argc;
-    frame.yield = nullptr;
-    frame.unwindHandler = nullptr;
-    frame.unwindLabel = nullptr;
-    frame.unwindLevel = 0;
-
-    Function *function;
-
-    {
-        Heap::ExecutionContext *scope;
-
-        quintptr d = reinterpret_cast<quintptr>(fo);
-        if (d & 0x1) {
-            // we don't have a FunctionObject, but a ExecData
-            ExecData *data = reinterpret_cast<ExecData *>(d - 1);
-            function = data->function;
-            scope = data->scope->d();
-            fo = nullptr;
-        } else {
-            function = fo->function();
-            scope = fo->scope();
-        }
-
-        engine = function->internalClass->engine;
-
-        stack = engine->jsStackTop;
-        CallData *callData = reinterpret_cast<CallData *>(stack);
-        callData->function = fo ? fo->asReturnedValue() : Encode::undefined();
-        callData->context = scope;
-        callData->accumulator = Encode::undefined();
-        callData->newTarget = newTarget ? *newTarget : Primitive::undefinedValue();
-        callData->thisObject = thisObject ? *thisObject : Primitive::undefinedValue();
-        if (argc > int(function->nFormals))
-            argc = int(function->nFormals);
-        callData->setArgc(argc);
-
-        int jsStackFrameSize = offsetof(CallData, args)/sizeof(Value) + function->compiledFunction->nRegisters;
-        engine->jsStackTop += jsStackFrameSize;
-        memcpy(callData->args, argv, argc*sizeof(Value));
-        for (Value *v = callData->args + argc; v < engine->jsStackTop; ++v)
-            *v = Encode::undefined();
-
-        frame.parent = engine->currentStackFrame;
-        frame.v4Function = function;
-        frame.instructionPointer = 0;
-        frame.jsFrame = callData;
-        engine->currentStackFrame = &frame;
-    }
-
-    ReturnedValue result = exec(&frame, engine);
-
-    engine->currentStackFrame = frame.parent;
-    engine->jsStackTop = stack;
 
     return result;
 }
