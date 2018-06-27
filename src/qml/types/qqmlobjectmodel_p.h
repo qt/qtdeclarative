@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 class QObject;
 class QQmlChangeSet;
+class QAbstractItemModel;
 
 class Q_QML_PRIVATE_EXPORT QQmlInstanceModel : public QObject
 {
@@ -83,6 +84,7 @@ public:
     virtual QQmlIncubator::Status incubationStatus(int index) = 0;
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
+    virtual const QAbstractItemModel *abstractItemModel() const { return nullptr; }
 
 Q_SIGNALS:
     void countChanged();

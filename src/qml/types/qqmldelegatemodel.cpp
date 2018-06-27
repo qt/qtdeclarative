@@ -842,6 +842,11 @@ QObject *QQmlDelegateModel::parts()
     return d->m_parts;
 }
 
+const QAbstractItemModel *QQmlDelegateModel::abstractItemModel() const
+{
+    return d_func()->m_adaptorModel.aim();
+}
+
 void QQmlDelegateModelPrivate::emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package)
 {
     for (int i = 1; i < m_groupCount; ++i)

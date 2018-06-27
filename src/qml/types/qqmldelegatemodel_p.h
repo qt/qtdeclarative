@@ -135,6 +135,8 @@ public:
     QQmlListProperty<QQmlDelegateModelGroup> groups();
     QObject *parts();
 
+    const QAbstractItemModel *abstractItemModel() const override;
+
     bool event(QEvent *) override;
 
     static QQmlDelegateModelAttached *qmlAttachedProperties(QObject *obj);
