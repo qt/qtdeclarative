@@ -148,7 +148,8 @@ int QQuickTableViewPrivate::modelIndexAtCell(const QPoint &cell) const
 {
     int availableRows = tableSize.height();
     int modelIndex = cell.y() + (cell.x() * availableRows);
-    Q_TABLEVIEW_ASSERT(modelIndex < model->count(), modelIndex << cell);
+    Q_TABLEVIEW_ASSERT(modelIndex < model->count(),
+        "modelIndex:" << modelIndex << "cell:" << cell << "count:" << model->count());
     return modelIndex;
 }
 
