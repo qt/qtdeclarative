@@ -104,6 +104,7 @@ public:
     void disconnectFromView();
     void setupViewData(QQuickItem *newControlContentItem);
     void syncCurrentIndex();
+    void setPendingCurrentIndex(int index);
 
     enum PropertyChangeReason {
         UserChange,
