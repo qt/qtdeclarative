@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QTranslator qtTranslator;
-    qtTranslator.load("qml_" + QLocale::system().name(), ":/i18n/");
+    qtTranslator.load(QLocale(), "qml", "_", ":/i18n/");
     app.installTranslator(&qtTranslator);
 
     QQmlApplicationEngine engine;
