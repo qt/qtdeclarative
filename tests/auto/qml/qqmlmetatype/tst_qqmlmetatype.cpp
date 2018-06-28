@@ -227,17 +227,13 @@ void tst_qqmlmetatype::qmlType()
 
 void tst_qqmlmetatype::invalidQmlTypeName()
 {
-    QStringList currFailures = QQmlMetaType::typeRegistrationFailures();
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"testtype\"; type names must begin with an uppercase letter");
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"Test$Type\"");
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"EndingInSlash/\"");
+
     QCOMPARE(qmlRegisterType<TestType>("TestNamespace", 1, 0, "Test$Type"), -1); // should fail due to invalid QML type name.
     QCOMPARE(qmlRegisterType<TestType>("Test", 1, 0, "EndingInSlash/"), -1);
-    QStringList nowFailures = QQmlMetaType::typeRegistrationFailures();
-
-    foreach (const QString &f, currFailures)
-        nowFailures.removeOne(f);
-
-    QCOMPARE(nowFailures.size(), 2);
-    QCOMPARE(nowFailures.at(0), QStringLiteral("Invalid QML element name \"Test$Type\""));
-    QCOMPARE(nowFailures.at(1), QStringLiteral("Invalid QML element name \"EndingInSlash/\""));
+    QCOMPARE(qmlRegisterType<TestType>("Test", 1, 0, "testtype"), -1);
 }
 
 void tst_qqmlmetatype::prettyTypeName()

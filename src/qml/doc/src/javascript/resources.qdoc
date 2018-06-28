@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-javascript-resources.html
-\title Defining JavaScript Resources In QML
+\title Defining JavaScript Resources in QML
 \brief Description of how JavaScript files may be defined for use in QML
 
 The program logic for a QML application may be defined in JavaScript.  The
@@ -60,7 +60,8 @@ An example of a code-behind implementation resource follows:
 \code
 // MyButton.qml
 import QtQuick 2.0
-import "my_button_impl.js" as Logic // a new instance of this JavaScript resource is loaded for each instance of Button.qml
+import "my_button_impl.js" as Logic // A new instance of this JavaScript resource
+                                    // is loaded for each instance of Button.qml.
 
 Rectangle {
     id: rect
@@ -95,13 +96,18 @@ for maintainability and readability.
 
 \section1 Shared JavaScript Resources (Libraries)
 
-Some JavaScript files act more like libraries - they provide a set of helper
-functions that take input and compute output, but never manipulate QML
-component instances directly.
+By default, JavaScript files imported from QML share their context with the QML
+component. That means the JavaScript files have access to the same QML objects
+and can modify them. As a consequence, each import must have a unique copy of
+these files.
 
-As it would be wasteful for each QML component instance to have a unique copy of
-these libraries, the JavaScript programmer can indicate a particular file is a
-shared library through the use of a pragma, as shown in the following example.
+\l {Defining JavaScript Resources in QML#Code-Behind Implementation Resource}
+{The previous section} covers stateful imports of JavaScript files. However,
+some JavaScript files are stateless and act more like reusable libraries, in
+the sense that they provide a set of helper functions that do not require
+anything from where they were imported from. You can save significant amounts
+of memory and speed up the instantiation of QML components if you mark such
+libraries with a special pragma, as shown in the following example.
 
 \code
 // factorial.js
@@ -141,7 +147,10 @@ For example:
 \code
 // Calculator.qml
 import QtQuick 2.0
-import "factorial.js" as FactorialCalculator // this JavaScript resource is only ever loaded once by the engine, even if multiple instances of Calculator.qml are created
+import "factorial.js" as FactorialCalculator // This JavaScript resource is only
+                                             // ever loaded once by the engine,
+                                             // even if multiple instances of
+                                             // Calculator.qml are created.
 
 Text {
     width: 500
