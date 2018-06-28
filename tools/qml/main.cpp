@@ -535,10 +535,9 @@ int main(int argc, char *argv[])
         verboseMode = false;
 
 #if QT_CONFIG(translation)
-    //qt_ translations loaded by QQmlApplicationEngine
-    QString sysLocale = QLocale::system().name();
-
-    if (!translationFile.isEmpty()) { //Note: installed before QQmlApplicationEngine's automatic translation loading
+    // Need to be installed before QQmlApplicationEngine's automatic translation loading
+    // (qt_ translations are loaded there)
+    if (!translationFile.isEmpty()) {
         QTranslator translator;
 
         if (translator.load(translationFile)) {
