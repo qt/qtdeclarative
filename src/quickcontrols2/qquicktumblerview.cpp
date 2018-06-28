@@ -36,6 +36,7 @@
 
 #include "qquicktumblerview_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickpathview_p.h>
@@ -44,6 +45,8 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcTumblerView, "qt.quick.controls.tumblerview")
 
 QQuickTumblerView::QQuickTumblerView(QQuickItem *parent) :
     QQuickItem(parent)
@@ -59,6 +62,8 @@ QVariant QQuickTumblerView::model() const
 
 void QQuickTumblerView::setModel(const QVariant &model)
 {
+    qCDebug(lcTumblerView) << "setting model to:" << model << "on"
+        << (m_pathView ? static_cast<QObject*>(m_pathView) : static_cast<QObject*>(m_listView));
     if (model == m_model)
         return;
 
@@ -85,6 +90,8 @@ QQmlComponent *QQuickTumblerView::delegate() const
 
 void QQuickTumblerView::setDelegate(QQmlComponent *delegate)
 {
+    qCDebug(lcTumblerView) << "setting delegate to:" << delegate << "on"
+        << (m_pathView ? static_cast<QObject*>(m_pathView) : static_cast<QObject*>(m_listView));
     if (delegate == m_delegate)
         return;
 
@@ -135,6 +142,8 @@ void QQuickTumblerView::createView()
         }
 
         if (!m_pathView) {
+            qCDebug(lcTumblerView) << "creating PathView";
+
             m_pathView = new QQuickPathView;
             QQmlEngine::setContextForObject(m_pathView, qmlContext(this));
             QQml_setParent_noEvent(m_pathView, this);
@@ -150,6 +159,8 @@ void QQuickTumblerView::createView()
             updateView();
             // Set the model.
             updateModel();
+
+            qCDebug(lcTumblerView) << "finished creating PathView";
         }
     } else {
         if (m_pathView) {
@@ -162,6 +173,8 @@ void QQuickTumblerView::createView()
         }
 
         if (!m_listView) {
+            qCDebug(lcTumblerView) << "creating ListView";
+
             m_listView = new QQuickListView;
             QQmlEngine::setContextForObject(m_listView, qmlContext(this));
             QQml_setParent_noEvent(m_listView, this);
@@ -181,6 +194,8 @@ void QQuickTumblerView::createView()
             // which we don't want when the contentItem has just been created.
             m_listView->setDelegate(m_delegate);
             m_listView->setHighlightMoveDuration(1000);
+
+            qCDebug(lcTumblerView) << "finished creating ListView";
         }
     }
 }

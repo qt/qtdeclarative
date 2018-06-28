@@ -111,6 +111,8 @@ public:
         InternalChange
     };
 
+    static QString propertyChangeReasonToString(PropertyChangeReason changeReason);
+
     void setCurrentIndex(int newCurrentIndex, PropertyChangeReason changeReason = InternalChange);
     void setCount(int newCount);
     void setWrapBasedOnCount();

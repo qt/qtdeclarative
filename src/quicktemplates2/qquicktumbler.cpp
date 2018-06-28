@@ -36,6 +36,7 @@
 
 #include "qquicktumbler_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickflickable_p.h>
@@ -43,6 +44,8 @@
 #include <QtQuickTemplates2/private/qquicktumbler_p_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
 
 /*!
     \qmltype Tumbler
@@ -190,11 +193,22 @@ void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
         // If the user set currentIndex in the onModelChanged handler,
         // we have to respect that currentIndex by ignoring changes in the view
         // until the model has finished being set.
+        qCDebug(lcTumbler).nospace() << "view currentIndex changed to "
+            << (view ? view->property("currentIndex").toString() : QStringLiteral("unknown index (no view)"))
+            << ", but we're ignoring it because one or more of the following conditions are true:"
+            << "\n- !view: " << !view
+            << "\n- ignoreCurrentIndexChanges: " << ignoreCurrentIndexChanges
+            << "\n- currentIndexSetDuringModelChange: " << currentIndexSetDuringModelChange;
         return;
     }
 
     const int oldCurrentIndex = currentIndex;
     currentIndex = view->property("currentIndex").toInt();
+
+    qCDebug(lcTumbler).nospace() << "view currentIndex changed to "
+        << (view ? view->property("currentIndex").toString() : QStringLiteral("unknown index (no view)"))
+        << ", our old currentIndex was " << oldCurrentIndex;
+
     if (oldCurrentIndex != currentIndex)
         emit q->currentIndexChanged();
 }
@@ -202,6 +216,7 @@ void QQuickTumblerPrivate::_q_onViewCurrentIndexChanged()
 void QQuickTumblerPrivate::_q_onViewCountChanged()
 {
     Q_Q(QQuickTumbler);
+    qCDebug(lcTumbler) << "view count changed - ignoring signals?" << ignoreSignals;
     if (ignoreSignals)
         return;
 
@@ -513,10 +528,12 @@ void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &old
 void QQuickTumbler::componentComplete()
 {
     Q_D(QQuickTumbler);
+    qCDebug(lcTumbler) << "componentComplete()";
     QQuickControl::componentComplete();
 
     if (!d->view) {
         // Force the view to be created.
+        qCDebug(lcTumbler) << "emitting wrapChanged() to force view to be created";
         emit wrapChanged();
         // Determine the type of view for attached properties, etc.
         d->setupViewData(d->contentItem);
@@ -532,6 +549,8 @@ void QQuickTumbler::componentComplete()
     d->_q_updateItemHeights();
     d->_q_updateItemWidths();
     d->_q_onViewCountChanged();
+
+    qCDebug(lcTumbler) << "componentComplete() is done";
 }
 
 void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
@@ -659,18 +678,29 @@ void QQuickTumblerPrivate::syncCurrentIndex()
 
 void QQuickTumblerPrivate::setPendingCurrentIndex(int index)
 {
+    qCDebug(lcTumbler) << "setting pendingCurrentIndex to" << index;
     pendingCurrentIndex = index;
+}
+
+QString QQuickTumblerPrivate::propertyChangeReasonToString(
+    QQuickTumblerPrivate::PropertyChangeReason changeReason)
+{
+    return changeReason == UserChange ? QStringLiteral("UserChange") : QStringLiteral("InternalChange");
 }
 
 void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
     QQuickTumblerPrivate::PropertyChangeReason changeReason)
 {
     Q_Q(QQuickTumbler);
+    qCDebug(lcTumbler).nospace() << "setting currentIndex to " << newCurrentIndex
+        << ", old currentIndex was " << currentIndex
+        << ", changeReason is " << propertyChangeReasonToString(changeReason);
     if (newCurrentIndex == currentIndex || newCurrentIndex < -1)
         return;
 
     if (!q->isComponentComplete()) {
         // Views can't set currentIndex until they're ready.
+        qCDebug(lcTumbler) << "we're not complete; setting pendingCurrentIndex instead";
         setPendingCurrentIndex(newCurrentIndex);
         return;
     }
@@ -680,6 +710,7 @@ void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
         // the model is in the process of being set and the user has set
         // the currentIndex in onModelChanged. We have to queue the currentIndex
         // change until we're ready.
+        qCDebug(lcTumbler) << "a model is being set; setting pendingCurrentIndex instead";
         setPendingCurrentIndex(newCurrentIndex);
         return;
     }
@@ -717,11 +748,16 @@ void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
             currentIndex = newCurrentIndex;
             emit q->currentIndexChanged();
         }
+
+        qCDebug(lcTumbler) << "view's currentIndex is now" << view->property("currentIndex").toInt()
+            << "and ours is" << currentIndex;
     }
 }
 
 void QQuickTumblerPrivate::setCount(int newCount)
 {
+    qCDebug(lcTumbler).nospace() << "setting count to " << newCount
+        << ", old count was " << count;
     if (newCount == count)
         return;
 
@@ -743,6 +779,7 @@ void QQuickTumblerPrivate::setWrapBasedOnCount()
 
 void QQuickTumblerPrivate::setWrap(bool shouldWrap, bool isExplicit)
 {
+    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- exlicit?" << isExplicit;
     if (isExplicit)
         explicitWrap = true;
 
