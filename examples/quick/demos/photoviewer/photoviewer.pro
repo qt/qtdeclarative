@@ -10,7 +10,8 @@ SOURCES = *.qml \
           PhotoViewerCore/script/*.js
 }
 
-TRANSLATIONS += i18n/qml_fr.ts \
+TRANSLATIONS += i18n/qml_en.ts \
+                i18n/qml_fr.ts \
                 i18n/qml_de.ts
 
 RESOURCES += qml.qrc

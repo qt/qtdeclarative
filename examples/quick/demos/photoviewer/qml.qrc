@@ -15,5 +15,6 @@
         <file>PhotoViewerCore/script/script.js</file>
         <file>i18n/qml_fr.qm</file>
         <file>i18n/qml_de.qm</file>
+        <file>i18n/qml_en.qm</file>
     </qresource>
 </RCC>
