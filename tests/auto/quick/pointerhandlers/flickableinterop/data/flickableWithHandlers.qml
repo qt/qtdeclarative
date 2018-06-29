@@ -47,7 +47,7 @@ Rectangle {
         Row {
             spacing: 6
             Slider {
-                label: "DragHandler"
+                label: "DH Slider"
                 objectName: "Slider"
                 value: 49; width: 100; height: 400
             }
@@ -80,6 +80,7 @@ Rectangle {
                     objectName: "drag"
                     DragHandler {
                         id: drag1
+                        objectName: "drag1"
                     }
                     Text {
                         anchors.centerIn: parent
@@ -96,6 +97,7 @@ Rectangle {
                     border.width: 3
                     TapHandler {
                         id: tap1
+                        objectName: "tap1"
                         gesturePolicy: TapHandler.DragThreshold
                     }
                     Text {
@@ -113,9 +115,11 @@ Rectangle {
                     objectName: "dragAndTap"
                     DragHandler {
                         id: drag2
+                        objectName: "drag2"
                     }
                     TapHandler {
                         id: tap2
+                        objectName: "tap2"
                         gesturePolicy: TapHandler.DragThreshold
                     }
                     Text {
@@ -133,10 +137,12 @@ Rectangle {
                     objectName: "tapAndDrag"
                     TapHandler {
                         id: tap3
+                        objectName: "tap3"
                         gesturePolicy: TapHandler.DragThreshold
                     }
                     DragHandler {
                         id: drag3
+                        objectName: "drag3"
                     }
                     Text {
                         anchors.centerIn: parent

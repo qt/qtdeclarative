@@ -454,7 +454,10 @@ bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
 bool QQuickPointerHandler::wantsEventPoint(QQuickEventPoint *point)
 {
-    return parentContains(point);
+    bool ret = parentContains(point);
+    qCDebug(lcPointerHandlerDispatch) << hex << point->pointId() << "@" << point->scenePosition()
+                                      << metaObject()->className() << objectName() << ret;
+    return ret;
 }
 
 /*!
