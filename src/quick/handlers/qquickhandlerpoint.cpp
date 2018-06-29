@@ -133,46 +133,42 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
         m_velocity = point->velocity();
 }
 
-void QQuickHandlerPoint::reset(const QVector<QQuickEventPoint *> &points)
+void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 {
     if (points.isEmpty()) {
         qWarning("reset: no points");
         return;
     }
     if (points.count() == 1) {
-        reset(points.first());
+        *this = points.first(); // copy all values
         return;
     }
     // all points are required to be from the same event
-    const QQuickPointerEvent *event = points.first()->pointerEvent();
     QPointF posSum;
     QPointF scenePosSum;
+    QPointF pressPosSum;
+    QPointF scenePressPosSum;
     QVector2D velocitySum;
     qreal pressureSum = 0;
     QSizeF ellipseDiameterSum;
-    bool press = false;
-    const QQuickPointerTouchEvent *touchEvent = event->asPointerTouchEvent();
-    for (const QQuickEventPoint *point : qAsConst(points)) {
-        posSum += point->position();
-        scenePosSum += point->scenePosition();
-        velocitySum += point->velocity();
-        if (touchEvent) {
-            pressureSum += static_cast<const QQuickEventTouchPoint *>(point)->pressure();
-            ellipseDiameterSum += static_cast<const QQuickEventTouchPoint *>(point)->ellipseDiameters();
-        }
-        if (point->state() == QQuickEventPoint::Pressed)
-            press = true;
+    for (const QQuickHandlerPoint &point : points) {
+        posSum += point.position();
+        scenePosSum += point.scenePosition();
+        pressPosSum += point.pressPosition();
+        scenePressPosSum += point.scenePressPosition();
+        velocitySum += point.velocity();
+        pressureSum += point.pressure();
+        ellipseDiameterSum += point.ellipseDiameters();
     }
     m_id = 0;
     m_uniqueId = QPointingDeviceUniqueId();
-    m_pressedButtons = event->buttons();
-    m_pressedModifiers = event->modifiers();
+    // all points are required to be from the same event, so pressed buttons and modifiers should be the same
+    m_pressedButtons = points.first().pressedButtons();
+    m_pressedModifiers = points.first().modifiers();
     m_position = posSum / points.size();
     m_scenePosition = scenePosSum / points.size();
-    if (press) {
-        m_pressPosition = m_position;
-        m_scenePressPosition = m_scenePosition;
-    }
+    m_pressPosition = pressPosSum / points.size();
+    m_scenePressPosition = scenePressPosSum / points.size();
     m_velocity = velocitySum / points.size();
     m_rotation = 0; // averaging the rotations of all the points isn't very sensible
     m_pressure = pressureSum / points.size();

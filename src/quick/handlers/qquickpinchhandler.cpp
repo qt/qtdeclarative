@@ -317,8 +317,8 @@ void QQuickPinchHandler::onActiveChanged()
 void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
-        for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-            qCDebug(lcPinchHandler) << point->state() << point->sceneGrabPosition() << "->" << point->scenePosition();
+        for (const QQuickHandlerPoint &p : m_currentPoints)
+            qCDebug(lcPinchHandler) << hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
     QQuickMultiPointHandler::handlePointerEventImpl(event);
 
@@ -354,10 +354,15 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 #endif // QT_CONFIG(gestures)
     {
         bool containsReleasedPoints = event->isReleaseEvent();
+        QVector<QQuickEventPoint *> chosenPoints;
+        for (const QQuickHandlerPoint &p : m_currentPoints) {
+            QQuickEventPoint *ep = event->pointById(p.id());
+            chosenPoints << ep;
+        }
         if (!active()) {
             // Verify that at least one of the points has moved beyond threshold needed to activate the handler
-            for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-                if (!containsReleasedPoints && QQuickWindowPrivate::dragOverThreshold(point) && grabPoints(m_currentPoints)) {
+            for (QQuickEventPoint *point : qAsConst(chosenPoints)) {
+                if (!containsReleasedPoints && QQuickWindowPrivate::dragOverThreshold(point) && grabPoints(chosenPoints)) {
                     setActive(true);
                     break;
                 } else {
@@ -386,7 +391,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         m_startAngles = std::move(newAngles);
 
         if (!containsReleasedPoints)
-            acceptPoints(m_currentPoints);
+            acceptPoints(chosenPoints);
     }
 
     QPointF centroidParentPos;

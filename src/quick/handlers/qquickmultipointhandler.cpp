@@ -85,15 +85,31 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
     const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
     const bool ret = (candidatePoints.size() >= minimumPointCount() && candidatePoints.size() <= maximumPointCount());
-    if (ret)
-        m_currentPoints = candidatePoints;
+    if (ret) {
+        const int c = candidatePoints.count();
+        m_currentPoints.resize(c);
+        for (int i = 0; i < c; ++i)
+            m_currentPoints[i].reset(candidatePoints[i]);
+    } else {
+        m_currentPoints.clear();
+    }
     return ret;
 }
 
 void QQuickMultiPointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 {
     QQuickPointerHandler::handlePointerEventImpl(event);
+    // event's points can be reordered since the previous event, which is why m_currentPoints
+    // is _not_ a shallow copy of the QQuickPointerTouchEvent::m_touchPoints vector.
+    // So we have to update our m_currentPoints instances based on the given event.
+    for (QQuickHandlerPoint &p : m_currentPoints) {
+        const QQuickEventPoint *ep = event->pointById(p.id());
+        if (ep)
+            p.reset(ep);
+    }
+    QPointF sceneGrabPos = m_centroid.sceneGrabPosition();
     m_centroid.reset(m_currentPoints);
+    m_centroid.m_sceneGrabPosition = sceneGrabPos; // preserve as it was
     emit centroidChanged();
 }
 
@@ -175,24 +191,18 @@ void QQuickMultiPointHandler::setMaximumPointCount(int maximumPointCount)
 
 bool QQuickMultiPointHandler::hasCurrentPoints(QQuickPointerEvent *event)
 {
-    bool ret = true;
-    int c = event->pointCount();
-    if (c < m_currentPoints.size())
+    if (event->pointCount() < m_currentPoints.size() || m_currentPoints.size() == 0)
         return false;
     // TODO optimize: either ensure the points are sorted,
     // or use std::equal with a predicate
-    for (int i = 0; ret && i < c; ++i) {
-        if (event->point(i)->state() == QQuickEventPoint::Released)
+    for (const QQuickHandlerPoint &p : qAsConst(m_currentPoints)) {
+        const QQuickEventPoint *ep = event->pointById(p.id());
+        if (!ep)
             return false;
-        bool found = false;
-        int pointId = event->point(i)->pointId();
-        for (QQuickEventPoint *o : qAsConst(m_currentPoints))
-            if (o && pointId == o->pointId())
-                found = true;
-        if (!found)
-            ret = false;
+        if (ep->state() == QQuickEventPoint::Released)
+            return false;
     }
-    return ret;
+    return true;
 }
 
 qreal QQuickMultiPointHandler::averageTouchPointDistance(const QPointF &ref)
@@ -200,8 +210,8 @@ qreal QQuickMultiPointHandler::averageTouchPointDistance(const QPointF &ref)
     qreal ret = 0;
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QVector2D(point->scenePosition() - ref).length();
+    for (const QQuickHandlerPoint &p : m_currentPoints)
+        ret += QVector2D(p.scenePosition() - ref).length();
     return ret / m_currentPoints.size();
 }
 
@@ -211,8 +221,8 @@ qreal QQuickMultiPointHandler::averageStartingDistance(const QPointF &ref)
     qreal ret = 0;
     if (Q_UNLIKELY(m_currentPoints.size() == 0))
         return ret;
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints))
-        ret += QVector2D(point->sceneGrabPosition() - ref).length();
+    for (const QQuickHandlerPoint &p : m_currentPoints)
+        ret += QVector2D(p.sceneGrabPosition() - ref).length();
     return ret / m_currentPoints.size();
 }
 
@@ -220,9 +230,9 @@ QVector<QQuickMultiPointHandler::PointData> QQuickMultiPointHandler::angles(cons
 {
     QVector<PointData> angles;
     angles.reserve(m_currentPoints.count());
-    for (QQuickEventPoint *point : qAsConst(m_currentPoints)) {
-        qreal angle = QLineF(ref, point->scenePosition()).angle();
-        angles.append(PointData(point->pointId(), -angle));     // convert to clockwise, to be consistent with QQuickItem::rotation
+    for (const QQuickHandlerPoint &p : m_currentPoints) {
+        qreal angle = QLineF(ref, p.scenePosition()).angle();
+        angles.append(PointData(p.id(), -angle));     // convert to clockwise, to be consistent with QQuickItem::rotation
     }
     return angles;
 }

@@ -93,7 +93,7 @@ public:
 
     void reset();
     void reset(const QQuickEventPoint *point);
-    void reset(const QVector<QQuickEventPoint *> &points);
+    void reset(const QVector<QQuickHandlerPoint> &points);
 
 private:
     int m_id;

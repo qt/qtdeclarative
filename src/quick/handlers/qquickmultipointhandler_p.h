@@ -106,7 +106,7 @@ protected:
     bool grabPoints(QVector<QQuickEventPoint *> points);
 
 protected:
-    QVector<QQuickEventPoint *> m_currentPoints;
+    QVector<QQuickHandlerPoint> m_currentPoints;
     QQuickHandlerPoint m_centroid;
     int m_minimumPointCount;
     int m_maximumPointCount;
