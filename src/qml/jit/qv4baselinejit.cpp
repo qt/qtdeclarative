@@ -787,6 +787,15 @@ void BaselineJIT::generate_ConvertThisToObject()
     as->checkException();
 }
 
+void BaselineJIT::generate_LoadSuperConstructor()
+{
+    as->prepareCallWithArgCount(2);
+    as->passRegAsArg(CallData::Function, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Helpers::loadSuperConstructor, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_ToObject()
 {
     STORE_ACC();

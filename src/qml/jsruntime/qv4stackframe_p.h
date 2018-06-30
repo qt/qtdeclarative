@@ -129,6 +129,9 @@ struct Q_QML_EXPORT CppStackFrame {
     }
 
 #ifndef V4_BOOTSTRAP
+    static uint requiredJSStackFrameSize(uint nRegisters) {
+        return CallData::HeaderSize() + nRegisters;
+    }
     static uint requiredJSStackFrameSize(Function *v4Function) {
         return CallData::HeaderSize() + v4Function->compiledFunction->nRegisters;
     }
@@ -136,7 +139,12 @@ struct Q_QML_EXPORT CppStackFrame {
         return requiredJSStackFrameSize(v4Function);
     }
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
-                      const Value &thisObject, const Value &newTarget = Primitive::undefinedValue())
+                      const Value &thisObject, const Value &newTarget = Primitive::undefinedValue()) {
+        setupJSFrame(stackSpace, function, scope, thisObject, newTarget,
+                     v4Function->nFormals, v4Function->compiledFunction->nRegisters);
+    }
+    void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
+                      const Value &thisObject, const Value &newTarget, uint nFormals, uint nRegisters)
     {
         jsFrame = reinterpret_cast<CallData *>(stackSpace);
         jsFrame->function = function;
@@ -146,12 +154,12 @@ struct Q_QML_EXPORT CppStackFrame {
         jsFrame->newTarget = newTarget;
 
         uint argc = uint(originalArgumentsCount);
-        if (argc > v4Function->nFormals)
-            argc = v4Function->nFormals;
+        if (argc > nFormals)
+            argc = nFormals;
         jsFrame->setArgc(argc);
 
         memcpy(jsFrame->args, originalArguments, argc*sizeof(Value));
-        const Value *end = jsFrame->args + v4Function->compiledFunction->nRegisters;
+        const Value *end = jsFrame->args + nRegisters;
         for (Value *v = jsFrame->args + argc; v < end; ++v)
             *v = Encode::undefined();
     }

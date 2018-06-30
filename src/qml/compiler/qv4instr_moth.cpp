@@ -504,6 +504,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(ConvertThisToObject)
         MOTH_END_INSTR(ConvertThisToObject)
 
+        MOTH_BEGIN_INSTR(LoadSuperConstructor)
+        MOTH_END_INSTR(LoadSuperConstructor)
+
         MOTH_BEGIN_INSTR(ToObject)
         MOTH_END_INSTR(ToObject)
 

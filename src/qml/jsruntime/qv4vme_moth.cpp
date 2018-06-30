@@ -936,6 +936,16 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         }
     MOTH_END_INSTR(ConvertThisToObject)
 
+    MOTH_BEGIN_INSTR(LoadSuperConstructor)
+        const Value *f = &stack[CallData::Function];
+        if (!f->isFunctionObject()) {
+            engine->throwTypeError();
+        } else {
+            acc = static_cast<const Object *>(f)->getPrototypeOf()->asReturnedValue();
+        }
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(LoadSuperConstructor)
+
     MOTH_BEGIN_INSTR(ToObject)
         acc = ACC.toObject(engine)->asReturnedValue();
         CHECK_EXCEPTION;

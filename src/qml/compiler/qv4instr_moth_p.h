@@ -142,6 +142,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CreateUnmappedArgumentsObject(op) INSTRUCTION(op, CreateUnmappedArgumentsObject, 0)
 #define INSTR_CreateRestParameter(op) INSTRUCTION(op, CreateRestParameter, 1, argIndex)
 #define INSTR_ConvertThisToObject(op) INSTRUCTION(op, ConvertThisToObject, 0)
+#define INSTR_LoadSuperConstructor(op) INSTRUCTION(op, LoadSuperConstructor, 0)
 #define INSTR_ToObject(op) INSTRUCTION(op, ToObject, 0)
 #define INSTR_Jump(op) INSTRUCTION(op, Jump, 1, offset)
 #define INSTR_JumpTrue(op) INSTRUCTION(op, JumpTrue, 1, offset)
@@ -271,6 +272,7 @@ QT_BEGIN_NAMESPACE
     F(CreateUnmappedArgumentsObject) \
     F(CreateRestParameter) \
     F(ConvertThisToObject) \
+    F(LoadSuperConstructor) \
     F(ToObject) \
     F(Jump) \
     F(JumpTrue) \

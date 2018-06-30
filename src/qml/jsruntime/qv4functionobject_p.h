@@ -122,6 +122,7 @@ DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
 
 struct ConstructorFunction : ScriptFunction
 {
+    bool isDerivedConstructor;
 };
 
 struct MemberFunction : ScriptFunction
@@ -130,6 +131,7 @@ struct MemberFunction : ScriptFunction
 
 struct DefaultClassConstructorFunction : FunctionObject
 {
+    bool isDerivedConstructor;
 };
 
 #define BoundFunctionMembers(class, Member) \
@@ -180,7 +182,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
-    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, bool isDerivedConstructor);
     static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount);
 
@@ -252,6 +254,7 @@ struct ScriptFunction : FunctionObject {
 struct ConstructorFunction : ScriptFunction {
     V4_OBJECT2(ConstructorFunction, ScriptFunction)
     V4_INTERNALCLASS(ConstructorFunction)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

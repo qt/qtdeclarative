@@ -179,6 +179,7 @@ public:
         enum Type {
             Invalid,
             Accumulator,
+            Super,
             StackSlot,
             ScopedLocal,
             Name,
@@ -215,6 +216,7 @@ public:
         }
         bool isConstant() const { return type == Const; }
         bool isAccumulator() const { return type == Accumulator; }
+        bool isSuper() const { return type == Super; }
         bool isStackSlot() const { return type == StackSlot; }
         bool isRegister() const {
             return isStackSlot();
@@ -244,6 +246,9 @@ public:
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
+        }
+        static Reference fromSuper(Codegen *cg) {
+            return Reference(cg, Super);
         }
         static Reference fromStackSlot(Codegen *cg, int tempIndex = -1, bool isLocal = false) {
             Reference r(cg, StackSlot);
@@ -704,6 +709,7 @@ protected:
 
 private:
     VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;
+    void handleConstruct(const Reference &base, AST::ArgumentList *args);
 };
 
 }

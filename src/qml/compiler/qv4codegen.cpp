@@ -1108,6 +1108,8 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError)
         return false;
     base = base.storeOnStack();
+    if (hasError)
+        return false;
     if (AST::StringLiteral *str = AST::cast<AST::StringLiteral *>(ast->expression)) {
         QString s = str->value.toString();
         uint arrayIndex = QV4::String::toArrayIndex(s);
@@ -1736,6 +1738,9 @@ bool Codegen::visit(CallExpression *ast)
         break;
     case Reference::Name:
         break;
+    case Reference::Super:
+        handleConstruct(base, ast->arguments);
+        return false;
     default:
         base = base.storeOnStack();
         break;
@@ -2015,12 +2020,12 @@ bool Codegen::visit(FalseLiteral *)
     return false;
 }
 
-bool Codegen::visit(SuperLiteral *ast)
+bool Codegen::visit(SuperLiteral *)
 {
     if (hasError)
         return false;
 
-    throwSyntaxError(ast->superToken, QLatin1String("Support for 'super' keyword not implemented"));
+    _expr.setResult(Reference::fromSuper(this));
     return false;
 }
 
@@ -2207,6 +2212,43 @@ bool Codegen::visit(NestedExpression *ast)
     return false;
 }
 
+void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
+{
+    Reference constructor;
+    if (base.isSuper()) {
+        Instruction::LoadSuperConstructor super;
+        bytecodeGenerator->addInstruction(super);
+        constructor = Reference::fromAccumulator(this).storeOnStack();
+    } else {
+        constructor = base.storeOnStack();
+    }
+
+    auto calldata = pushArgs(arguments);
+    if (hasError)
+        return;
+
+    if (base.isSuper()) {
+        Reference::fromStackSlot(this, CallData::Function).loadInAccumulator();
+    } else {
+        constructor.loadInAccumulator();
+    }
+
+    if (calldata.hasSpread) {
+        Instruction::ConstructWithSpread create;
+        create.func = constructor.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    } else {
+        Instruction::Construct create;
+        create.func = constructor.stackSlot();
+        create.argc = calldata.argc;
+        create.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(create);
+    }
+    _expr.setResult(Reference::fromAccumulator(this));
+}
+
 bool Codegen::visit(NewExpression *ast)
 {
     if (hasError)
@@ -2217,16 +2259,12 @@ bool Codegen::visit(NewExpression *ast)
     Reference base = expression(ast->expression);
     if (hasError)
         return false;
+    if (base.isSuper()) {
+        throwSyntaxError(ast->expression->firstSourceLocation(), QStringLiteral("Cannot use new with super."));
+        return false;
+    }
 
-    base = base.storeOnStack();
-    base.loadInAccumulator();
-
-    Instruction::Construct create;
-    create.func = base.stackSlot();
-    create.argc = 0;
-    create.argv = 0;
-    bytecodeGenerator->addInstruction(create);
-    _expr.setResult(Reference::fromAccumulator(this));
+    handleConstruct(base, nullptr);
     return false;
 }
 
@@ -2240,28 +2278,12 @@ bool Codegen::visit(NewMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
-    base = base.storeOnStack();
-
-    auto calldata = pushArgs(ast->arguments);
-    if (hasError)
+    if (base.isSuper()) {
+        throwSyntaxError(ast->base->firstSourceLocation(), QStringLiteral("Cannot use new with super."));
         return false;
-
-    base.loadInAccumulator();
-
-    if (calldata.hasSpread) {
-        Instruction::ConstructWithSpread create;
-        create.func = base.stackSlot();
-        create.argc = calldata.argc;
-        create.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(create);
-    } else {
-        Instruction::Construct create;
-        create.func = base.stackSlot();
-        create.argc = calldata.argc;
-        create.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(create);
     }
-    _expr.setResult(Reference::fromAccumulator(this));
+
+    handleConstruct(base, ast->arguments);
     return false;
 }
 
@@ -3684,6 +3706,8 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     case Invalid:
     case Accumulator:
         break;
+    case Super:
+        break;
     case StackSlot:
         theStackSlot = other.theStackSlot;
         break;
@@ -3733,6 +3757,8 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
     case Invalid:
     case Accumulator:
         break;
+    case Super:
+        return true;
     case StackSlot:
         return theStackSlot == other.theStackSlot;
     case ScopedLocal:
@@ -3776,6 +3802,9 @@ Codegen::Reference Codegen::Reference::asLValue() const
     case Invalid:
     case Accumulator:
         Q_UNREACHABLE();
+    case Super:
+        codegen->throwSyntaxError(AST::SourceLocation(), QStringLiteral("Super lvalues not implemented."));
+        return *this;
     case Member:
         if (!propertyBase.isStackSlot()) {
             Reference r = *this;
@@ -3909,6 +3938,9 @@ void Codegen::Reference::storeAccumulator() const
         return;
     }
     switch (type) {
+    case Super:
+        codegen->throwSyntaxError(SourceLocation(), QStringLiteral("storing super properties not implemented."));
+        return;
     case StackSlot: {
         Instruction::StoreReg store;
         store.reg = theStackSlot;
@@ -3985,6 +4017,9 @@ void Codegen::Reference::loadInAccumulator() const
 {
     switch (type) {
     case Accumulator:
+        return;
+    case Super:
+        codegen->throwSyntaxError(AST::SourceLocation(), QStringLiteral("Super property access not implemented."));
         return;
     case Const: {
 QT_WARNING_PUSH

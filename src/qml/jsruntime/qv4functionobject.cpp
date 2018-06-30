@@ -184,9 +184,16 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
-Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function)
+Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function, bool isDerivedConstructor)
 {
-    return scope->engine()->memoryManager->allocate<ConstructorFunction>(scope, function);
+    if (!function) {
+        Heap::DefaultClassConstructorFunction *c = scope->engine()->memoryManager->allocate<DefaultClassConstructorFunction>(scope);
+        c->isDerivedConstructor = isDerivedConstructor;
+        return c;
+    }
+    Heap::ConstructorFunction *c = scope->engine()->memoryManager->allocate<ConstructorFunction>(scope, function);
+    c->isDerivedConstructor = isDerivedConstructor;
+    return c;
 }
 
 Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function)
@@ -455,9 +462,20 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
 {
     ExecutionEngine *v4 = fo->engine();
     const ScriptFunction *f = static_cast<const ScriptFunction *>(fo);
+    Q_ASSERT(newTarget->isFunctionObject());
+    const FunctionObject *nt = static_cast<const FunctionObject *>(newTarget);
 
     Scope scope(v4);
-    ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(f->classForConstructor()));
+    Scoped<InternalClass> ic(scope);
+    if (nt->d() == f->d()) {
+        ic = f->classForConstructor();
+    } else {
+        const Object *o = nt->d()->protoProperty();
+        ic = scope.engine->internalClasses(EngineBase::Class_Object);
+        if (o)
+            ic = ic->changePrototype(o->d());
+    }
+    ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(ic));
 
     CppStackFrame frame;
     frame.init(v4, f->function(), argv, argc);
@@ -535,6 +553,36 @@ Heap::InternalClass *ScriptFunction::classForConstructor() const
 
 DEFINE_OBJECT_VTABLE(ConstructorFunction);
 
+ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    const ConstructorFunction *c = static_cast<const ConstructorFunction *>(f);
+    if (!c->d()->isDerivedConstructor)
+        return ScriptFunction::virtualCallAsConstructor(f, argv, argc, newTarget);
+
+    ExecutionEngine *v4 = f->engine();
+
+    CppStackFrame frame;
+    frame.init(v4, f->function(), argv, argc);
+    frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
+                       Primitive::undefinedValue(),
+                       newTarget ? *newTarget : Primitive::undefinedValue());
+
+    frame.push();
+    v4->jsStackTop += frame.requiredJSStackFrameSize();
+
+    ReturnedValue result = Moth::VME::exec(&frame, v4);
+
+    frame.pop();
+
+    if (Q_UNLIKELY(v4->hasException))
+        return Encode::undefined();
+    else if (Value::fromReturnedValue(result).isObject())
+        return result;
+    else if (!Value::fromReturnedValue(result).isUndefined())
+        return v4->throwTypeError();
+    return frame.jsFrame->thisObject.asReturnedValue();
+}
+
 ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     return f->engine()->throwTypeError(QStringLiteral("Cannot call a class constructor without |new|"));
@@ -549,13 +597,44 @@ ReturnedValue MemberFunction::virtualCallAsConstructor(const FunctionObject *f, 
 
 DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);
 
-ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
+ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Scope scope(f);
-    ScopedObject proto(scope, f->get(scope.engine->id_prototype()));
-    ScopedObject c(scope, scope.engine->newObject());
-    c->setPrototypeUnchecked(proto);
-    return c->asReturnedValue();
+    const DefaultClassConstructorFunction *c = static_cast<const DefaultClassConstructorFunction *>(f);
+    ExecutionEngine *v4 = f->engine();
+
+    Scope scope(v4);
+
+    if (!c->d()->isDerivedConstructor) {
+        ScopedObject proto(scope, static_cast<const Object *>(newTarget)        ->get(scope.engine->id_prototype()));
+        ScopedObject c(scope, scope.engine->newObject());
+        c->setPrototypeUnchecked(proto);
+        return c->asReturnedValue();
+    }
+
+    ScopedFunctionObject super(scope, f->getPrototypeOf());
+    Q_ASSERT(super->isFunctionObject());
+
+    CppStackFrame frame;
+    frame.init(v4, nullptr, argv, argc);
+    frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
+                       Primitive::undefinedValue(),
+                       newTarget ? *newTarget : Primitive::undefinedValue(), argc, argc);
+
+    frame.push();
+    v4->jsStackTop += frame.requiredJSStackFrameSize(argc);
+
+    // Do a super call
+    ReturnedValue result = super->callAsConstructor(argv, argc, newTarget);
+
+    frame.pop();
+
+    if (Q_UNLIKELY(v4->hasException))
+        return Encode::undefined();
+    else if (Value::fromReturnedValue(result).isObject())
+        return result;
+    else if (!Value::fromReturnedValue(result).isUndefined())
+        return v4->throwTypeError();
+    return frame.jsFrame->thisObject.asReturnedValue();
 }
 
 ReturnedValue DefaultClassConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)

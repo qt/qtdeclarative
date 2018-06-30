@@ -1306,7 +1306,6 @@ ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &fu
 {
     if (!function.isFunctionObject())
         return engine->throwTypeError();
-    Q_ASSERT(function.sameValue(newTarget));
 
     return static_cast<const FunctionObject &>(function).callAsConstructor(argv, argc, &newTarget);
 }
@@ -1316,7 +1315,6 @@ ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const
     Q_UNIMPLEMENTED();
     if (!function.isFunctionObject())
         return engine->throwTypeError();
-    Q_ASSERT(function.sameValue(newTarget));
 
     Scope scope(engine);
     CallArgs arguments = createSpreadArguments(scope, argv, argc);
@@ -1508,13 +1506,8 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
 
     ScopedFunctionObject constructor(scope);
-    if (cls->constructorFunction != UINT_MAX) {
-        QV4::Function *f = unit->runtimeFunctions[cls->constructorFunction];
-        Q_ASSERT(f);
-        constructor = FunctionObject::createConstructorFunction(current, f)->asReturnedValue();
-    } else {
-        constructor = engine->memoryManager->allocate<DefaultClassConstructorFunction>();
-    }
+    QV4::Function *f = cls->constructorFunction != UINT_MAX ? unit->runtimeFunctions[cls->constructorFunction] : nullptr;
+    constructor = FunctionObject::createConstructorFunction(current, f, !superClass.isEmpty())->asReturnedValue();
     constructor->setPrototypeUnchecked(constructorParent);
     constructor->defineDefaultProperty(engine->id_prototype(), proto);
     proto->defineDefaultProperty(engine->id_constructor(), constructor);

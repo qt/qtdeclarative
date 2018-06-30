@@ -63,14 +63,14 @@ void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Object"));
 }
 
-ReturnedValue ObjectCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue ObjectCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *v4 = f->engine();
-    const ObjectCtor *ctor = static_cast<const ObjectCtor *>(f);
+    const ObjectCtor *nt = static_cast<const ObjectCtor *>(newTarget);
     if (!argc || argv[0].isUndefined() || argv[0].isNull()) {
         Scope scope(v4);
         ScopedObject obj(scope, scope.engine->newObject());
-        ScopedObject proto(scope, ctor->get(scope.engine->id_prototype()));
+        ScopedObject proto(scope, nt->get(scope.engine->id_prototype()));
         if (!!proto)
             obj->setPrototypeOf(proto);
         return obj.asReturnedValue();
