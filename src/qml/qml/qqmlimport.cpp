@@ -1756,7 +1756,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 {
     filePluginPath << QLatin1String(".");
     // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
-#ifdef Q_OS_HTML5
+#ifdef Q_OS_WASM
        // Hardcode the qml imports to "qml/" relative to the app nexe.
        // This should perhaps be set via Qml2Imports in qt.conf.
       QString installImportsPath = QStringLiteral("qml/");

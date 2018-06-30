@@ -1774,7 +1774,7 @@ Returns a QQmlQmldirData for \a url.  The QQmlQmldirData may be cached.
 */
 QQmlQmldirData *QQmlTypeLoader::getQmldir(const QUrl &url)
 {
-#ifdef Q_OS_HTML5
+#ifdef Q_OS_WASM
         // ###  asserts here on urls like "qml/QtQuick.2.1/qmldir",
         // which are relative urls we want to load over the network.
 #else
@@ -2447,7 +2447,7 @@ bool QQmlTypeData::loadImplicitImport()
 void QQmlTypeData::dataReceived(const SourceCodeData &data)
 {
     m_backupSourceCode = data;
-#ifndef Q_OS_HTML5
+#ifndef Q_OS_WASM
     if (tryLoadFromDiskCache())
         return;
 #endif

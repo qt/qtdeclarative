@@ -326,7 +326,7 @@ bool QSGDefaultRenderContext::separateIndexBuffer() const
     // target will generate an INVALID_OPERATION error, and the
     // current binding will remain untouched.
     static const bool isWebGL = (qGuiApp->platformName().compare(QLatin1String("webgl")) == 0
-                                  || qGuiApp->platformName().compare(QLatin1String("html5")) == 0);
+                                  || qGuiApp->platformName().compare(QLatin1String("webassembly")) == 0);
     return isWebGL;
 }
 
