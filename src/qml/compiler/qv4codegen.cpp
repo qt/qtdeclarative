@@ -914,9 +914,11 @@ bool Codegen::visit(ClassExpression *ast)
 
     bytecodeGenerator->addInstruction(createClass);
 
-    Reference ctor = referenceForName(ast->name.toString(), true);
-    ctor.isReferenceToConst = false; // this is the definition
-    (void) ctor.storeRetainAccumulator();
+    if (!ast->name.isEmpty()) {
+        Reference ctor = referenceForName(ast->name.toString(), true);
+        ctor.isReferenceToConst = false; // this is the definition
+        (void) ctor.storeRetainAccumulator();
+    }
 
     _expr.setResult(Reference::fromAccumulator(this));
     return false;

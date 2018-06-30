@@ -1779,6 +1779,8 @@ CoverInitializedName: IdentifierReference Initializer_In;
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
             f->name = stringRef(1);
+        if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+            c->name = stringRef(1);
         AST::BinaryExpression *assignment = new (pool) AST::BinaryExpression(left, QSOperator::Assign, sym(2).Expression);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(name, assignment);
         node->colonToken = loc(1);
@@ -1796,6 +1798,10 @@ PropertyDefinition: PropertyName T_COLON AssignmentExpression_In;
         if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression)) {
             if (!AST::cast<AST::ComputedPropertyName *>(sym(1).PropertyName))
                 f->name = driver->newStringRef(sym(1).PropertyName->asString());
+        }
+        if (auto *c = asAnonymousClassDefinition(sym(3).Expression)) {
+            if (!AST::cast<AST::ComputedPropertyName *>(sym(1).PropertyName))
+                c->name = driver->newStringRef(sym(1).PropertyName->asString());
         }
         node->colonToken = loc(2);
         sym(1).Node = node;
@@ -2520,6 +2526,10 @@ AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
             if (auto *id = AST::cast<AST::IdentifierExpression *>(sym(1).Expression))
                 f->name = id->name;
         }
+        if (auto *c = asAnonymousClassDefinition(sym(3).Expression)) {
+            if (auto *id = AST::cast<AST::IdentifierExpression *>(sym(1).Expression))
+                c->name = id->name;
+        }
 
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::Assign, sym(3).Expression);
         node->operatorToken = loc(2);
@@ -2832,6 +2842,8 @@ VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
             f->name = stringRef(1);
+        if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+            c->name = stringRef(1);
     } break;
 ./
 
@@ -2958,6 +2970,8 @@ BindingProperty: BindingIdentifier InitializerOpt_In;
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
         if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
             f->name = stringRef(1);
+        if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+            c->name = stringRef(1);
         sym(1).Node = new (pool) AST::PatternProperty(name, stringRef(1), sym(2).Expression);
     } break;
 ./
@@ -2986,6 +3000,8 @@ BindingElement: BindingIdentifier InitializerOpt_In;
       // if initializer is an anonymous function expression, we need to assign identifierref as it's name
       if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
           f->name = stringRef(1);
+      if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+          c->name = stringRef(1);
       sym(1).Node = node;
     } break;
 ./

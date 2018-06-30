@@ -129,6 +129,7 @@ T1 cast(T2 *ast)
 }
 
 FunctionExpression *asAnonymousFunctionDefinition(AST::Node *n);
+ClassExpression *asAnonymousClassDefinition(AST::Node *n);
 
 class QML_PARSER_EXPORT Node: public Managed
 {
@@ -257,6 +258,7 @@ public:
     virtual Pattern *patternCast();
     // implements the IsFunctionDefinition rules in the spec
     virtual FunctionExpression *asFunctionDefinition();
+    virtual ClassExpression *asClassDefinition();
 
     void accept(Visitor *visitor);
     static void accept(Node *node, Visitor *visitor);
@@ -314,6 +316,7 @@ public:
     { return rparenToken; }
 
     FunctionExpression *asFunctionDefinition() override;
+    ClassExpression *asClassDefinition() override;
 
 
 // attributes
@@ -2110,7 +2113,6 @@ public:
 
     FunctionExpression *asFunctionDefinition() override;
 
-
 // attributes
     QStringRef name;
     bool isArrowFunction = false;
@@ -2236,6 +2238,8 @@ public:
 
     SourceLocation lastSourceLocation() const override
     { return rbraceToken; }
+
+    ClassExpression *asClassDefinition() override;
 
 // attributes
     QStringRef name;

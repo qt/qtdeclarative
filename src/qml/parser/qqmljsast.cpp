@@ -55,6 +55,16 @@ FunctionExpression *asAnonymousFunctionDefinition(Node *n)
     return f;
 }
 
+ClassExpression *asAnonymousClassDefinition(Node *n)
+{
+    if (!n)
+        return nullptr;
+    ClassExpression *c = n->asClassDefinition();
+    if (!c || !c->name.isNull())
+        return nullptr;
+    return c;
+}
+
 
 void Node::accept(Visitor *visitor)
 {
@@ -101,6 +111,11 @@ Pattern *Node::patternCast()
 }
 
 FunctionExpression *Node::asFunctionDefinition()
+{
+    return nullptr;
+}
+
+ClassExpression *Node::asClassDefinition()
 {
     return nullptr;
 }
@@ -172,6 +187,11 @@ void NestedExpression::accept0(Visitor *visitor)
 FunctionExpression *NestedExpression::asFunctionDefinition()
 {
     return expression->asFunctionDefinition();
+}
+
+ClassExpression *NestedExpression::asClassDefinition()
+{
+    return expression->asClassDefinition();
 }
 
 void ThisExpression::accept0(Visitor *visitor)
@@ -1294,6 +1314,11 @@ void ClassExpression::accept0(Visitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+ClassExpression *ClassExpression::asClassDefinition()
+{
+    return this;
 }
 
 void ClassDeclaration::accept0(Visitor *visitor)
