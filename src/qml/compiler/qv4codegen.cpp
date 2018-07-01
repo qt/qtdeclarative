@@ -2264,6 +2264,10 @@ void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
         create.argv = calldata.argv;
         bytecodeGenerator->addInstruction(create);
     }
+    if (base.isSuper())
+        // set the result up as the thisObject
+        Reference::fromAccumulator(this).storeOnStack(CallData::This);
+
     _expr.setResult(Reference::fromAccumulator(this));
 }
 

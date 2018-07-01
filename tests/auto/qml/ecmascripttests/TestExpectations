@@ -2555,7 +2555,6 @@ language/expressions/prefix-increment/S11.4.4_A5_T4.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T5.js fails
 language/expressions/prefix-increment/S11.4.4_A6_T3.js fails
 language/expressions/super/call-bind-this-value-twice.js fails
-language/expressions/super/call-bind-this-value.js fails
 language/expressions/super/call-construct-invocation.js fails
 language/expressions/super/call-proto-not-ctor.js fails
 language/expressions/super/prop-dot-cls-null-proto.js fails
@@ -2738,7 +2737,6 @@ language/module-code/instn-star-props-nrml-star_FIXTURE.js fails
 language/module-code/instn-star-star-cycle-2_FIXTURE.js fails
 language/module-code/instn-star-star-cycle-indirect-x_FIXTURE.js fails
 language/module-code/namespace/internals/own-property-keys-binding-types_FIXTURE.js fails
-language/rest-parameters/with-new-target.js fails
 language/statements/async-function/cptn-decl.js fails
 language/statements/async-function/declaration-returns-promise.js fails
 language/statements/async-function/evaluation-body.js fails
@@ -3056,10 +3054,7 @@ language/statements/class/scope-static-meth-paramsbody-var-open.js fails
 language/statements/class/scope-static-setter-paramsbody-var-open.js fails
 language/statements/class/static-method-gen-non-configurable-err.js fails
 language/statements/class/static-method-non-configurable-err.js fails
-language/statements/class/subclass/binding.js fails
 language/statements/class/subclass/bound-function.js fails
-language/statements/class/subclass/builtin-objects/Array/contructor-calls-super-multiple-arguments.js fails
-language/statements/class/subclass/builtin-objects/Array/contructor-calls-super-single-argument.js fails
 language/statements/class/subclass/builtin-objects/Array/super-must-be-called.js fails
 language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js fails
 language/statements/class/subclass/builtin-objects/ArrayBuffer/super-must-be-called.js fails
@@ -3101,10 +3096,6 @@ language/statements/class/subclass/class-definition-null-proto-super.js fails
 language/statements/class/subclass/class-definition-null-proto-this.js fails
 language/statements/class/subclass/class-definition-superclass-generator.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
-language/statements/class/subclass/derived-class-return-override-with-empty.js fails
-language/statements/class/subclass/derived-class-return-override-with-this.js fails
-language/statements/class/subclass/derived-class-return-override-with-undefined.js fails
-language/statements/class/super/in-constructor.js fails
 language/statements/class/super/in-methods.js fails
 language/statements/const/block-local-closure-get-before-initialization.js fails
 language/statements/const/block-local-use-before-initialization-in-declaration-statement.js fails
