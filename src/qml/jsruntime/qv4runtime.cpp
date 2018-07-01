@@ -1515,10 +1515,6 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     const QV4::CompiledData::Class *cls = unit->data->classAt(classIndex);
 
     Scope scope(engine);
-    ScopedString name(scope);
-    if (cls->nameIndex != UINT_MAX)
-        name = unit->runtimeStrings[cls->nameIndex];
-    // ### fix heritage
     ScopedObject protoParent(scope, engine->objectPrototype());
     ScopedObject constructorParent(scope, engine->functionPrototype());
     if (!superClass.isEmpty()) {
@@ -1548,6 +1544,11 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     constructor->defineDefaultProperty(engine->id_prototype(), proto);
     proto->defineDefaultProperty(engine->id_constructor(), constructor);
 
+    ScopedString name(scope);
+    if (cls->nameIndex != UINT_MAX) {
+        name = unit->runtimeStrings[cls->nameIndex];
+        constructor->defineReadonlyConfigurableProperty(engine->id_name(), name);
+    }
 
     ScopedObject receiver(scope, *constructor);
     ScopedPropertyKey propertyName(scope);
