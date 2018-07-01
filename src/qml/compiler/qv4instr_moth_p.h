@@ -95,6 +95,8 @@ QT_BEGIN_NAMESPACE
 #define INSTR_Resume(op) INSTRUCTION(op, Resume, 1, offset)
 #define INSTR_StoreProperty(op) INSTRUCTION(op, StoreProperty, 2, name, base)
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
+#define INSTR_LoadSuperProperty(op) INSTRUCTION(op, LoadSuperProperty, 1, property)
+#define INSTR_StoreSuperProperty(op) INSTRUCTION(op, StoreSuperProperty, 1, property)
 #define INSTR_StoreScopeObjectProperty(op) INSTRUCTION(op, StoreScopeObjectProperty, 2, base, propertyIndex)
 #define INSTR_StoreContextObjectProperty(op) INSTRUCTION(op, StoreContextObjectProperty, 2, base, propertyIndex)
 #define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 1, base)
@@ -221,6 +223,8 @@ QT_BEGIN_NAMESPACE
     F(GetLookup) \
     F(StoreProperty) \
     F(SetLookup) \
+    F(LoadSuperProperty) \
+    F(StoreSuperProperty) \
     F(StoreScopeObjectProperty) \
     F(StoreContextObjectProperty) \
     F(LoadScopeObjectProperty) \
@@ -516,7 +520,7 @@ struct InstrInfo
     static int size(Instr::Type type);
 };
 
-Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() < 128);
+Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() <= 128);
 
 template<int N>
 struct InstrMeta {

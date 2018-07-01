@@ -212,6 +212,12 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(SetLookup)
         COLLECTOR_END_INSTR(SetLookup)
 
+        COLLECTOR_BEGIN_INSTR(LoadSuperProperty)
+        COLLECTOR_END_INSTR(LoadSuperProperty)
+
+        COLLECTOR_BEGIN_INSTR(StoreSuperProperty)
+        COLLECTOR_END_INSTR(StoreSuperProperty)
+
         COLLECTOR_BEGIN_INSTR(StoreScopeObjectProperty)
         COLLECTOR_END_INSTR(StoreScopeObjectProperty)
 

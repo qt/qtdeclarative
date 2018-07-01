@@ -856,6 +856,42 @@ ReturnedValue Runtime::method_loadName(ExecutionEngine *engine, int nameIndex)
     return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name);
 }
 
+ReturnedValue Runtime::method_loadSuperProperty(ExecutionEngine *engine, const Value &property)
+{
+    Scope scope(engine);
+    ScopedObject base(scope, engine->currentStackFrame->thisObject());
+    if (!base)
+        return engine->throwTypeError();
+    ScopedObject proto(scope, base->getPrototypeOf());
+    if (!proto)
+        return engine->throwTypeError();
+    ScopedPropertyKey key(scope, property.toPropertyKey(engine));
+    if (engine->hasException)
+        return Encode::undefined();
+    return proto->get(key, base);
+}
+
+void Runtime::method_storeSuperProperty(ExecutionEngine *engine, const Value &property, const Value &value)
+{
+    Scope scope(engine);
+    ScopedObject base(scope, engine->currentStackFrame->thisObject());
+    if (!base) {
+        engine->throwTypeError();
+        return;
+    }
+    ScopedObject proto(scope, base->getPrototypeOf());
+    if (!proto) {
+        engine->throwTypeError();
+        return;
+    }
+    ScopedPropertyKey key(scope, property.toPropertyKey(engine));
+    if (engine->hasException)
+        return;
+    bool result = proto->put(key, value, base);
+    if (!result && engine->currentStackFrame->v4Function->isStrict())
+        engine->throwTypeError();
+}
+
 #endif // V4_BOOTSTRAP
 
 uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)

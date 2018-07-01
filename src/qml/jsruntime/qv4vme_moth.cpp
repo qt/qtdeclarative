@@ -610,6 +610,20 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
 
+    MOTH_BEGIN_INSTR(LoadSuperProperty)
+        STORE_IP();
+        STORE_ACC();
+        acc = Runtime::method_loadSuperProperty(engine, STACK_VALUE(property));
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(LoadSuperProperty)
+
+    MOTH_BEGIN_INSTR(StoreSuperProperty)
+        STORE_IP();
+        STORE_ACC();
+        Runtime::method_storeSuperProperty(engine, STACK_VALUE(property), accumulator);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(StoreSuperProperty)
+
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
         STORE_ACC();
         Runtime::method_storeQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
@@ -666,7 +680,8 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
             goto handleUnwind;
         }
-        acc = static_cast<const FunctionObject &>(func).call(nullptr, stack + argv, argc);
+        Value undef = Primitive::undefinedValue();
+        acc = static_cast<const FunctionObject &>(func).call(&undef, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
 

@@ -180,6 +180,7 @@ public:
             Invalid,
             Accumulator,
             Super,
+            SuperProperty,
             StackSlot,
             ScopedLocal,
             Name,
@@ -217,6 +218,7 @@ public:
         bool isConstant() const { return type == Const; }
         bool isAccumulator() const { return type == Accumulator; }
         bool isSuper() const { return type == Super; }
+        bool isSuperProperty() const { return type == SuperProperty; }
         bool isStackSlot() const { return type == StackSlot; }
         bool isRegister() const {
             return isStackSlot();
@@ -280,6 +282,12 @@ public:
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
+            return r;
+        }
+        static Reference fromSuperProperty(const Reference &property) {
+            Q_ASSERT(property.isStackSlot());
+            Reference r(property.codegen, SuperProperty);
+            r.property = property.stackSlot();
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
@@ -368,6 +376,7 @@ public:
                 qint16 qmlNotifyIndex;
                 PropertyCapturePolicy capturePolicy;
             };
+            Moth::StackSlot property; // super property
         };
         QString name;
         mutable bool isArgOrEval = false;

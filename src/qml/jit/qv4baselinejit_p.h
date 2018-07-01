@@ -104,6 +104,8 @@ public:
     void generate_GetLookup(int index) override;
     void generate_StoreProperty(int name, int base) override;
     void generate_SetLookup(int index, int base) override;
+    void generate_LoadSuperProperty(int property) override;
+    void generate_StoreSuperProperty(int property) override;
     void generate_StoreScopeObjectProperty(int base,
                                            int propertyIndex) override;
     void generate_StoreContextObjectProperty(int base,

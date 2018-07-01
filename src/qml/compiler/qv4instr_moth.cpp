@@ -312,6 +312,14 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(base, nFormals) << "(" << index << ")";
         MOTH_END_INSTR(SetLookup)
 
+        MOTH_BEGIN_INSTR(LoadSuperProperty)
+            d << dumpRegister(property, nFormals);
+        MOTH_END_INSTR(LoadSuperProperty)
+
+        MOTH_BEGIN_INSTR(StoreSuperProperty)
+            d << dumpRegister(property, nFormals);
+        MOTH_END_INSTR(StoreSuperProperty)
+
         MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
             d << dumpRegister(base, nFormals) << "[" << propertyIndex << "]";
         MOTH_END_INSTR(StoreScopeObjectProperty)

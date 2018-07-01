@@ -1109,6 +1109,11 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
+    if (base.isSuper()) {
+        Reference index = expression(ast->expression).storeOnStack();
+        _expr.setResult(Reference::fromSuperProperty(index));
+        return false;
+    }
     base = base.storeOnStack();
     if (hasError)
         return false;
@@ -1957,6 +1962,9 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
 
     switch (expr.type) {
+    case Reference::SuperProperty:
+        // ### this should throw a reference error at runtime.
+        return false;
     case Reference::StackSlot:
         if (!expr.stackSlotIsLocalOrArgument)
             break;
@@ -2052,6 +2060,14 @@ bool Codegen::visit(FieldMemberExpression *ast)
     Reference base = expression(ast->base);
     if (hasError)
         return false;
+    if (base.isSuper()) {
+        Instruction::LoadRuntimeString load;
+        load.stringId = registerString(ast->name.toString());
+        bytecodeGenerator->addInstruction(load);
+        Reference property = Reference::fromAccumulator(this).storeOnStack();
+        _expr.setResult(Reference::fromSuperProperty(property));
+        return false;
+    }
     _expr.setResult(Reference::fromMember(base, ast->name.toString()));
     return false;
 }
@@ -3710,6 +3726,9 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         break;
     case Super:
         break;
+    case SuperProperty:
+        property = other.property;
+        break;
     case StackSlot:
         theStackSlot = other.theStackSlot;
         break;
@@ -3761,6 +3780,8 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         break;
     case Super:
         return true;
+    case SuperProperty:
+        return property == other.property;
     case StackSlot:
         return theStackSlot == other.theStackSlot;
     case ScopedLocal:
@@ -3941,7 +3962,12 @@ void Codegen::Reference::storeAccumulator() const
     }
     switch (type) {
     case Super:
-        codegen->throwSyntaxError(SourceLocation(), QStringLiteral("storing super properties not implemented."));
+        Q_UNREACHABLE();
+        return;
+    case SuperProperty:
+        Instruction::StoreSuperProperty store;
+        store.property = property.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(store);
         return;
     case StackSlot: {
         Instruction::StoreReg store;
@@ -4021,7 +4047,12 @@ void Codegen::Reference::loadInAccumulator() const
     case Accumulator:
         return;
     case Super:
-        codegen->throwSyntaxError(AST::SourceLocation(), QStringLiteral("Super property access not implemented."));
+        Q_UNREACHABLE();
+        return;
+    case SuperProperty:
+        Instruction::LoadSuperProperty load;
+        load.property = property.stackSlot();
+        codegen->bytecodeGenerator->addInstruction(load);
         return;
     case Const: {
 QT_WARNING_PUSH

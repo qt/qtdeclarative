@@ -304,6 +304,30 @@ void BaselineJIT::generate_SetLookup(int index, int base)
     as->checkException();
 }
 
+void BaselineJIT::generate_LoadSuperProperty(int property)
+{
+    STORE_IP();
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passRegAsArg(property, 1);
+    as->passEngineAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_loadSuperProperty, Assembler::ResultInAccumulator);
+    as->checkException();
+}
+
+void BaselineJIT::generate_StoreSuperProperty(int property)
+{
+    STORE_IP();
+    STORE_ACC();
+    as->prepareCallWithArgCount(3);
+    as->passAccumulatorAsArg(2);
+    as->passRegAsArg(property, 1);
+    as->passFunctionAsArg(0);
+    JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeSuperProperty, Assembler::IgnoreResult);
+    as->checkException();
+}
+
+
 void BaselineJIT::generate_StoreScopeObjectProperty(int base, int propertyIndex)
 {
     STORE_ACC();
