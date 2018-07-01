@@ -301,12 +301,8 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(LoadProperty)
 
         MOTH_BEGIN_INSTR(GetLookup)
-            d << dumpRegister(base, nFormals) << "(" << index << ")";
-        MOTH_END_INSTR(GetLookup)
-
-        MOTH_BEGIN_INSTR(GetLookupA)
             d << "acc(" << index << ")";
-        MOTH_END_INSTR(GetLookupA)
+        MOTH_END_INSTR(GetLookup)
 
         MOTH_BEGIN_INSTR(StoreProperty)
             d << dumpRegister(base, nFormals) << "[" << name<< "]";

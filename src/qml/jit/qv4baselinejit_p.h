@@ -101,8 +101,7 @@ public:
     void generate_LoadElement(int base) override;
     void generate_StoreElement(int base, int index) override;
     void generate_LoadProperty(int name) override;
-    void generate_GetLookup(int index, int base) override;
-    void generate_GetLookupA(int index) override;
+    void generate_GetLookup(int index) override;
     void generate_StoreProperty(int name, int base) override;
     void generate_SetLookup(int index, int base) override;
     void generate_StoreScopeObjectProperty(int base,

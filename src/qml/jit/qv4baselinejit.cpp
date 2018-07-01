@@ -265,19 +265,7 @@ void BaselineJIT::generate_LoadProperty(int name)
     as->checkException();
 }
 
-void BaselineJIT::generate_GetLookup(int index, int base)
-{
-    STORE_IP();
-    as->prepareCallWithArgCount(4);
-    as->passRegAsArg(base, 3);
-    as->passInt32AsArg(index, 2);
-    as->passFunctionAsArg(1);
-    as->passEngineAsArg(0);
-    JIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, Assembler::ResultInAccumulator);
-    as->checkException();
-}
-
-void BaselineJIT::generate_GetLookupA(int index)
+void BaselineJIT::generate_GetLookup(int index)
 {
     STORE_IP();
     STORE_ACC();

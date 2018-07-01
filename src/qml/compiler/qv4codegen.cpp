@@ -4106,16 +4106,10 @@ QT_WARNING_POP
         return;
     case Member:
         if (!disable_lookups && codegen->useFastLookups) {
-            if (propertyBase.isAccumulator()) {
-                Instruction::GetLookupA load;
-                load.index = codegen->registerGetterLookup(propertyNameIndex);
-                codegen->bytecodeGenerator->addInstruction(load);
-            } else {
-                Instruction::GetLookup load;
-                load.base = propertyBase.storeOnStack().stackSlot();
-                load.index = codegen->registerGetterLookup(propertyNameIndex);
-                codegen->bytecodeGenerator->addInstruction(load);
-            }
+            propertyBase.loadInAccumulator();
+            Instruction::GetLookup load;
+            load.index = codegen->registerGetterLookup(propertyNameIndex);
+            codegen->bytecodeGenerator->addInstruction(load);
         } else {
             propertyBase.loadInAccumulator();
             Instruction::LoadProperty load;

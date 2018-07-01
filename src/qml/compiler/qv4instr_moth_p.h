@@ -87,8 +87,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_StoreNameSloppy(op) INSTRUCTION(op, StoreNameSloppy, 1, name)
 #define INSTR_StoreNameStrict(op) INSTRUCTION(op, StoreNameStrict, 1, name)
 #define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 1, name)
-#define INSTR_GetLookup(op) INSTRUCTION(op, GetLookup, 2, index, base)
-#define INSTR_GetLookupA(op) INSTRUCTION(op, GetLookupA, 1, index)
+#define INSTR_GetLookup(op) INSTRUCTION(op, GetLookup, 1, index)
 #define INSTR_LoadScopeObjectProperty(op) INSTRUCTION(op, LoadScopeObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadContextObjectProperty(op) INSTRUCTION(op, LoadContextObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
@@ -220,7 +219,6 @@ QT_BEGIN_NAMESPACE
     F(StoreElement) \
     F(LoadProperty) \
     F(GetLookup) \
-    F(GetLookupA) \
     F(StoreProperty) \
     F(SetLookup) \
     F(StoreScopeObjectProperty) \

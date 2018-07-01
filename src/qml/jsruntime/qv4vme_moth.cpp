@@ -588,18 +588,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();
-        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
-        acc = l->getter(l, engine, STACK_VALUE(base));
-        CHECK_EXCEPTION;
-    MOTH_END_INSTR(GetLookup)
-
-    MOTH_BEGIN_INSTR(GetLookupA)
-        STORE_IP();
         STORE_ACC();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
         acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
-    MOTH_END_INSTR(GetLookupA)
+    MOTH_END_INSTR(GetLookup)
 
     MOTH_BEGIN_INSTR(StoreProperty)
         STORE_IP();
