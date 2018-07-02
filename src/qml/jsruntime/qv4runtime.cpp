@@ -487,8 +487,10 @@ Heap::Object *RuntimeHelpers::convertToObject(ExecutionEngine *engine, const Val
     Q_ASSERT(!value.isObject());
     switch (value.type()) {
     case Value::Undefined_Type:
+        engine->throwTypeError(QLatin1String("Value is undefined and could not be converted to an object"));
+        return nullptr;
     case Value::Null_Type:
-        engine->throwTypeError();
+        engine->throwTypeError(QLatin1String("Value is null and could not be converted to an object"));
         return nullptr;
     case Value::Boolean_Type:
         return engine->newBooleanObject(value.booleanValue());

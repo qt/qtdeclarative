@@ -8103,7 +8103,7 @@ void tst_qqmlecmascript::setPropertyOnInvalid()
     QQmlEngine engine;
     {
         QQmlComponent component(&engine, testFileUrl("setPropertyOnNull.qml"));
-        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QString warning = component.url().toString() + ":4: TypeError: Value is null and could not be converted to an object";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
         QObject *object = component.create();
         QVERIFY(object);
@@ -8112,7 +8112,7 @@ void tst_qqmlecmascript::setPropertyOnInvalid()
 
     {
         QQmlComponent component(&engine, testFileUrl("setPropertyOnUndefined.qml"));
-        QString warning = component.url().toString() + ":4: TypeError: Type error";
+        QString warning = component.url().toString() + ":4: TypeError: Value is undefined and could not be converted to an object";
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
         QObject *object = component.create();
         QVERIFY(object);
