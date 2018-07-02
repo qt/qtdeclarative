@@ -1990,9 +1990,6 @@ void tst_qquicktextinput::validators()
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QCOMPARE(intInput->property("acceptable").toBool(), false);
     QCOMPARE(intSpy.count(), 0);
-    QTest::keyPress(&window, Qt::Key_2);
-    QTest::keyRelease(&window, Qt::Key_2, Qt::NoModifier);
-    QTRY_COMPARE(intInput->text(), QLatin1String("1"));
     QCOMPARE(intInput->hasAcceptableInput(), false);
     QCOMPARE(intInput->property("acceptable").toBool(), false);
     QCOMPARE(intSpy.count(), 0);
