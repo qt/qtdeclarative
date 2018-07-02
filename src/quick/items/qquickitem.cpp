@@ -2355,6 +2355,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \fn QQuickItem::QQuickItem(QQuickItem *parent)
 
     Constructs a QQuickItem with the given \a parent.
+
+    The \c parent will be used as both the \l {setParentItem()}{visual parent}
+    and the \l QObject parent.
 */
 QQuickItem::QQuickItem(QQuickItem* parent)
 : QObject(*(new QQuickItemPrivate), parent)
