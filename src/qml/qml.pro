@@ -31,7 +31,7 @@ DEFINES += QT_NO_FOREACH
     !equals(tag, "$${LITERAL_DOLLAR}Format:%H$${LITERAL_DOLLAR}") {
         QML_COMPILE_HASH = $$tag
     } else:exists($$PWD/../../.git) {
-        commit = $$system(git describe --tags --always --long --dirty)
+        commit = $$system(git rev-parse HEAD)
         QML_COMPILE_HASH = $$commit
     }
     compile_hash_contents = \
