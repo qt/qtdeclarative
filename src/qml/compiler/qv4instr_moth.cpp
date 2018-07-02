@@ -46,7 +46,7 @@ using namespace QV4::Moth;
 
 int InstrInfo::size(Instr::Type type)
 {
-#define MOTH_RETURN_INSTR_SIZE(I) case Instr::Type::I: return InstrMeta<int(Instr::Type::I)>::Size;
+#define MOTH_RETURN_INSTR_SIZE(I) case Instr::Type::I: case Instr::Type::I##_Wide: return InstrMeta<int(Instr::Type::I)>::Size;
     switch (type) {
     FOR_EACH_MOTH_INSTR(MOTH_RETURN_INSTR_SIZE)
     }

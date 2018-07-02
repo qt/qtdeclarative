@@ -321,7 +321,7 @@ QT_BEGIN_NAMESPACE
     F(Sub) \
     F(LoadQmlContext) \
     F(LoadQmlImportedScripts)
-#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlImportedScripts) + 1)
+#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlImportedScripts_Wide))
 
 #if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
 // icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the
@@ -332,7 +332,7 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
 
-#define MOTH_INSTR_ENUM(I)  I,
+#define MOTH_INSTR_ENUM(I)  I, I##_Wide,
 #define MOTH_INSTR_SIZE(I) (sizeof(QV4::Moth::Instr::instr_##I))
 
 #define MOTH_EXPAND_FOR_MSVC(x) x
@@ -375,7 +375,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_COLLECT_NARGS(instr) \
     INSTR_##instr(MOTH_COLLECT_ARG_COUNT)
 #define MOTH_COLLECT_ARG_COUNT_INSTRUCTION(name, nargs, ...) \
-    nargs,
+    nargs, nargs,
 
 #define MOTH_DECODE_ARG(arg, type, nargs, offset) \
     arg = qFromLittleEndian<type>( \
@@ -430,18 +430,16 @@ QT_BEGIN_NAMESPACE
 #ifdef MOTH_COMPUTED_GOTO
 /* collect jump labels */
 #define COLLECT_LABELS(instr) \
-    INSTR_##instr(GET_LABEL)
+    INSTR_##instr(GET_LABEL) \
+    INSTR_##instr(GET_LABEL_WIDE)
 #define GET_LABEL_INSTRUCTION(name, ...) \
     &&op_byte_##name,
-#define COLLECT_LABELS_WIDE(instr) \
-    INSTR_##instr(GET_LABEL_WIDE)
 #define GET_LABEL_WIDE_INSTRUCTION(name, ...) \
     &&op_int_##name,
 
 #define MOTH_JUMP_TABLE \
     static const void *jumpTable[] = { \
         FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS_WIDE) \
     };
 
 #define MOTH_DISPATCH() \
@@ -456,7 +454,7 @@ QT_BEGIN_NAMESPACE
 #define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
-    case (static_cast<uchar>(Instr::Type::name) + MOTH_NUM_INSTRUCTIONS()): goto op_int_##name;
+    case (static_cast<uchar>(Instr::Type::name##_Wide)): goto op_int_##name;
 
 #define MOTH_DISPATCH() \
     switch (static_cast<uchar>(*code)) { \
@@ -507,6 +505,14 @@ union Instr
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
     };
 
+    static Type wideInstructionType(Type t) { return Type(int(t) | 1); }
+    static Type narrowInstructionType(Type t) { return Type(int(t) & ~1); }
+    static bool isWide(Type t) { return int(t) & 1; }
+    static bool isNarrow(Type t) { return !(int(t) & 1); }
+
+    static Type unpack(const uchar *c) { return Type(*c); }
+    static void pack(uchar *c, Type t) { *c = uchar(uint(t)); }
+
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
 
     FOR_EACH_MOTH_INSTR(MOTH_EMIT_INSTR_MEMBERS)
@@ -520,7 +526,7 @@ struct InstrInfo
     static int size(Instr::Type type);
 };
 
-Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() <= 128);
+Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() <= 256);
 
 template<int N>
 struct InstrMeta {

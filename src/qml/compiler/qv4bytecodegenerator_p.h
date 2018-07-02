@@ -279,7 +279,7 @@ private:
         int line;
         int offsetForJump;
         int linkedLabel;
-        char packed[sizeof(Instr) + 2]; // 2 for instruction and prefix
+        unsigned char packed[sizeof(Instr) + 2]; // 2 for instruction type
     };
 
     void compressInstructions();

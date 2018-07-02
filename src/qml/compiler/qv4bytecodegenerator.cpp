@@ -70,10 +70,9 @@ int BytecodeGenerator::newRegisterArray(int n)
 
 void BytecodeGenerator::packInstruction(I &i)
 {
-    uchar type = *reinterpret_cast<uchar *>(i.packed);
-    Q_ASSERT(type >= MOTH_NUM_INSTRUCTIONS());
-    if (type >= MOTH_NUM_INSTRUCTIONS())
-        type -= MOTH_NUM_INSTRUCTIONS();
+    Instr::Type type = Instr::unpack(i.packed);
+    Q_ASSERT(int(type) < MOTH_NUM_INSTRUCTIONS());
+    type = Instr::narrowInstructionType(type);
     int instructionsAsInts[sizeof(Instr)/sizeof(int)] = {};
     int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
     for (int j = 0; j < nMembers; ++j) {
@@ -89,10 +88,10 @@ void BytecodeGenerator::packInstruction(I &i)
             break;
         }
     }
-    char *code = i.packed;
+    uchar *code = i.packed;
     switch (width) {
     case Normal:
-        *reinterpret_cast<uchar *>(code) = type;
+        Instr::pack(code, type);
         ++code;
         for (int n = 0; n < nMembers; ++n) {
             qint8 v = static_cast<qint8>(instructionsAsInts[n]);
@@ -122,7 +121,7 @@ void BytecodeGenerator::adjustJumpOffsets()
 //        qDebug() << "adjusting jump offset for instruction" << index << i.position << i.size << "offsetForJump" << i.offsetForJump << "target"
 //                 << labels.at(i.linkedLabel) << linkedInstruction.position << "jumpOffset" << jumpOffset;
         uchar type = *reinterpret_cast<const uchar *>(i.packed);
-        if (type >= MOTH_NUM_INSTRUCTIONS()) {
+        if (Instr::isWide(Instr::Type(type))) {
             Q_ASSERT(i.offsetForJump == i.size - 4);
             qToLittleEndian<qint32>(jumpOffset, c);
         } else {
@@ -177,7 +176,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
             entry.line = currentLine;
             lineNumbers.append(entry);
         }
-        code.append(i.packed, i.size);
+        code.append(reinterpret_cast<const char *>(i.packed), i.size);
     }
 
     context->code = code;
@@ -228,10 +227,10 @@ QT_WARNING_POP
     if (offsetOfOffset != -1)
         offsetOfOffset += 1;
     I instr{type, static_cast<short>(s + 1), 0, currentLine, offsetOfOffset, -1, "\0\0" };
-    char *code = instr.packed;
-    *reinterpret_cast<uchar *>(code) = static_cast<uchar>(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type));
+    uchar *code = instr.packed;
+    Instr::pack(code, Instr::wideInstructionType(type));
     ++code;
-    Q_ASSERT(MOTH_NUM_INSTRUCTIONS() + static_cast<int>(type) < 256);
+    Q_ASSERT(static_cast<uint>(Instr::wideInstructionType(type)) < 256);
 
     for (int j = 0; j < argCount; ++j) {
         qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
