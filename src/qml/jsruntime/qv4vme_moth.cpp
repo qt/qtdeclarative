@@ -328,7 +328,7 @@ static struct InstrCount {
 
 #ifdef MOTH_COMPUTED_GOTO
 #define MOTH_END_INSTR(instr) \
-        MOTH_DISPATCH() \
+        MOTH_DISPATCH_SINGLE() \
     }
 #else // !MOTH_COMPUTED_GOTO
 #define MOTH_END_INSTR(instr) \

@@ -48,7 +48,7 @@ int InstrInfo::size(Instr::Type type)
 {
 #define MOTH_RETURN_INSTR_SIZE(I) case Instr::Type::I: case Instr::Type::I##_Wide: return InstrMeta<int(Instr::Type::I)>::Size;
     switch (type) {
-    FOR_EACH_MOTH_INSTR(MOTH_RETURN_INSTR_SIZE)
+    FOR_EACH_MOTH_INSTR_ALL(MOTH_RETURN_INSTR_SIZE)
     }
 #undef MOTH_RETURN_INSTR_SIZE
     Q_UNREACHABLE();
@@ -111,6 +111,8 @@ static QString toString(QV4::ReturnedValue v)
         QDebug d = qDebug(); \
         d.noquote(); \
         d.nospace(); \
+        if (static_cast<int>(Instr::Type::instr) >= 0x100) \
+            --base_ptr; \
         d << alignedLineNumber(line) << alignedNumber(codeOffset).constData() << ": " \
           << rawBytes(base_ptr, int(code - base_ptr)) << #instr << " ";
 
@@ -123,7 +125,7 @@ namespace QV4 {
 namespace Moth {
 
 const int InstrInfo::argumentCount[] = {
-    FOR_EACH_MOTH_INSTR(MOTH_COLLECT_NARGS)
+    FOR_EACH_MOTH_INSTR_ALL(MOTH_COLLECT_NARGS)
 };
 
 

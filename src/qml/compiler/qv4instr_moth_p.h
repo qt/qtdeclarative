@@ -62,6 +62,7 @@ QT_BEGIN_NAMESPACE
     op##_INSTRUCTION(name, nargs, __VA_ARGS__)
 
 /* for all jump instructions, the offset has to come last, to simplify the job of the bytecode generator */
+#define INSTR_Nop(op) INSTRUCTION(op, Nop, 0)
 #define INSTR_Ret(op) INSTRUCTION(op, Ret, 0)
 #define INSTR_Debug(op) INSTRUCTION(op, Debug, 0)
 #define INSTR_LoadConst(op) INSTRUCTION(op, LoadConst, 1, index)
@@ -191,10 +192,12 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 
+#define FOR_EACH_MOTH_INSTR_ALL(F) \
+    F(Nop) \
+    FOR_EACH_MOTH_INSTR(F)
 
 #define FOR_EACH_MOTH_INSTR(F) \
     F(Ret) \
-    F(Debug) \
     F(LoadConst) \
     F(LoadZero) \
     F(LoadTrue) \
@@ -202,6 +205,7 @@ QT_BEGIN_NAMESPACE
     F(LoadNull) \
     F(LoadUndefined) \
     F(LoadInt) \
+    F(LoadRuntimeString) \
     F(MoveConst) \
     F(LoadReg) \
     F(StoreReg) \
@@ -210,7 +214,6 @@ QT_BEGIN_NAMESPACE
     F(StoreLocal) \
     F(LoadScopedLocal) \
     F(StoreScopedLocal) \
-    F(LoadRuntimeString) \
     F(MoveRegExp) \
     F(LoadClosure) \
     F(LoadName) \
@@ -230,51 +233,7 @@ QT_BEGIN_NAMESPACE
     F(LoadScopeObjectProperty) \
     F(LoadContextObjectProperty) \
     F(LoadIdObject) \
-    F(Yield) \
-    F(Resume) \
-    F(CallValue) \
-    F(CallProperty) \
-    F(CallPropertyLookup) \
-    F(CallElement) \
-    F(CallName) \
-    F(CallPossiblyDirectEval) \
-    F(CallGlobalLookup) \
-    F(CallScopeObjectProperty) \
-    F(CallContextObjectProperty) \
-    F(CallWithSpread) \
-    F(Construct) \
-    F(ConstructWithSpread) \
-    F(SetUnwindHandler) \
-    F(UnwindDispatch) \
-    F(UnwindToLabel) \
-    F(ThrowException) \
-    F(GetException) \
-    F(SetException) \
-    F(CreateCallContext) \
-    F(PushCatchContext) \
-    F(PushWithContext) \
-    F(PushBlockContext) \
-    F(CloneBlockContext) \
-    F(PushScriptContext) \
-    F(PopScriptContext) \
-    F(PopContext) \
-    F(GetIterator) \
-    F(IteratorNext) \
-    F(IteratorClose) \
-    F(DestructureRestElement) \
-    F(DeleteProperty) \
-    F(DeleteName) \
-    F(TypeofName) \
-    F(TypeofValue) \
-    F(DeclareVar) \
-    F(DefineArray) \
-    F(DefineObjectLiteral) \
-    F(CreateClass) \
-    F(CreateMappedArgumentsObject) \
-    F(CreateUnmappedArgumentsObject) \
-    F(CreateRestParameter) \
     F(ConvertThisToObject) \
-    F(LoadSuperConstructor) \
     F(ToObject) \
     F(Jump) \
     F(JumpTrue) \
@@ -319,9 +278,55 @@ QT_BEGIN_NAMESPACE
     F(Div) \
     F(Mod) \
     F(Sub) \
+    F(CallValue) \
+    F(CallProperty) \
+    F(CallPropertyLookup) \
+    F(CallElement) \
+    F(CallName) \
+    F(CallPossiblyDirectEval) \
+    F(CallGlobalLookup) \
+    F(CallScopeObjectProperty) \
+    F(CallContextObjectProperty) \
+    F(CallWithSpread) \
+    F(Construct) \
+    F(ConstructWithSpread) \
+    F(SetUnwindHandler) \
+    F(UnwindDispatch) \
+    F(UnwindToLabel) \
+    F(ThrowException) \
+    F(GetException) \
+    F(SetException) \
+    F(CreateCallContext) \
+    F(PushCatchContext) \
+    F(PushWithContext) \
+    F(PushBlockContext) \
+    F(CloneBlockContext) \
+    F(PopContext) \
+    F(GetIterator) \
+    F(IteratorNext) \
+    F(IteratorClose) \
+    F(DestructureRestElement) \
+    F(DeleteProperty) \
+    F(DeleteName) \
+    F(TypeofName) \
+    F(TypeofValue) \
+    F(DeclareVar) \
+    F(DefineArray) \
+    F(DefineObjectLiteral) \
+    F(CreateMappedArgumentsObject) \
+    F(CreateUnmappedArgumentsObject) \
+    F(CreateRestParameter) \
     F(LoadQmlContext) \
-    F(LoadQmlImportedScripts)
-#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::LoadQmlImportedScripts_Wide))
+    F(LoadQmlImportedScripts) \
+    F(Yield) \
+    F(Resume) \
+    F(CreateClass) \
+    F(LoadSuperConstructor) \
+    F(PushScriptContext) \
+    F(PopScriptContext) \
+    F(Debug) \
+
+#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)
 
 #if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
 // icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the
@@ -439,27 +444,44 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_JUMP_TABLE \
     static const void *jumpTable[] = { \
-        FOR_EACH_MOTH_INSTR(COLLECT_LABELS) \
+        FOR_EACH_MOTH_INSTR_ALL(COLLECT_LABELS) \
     };
 
-#define MOTH_DISPATCH() \
+#define MOTH_DISPATCH_SINGLE() \
     goto *jumpTable[*reinterpret_cast<const uchar *>(code)];
+
+#define MOTH_DISPATCH() \
+    MOTH_DISPATCH_SINGLE() \
+    op_byte_Nop: \
+        ++code; \
+        MOTH_DISPATCH_SINGLE() \
+    op_int_Nop: /* wide prefix */ \
+        ++code; \
+        goto *jumpTable[0x100 | *reinterpret_cast<const uchar *>(code)];
 #else
 #define MOTH_JUMP_TABLE
 
 #define MOTH_INSTR_CASE_AND_JUMP(instr) \
-    INSTR_##instr(GET_CASE_AND_JUMP)
-#define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
-    case static_cast<uchar>(Instr::Type::name): goto op_byte_##name;
-#define MOTH_INSTR_CASE_AND_JUMP_WIDE(instr) \
+    INSTR_##instr(GET_CASE_AND_JUMP) \
     INSTR_##instr(GET_CASE_AND_JUMP_WIDE)
+#define GET_CASE_AND_JUMP_INSTRUCTION(name, ...) \
+    case Instr::Type::name: goto op_byte_##name;
 #define GET_CASE_AND_JUMP_WIDE_INSTRUCTION(name, ...) \
-    case (static_cast<uchar>(Instr::Type::name##_Wide)): goto op_int_##name;
+    case Instr::Type::name##_Wide: goto op_int_##name;
 
 #define MOTH_DISPATCH() \
-    switch (static_cast<uchar>(*code)) { \
+    Instr::Type type = Instr::Type(static_cast<uchar>(*code)); \
+  dispatch: \
+    switch (type) { \
+        case Instr::Type::Nop: \
+            ++code; \
+            type = Instr::Type(static_cast<uchar>(*code)); \
+            goto dispatch; \
+        case Instr::Type::Nop_Wide: /* wide prefix */ \
+            ++code; \
+            type = Instr::Type(0x100 | static_cast<uchar>(*code)); \
+            goto dispatch; \
         FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP) \
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_CASE_AND_JUMP_WIDE) \
     }
 #endif
 
@@ -502,20 +524,29 @@ inline void dumpBytecode(const QByteArray &bytecode, int nLocals, int nFormals, 
 union Instr
 {
     enum class Type {
-        FOR_EACH_MOTH_INSTR(MOTH_INSTR_ENUM)
+        FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_ENUM)
     };
 
     static Type wideInstructionType(Type t) { return Type(int(t) | 1); }
     static Type narrowInstructionType(Type t) { return Type(int(t) & ~1); }
     static bool isWide(Type t) { return int(t) & 1; }
     static bool isNarrow(Type t) { return !(int(t) & 1); }
+    static int encodedLength(Type t) { return int(t) >= 256 ? 2 : 1; }
 
-    static Type unpack(const uchar *c) { return Type(*c); }
-    static void pack(uchar *c, Type t) { *c = uchar(uint(t)); }
+    static Type unpack(const uchar *c) { if (c[0] == 0x1) return Type(0x100 + c[1]); return Type(c[0]); }
+    static uchar *pack(uchar *c, Type t) {
+        if (uint(t) >= 256) {
+            c[0] = 0x1;
+            c[1] = uint(t) &0xff;
+            return c + 2;
+        }
+        c[0] = uchar(uint(t));
+        return c + 1;
+    }
 
-    FOR_EACH_MOTH_INSTR(MOTH_EMIT_STRUCTS)
+    FOR_EACH_MOTH_INSTR_ALL(MOTH_EMIT_STRUCTS)
 
-    FOR_EACH_MOTH_INSTR(MOTH_EMIT_INSTR_MEMBERS)
+    FOR_EACH_MOTH_INSTR_ALL(MOTH_EMIT_INSTR_MEMBERS)
 
     int argumentsAsInts[4];
 };
@@ -525,8 +556,6 @@ struct InstrInfo
     static const int argumentCount[];
     static int size(Instr::Type type);
 };
-
-Q_STATIC_ASSERT(MOTH_NUM_INSTRUCTIONS() <= 256);
 
 template<int N>
 struct InstrMeta {
@@ -545,7 +574,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
                  reinterpret_cast<const char *>(&v), \
                  Size); } \
     };
-FOR_EACH_MOTH_INSTR(MOTH_INSTR_META_TEMPLATE);
+FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
 QT_WARNING_POP
 
@@ -556,7 +585,7 @@ class InstrData : public InstrMeta<InstrType>::DataType
 
 struct Instruction {
 #define MOTH_INSTR_DATA_TYPEDEF(I) typedef InstrData<int(Instr::Type::I)> I;
-FOR_EACH_MOTH_INSTR(MOTH_INSTR_DATA_TYPEDEF)
+FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_DATA_TYPEDEF)
 #undef MOTH_INSTR_DATA_TYPEDEF
 private:
     Instruction();

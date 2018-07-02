@@ -75,8 +75,9 @@ void BytecodeGenerator::packInstruction(I &i)
     type = Instr::narrowInstructionType(type);
     int instructionsAsInts[sizeof(Instr)/sizeof(int)] = {};
     int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
+    uchar *code = i.packed + Instr::encodedLength(type);
     for (int j = 0; j < nMembers; ++j) {
-        instructionsAsInts[j] = qFromLittleEndian<qint32>(i.packed + 1 + j * sizeof(int));
+        instructionsAsInts[j] = qFromLittleEndian<qint32>(code + j * sizeof(int));
     }
     enum {
         Normal,
@@ -88,11 +89,10 @@ void BytecodeGenerator::packInstruction(I &i)
             break;
         }
     }
-    uchar *code = i.packed;
+    code = i.packed;
     switch (width) {
     case Normal:
-        Instr::pack(code, type);
-        ++code;
+        code = Instr::pack(code, type);
         for (int n = 0; n < nMembers; ++n) {
             qint8 v = static_cast<qint8>(instructionsAsInts[n]);
             memcpy(code, &v, 1);
@@ -225,12 +225,10 @@ QT_WARNING_POP
     const int argCount = Moth::InstrInfo::argumentCount[static_cast<int>(type)];
     int s = argCount*sizeof(int);
     if (offsetOfOffset != -1)
-        offsetOfOffset += 1;
-    I instr{type, static_cast<short>(s + 1), 0, currentLine, offsetOfOffset, -1, "\0\0" };
+        offsetOfOffset += Instr::encodedLength(type);
+    I instr{type, static_cast<short>(s + Instr::encodedLength(type)), 0, currentLine, offsetOfOffset, -1, "\0\0" };
     uchar *code = instr.packed;
-    Instr::pack(code, Instr::wideInstructionType(type));
-    ++code;
-    Q_ASSERT(static_cast<uint>(Instr::wideInstructionType(type)) < 256);
+    code = Instr::pack(code, Instr::wideInstructionType(type));
 
     for (int j = 0; j < argCount; ++j) {
         qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
