@@ -35,7 +35,7 @@
 #include <QSignalSpy>
 #include <QDebug>
 
-class tst_QQmlPropertyMap : public QObject
+class tst_QQmlPropertyMap : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -61,6 +61,7 @@ private slots:
     void disallowExtending();
     void QTBUG_35906();
     void QTBUG_48136();
+    void lookupsInSubTypes();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -89,9 +90,18 @@ private:
     int value = 0;
 };
 
+class SimplePropertyMap: public QQmlPropertyMap
+{
+    Q_OBJECT
+public:
+    SimplePropertyMap() : QQmlPropertyMap(this, nullptr) {}
+};
+
 void tst_QQmlPropertyMap::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     qmlRegisterType<LazyPropertyMap>("QTBUG_35233", 1, 0, "LazyPropertyMap");
+    qmlRegisterType<SimplePropertyMap>("Test", 1, 0, "SimplePropertyMap");
 }
 
 void tst_QQmlPropertyMap::insert()
@@ -494,6 +504,16 @@ void tst_QQmlPropertyMap::QTBUG_48136()
     QCOMPARE(valueChangedSpy.count(), 1);
     map.setProperty(key, 45);
     QCOMPARE(valueChangedSpy.count(), 1);
+}
+
+void tst_QQmlPropertyMap::lookupsInSubTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("PropertyMapSubType.qml"));
+    QTest::ignoreMessage(QtDebugMsg, "expected output");
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("newProperty").toInt(), 42);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)

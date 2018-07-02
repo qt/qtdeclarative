@@ -125,6 +125,37 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
     QObject *scopeObject = resource->getScopeObject();
 
     ScopedString name(scope, id.asStringOrSymbol());
+
+    const auto performGobalLookUp = [&result, v4, &name, hasProperty]() {
+        bool hasProp = false;
+        result = v4->globalObject->get(name, &hasProp);
+        if (hasProp) {
+            if (hasProperty)
+                *hasProperty = hasProp;
+            return true;
+        }
+        return false;
+    };
+
+    // If the scope object is a QAbstractDynamicMetaObject, then QMetaObject::indexOfProperty
+    // will call createProperty() on the QADMO and implicitly create the property. While that
+    // is questionable behavior, there are two use-cases that we support in the light of this:
+    //
+    //    (1) The implicit creation of properties is necessary because it will also result in
+    //        a recorded capture, which will allow a re-evaluation of bindings when the value
+    //        is populated later. See QTBUG-35233 and the test-case in tst_qqmlpropertymap.
+    //
+    //    (1) Looking up "console" in order to place a console.log() call for example must
+    //        find the console instead of creating a new property. Therefore we prioritize the
+    //        lookup in the global object here.
+    //
+    // Note: The scope object is only a QADMO for example when somebody registers a QQmlPropertyMap
+    // sub-class as QML type and then instantiates it in .qml.
+    if (scopeObject && QQmlPropertyCache::isDynamicMetaObject(scopeObject->metaObject())) {
+        if (performGobalLookUp())
+            return result->asReturnedValue();
+    }
+
     if (context->imports && name->startsWithUpper()) {
         // Search for attached properties, enums and imported scripts
         QQmlTypeNameCache::Result r = context->imports->query(name, QQmlImport::AllowRecursion);
@@ -217,12 +248,8 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
     // true if we access properties of the global object.
-    result = v4->globalObject->get(name, &hasProp);
-    if (hasProp) {
-        if (hasProperty)
-            *hasProperty = hasProp;
+    if (performGobalLookUp())
         return result->asReturnedValue();
-    }
 
     expressionContext->unresolvedNames = true;
 
