@@ -70,17 +70,12 @@ QQmlAnimationTimer::QQmlAnimationTimer() :
 QQmlAnimationTimer *QQmlAnimationTimer::instance(bool create)
 {
     QQmlAnimationTimer *inst;
-#ifndef QT_NO_THREAD
     if (create && !animationTimer()->hasLocalData()) {
         inst = new QQmlAnimationTimer;
         animationTimer()->setLocalData(inst);
     } else {
         inst = animationTimer() ? animationTimer()->localData() : 0;
     }
-#else
-    static QQmlAnimationTimer unifiedTimer;
-    inst = &unifiedTimer;
-#endif
     return inst;
 }
 

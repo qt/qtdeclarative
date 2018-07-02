@@ -221,10 +221,12 @@ QSGRenderLoop *QSGRenderLoop::instance()
             }
 
             switch (loopType) {
+#if QT_CONFIG(thread)
             case ThreadedRenderLoop:
                 qCDebug(QSG_LOG_INFO, "threaded render loop");
                 s_instance = new QSGThreadedRenderLoop();
                 break;
+#endif
             case WindowsRenderLoop:
                 qCDebug(QSG_LOG_INFO, "windows render loop");
                 s_instance = new QSGWindowsRenderLoop();

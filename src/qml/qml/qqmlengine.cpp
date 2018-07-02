@@ -95,7 +95,9 @@
 #include <private/qqmldelegatemodel_p.h>
 #endif
 #include <private/qqmlobjectmodel_p.h>
+#if QT_CONFIG(thread)
 #include <private/qquickworkerscript_p.h>
+#endif
 #include <private/qqmlinstantiator_p.h>
 #include <private/qqmlloggingcategory_p.h>
 
@@ -243,7 +245,9 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
     qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
     qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
 #endif
+#if QT_CONFIG(thread)
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
+#endif
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
@@ -687,7 +691,9 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 #endif
   outputWarningsToMsgLog(true),
   cleanup(nullptr), erroredBindings(nullptr), inProgressCreations(0),
+#if QT_CONFIG(thread)
   workerScriptEngine(nullptr),
+#endif
   activeObjectCreator(nullptr),
 #if QT_CONFIG(qml_network)
   networkAccessManager(nullptr), networkAccessManagerFactory(nullptr),
@@ -987,6 +993,7 @@ void QQmlEnginePrivate::init()
     rootContext = new QQmlContext(q,true);
 }
 
+#if QT_CONFIG(thread)
 QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 {
     Q_Q(QQmlEngine);
@@ -994,6 +1001,7 @@ QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
         workerScriptEngine = new QQuickWorkerScriptEngine(q);
     return workerScriptEngine;
 }
+#endif
 
 /*!
   \class QQmlEngine

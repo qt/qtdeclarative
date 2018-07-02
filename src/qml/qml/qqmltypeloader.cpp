@@ -865,13 +865,23 @@ void QQmlTypeLoaderThread::loadWithCachedUnitAsync(QQmlDataBlob *b, const QV4::C
 void QQmlTypeLoaderThread::callCompleted(QQmlDataBlob *b)
 {
     b->addref();
+#if !QT_CONFIG(thread)
+    if (!isThisThread())
+        postMethodToThread(&This::callCompletedMain, b);
+#else
     postMethodToMain(&This::callCompletedMain, b);
+#endif
 }
 
 void QQmlTypeLoaderThread::callDownloadProgressChanged(QQmlDataBlob *b, qreal p)
 {
     b->addref();
+#if !QT_CONFIG(thread)
+    if (!isThisThread())
+        postMethodToThread(&This::callDownloadProgressChangedMain, b, p);
+#else
     postMethodToMain(&This::callDownloadProgressChangedMain, b, p);
+#endif
 }
 
 void QQmlTypeLoaderThread::initializeEngine(QQmlExtensionInterface *iface,

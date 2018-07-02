@@ -51,7 +51,9 @@
 
 #ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
+#if QT_CONFIG(filedialog)
 #include <QtWidgets/QFileDialog>
+#endif
 #endif
 
 #include <QtCore/QTranslator>

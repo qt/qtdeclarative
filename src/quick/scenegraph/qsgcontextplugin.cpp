@@ -89,8 +89,10 @@ struct QSGAdaptationBackendData
 QSGAdaptationBackendData::QSGAdaptationBackendData()
     : flags(nullptr)
 {
+#if QT_CONFIG(thread)
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
+#endif
 }
 
 QSGAdaptationBackendData::~QSGAdaptationBackendData()

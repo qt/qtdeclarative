@@ -316,6 +316,12 @@ void QQmlThread::shutdownThread()
 
 void QQmlThread::internalCallMethodInThread(Message *message)
 {
+#if !QT_CONFIG(thread)
+    message->call(this);
+    delete message;
+    return;
+#endif
+
     Q_ASSERT(!isThisThread());
     d->lock();
     Q_ASSERT(d->m_mainThreadWaiting == false);
@@ -376,6 +382,10 @@ void QQmlThread::internalCallMethodInMain(Message *message)
 
 void QQmlThread::internalPostMethodToThread(Message *message)
 {
+#if !QT_CONFIG(thread)
+    internalPostMethodToMain(message);
+    return;
+#endif
     Q_ASSERT(!isThisThread());
     d->lock();
     bool wasEmpty = d->threadList.isEmpty();

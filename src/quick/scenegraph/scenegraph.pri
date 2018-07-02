@@ -115,7 +115,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultimagenode.cpp \
         $$PWD/util/qsgdefaultninepatchnode.cpp \
         $$PWD/qsgdefaultlayer.cpp \
-        $$PWD/qsgthreadedrenderloop.cpp \
         $$PWD/qsgwindowsrenderloop.cpp
     HEADERS += \
         $$PWD/qsgdefaultglyphnode_p.h \
@@ -132,8 +131,14 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultimagenode_p.h \
         $$PWD/util/qsgdefaultninepatchnode_p.h \
         $$PWD/qsgdefaultlayer_p.h \
-        $$PWD/qsgthreadedrenderloop_p.h \
         $$PWD/qsgwindowsrenderloop_p.h
+
+    qtConfig(thread) {
+        SOURCES += \
+            $$PWD/qsgthreadedrenderloop.cpp
+        HEADERS += \
+            $$PWD/qsgthreadedrenderloop_p.h
+    }
 
     qtConfig(quick-sprite) {
         SOURCES += \

@@ -153,8 +153,10 @@ public:
     QV8Engine *v8engine() const { return q_func()->handle()->v8Engine; }
     QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
+#if QT_CONFIG(thread)
     QQuickWorkerScriptEngine *getWorkerScriptEngine();
     QQuickWorkerScriptEngine *workerScriptEngine;
+#endif
 
     QUrl baseUrl;
 

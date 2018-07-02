@@ -6,9 +6,8 @@ SUBDIRS += \
     packetprotocol
 
 # Connectors
-SUBDIRS += \
-    qmldbg_native \
-    qmldbg_server
+SUBDIRS += qmldbg_native
+qtConfig(thread): SUBDIRS += qmldbg_server
 
 qmldbg_native.depends = packetprotocol
 qmldbg_server.depends = packetprotocol
@@ -35,8 +34,9 @@ qmldbg_nativedebugger.depends = packetprotocol
 qtHaveModule(quick) {
     SUBDIRS += \
         qmldbg_inspector \
-        qmldbg_quickprofiler \
-        qmldbg_preview
+        qmldbg_quickprofiler
+
+    qtConfig(qml-network): SUBDIRS += qmldbg_preview
 
     qmldbg_inspector.depends = packetprotocol
     qmldbg_quickprofiler.depends = packetprotocol
