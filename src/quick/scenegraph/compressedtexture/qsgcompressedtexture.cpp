@@ -49,50 +49,11 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO, "qt.scenegraph.textureio");
 
-bool QSGCompressedTextureData::isValid() const
-{
-    if (data.isNull() || size.isEmpty() || !format)
-        return false;
-    if (dataLength < 0 || dataOffset < 0 || dataOffset >= data.length())
-        return false;
-    if (dataLength > 0 && qint64(dataOffset) + qint64(dataLength) > qint64(data.length()))
-        return false;
-
-    return true;
-}
-
-int QSGCompressedTextureData::sizeInBytes() const
-{
-    if (!isValid())
-        return 0;
-    return dataLength > 0 ? dataLength : data.length() - dataOffset;
-}
-
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QSGCompressedTextureData *d)
-{
-    QDebugStateSaver saver(dbg);
-
-    dbg.nospace() << "QSGCompressedTextureData(";
-    if (d) {
-        dbg << d->logName << ' ';
-        dbg << static_cast<QOpenGLTexture::TextureFormat>(d->format)
-            << "[0x" << hex << d->format << dec << "]";
-        dbg.space() << (d->hasAlpha ? "with" : "no") << "alpha" << d->size
-                    << "databuffer" << d->data.size() << "offset" << d->dataOffset << "length";
-        dbg.nospace() << d->dataLength << ")";
-    } else {
-        dbg << "null)";
-    }
-    return dbg;
-}
-
-QSGCompressedTexture::QSGCompressedTexture(const DataPtr& texData)
+QSGCompressedTexture::QSGCompressedTexture(const QTextureFileData &texData)
     : m_textureData(texData)
 {
-    if (m_textureData) {
-        m_size = m_textureData->size;
-        m_hasAlpha = m_textureData->hasAlpha;
-    }
+    m_size = m_textureData.size();
+    m_hasAlpha = !formatIsOpaque(m_textureData.glInternalFormat());
 }
 
 QSGCompressedTexture::~QSGCompressedTexture()
@@ -155,35 +116,38 @@ void QSGCompressedTexture::bind()
     if (m_uploaded)
         return;
 
-    QByteArray logName(m_textureData ? m_textureData->logName : QByteArrayLiteral("(unset)"));
-
-    if (!m_textureData || !m_textureData->isValid()) {
-        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", logName.constData());
+    if (!m_textureData.isValid()) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", m_textureData.logName().constData());
         funcs->glBindTexture(GL_TEXTURE_2D, 0);
         return;
     }
 
     if (Q_UNLIKELY(QSG_LOG_TEXTUREIO().isDebugEnabled())) {
-        qCDebug(QSG_LOG_TEXTUREIO) << "Uploading texture" << m_textureData.data();
+        qCDebug(QSG_LOG_TEXTUREIO) << "Uploading texture" << m_textureData;
         while (funcs->glGetError() != GL_NO_ERROR);
     }
 
-    funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_textureData->format,
-                                  m_size.width(), m_size.height(), 0, m_textureData->sizeInBytes(),
-                                  m_textureData->data.constData() + m_textureData->dataOffset);
+    funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_textureData.glInternalFormat(),
+                                  m_size.width(), m_size.height(), 0, m_textureData.dataLength(),
+                                  m_textureData.data().constData() + m_textureData.dataOffset());
 
     if (Q_UNLIKELY(QSG_LOG_TEXTUREIO().isDebugEnabled())) {
         GLuint error = funcs->glGetError();
         if (error != GL_NO_ERROR) {
-            qCDebug(QSG_LOG_TEXTUREIO, "glCompressedTexImage2D failed for %s, error 0x%x", logName.constData(), error);
+            qCDebug(QSG_LOG_TEXTUREIO, "glCompressedTexImage2D failed for %s, error 0x%x", m_textureData.logName().constData(), error);
         }
     }
 
-    m_textureData.clear();  // Release this memory, not needed anymore
+    m_textureData = QTextureFileData();  // Release this memory, not needed anymore
 
     updateBindOptions(true);
     m_uploaded = true;
 #endif // QT_CONFIG(opengl)
+}
+
+QTextureFileData QSGCompressedTexture::textureData() const
+{
+    return m_textureData;
 }
 
 bool QSGCompressedTexture::formatIsOpaque(quint32 glTextureFormat)
@@ -211,14 +175,14 @@ bool QSGCompressedTexture::formatIsOpaque(quint32 glTextureFormat)
     }
 }
 
-QSGCompressedTextureFactory::QSGCompressedTextureFactory(const QSGCompressedTexture::DataPtr &texData)
+QSGCompressedTextureFactory::QSGCompressedTextureFactory(const QTextureFileData &texData)
     : m_textureData(texData)
 {
 }
 
 QSGTexture *QSGCompressedTextureFactory::createTexture(QQuickWindow *window) const
 {
-    if (!m_textureData || !m_textureData->isValid())
+    if (!m_textureData.isValid())
         return nullptr;
 
     // attempt to atlas the texture
@@ -232,15 +196,12 @@ QSGTexture *QSGCompressedTextureFactory::createTexture(QQuickWindow *window) con
 
 int QSGCompressedTextureFactory::textureByteCount() const
 {
-    return m_textureData ? m_textureData->sizeInBytes() : 0;
+    return qMax(0, m_textureData.data().size() - m_textureData.dataOffset());
 }
-
 
 QSize QSGCompressedTextureFactory::textureSize() const
 {
-    if (m_textureData && m_textureData->isValid())
-        return m_textureData->size;
-    return QSize();
+    return m_textureData.size();
 }
 
 QT_END_NAMESPACE

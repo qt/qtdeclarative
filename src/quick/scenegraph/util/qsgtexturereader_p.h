@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 class QIODevice;
 class QQuickTextureFactory;
-class QSGTextureFileHandler;
+class QTextureFileReader;
 
 class QSGTextureReader
 {
@@ -75,11 +75,7 @@ public:
     static QList<QByteArray> supportedFileFormats();
 
 private:
-    bool init();
-    QIODevice *m_device = nullptr;
-    QFileInfo m_fileInfo;
-    QSGTextureFileHandler *m_handler = nullptr;
-    bool checked = false;
+    QTextureFileReader *m_reader = nullptr;
 };
 
 QT_END_NAMESPACE

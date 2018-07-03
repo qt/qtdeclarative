@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtexturefiledata_p.h>
 #include <QSGTexture>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QQuickTextureFactory>
@@ -58,30 +59,11 @@
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureData
-{
-    QByteArray logName;
-    QByteArray data;
-    QSize size;
-    uint format = 0;
-    int dataOffset = 0;
-    int dataLength = 0;
-    bool hasAlpha = false;
-
-    bool isValid() const;
-    int sizeInBytes() const;
-};
-
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QSGCompressedTextureData *);
-
-
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
 {
     Q_OBJECT
 public:
-    typedef QSharedPointer<QSGCompressedTextureData> DataPtr;
-
-    QSGCompressedTexture(const DataPtr& texData);
+    QSGCompressedTexture(const QTextureFileData& texData);
     virtual ~QSGCompressedTexture();
 
     int textureId() const override;
@@ -91,12 +73,12 @@ public:
 
     void bind() override;
 
-    const QSGCompressedTextureData *textureData();
+    QTextureFileData textureData() const;
 
     static bool formatIsOpaque(quint32 glTextureFormat);
 
 protected:
-    DataPtr m_textureData;
+    QTextureFileData m_textureData;
     QSize m_size;
     mutable uint m_textureId = 0;
     bool m_hasAlpha = false;
@@ -110,13 +92,14 @@ namespace QSGAtlasTexture {
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
 public:
-    QSGCompressedTextureFactory(const QSGCompressedTexture::DataPtr& texData);
+    QSGCompressedTextureFactory(const QTextureFileData& texData);
     QSGTexture *createTexture(QQuickWindow *) const override;
     int textureByteCount() const override;
     QSize textureSize() const override;
 
 protected:
-    QSGCompressedTexture::DataPtr m_textureData;
+    QTextureFileData m_textureData;
+
 private:
     friend class QSGAtlasTexture::Manager;
 };

@@ -143,11 +143,11 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 {
     QSGTexture *t = nullptr;
-    if (!qsgEnableCompressedAtlas() || !factory->m_textureData || !factory->m_textureData->isValid())
+    if (!qsgEnableCompressedAtlas() || !factory->m_textureData.isValid())
         return t;
 
     // TODO: further abstract the atlas and remove this restriction
-    unsigned int format = factory->m_textureData->format;
+    unsigned int format = factory->m_textureData.glInternalFormat();
     switch (format) {
     case QOpenGLTexture::RGB8_ETC1:
     case QOpenGLTexture::RGB8_ETC2:
@@ -158,15 +158,15 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
         return t;
     }
 
-    QSize size = factory->m_textureData->size;
+    QSize size = factory->m_textureData.size();
     if (size.width() < m_atlas_size_limit && size.height() < m_atlas_size_limit) {
         QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.find(format);
         if (i == m_atlases.end())
             i = m_atlases.insert(format, new QSGCompressedAtlasTexture::Atlas(m_atlas_size, format));
         // must be multiple of 4
         QSize paddedSize(((size.width() + 3) / 4) * 4, ((size.height() + 3) / 4) * 4);
-        QByteArray data = factory->m_textureData->data;
-        t = i.value()->create(data, factory->m_textureData->sizeInBytes(), factory->m_textureData->dataOffset, size, paddedSize);
+        QByteArray data = factory->m_textureData.data();
+        t = i.value()->create(data, factory->m_textureData.dataLength(), factory->m_textureData.dataOffset(), size, paddedSize);
     }
     return t;
 }

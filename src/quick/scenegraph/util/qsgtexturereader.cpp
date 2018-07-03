@@ -38,36 +38,37 @@
 ****************************************************************************/
 
 #include "qsgtexturereader_p.h"
-
-#include <private/qtquickglobal_p.h>
-
-#include <private/qsgtexturefilehandler_p.h>
-
-#if QT_CONFIG(opengl)
-#include <private/qsgpkmhandler_p.h>
-#include <private/qsgktxhandler_p.h>
-#endif
-
-#include <QFileInfo>
+#include <private/qsgcompressedtexture_p.h>
+#include <private/qtexturefilereader_p.h>
 
 QT_BEGIN_NAMESPACE
 
 QSGTextureReader::QSGTextureReader(QIODevice *device, const QString &fileName)
-    : m_device(device), m_fileInfo(fileName)
 {
+#if QT_CONFIG(opengl)
+    m_reader = new QTextureFileReader(device, fileName);
+#else
+    Q_UNUSED(device);
+    Q_UNUSED(fileName);
+#endif
 }
 
 QSGTextureReader::~QSGTextureReader()
 {
-    delete m_handler;
+    delete m_reader;
 }
 
 QQuickTextureFactory *QSGTextureReader::read()
 {
 #if QT_CONFIG(opengl)
-    if (!isTexture())
+    if (!m_reader)
         return nullptr;
-    return m_handler->read();
+
+    QTextureFileData texData = m_reader->read();
+    if (!texData.isValid())
+        return nullptr;
+
+    return new QSGCompressedTextureFactory(texData);
 #else
     return nullptr;
 #endif
@@ -75,41 +76,12 @@ QQuickTextureFactory *QSGTextureReader::read()
 
 bool QSGTextureReader::isTexture()
 {
-#if QT_CONFIG(opengl)
-    if (!checked) {
-        checked = true;
-        if (!init())
-            return false;
-
-        QByteArray headerBlock = m_device->peek(64);
-        QByteArray suffix = m_fileInfo.suffix().toLower().toLatin1();
-        QByteArray logName = m_fileInfo.fileName().toUtf8();
-
-        // Currently the handlers are hardcoded; later maybe a list of plugins
-        if (QSGPkmHandler::canRead(suffix, headerBlock)) {
-            m_handler = new QSGPkmHandler(m_device, logName);
-        } else if (QSGKtxHandler::canRead(suffix, headerBlock)) {
-            m_handler = new QSGKtxHandler(m_device, logName);
-        }
-        // else if OtherHandler::canRead() ...etc.
-    }
-    return (m_handler != nullptr);
-#else
-    return false;
-#endif
+    return m_reader ? m_reader->canRead() : false;
 }
 
 QList<QByteArray> QSGTextureReader::supportedFileFormats()
 {
-    // Hardcoded for now
-    return {QByteArrayLiteral("pkm"), QByteArrayLiteral("ktx")};
-}
-
-bool QSGTextureReader::init()
-{
-    if (!m_device)
-        return false;
-    return m_device->isReadable();
+    return QTextureFileReader::supportedFileFormats();
 }
 
 QT_END_NAMESPACE

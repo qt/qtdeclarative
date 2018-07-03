@@ -56,7 +56,6 @@
 #include <private/qquickprofiler_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgcompressedtexture_p.h>
-#include <private/qsgpkmhandler_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -154,13 +153,12 @@ QSGTexture *Texture::removedFromAtlas() const
     }
 
     if (!m_data.isEmpty()) {
-        QSGCompressedTexture::DataPtr texData(QSGCompressedTexture::DataPtr::create());
-        texData->data = m_data;
-        texData->size = m_size;
-        texData->format = static_cast<Atlas*>(m_atlas)->format();
-        texData->hasAlpha = hasAlphaChannel();
-        texData->dataLength = m_dataLength;
-        texData->dataOffset = m_dataOffset;
+        QTextureFileData texData;
+        texData.setData(m_data);
+        texData.setSize(m_size);
+        texData.setGLInternalFormat(static_cast<Atlas*>(m_atlas)->format());
+        texData.setDataLength(m_dataLength);
+        texData.setDataOffset(m_dataOffset);
         m_nonatlas_texture = new QSGCompressedTexture(texData);
         m_nonatlas_texture->setMipmapFiltering(mipmapFiltering());
         m_nonatlas_texture->setFiltering(filtering());
