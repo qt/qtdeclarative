@@ -364,22 +364,31 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
 
     ScopedArrayObject result(scope, scope.engine->newArrayObject());
 
-    if (thisObject->isArrayObject()) {
-        result->copyArrayData(thisObject);
-    } else {
-        result->arraySet(0, thisObject);
-    }
-
     ScopedArrayObject elt(scope);
     ScopedObject eltAsObj(scope);
     ScopedValue entry(scope);
-    for (int i = 0, ei = argc; i < ei; ++i) {
-        eltAsObj = argv[i];
-        elt = argv[i];
+    for (int i = -1; i < argc; ++i) {
+        const Value *v = i == -1 ? thisObject.getPointer() : argv + i;
+        eltAsObj = *v;
+        elt = *v;
         if (elt) {
             uint n = elt->getLength();
             uint newLen = ArrayData::append(result, elt, n);
             result->setArrayLengthUnchecked(newLen);
+        } else if (eltAsObj && eltAsObj->isConcatSpreadable()) {
+            const uint startIndex = result->getLength();
+            const uint len = eltAsObj->getLength();
+            if (scope.engine->hasException)
+                return Encode::undefined();
+
+            for (uint i = 0; i < len; ++i) {
+                bool hasProperty = false;
+                entry = eltAsObj->get(i, &hasProperty);
+                if (hasProperty) {
+                    if (!result->put(startIndex + i, entry))
+                        return scope.engine->throwTypeError();
+                }
+            }
         } else if (eltAsObj && eltAsObj->isListType()) {
             const uint startIndex = result->getLength();
             for (int i = 0, len = eltAsObj->getLength(); i < len; ++i) {
@@ -388,7 +397,7 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
                 result->put(startIndex + i, entry);
             }
         } else {
-            result->arraySet(result->getLength(), argv[i]);
+            result->arraySet(result->getLength(), *v);
         }
     }
 

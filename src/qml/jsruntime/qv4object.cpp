@@ -51,6 +51,7 @@
 #include "qv4identifiertable_p.h"
 #include "qv4jscall_p.h"
 #include "qv4symbol_p.h"
+#include "qv4proxy_p.h"
 
 #include <stdint.h>
 
@@ -928,6 +929,32 @@ void Object::initSparseArray()
         return;
 
     ArrayData::realloc(this, Heap::ArrayData::Sparse, 0, false);
+}
+
+bool Object::isConcatSpreadable() const
+{
+    Scope scope(this);
+    ScopedValue spreadable(scope, get(scope.engine->symbol_isConcatSpreadable()));
+    if (!spreadable->isUndefined())
+        return spreadable->toBoolean();
+    return isArray();
+}
+
+bool Object::isArray() const
+{
+    if (isArrayObject())
+        return true;
+    if (vtable() == ProxyObject::staticVTable()) {
+        const ProxyObject *p = static_cast<const ProxyObject *>(this);
+        Scope scope(this);
+        if (!p->d()->handler) {
+            scope.engine->throwTypeError();
+            return false;
+        }
+        ScopedObject o(scope, p->d()->target);
+        return o->isArray();
+    }
+    return false;
 }
 
 

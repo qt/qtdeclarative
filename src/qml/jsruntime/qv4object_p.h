@@ -359,6 +359,9 @@ public:
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
 
+    bool isConcatSpreadable() const;
+    bool isArray() const;
+
 protected:
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
