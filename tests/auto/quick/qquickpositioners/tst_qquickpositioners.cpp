@@ -3774,10 +3774,6 @@ void tst_qquickpositioners::test_mirroring()
     QList<QString> objectNames;
     objectNames << "one" << "two" << "three" << "four" << "five";
 
-#ifdef Q_OS_MACOS
-    qputenv("QSG_RENDER_LOOP","basic"); // QTBUG-69040
-#endif
-
     foreach (const QString qmlFile, qmlFiles) {
         QScopedPointer<QQuickView> windowA(createView(testFile(qmlFile)));
         QQuickItem *rootA = qobject_cast<QQuickItem*>(windowA->rootObject());
