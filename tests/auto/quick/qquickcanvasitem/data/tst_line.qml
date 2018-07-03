@@ -834,5 +834,96 @@ CanvasTestCase {
        ctx.lineCap = 'square';
        compare(ctx.lineCap, 'square');
 
+   }
+
+   function test_lineDash(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       ctx.strokeStyle = "#fff";
+       ctx.lineWidth = 2;
+       var pattern = [2, 3, 5, 1, 6, 3]
+       ctx.setLineDash(pattern)
+
+       compare(ctx.getLineDash(), pattern);
+
+       ctx.beginPath();
+       ctx.moveTo(0, 0);
+       ctx.lineTo(40, 0);
+       ctx.stroke();
+
+       comparePixel(ctx, 0,0, 255,255,255,255);
+       comparePixel(ctx, 1,0, 255,255,255,255);
+       comparePixel(ctx, 2,0, 255,255,255,255);
+       comparePixel(ctx, 3,0, 255,255,255,255);
+       comparePixel(ctx, 4,0, 0,0,0,0);
+       comparePixel(ctx, 5,0, 0,0,0,0);
+       comparePixel(ctx, 6,0, 0,0,0,0);
+       comparePixel(ctx, 7,0, 0,0,0,0);
+       comparePixel(ctx, 8,0, 0,0,0,0);
+       comparePixel(ctx, 9,0, 0,0,0,0);
+       comparePixel(ctx, 10,0, 255,255,255,255);
+       comparePixel(ctx, 11,0, 255,255,255,255);
+       comparePixel(ctx, 12,0, 255,255,255,255);
+       comparePixel(ctx, 13,0, 255,255,255,255);
+       comparePixel(ctx, 14,0, 255,255,255,255);
+       comparePixel(ctx, 15,0, 255,255,255,255);
+       comparePixel(ctx, 16,0, 255,255,255,255);
+       comparePixel(ctx, 17,0, 255,255,255,255);
+       comparePixel(ctx, 18,0, 255,255,255,255);
+       comparePixel(ctx, 19,0, 255,255,255,255);
+       comparePixel(ctx, 20,0, 0,0,0,0);
+       comparePixel(ctx, 21,0, 0,0,0,0);
+       comparePixel(ctx, 22,0, 255,255,255,255);
+       comparePixel(ctx, 23,0, 255,255,255,255);
+       comparePixel(ctx, 24,0, 255,255,255,255);
+       comparePixel(ctx, 25,0, 255,255,255,255);
+       comparePixel(ctx, 26,0, 255,255,255,255);
+       comparePixel(ctx, 27,0, 255,255,255,255);
+       comparePixel(ctx, 28,0, 255,255,255,255);
+       comparePixel(ctx, 29,0, 255,255,255,255);
+       comparePixel(ctx, 30,0, 255,255,255,255);
+       comparePixel(ctx, 31,0, 255,255,255,255);
+       comparePixel(ctx, 32,0, 255,255,255,255);
+       comparePixel(ctx, 33,0, 255,255,255,255);
+       comparePixel(ctx, 34,0, 0,0,0,0);
+       comparePixel(ctx, 35,0, 0,0,0,0);
+       comparePixel(ctx, 36,0, 0,0,0,0);
+       comparePixel(ctx, 37,0, 0,0,0,0);
+       comparePixel(ctx, 38,0, 0,0,0,0);
+       comparePixel(ctx, 39,0, 0,0,0,0);
+  }
+
+   function test_lineDashOffset(row) {
+       var canvas = createCanvasObject(row);
+       var ctx = canvas.getContext('2d');
+       ctx.reset();
+       ctx.strokeStyle = "#fff";
+       ctx.lineWidth = 2;
+       var pattern = [2,2]
+       ctx.setLineDash(pattern)
+       ctx.lineDashOffset = 1
+       compare(ctx.getLineDash(), pattern);
+
+       ctx.beginPath();
+       ctx.moveTo(0, 0);
+       ctx.lineTo(40, 0);
+       ctx.stroke();
+
+
+       comparePixel(ctx, 0,0, 255,255,255,255);
+       comparePixel(ctx, 1,0, 255,255,255,255);
+       comparePixel(ctx, 2,0, 0,0,0,0);
+       comparePixel(ctx, 3,0, 0,0,0,0);
+       comparePixel(ctx, 4,0, 0,0,0,0);
+       comparePixel(ctx, 5,0, 0,0,0,0);
+       comparePixel(ctx, 6,0, 255,255,255,255);
+       comparePixel(ctx, 7,0, 255,255,255,255);
+       comparePixel(ctx, 8,0, 255,255,255,255);
+       comparePixel(ctx, 9,0, 255,255,255,255);
+       comparePixel(ctx, 10,0, 0,0,0,0);
+       comparePixel(ctx, 11,0, 0,0,0,0);
+       comparePixel(ctx, 12,0, 0,0,0,0);
+       comparePixel(ctx, 13,0, 0,0,0,0);
   }
 }

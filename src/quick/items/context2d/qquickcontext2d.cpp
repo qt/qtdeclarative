@@ -563,6 +563,8 @@ struct QQuickJSContext2D : public QV4::Object
     static QV4::ReturnedValue method_set_lineWidth(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_get_miterLimit(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_set_miterLimit(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue method_set_lineDashOffset(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue method_get_lineDashOffset(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
     static QV4::ReturnedValue method_get_shadowBlur(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_set_shadowBlur(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
@@ -641,6 +643,8 @@ public:
         o->defineDefaultProperty(QStringLiteral("createLinearGradient"), method_createLinearGradient, 0);
         o->defineDefaultProperty(QStringLiteral("strokeRect"), method_strokeRect, 0);
         o->defineDefaultProperty(QStringLiteral("closePath"), method_closePath, 0);
+        o->defineDefaultProperty(QStringLiteral("setLineDash"), method_setLineDash, 0);
+        o->defineDefaultProperty(QStringLiteral("getLineDash"), method_getLineDash, 0);
         o->defineAccessorProperty(QStringLiteral("canvas"), QQuickJSContext2DPrototype::method_get_canvas, nullptr);
 
         return o->d();
@@ -690,6 +694,8 @@ public:
     static QV4::ReturnedValue method_createImageData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_getImageData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_putImageData(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue method_setLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue method_getLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 
 };
 
@@ -1962,6 +1968,122 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_miterLimit(const QV4::FunctionO
     }
     RETURN_UNDEFINED();
 }
+
+/*!
+    \qmlmethod array QtQuick::Context2D::getLineDash()
+    \since QtQuick 2.11
+    Returns an array of qreals representing the dash pattern of the line.
+
+    \sa setLineDash()
+  */
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
+{
+    QV4::Scope scope(b);
+    QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
+    CHECK_CONTEXT(r)
+
+    const QVector<qreal> pattern = r->d()->context->state.lineDash;
+    QV4::ScopedArrayObject array(scope, scope.engine->newArrayObject(pattern.size()));
+    array->arrayReserve(pattern.size());
+    for (int i = 0; i < pattern.size(); i++)
+        array->put(i, QV4::Primitive::fromDouble(pattern[i]));
+
+    array->setArrayLengthUnchecked(pattern.size());
+
+    RETURN_RESULT(*array);
+}
+
+/*!
+    \qmlmethod QtQuick::Context2D::setLineDash(array pattern)
+    \since QtQuick 2.11
+    Sets the dash pattern to the given pattern
+
+    \a pattern a list of numbers that specifies distances to alternately draw a line and a gap.
+
+    If the number of elements in the array is odd, the elements of the array get copied
+    and concatenated. For example, [5, 15, 25] will become [5, 15, 25, 5, 15, 25].
+
+    \table 100%
+    \row
+    \li \inlineimage qml-item-canvas-lineDash.png
+    \li
+    \code
+    var space = 4
+    ctx.setLineDash([1, space, 3, space, 9, space, 27, space, 9, space])
+    ...
+    ctx.stroke();
+    \endcode
+    \endtable
+
+    \sa setLineDash
+  */
+QV4::ReturnedValue QQuickJSContext2DPrototype::method_setLineDash(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
+{
+    QV4::Scope scope(b);
+    QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
+    CHECK_CONTEXT_SETTER(r)
+
+    if (!argc)
+        RETURN_UNDEFINED();
+
+    QV4::ScopedArrayObject array(scope, argv[0]);
+    if (!array)
+        RETURN_UNDEFINED();
+
+    QV4::ScopedValue v(scope);
+    const uint arrayLength = array->getLength();
+    QVector<qreal> dashes;
+    dashes.reserve(arrayLength);
+    for (uint i = 0; i < arrayLength; ++i) {
+        v = array->get(i);
+        const double number = v->toNumber();
+
+        if (!qt_is_finite(number) || (number < 0))
+                RETURN_UNDEFINED();
+
+        dashes.append(v->toNumber());
+    }
+    if (dashes.size() % 2 != 0) {
+        dashes += dashes;
+    }
+
+    r->d()->context->state.lineDash = dashes;
+    r->d()->context->buffer()->setLineDash(dashes);
+
+    RETURN_UNDEFINED();
+}
+
+/*!
+    \qmlproperty real QtQuick::Context2D::lineDashOffset
+    \since QtQuick 2.11
+
+     Holds the current line dash offset
+     The default line dash ofset value is 0
+ */
+QV4::ReturnedValue QQuickJSContext2D::method_get_lineDashOffset(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *, int)
+{
+    QV4::Scope scope(b);
+    QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
+    CHECK_CONTEXT(r)
+
+    RETURN_RESULT(QV4::Encode(r->d()->context->state.lineDashOffset));
+}
+
+QV4::ReturnedValue QQuickJSContext2D::method_set_lineDashOffset(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
+{
+    QV4::Scope scope(b);
+    QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
+    CHECK_CONTEXT_SETTER(r)
+
+    const qreal offset = argc ? argv[0].toNumber() : -1;
+
+    if (qt_is_finite(offset) && offset != r->d()->context->state.lineDashOffset) {
+        r->d()->context->state.lineDashOffset = offset;
+        r->d()->context->buffer()->setLineDashOffset(offset);
+    }
+    RETURN_UNDEFINED();
+}
+
 
 // shadows
 /*!
@@ -4312,6 +4434,7 @@ QQuickContext2DEngineData::QQuickContext2DEngineData(QV4::ExecutionEngine *v4)
     proto->defineAccessorProperty(QStringLiteral("lineWidth"), QQuickJSContext2D::method_get_lineWidth, QQuickJSContext2D::method_set_lineWidth);
     proto->defineAccessorProperty(QStringLiteral("textAlign"), QQuickJSContext2D::method_get_textAlign, QQuickJSContext2D::method_set_textAlign);
     proto->defineAccessorProperty(QStringLiteral("shadowBlur"), QQuickJSContext2D::method_get_shadowBlur, QQuickJSContext2D::method_set_shadowBlur);
+    proto->defineAccessorProperty(QStringLiteral("lineDashOffset"), QQuickJSContext2D::method_get_lineDashOffset, QQuickJSContext2D::method_set_lineDashOffset);
     contextPrototype = proto;
 
     proto = scope.engine->newObject();
@@ -4375,6 +4498,10 @@ void QQuickContext2D::popState()
 
     if (newState.shadowOffsetY != state.shadowOffsetY)
         buffer()->setShadowOffsetY(newState.shadowOffsetY);
+
+    if (newState.lineDash != state.lineDash)
+        buffer()->setLineDash(newState.lineDash);
+
     m_path = state.matrix.map(m_path);
     state = newState;
     m_path = state.matrix.inverted().map(m_path);

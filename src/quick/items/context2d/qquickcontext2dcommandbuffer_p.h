@@ -201,6 +201,20 @@ public:
         ints << join;
     }
 
+    inline void setLineDash(const QVector<qreal> &pattern)
+    {
+        commands << QQuickContext2D::LineDash;
+        reals << pattern.length();
+        for (qreal r : pattern)
+            reals << r;
+    }
+
+    inline void setLineDashOffset( qreal offset)
+    {
+        commands << QQuickContext2D::LineDashOffset;
+        reals << offset;
+    }
+
     inline void setMiterLimit( qreal limit)
     {
         commands << QQuickContext2D::MiterLimit;
