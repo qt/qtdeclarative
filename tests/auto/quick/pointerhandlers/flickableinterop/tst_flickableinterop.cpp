@@ -576,6 +576,7 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
     QVERIFY(knob);
     QQuickFlickable *flickable = window->rootObject()->findChild<QQuickFlickable*>();
     QVERIFY(flickable);
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
 
     // The knob is initially centered over the slider's "groove"
     qreal initialXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).x() - slider->mapToScene
@@ -584,32 +585,32 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
 
     // Drag the slider in the allowed (vertical) direction with one finger
     QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    touchSeq.press(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     p1 += QPoint(0, dragThreshold);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    touchSeq.move(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     p1 += QPoint(0, dragThreshold);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    touchSeq.move(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     p1 += QPoint(0, dragThreshold);
-    QTest::touchEvent(window, touchDevice).move(1, p1, window);
+    touchSeq.move(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(slider->property("value").toInt() < 49);
     QVERIFY(!flickable->isMoving());
 
     // Drag the Flickable with a second finger
     QPoint p2(300,300);
-    QTest::touchEvent(window, touchDevice).stationary(1).press(2, p2, window);
+    touchSeq.stationary(1).press(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     for (int i = 0; i < 4; ++i) {
         p1 += QPoint(-10, -10);
         p2 += QPoint(dragThreshold, 0);
-        QTest::touchEvent(window, touchDevice).move(1, p1, window).stationary(2);
+        touchSeq.move(1, p1, window).stationary(2).commit();
         QQuickTouchUtils::flush(window);
         p1 += QPoint(-10, -10);
         p2 += QPoint(dragThreshold, 0);
-        QTest::touchEvent(window, touchDevice).stationary(1).move(2, p2, window);
+        touchSeq.stationary(1).move(2, p2, window).commit();
         QQuickTouchUtils::flush(window);
         qCDebug(lcPointerTests) << "step" << i << ": fingers @" << p1 << p2 << "is Flickable moving yet?" << flickable->isMoving();
     }
@@ -622,7 +623,7 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
     QVERIFY(qAbs(knobSliderXOffset) <= 1);
 
     // Release
-    QTest::touchEvent(window, touchDevice).release(1, p1, window).release(2, p2, window);
+    touchSeq.release(1, p1, window).release(2, p2, window).commit();
 }
 
 QTEST_MAIN(tst_FlickableInterop)

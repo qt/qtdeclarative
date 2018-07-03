@@ -526,23 +526,24 @@ void tst_TapHandler::buttonsMultiTouch()
     QQuickItem *buttonReleaseWithinBounds = window->rootObject()->findChild<QQuickItem*>("ReleaseWithinBounds");
     QVERIFY(buttonReleaseWithinBounds);
     QSignalSpy releaseWithinBoundsTappedSpy(buttonReleaseWithinBounds, SIGNAL(tapped()));
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
 
     // can press multiple buttons at the same time
     QPoint p1 = buttonDragThreshold->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
+    touchSeq.press(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonDragThreshold->property("pressed").toBool());
     QPoint p2 = buttonWithinBounds->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).stationary(1).press(2, p2, window);
+    touchSeq.stationary(1).press(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonWithinBounds->property("pressed").toBool());
     QPoint p3 = buttonReleaseWithinBounds->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::touchEvent(window, touchDevice).stationary(1).stationary(2).press(3, p3, window);
+    touchSeq.stationary(1).stationary(2).press(3, p3, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
 
     // can release top button and press again: others stay pressed the whole time
-    QTest::touchEvent(window, touchDevice).stationary(2).stationary(3).release(1, p1, window);
+    touchSeq.stationary(2).stationary(3).release(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!buttonDragThreshold->property("pressed").toBool());
     QCOMPARE(dragThresholdTappedSpy.count(), 1);
@@ -550,14 +551,14 @@ void tst_TapHandler::buttonsMultiTouch()
     QCOMPARE(withinBoundsTappedSpy.count(), 0);
     QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
     QCOMPARE(releaseWithinBoundsTappedSpy.count(), 0);
-    QTest::touchEvent(window, touchDevice).stationary(2).stationary(3).press(1, p1, window);
+    touchSeq.stationary(2).stationary(3).press(1, p1, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonDragThreshold->property("pressed").toBool());
     QVERIFY(buttonWithinBounds->property("pressed").toBool());
     QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
 
     // can release middle button and press again: others stay pressed the whole time
-    QTest::touchEvent(window, touchDevice).stationary(1).stationary(3).release(2, p2, window);
+    touchSeq.stationary(1).stationary(3).release(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(!buttonWithinBounds->property("pressed").toBool());
     QCOMPARE(withinBoundsTappedSpy.count(), 1);
@@ -565,21 +566,21 @@ void tst_TapHandler::buttonsMultiTouch()
     QCOMPARE(dragThresholdTappedSpy.count(), 1);
     QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
     QCOMPARE(releaseWithinBoundsTappedSpy.count(), 0);
-    QTest::touchEvent(window, touchDevice).stationary(1).stationary(3).press(2, p2, window);
+    touchSeq.stationary(1).stationary(3).press(2, p2, window).commit();
     QQuickTouchUtils::flush(window);
     QVERIFY(buttonDragThreshold->property("pressed").toBool());
     QVERIFY(buttonWithinBounds->property("pressed").toBool());
     QVERIFY(buttonReleaseWithinBounds->property("pressed").toBool());
 
     // can release bottom button and press again: others stay pressed the whole time
-    QTest::touchEvent(window, touchDevice).stationary(1).stationary(2).release(3, p3, window);
+    touchSeq.stationary(1).stationary(2).release(3, p3, window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(releaseWithinBoundsTappedSpy.count(), 1);
     QVERIFY(buttonWithinBounds->property("pressed").toBool());
     QCOMPARE(withinBoundsTappedSpy.count(), 1);
     QVERIFY(!buttonReleaseWithinBounds->property("pressed").toBool());
     QCOMPARE(dragThresholdTappedSpy.count(), 1);
-    QTest::touchEvent(window, touchDevice).stationary(1).stationary(2).press(3, p3, window);
+    touchSeq.stationary(1).stationary(2).press(3, p3, window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(buttonDragThreshold->property("pressed").toBool());
     QVERIFY(buttonWithinBounds->property("pressed").toBool());
