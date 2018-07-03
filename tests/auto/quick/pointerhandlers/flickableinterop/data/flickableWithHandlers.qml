@@ -46,10 +46,15 @@ Rectangle {
 
         Row {
             spacing: 6
-            Slider {
-                label: "DH Slider"
-                objectName: "Slider"
-                value: 49; width: 100; height: 400
+            KnobDragSlider {
+                label: "Slider with\nDH on knob"
+                objectName: "knobSlider"
+                value: 49; width: 120; height: 400
+            }
+            GrooveDragSlider {
+                label: "Slider with\nDH on root"
+                objectName: "grooveSlider"
+                value: 49; width: 120; height: 400
             }
             Column {
                 spacing: 6

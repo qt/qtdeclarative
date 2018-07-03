@@ -69,6 +69,7 @@ private slots:
     void mouseDragFlickableBehindButton();
     void touchDragSlider();
     void touchDragFlickableBehindSlider();
+    void mouseDragSlider_data();
     void mouseDragSlider();
     void mouseDragFlickableBehindSlider();
     void touchDragFlickableBehindItemWithHandlers_data();
@@ -293,7 +294,7 @@ void tst_FlickableInterop::touchDragSlider()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("knobSlider");
     QVERIFY(slider);
     QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
     QVERIFY(drag);
@@ -339,6 +340,26 @@ void tst_FlickableInterop::touchDragSlider()
     QCOMPARE(translationChangedSpy.count(), 1);
 }
 
+void tst_FlickableInterop::mouseDragSlider_data()
+{
+    QTest::addColumn<QString>("nameOfSliderToDrag");
+    QTest::addColumn<QPoint>("pressPositionRelativeToKnob");
+    QTest::addColumn<QPoint>("dragDirection"); // a unit vector
+    QTest::addColumn<bool>("expectedTapHandlerPressed");
+    QTest::addColumn<bool>("expectedDragHandlerActive");
+    QTest::addColumn<bool>("expectedFlickableMoving");
+
+    QTest::newRow("drag down on knob of knobSlider") <<         "knobSlider" << QPoint(0, 0) << QPoint(0, 1) << true << true << false;
+    QTest::newRow("drag sideways on knob of knobSlider") <<     "knobSlider" << QPoint(0, 0) << QPoint(1, 0) << true << false << true;
+    QTest::newRow("drag down on groove of knobSlider") <<       "knobSlider" << QPoint(0, 20) << QPoint(0, 1) << false << false << true;
+    QTest::newRow("drag sideways on groove of knobSlider") <<   "knobSlider" << QPoint(0, 20) << QPoint(1, 0) << false << false << true;
+
+    QTest::newRow("drag down on knob of grooveSlider") <<       "grooveSlider" << QPoint(0, 0) << QPoint(0, 1) << true << true << false;
+    QTest::newRow("drag sideways on knob of grooveSlider") <<   "grooveSlider" << QPoint(0, 0) << QPoint(1, 0) << true << false << true;
+    QTest::newRow("drag down on groove of grooveSlider") <<     "grooveSlider" << QPoint(0, 20) << QPoint(0, 1) << false << true << false;
+    QTest::newRow("drag sideways on groove of grooveSlider") << "grooveSlider" << QPoint(0, 20) << QPoint(1, 0) << false << false << true;
+}
+
 void tst_FlickableInterop::mouseDragSlider()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -346,7 +367,14 @@ void tst_FlickableInterop::mouseDragSlider()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QFETCH(QString, nameOfSliderToDrag);
+    QFETCH(QPoint, pressPositionRelativeToKnob);
+    QFETCH(QPoint, dragDirection); // a unit vector
+    QFETCH(bool, expectedTapHandlerPressed);
+    QFETCH(bool, expectedDragHandlerActive);
+    QFETCH(bool, expectedFlickableMoving);
+
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>(nameOfSliderToDrag);
     QVERIFY(slider);
     QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
     QVERIFY(drag);
@@ -357,33 +385,40 @@ void tst_FlickableInterop::mouseDragSlider()
     QSignalSpy tappedSpy(knob->parent(), SIGNAL(tapped()));
     QSignalSpy translationChangedSpy(drag, SIGNAL(translationChanged()));
 
-    // Drag the slider in the allowed (vertical) direction
+    // Drag the slider
     tappedSpy.clear();
-    QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint();
+    QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint() + pressPositionRelativeToKnob;
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_VERIFY(slider->property("pressed").toBool());
-    p1 += QPoint(0, dragThreshold);
+    QTRY_COMPARE(slider->property("pressed").toBool(), expectedTapHandlerPressed);
+    p1 += QPoint(dragThreshold * dragDirection.x(), dragThreshold * dragDirection.y());
     QTest::mouseMove(window, p1);
-    QVERIFY(slider->property("pressed").toBool());
+    QCOMPARE(drag->active(), false);
+    QCOMPARE(slider->property("pressed").toBool(), expectedTapHandlerPressed);
     QCOMPARE(slider->property("value").toInt(), 49);
-    p1 += QPoint(0, 1);
+    p1 += dragDirection; // one more pixel
     QTest::mouseMove(window, p1);
-    p1 += QPoint(0, 10);
+    QCOMPARE(drag->active(), expectedDragHandlerActive);
+    // drag farther, to make sure the knob gets adjusted significantly
+    p1 += QPoint(10 * dragDirection.x(), 10 * dragDirection.y());
     QTest::mouseMove(window, p1);
-    QVERIFY(slider->property("value").toInt() < 49);
-    QVERIFY(!flickable->isMoving());
-    QVERIFY(!slider->property("pressed").toBool());
+    if (expectedDragHandlerActive && dragDirection.y() > 0)
+        QVERIFY(slider->property("value").toInt() < 49);
+    // by now, Flickable will have stolen the grab, if it decided that it wanted to during filtering of the last event
+    QCOMPARE(flickable->isMoving(), expectedFlickableMoving);
+    QCOMPARE(slider->property("pressed").toBool(), false);
 
-    // Now that the DragHandler is active, the Flickable will not steal the grab
+    // If the DragHandler is active, the Flickable will not steal the grab
     // even if we move a large distance horizontally
-    p1 += QPoint(dragThreshold * 2, 0);
-    QTest::mouseMove(window, p1);
-    QVERIFY(!flickable->isMoving());
+    if (expectedDragHandlerActive) {
+        p1 += QPoint(dragThreshold * 2, 0);
+        QTest::mouseMove(window, p1);
+        QCOMPARE(flickable->isMoving(), false);
+    }
 
     // Release, and do not expect the tapped signal
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(tappedSpy.count(), 0);
-    QCOMPARE(translationChangedSpy.count(), 1);
+    QCOMPARE(translationChangedSpy.count(), expectedDragHandlerActive ? 1 : 0);
 }
 
 void tst_FlickableInterop::touchDragFlickableBehindSlider()
@@ -393,7 +428,7 @@ void tst_FlickableInterop::touchDragFlickableBehindSlider()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("knobSlider");
     QVERIFY(slider);
     QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
     QVERIFY(drag);
@@ -439,7 +474,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindSlider()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("knobSlider");
     QVERIFY(slider);
     QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
     QVERIFY(drag);
@@ -568,7 +603,7 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
     createView(windowPtr, "flickableWithHandlers.qml");
     QQuickView * window = windowPtr.data();
 
-    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("Slider");
+    QQuickItem *slider = window->rootObject()->findChild<QQuickItem*>("knobSlider");
     QVERIFY(slider);
     QQuickDragHandler *drag = slider->findChild<QQuickDragHandler*>();
     QVERIFY(drag);

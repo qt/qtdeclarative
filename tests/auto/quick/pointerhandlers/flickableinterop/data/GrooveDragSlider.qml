@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -37,6 +37,15 @@ Item {
     property alias tapEnabled: tap.enabled
     property alias pressed: tap.pressed
     signal tapped
+
+    DragHandler {
+        id: dragHandler
+        objectName: root.objectName + " DragHandler"
+        target: knob
+        xAxis.enabled: false
+        yAxis.minimum: slot.y
+        yAxis.maximum: slot.height + slot.y - knob.height
+    }
 
     Rectangle {
         id: slot
@@ -78,16 +87,9 @@ Item {
         onYChanged: if (!programmatic) root.value = root.maximumValue - (knob.y - dragHandler.yAxis.minimum) * multiplier
         transformOrigin: Item.Center
         function setValue(value) { knob.y = dragHandler.yAxis.maximum - value / knob.multiplier }
-        DragHandler {
-            id: dragHandler
-            objectName: label.text + " DragHandler"
-            xAxis.enabled: false
-            yAxis.minimum: slot.y
-            yAxis.maximum: slot.height + slot.y - knob.height
-        }
         TapHandler {
             id: tap
-            objectName: label.text + " TapHandler"
+            objectName: root.objectName + " TapHandler"
             gesturePolicy: TapHandler.DragThreshold
             onTapped: {
                 tapFlash.start()
@@ -97,20 +99,20 @@ Item {
     }
 
     Text {
-        font.pointSize: 16
         color: "red"
-        anchors.bottom: parent.bottom
+        anchors.top: slot.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         text: root.value
     }
 
     Text {
         id: label
-        font.pointSize: 12
+        font.pointSize: 9
         color: "red"
-        anchors.top: parent.top
-        anchors.topMargin: 5
+        anchors.bottom: slot.top
+        anchors.bottomMargin: 5
         anchors.horizontalCenter: parent.horizontalCenter
+        verticalAlignment: Text.AlignBottom
     }
 
     Component.onCompleted: {
