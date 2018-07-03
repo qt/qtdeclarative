@@ -631,9 +631,10 @@ void tst_qquickwindow::touchEvent_basic()
     topItem->setSize(QSizeF(150, 150));
 
     QPointF pos(10, 10);
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
 
     // press single point
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window).commit();
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(topItem->lastEvent.touchPoints.count(), 1);
 
@@ -643,11 +644,11 @@ void tst_qquickwindow::touchEvent_basic()
     // would put the decorated window at that position rather than the window itself.
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(topItem, pos)));
     topItem->reset();
-    QTest::touchEvent(window, touchDevice).release(0, topItem->mapToScene(pos).toPoint(), window);
+    touchSeq.release(0, topItem->mapToScene(pos).toPoint(), window).commit();
 
     // press multiple points
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window)
-            .press(1, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(), window)
+            .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
@@ -656,35 +657,35 @@ void tst_qquickwindow::touchEvent_basic()
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, Qt::TouchPointPressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
     bottomItem->reset();
-    QTest::touchEvent(window, touchDevice).release(0, topItem->mapToScene(pos).toPoint(), window).release(1, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.release(0, topItem->mapToScene(pos).toPoint(), window).release(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
 
     // touch point on top item moves to bottom item, but top item should still receive the event
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).move(0, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.move(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, Qt::TouchPointMoved,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
     topItem->reset();
-    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
 
     // touch point on bottom item moves to top item, but bottom item should still receive the event
-    QTest::touchEvent(window, touchDevice).press(0, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.press(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).move(0, topItem->mapToScene(pos).toPoint(), window);
+    touchSeq.move(0, topItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, Qt::TouchPointMoved,
             makeTouchPoint(bottomItem, bottomItem->mapFromItem(topItem, pos), pos)));
     bottomItem->reset();
-    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
 
     // a single stationary press on an item shouldn't cause an event
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(), window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).stationary(0)
-            .press(1, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.stationary(0)
+            .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press only, not stationary
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
@@ -696,13 +697,13 @@ void tst_qquickwindow::touchEvent_basic()
     // cleanup: what is pressed must be released
     // Otherwise you will get an assertion failure:
     // ASSERT: "itemForTouchPointId.isEmpty()" in file items/qquickwindow.cpp
-    QTest::touchEvent(window, touchDevice).release(0, pos.toPoint(), window).release(1, pos.toPoint(), window);
+    touchSeq.release(0, pos.toPoint(), window).release(1, pos.toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
 
     // move touch point from top item to bottom, and release
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(),window);
+    touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(),window).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, window, Qt::TouchPointReleased,
@@ -710,13 +711,13 @@ void tst_qquickwindow::touchEvent_basic()
     topItem->reset();
 
     // release while another point is pressed
-    QTest::touchEvent(window, touchDevice).press(0, topItem->mapToScene(pos).toPoint(),window)
-            .press(1, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window)
+            .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).move(0, bottomItem->mapToScene(pos).toPoint(), window);
+    touchSeq.move(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QTest::touchEvent(window, touchDevice).release(0, bottomItem->mapToScene(pos).toPoint(), window)
-                             .stationary(1);
+    touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(), window)
+                             .stationary(1).commit();
     QQuickTouchUtils::flush(window);
     QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
