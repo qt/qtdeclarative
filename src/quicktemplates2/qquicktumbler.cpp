@@ -867,7 +867,7 @@ void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)
 
 void QQuickTumblerAttachedPrivate::calculateDisplacement()
 {
-    const int previousDisplacement = displacement;
+    const qreal previousDisplacement = displacement;
     displacement = 0;
 
     if (!tumbler) {

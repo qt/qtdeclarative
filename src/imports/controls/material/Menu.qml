@@ -39,6 +39,7 @@ import QtQuick.Controls 2.5
 import QtQuick.Templates 2.5 as T
 import QtQuick.Controls.Material 2.5
 import QtQuick.Controls.Material.impl 2.5
+import QtQuick.Window 2.12
 
 T.Menu {
     id: control
@@ -73,8 +74,7 @@ T.Menu {
         implicitHeight: contentHeight
 
         model: control.contentModel
-        // TODO: improve this?
-        interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
+        interactive: Window.window ? contentHeight > Window.window.height : false
         clip: true
         currentIndex: control.currentIndex
 

@@ -40,6 +40,7 @@ import QtQuick.Controls 2.5
 import QtQuick.Controls.impl 2.5
 import QtQuick.Controls.Fusion 2.5
 import QtQuick.Controls.Fusion.impl 2.5
+import QtQuick.Window 2.12
 
 T.Menu {
     id: control
@@ -58,8 +59,7 @@ T.Menu {
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel
-        // TODO: improve this?
-        interactive: ApplicationWindow.window ? contentHeight > ApplicationWindow.window.height : false
+        interactive: Window.window ? contentHeight > Window.window.height : false
         clip: true
         currentIndex: control.currentIndex
 
