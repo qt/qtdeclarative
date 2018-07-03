@@ -350,6 +350,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_MemberFunction] = ic->d();
     ic = ic->changeVTable(GeneratorFunction::staticVTable());
     classes[Class_GeneratorFunction] = ic->d();
+    ic = ic->changeVTable(MemberGeneratorFunction::staticVTable());
+    classes[Class_MemberGeneratorFunction] = ic->d();
     classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->propertyKey(), Attr_NotEnumerable, &index);
     Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
 

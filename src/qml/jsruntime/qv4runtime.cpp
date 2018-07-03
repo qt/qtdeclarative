@@ -1569,7 +1569,10 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         }
         QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);
-        function = FunctionObject::createMemberFunction(current, f);
+        if (f->isGenerator())
+            function = MemberGeneratorFunction::create(current, f);
+        else
+            function = FunctionObject::createMemberFunction(current, f);
         Q_ASSERT(function);
         PropertyAttributes attributes;
         switch (methods[i].type) {

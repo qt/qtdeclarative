@@ -232,3 +232,21 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
         return Encode::undefined();
     return IteratorPrototype::createIterResultObject(engine, result, done);
 }
+
+DEFINE_OBJECT_VTABLE(MemberGeneratorFunction);
+
+Heap::FunctionObject *MemberGeneratorFunction::create(ExecutionContext *context, Function *function)
+{
+    Scope scope(context);
+    Scoped<GeneratorFunction> g(scope, context->engine()->memoryManager->allocate<MemberGeneratorFunction>(context, function));
+    ScopedObject proto(scope, scope.engine->newObject());
+    proto->setPrototypeOf(scope.engine->generatorPrototype());
+    g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);
+    g->setPrototypeOf(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
+    return g->d();
+}
+
+ReturnedValue MemberGeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
+{
+    return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
+}

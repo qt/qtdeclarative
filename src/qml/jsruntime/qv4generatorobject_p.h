@@ -75,6 +75,9 @@ struct GeneratorFunctionCtor : FunctionObject {
 struct GeneratorFunction : ScriptFunction {
 };
 
+struct MemberGeneratorFunction : ScriptFunction {
+};
+
 struct GeneratorPrototype : FunctionObject {
     void init();
 };
@@ -108,6 +111,15 @@ struct GeneratorFunction : ScriptFunction
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct MemberGeneratorFunction : GeneratorFunction
+{
+    V4_OBJECT2(MemberGeneratorFunction, GeneratorFunction)
+    V4_INTERNALCLASS(MemberGeneratorFunction)
+
+    static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct GeneratorPrototype : Object
