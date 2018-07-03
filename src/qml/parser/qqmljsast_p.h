@@ -176,6 +176,19 @@ public:
         Kind_ComputedPropertyName,
         Kind_IfStatement,
         Kind_LabelledStatement,
+        Kind_NameSpaceImport,
+        Kind_ImportSpecifier,
+        Kind_ImportsList,
+        Kind_NamedImports,
+        Kind_ImportClause,
+        Kind_FromClause,
+        Kind_ImportDeclaration,
+        Kind_Module,
+        Kind_ExportSpecifier,
+        Kind_ExportsList,
+        Kind_ExportClause,
+        Kind_ExportDeclaration,
+        Kind_ModuleItemList,
         Kind_NewExpression,
         Kind_NewMemberExpression,
         Kind_NotExpression,
@@ -2320,6 +2333,459 @@ public:
 
 // attributes
     StatementList *statements;
+};
+
+class QML_PARSER_EXPORT ImportSpecifier: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ImportSpecifier)
+
+    ImportSpecifier(const QStringRef &importedBinding)
+        : importedBinding(importedBinding)
+    {
+        kind = K;
+    }
+
+    ImportSpecifier(const QStringRef &identifier, const QStringRef &importedBinding)
+        : identifier(identifier), importedBinding(importedBinding)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return identifier.isNull() ? importedBindingToken : identifierToken; }
+    SourceLocation lastSourceLocation() const override
+    { return importedBindingToken; }
+
+// attributes
+    SourceLocation identifierToken;
+    SourceLocation importedBindingToken;
+    QStringRef identifier;
+    QStringRef importedBinding;
+};
+
+class QML_PARSER_EXPORT ImportsList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ImportsList)
+
+    ImportsList(ImportSpecifier *importSpecifier)
+        : importSpecifier(importSpecifier)
+    {
+        kind = K;
+        next = this;
+    }
+
+    ImportsList(ImportsList *previous, ImportSpecifier *importSpecifier)
+        : importSpecifier(importSpecifier)
+    {
+        kind = K;
+        if (previous) {
+            next = previous->next;
+            previous->next = this;
+        } else {
+            next = this;
+        }
+    }
+
+    ImportsList *finish()
+    {
+        ImportsList *head = this;
+        next = nullptr;
+        return head;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return importSpecifierToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return next ? next->lastSourceLocation() : importSpecifierToken; }
+
+// attributes
+    SourceLocation importSpecifierToken;
+    ImportSpecifier *importSpecifier;
+    ImportsList *next = this;
+};
+
+class QML_PARSER_EXPORT NamedImports: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(NamedImports)
+
+    NamedImports()
+    {
+        kind = K;
+    }
+
+    NamedImports(ImportsList *importsList)
+        : importsList(importsList)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return leftBraceToken; }
+    SourceLocation lastSourceLocation() const override
+    { return rightBraceToken; }
+
+// attributes
+    SourceLocation leftBraceToken;
+    SourceLocation rightBraceToken;
+    ImportsList *importsList = nullptr;
+};
+
+class QML_PARSER_EXPORT NameSpaceImport: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(NameSpaceImport)
+
+    NameSpaceImport(const QStringRef &importedBinding)
+        : importedBinding(importedBinding)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    virtual SourceLocation firstSourceLocation() const override
+    { return starToken; }
+    virtual SourceLocation lastSourceLocation() const override
+    { return importedBindingToken; }
+
+// attributes
+    SourceLocation starToken;
+    SourceLocation importedBindingToken;
+    QStringRef importedBinding;
+};
+
+class QML_PARSER_EXPORT ImportClause: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ImportClause)
+
+    ImportClause(const QStringRef &importedDefaultBinding)
+        : importedDefaultBinding(importedDefaultBinding)
+    {
+        kind = K;
+    }
+
+    ImportClause(NameSpaceImport *nameSpaceImport)
+        : nameSpaceImport(nameSpaceImport)
+    {
+        kind = K;
+    }
+
+    ImportClause(NamedImports *namedImports)
+        : namedImports(namedImports)
+    {
+        kind = K;
+    }
+
+    ImportClause(const QStringRef &importedDefaultBinding, NameSpaceImport *nameSpaceImport)
+        : importedDefaultBinding(importedDefaultBinding)
+        , nameSpaceImport(nameSpaceImport)
+    {
+        kind = K;
+    }
+
+    ImportClause(const QStringRef &importedDefaultBinding, NamedImports *namedImports)
+        : importedDefaultBinding(importedDefaultBinding)
+        , namedImports(namedImports)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    virtual SourceLocation firstSourceLocation() const override
+    { return importedDefaultBinding.isNull() ? (nameSpaceImport ? nameSpaceImport->firstSourceLocation() : namedImports->firstSourceLocation()) :  importedDefaultBindingToken; }
+    virtual SourceLocation lastSourceLocation() const override
+    { return importedDefaultBinding.isNull() ? (nameSpaceImport ? nameSpaceImport->lastSourceLocation() : namedImports->lastSourceLocation()) : importedDefaultBindingToken; }
+
+// attributes
+    SourceLocation importedDefaultBindingToken;
+    QStringRef importedDefaultBinding;
+    NameSpaceImport *nameSpaceImport = nullptr;
+    NamedImports *namedImports = nullptr;
+};
+
+class QML_PARSER_EXPORT FromClause: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(FromClause)
+
+    FromClause(const QStringRef &moduleSpecifier)
+        : moduleSpecifier(moduleSpecifier)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return fromToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return moduleSpecifierToken; }
+
+// attributes
+    SourceLocation fromToken;
+    SourceLocation moduleSpecifierToken;
+    QStringRef moduleSpecifier;
+};
+
+class QML_PARSER_EXPORT ImportDeclaration: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ImportDeclaration)
+
+    ImportDeclaration(ImportClause *importClause, FromClause *fromClause)
+        : importClause(importClause), fromClause(fromClause)
+    {
+        kind = K;
+    }
+
+    ImportDeclaration(const QStringRef &moduleSpecifier)
+        : moduleSpecifier(moduleSpecifier)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return importToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return moduleSpecifier.isNull() ? fromClause->lastSourceLocation() : moduleSpecifierToken; }
+
+// attributes
+    SourceLocation importToken;
+    SourceLocation moduleSpecifierToken;
+    QStringRef moduleSpecifier;
+    ImportClause *importClause = nullptr;
+    FromClause *fromClause = nullptr;
+};
+
+class QML_PARSER_EXPORT ExportSpecifier: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ExportSpecifier)
+
+    ExportSpecifier(const QStringRef &identifier)
+        : identifier(identifier), exportedIdentifier(identifier)
+    {
+        kind = K;
+    }
+
+    ExportSpecifier(const QStringRef &identifier, const QStringRef &exportedIdentifier)
+        : identifier(identifier), exportedIdentifier(exportedIdentifier)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return identifierToken; }
+    SourceLocation lastSourceLocation() const override
+    { return exportedIdentifierToken.isValid() ? exportedIdentifierToken : identifierToken; }
+
+// attributes
+    SourceLocation identifierToken;
+    SourceLocation exportedIdentifierToken;
+    QStringRef identifier;
+    QStringRef exportedIdentifier;
+};
+
+class QML_PARSER_EXPORT ExportsList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ExportsList)
+
+    ExportsList(ExportSpecifier *exportSpecifier)
+        : exportSpecifier(exportSpecifier)
+    {
+        kind = K;
+        next = this;
+    }
+
+    ExportsList(ExportsList *previous, ExportSpecifier *exportSpecifier)
+        : exportSpecifier(exportSpecifier)
+    {
+        kind = K;
+        if (previous) {
+            next = previous->next;
+            previous->next = this;
+        } else {
+            next = this;
+        }
+    }
+
+    ExportsList *finish()
+    {
+        ExportsList *head = next;
+        next = nullptr;
+        return head;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return exportSpecifier->firstSourceLocation(); }
+    SourceLocation lastSourceLocation() const override
+    { return next ? next->lastSourceLocation() : exportSpecifier->lastSourceLocation(); }
+
+// attributes
+    ExportSpecifier *exportSpecifier;
+    ExportsList *next;
+};
+
+class QML_PARSER_EXPORT ExportClause: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ExportClause)
+
+    ExportClause()
+    {
+        kind = K;
+    }
+
+    ExportClause(ExportsList *exportsList)
+        : exportsList(exportsList)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return leftBraceToken; }
+    SourceLocation lastSourceLocation() const override
+    { return rightBraceToken; }
+
+// attributes
+    SourceLocation leftBraceToken;
+    SourceLocation rightBraceToken;
+    ExportsList *exportsList = nullptr;
+};
+
+class QML_PARSER_EXPORT ExportDeclaration: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ExportDeclaration)
+
+    ExportDeclaration(FromClause *fromClause)
+        : fromClause(fromClause)
+    {
+        exportAll = true;
+        kind = K;
+    }
+
+    ExportDeclaration(ExportClause *exportClause, FromClause *fromClause)
+        : exportClause(exportClause), fromClause(fromClause)
+    {
+        kind = K;
+    }
+
+    ExportDeclaration(ExportClause *exportClause)
+        : exportClause(exportClause)
+    {
+        kind = K;
+    }
+
+    ExportDeclaration(bool exportDefault, Node *variableStatementOrDeclaration)
+        : variableStatementOrDeclaration(variableStatementOrDeclaration)
+        , exportDefault(exportDefault)
+    {
+        kind = K;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return exportToken; }
+    SourceLocation lastSourceLocation() const override
+    { return fromClause ? fromClause->lastSourceLocation() : (exportClause ? exportClause->lastSourceLocation() : variableStatementOrDeclaration->lastSourceLocation()); }
+
+// attributes
+    SourceLocation exportToken;
+    bool exportAll = false;
+    ExportClause *exportClause = nullptr;
+    FromClause *fromClause = nullptr;
+    Node *variableStatementOrDeclaration = nullptr;
+    bool exportDefault = false;
+};
+
+class QML_PARSER_EXPORT ModuleItemList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(ModuleItemList)
+
+    ModuleItemList(Node *item)
+        : item(item)
+    {
+        kind = K;
+        next = this;
+    }
+
+    ModuleItemList(ModuleItemList *previous, Node *item)
+        : item(item)
+    {
+        kind = K;
+        if (previous) {
+            next = previous->next;
+            previous->next = this;
+        } else {
+            next = this;
+        }
+    }
+
+    ModuleItemList *finish()
+    {
+        ModuleItemList *head = next;
+        next = nullptr;
+        return head;
+    }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return item->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return next ? next->lastSourceLocation() : item->lastSourceLocation(); }
+
+// attributes
+    Node *item; // ImportDeclaration, ExportDeclaration or StatementList
+    ModuleItemList *next;
+};
+
+class QML_PARSER_EXPORT ESModule: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(Module)
+
+    ESModule(ModuleItemList *body)
+        : body(body)
+    { kind = K; }
+
+    void accept0(Visitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return body ? body->firstSourceLocation() : SourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return body ? body->lastSourceLocation() : SourceLocation(); }
+
+// attributes
+    ModuleItemList *body;
 };
 
 class QML_PARSER_EXPORT DebuggerStatement: public Statement

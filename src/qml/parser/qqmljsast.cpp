@@ -1058,6 +1058,130 @@ void Program::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void ImportSpecifier::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+
+    }
+    visitor->endVisit(this);
+}
+
+void ImportsList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        for (ImportsList *it = this; it; it = it->next) {
+            accept(it->importSpecifier, visitor);
+        }
+    }
+
+    visitor->endVisit(this);
+}
+
+void NamedImports::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(importsList, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void FromClause::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void NameSpaceImport::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+    }
+
+    visitor->endVisit(this);
+}
+
+void ImportClause::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(nameSpaceImport, visitor);
+        accept(namedImports, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ImportDeclaration::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(importClause, visitor);
+        accept(fromClause, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ExportSpecifier::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+
+    }
+
+    visitor->endVisit(this);
+}
+
+void ExportsList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        for (ExportsList *it = this; it; it = it->next) {
+            accept(it->exportSpecifier, visitor);
+        }
+    }
+
+    visitor->endVisit(this);
+}
+
+void ExportClause::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(exportsList, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ExportDeclaration::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(fromClause, visitor);
+        accept(exportClause, visitor);
+        accept(variableStatementOrDeclaration, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void ModuleItemList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        for (ModuleItemList *it = this; it; it = it->next) {
+            accept(it->item, visitor);
+        }
+    }
+
+    visitor->endVisit(this);
+}
+
+void ESModule::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(body, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 void DebuggerStatement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {

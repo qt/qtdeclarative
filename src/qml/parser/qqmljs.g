@@ -287,6 +287,17 @@ public:
       AST::PatternProperty *PatternProperty;
       AST::PatternPropertyList *PatternPropertyList;
       AST::ClassElementList *ClassElementList;
+      AST::ModuleItemList *ModuleItemList;
+      AST::ImportClause *ImportClause;
+      AST::FromClause *FromClause;
+      AST::NameSpaceImport *NameSpaceImport;
+      AST::ImportsList *ImportsList;
+      AST::NamedImports *NamedImports;
+      AST::ImportSpecifier *ImportSpecifier;
+      AST::ExportSpecifier *ExportSpecifier;
+      AST::ExportsList *ExportsList;
+      AST::ExportClause *ExportClause;
+      AST::ExportDeclaration *ExportDeclaration;
 
       AST::UiProgram *UiProgram;
       AST::UiHeaderItemList *UiHeaderItemList;
@@ -4024,15 +4035,39 @@ ScriptBody: StatementList;
 ./
 
 Module: ModuleBodyOpt;
-/.  case $rule_number: { UNIMPLEMENTED; } ./
+/.  case $rule_number: {
+        sym(1).Node = new (pool) AST::ESModule(sym(1).ModuleItemList);
+    } break;
+./
 
 ModuleBody: ModuleItemList;
+/.
+    case $rule_number: {
+        sym(1).ModuleItemList = sym(1).ModuleItemList->finish();
+    } break;
+./
 
 ModuleBodyOpt: ;
+/.
+    case $rule_number: {
+        sym(1).ModuleItemList = nullptr;
+    } break;
+./
 ModuleBodyOpt: ModuleBody;
 
 ModuleItemList: ModuleItem;
+/.
+    case $rule_number: {
+        sym(1).ModuleItemList = new (pool) AST::ModuleItemList(sym(1).Node);
+    } break;
+./
+
 ModuleItemList: ModuleItemList ModuleItem;
+/.
+    case $rule_number: {
+        sym(1).ModuleItemList = new (pool) AST::ModuleItemList(sym(1).ModuleItemList, sym(2).Node);
+    } break;
+./
 
 ModuleItem: ImportDeclaration T_AUTOMATIC_SEMICOLON;
 ModuleItem: ImportDeclaration T_SEMICOLON;
@@ -4041,29 +4076,144 @@ ModuleItem: ExportDeclaration T_SEMICOLON;
 ModuleItem: StatementListItem;
 
 ImportDeclaration: T_IMPORT ImportClause FromClause;
+/.
+    case $rule_number: {
+        auto decl = new (pool) AST::ImportDeclaration(sym(2).ImportClause, sym(3).FromClause);
+        decl->importToken = loc(1);
+        sym(1).Node = decl;
+    } break;
+./
 ImportDeclaration: T_IMPORT ModuleSpecifier;
+/.
+    case $rule_number: {
+        auto decl = new (pool) AST::ImportDeclaration(stringRef(2));
+        decl->importToken = loc(1);
+        decl->moduleSpecifierToken = loc(2);
+        sym(1).Node = decl;
+    } break;
+./
 
 ImportClause: ImportedDefaultBinding;
+/.
+    case $rule_number: {
+        auto clause = new (pool) AST::ImportClause(stringRef(1));
+        clause->importedDefaultBindingToken = loc(1);
+        sym(1).ImportClause = clause;
+    } break;
+./
 ImportClause: NameSpaceImport;
+/.
+    case $rule_number: {
+        sym(1).ImportClause = new (pool) AST::ImportClause(sym(1).NameSpaceImport);
+    } break;
+./
 ImportClause: NamedImports;
+/.
+    case $rule_number: {
+        sym(1).ImportClause = new (pool) AST::ImportClause(sym(1).NamedImports);
+    } break;
+./
 ImportClause: ImportedDefaultBinding T_COMMA NameSpaceImport;
+/.
+    case $rule_number: {
+        auto importClause = new (pool) AST::ImportClause(stringRef(1), sym(3).NameSpaceImport);
+        importClause->importedDefaultBindingToken = loc(1);
+        sym(1).ImportClause = importClause;
+    } break;
+./
 ImportClause: ImportedDefaultBinding T_COMMA NamedImports;
+/.
+    case $rule_number: {
+        auto importClause = new (pool) AST::ImportClause(stringRef(1), sym(3).NamedImports);
+        importClause->importedDefaultBindingToken = loc(1);
+        sym(1).ImportClause = importClause;
+    } break;
+./
 
 ImportedDefaultBinding: ImportedBinding;
 
 NameSpaceImport: T_STAR T_AS ImportedBinding;
+/.
+    case $rule_number: {
+        auto import = new (pool) AST::NameSpaceImport(stringRef(3));
+        import->starToken = loc(1);
+        import->importedBindingToken = loc(3);
+        sym(1).NameSpaceImport = import;
+    } break;
+./
 
 NamedImports: T_LBRACE T_RBRACE;
+/.
+    case $rule_number: {
+        auto namedImports = new (pool) AST::NamedImports();
+        namedImports->leftBraceToken = loc(1);
+        namedImports->rightBraceToken = loc(2);
+        sym(1).NamedImports = namedImports;
+    } break;
+./
 NamedImports: T_LBRACE ImportsList T_RBRACE;
+/.
+    case $rule_number: {
+        auto namedImports = new (pool) AST::NamedImports(sym(2).ImportsList->finish());
+        namedImports->leftBraceToken = loc(1);
+        namedImports->rightBraceToken = loc(3);
+        sym(1).NamedImports = namedImports;
+    } break;
+./
 NamedImports: T_LBRACE ImportsList T_COMMA T_RBRACE;
+/.
+    case $rule_number: {
+        auto namedImports = new (pool) AST::NamedImports(sym(2).ImportsList->finish());
+        namedImports->leftBraceToken = loc(1);
+        namedImports->rightBraceToken = loc(4);
+        sym(1).NamedImports = namedImports;
+    } break;
+./
 
 FromClause: T_FROM ModuleSpecifier;
+/.
+    case $rule_number: {
+        auto clause = new (pool) AST::FromClause(stringRef(2));
+        clause->fromToken = loc(1);
+        clause->moduleSpecifierToken = loc(2);
+        sym(1).FromClause = clause;
+    } break;
+./
 
 ImportsList: ImportSpecifier;
+/.
+    case $rule_number: {
+        auto importsList = new (pool) AST::ImportsList(sym(1).ImportSpecifier);
+        importsList->importSpecifierToken = loc(1);
+        sym(1).ImportsList = importsList;
+    } break;
+./
 ImportsList: ImportsList T_COMMA ImportSpecifier;
+/.
+    case $rule_number: {
+        auto importsList = new (pool) AST::ImportsList(sym(1).ImportsList, sym(3).ImportSpecifier);
+        importsList->importSpecifierToken = loc(3);
+        sym(1).ImportsList = importsList;
+    } break;
+./
 
 ImportSpecifier: ImportedBinding;
+/.
+    case $rule_number: {
+        auto importSpecifier = new (pool) AST::ImportSpecifier(stringRef(1));
+        importSpecifier->importedBindingToken = loc(1);
+        sym(1).ImportSpecifier = importSpecifier;
+    } break;
+./
 ImportSpecifier: IdentifierName T_AS ImportedBinding;
+/.
+    case $rule_number: {
+    auto importSpecifier = new (pool) AST::ImportSpecifier(stringRef(1), stringRef(3));
+    importSpecifier->identifierToken = loc(1);
+    importSpecifier->importedBindingToken = loc(3);
+    sym(1).ImportSpecifier = importSpecifier;
+    } break;
+./
 
 ModuleSpecifier: T_STRING_LITERAL;
 
@@ -4082,23 +4232,116 @@ ExportDeclarationLookahead: ;
 ./
 
 ExportDeclaration: T_EXPORT T_STAR FromClause;
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(sym(3).FromClause);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 ExportDeclaration: T_EXPORT ExportClause FromClause;
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(sym(2).ExportClause, sym(3).FromClause);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 ExportDeclaration: T_EXPORT ExportClause;
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(sym(2).ExportClause);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 ExportDeclaration: T_EXPORT VariableStatement;
+/. case $rule_number:  Q_FALLTHROUGH(); ./
 ExportDeclaration: T_EXPORT Declaration;
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(/*exportDefault=*/false, sym(2).Node);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION HoistableDeclaration_Default;
+/. case $rule_number:  Q_FALLTHROUGH(); ./
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION ClassDeclaration_Default;
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(/*exportDefault=*/true, sym(5).Node);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead AssignmentExpression_In; -- [lookahead ∉ { function, class }]
+/.
+    case $rule_number: {
+        auto exportDeclaration = new (pool) AST::ExportDeclaration(/*exportDefault=*/true, sym(4).Node);
+        exportDeclaration->exportToken = loc(1);
+        sym(1).ExportDeclaration = exportDeclaration;
+    } break;
+./
 
 ExportClause: T_LBRACE T_RBRACE;
+/.
+    case $rule_number: {
+        auto exportClause = new (pool) AST::ExportClause();
+        exportClause->leftBraceToken = loc(1);
+        exportClause->rightBraceToken = loc(2);
+        sym(1).ExportClause = exportClause;
+    } break;
+./
 ExportClause: T_LBRACE ExportsList T_RBRACE;
+/.
+    case $rule_number: {
+        auto exportClause = new (pool) AST::ExportClause(sym(2).ExportsList->finish());
+        exportClause->leftBraceToken = loc(1);
+        exportClause->rightBraceToken = loc(3);
+        sym(1).ExportClause = exportClause;
+    } break;
+./
 ExportClause: T_LBRACE ExportsList T_COMMA T_RBRACE;
+/.
+    case $rule_number: {
+        auto exportClause = new (pool) AST::ExportClause(sym(2).ExportsList->finish());
+        exportClause->leftBraceToken = loc(1);
+        exportClause->rightBraceToken = loc(4);
+        sym(1).ExportClause = exportClause;
+    } break;
+./
 
 ExportsList: ExportSpecifier;
+/.
+    case $rule_number: {
+        sym(1).ExportsList = new (pool) AST::ExportsList(sym(1).ExportSpecifier);
+    } break;
+./
 ExportsList: ExportsList T_COMMA ExportSpecifier;
+/.
+    case $rule_number: {
+        sym(1).ExportsList = new (pool) AST::ExportsList(sym(1).ExportsList, sym(3).ExportSpecifier);
+    } break;
+./
 
 ExportSpecifier: IdentifierName;
+/.
+    case $rule_number: {
+        auto exportSpecifier = new (pool) AST::ExportSpecifier(stringRef(1));
+        exportSpecifier->identifierToken = loc(1);
+        sym(1).ExportSpecifier = exportSpecifier;
+    } break;
+./
 ExportSpecifier: IdentifierName T_AS IdentifierName;
+/.
+    case $rule_number: {
+        auto exportSpecifier = new (pool) AST::ExportSpecifier(stringRef(1), stringRef(3));
+        exportSpecifier->identifierToken = loc(1);
+        exportSpecifier->exportedIdentifierToken = loc(3);
+        sym(1).ExportSpecifier = exportSpecifier;
+    } break;
+./
 
 -- Old top level code
 

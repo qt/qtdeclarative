@@ -335,6 +335,48 @@ public:
     virtual bool visit(Program *) { return true; }
     virtual void endVisit(Program *) {}
 
+    virtual bool visit(NameSpaceImport *) { return true; }
+    virtual void endVisit(NameSpaceImport *) {}
+
+    virtual bool visit(ImportSpecifier *) { return true; }
+    virtual void endVisit(ImportSpecifier *) {}
+
+    virtual bool visit(ImportsList *) { return true; }
+    virtual void endVisit(ImportsList *) {}
+
+    virtual bool visit(NamedImports *) { return true; }
+    virtual void endVisit(NamedImports *) {}
+
+    virtual bool visit(FromClause *) { return true; }
+    virtual void endVisit(FromClause *) {}
+
+    virtual bool visit(ImportClause *) { return true; }
+    virtual void endVisit(ImportClause *) {}
+
+    virtual bool visit(ImportDeclaration *) { return true; }
+    virtual void endVisit(ImportDeclaration *) {}
+
+    virtual bool visit(ExportSpecifier *) { return true; }
+    virtual void endVisit(ExportSpecifier *) {}
+
+    virtual bool visit(ExportsList *) { return true; }
+    virtual void endVisit(ExportsList *) {}
+
+    virtual bool visit(ExportClause *) { return true; }
+    virtual void endVisit(ExportClause *) {}
+
+    virtual bool visit(ExportDeclaration *) { return true; }
+    virtual void endVisit(ExportDeclaration *) {}
+
+    virtual bool visit(ModuleItem *) { return true; }
+    virtual void endVisit(ModuleItem *) {}
+
+    virtual bool visit(ModuleItemList *) { return true; }
+    virtual void endVisit(ModuleItemList *) {}
+
+    virtual bool visit(ESModule *) { return true; }
+    virtual void endVisit(ESModule *) {}
+
     virtual bool visit(DebuggerStatement *) { return true; }
     virtual void endVisit(DebuggerStatement *) {}
 };
