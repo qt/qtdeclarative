@@ -6,7 +6,7 @@ QT_FOR_CONFIG += qml qml-private quick-private
 SUBDIRS += \
     qml
 
-qtConfig(qml-animation) {
+qtHaveModule(gui):qtConfig(qml-animation) {
     SUBDIRS += \
         quick \
         quickshapes
