@@ -1706,6 +1706,7 @@ void QQuickWindowPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QQuic
 {
     const QVector<QQuickPointerHandler *> &eventDeliveryTargets = pointerEvent->device()->eventDeliveryTargets();
     QVarLengthArray<QPair<QQuickItem *, bool>, 4> sendFilteredPointerEventResult;
+    hasFiltered.clear();
     for (auto handler : passiveGrabbers) {
         // a null pointer in passiveGrabbers is unlikely, unless the grabbing handler was deleted dynamically
         if (Q_LIKELY(handler) && !eventDeliveryTargets.contains(handler)) {
@@ -1742,6 +1743,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
     if (point->exclusiveGrabber()) {
         if (auto grabber = point->grabberItem()) {
             bool handled = false;
+            hasFiltered.clear();
             if (sendFilteredPointerEvent(pointerEvent, grabber))
                 handled = true;
             // if the grabber is an Item:
@@ -1770,6 +1772,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
             // if the grabber is not an Item, it must be a PointerHandler
             auto handler = point->grabberPointerHandler();
             pointerEvent->localize(handler->parentItem());
+            hasFiltered.clear();
             if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
                 handler->handlePointerEvent(pointerEvent);
             if (mouseIsReleased)
@@ -1795,6 +1798,7 @@ void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEven
                     if (!itemPrivate->extra.isAllocated() || itemPrivate->extra->pointerHandlers.isEmpty())
                         continue;
                     pointerEvent->localize(item);
+                    hasFiltered.clear();
                     if (!sendFilteredPointerEvent(pointerEvent, item)) {
                         if (itemPrivate->handlePointerEvent(pointerEvent, true)) // avoid re-delivering to grabbers
                             delivered = true;
@@ -2452,6 +2456,7 @@ void QQuickWindowPrivate::deliverUpdatedTouchPoints(QQuickPointerTouchEvent *eve
             // The grabber is not an item? It's a handler then.  Let it have the event first.
             QQuickPointerHandler *handler = static_cast<QQuickPointerHandler *>(grabber);
             receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
+            hasFiltered.clear();
             if (sendFilteredPointerEvent(event, receiver))
                 done = true;
             event->localize(receiver);
@@ -2520,6 +2525,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
     }
 
     for (QQuickItem *item : targetItems) {
+        hasFiltered.clear();
         if (!handlersOnly && sendFilteredPointerEvent(event, item)) {
             if (event->isAccepted()) {
                 for (int i = 0; i < event->pointCount(); ++i)
@@ -2598,6 +2604,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     bool eventAccepted = false;
 
     // If any parent filters the event, we're done.
+    hasFiltered.clear();
     if (sendFilteredPointerEvent(pointerEvent, item))
         return;
 
@@ -2811,7 +2818,6 @@ QQuickItem *QQuickWindowPrivate::findCursorItem(QQuickItem *item, const QPointF 
 
 bool QQuickWindowPrivate::sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent)
 {
-    hasFiltered.clear();
     return sendFilteredPointerEventImpl(event, receiver, filteringParent ? filteringParent : receiver->parentItem());
 }
 
