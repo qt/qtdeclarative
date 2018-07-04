@@ -260,13 +260,71 @@ struct QQuickStyleSpec
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
+static QStringList parseStylePathsWithColon(const QString &var)
+{
+    QStringList paths;
+    const QChar colon = QLatin1Char(':');
+    int currentIndex = 0;
+
+    do {
+        int nextColonIndex = -1;
+        QString path;
+
+        if (var.at(currentIndex) == colon) {
+            // This is either a list separator, or a qrc path.
+            if (var.at(currentIndex + 1) == colon) {
+                // It's a double colon (list separator followed by qrc path);
+                // find the end of the path.
+                nextColonIndex = var.indexOf(colon, currentIndex + 2);
+                path = var.mid(currentIndex + 1,
+                    nextColonIndex == -1 ? -1 : nextColonIndex - currentIndex - 1);
+            } else {
+                // It's a single colon.
+                nextColonIndex = var.indexOf(colon, currentIndex + 1);
+                if (currentIndex == 0) {
+                    // If we're at the start of the string, then it's a qrc path.
+                    path = var.mid(currentIndex,
+                        nextColonIndex == -1 ? -1 : nextColonIndex - currentIndex);
+                } else {
+                    // Otherwise, it's a separator.
+                    path = var.mid(currentIndex + 1,
+                        nextColonIndex == -1 ? -1 : nextColonIndex - currentIndex - 1);
+                }
+            }
+        } else {
+            // It's a file path.
+            nextColonIndex = var.indexOf(colon, currentIndex);
+            path = var.mid(currentIndex,
+                nextColonIndex == -1 ? -1 : nextColonIndex - currentIndex);
+        }
+
+        paths += path;
+        currentIndex = nextColonIndex;
+
+        // Keep going until we can't find any more colons,
+        // or we're at the last character.
+    } while (currentIndex != -1 && currentIndex < var.size() - 1);
+
+    return paths;
+}
+
 QStringList QQuickStylePrivate::stylePaths()
 {
     // system/custom style paths
     QStringList paths;
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE_PATH"))) {
-        const QByteArray value = qgetenv("QT_QUICK_CONTROLS_STYLE_PATH");
-        paths += QString::fromLocal8Bit(value).split(QDir::listSeparator(), QString::SkipEmptyParts);
+        const QString value = QString::fromLocal8Bit(qgetenv("QT_QUICK_CONTROLS_STYLE_PATH"));
+        const QChar listSeparator = QDir::listSeparator();
+        if (listSeparator == QLatin1Char(':')) {
+            // Split manually to avoid breaking paths on systems where : is the list separator,
+            // since it's also used for qrc paths.
+            paths += parseStylePathsWithColon(value);
+        } else {
+            // Fast/simpler path for systems where something other than : is used as
+            // the list separator (such as ';').
+            const QStringList customPaths = value.split(listSeparator, QString::SkipEmptyParts);
+            paths += customPaths;
+        }
     }
 
     // built-in import paths

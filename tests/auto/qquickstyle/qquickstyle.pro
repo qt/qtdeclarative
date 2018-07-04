@@ -10,3 +10,11 @@ QT_PRIVATE += core-private gui-private quickcontrols2-private
 include (../shared/util.pri)
 
 TESTDATA = $$PWD/data/*
+
+qrcStyles1.files = $$files(qrcStyles1/QrcStyle1/*.qml)
+qrcStyles1.prefix = /
+RESOURCES += qrcStyles1
+
+qrcStyles2.files = $$files(qrcStyles2/QrcStyle2/*.qml)
+qrcStyles2.prefix = /
+RESOURCES += qrcStyles2
