@@ -399,7 +399,7 @@ ReturnedValue MathObject::method_max(const FunctionObject *, const Value *, cons
         if (x > mx || std::isnan(x))
             mx = x;
     }
-    RETURN_RESULT(Encode(mx));
+    RETURN_RESULT(Encode::smallestNumber(mx));
 }
 
 ReturnedValue MathObject::method_min(const FunctionObject *, const Value *, const Value *argv, int argc)
@@ -412,7 +412,7 @@ ReturnedValue MathObject::method_min(const FunctionObject *, const Value *, cons
             mx = x;
         }
     }
-    RETURN_RESULT(Encode(mx));
+    RETURN_RESULT(Encode::smallestNumber(mx));
 }
 
 ReturnedValue MathObject::method_pow(const FunctionObject *, const Value *, const Value *argv, int argc)

@@ -39,6 +39,7 @@
 #include <qqmlcomponent.h>
 #include <stdlib.h>
 #include <private/qv4alloca_p.h>
+#include <private/qjsvalue_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -220,6 +221,7 @@ private slots:
     void multilineStrings();
 
     void throwError();
+    void mathMinMax();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod();
@@ -4324,6 +4326,21 @@ QJSValue tst_QJSEngine::throwingCppMethod()
 {
     qjsEngine(this)->throwError("blub");
     return QJSValue(47);
+}
+
+void tst_QJSEngine::mathMinMax()
+{
+    QJSEngine engine;
+
+    QJSValue result = engine.evaluate("var a = .5; Math.min(1, 2, 3.5 + a, '5')");
+    QCOMPARE(result.toNumber(), 1.0);
+    QVERIFY(QJSValuePrivate::getValue(&result) != nullptr);
+    QVERIFY(QJSValuePrivate::getValue(&result)->isInteger());
+
+    result = engine.evaluate("var a = .5; Math.max('0', 1, 2, 3.5 + a)");
+    QCOMPARE(result.toNumber(), 4.0);
+    QVERIFY(QJSValuePrivate::getValue(&result) != nullptr);
+    QVERIFY(QJSValuePrivate::getValue(&result)->isInteger());
 }
 
 QTEST_MAIN(tst_QJSEngine)

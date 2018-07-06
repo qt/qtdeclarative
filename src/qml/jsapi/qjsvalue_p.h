@@ -62,7 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QJSValuePrivate
+class Q_AUTOTEST_EXPORT QJSValuePrivate
 {
 public:
     static inline QV4::Value *getValue(const QJSValue *jsval)

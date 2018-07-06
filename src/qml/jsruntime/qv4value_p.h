@@ -334,13 +334,16 @@ public:
             return true;
         if (isDouble()) {
             double d = doubleValue();
-            int i = (int)d;
-            if (i == d && !(d == 0 && std::signbit(d))) {
-                setInt_32(i);
+            if (isInt32(d)) {
+                setInt_32(int(d));
                 return true;
             }
         }
         return false;
+    }
+    QML_NEARLY_ALWAYS_INLINE static bool isInt32(double d) {
+        int i = int(d);
+        return (i == d && !(d == 0 && std::signbit(d)));
     }
     double asDouble() const {
         if (tag() == quint32(ValueTypeInternal::Integer))
@@ -733,7 +736,7 @@ struct Encode {
     }
 
     static ReturnedValue smallestNumber(double d) {
-        if (static_cast<int>(d) == d && !(d == 0. && std::signbit(d)))
+        if (Value::isInt32(d))
             return Encode(static_cast<int>(d));
         else
             return Encode(d);
