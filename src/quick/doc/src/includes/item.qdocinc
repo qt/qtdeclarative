@@ -1,0 +1,6 @@
+//! [mapping]
+
+The following properties of the item are used in the mapping:
+\l x, \l y, \l scale, \l rotation, \l transformOrigin, and \l [QML]{Item::}{transform}.
+
+//! [mapping]

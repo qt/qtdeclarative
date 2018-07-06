@@ -4409,6 +4409,8 @@ void QQuickItem::polish()
     item's coordinate system, to this item's coordinate system, and returns a \l point or \l rect
     matching the mapped coordinate.
 
+    \input item.qdocinc mapping
+
     If \a item is a \c null value, this maps the point or rect from the coordinate system of
     the root QML view.
 */
@@ -4497,6 +4499,8 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
     item's coordinate system, to \a item's coordinate system, and returns a \l point or \l rect
     matching the mapped coordinate.
 
+    \input item.qdocinc mapping
+
     If \a item is a \c null value, this maps the point or rect to the coordinate system of the
     root QML view.
 */
@@ -4566,6 +4570,8 @@ void QQuickItem::mapToItem(QQmlV4Function *args) const
 
     Maps the point (\a x, \a y), which is in the global coordinate system, to the
     item's coordinate system, and returns a \l point  matching the mapped coordinate.
+
+    \input item.qdocinc mapping
 */
 /*!
     \internal
@@ -4601,6 +4607,8 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 
     Maps the point (\a x, \a y), which is in this item's coordinate system, to the
     global coordinate system, and returns a \l point  matching the mapped coordinate.
+
+    \input item.qdocinc mapping
 */
 /*!
     \internal
@@ -7690,6 +7698,8 @@ void QQuickItem::setContainmentMask(QObject *mask)
     point within \a item's coordinate system, and returns the mapped
     coordinate.
 
+    \input item.qdocinc mapping
+
     If \a item is 0, this maps \a point to the coordinate system of the
     scene.
 
@@ -7708,6 +7718,8 @@ QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) cons
     point within the scene's coordinate system, and returns the mapped
     coordinate.
 
+    \input item.qdocinc mapping
+
     \sa {Concepts - Visual Coordinates in Qt Quick}
 */
 QPointF QQuickItem::mapToScene(const QPointF &point) const
@@ -7720,6 +7732,8 @@ QPointF QQuickItem::mapToScene(const QPointF &point) const
     Maps the given \a point in this item's coordinate system to the equivalent
     point within global screen coordinate system, and returns the mapped
     coordinate.
+
+    \input item.qdocinc mapping
 
     For example, this may be helpful to add a popup to a Qt Quick component.
 
@@ -7742,6 +7756,8 @@ QPointF QQuickItem::mapToGlobal(const QPointF &point) const
     rectangular area within \a item's coordinate system, and returns the mapped
     rectangle value.
 
+    \input item.qdocinc mapping
+
     If \a item is 0, this maps \a rect to the coordinate system of the
     scene.
 
@@ -7761,6 +7777,8 @@ QRectF QQuickItem::mapRectToItem(const QQuickItem *item, const QRectF &rect) con
     rectangular area within the scene's coordinate system, and returns the mapped
     rectangle value.
 
+    \input item.qdocinc mapping
+
     \sa {Concepts - Visual Coordinates in Qt Quick}
 */
 QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
@@ -7773,6 +7791,8 @@ QRectF QQuickItem::mapRectToScene(const QRectF &rect) const
     Maps the given \a point in \a item's coordinate system to the equivalent
     point within this item's coordinate system, and returns the mapped
     coordinate.
+
+    \input item.qdocinc mapping
 
     If \a item is 0, this maps \a point from the coordinate system of the
     scene.
@@ -7790,6 +7810,8 @@ QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) co
     point within this item's coordinate system, and returns the mapped
     coordinate.
 
+    \input item.qdocinc mapping
+
     \sa {Concepts - Visual Coordinates in Qt Quick}
 */
 QPointF QQuickItem::mapFromScene(const QPointF &point) const
@@ -7802,6 +7824,8 @@ QPointF QQuickItem::mapFromScene(const QPointF &point) const
     Maps the given \a point in the global screen coordinate system to the
     equivalent point within this item's coordinate system, and returns the
     mapped coordinate.
+
+    \input item.qdocinc mapping
 
     For example, this may be helpful to add a popup to a Qt Quick component.
 
@@ -7824,6 +7848,8 @@ QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
     rectangular area within this item's coordinate system, and returns the mapped
     rectangle value.
 
+    \input item.qdocinc mapping
+
     If \a item is 0, this maps \a rect from the coordinate system of the
     scene.
 
@@ -7841,6 +7867,8 @@ QRectF QQuickItem::mapRectFromItem(const QQuickItem *item, const QRectF &rect) c
     Maps the given \a rect in the scene's coordinate system to the equivalent
     rectangular area within this item's coordinate system, and returns the mapped
     rectangle value.
+
+    \input item.qdocinc mapping
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
 */
