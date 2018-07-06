@@ -367,6 +367,36 @@ properties are enough.
  \li \l{Qt Quick Layouts Overview}
 \endlist
 
+\section1 Type Safety
+
+When declaring properties in QML, it's easy and convenient to use the "var" type:
+
+\code
+property var name
+property var size
+property var optionsMenu
+\endcode
+
+However, this approach has several disadvantages:
+\list
+ \li If a value with the wrong type is assigned, the error reported will point
+     to the location of the property declaration, as opposed to the location
+     where the property was assigned to. This slows down the development
+     process by making it more difficult to track down errors.
+ \li Static anaylsis to catch errors like the ones mentioned above is not
+     possible.
+ \li The actual underlying type of the property is not always immediately clear
+     to the reader.
+\endlist
+
+Instead, always use the actual type where possible:
+
+\code
+property string name
+property int size
+property MyMenu optionsMenu
+\endcode
+
 \section1 Performance
 
 For information on performance in QML and Qt Quick,
