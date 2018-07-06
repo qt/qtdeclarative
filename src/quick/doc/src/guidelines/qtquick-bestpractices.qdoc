@@ -337,8 +337,9 @@ must be considered while using them:
 \section2 Dos
 
 \list
- \li Use anchors or the item's width and height properties to specify the size
-     of the layout against its parent.
+ \li Use \l {Item::}{anchors} or the \l {Item::}{width} and \l {Item::}{height}
+     properties to specify the size of the layout against its non-layout parent
+     item.
  \li Use the \l Layout attached property to set the size and alignment
      attributes of the layout's immediate children.
 \endlist
@@ -346,12 +347,10 @@ must be considered while using them:
 \section2 Don'ts
 
 \list
- \li Do not rely on anchors to specify the preferred size of an item in a layout.
-     Instead, use \c Layout.preferredWidth and \c Layout.preferredHeight.
  \li Do not define preferred sizes for items that provide implicitWidth and
      implicitHeight, unless their implicit sizes are not satisfactory.
- \li Do not mix anchors and layouts in ways that cause conflicts. For example,
-     do not apply anchor constraints to a layout's immediate children.
+ \li Do not use anchors on an item that is an immediate child of a layout.
+     Instead, use \c Layout.preferredWidth and \c Layout.preferredHeight:
 
     \snippet qml/windowconstraints.qml rowlayout
 \endlist
