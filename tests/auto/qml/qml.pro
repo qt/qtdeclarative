@@ -71,6 +71,7 @@ PRIVATETESTS += \
     qqmlobjectmodel \
     qv4assembler \
     qv4mm \
+    qv4identifiertable \
     ecmascripttests \
     bindingdependencyapi
 

@@ -54,10 +54,10 @@ static inline int primeForNumBits(int numBits)
 }
 
 
-IdentifierTable::IdentifierTable(ExecutionEngine *engine)
+IdentifierTable::IdentifierTable(ExecutionEngine *engine, int numBits)
     : engine(engine)
     , size(0)
-    , numBits(8)
+    , numBits(numBits)
 {
     alloc = primeForNumBits(numBits);
     entriesByHash = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::StringOrSymbol *));
@@ -255,7 +255,8 @@ void IdentifierTable::markObjects(MarkStack *markStack)
 template <typename Key>
 int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
     int freed = 0;
-    Key lastKey = 0;
+    uint lastKey = 0;
+
     int lastEntry = -1;
     int start = 0;
     // start at an empty entry so we compress properly
@@ -272,18 +273,21 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
             continue;
         }
         if (entry->isMarked()) {
-            if (lastEntry >= 0 && lastKey == f(entry)) {
+            if (lastEntry >= 0 && lastKey == (f(entry) % alloc)) {
                 Q_ASSERT(table[lastEntry] == nullptr);
                 table[lastEntry] = entry;
                 table[idx] = nullptr;
-                lastEntry = (lastEntry + 1) % alloc;
-                Q_ASSERT(table[lastEntry] == nullptr);
+
+                // find next free slot just like in addEntry()
+                do {
+                    lastEntry = (lastEntry + 1) % alloc;
+                } while (table[lastEntry] != nullptr);
             }
             continue;
         }
         if (lastEntry == -1) {
             lastEntry = idx;
-            lastKey = f(entry);
+            lastKey = f(entry) % alloc;
         }
         table[idx] = nullptr;
         ++freed;
@@ -299,7 +303,7 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
 
 void IdentifierTable::sweep()
 {
-    int f = sweepTable<int>(entriesByHash, alloc, [](Heap::StringOrSymbol *entry) {return entry->hashValue(); });
+    int f = sweepTable<uint>(entriesByHash, alloc, [](Heap::StringOrSymbol *entry) {return entry->hashValue(); });
     int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::StringOrSymbol *entry) {return entry->identifier.id(); });
     Q_UNUSED(f);
     Q_ASSERT(f == freed);

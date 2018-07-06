@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct IdentifierTable
+struct Q_QML_PRIVATE_EXPORT IdentifierTable
 {
     ExecutionEngine *engine;
 
@@ -76,7 +76,7 @@ struct IdentifierTable
 
 public:
 
-    IdentifierTable(ExecutionEngine *engine);
+    IdentifierTable(ExecutionEngine *engine, int numBits = 8);
     ~IdentifierTable();
 
     Heap::String *insertString(const QString &s);
@@ -97,8 +97,8 @@ public:
     PropertyKey asPropertyKeyImpl(const Heap::String *str);
 
     Heap::StringOrSymbol *resolveId(PropertyKey i) const;
-    Q_QML_PRIVATE_EXPORT Heap::String *stringForId(PropertyKey i) const;
-    Q_QML_PRIVATE_EXPORT Heap::Symbol *symbolForId(PropertyKey i) const;
+    Heap::String *stringForId(PropertyKey i) const;
+    Heap::Symbol *symbolForId(PropertyKey i) const;
 
     void markObjects(MarkStack *markStack);
     void sweep();
