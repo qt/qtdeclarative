@@ -59,20 +59,19 @@ custom control.
 \li \l{Qt Quick}
 \endlist
 
+\omit
 \section1 Keep it Short and Simple or "KiSS"
 
 QML being a declarative language, a lot of the details are worked out by the underlying
 engine. So it is important for any QML application, especially one with a
 larger codebase, to have its code organized in smaller and simpler \c .qml files.
 
-\omit
-need a few snippet or example applications that showcase this.
+TODO: need a few snippet or example applications that showcase this.
 \endomit
 
-\section2 Related Information
-\list
- \li \l{QML Coding Conventions}
-\endlist
+\section1 Coding Conventions
+
+See \l{QML Coding Conventions}.
 
 \section1 Bundle Application Resources
 
