@@ -83,6 +83,7 @@ class QSGGlyphNode;
 class QSGRootNode;
 class QSGSpriteNode;
 class QSGRenderNode;
+class QSGRenderContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGNodeVisitorEx
 {
@@ -507,6 +508,7 @@ protected:
     uint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
+    GlyphData &emptyData(glyph_t glyph);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
     void saveTexture(GLuint textureId, int width, int height) const;
@@ -514,11 +516,14 @@ protected:
 
     inline bool isCoreProfile() const { return m_coreProfile; }
 
-private:
+    bool m_doubleGlyphResolution;
+
+protected:
     QRawFont m_referenceFont;
+
+private:
     int m_glyphCount;
 
-    bool m_doubleGlyphResolution;
     bool m_coreProfile;
 
     QList<Texture> m_textures;
