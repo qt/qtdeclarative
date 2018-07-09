@@ -35,7 +35,10 @@ qmldbg_nativedebugger.depends = packetprotocol
 qtHaveModule(quick) {
     SUBDIRS += \
         qmldbg_inspector \
-        qmldbg_quickprofiler
+        qmldbg_quickprofiler \
+        qmldbg_preview
+
     qmldbg_inspector.depends = packetprotocol
     qmldbg_quickprofiler.depends = packetprotocol
+    qmldbg_preview.depends = packetprotocol
 }

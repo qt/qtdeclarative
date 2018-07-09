@@ -9,6 +9,7 @@ SOURCES += \
     qqmldebugconnection.cpp \
     qqmldebugmessageclient.cpp \
     qqmlenginecontrolclient.cpp \
+    qqmlpreviewclient.cpp \
     qqmlprofilerclient.cpp \
     qqmlprofilerevent.cpp \
     qqmlprofilereventlocation.cpp \
@@ -22,6 +23,8 @@ HEADERS += \
     qqmldebugmessageclient_p.h \
     qqmlenginecontrolclient_p.h \
     qqmlenginecontrolclient_p_p.h \
+    qqmlpreviewclient_p.h \
+    qqmlpreviewclient_p_p.h \
     qqmlprofilerclient_p.h \
     qqmlprofilerclient_p_p.h \
     qqmlprofilerevent_p.h \

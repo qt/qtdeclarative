@@ -127,6 +127,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.2.qml";
     invalidFiles << "tests/auto/qml/parserstress/tests/ecma_3/FunExpr/fe-001.js";
     invalidFiles << "tests/auto/qml/qjsengine/script/com/trolltech/syntaxerror/__init__.js";
+    invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
 }
 
 QStringList tst_qmlmin::findFiles(const QDir &d)
