@@ -55,7 +55,8 @@ SOURCES += \
     $$PWD/qv4vme_moth.cpp \
     $$PWD/qv4mapobject.cpp \
     $$PWD/qv4mapiterator.cpp \
-    $$PWD/qv4estable.cpp
+    $$PWD/qv4estable.cpp \
+    $$PWD/qv4module.cpp
 
 qtConfig(qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
@@ -123,7 +124,8 @@ HEADERS += \
     $$PWD/qv4mapobject_p.h \
     $$PWD/qv4mapiterator_p.h \
     $$PWD/qv4estable_p.h \
-    $$PWD/qv4vtable_p.h
+    $$PWD/qv4vtable_p.h \
+    $$PWD/qv4module_p.h
 
 qtConfig(qml-sequence-object) {
     HEADERS += \

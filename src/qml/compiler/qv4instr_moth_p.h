@@ -76,6 +76,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadReg(op) INSTRUCTION(op, LoadReg, 1, reg)
 #define INSTR_StoreReg(op) INSTRUCTION(op, StoreReg, 1, reg)
 #define INSTR_MoveReg(op) INSTRUCTION(op, MoveReg, 2, srcReg, destReg)
+#define INSTR_LoadImport(op) INSTRUCTION(op, LoadImport, 1, index)
 #define INSTR_LoadLocal(op) INSTRUCTION(op, LoadLocal, 1, index)
 #define INSTR_StoreLocal(op) INSTRUCTION(op, StoreLocal, 1, index)
 #define INSTR_LoadScopedLocal(op) INSTRUCTION(op, LoadScopedLocal, 2, scope, index)
@@ -210,6 +211,7 @@ QT_BEGIN_NAMESPACE
     F(LoadReg) \
     F(StoreReg) \
     F(MoveReg) \
+    F(LoadImport) \
     F(LoadLocal) \
     F(StoreLocal) \
     F(LoadScopedLocal) \

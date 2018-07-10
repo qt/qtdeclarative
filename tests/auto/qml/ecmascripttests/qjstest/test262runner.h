@@ -67,6 +67,7 @@ struct TestData : TestCase {
 
     QList<QByteArray> includes;
 
+    QByteArray harness;
     QByteArray content;
 };
 

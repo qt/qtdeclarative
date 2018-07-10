@@ -50,6 +50,7 @@
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4vme_moth_p.h>
+#include <private/qv4module_p.h>
 #include "qv4compilationunitmapper_p.h"
 #include <QQmlPropertyMap>
 #include <QDateTime>
@@ -113,6 +114,9 @@ CompilationUnit::~CompilationUnit()
     delete [] constants;
     constants = nullptr;
 #endif
+
+    delete [] imports;
+    imports = nullptr;
 }
 
 QString CompilationUnit::localCacheFilePath(const QUrl &url)
@@ -291,6 +295,9 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
         for (uint i = 0; i < data->lookupTableSize; ++i)
             runtimeLookups[i].markObjects(markStack);
     }
+
+    if (m_module)
+        m_module->mark(markStack);
 }
 
 IdentifierHash CompilationUnit::createNamedObjectsPerComponent(int componentObjectIndex)
@@ -368,6 +375,116 @@ bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHashe
     Q_ASSERT(checksum.size() == sizeof(data->dependencyMD5Checksum));
     return memcmp(data->dependencyMD5Checksum, checksum.constData(),
                   sizeof(data->dependencyMD5Checksum)) == 0;
+}
+
+QStringList CompilationUnit::moduleRequests() const
+{
+    QStringList requests;
+
+    for (uint i = 0; i < data->importEntryTableSize; ++i) {
+        const ImportEntry &entry = data->importEntryTable()[i];
+        requests << stringAt(entry.moduleRequest);
+    }
+
+    return requests;
+}
+
+Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
+{
+    if (m_module)
+        return m_module;
+
+    if (!this->engine)
+        linkToEngine(engine);
+
+    m_module = engine->memoryManager->allocate<Module>(engine, this);
+
+    for (const QString &request: moduleRequests()) {
+        auto dependentModuleUnit = engine->loadModule(QUrl(request), this);
+        if (engine->hasException)
+            return nullptr;
+        dependentModuleUnit->instantiate(engine);
+    }
+
+    Scope scope(engine);
+    ScopedString importName(scope);
+
+    const uint importCount = data->importEntryTableSize;
+    imports = new const Value *[importCount];
+    memset(imports, 0, importCount * sizeof(Value *));
+    for (uint i = 0; i < importCount; ++i) {
+        const CompiledData::ImportEntry &entry = data->importEntryTable()[i];
+        auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(entry.moduleRequest)), this);
+        importName = runtimeStrings[entry.importName];
+        const Value *valuePtr = dependentModuleUnit->resolveExport(importName);
+        if (!valuePtr) {
+            QString referenceErrorMessage = QStringLiteral("Unable to resolve import reference ");
+            referenceErrorMessage += importName->toQString();
+            engine->throwReferenceError(referenceErrorMessage, fileName(), /*### line*/1, /*### column*/1);
+            return nullptr;
+        }
+        imports[i] = valuePtr;
+    }
+
+    return m_module;
+}
+
+const Value *CompilationUnit::resolveExport(QV4::String *exportName)
+{
+    if (!m_module)
+        return nullptr;
+
+    Scope scope(engine);
+    ScopedString localName(scope, localNameForExportName(exportName));
+    if (!localName)
+        return nullptr;
+
+    uint index = m_module->scope->internalClass->find(localName->toPropertyKey());
+    if (index < UINT_MAX)
+        return &m_module->scope->locals[index];
+
+    return nullptr;
+}
+
+Heap::String *CompilationUnit::localNameForExportName(QV4::String *exportName) const
+{
+    const CompiledData::ExportEntry *firstExport = data->localExportEntryTable();
+    const CompiledData::ExportEntry *lastExport = data->localExportEntryTable() + data->localExportEntryTableSize;
+    auto matchingExport = std::lower_bound(firstExport, lastExport, exportName, [this](const CompiledData::ExportEntry &lhs, QV4::String *name) {
+        return stringAt(lhs.exportName) < name->toQString();
+    });
+    if (matchingExport == lastExport || stringAt(matchingExport->exportName) != exportName->toQString())
+        return nullptr;
+    return runtimeStrings[matchingExport->localName];
+}
+
+void CompilationUnit::evaluate()
+{
+    if (m_moduleEvaluated)
+        return;
+    m_moduleEvaluated = true;
+
+    for (const QString &request: moduleRequests()) {
+        auto dependentModuleUnit = engine->loadModule(QUrl(request), this);
+        if (engine->hasException)
+            return;
+        dependentModuleUnit->evaluate();
+        if (engine->hasException)
+            return;
+    }
+
+    QV4::Function *moduleFunction = runtimeFunctions[data->indexOfRootFunction];
+    CppStackFrame frame;
+    frame.init(engine, moduleFunction, nullptr, 0);
+    frame.setupJSFrame(engine->jsStackTop, Primitive::undefinedValue(), m_module->scope,
+                       Primitive::undefinedValue(), Primitive::undefinedValue());
+
+    frame.push();
+    engine->jsStackTop += frame.requiredJSStackFrameSize();
+    auto frameCleanup = qScopeGuard([&frame]() {
+       frame.pop();
+    });
+    Moth::VME::exec(&frame, engine);
 }
 
 bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString)

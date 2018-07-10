@@ -103,6 +103,12 @@ protected:
     bool visit(AST::Program *ast) override;
     void endVisit(AST::Program *) override;
 
+    bool visit(AST::ESModule *ast) override;
+    void endVisit(AST::ESModule *) override;
+
+    bool visit(AST::ExportDeclaration *declaration) override;
+    bool visit(AST::ImportDeclaration *declaration) override;
+
     bool visit(AST::CallExpression *ast) override;
     bool visit(AST::PatternElement *ast) override;
     bool visit(AST::IdentifierExpression *ast) override;

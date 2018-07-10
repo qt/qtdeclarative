@@ -2753,6 +2753,8 @@ public:
         return head;
     }
 
+    StatementList *buildStatementList() const;
+
     void accept0(Visitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
@@ -2773,7 +2775,11 @@ public:
 
     ESModule(ModuleItemList *body)
         : body(body)
-    { kind = K; }
+    {
+        kind = K;
+        if (body)
+            statements = body->buildStatementList();
+    }
 
     void accept0(Visitor *visitor) override;
 
@@ -2785,6 +2791,7 @@ public:
 
 // attributes
     ModuleItemList *body;
+    StatementList *statements = nullptr;
 };
 
 class QML_PARSER_EXPORT DebuggerStatement: public Statement

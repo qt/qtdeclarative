@@ -140,6 +140,11 @@ void BaselineJIT::generate_MoveReg(int srcReg, int destReg)
     as->moveReg(srcReg, destReg);
 }
 
+void BaselineJIT::generate_LoadImport(int index)
+{
+    as->loadImport(index);
+}
+
 void BaselineJIT::generate_LoadLocal(int index)
 {
     as->loadLocal(index);

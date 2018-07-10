@@ -441,27 +441,59 @@ void Test262Runner::writeTestExpectations()
 
 }
 
-static bool executeTest(const QByteArray &data)
+static bool executeTest(const QByteArray &data, bool runAsModule = false, const QString &testCasePath = QString(), const QByteArray &harnessForModules = QByteArray())
 {
     QString testData = QString::fromUtf8(data);
 
     QV4::ExecutionEngine vm;
 
     QV4::Scope scope(&vm);
-    QV4::ScopedContext ctx(scope, vm.rootContext());
 
     QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
 
-    QV4::Script script(ctx, QV4::Compiler::ContextType::Global, testData, QString());
-    script.parse();
+    if (runAsModule) {
+        const QUrl rootModuleUrl = QUrl::fromLocalFile(testCasePath);
+        // inject all modules with the harness
+        QVector<QUrl> modulesToLoad = { rootModuleUrl };
+        while (!modulesToLoad.isEmpty()) {
+            QUrl url = modulesToLoad.takeFirst();
+            QQmlRefPointer<QV4::CompiledData::CompilationUnit> module;
 
-    QV4::ScopedValue result(scope);
-    if (!scope.engine->hasException)
-        result = script.run();
+            QFile f(url.toLocalFile());
+            if (f.open(QIODevice::ReadOnly)) {
+                QByteArray content = harnessForModules + f.readAll();
+                module = vm.compileModule(url, QString::fromUtf8(content));
+                if (vm.hasException)
+                    break;
+                vm.injectModule(module);
+            } else {
+                vm.throwError(QStringLiteral("Could not load module"));
+                break;
+            }
 
-    if (scope.engine->hasException)
-        return false;
-    return true;
+            for (const QString &request: module->moduleRequests()) {
+                const QUrl absoluteRequest = module->finalUrl().resolved(QUrl(request));
+                if (!vm.modules.contains(absoluteRequest))
+                    modulesToLoad << absoluteRequest;
+            }
+        }
+
+        if (!vm.hasException) {
+            if (auto rootModuleUnit = vm.loadModule(rootModuleUrl)) {
+                if (rootModuleUnit->instantiate(&vm))
+                    rootModuleUnit->evaluate();
+            }
+        }
+    } else {
+        QV4::ScopedContext ctx(scope, vm.rootContext());
+
+        QV4::Script script(ctx, QV4::Compiler::ContextType::Global, testData);
+        script.parse();
+
+        if (!vm.hasException)
+            script.run();
+    }
+    return !vm.hasException;
 }
 
 class SingleTest : public QRunnable
@@ -498,11 +530,9 @@ void SingleTest::run()
         data.sloppyResult = TestCase::Skipped;
     }
     if (data.runInStrictMode) {
-        QByteArray c = data.content;
-        // modules are strict by default.
-        if (!data.runAsModuleCode)
-            c.prepend("'use strict';\n");
-        bool ok = ::executeTest(c);
+        const QString testCasePath = QFileInfo(runner->testDir + "/test/" + data.test).absoluteFilePath();
+        QByteArray c = "'use strict';\n" + data.content;
+        bool ok = ::executeTest(c, data.runAsModuleCode, testCasePath, data.harness);
         if (data.negative)
             ok = !ok;
 
@@ -623,18 +653,18 @@ TestData Test262Runner::getTestData(const TestCase &testCase)
     TestData data(testCase);
     parseYaml(content, &data);
 
-    data.content += harness("assert.js");
-    data.content += harness("sta.js");
+    data.harness += harness("assert.js");
+    data.harness += harness("sta.js");
 
     for (QByteArray inc : qAsConst(data.includes)) {
         inc = inc.trimmed();
-        data.content += harness(inc);
+        data.harness += harness(inc);
     }
 
     if (data.async)
-        data.content += harness("doneprintHandle.js");
+        data.harness += harness("doneprintHandle.js");
 
-    data.content += content;
+    data.content = data.harness + content;
 
     return data;
 }

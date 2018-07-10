@@ -241,6 +241,24 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         for (int i = 0; i < c->locals.size(); ++i)
             registerString(c->locals.at(i));
     }
+    {
+        const auto registerExportEntry = [this](const Compiler::ExportEntry &entry) {
+            registerString(entry.exportName);
+            registerString(entry.moduleRequest);
+            registerString(entry.importName);
+            registerString(entry.localName);
+        };
+        std::for_each(module->localExportEntries.constBegin(), module->localExportEntries.constEnd(), registerExportEntry);
+        std::for_each(module->indirectExportEntries.constBegin(), module->indirectExportEntries.constEnd(), registerExportEntry);
+        std::for_each(module->starExportEntries.constBegin(), module->starExportEntries.constEnd(), registerExportEntry);
+    }
+    {
+        for (const auto &entry: module->importEntries) {
+            registerString(entry.moduleRequest);
+            registerString(entry.importName);
+            registerString(entry.localName);
+        }
+    }
 
     Q_ALLOCA_VAR(quint32_le, blockClassAndFunctionOffsets, (module->functions.size() + module->classes.size() + module->blocks.size()) * sizeof(quint32_le));
     uint jsClassDataOffset = 0;
@@ -304,7 +322,34 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             jsClassOffsetTable[i] = jsClassDataOffset + jsClassOffsets.at(i);
     }
 
+
     memcpy(dataPtr + unit->offsetToTranslationTable, translations.constData(), translations.count() * sizeof(CompiledData::TranslationData));
+
+    {
+        const auto populateExportEntryTable = [this, dataPtr](const QVector<Compiler::ExportEntry> &table, quint32_le offset) {
+            CompiledData::ExportEntry *entryToWrite = reinterpret_cast<CompiledData::ExportEntry *>(dataPtr + offset);
+            for (const Compiler::ExportEntry &entry: table) {
+                entryToWrite->exportName = getStringId(entry.exportName);
+                entryToWrite->moduleRequest = getStringId(entry.moduleRequest);
+                entryToWrite->importName = getStringId(entry.importName);
+                entryToWrite->localName = getStringId(entry.localName);
+                entryToWrite++;
+            }
+        };
+        populateExportEntryTable(module->localExportEntries, unit->offsetToLocalExportEntryTable);
+        populateExportEntryTable(module->indirectExportEntries, unit->offsetToIndirectExportEntryTable);
+        populateExportEntryTable(module->starExportEntries, unit->offsetToStarExportEntryTable);
+    }
+
+    {
+        CompiledData::ImportEntry *entryToWrite = reinterpret_cast<CompiledData::ImportEntry *>(dataPtr + unit->offsetToImportEntryTable);
+        for (const Compiler::ImportEntry &entry: module->importEntries) {
+            entryToWrite->moduleRequest = getStringId(entry.moduleRequest);
+            entryToWrite->importName = getStringId(entry.importName);
+            entryToWrite->localName = getStringId(entry.localName);
+            entryToWrite++;
+        }
+    }
 
     // write strings and string table
     if (option == GenerateWithStringTable)
@@ -547,8 +592,23 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     nextOffset = (nextOffset + 7) & ~quint32(0x7);
 
-    quint32 functionSize = 0;
+    const auto reserveExportTable = [&nextOffset](int count, quint32_le *tableSizePtr, quint32_le *offsetPtr) {
+        *tableSizePtr = count;
+        *offsetPtr = nextOffset;
+        nextOffset += count * sizeof(CompiledData::ExportEntry);
+        nextOffset = (nextOffset + 7) & ~quint32(0x7);
+    };
 
+    reserveExportTable(module->localExportEntries.count(), &unit.localExportEntryTableSize, &unit.offsetToLocalExportEntryTable);
+    reserveExportTable(module->indirectExportEntries.count(), &unit.indirectExportEntryTableSize, &unit.offsetToIndirectExportEntryTable);
+    reserveExportTable(module->starExportEntries.count(), &unit.starExportEntryTableSize, &unit.offsetToStarExportEntryTable);
+
+    unit.importEntryTableSize = module->importEntries.count();
+    unit.offsetToImportEntryTable = nextOffset;
+    nextOffset += unit.importEntryTableSize * sizeof(CompiledData::ImportEntry);
+    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+
+    quint32 functionSize = 0;
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *f = module->functions.at(i);
         blockAndFunctionOffsets[i] = nextOffset;

@@ -1509,6 +1509,16 @@ void JIT::Assembler::storeHeapObject(int reg)
     pasm()->storeHeapObject(PlatformAssembler::ReturnValueRegisterValue, regAddr(reg));
 }
 
+void JIT::Assembler::loadImport(int index)
+{
+    Address addr = pasm()->loadCompilationUnitPtr(PlatformAssembler::ScratchRegister);
+    addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, imports);
+    pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
+    addr.offset = index * int(sizeof(QV4::Value*));
+    pasm()->loadPtr(addr, PlatformAssembler::ScratchRegister);
+    pasm()->loadAccumulator(Address(PlatformAssembler::ScratchRegister));
+}
+
 void Assembler::toNumber()
 {
     pasm()->toNumber();

@@ -126,6 +126,49 @@ void Codegen::generateFromProgram(const QString &fileName,
     defineFunction(QStringLiteral("%entry"), node, nullptr, node->statements);
 }
 
+void Codegen::generateFromModule(const QString &fileName,
+                                 const QString &finalUrl,
+                                 const QString &sourceCode,
+                                 ESModule *node,
+                                 Module *module)
+{
+    Q_ASSERT(node);
+
+    _module = module;
+    _context = nullptr;
+
+    // ### should be set on the module outside of this method
+    _module->fileName = fileName;
+    _module->finalUrl = finalUrl;
+
+    ScanFunctions scan(this, sourceCode, ContextType::ESModule);
+    scan(node);
+
+    if (hasError)
+        return;
+
+    {
+        Compiler::Context *moduleContext = _module->contextMap.value(node);
+        for (const auto &entry: moduleContext->exportEntries) {
+            if (entry.moduleRequest.isEmpty()) {
+                // ### check against imported bound names
+                _module->localExportEntries << entry;
+            } else if (entry.importName == QLatin1Char('*')) {
+                _module->starExportEntries << entry;
+            } else {
+                _module->indirectExportEntries << entry;
+            }
+        }
+        _module->importEntries = moduleContext->importEntries;
+    }
+
+    std::sort(_module->localExportEntries.begin(), _module->localExportEntries.end(), ExportEntry::lessThan);
+    std::sort(_module->starExportEntries.begin(), _module->starExportEntries.end(), ExportEntry::lessThan);
+    std::sort(_module->indirectExportEntries.begin(), _module->indirectExportEntries.end(), ExportEntry::lessThan);
+
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->statements);
+}
+
 void Codegen::enterContext(Node *node)
 {
     _context = _module->contextMap.value(node);
@@ -2163,13 +2206,21 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
 {
     Context::ResolvedName resolved = _context->resolveName(name);
 
-    if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack) {
+    if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack
+        || resolved.type == Context::ResolvedName::Import) {
         if (resolved.isArgOrEval && isLhs)
             // ### add correct source location
             throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-        Reference r = (resolved.type == Context::ResolvedName::Local) ?
-                    Reference::fromScopedLocal(this, resolved.index, resolved.scope) :
-                    Reference::fromStackSlot(this, resolved.index, true /*isLocal*/);
+        Reference r;
+        switch (resolved.type) {
+        case Context::ResolvedName::Local:
+            r = Reference::fromScopedLocal(this, resolved.index, resolved.scope); break;
+        case Context::ResolvedName::Stack:
+            r = Reference::fromStackSlot(this, resolved.index, true /*isLocal*/); break;
+        case Context::ResolvedName::Import:
+            r = Reference::fromImport(this, resolved.index); break;
+        default: Q_UNREACHABLE();
+        }
         if (r.isStackSlot() && _volatileMemoryLocations.isVolatile(name))
             r.isVolatile = true;
         r.isArgOrEval = resolved.isArgOrEval;
@@ -3744,6 +3795,9 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         elementBase = other.elementBase;
         elementSubscript = other.elementSubscript;
         break;
+    case Import:
+        index = other.index;
+        break;
     case Const:
         constant = other.constant;
         break;
@@ -3789,6 +3843,8 @@ bool Codegen::Reference::operator==(const Codegen::Reference &other) const
         return propertyBase == other.propertyBase && propertyNameIndex == other.propertyNameIndex;
     case Subscript:
         return elementBase == other.elementBase && elementSubscript == other.elementSubscript;
+    case Import:
+        return index == other.index;
     case Const:
         return constant == other.constant;
     case QmlScopeObject:
@@ -4031,6 +4087,7 @@ void Codegen::Reference::storeAccumulator() const
     case Invalid:
     case Accumulator:
     case Const:
+    case Import:
         break;
     }
 
@@ -4145,6 +4202,11 @@ QT_WARNING_POP
             codegen->bytecodeGenerator->addInstruction(load);
         }
         return;
+    case Import: {
+        Instruction::LoadImport load;
+        load.index = index;
+        codegen->bytecodeGenerator->addInstruction(load);
+    } return;
     case Subscript: {
         elementSubscript.loadInAccumulator();
         Instruction::LoadElement load;

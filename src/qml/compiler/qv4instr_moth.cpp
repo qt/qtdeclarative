@@ -207,6 +207,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(destReg, nFormals) << ", " << dumpRegister(srcReg, nFormals);
         MOTH_END_INSTR(MoveReg)
 
+        MOTH_BEGIN_INSTR(LoadImport)
+            d << "i" << index;
+        MOTH_END_INSTR(LoadImport)
+
         MOTH_BEGIN_INSTR(LoadConst)
             d << "C" << index;
         MOTH_END_INSTR(LoadConst)

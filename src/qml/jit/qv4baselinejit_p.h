@@ -87,6 +87,7 @@ public:
     void generate_LoadReg(int reg) override;
     void generate_StoreReg(int reg) override;
     void generate_MoveReg(int srcReg, int destReg) override;
+    void generate_LoadImport(int index) override;
     void generate_LoadLocal(int index) override;
     void generate_StoreLocal(int index) override;
     void generate_LoadScopedLocal(int scope, int index) override;

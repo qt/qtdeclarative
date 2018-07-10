@@ -161,6 +161,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(MoveConst)
         COLLECTOR_END_INSTR(MoveConst)
 
+        COLLECTOR_BEGIN_INSTR(LoadImport)
+        COLLECTOR_END_INSTR(LoadImport)
+
         COLLECTOR_BEGIN_INSTR(LoadLocal)
         COLLECTOR_END_INSTR(LoadLocal)
 

@@ -503,6 +503,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STACK_VALUE(destReg) = STACK_VALUE(srcReg);
     MOTH_END_INSTR(MoveReg)
 
+    MOTH_BEGIN_INSTR(LoadImport)
+        acc = function->compilationUnit->imports[index]->asReturnedValue();
+    MOTH_END_INSTR(LoadImport)
+
     MOTH_BEGIN_INSTR(LoadLocal)
         auto cc = static_cast<Heap::CallContext *>(stack[CallData::Context].m());
         Q_ASSERT(cc->type != QV4::Heap::CallContext::Type_GlobalContext);

@@ -156,6 +156,17 @@ Context::ResolvedName Context::resolveName(const QString &name)
         c = c->parent;
     }
 
+    if (c && c->contextType == ContextType::ESModule) {
+        for (int i = 0; i < c->importEntries.count(); ++i) {
+            if (c->importEntries.at(i).localName == name) {
+                result.index = i;
+                result.type = ResolvedName::Import;
+                result.isConst = true;
+                return result;
+            }
+        }
+    }
+
     // ### can we relax the restrictions here?
     if (contextType == ContextType::Eval || c->contextType == ContextType::Binding)
         return result;
@@ -219,7 +230,7 @@ void Context::emitBlockHeader(Codegen *codegen)
         }
     }
 
-    if (contextType == ContextType::Function || contextType == ContextType::Binding) {
+    if (contextType == ContextType::Function || contextType == ContextType::Binding || contextType == ContextType::ESModule) {
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
             if (it->canEscape && it->type == Context::ThisFunctionName) {
                 // move the function from the stack to the call context
@@ -285,6 +296,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     registerOffset = bytecodeGenerator->currentRegister();
 
     switch (contextType) {
+    case ContextType::ESModule:
     case ContextType::Block:
     case ContextType::Function:
     case ContextType::Binding: {

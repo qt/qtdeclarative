@@ -86,6 +86,10 @@ namespace CompiledData {
 struct CompilationUnit;
 }
 
+namespace Heap {
+struct Module;
+};
+
 struct Function;
 
 
@@ -556,6 +560,17 @@ public:
     QV4::ReturnedValue global();
 
     double localTZA = 0.0; // local timezone, initialized at startup
+
+#ifndef V4_BOOTSTRAP
+    QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url);
+    QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode);
+    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, QList<QQmlJS::DiagnosticMessage> *diagnostics);
+
+    QHash<QUrl, QQmlRefPointer<CompiledData::CompilationUnit>> modules;
+    void injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit);
+    QQmlRefPointer<CompiledData::CompilationUnit> loadModule(const QUrl &_url, CompiledData::CompilationUnit *referrer = nullptr);
+#endif
+
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;

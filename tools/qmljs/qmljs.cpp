@@ -37,6 +37,7 @@
 #include "private/qv4context_p.h"
 #include "private/qv4script_p.h"
 #include "private/qv4string_p.h"
+#include "private/qv4module_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
 
 #include <QtCore/QCoreApplication>
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
     args.removeFirst();
 
     bool runAsQml = false;
+    bool runAsModule = false;
     bool cache = false;
 
     if (!args.isEmpty()) {
@@ -91,6 +93,11 @@ int main(int argc, char *argv[])
 
         if (args.constFirst() == QLatin1String("--qml")) {
             runAsQml = true;
+            args.removeFirst();
+        }
+
+        if (args.constFirst() == QLatin1String("--module")) {
+            runAsModule = true;
             args.removeFirst();
         }
 
@@ -113,8 +120,21 @@ int main(int argc, char *argv[])
     QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
 
     for (const QString &fn : qAsConst(args)) {
-        QFile file(fn);
-        if (file.open(QFile::ReadOnly)) {
+        QV4::ScopedValue result(scope);
+        if (runAsModule) {
+            auto moduleUnit = vm.loadModule(QUrl::fromLocalFile(QFileInfo(fn).absoluteFilePath()));
+            if (moduleUnit) {
+                if (moduleUnit->instantiate(&vm))
+                    moduleUnit->evaluate();
+            } else {
+                vm.throwError(QStringLiteral("Could not load module file"));
+            }
+        } else {
+            QFile file(fn);
+            if (!file.open(QFile::ReadOnly)) {
+                std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
+                return EXIT_FAILURE;
+            }
             QScopedPointer<QV4::Script> script;
             if (cache && QFile::exists(fn + QLatin1Char('c'))) {
                 QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
@@ -133,7 +153,6 @@ int main(int argc, char *argv[])
                 script->parseAsBinding = runAsQml;
                 script->parse();
             }
-            QV4::ScopedValue result(scope);
             if (!scope.engine->hasException) {
                 const auto unit = script->compilationUnit;
                 if (cache && unit && !(unit->unitData()->flags & QV4::CompiledData::Unit::StaticData)) {
@@ -149,19 +168,16 @@ int main(int argc, char *argv[])
                 result = script->run();
 //                std::cout << t.elapsed() << " ms. elapsed" << std::endl;
             }
-            if (scope.engine->hasException) {
-                QV4::StackTrace trace;
-                QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
-                showException(ctx, ex, trace);
-                return EXIT_FAILURE;
-            }
-            if (!result->isUndefined()) {
-                if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
-                    std::cout << "exit value: " << qPrintable(result->toQString()) << std::endl;
-            }
-        } else {
-            std::cerr << "Error: cannot open file " << fn.toUtf8().constData() << std::endl;
+        }
+        if (scope.engine->hasException) {
+            QV4::StackTrace trace;
+            QV4::ScopedValue ex(scope, scope.engine->catchException(&trace));
+            showException(ctx, ex, trace);
             return EXIT_FAILURE;
+        }
+        if (!result->isUndefined()) {
+            if (! qgetenv("SHOW_EXIT_VALUE").isEmpty())
+                std::cout << "exit value: " << qPrintable(result->toQString()) << std::endl;
         }
     }
 

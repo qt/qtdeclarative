@@ -74,7 +74,8 @@ enum class ContextType {
                //  * function declarations are moved to the return address when encountered
                //  * return statements are allowed everywhere (like in FunctionCode)
                //  * variable declarations are treated as true locals (like in FunctionCode)
-    Block
+    Block,
+    ESModule
 };
 
 struct Context;
@@ -97,6 +98,24 @@ struct Class {
     QVector<Method> methods;
 };
 
+struct ExportEntry
+{
+    QString exportName;
+    QString moduleRequest;
+    QString importName;
+    QString localName;
+
+    static bool lessThan(const ExportEntry &lhs, const ExportEntry &rhs)
+    { return lhs.exportName < rhs.exportName; }
+};
+
+struct ImportEntry
+{
+    QString moduleRequest;
+    QString importName;
+    QString localName;
+};
+
 struct Module {
     Module(bool debugMode)
         : debugMode(debugMode)
@@ -117,6 +136,10 @@ struct Module {
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
     bool debugMode = false;
+    QVector<ExportEntry> localExportEntries;
+    QVector<ExportEntry> indirectExportEntries;
+    QVector<ExportEntry> starExportEntries;
+    QVector<ImportEntry> importEntries;
 };
 
 
@@ -153,6 +176,8 @@ struct Context {
     QQmlJS::AST::FormalParameterList *formals = nullptr;
     QStringList arguments;
     QStringList locals;
+    QVector<ImportEntry> importEntries;
+    QVector<ExportEntry> exportEntries;
     QVector<Context *> nestedContexts;
 
     ControlFlow *controlFlow = nullptr;
@@ -289,7 +314,8 @@ struct Context {
             Unresolved,
             Global,
             Local,
-            Stack
+            Stack,
+            Import
         };
         Type type = Unresolved;
         bool isArgOrEval = false;

@@ -163,8 +163,11 @@ public:
 
     Q_REQUIRED_RESULT Jump jump()
     {
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
         Instruction::Jump data;
         return addJumpInstruction(data);
+QT_WARNING_POP
     }
 
     Q_REQUIRED_RESULT Jump jumpTrue()

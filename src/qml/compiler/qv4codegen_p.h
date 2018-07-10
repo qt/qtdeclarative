@@ -104,6 +104,12 @@ public:
                              Module *module,
                              ContextType contextType = ContextType::Global);
 
+    void generateFromModule(const QString &fileName,
+                            const QString &finalUrl,
+                            const QString &sourceCode,
+                            AST::ESModule *ast,
+                            Module *module);
+
 public:
     class VolatileMemoryLocationScanner;
     class VolatileMemoryLocations {
@@ -186,6 +192,7 @@ public:
             Name,
             Member,
             Subscript,
+            Import,
             QmlScopeObject,
             QmlContextObject,
             LastLValue = QmlContextObject,
@@ -271,6 +278,11 @@ public:
             Reference r(cg, ScopedLocal);
             r.index = index;
             r.scope = scope;
+            return r;
+        }
+        static Reference fromImport(Codegen *cg, int index) {
+            Reference r(cg, Import);
+            r.index = index;
             return r;
         }
         static Reference fromName(Codegen *cg, const QString &name) {

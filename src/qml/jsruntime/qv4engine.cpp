@@ -75,6 +75,10 @@
 #include "qv4reflect_p.h"
 #include "qv4proxy_p.h"
 #include "qv4stackframe_p.h"
+#include <private/qqmljsengine_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsast_p.h>
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -92,12 +96,16 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmllistwrapper_p.h>
 #include <private/qqmllist_p.h>
+#include <private/qqmltypeloader_p.h>
 #if QT_CONFIG(qml_locale)
 #include <private/qqmllocale_p.h>
 #endif
+#include <qqmlfile.h>
 
 #include <QtCore/QTextStream>
 #include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -593,6 +601,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    modules.clear();
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = nullptr;
     delete identifierTable;
@@ -1619,6 +1628,96 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 ReturnedValue ExecutionEngine::global()
 {
     return globalObject->asReturnedValue();
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
+{
+    QFile f(QQmlFile::urlToLocalFileOrQrc(url));
+    if (!f.open(QIODevice::ReadOnly))
+        return nullptr;
+
+    const QString sourceCode = QString::fromUtf8(f.readAll());
+    f.close();
+
+    return compileModule(url, sourceCode);
+}
+
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url, const QString &sourceCode)
+{
+    QList<QQmlJS::DiagnosticMessage> diagnostics;
+    auto unit = compileModule(/*debugMode*/debugger() != nullptr, url, sourceCode, &diagnostics);
+    for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
+        if (m.isError()) {
+            throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
+            return nullptr;
+        } else {
+            qWarning() << url << ':' << m.loc.startLine << ':' << m.loc.startColumn
+                      << ": warning: " << m.message;
+        }
+    }
+    return unit;
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, QList<QQmlJS::DiagnosticMessage> *diagnostics)
+{
+    QQmlJS::Engine ee;
+    QQmlJS::Lexer lexer(&ee);
+    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
+    QQmlJS::Parser parser(&ee);
+
+    const bool parsed = parser.parseModule();
+
+    if (diagnostics)
+        *diagnostics = parser.diagnosticMessages();
+
+    if (!parsed)
+        return nullptr;
+
+    QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule*>(parser.rootNode());
+    if (!moduleNode) {
+        // if parsing was successful, and we have no module, then
+        // the file was empty.
+        if (diagnostics)
+            diagnostics->clear();
+        return nullptr;
+    }
+
+    using namespace QV4::Compiler;
+    Compiler::Module compilerModule(debugMode);
+    JSUnitGenerator jsGenerator(&compilerModule);
+    Codegen cg(&jsGenerator, /*strictMode*/true);
+    cg.generateFromModule(url.fileName(), url.toString(), sourceCode, moduleNode, &compilerModule);
+    auto errors = cg.errors();
+    if (diagnostics)
+        *diagnostics << errors;
+
+    if (!errors.isEmpty())
+        return nullptr;
+
+    return cg.generateCompilationUnit();
+}
+
+void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit)
+{
+    modules.insert(moduleUnit->finalUrl(), moduleUnit);
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, CompiledData::CompilationUnit *referrer)
+{
+    QUrl url = QQmlTypeLoader::normalize(_url);
+    if (referrer)
+        url = referrer->finalUrl().resolved(url);
+
+    auto existingModule = modules.find(url);
+    if (existingModule != modules.end())
+        return *existingModule;
+
+    auto newModule = compileModule(url);
+    if (newModule)
+        modules.insert(url, newModule);
+
+    return newModule;
 }
 
 // Converts a JS value to a meta-type.

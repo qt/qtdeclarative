@@ -149,6 +149,120 @@ void ScanFunctions::endVisit(Program *)
     leaveEnvironment();
 }
 
+bool ScanFunctions::visit(ESModule *ast)
+{
+    enterEnvironment(ast, defaultProgramType, QStringLiteral("%ModuleCode"));
+    _context->isStrict = true;
+    return true;
+}
+
+void ScanFunctions::endVisit(ESModule *)
+{
+    leaveEnvironment();
+}
+
+bool ScanFunctions::visit(ExportDeclaration *declaration)
+{
+    QString module;
+    if (declaration->fromClause)
+        module = declaration->fromClause->moduleSpecifier.toString();
+
+    if (declaration->exportAll) {
+        Compiler::ExportEntry entry;
+        entry.moduleRequest = declaration->fromClause->moduleSpecifier.toString();
+        entry.importName = QStringLiteral("*");
+        _context->exportEntries << entry;
+    } else if (declaration->exportClause) {
+        for (ExportsList *it = declaration->exportClause->exportsList; it; it = it->next) {
+            ExportSpecifier *spec = it->exportSpecifier;
+            Compiler::ExportEntry entry;
+            if (module.isEmpty())
+                entry.localName = spec->identifier.toString();
+            else
+                entry.importName = spec->identifier.toString();
+
+            entry.moduleRequest = module;
+            entry.exportName = spec->exportedIdentifier.toString();
+
+            _context->exportEntries << entry;
+        }
+    } else if (auto *vstmt = AST::cast<AST::VariableStatement*>(declaration->variableStatementOrDeclaration)) {
+        QStringList boundNames;
+        for (VariableDeclarationList *it = vstmt->declarations; it; it = it->next) {
+            if (!it->declaration)
+                continue;
+            it->declaration->boundNames(&boundNames);
+        }
+        for (const QString &name: boundNames) {
+            Compiler::ExportEntry entry;
+            entry.localName = name;
+            entry.exportName = name;
+            _context->exportEntries << entry;
+        }
+    } else if (auto *classDecl = AST::cast<AST::ClassDeclaration*>(declaration->variableStatementOrDeclaration)) {
+        QString name = classDecl->name.toString();
+        Compiler::ExportEntry entry;
+        entry.localName = name;
+        entry.exportName = name;
+        _context->exportEntries << entry;
+    } else if (auto *fdef = declaration->variableStatementOrDeclaration->asFunctionDefinition()) {
+        QString name = fdef->name.toString();
+        Compiler::ExportEntry entry;
+        entry.localName = name;
+        entry.exportName = name;
+        _context->exportEntries << entry;
+    } else if (declaration->exportDefault) {
+        Compiler::ExportEntry entry;
+        entry.localName = QStringLiteral("*default*");
+        entry.exportName = QStringLiteral("default");
+        _context->exportEntries << entry;
+    }
+
+    return true; // scan through potential assignment expression code, etc.
+}
+
+bool ScanFunctions::visit(ImportDeclaration *declaration)
+{
+    QString module;
+    if (declaration->fromClause)
+        module = declaration->fromClause->moduleSpecifier.toString();
+
+    if (ImportClause *import = declaration->importClause) {
+        if (!import->importedDefaultBinding.isEmpty()) {
+            Compiler::ImportEntry entry;
+            entry.moduleRequest = module;
+            entry.importName = QStringLiteral("default");
+            entry.localName = import->importedDefaultBinding.toString();
+            _context->importEntries << entry;
+        }
+
+        if (import->nameSpaceImport) {
+            Compiler::ImportEntry entry;
+            entry.moduleRequest = module;
+            entry.importName = QStringLiteral("*");
+            entry.localName = import->nameSpaceImport->importedBinding.toString();
+            _context->importEntries << entry;
+
+            _cg->throwSyntaxError(import->nameSpaceImport->importedBindingToken, QStringLiteral("* imports are currently not supported."));
+            return false;
+        }
+
+        if (import->namedImports) {
+            for (ImportsList *it = import->namedImports->importsList; it; it = it->next) {
+                Compiler::ImportEntry entry;
+                entry.moduleRequest = module;
+                entry.localName = it->importSpecifier->importedBinding.toString();
+                if (!it->importSpecifier->identifier.isEmpty())
+                    entry.importName = it->importSpecifier->identifier.toString();
+                else
+                    entry.importName = entry.localName;
+                _context->importEntries << entry;
+            }
+        }
+    }
+    return false;
+}
+
 bool ScanFunctions::visit(CallExpression *ast)
 {
     if (!_context->hasDirectEval) {
@@ -529,6 +643,17 @@ void ScanFunctions::calcEscapingVariables()
         }
     }
 
+    for (Context *c : qAsConst(m->contextMap)) {
+        if (c->contextType != ContextType::ESModule)
+            continue;
+        for (const auto &entry: c->exportEntries) {
+            auto m = c->members.find(entry.localName);
+            if (m != c->members.end())
+                m->canEscape = true;
+        }
+        break;
+    }
+
     for (Context *inner : qAsConst(m->contextMap)) {
         for (const QString &var : qAsConst(inner->usedVariables)) {
             Context *c = inner;
@@ -545,6 +670,10 @@ void ScanFunctions::calcEscapingVariables()
                     if (c->parent || it->isLexicallyScoped()) {
                         it->canEscape = true;
                         c->requiresExecutionContext = true;
+                    } else if (c->contextType == ContextType::ESModule) {
+                        // Module instantiation provides a context, but vars used from inner
+                        // scopes need to be stored in its locals[].
+                        it->canEscape = true;
                     }
                     break;
                 }
