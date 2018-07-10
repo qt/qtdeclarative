@@ -40,6 +40,18 @@
             ],
             "output": [ "privateFeature" ]
         },
+        "qml-preview": {
+            "label": "Command line QML Preview tool",
+            "purpose": "Updates QML documents in your application live as you change them on disk",
+            "section": "QML",
+            "condition": [
+                "features.commandlineparser",
+                "features.localserver",
+                "features.process",
+                "features.qml-debug"
+            ],
+            "output": [ "privateFeature" ]
+        },
         "qml-devtools": {
             "label": "QML Development Tools",
             "purpose": "Provides the QmlDevtools library and various utilities.",

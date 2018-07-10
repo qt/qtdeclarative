@@ -15,6 +15,7 @@ qtConfig(qml-devtools) {
 
     qtConfig(qml-devtools): SUBDIRS += qmllint
     qtConfig(qml-profiler): SUBDIRS += qmlprofiler
+    qtConfig(qml-preview): SUBDIRS += qmlpreview
 
     qtHaveModule(quick) {
         !static: {
