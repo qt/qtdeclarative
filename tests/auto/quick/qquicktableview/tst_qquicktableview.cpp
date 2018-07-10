@@ -75,6 +75,7 @@ public:
     tst_QQuickTableView();
 
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
+    QPoint getContextRowAndColumn(const QQuickItem *item) const;
 
 private slots:
     void initTestCase() override;
@@ -117,6 +118,14 @@ QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *o
 {
     QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
     return static_cast<QQuickTableViewAttached *>(attachedObject);
+}
+
+QPoint tst_QQuickTableView::getContextRowAndColumn(const QQuickItem *item) const
+{
+    const auto context = qmlContext(item);
+    const int row = context->contextProperty("row").toInt();
+    const int column = context->contextProperty("column").toInt();
+    return QPoint(column, row);
 }
 
 void tst_QQuickTableView::setAndGetModel_data()
@@ -343,11 +352,9 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         QVERIFY(item);
         QCOMPARE(item->parentItem(), tableView->contentItem());
 
-        auto attached = getAttachedObject(item);
-        int row = attached->row();
-        int column = attached->column();
-        qreal expectedX = margins.left() + (column * (expectedItemWidth + spacing.width()));
-        qreal expectedY = margins.top() + (row * (expectedItemHeight + spacing.height()));
+        const QPoint cell = getContextRowAndColumn(item);
+        qreal expectedX = margins.left() + (cell.x() * (expectedItemWidth + spacing.width()));
+        qreal expectedY = margins.top() + (cell.y() * (expectedItemHeight + spacing.height()));
         QCOMPARE(item->x(), expectedX);
         QCOMPARE(item->y(), expectedY);
         QCOMPARE(item->width(), expectedItemWidth);
@@ -452,7 +459,7 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
 
     auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
     auto const bottomRightItem = bottomRightFxItem->item;
-    auto bottomRightAttached = getAttachedObject(bottomRightItem);
+    const QPoint bottomRightCell = getContextRowAndColumn(bottomRightItem.data());
 
     // Check that the right-most item is overlapping the right edge of the view
     QVERIFY(bottomRightItem->x() < tableView->width());
@@ -462,7 +469,7 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     qreal cellWidth = bottomRightItem->width() + spacing.width();
     qreal availableWidth = tableView->width() - margins.left();
     int expectedColumns = qCeil(availableWidth / cellWidth);
-    int actualColumns = bottomRightAttached->column() + 1;
+    int actualColumns = bottomRightCell.x() + 1;
     QCOMPARE(actualColumns, expectedColumns);
 
     // Check that the bottom-most item is overlapping the bottom edge of the view
@@ -473,7 +480,7 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     qreal cellHeight = bottomRightItem->height() + spacing.height();
     qreal availableHeight = tableView->height() - margins.top();
     int expectedRows = qCeil(availableHeight / cellHeight);
-    int actualRows = bottomRightAttached->row() + 1;
+    int actualRows = bottomRightCell.y() + 1;
     QCOMPARE(actualRows, expectedRows);
 }
 
@@ -500,22 +507,18 @@ void tst_QQuickTableView::checkInitialAttachedProperties()
     for (auto fxItem : tableViewPrivate->loadedItems) {
         const int index = fxItem->index;
         const auto item = fxItem->item;
-        const auto attached = getAttachedObject(item);
         const auto context = qmlContext(item.data());
         const QPoint cell = tableViewPrivate->cellAtModelIndex(index);
         const int contextIndex = context->contextProperty("index").toInt();
-        const int contextRow = context->contextProperty("row").toInt();
-        const int contextColumn = context->contextProperty("column").toInt();
+        const QPoint contextCell = getContextRowAndColumn(item.data());
         const QString contextModelData = context->contextProperty("modelData").toString();
         const QQmlDelegateModelAttached *delegateModelAttached =
                 static_cast<QQmlDelegateModelAttached *>(
                     qmlAttachedPropertiesObject<QQmlDelegateModel>(item));
         const int contextItemsIndex = delegateModelAttached->property("itemsIndex").toInt();
 
-        QCOMPARE(attached->row(), cell.y());
-        QCOMPARE(attached->column(), cell.x());
-        QCOMPARE(contextRow, cell.y());
-        QCOMPARE(contextColumn, cell.x());
+        QCOMPARE(contextCell.y(), cell.y());
+        QCOMPARE(contextCell.x(), cell.x());
         QCOMPARE(contextIndex, index);
         QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
         QCOMPARE(contextItemsIndex, index);

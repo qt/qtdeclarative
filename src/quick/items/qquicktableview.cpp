@@ -1201,16 +1201,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     if (!attached)
         return;
 
-    // Even though row and column is injected directly into the context of a delegate item
-    // from QQmlDelegateModel and its model classes, they will only return which row and
-    // column an item represents in the model. This might be different from which
-    // cell an item ends up in in the Table, if a different rows/columns has been set
-    // on it (which is typically the case for list models). For those cases, Table.row
-    // and Table.column can be helpful.
-    QPoint cell = cellAtModelIndex(modelIndex);
     attached->setTableView(q_func());
-    attached->setColumn(cell.x());
-    attached->setRow(cell.y());
 }
 
 void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool reset)

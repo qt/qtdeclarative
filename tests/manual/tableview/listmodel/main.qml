@@ -77,7 +77,7 @@ Window {
 
                     Text {
                         anchors.centerIn: parent
-                        text: name + "\n[" + tableDelegate.TableView.column + ", " + tableDelegate.TableView.row + "]"
+                        text: name + "\n[" + column + ", " + row + "]"
                     }
                 }
             }
