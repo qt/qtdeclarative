@@ -498,7 +498,10 @@ void SingleTest::run()
         data.sloppyResult = TestCase::Skipped;
     }
     if (data.runInStrictMode) {
-        QByteArray c = "'use strict';\n" + data.content;
+        QByteArray c = data.content;
+        // modules are strict by default.
+        if (!data.runAsModuleCode)
+            c.prepend("'use strict';\n");
         bool ok = ::executeTest(c);
         if (data.negative)
             ok = !ok;
@@ -550,7 +553,7 @@ int Test262Runner::runSingleTest(TestCase testCase)
     TestData data = getTestData(testCase);
 //    qDebug() << "starting test" << data.test;
 
-    if (data.isExcluded || data.async || data.runAsModuleCode)
+    if (data.isExcluded || data.async)
         return 0;
 
     if (threadPool) {
@@ -727,6 +730,11 @@ void Test262Runner::parseYaml(const QByteArray &content, TestData *data)
     data->runInStrictMode = !flags.contains("noStrict") && !flags.contains("raw");
     data->runAsModuleCode = flags.contains("module");
     data->async = flags.contains("async");
+
+    if (data->runAsModuleCode) {
+        data->runInStrictMode = true;
+        data->runInSloppyMode = false;
+    }
 
     YamlSection includes(yaml, "includes:");
     data->includes = includes.keywords();
