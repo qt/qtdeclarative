@@ -53,18 +53,20 @@
 
 QT_USE_NAMESPACE
 
+namespace {
+
 QStringList g_qmlImportPaths;
 
-static inline QString typeLiteral()         { return QStringLiteral("type"); }
-static inline QString versionLiteral()      { return QStringLiteral("version"); }
-static inline QString nameLiteral()         { return QStringLiteral("name"); }
-static inline QString relativePathLiteral() { return QStringLiteral("relativePath"); }
-static inline QString pluginsLiteral()      { return QStringLiteral("plugins"); }
-static inline QString pathLiteral()         { return QStringLiteral("path"); }
-static inline QString classnamesLiteral()   { return QStringLiteral("classnames"); }
-static inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
+inline QString typeLiteral()         { return QStringLiteral("type"); }
+inline QString versionLiteral()      { return QStringLiteral("version"); }
+inline QString nameLiteral()         { return QStringLiteral("name"); }
+inline QString relativePathLiteral() { return QStringLiteral("relativePath"); }
+inline QString pluginsLiteral()      { return QStringLiteral("plugins"); }
+inline QString pathLiteral()         { return QStringLiteral("path"); }
+inline QString classnamesLiteral()   { return QStringLiteral("classnames"); }
+inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
 
-static void printUsage(const QString &appNameIn)
+void printUsage(const QString &appNameIn)
 {
     const std::wstring appName = appNameIn.toStdWString();
 #ifndef QT_BOOTSTRAPPED
@@ -255,7 +257,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
 }
 
 // Scan a single qml file for import statements
-static QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &code)
+QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &code)
 {
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
@@ -275,7 +277,7 @@ static QVariantList findQmlImportsInQmlCode(const QString &filePath, const QStri
 }
 
 // Scan a single qml file for import statements
-static QVariantList findQmlImportsInQmlFile(const QString &filePath)
+QVariantList findQmlImportsInQmlFile(const QString &filePath)
 {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -489,6 +491,8 @@ QVariantList findQmlImportsRecursively(const QStringList &qmlDirs, const QString
     }
     return ret;
 }
+
+} // namespace
 
 int main(int argc, char *argv[])
 {
