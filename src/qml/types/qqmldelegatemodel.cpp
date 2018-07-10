@@ -900,7 +900,8 @@ QObject *QQmlDelegateModel::parts()
 
 const QAbstractItemModel *QQmlDelegateModel::abstractItemModel() const
 {
-    return d_func()->m_adaptorModel.aim();
+    Q_D(const QQmlDelegateModel);
+    return d->m_adaptorModel.adaptsAim() ? d->m_adaptorModel.aim() : nullptr;
 }
 
 void QQmlDelegateModelPrivate::emitCreatedPackage(QQDMIncubationTask *incubationTask, QQuickPackage *package)
