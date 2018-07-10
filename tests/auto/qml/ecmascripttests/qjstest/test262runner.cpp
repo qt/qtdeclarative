@@ -191,6 +191,8 @@ bool Test262Runner::loadTests()
         QString file = it.next().mid(pathlen);
         if (!file.endsWith(".js"))
             continue;
+        if (file.endsWith("_FIXTURE.js"))
+            continue;
         if (!filter.isEmpty() && !file.contains(filter))
             continue;
         if (file.startsWith(annexB) || file.startsWith(harness) || file.startsWith(intl402))
