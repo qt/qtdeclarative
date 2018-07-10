@@ -726,6 +726,7 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
     \row \li \c AbstractButton.IconOnly \li \image qtquickcontrols2-button-icononly.png
     \row \li \c AbstractButton.TextOnly \li \image qtquickcontrols2-button-textonly.png
     \row \li \c AbstractButton.TextBesideIcon \li \image qtquickcontrols2-button-textbesideicon.png
+    \row \li \c AbstractButton.TextUnderIcon \li \image qtquickcontrols2-button-textundericon.png
     \endtable
 
     \sa {Control::}{spacing}, {Control::}{padding}
