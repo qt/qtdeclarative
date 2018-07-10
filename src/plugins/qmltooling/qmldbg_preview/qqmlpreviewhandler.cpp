@@ -30,6 +30,9 @@
 
 #include <QtCore/qtimer.h>
 #include <QtCore/qsettings.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtCore/qtranslator.h>
+
 #include <QtGui/qwindow.h>
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/qquickwindow.h>
@@ -79,6 +82,7 @@ QQmlPreviewHandler::QQmlPreviewHandler(QObject *parent) : QObject(parent)
 
 QQmlPreviewHandler::~QQmlPreviewHandler()
 {
+    removeTranslators();
     clear();
 }
 
@@ -224,6 +228,39 @@ void QQmlPreviewHandler::zoom(qreal newFactor)
     } else {
         emit error(errorMessage);
     }
+}
+
+void QQmlPreviewHandler::removeTranslators()
+{
+    if (!m_qtTranslator.isNull()) {
+        QCoreApplication::removeTranslator(m_qtTranslator.get());
+        m_qtTranslator.reset();
+    }
+
+    if (m_qmlTranslator.isNull()) {
+        QCoreApplication::removeTranslator(m_qmlTranslator.get());
+        m_qmlTranslator.reset();
+    }
+}
+
+void QQmlPreviewHandler::language(const QUrl &context, const QString &locale)
+{
+    removeTranslators();
+
+    m_qtTranslator.reset(new QTranslator(this));
+    if (m_qtTranslator->load(QLatin1String("qt_") + locale,
+                           QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+        QCoreApplication::installTranslator(m_qtTranslator.get());
+    }
+
+    m_qmlTranslator.reset(new QTranslator(this));
+    if (m_qmlTranslator->load(QLatin1String("qml_" ) + locale,
+                              context.toLocalFile() + QLatin1String("/i18n"))) {
+        QCoreApplication::installTranslator(m_qmlTranslator.get());
+    }
+
+    for (QQmlEngine *engine : qAsConst(m_engines))
+        engine->retranslate();
 }
 
 void QQmlPreviewHandler::clear()

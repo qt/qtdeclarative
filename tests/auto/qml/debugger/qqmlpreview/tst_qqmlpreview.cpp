@@ -69,6 +69,7 @@ private slots:
     void error();
     void zoom();
     void fps();
+    void language();
 };
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile)
@@ -339,6 +340,14 @@ void tst_QQmlPreview::fps()
         QTRY_VERIFY(m_frames > 100);
     else
         QSKIP("offscreen rendering doesn't produce any frames");
+}
+
+void tst_QQmlPreview::language()
+{
+    QCOMPARE(startQmlProcess("window.qml"), ConnectSuccess);
+    QVERIFY(m_client);
+    m_client->triggerLanguage(dataDirectoryUrl(), "qt_QT");
+    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile("i18n/qml_qt_QT.qm")), 30000);
 }
 
 QTEST_MAIN(tst_QQmlPreview)

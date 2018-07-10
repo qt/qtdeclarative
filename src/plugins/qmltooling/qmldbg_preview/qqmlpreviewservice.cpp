@@ -53,6 +53,7 @@ QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
     connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::loadUrl);
     connect(this, &QQmlPreviewServiceImpl::rerun, &m_handler, &QQmlPreviewHandler::rerun);
     connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
+    connect(this, &QQmlPreviewServiceImpl::language, &m_handler, &QQmlPreviewHandler::language);
     connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
             Qt::DirectConnection);
     connect(&m_handler, &QQmlPreviewHandler::fps, this, &QQmlPreviewServiceImpl::forwardFps,
@@ -121,6 +122,14 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         float factor;
         packet >> factor;
         emit zoom(static_cast<qreal>(factor));
+        break;
+    }
+    case Language: {
+        QUrl context;
+        QString locale;
+        packet >> context >> locale;
+        emit language(context.isEmpty() ? m_currentUrl : context,
+                      locale.isEmpty() ? QLocale::system().name() : locale);
         break;
     }
     default:

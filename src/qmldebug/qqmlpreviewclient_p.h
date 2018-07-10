@@ -72,7 +72,8 @@ public:
         Directory,
         ClearCache,
         Zoom,
-        Fps
+        Fps,
+        Language
     };
 
     QQmlPreviewClient(QQmlDebugConnection *parent);
@@ -85,6 +86,7 @@ public:
     void triggerLoad(const QUrl &url);
     void triggerRerun();
     void triggerZoom(float factor);
+    void triggerLanguage(const QUrl &url, const QString &locale);
 
 signals:
     void request(const QString &path);
