@@ -10,6 +10,7 @@ SUBDIRS =   quick-accessibility \
             localstorage \
             models \
             views \
+            tableview \
             mousearea \
             positioners \
             righttoleft \
