@@ -105,8 +105,18 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
     return QList<QQmlDebugClient *>({m_client});
 }
 
+void checkFiles(const QStringList &files)
+{
+    QVERIFY(!files.contains("/etc/localtime"));
+    QVERIFY(!files.contains("/etc/timezome"));
+    QVERIFY(!files.contains(":/qgradient/webgradients.binaryjson"));
+}
+
 void tst_QQmlPreview::cleanup()
 {
+    // Use a separate function so that we don't return early from cleanup() on failure.
+    checkFiles(m_files);
+
     QQmlDebugTest::cleanup();
     if (QTest::currentTestFailed()) {
         qDebug() << "Files loaded:" << m_files;
