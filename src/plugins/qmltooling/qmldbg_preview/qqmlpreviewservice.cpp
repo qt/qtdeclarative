@@ -74,6 +74,17 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         QByteArray contents;
         packet >> path >> contents;
         emit file(path, contents);
+
+        // Replace the whole scene with the first file successfully loaded over the debug
+        // connection. This is an OK approximation of the root component, and if the client wants
+        // something specific, it will send an explicit Load anyway.
+        if (m_currentUrl.isEmpty() && path.endsWith(".qml")) {
+            if (path.startsWith(':'))
+                m_currentUrl = QUrl("qrc" + path);
+            else
+                m_currentUrl = QUrl::fromLocalFile(path);
+            emit load(m_currentUrl);
+        }
         break;
     }
     case Directory: {
@@ -86,6 +97,10 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
     case Load: {
         QUrl url;
         packet >> url;
+        if (url.isEmpty())
+            url = m_currentUrl;
+        else
+            m_currentUrl = url;
         emit load(url);
         break;
     }

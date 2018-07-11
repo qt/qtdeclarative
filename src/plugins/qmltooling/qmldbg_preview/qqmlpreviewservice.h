@@ -90,6 +90,7 @@ private:
     QScopedPointer<QQmlPreviewFileEngineHandler> m_fileEngine;
     QScopedPointer<QQmlPreviewFileLoader> m_loader;
     QQmlPreviewHandler m_handler;
+    QUrl m_currentUrl;
 };
 
 QT_END_NAMESPACE
