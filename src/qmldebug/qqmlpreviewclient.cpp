@@ -61,18 +61,29 @@ void QQmlPreviewClient::messageReceived(const QByteArray &message)
     qint8 command;
     packet >> command;
 
-    if (command == Error) {
+    switch (command) {
+    case Error: {
         QString seviceError;
         packet >> seviceError;
         emit error(seviceError);
-        return;
+        break;
     }
-
-    Q_ASSERT(command == Request);
-
-    QString fileName;
-    packet >> fileName;
-    emit request(fileName);
+    case Request: {
+        QString fileName;
+        packet >> fileName;
+        emit request(fileName);
+        break;
+    }
+    case Fps: {
+        quint16 frames;
+        packet >> frames;
+        emit fps(frames);
+        break;
+    }
+    default:
+        emit error(QString::fromLatin1("Unknown command received: %1").arg(command));
+        break;
+    }
 }
 
 void QQmlPreviewClient::sendDirectory(const QString &path, const QStringList &entries)

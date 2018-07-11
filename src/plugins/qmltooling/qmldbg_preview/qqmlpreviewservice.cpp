@@ -55,7 +55,8 @@ QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
     connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
     connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
             Qt::DirectConnection);
-
+    connect(&m_handler, &QQmlPreviewHandler::fps, this, &QQmlPreviewServiceImpl::forwardFps,
+            Qt::DirectConnection);
 }
 
 QQmlPreviewServiceImpl::~QQmlPreviewServiceImpl()
@@ -159,6 +160,13 @@ void QQmlPreviewServiceImpl::forwardError(const QString &error)
 {
     QQmlDebugPacket packet;
     packet << static_cast<qint8>(Error) << error;
+    emit messageToClient(name(), packet.data());
+}
+
+void QQmlPreviewServiceImpl::forwardFps(quint16 frames)
+{
+    QQmlDebugPacket packet;
+    packet << static_cast<qint8>(Fps) << frames;
     emit messageToClient(name(), packet.data());
 }
 

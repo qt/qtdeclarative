@@ -61,7 +61,8 @@ public:
         Rerun,
         Directory,
         ClearCache,
-        Zoom
+        Zoom,
+        Fps
     };
 
     static const QString s_key;
@@ -76,6 +77,7 @@ public:
 
     void forwardRequest(const QString &file);
     void forwardError(const QString &error);
+    void forwardFps(quint16 frames);
 
 signals:
     void error(const QString &file);

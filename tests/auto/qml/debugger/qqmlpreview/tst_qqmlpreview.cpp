@@ -57,6 +57,7 @@ private:
     QStringList m_filesNotFound;
     QStringList m_directories;
     QStringList m_serviceErrors;
+    quint16 m_frames = 0;
 
 private slots:
     void cleanup() final;
@@ -67,6 +68,7 @@ private slots:
     void blacklist();
     void error();
     void zoom();
+    void fps();
 };
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile)
@@ -102,6 +104,9 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
     QObject::connect(m_client, &QQmlPreviewClient::error, this, [this](const QString &error) {
         m_serviceErrors.append(error);
     });
+    QObject::connect(m_client, &QQmlPreviewClient::fps, this, [this](quint16 frames) {
+        m_frames += frames;
+    });
 
     return QList<QQmlDebugClient *>({m_client});
 }
@@ -135,6 +140,7 @@ void tst_QQmlPreview::cleanup()
     m_files.clear();
     m_filesNotFound.clear();
     m_serviceErrors.clear();
+    m_frames = 0;
 }
 
 void tst_QQmlPreview::connect()
@@ -321,6 +327,18 @@ void tst_QQmlPreview::zoom()
     verifyZoomFactor(m_process, baseZoomFactor);
     m_process->stop();
     QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::fps()
+{
+    const QString file("qtquick2.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    m_client->triggerLoad(testFileUrl(file));
+    if (QGuiApplication::platformName() != "offscreen")
+        QTRY_VERIFY(m_frames > 100);
+    else
+        QSKIP("offscreen rendering doesn't produce any frames");
 }
 
 QTEST_MAIN(tst_QQmlPreview)

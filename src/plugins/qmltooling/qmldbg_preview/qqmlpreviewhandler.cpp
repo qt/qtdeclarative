@@ -72,6 +72,9 @@ QQmlPreviewHandler::QQmlPreviewHandler(QObject *parent) : QObject(parent)
                                  || platformName == QStringLiteral("wayland"));
 
     QCoreApplication::instance()->installEventFilter(this);
+
+    m_fpsTimer.setInterval(1000);
+    connect(&m_fpsTimer, &QTimer::timeout, this, &QQmlPreviewHandler::fpsTimerHit);
 }
 
 QQmlPreviewHandler::~QQmlPreviewHandler()
@@ -227,7 +230,7 @@ void QQmlPreviewHandler::clear()
 {
     qDeleteAll(m_createdObjects);
     m_createdObjects.clear();
-    m_currentWindow = nullptr;
+    setCurrentWindow(nullptr);
 }
 
 Qt::WindowFlags fixFlags(Qt::WindowFlags flags)
@@ -249,7 +252,7 @@ Qt::WindowFlags fixFlags(Qt::WindowFlags flags)
 void QQmlPreviewHandler::showObject(QObject *object)
 {
     if (QWindow *window = qobject_cast<QWindow *>(object)) {
-        m_currentWindow = qobject_cast<QQuickWindow *>(window);
+        setCurrentWindow(qobject_cast<QQuickWindow *>(window));
         for (QWindow *otherWindow : QGuiApplication::allWindows()) {
             if (QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(otherWindow)) {
                 if (quickWindow == m_currentWindow)
@@ -259,7 +262,7 @@ void QQmlPreviewHandler::showObject(QObject *object)
             }
         }
     } else if (QQuickItem *item = qobject_cast<QQuickItem *>(object)) {
-        m_currentWindow = nullptr;
+        setCurrentWindow(nullptr);
         for (QWindow *window : QGuiApplication::allWindows()) {
             if (QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(window)) {
                 if (m_currentWindow != nullptr) {
@@ -267,7 +270,7 @@ void QQmlPreviewHandler::showObject(QObject *object)
                                              "decide which one to use."));
                     return;
                 }
-                m_currentWindow = quickWindow;
+                setCurrentWindow(quickWindow);
             } else {
                 window->setVisible(false);
                 window->setFlag(Qt::WindowStaysOnTopHint, false);
@@ -275,7 +278,7 @@ void QQmlPreviewHandler::showObject(QObject *object)
         }
 
         if (m_currentWindow == nullptr) {
-            m_currentWindow = new QQuickWindow;
+            setCurrentWindow(new QQuickWindow);
             m_createdObjects.append(m_currentWindow.data());
         }
 
@@ -299,6 +302,38 @@ void QQmlPreviewHandler::showObject(QObject *object)
         m_currentWindow->setFlags(fixFlags(m_currentWindow->flags()) | Qt::WindowStaysOnTopHint);
         m_currentWindow->setVisible(true);
     }
+}
+
+void QQmlPreviewHandler::setCurrentWindow(QQuickWindow *window)
+{
+    if (window == m_currentWindow.data())
+        return;
+
+    if (m_currentWindow) {
+        disconnect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
+                   this, &QQmlPreviewHandler::frameSwapped);
+        m_fpsTimer.stop();
+        m_frames = 0;
+    }
+
+    m_currentWindow = window;
+
+    if (m_currentWindow) {
+        connect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
+                this, &QQmlPreviewHandler::frameSwapped);
+        m_fpsTimer.start();
+    }
+}
+
+void QQmlPreviewHandler::frameSwapped()
+{
+    ++m_frames;
+}
+
+void QQmlPreviewHandler::fpsTimerHit()
+{
+    emit fps(m_frames);
+    m_frames = 0;
 }
 
 void QQmlPreviewHandler::tryCreateObject()

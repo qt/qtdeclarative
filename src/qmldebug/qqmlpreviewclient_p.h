@@ -71,7 +71,8 @@ public:
         Rerun,
         Directory,
         ClearCache,
-        Zoom
+        Zoom,
+        Fps
     };
 
     QQmlPreviewClient(QQmlDebugConnection *parent);
@@ -88,6 +89,7 @@ public:
 signals:
     void request(const QString &path);
     void error(const QString &message);
+    void fps(quint16 frames);
 };
 
 QT_END_NAMESPACE

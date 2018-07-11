@@ -72,11 +72,16 @@ public:
 
 signals:
     void error(const QString &message);
+    void fps(quint16 frames);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 private:
     void tryCreateObject();
     void showObject(QObject *object);
+    void setCurrentWindow(QQuickWindow *window);
+    void frameSwapped();
+    void fpsTimerHit();
 
     QScopedPointer<QQuickItem> m_dummyItem;
     QList<QQmlEngine *> m_engines;
@@ -85,6 +90,9 @@ private:
     QPointer<QQuickWindow> m_currentWindow;
     bool m_supportsMultipleWindows;
     QQmlPreviewPosition m_lastPosition;
+
+    QTimer m_fpsTimer;
+    quint16 m_frames = 0;
 };
 
 QT_END_NAMESPACE
