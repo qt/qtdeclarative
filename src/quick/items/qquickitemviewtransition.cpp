@@ -500,6 +500,8 @@ void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitione
     }
 
     if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
+        if (transition)
+            transition->cancel();
         delete transition;
         transition = new QQuickItemViewTransitionJob;
     }
