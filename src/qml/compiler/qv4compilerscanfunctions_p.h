@@ -58,6 +58,7 @@
 #include <private/qv4util_p.h>
 #include <QtCore/QStringList>
 #include <QStack>
+#include <QScopedValueRollback>
 
 QT_BEGIN_NAMESPACE
 
@@ -79,7 +80,7 @@ class Codegen;
 
 class ScanFunctions: protected QQmlJS::AST::Visitor
 {
-    typedef QV4::TemporaryAssignment<bool> TemporaryBoolAssignment;
+    typedef QScopedValueRollback<bool> TemporaryBoolAssignment;
 public:
     ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType);
     void operator()(AST::Node *node);

@@ -57,6 +57,7 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QString>
+#include <QScopedValueRollback>
 
 using namespace QV4;
 
@@ -154,7 +155,7 @@ ReturnedValue Script::run(const QV4::Value *thisObject)
     QV4::Scope valueScope(engine);
 
     if (qmlContext.isUndefined()) {
-        TemporaryAssignment<Function*> savedGlobalCode(engine->globalCode, vmFunction);
+        QScopedValueRollback<Function*> savedGlobalCode(engine->globalCode, vmFunction);
 
         return vmFunction->call(thisObject ? thisObject : engine->globalObject, nullptr, 0,
                                 context);
