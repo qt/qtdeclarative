@@ -760,7 +760,7 @@ public:
 
     void accept0(Visitor *visitor) override;
 
-    QString asString() const override { return QString::number(id, 'g', 16); }
+    QString asString() const override;
 
 // attributes
     double id;

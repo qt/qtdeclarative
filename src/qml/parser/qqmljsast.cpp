@@ -267,6 +267,28 @@ void NumericLiteralPropertyName::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+namespace {
+struct LocaleWithoutZeroPadding : public QLocale
+{
+    LocaleWithoutZeroPadding()
+        : QLocale(QLocale::C)
+    {
+        setNumberOptions(QLocale::OmitLeadingZeroInExponent | QLocale::OmitGroupSeparator);
+    }
+};
+}
+
+QString NumericLiteralPropertyName::asString()const
+{
+    // Can't use QString::number here anymore as it does zero padding by default now.
+
+    // In C++11 this initialization is thread-safe (6.7 [stmt.dcl] p4)
+    static LocaleWithoutZeroPadding locale;
+    // Because of https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83562 we can't use thread_local
+    // for the locale variable and therefore rely on toString(double) to be thread-safe.
+    return locale.toString(id, 'g', 16);
+}
+
 void ArrayMemberExpression::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
