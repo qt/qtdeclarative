@@ -76,6 +76,50 @@ public:
         emit dataChanged(index, index);
     }
 
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override
+    {
+        if (row < 0 || count <= 0)
+            return false;
+
+        beginInsertRows(parent, row, row + count - 1);
+        m_rows += count;
+        endInsertRows();
+        return true;
+    }
+
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override
+    {
+        if (!checkIndex(createIndex(row, 0)) || !checkIndex(createIndex(row + count - 1, 0)))
+            return false;
+
+        beginRemoveRows(parent, row, row + count - 1);
+        m_rows -= count;
+        endRemoveRows();
+        return true;
+    }
+
+    bool insertColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override
+    {
+        if (column < 0 || count <= 0)
+            return false;
+
+        beginInsertColumns(parent, column, column + count - 1);
+        m_columns += count;
+        endInsertColumns();
+        return true;
+    }
+
+    bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override
+    {
+        if (!checkIndex(createIndex(0, column)) || !checkIndex(createIndex(0, column + count - 1)))
+            return false;
+
+        beginRemoveColumns(parent, column, column + count - 1);
+        m_columns -= count;
+        endRemoveColumns();
+        return true;
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();

@@ -101,6 +101,7 @@ private slots:
     void flickOvershoot_data();
     void flickOvershoot();
     void checkRowColumnCount();
+    void modelSignals();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -778,6 +779,59 @@ void tst_QQuickTableView::checkRowColumnCount()
 
     const int qmlCountAfterUpFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
     QCOMPARE(qmlCountAfterUpFlick, qmlCountAfterInit);
+}
+
+void tst_QQuickTableView::modelSignals()
+{
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    TestModel model(1, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 1);
+    QCOMPARE(tableView->columns(), 1);
+
+    QVERIFY(model.insertRows(0, 1));
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 2);
+    QCOMPARE(tableView->columns(), 1);
+
+    QVERIFY(model.removeRows(1, 1));
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 1);
+    QCOMPARE(tableView->columns(), 1);
+
+    model.insertColumns(1, 1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 1);
+    QCOMPARE(tableView->columns(), 2);
+
+    model.removeColumns(1, 1);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 1);
+    QCOMPARE(tableView->columns(), 1);
+
+    model.setRowCount(10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 10);
+    QCOMPARE(tableView->columns(), 1);
+
+    model.setColumnCount(10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 10);
+    QCOMPARE(tableView->columns(), 10);
+
+    model.setRowCount(0);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 10);
+
+    model.setColumnCount(0);
+    // TODO: When the QAbstractItemModel's column count is set to 0,
+    // QQmlAdaptorModel::columnCount() likes to return whatever it was previously,
+    // even though the model doesn't actually have any columns... not sure what to do about that.
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 10);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

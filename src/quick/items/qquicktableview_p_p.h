@@ -324,6 +324,7 @@ public:
     void rowsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void columnsInsertedCallback(const QModelIndex &parent, int begin, int end);
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
+    void modelResetCallback();
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;
