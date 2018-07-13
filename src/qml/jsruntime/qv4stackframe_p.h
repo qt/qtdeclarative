@@ -57,7 +57,10 @@ struct CallData
         Accumulator = 2,
         This = 3,
         NewTarget = 4,
-        Argc = 5
+        Argc = 5,
+
+        LastOffset = Argc,
+        OffsetCount = LastOffset + 1
     };
 
     Value function;
@@ -87,8 +90,13 @@ struct CallData
 };
 
 Q_STATIC_ASSERT(std::is_standard_layout<CallData>::value);
-Q_STATIC_ASSERT(offsetof(CallData, thisObject) == CallData::This*sizeof(Value));
-Q_STATIC_ASSERT(offsetof(CallData, args) == 6*sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, function   ) == CallData::Function    * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, context    ) == CallData::Context     * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, accumulator) == CallData::Accumulator * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, thisObject ) == CallData::This        * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, newTarget  ) == CallData::NewTarget   * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, _argc      ) == CallData::Argc        * sizeof(Value));
+Q_STATIC_ASSERT(offsetof(CallData, args       ) == 6 * sizeof(Value));
 
 struct Q_QML_EXPORT CppStackFrame {
     EngineBase *engine;
