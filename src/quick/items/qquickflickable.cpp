@@ -633,6 +633,31 @@ void QQuickFlickablePrivate::updateBeginningEnd()
     \c contentItem that are relevant.  For example, the bound of Items added
     to the Flickable will be available by \c contentItem.childrenRect
 
+    \section1 Examples of contentX and contentY
+
+    The following images demonstrate a flickable being flicked in various
+    directions and the resulting \l contentX and \l contentY values.
+    The blue square represents the flickable's content, and the black
+    border represents the bounds of the flickable.
+
+    \table
+        \row
+            \li \image flickable-contentXY-resting.png
+            \li The \c contentX and \c contentY are both \c 0.
+        \row
+            \li \image flickable-contentXY-top-left.png
+            \li The \c contentX and the \c contentY are both \c 50.
+        \row
+            \li \image flickable-contentXY-top-right.png
+            \li The \c contentX is \c -50 and the \c contentY is \c 50.
+        \row
+            \li \image flickable-contentXY-bottom-right.png
+            \li The \c contentX and the \c contentY are both \c -50.
+        \row
+            \li \image flickable-contentXY-bottom-left.png
+            \li The \c contentX is \c 50 and the \c contentY is \c -50.
+    \endtable
+
     \section1 Limitations
 
     \note Due to an implementation detail, items placed inside a Flickable
@@ -738,7 +763,7 @@ QQuickFlickable::~QQuickFlickable()
     for the position; another way is to use the normalized values in
     \l {QtQuick::Flickable::visibleArea}{visibleArea}.
 
-    \sa originX, originY
+    \sa {Examples of contentX and contentY}, originX, originY
 */
 qreal QQuickFlickable::contentX() const
 {

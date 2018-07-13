@@ -126,6 +126,8 @@ private slots:
     void parentErrors();
 
     void rootContext();
+    void sourceURLKeepComponent();
+
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1386,6 +1388,57 @@ void tst_QQuickLoader::rootContext()
     }
     QVERIFY2(warningsSpy.isEmpty(), qPrintable(failureMessage));
     QCOMPARE(objectInRootContext.didIt, 2);
+}
+
+void tst_QQuickLoader::sourceURLKeepComponent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray(
+                      "import QtQuick 2.0\n"
+                      " Loader { id: loader\n }"),
+                      dataDirectoryUrl());
+
+    QScopedPointer<QQuickLoader> loader(qobject_cast<QQuickLoader*>(component.create()));
+    loader->setSource(testFileUrl("/Rect120x60.qml"));
+
+    QVERIFY(loader);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(loader->progress(), 1.0);
+
+    const QPointer<QQmlComponent> sourceComponent =  loader->sourceComponent();
+
+    //Ensure toggling active status does not recreate component
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    loader->setActive(true);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    loader->setActive(false);
+    QVERIFY(!loader->item());
+    QVERIFY(loader->sourceComponent());
+    QCOMPARE(sourceComponent.data(), loader->sourceComponent());
+
+    //Ensure changing source url causes component to be recreated when inactive
+    loader->setSource(testFileUrl("/BlueRect.qml"));
+
+    loader->setActive(true);
+    QVERIFY(loader->item());
+    QVERIFY(loader->sourceComponent());
+
+    const QPointer<QQmlComponent> newSourceComponent =  loader->sourceComponent();
+    QVERIFY(sourceComponent.data() != newSourceComponent.data());
+
+    //Ensure changing source url causes component to be recreated when active
+    loader->setSource(testFileUrl("/Rect120x60.qml"));
+    QVERIFY(loader->sourceComponent() != newSourceComponent.data());
+
 }
 
 QTEST_MAIN(tst_QQuickLoader)

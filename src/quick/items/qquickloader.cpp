@@ -112,6 +112,8 @@ void QQuickLoaderPrivate::clear()
                 q, SIGNAL(progressChanged()));
         component->deleteLater();
         component.setObject(nullptr, q);
+    } else if (component) {
+        component.setObject(nullptr, q);
     }
     source = QUrl();
 
@@ -437,7 +439,8 @@ void QQuickLoader::loadFromSource()
 
     if (isComponentComplete()) {
         QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-        d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
+        if (!d->component)
+            d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
         d->load();
     }
 }
@@ -823,7 +826,8 @@ void QQuickLoader::componentComplete()
     if (active()) {
         if (d->loadingFromSource) {
             QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-            d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
+            if (!d->component)
+                d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
         }
         d->load();
     }

@@ -68,6 +68,37 @@ QT_BEGIN_NAMESPACE
 
 using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
+class NullDevice : public QIODevice
+{
+public:
+    NullDevice() { open(QIODevice::ReadWrite); }
+
+protected:
+    qint64 readData(char *data, qint64 maxlen) final;
+    qint64 writeData(const char *data, qint64 len) final;
+};
+
+qint64 NullDevice::readData(char *data, qint64 maxlen)
+{
+    Q_UNUSED(data);
+    return maxlen;
+}
+
+qint64 NullDevice::writeData(const char *data, qint64 len)
+{
+    Q_UNUSED(data);
+    return len;
+}
+
+// check whether the data can be saved
+// (otherwise we assert in QVariant::operator<< when actually saving it)
+static bool isSaveable(const QVariant &value)
+{
+    NullDevice nullDevice;
+    QDataStream fakeStream(&nullDevice);
+    return QMetaType::save(fakeStream, static_cast<int>(value.type()), value.constData());
+}
+
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
     QQmlEngineDebugService(2, parent), m_watch(new QQmlWatcher(this)), m_statesDelegate(nullptr)
 {
@@ -106,13 +137,7 @@ QDataStream &operator<<(QDataStream &ds,
                         const QQmlEngineDebugServiceImpl::QQmlObjectProperty &data)
 {
     ds << (int)data.type << data.name;
-    // check first whether the data can be saved
-    // (otherwise we assert in QVariant::operator<<)
-    QQmlDebugPacket fakeStream;
-    if (QMetaType::save(fakeStream, data.value.type(), data.value.constData()))
-        ds << data.value;
-    else
-        ds << QVariant();
+    ds << (isSaveable(data.value) ? data.value : QVariant());
     ds << data.valueTypeName << data.binding << data.hasNotifySignal;
     return ds;
 }
@@ -247,8 +272,8 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
                 }
             }
 
-            // We expect all QML value types to either have a toString() method or stream operators
-            return value;
+            if (isSaveable(value))
+                return value;
         }
     }
 

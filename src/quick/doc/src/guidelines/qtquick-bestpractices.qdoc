@@ -59,20 +59,19 @@ custom control.
 \li \l{Qt Quick}
 \endlist
 
+\omit
 \section1 Keep it Short and Simple or "KiSS"
 
 QML being a declarative language, a lot of the details are worked out by the underlying
 engine. So it is important for any QML application, especially one with a
 larger codebase, to have its code organized in smaller and simpler \c .qml files.
 
-\omit
-need a few snippet or example applications that showcase this.
+TODO: need a few snippet or example applications that showcase this.
 \endomit
 
-\section2 Related Information
-\list
- \li \l{QML Coding Conventions}
-\endlist
+\section1 Coding Conventions
+
+See \l{QML Coding Conventions}.
 
 \section1 Bundle Application Resources
 
@@ -338,8 +337,9 @@ must be considered while using them:
 \section2 Dos
 
 \list
- \li Use anchors or the item's width and height properties to specify the size
-     of the layout against its parent.
+ \li Use \l {Item::}{anchors} or the \l {Item::}{width} and \l {Item::}{height}
+     properties to specify the size of the layout against its non-layout parent
+     item.
  \li Use the \l Layout attached property to set the size and alignment
      attributes of the layout's immediate children.
 \endlist
@@ -347,12 +347,10 @@ must be considered while using them:
 \section2 Don'ts
 
 \list
- \li Do not rely on anchors to specify the preferred size of an item in a layout.
-     Instead, use \c Layout.preferredWidth and \c Layout.preferredHeight.
  \li Do not define preferred sizes for items that provide implicitWidth and
      implicitHeight, unless their implicit sizes are not satisfactory.
- \li Do not mix anchors and layouts in ways that cause conflicts. For example,
-     do not apply anchor constraints to a layout's immediate children.
+ \li Do not use anchors on an item that is an immediate child of a layout.
+     Instead, use \c Layout.preferredWidth and \c Layout.preferredHeight:
 
     \snippet qml/windowconstraints.qml rowlayout
 \endlist
@@ -368,6 +366,36 @@ properties are enough.
  \li \l{Item Positioners}
  \li \l{Qt Quick Layouts Overview}
 \endlist
+
+\section1 Type Safety
+
+When declaring properties in QML, it's easy and convenient to use the "var" type:
+
+\code
+property var name
+property var size
+property var optionsMenu
+\endcode
+
+However, this approach has several disadvantages:
+\list
+ \li If a value with the wrong type is assigned, the error reported will point
+     to the location of the property declaration, as opposed to the location
+     where the property was assigned to. This slows down the development
+     process by making it more difficult to track down errors.
+ \li Static anaylsis to catch errors like the ones mentioned above is not
+     possible.
+ \li The actual underlying type of the property is not always immediately clear
+     to the reader.
+\endlist
+
+Instead, always use the actual type where possible:
+
+\code
+property string name
+property int size
+property MyMenu optionsMenu
+\endcode
 
 \section1 Performance
 
@@ -420,7 +448,7 @@ on the display resolution on offer.
 \section2 Related Information
 
 \list
- \li \l{Qt Quick Controls 2 - Gallery Example}{Gallery example}
+ \li \l{Qt Quick Controls 2 - Gallery}{Gallery example}
  \li \l{Qt Quick Controls 2 - Text Editor}{Text Editor example}
  \li \l{Font Awesome}
  \li \l{Scalability}

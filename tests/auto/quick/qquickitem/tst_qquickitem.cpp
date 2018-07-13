@@ -2105,32 +2105,34 @@ void tst_qquickitem::shortcutOverride()
 void tst_qquickitem::qtBug60123()
 {
     QMainWindow main;
+    main.resize(400, 200);
 
     QQuickView window;
     QQuickView window2;
     window.setSource(testFileUrl("mainWindowQtBug60123.qml"));
     window2.setSource(testFileUrl("mainWindowQtBug60123.qml"));
 
+    // Create central widget for the main window
     QWidget *baseWidget = new QWidget(&main);
-    main.resize(400, 200);
     baseWidget->resize(400, 200);
     baseWidget->setMaximumHeight(200);
     baseWidget->setMaximumWidth(400);
+    main.setCentralWidget(baseWidget);
 
     // Create container widgets for both windows
     QWidget *containers = QWidget::createWindowContainer(&window, baseWidget);
-    containers->setGeometry(0, 0, 400, 200);
-    QWidget* containers2 = QWidget::createWindowContainer(&window2, baseWidget);
-    containers2->setGeometry(50, 50, 300, 150);
+    QWidget *containers2 = QWidget::createWindowContainer(&window2, baseWidget);
+    containers->setGeometry(0, 0, 100, 100);
+    containers2->setGeometry(100, 100, 100, 100);
 
     // Show and activate the main window
     main.show();
-    QTest::qWaitForWindowActive(&main);
+    QVERIFY(QTest::qWaitForWindowExposed(&main));
 
     // Activate window, test press and release events
     auto activateWindowAndTestPress = [] (QQuickView* testWindow) {
         testWindow->requestActivate();
-        QTest::qWaitForWindowActive(testWindow);
+        QVERIFY(QTest::qWaitForWindowActive(testWindow));
         QTest::mousePress(testWindow, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));
         QCOMPARE(testWindow->rootObject()->property("lastEvent").toString(), QString("pressed"));
         QTest::mouseRelease(testWindow, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));

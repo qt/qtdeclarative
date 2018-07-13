@@ -227,6 +227,8 @@ private:
     QPointer<QJSDebugClient> m_client;
 
     void targetData();
+    bool waitForClientSignal(const char *signal, int timeout = 30000);
+
     QTime t;
 };
 
@@ -798,7 +800,7 @@ void tst_QQmlDebugJS::connect()
     QFETCH(bool, qmlscene);
     QCOMPARE(init(qmlscene, QString(TEST_QMLFILE), blockMode, restrictMode), ConnectSuccess);
     m_client->connect();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(connected())));
+    QVERIFY(waitForClientSignal(SIGNAL(connected())));
 }
 
 void tst_QQmlDebugJS::interrupt()
@@ -812,7 +814,7 @@ void tst_QQmlDebugJS::interrupt()
     m_client->connect(redundantRefs, namesAsObjects);
 
     m_client->interrupt();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(interruptRequested())));
+    QVERIFY(waitForClientSignal(SIGNAL(interruptRequested())));
 }
 
 void tst_QQmlDebugJS::getVersion()
@@ -824,10 +826,10 @@ void tst_QQmlDebugJS::getVersion()
     QFETCH(bool, namesAsObjects);
     QCOMPARE(init(qmlscene), ConnectSuccess);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(connected())));
+    QVERIFY(waitForClientSignal(SIGNAL(connected())));
 
     m_client->version();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::getVersionWhenAttaching()
@@ -841,7 +843,7 @@ void tst_QQmlDebugJS::getVersionWhenAttaching()
     m_client->connect(redundantRefs, namesAsObjects);
 
     m_client->version();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::disconnect()
@@ -855,7 +857,7 @@ void tst_QQmlDebugJS::disconnect()
     m_client->connect(redundantRefs, namesAsObjects);
 
     m_client->disconnect();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
@@ -870,7 +872,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnCompleted()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -893,7 +895,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComponentCreated()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -916,7 +918,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnTimerCallback()
     //We can set the breakpoint after connect() here because the timer is repeating and if we miss
     //its first iteration we can still catch the second one.
     m_client->setBreakpoint(QLatin1String(TIMER_QMLFILE), sourceLine, -1, true);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -939,7 +941,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptInDifferentFile()
 
     m_client->setBreakpoint(QLatin1String(TEST_JSFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -964,7 +966,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
     m_client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped()), 1));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped()), 1));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -989,7 +991,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
     m_client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
     QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped()), 1));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped()), 1));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1012,7 +1014,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
 
     m_client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1035,7 +1037,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
     m_client->connect(redundantRefs, namesAsObjects);
     //The breakpoint is in a timer loop so we can set it after connect().
     m_client->setBreakpoint(QLatin1String(CONDITION_QMLFILE), sourceLine, 1, true, QLatin1String("a > 10"));
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     //Get the frame index
     QString jsonString = m_client->response;
@@ -1047,7 +1049,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptWithCondition()
 
         //Verify the value of 'result'
         m_client->evaluate(QLatin1String("a"),frameIndex);
-        QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+        QVERIFY(waitForClientSignal(SIGNAL(result())));
     }
 
     jsonString = m_client->response;
@@ -1073,7 +1075,7 @@ void tst_QQmlDebugJS::setBreakpointInScriptThatQuits()
 
     m_client->setBreakpoint(QLatin1String(QUIT_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1102,7 +1104,7 @@ void tst_QQmlDebugJS::setBreakpointWhenAttaching()
     //The breakpoint is in a timer loop so we can set it after connect().
     m_client->setBreakpoint(QLatin1String(TIMER_QMLFILE), sourceLine);
 
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 }
 
 void tst_QQmlDebugJS::clearBreakpoint()
@@ -1123,7 +1125,7 @@ void tst_QQmlDebugJS::clearBreakpoint()
     m_client->setBreakpoint(QLatin1String(CHANGEBREAKPOINT_QMLFILE), sourceLine1, -1, true);
     m_client->setBreakpoint(QLatin1String(CHANGEBREAKPOINT_QMLFILE), sourceLine2, -1, true);
 
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     //Will hit 1st brakpoint, change this breakpoint enable = false
     QString jsonString(m_client->response);
@@ -1135,17 +1137,17 @@ void tst_QQmlDebugJS::clearBreakpoint()
     int breakpoint = breakpointsHit.at(0).toInt();
     m_client->clearBreakpoint(breakpoint);
 
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     //Continue with debugging
     m_client->continueDebugging(QJSDebugClient::Continue);
     //Hit 2nd breakpoint
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     //Continue with debugging
     m_client->continueDebugging(QJSDebugClient::Continue);
     //Should stop at 2nd breakpoint
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     jsonString = m_client->response;
     value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1165,7 +1167,7 @@ void tst_QQmlDebugJS::setExceptionBreak()
     QCOMPARE(init(qmlscene, EXCEPTION_QMLFILE), ConnectSuccess);
     m_client->setExceptionBreak(QJSDebugClient::All,true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 }
 
 void tst_QQmlDebugJS::stepNext()
@@ -1180,10 +1182,10 @@ void tst_QQmlDebugJS::stepNext()
 
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->continueDebugging(QJSDebugClient::Next);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1215,11 +1217,11 @@ void tst_QQmlDebugJS::stepIn()
 
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, 1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
     QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::In);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
@@ -1239,11 +1241,11 @@ void tst_QQmlDebugJS::stepOut()
 
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
     QCOMPARE(responseBody(m_client).value("sourceLine").toInt(), sourceLine);
 
     m_client->continueDebugging(QJSDebugClient::Out);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     const QVariantMap body = responseBody(m_client);
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
@@ -1264,10 +1266,10 @@ void tst_QQmlDebugJS::continueDebugging()
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine1, -1, true);
     m_client->setBreakpoint(QLatin1String(STEPACTION_QMLFILE), sourceLine2, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->continueDebugging(QJSDebugClient::Continue);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList() << QJSValue(jsonString)).toVariant().toMap();
@@ -1290,10 +1292,10 @@ void tst_QQmlDebugJS::backtrace()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->backtrace();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::getFrameDetails()
@@ -1308,10 +1310,10 @@ void tst_QQmlDebugJS::getFrameDetails()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->frame();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::getScopeDetails()
@@ -1326,10 +1328,10 @@ void tst_QQmlDebugJS::getScopeDetails()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->scope();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 }
 
 void tst_QQmlDebugJS::evaluateInGlobalScope()
@@ -1342,7 +1344,7 @@ void tst_QQmlDebugJS::evaluateInGlobalScope()
     for (int i = 0; i < 10; ++i) {
         // The engine might not be initialized, yet. We just try until it shows up.
         m_client->evaluate(QLatin1String("console.log('Hello World')"));
-        if (QQmlDebugTest::waitForSignal(m_client, SIGNAL(result()), 500))
+        if (waitForClientSignal(SIGNAL(result()), 500))
             break;
     }
 
@@ -1362,10 +1364,10 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
 
     m_client->setBreakpoint(QLatin1String(ONCOMPLETED_QMLFILE), sourceLine, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->frame();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     //Get the frame index
     QString jsonString(m_client->response);
@@ -1376,7 +1378,7 @@ void tst_QQmlDebugJS::evaluateInLocalScope()
     int frameIndex = body.value("index").toInt();
 
     m_client->evaluate(QLatin1String("root.a"), frameIndex);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     //Verify the value of 'timer.interval'
     jsonString = m_client->response;
@@ -1407,7 +1409,7 @@ void tst_QQmlDebugJS::evaluateInContext()
 
     // "a" not accessible without extra context
     m_client->evaluate(QLatin1String("a + 10"), -1, -1);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(failure())));
+    QVERIFY(waitForClientSignal(SIGNAL(failure())));
 
     bool success = false;
     engineClient->queryAvailableEngines(&success);
@@ -1430,7 +1432,7 @@ void tst_QQmlDebugJS::evaluateInContext()
 
     // "a" accessible in context of surrounding object
     m_client->evaluate(QLatin1String("a + 10"), -1, object.debugId);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 20);
 }
@@ -1446,10 +1448,10 @@ void tst_QQmlDebugJS::getScripts()
 
     m_client->setBreakpoint(QString(TEST_QMLFILE), 35, -1, true);
     m_client->connect(redundantRefs, namesAsObjects);
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(stopped())));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     m_client->scripts();
-    QVERIFY(QQmlDebugTest::waitForSignal(m_client, SIGNAL(result())));
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
     QString jsonString(m_client->response);
     QVariantMap value = m_client->parser.call(QJSValueList()
                                             << QJSValue(jsonString)).toVariant().toMap();
@@ -1543,6 +1545,11 @@ void tst_QQmlDebugJS::targetData()
     QTest::newRow("qmlscene / sparse / objects")    << true  << false << true;
     QTest::newRow("custom / sparse / strings")      << false << false << false;
     QTest::newRow("qmlscene / sparse / strings")    << true  << false << false;
+}
+
+bool tst_QQmlDebugJS::waitForClientSignal(const char *signal, int timeout)
+{
+    return QQmlDebugTest::waitForSignal(m_client.data(), signal, timeout);
 }
 
 QTEST_MAIN(tst_QQmlDebugJS)
