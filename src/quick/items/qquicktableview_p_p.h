@@ -197,7 +197,7 @@ public:
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
-    QSizeF cellSpacing;
+    QSizeF cellSpacing = QSizeF(0, 0);
     QMarginsF tableMargins;
 
     int cacheBuffer = kDefaultCacheBuffer;

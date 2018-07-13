@@ -104,6 +104,7 @@ private slots:
     void fillTableViewButNothingMore();
     void checkInitialAttachedProperties_data();
     void checkInitialAttachedProperties();
+    void checkSpacingValues();
     void flick_data();
     void flick();
     void flickOvershoot_data();
@@ -685,6 +686,50 @@ void tst_QQuickTableView::checkInitialAttachedProperties()
         QCOMPARE(contextIndex, index);
         QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
     }
+}
+
+void tst_QQuickTableView::checkSpacingValues()
+{
+    LOAD_TABLEVIEW("tableviewdefaultspacing.qml");
+
+    int rowCount = 9;
+    int columnCount = 9;
+    int delegateWidth = 15;
+    int delegateHeight = 10;
+    auto model = TestModelAsVariant(rowCount, columnCount);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Default spacing : 0
+    QCOMPARE(tableView->rowSpacing(), 0);
+    QCOMPARE(tableView->columnSpacing(), 0);
+
+    tableView->polish();
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->contentWidth(), columnCount * (delegateWidth + tableView->columnSpacing()) - tableView->columnSpacing());
+    QCOMPARE(tableView->contentHeight(), rowCount * (delegateHeight + tableView->rowSpacing()) - tableView->rowSpacing());
+
+    // Valid spacing assignment
+    tableView->setRowSpacing(42);
+    tableView->setColumnSpacing(12);
+    QCOMPARE(tableView->rowSpacing(), 42);
+    QCOMPARE(tableView->columnSpacing(), 12);
+
+    tableView->polish();
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->contentWidth(), columnCount * (delegateWidth + tableView->columnSpacing()) - tableView->columnSpacing());
+    QCOMPARE(tableView->contentHeight(), rowCount * (delegateHeight + tableView->rowSpacing()) - tableView->rowSpacing());
+
+    // Invalid assignments (should ignore)
+    tableView->setRowSpacing(-1);
+    tableView->setColumnSpacing(-5);
+    tableView->setRowSpacing(INFINITY);
+    tableView->setColumnSpacing(INFINITY);
+    tableView->setRowSpacing(NAN);
+    tableView->setColumnSpacing(NAN);
+    QCOMPARE(tableView->rowSpacing(), 42);
+    QCOMPARE(tableView->columnSpacing(), 12);
 }
 
 void tst_QQuickTableView::flick_data()
