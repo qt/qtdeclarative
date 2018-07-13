@@ -208,7 +208,7 @@ void tst_QQuickTableView::checkImplicitSizeDelegate()
 {
     // Check that we can set the size of delegate items using
     // implicit width/height, instead of forcing the user to
-    // create an attached object by using TableView.cellWidth/Height.
+    // create an attached object by using implicitWidth/Height.
     LOAD_TABLEVIEW("tableviewimplicitsize.qml");
 
     auto model = TestModelAsVariant(100, 100);

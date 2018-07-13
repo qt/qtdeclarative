@@ -76,8 +76,8 @@ Window {
         Component {
             id: tableViewDelegate
             Rectangle {
-                TableView.cellWidth: column % 3 ? 80 : 50
-                TableView.cellHeight: row % 3 ? 80 : 50
+                implicitWidth: column % 3 ? 80 : 50
+                implicitHeight: row % 3 ? 80 : 50
 
                 Text {
                     anchors.centerIn: parent

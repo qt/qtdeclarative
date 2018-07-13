@@ -150,8 +150,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QQuickTableView *tableView READ tableView NOTIFY tableViewChanged)
-    Q_PROPERTY(qreal cellWidth READ cellWidth WRITE setCellWidth NOTIFY cellWidthChanged)
-    Q_PROPERTY(qreal cellHeight READ cellHeight WRITE setCellHeight NOTIFY cellHeightChanged)
 
 public:
     QQuickTableViewAttached(QObject *parent)
@@ -165,31 +163,11 @@ public:
         Q_EMIT tableViewChanged();
     }
 
-    qreal cellWidth() const { return m_cellWidth; }
-    void setCellWidth(qreal newWidth) {
-        if (newWidth == m_cellWidth)
-            return;
-        m_cellWidth = newWidth;
-        Q_EMIT cellWidthChanged();
-    }
-
-    qreal cellHeight() const { return m_cellHeight; }
-    void setCellHeight(qreal newHeight) {
-        if (newHeight == m_cellHeight)
-            return;
-        m_cellHeight = newHeight;
-        Q_EMIT cellHeightChanged();
-    }
-
 Q_SIGNALS:
     void tableViewChanged();
-    void cellWidthChanged();
-    void cellHeightChanged();
 
 private:
     QPointer<QQuickTableView> m_tableview;
-    QQmlNullableValue<qreal> m_cellWidth;
-    QQmlNullableValue<qreal> m_cellHeight;
 
     friend class QQuickTableViewPrivate;
 };

@@ -490,29 +490,17 @@ Qt::Edge QQuickTableViewPrivate::nextEdgeToUnload(const QRectF rect)
 
 qreal QQuickTableViewPrivate::cellWidth(const QPoint& cell)
 {
-    // If a delegate item has TableView.cellWidth set, then
-    // we prefer that. Otherwise we fall back to use implicitWidth.
     // Using an items width directly is not an option, since we change
     // it during layout (which would also cause problems when recycling items).
     auto const cellItem = loadedTableItem(cell)->item;
-    if (auto const attached = getAttachedObject(cellItem)) {
-        if (!attached->m_cellWidth.isNull)
-            return attached->m_cellWidth;
-    }
     return cellItem->implicitWidth();
 }
 
 qreal QQuickTableViewPrivate::cellHeight(const QPoint& cell)
 {
-    // If a delegate item has TableView.cellHeight set, then
-    // we prefer that. Otherwise we fall back to use implicitHeight.
     // Using an items height directly is not an option, since we change
     // it during layout (which would also cause problems when recycling items).
     auto const cellItem = loadedTableItem(cell)->item;
-    if (auto const attached = getAttachedObject(cellItem)) {
-        if (!attached->m_cellHeight.isNull)
-            return attached->m_cellHeight;
-    }
     return cellItem->implicitHeight();
 }
 
