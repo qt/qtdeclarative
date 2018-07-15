@@ -109,7 +109,7 @@ public:
 
     virtual int variedDuration() const
     {
-        return qMax(qreal(0.0) , m_duration
+        return qMax(0.0 , m_duration
                 + (m_durationVariation * QRandomGenerator::global()->bounded(2.0))
                 - m_durationVariation);
     }
