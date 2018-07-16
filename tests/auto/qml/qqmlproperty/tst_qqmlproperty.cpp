@@ -2064,14 +2064,15 @@ void tst_qqmlproperty::floatToStringPrecision_data()
     QTest::addColumn<QString>("propertyName");
     QTest::addColumn<double>("number");
     QTest::addColumn<QString>("qtString");
+    QTest::addColumn<QString>("alternateQtString");
     QTest::addColumn<QString>("jsString");
 
-    QTest::newRow("3.4")           << "a" << 3.4           << "3.4"          << "3.4";
-    QTest::newRow("0.035003945")   << "b" << 0.035003945   << "0.035003945"  << "0.035003945";
-    QTest::newRow("0.0000012345")  << "c" << 0.0000012345  << "1.2345e-06"   << "0.0000012345";
-    QTest::newRow("0.00000012345") << "d" << 0.00000012345 << "1.2345e-07"   << "1.2345e-7";
-    QTest::newRow("1e20")          << "e" << 1e20          << "1e+20"        << "100000000000000000000";
-    QTest::newRow("1e21")          << "f" << 1e21          << "1e+21"        << "1e+21";
+    QTest::newRow("3.4")           << "a" << 3.4           << "3.4"         << "3.4"          << "3.4";
+    QTest::newRow("0.035003945")   << "b" << 0.035003945   << "0.035003945" << "0.0035003945" << "0.035003945";
+    QTest::newRow("0.0000012345")  << "c" << 0.0000012345  << "1.2345e-6"   << "1.2345e-06"    << "0.0000012345";
+    QTest::newRow("0.00000012345") << "d" << 0.00000012345 << "1.2345e-7"   << "1.2345e-07"    << "1.2345e-7";
+    QTest::newRow("1e20")          << "e" << 1e20          << "1e+20"       << "1e+20"        << "100000000000000000000";
+    QTest::newRow("1e21")          << "f" << 1e21          << "1e+21"       << "1e+21"        << "1e+21";
 }
 
 void tst_qqmlproperty::floatToStringPrecision()
@@ -2083,15 +2084,24 @@ void tst_qqmlproperty::floatToStringPrecision()
     QFETCH(QString, propertyName);
     QFETCH(double, number);
     QFETCH(QString, qtString);
+    QFETCH(QString, alternateQtString);
     QFETCH(QString, jsString);
 
     QByteArray name = propertyName.toLatin1();
     QCOMPARE(obj->property(name).toDouble(), number);
-    QCOMPARE(obj->property(name).toString(), qtString);
+    if (obj->property(name).toString() != qtString) {
+        QCOMPARE(obj->property(name).toString(), alternateQtString);
+    } else {
+        QCOMPARE(obj->property(name).toString(), qtString);
+    }
 
     QByteArray name1 = (propertyName + QLatin1Char('1')).toLatin1();
     QCOMPARE(obj->property(name1).toDouble(), number);
-    QCOMPARE(obj->property(name1).toString(), qtString);
+    if (obj->property(name1).toString() != qtString) {
+        QCOMPARE(obj->property(name1).toString(), alternateQtString);
+    } else {
+        QCOMPARE(obj->property(name1).toString(), qtString);
+    }
 
     QByteArray name2 = (propertyName + QLatin1Char('2')).toLatin1();
     QCOMPARE(obj->property(name2).toDouble(), number);
