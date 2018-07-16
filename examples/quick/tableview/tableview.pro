@@ -1,3 +1,5 @@
 TEMPLATE = subdirs
 
-SUBDIRS += pixelator
+SUBDIRS += \
+    gameoflife \
+    pixelator
