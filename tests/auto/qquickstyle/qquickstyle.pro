@@ -18,3 +18,11 @@ RESOURCES += qrcStyles1
 qrcStyles2.files = $$files(qrcStyles2/QrcStyle2/*.qml)
 qrcStyles2.prefix = /
 RESOURCES += qrcStyles2
+
+qrcStyles3.files = $$files(qrcStyles3/QrcStyle3/*.qml)
+qrcStyles3.prefix = /
+RESOURCES += qrcStyles3
+
+qrcStyles4.files = $$files(qrcStyles4/QrcStyle4/*.qml)
+qrcStyles4.prefix = /
+RESOURCES += qrcStyles4
