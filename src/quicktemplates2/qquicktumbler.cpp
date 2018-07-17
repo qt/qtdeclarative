@@ -215,7 +215,7 @@ void QQuickTumblerPrivate::_q_onViewCountChanged()
             // If we could successfully set the currentIndex, consider it done.
             // Otherwise, we'll try again later in updatePolish().
             if (currentIndex == pendingCurrentIndex)
-                pendingCurrentIndex = -1;
+                setPendingCurrentIndex(-1);
             else
                 q->polish();
         } else if (currentIndex == -1) {
@@ -639,7 +639,7 @@ void QQuickTumblerPrivate::syncCurrentIndex()
 
     // Nothing to do.
     if (actualViewIndex == indexToSet) {
-        pendingCurrentIndex = -1;
+        setPendingCurrentIndex(-1);
         return;
     }
 
@@ -652,9 +652,14 @@ void QQuickTumblerPrivate::syncCurrentIndex()
     ignoreCurrentIndexChanges = false;
 
     if (view->property("currentIndex").toInt() == indexToSet)
-        pendingCurrentIndex = -1;
+        setPendingCurrentIndex(-1);
     else if (isPendingCurrentIndex)
         q->polish();
+}
+
+void QQuickTumblerPrivate::setPendingCurrentIndex(int index)
+{
+    pendingCurrentIndex = index;
 }
 
 void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
@@ -666,7 +671,7 @@ void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
 
     if (!q->isComponentComplete()) {
         // Views can't set currentIndex until they're ready.
-        pendingCurrentIndex = newCurrentIndex;
+        setPendingCurrentIndex(newCurrentIndex);
         return;
     }
 
@@ -675,7 +680,7 @@ void QQuickTumblerPrivate::setCurrentIndex(int newCurrentIndex,
         // the model is in the process of being set and the user has set
         // the currentIndex in onModelChanged. We have to queue the currentIndex
         // change until we're ready.
-        pendingCurrentIndex = newCurrentIndex;
+        setPendingCurrentIndex(newCurrentIndex);
         return;
     }
 
@@ -814,7 +819,7 @@ void QQuickTumbler::updatePolish()
 
         // If the count is still 0, it's not going to happen.
         if (d->count == 0) {
-            d->pendingCurrentIndex = -1;
+            d->setPendingCurrentIndex(-1);
             return;
         }
 
@@ -829,7 +834,7 @@ void QQuickTumbler::updatePolish()
             d->setCurrentIndex(0);
         }
 
-        d->pendingCurrentIndex = -1;
+        d->setPendingCurrentIndex(-1);
     }
 }
 

@@ -643,6 +643,11 @@ QQuickOverlay *QQuickOverlayAttached::overlay() const
 
     The property can be attached to any popup.
 
+    For example, to change the color of the background dimming for a modal
+    popup, the following code can be used:
+
+    \snippet qtquickcontrols2-overlay-modal.qml 1
+
     \sa Popup::modal
 */
 QQmlComponent *QQuickOverlayAttached::modal() const
@@ -670,6 +675,11 @@ void QQuickOverlayAttached::setModal(QQmlComponent *modal)
     dimming popups.
 
     The property can be attached to any popup.
+
+    For example, to change the color of the background dimming for a modeless
+    popup, the following code can be used:
+
+    \snippet qtquickcontrols2-overlay-modeless.qml 1
 
     \sa Popup::dim
 */

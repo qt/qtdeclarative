@@ -104,6 +104,7 @@ public:
     void setupViewData(QQuickItem *newControlContentItem);
     void warnAboutIncorrectContentItem();
     void syncCurrentIndex();
+    void setPendingCurrentIndex(int index);
 
     enum PropertyChangeReason {
         UserChange,

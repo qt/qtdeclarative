@@ -70,6 +70,20 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-scrollview-listview.qml file
 
+    \section2 Sizing
+
+    As with Flickable, there are several things to keep in mind when using
+    ScrollView:
+    \list
+        \li If only a single item is used within a ScrollView, the content size is
+            automatically calculated based on the implicit size of its contained item.
+            However, if more than one item is used (or an implicit size is not
+            provided), the \l contentWidth and \l contentHeight properties must
+            be set to the combined size of its contained items.
+        \li If the content size is less than or equal to the size of the ScrollView,
+            it will not be flickable.
+    \endlist
+
     \section2 Scroll Bars
 
     The horizontal and vertical scroll bars can be accessed and customized using

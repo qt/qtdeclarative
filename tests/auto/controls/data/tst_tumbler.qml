@@ -298,13 +298,7 @@ TestCase {
         tryCompare(tumbler, "currentIndex", data.currentIndex);
 
         tumblerView = findView(tumbler);
-        // TODO: replace once QTBUG-19708 is fixed.
-        for (var delay = 1000; delay >= 0; delay -= 50) {
-            if (tumblerView.currentItem)
-                break;
-            wait(50);
-        }
-        verify(tumblerView.currentItem);
+        tryVerify(function() { return tumblerView.currentItem });
         compare(tumblerView.currentIndex, data.currentIndex);
         compare(tumblerView.currentItem.text, data.currentIndex.toString());
 
