@@ -211,7 +211,6 @@ QQuickTransitionInstance::QQuickTransitionInstance(QQuickTransition *transition,
 
 QQuickTransitionInstance::~QQuickTransitionInstance()
 {
-    stop();
     removeStateChangeListener();
     delete m_anim;
 }
