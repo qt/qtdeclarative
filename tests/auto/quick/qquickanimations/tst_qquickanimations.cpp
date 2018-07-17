@@ -29,8 +29,6 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
-#include <QtQml/private/qqmltimer_p.h>
-#include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qanimationgroupjob_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickitemanimation_p.h>
@@ -108,7 +106,6 @@ private slots:
     void pathLineUnspecifiedXYBug();
     void unsetAnimatorProxyJobWindow();
     void finished();
-    void replacingTransitions();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1687,40 +1684,6 @@ void tst_qquickanimations::finished()
         QCOMPARE(stoppedSpy.count(), 0);
         QCOMPARE(finishedSpy.count(), 0);
     }
-}
-
-void tst_qquickanimations::replacingTransitions()
-{
-    QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("replacingTransitions.qml"));
-    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));
-    if (!c.errors().isEmpty())
-        qDebug() << c.errorString();
-    QVERIFY(rect);
-
-    QQmlTimer *addTimer = rect->property("addTimer").value<QQmlTimer*>();
-    QVERIFY(addTimer);
-    QCOMPARE(addTimer->isRunning(), false);
-
-    QQuickTransition *addTrans = rect->property("addTransition").value<QQuickTransition*>();
-    QVERIFY(addTrans);
-    QCOMPARE(addTrans->running(), false);
-
-    QQuickTransition *displaceTrans = rect->property("displaceTransition").value<QQuickTransition*>();
-    QVERIFY(displaceTrans);
-    QCOMPARE(displaceTrans->running(), false);
-
-    QQmlListModel *model = rect->property("model").value<QQmlListModel *>();
-    QVERIFY(model);
-    QCOMPARE(model->count(), 0);
-
-    addTimer->start();
-    QTest::qWait(1000 + 1000 + 10000);
-
-    QTRY_COMPARE(addTimer->isRunning(), false);
-    QTRY_COMPARE(addTrans->running(), false);
-    QTRY_COMPARE(displaceTrans->running(), false);
-    QCOMPARE(model->count(), 3);
 }
 
 QTEST_MAIN(tst_qquickanimations)

@@ -108,14 +108,55 @@
 
 /*!
     \qmlmethod void ItemSelectionModel::setCurrentIndex(QModelIndex index, SelectionFlags command)
+
+    Sets the model item \a index to be the current item, and emits
+    currentChanged(). The current item is used for keyboard navigation and
+    focus indication; it is independent of any selected items, although a
+    selected item can also be the current item.
+
+    Depending on the specified \a command, the \a index can also become part
+    of the current selection.
+
+    Valid \a command values are described in \l {itemselectionmodelselectindex}
+    {select(\e index, \e command)}.
+
+    \sa select()
 */
 
 /*!
     \qmlmethod void ItemSelectionModel::select(QModelIndex index, SelectionFlags command)
+    \keyword itemselectionmodelselectindex
+
+    Selects the model item \a index using the specified \a command, and emits
+    selectionChanged().
+
+    Valid values for the \a command parameter, are:
+
+    \value NoUpdate       No selection will be made.
+    \value Clear          The complete selection will be cleared.
+    \value Select         All specified indexes will be selected.
+    \value Deselect       All specified indexes will be deselected.
+    \value Toggle         All specified indexes will be selected or
+                          deselected depending on their current state.
+    \value Current        The current selection will be updated.
+    \value Rows           All indexes will be expanded to span rows.
+    \value Columns        All indexes will be expanded to span columns.
+    \value SelectCurrent  A combination of Select and Current, provided for
+                          convenience.
+    \value ToggleCurrent  A combination of Toggle and Current, provided for
+                          convenience.
+    \value ClearAndSelect A combination of Clear and Select, provided for
+                          convenience.
 */
 
 /*!
     \qmlmethod void ItemSelectionModel::select(QItemSelection selection, SelectionFlags command)
+
+    Selects the item \a selection using the specified \a command, and emits
+    selectionChanged().
+
+    Valid \a command values are described in \l {itemselectionmodelselectindex}
+    {select(\e index, \e command)}.
 */
 
 /*!
