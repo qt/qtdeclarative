@@ -911,6 +911,18 @@ void tst_QQuickTableView::checkRowColumnCount()
     const int qmlCountAfterInit = view->rootObject()->property(maxDelegateCountProp).toInt();
     QCOMPARE(tableViewCount, qmlCountAfterInit);
 
+    // This test will keep track of the maximum number of delegate items TableView
+    // had to show at any point while flicking (in countingtableview.qml). Because
+    // of the geometries chosen for TableView and the delegate, only complete columns
+    // will be shown at start-up. But as we flick around, we expect the count to
+    // increase with one extra column. This is because TableView sometimes end up
+    // showing half a column on the left side, and half a column on the right side.
+    const QRect loadedTable = tableViewPrivate->loadedTable;
+    QVERIFY(loadedTable.height() > loadedTable.width());
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.width(), tableView->width());
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.height(), tableView->height());
+    const int expectedMaxCountAfterFlick = qmlCountAfterInit + loadedTable.height();
+
     // Flick a long distance right
     tableView->setContentX(tableView->width() * 2);
     tableView->polish();
@@ -918,7 +930,7 @@ void tst_QQuickTableView::checkRowColumnCount()
     WAIT_UNTIL_POLISHED;
 
     const int qmlCountAfterRightFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
-    QCOMPARE(qmlCountAfterRightFlick, qmlCountAfterInit);
+    QCOMPARE(qmlCountAfterRightFlick, expectedMaxCountAfterFlick);
 
     // Flick a long distance down
     tableView->setContentX(tableView->height() * 2);
@@ -927,7 +939,7 @@ void tst_QQuickTableView::checkRowColumnCount()
     WAIT_UNTIL_POLISHED;
 
     const int qmlCountAfterDownFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
-    QCOMPARE(qmlCountAfterDownFlick, qmlCountAfterInit);
+    QCOMPARE(qmlCountAfterDownFlick, expectedMaxCountAfterFlick);
 
     // Flick a long distance left
     tableView->setContentX(0);
@@ -936,7 +948,7 @@ void tst_QQuickTableView::checkRowColumnCount()
     WAIT_UNTIL_POLISHED;
 
     const int qmlCountAfterLeftFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
-    QCOMPARE(qmlCountAfterLeftFlick, qmlCountAfterInit);
+    QCOMPARE(qmlCountAfterLeftFlick, expectedMaxCountAfterFlick);
 
     // Flick a long distance up
     tableView->setContentY(0);
@@ -945,7 +957,7 @@ void tst_QQuickTableView::checkRowColumnCount()
     WAIT_UNTIL_POLISHED;
 
     const int qmlCountAfterUpFlick = view->rootObject()->property(maxDelegateCountProp).toInt();
-    QCOMPARE(qmlCountAfterUpFlick, qmlCountAfterInit);
+    QCOMPARE(qmlCountAfterUpFlick, expectedMaxCountAfterFlick);
 }
 
 void tst_QQuickTableView::modelSignals()
