@@ -174,91 +174,130 @@ public:
                     QLatin1String("this is not V8, this is V4 in Qt " QT_VERSION_STR));
         body.insert(QStringLiteral("UnpausedEvaluate"), true);
         body.insert(QStringLiteral("ContextEvaluate"), true);
+        body.insert(QStringLiteral("ChangeBreakpoint"), true);
         addBody(body);
     }
 };
 
-class V4SetBreakPointRequest: public V4CommandHandler
+class V4BreakPointRequest: public V4CommandHandler
 {
 public:
-    V4SetBreakPointRequest(): V4CommandHandler(QStringLiteral("setbreakpoint")) {}
+    V4BreakPointRequest(const QString &name): V4CommandHandler(name) {}
 
-    void handleRequest() override
+    void handleRequest() final
+    {
+        // Other types are currently not supported
+        m_type = QStringLiteral("scriptRegExp");
+
+        // decypher the payload:
+        m_args = req.value(QLatin1String("arguments")).toObject();
+        if (m_args.isEmpty()) {
+            createErrorResponse(QStringLiteral("breakpoint request with empty arguments object"));
+            return;
+        }
+
+        const int id = handleBreakPointRequest();
+        if (id < 0) {
+            createErrorResponse(m_error);
+        } else {
+            // response:
+            addCommand();
+            addRequestSequence();
+            addSuccess(true);
+            addRunning();
+            QJsonObject body;
+            body.insert(QStringLiteral("type"), m_type);
+            body.insert(QStringLiteral("breakpoint"), id);
+            addBody(body);
+        }
+    }
+
+protected:
+    virtual int handleBreakPointRequest() = 0;
+
+    QJsonObject m_args;
+    QString m_type;
+    QString m_error;
+};
+
+class V4SetBreakPointRequest: public V4BreakPointRequest
+{
+public:
+    V4SetBreakPointRequest(): V4BreakPointRequest(QStringLiteral("setbreakpoint")) {}
+
+    int handleBreakPointRequest() final
     {
         // decypher the payload:
-        QJsonObject args = req.value(QLatin1String("arguments")).toObject();
-        if (args.isEmpty())
-            return;
-
-        QString type = args.value(QLatin1String("type")).toString();
+        const QString type = m_args.value(QLatin1String("type")).toString();
         if (type != QLatin1String("scriptRegExp")) {
-            createErrorResponse(QStringLiteral("breakpoint type \"%1\" is not implemented").arg(type));
-            return;
+            m_error = QStringLiteral("breakpoint type \"%1\" is not implemented").arg(type);
+            return -1;
         }
 
-        QString fileName = args.value(QLatin1String("target")).toString();
+        const QString fileName = m_args.value(QLatin1String("target")).toString();
         if (fileName.isEmpty()) {
-            createErrorResponse(QStringLiteral("breakpoint has no file name"));
-            return;
+            m_error = QStringLiteral("breakpoint has no file name");
+            return -1;
         }
 
-        int line = args.value(QLatin1String("line")).toInt(-1);
+
+        const int line = m_args.value(QLatin1String("line")).toInt(-1);
         if (line < 0) {
-            createErrorResponse(QStringLiteral("breakpoint has an invalid line number"));
-            return;
+            m_error = QStringLiteral("breakpoint has an invalid line number");
+            return -1;
         }
 
-        bool enabled = args.value(QStringLiteral("enabled")).toBool(true);
-        QString condition = args.value(QStringLiteral("condition")).toString();
+        const bool enabled = m_args.value(QStringLiteral("enabled")).toBool(true);
+        const QString condition = m_args.value(QStringLiteral("condition")).toString();
 
         // set the break point:
-        int id = debugService->debuggerAgent.addBreakPoint(fileName, line + 1, enabled, condition);
+        return debugService->debuggerAgent.addBreakPoint(fileName, line + 1, enabled, condition);
 
-        // response:
-        addCommand();
-        addRequestSequence();
-        addSuccess(true);
-        addRunning();
-        QJsonObject body;
-        body.insert(QStringLiteral("type"), type);
-        body.insert(QStringLiteral("breakpoint"), id);
         // It's undocumented, but V8 sends back an actual_locations array too. However, our
         // Debugger currently doesn't tell us when it resolved a breakpoint, so we'll leave them
         // pending until the breakpoint is hit for the first time.
-        addBody(body);
     }
 };
 
-class V4ClearBreakPointRequest: public V4CommandHandler
+class V4ClearBreakPointRequest: public V4BreakPointRequest
 {
 public:
-    V4ClearBreakPointRequest(): V4CommandHandler(QStringLiteral("clearbreakpoint")) {}
+    V4ClearBreakPointRequest(): V4BreakPointRequest(QStringLiteral("clearbreakpoint")) {}
 
-    void handleRequest() override
+    int handleBreakPointRequest() final
     {
-        // decypher the payload:
-        QJsonObject args = req.value(QLatin1String("arguments")).toObject();
-        if (args.isEmpty())
-            return;
+        const int id = m_args.value(QLatin1String("breakpoint")).toInt(-1);
+        if (id < 0)
+            m_error = QStringLiteral("breakpoint has an invalid number");
+        else // remove the break point:
+            debugService->debuggerAgent.removeBreakPoint(id);
 
-        int id = args.value(QLatin1String("breakpoint")).toInt(-1);
+        return id;
+    }
+};
+
+class V4ChangeBreakPointRequest: public V4BreakPointRequest
+{
+public:
+    V4ChangeBreakPointRequest(): V4BreakPointRequest(QStringLiteral("changebreakpoint")) {}
+
+    int handleBreakPointRequest() final
+    {
+        const int id = m_args.value(QLatin1String("breakpoint")).toInt(-1);
         if (id < 0) {
-            createErrorResponse(QStringLiteral("breakpoint has an invalid number"));
-            return;
+            m_error = QStringLiteral("breakpoint has an invalid number");
+            return id;
         }
 
-        // remove the break point:
-        debugService->debuggerAgent.removeBreakPoint(id);
+        const QJsonValue enabled = m_args.value(QLatin1String("enabled"));
+        if (!enabled.isBool()) {
+            m_error = QStringLiteral("missing bool \"enabled\" in breakpoint change request");
+            return -1;
+        }
 
-        // response:
-        addCommand();
-        addRequestSequence();
-        addSuccess(true);
-        addRunning();
-        QJsonObject body;
-        body.insert(QStringLiteral("type"), QStringLiteral("scriptRegExp"));
-        body.insert(QStringLiteral("breakpoint"), id);
-        addBody(body);
+        // enable or disable the break point:
+        debugService->debuggerAgent.enableBreakPoint(id, enabled.toBool());
+        return id;
     }
 };
 
@@ -659,6 +698,7 @@ QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     addHandler(new V4VersionRequest);
     addHandler(new V4SetBreakPointRequest);
     addHandler(new V4ClearBreakPointRequest);
+    addHandler(new V4ChangeBreakPointRequest);
     addHandler(new V4BacktraceRequest);
     addHandler(new V4FrameRequest);
     addHandler(new V4ScopeRequest);

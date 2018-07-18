@@ -36,6 +36,7 @@
 #include <private/qpacket_p.h>
 
 #include <QtTest/qtest.h>
+#include <QtTest/qtestsystem.h>
 #include <QtCore/qprocess.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qfileinfo.h>
@@ -88,6 +89,7 @@ const char *SCRIPTS = "scripts";
 const char *SOURCE = "source";
 const char *SETBREAKPOINT = "setbreakpoint";
 const char *CLEARBREAKPOINT = "clearbreakpoint";
+const char *CHANGEBREAKPOINT = "changebreakpoint";
 const char *SETEXCEPTIONBREAK = "setexceptionbreak";
 const char *VERSION = "version";
 const char *DISCONNECT = "disconnect";
@@ -188,6 +190,9 @@ private slots:
     void clearBreakpoint_data() { targetData(); }
     void clearBreakpoint();
 
+    void changeBreakpoint_data() { targetData(); }
+    void changeBreakpoint();
+
     void setExceptionBreak_data() { targetData(); }
     void setExceptionBreak();
 
@@ -228,6 +233,7 @@ private:
 
     void targetData();
     bool waitForClientSignal(const char *signal, int timeout = 30000);
+    void checkVersionParameters();
 
     QTime t;
 };
@@ -273,6 +279,7 @@ public:
     void setBreakpoint(QString target, int line = -1, int column = -1, bool enabled = true,
                        QString condition = QString(), int ignoreCount = -1);
     void clearBreakpoint(int breakpoint);
+    void changeBreakpoint(int breakpoint, bool enabled);
     void setExceptionBreak(Exception type, bool enabled = false);
     void version();
     void disconnect();
@@ -609,6 +616,28 @@ void QJSDebugClient::clearBreakpoint(int breakpoint)
     sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
 }
 
+void QJSDebugClient::changeBreakpoint(int breakpoint, bool enabled)
+{
+    //    { "seq"       : <number>,
+    //      "type"      : "request",
+    //      "command"   : "changebreakpoint",
+    //      "arguments" : { "breakpoint" : <number of the break point to change>
+    //                      "enabled" : <bool: enables the break type if true, disables if false>
+    //                    }
+    //    }
+    VARIANTMAPINIT;
+    jsonVal.setProperty(QLatin1String(COMMAND), QLatin1String(CHANGEBREAKPOINT));
+
+    QJSValue args = parser.call(QJSValueList() << obj);
+
+    args.setProperty(QLatin1String(BREAKPOINT), breakpoint);
+    args.setProperty(QLatin1String(ENABLED), enabled);
+    jsonVal.setProperty(QLatin1String(ARGUMENTS), args);
+
+    const QJSValue json = stringify.call(QJSValueList() << jsonVal);
+    sendMessage(packMessage(V8REQUEST, json.toString().toUtf8()));
+}
+
 void QJSDebugClient::setExceptionBreak(Exception type, bool enabled)
 {
     //    { "seq"       : <number>,
@@ -696,7 +725,8 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
 
                 if (!value.value("success").toBool()) {
                     emit failure();
-                    qDebug() << "Received success == false response from application";
+                    qDebug() << "Received success == false response from application:"
+                             << value.value("message").toString();
                     return;
                 }
 
@@ -718,7 +748,6 @@ void QJSDebugClient::messageReceived(const QByteArray &data)
                         debugCommand == "setexceptionbreak" /*||
                         debugCommand == "profile"*/) {
                     emit result();
-
                 } else {
                     // DO NOTHING
                 }
@@ -825,6 +854,7 @@ void tst_QQmlDebugJS::getVersion()
 
     m_client->version();
     QVERIFY(waitForClientSignal(SIGNAL(result())));
+    checkVersionParameters();
 }
 
 void tst_QQmlDebugJS::getVersionWhenAttaching()
@@ -837,6 +867,7 @@ void tst_QQmlDebugJS::getVersionWhenAttaching()
 
     m_client->version();
     QVERIFY(waitForClientSignal(SIGNAL(result())));
+    checkVersionParameters();
 }
 
 void tst_QQmlDebugJS::disconnect()
@@ -1129,6 +1160,89 @@ void tst_QQmlDebugJS::clearBreakpoint()
     body = value.value("body").toMap();
 
     QCOMPARE(body.value("sourceLine").toInt(), sourceLine2);
+}
+
+void tst_QQmlDebugJS::changeBreakpoint()
+{
+    //void clearBreakpoint(int breakpoint);
+    QFETCH(bool, qmlscene);
+
+    int sourceLine2 = 37;
+    int sourceLine1 = 38;
+    QCOMPARE(init(qmlscene, CHANGEBREAKPOINT_QMLFILE), ConnectSuccess);
+
+    m_client->connect();
+
+    auto extractBody = [&]() {
+        const QVariantMap value = m_client->parser.call(
+                    QJSValueList() << QJSValue(QString(m_client->response))).toVariant().toMap();
+        return value.value("body").toMap();
+    };
+
+    auto extractBreakPointId = [&](const QVariantMap &body) {
+        const QList<QVariant> breakpointsHit = body.value("breakpoints").toList();
+        if (breakpointsHit.size() != 1)
+            return -1;
+        return breakpointsHit[0].toInt();
+    };
+
+    auto setBreakPoint = [&](int sourceLine, bool enabled) {
+        int id = -1;
+        auto connection = QObject::connect(m_client, &QJSDebugClient::result, [&]() {
+            id = extractBody().value("breakpoint").toInt();
+        });
+
+        m_client->setBreakpoint(QLatin1String(CHANGEBREAKPOINT_QMLFILE), sourceLine, -1, enabled);
+        bool success = QTest::qWaitFor([&]() { return id >= 0; });
+        Q_UNUSED(success);
+
+        QObject::disconnect(connection);
+        return id;
+    };
+
+    //The breakpoints are in a timer loop so we can set them after connect().
+    //Furthermore the breakpoints should be hit in the right order because setting of breakpoints
+    //can only occur in the QML event loop. (see QCOMPARE for sourceLine2 below)
+    const int breakpoint1 = setBreakPoint(sourceLine1, false);
+    QVERIFY(breakpoint1 >= 0);
+
+    const int breakpoint2 = setBreakPoint(sourceLine2, true);
+    QVERIFY(breakpoint2 >= 0);
+
+    auto verifyBreakpoint = [&](int sourceLine, int breakpointId) {
+        QVERIFY(waitForClientSignal(SIGNAL(stopped())));
+        const QVariantMap body = extractBody();
+        QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
+        QCOMPARE(extractBreakPointId(body), breakpointId);
+    };
+
+    verifyBreakpoint(sourceLine2, breakpoint2);
+
+    m_client->continueDebugging(QJSDebugClient::Continue);
+    verifyBreakpoint(sourceLine2, breakpoint2);
+
+    m_client->changeBreakpoint(breakpoint2, false);
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
+
+    m_client->changeBreakpoint(breakpoint1, true);
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
+
+    m_client->continueDebugging(QJSDebugClient::Continue);
+    verifyBreakpoint(sourceLine1, breakpoint1);
+
+    m_client->continueDebugging(QJSDebugClient::Continue);
+    verifyBreakpoint(sourceLine1, breakpoint1);
+
+    m_client->changeBreakpoint(breakpoint2, true);
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
+
+    m_client->changeBreakpoint(breakpoint1, false);
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
+
+    for (int i = 0; i < 3; ++i) {
+        m_client->continueDebugging(QJSDebugClient::Continue);
+        verifyBreakpoint(sourceLine2, breakpoint2);
+    }
 }
 
 void tst_QQmlDebugJS::setExceptionBreak()
@@ -1496,6 +1610,17 @@ void tst_QQmlDebugJS::targetData()
 bool tst_QQmlDebugJS::waitForClientSignal(const char *signal, int timeout)
 {
     return QQmlDebugTest::waitForSignal(m_client.data(), signal, timeout);
+}
+
+void tst_QQmlDebugJS::checkVersionParameters()
+{
+    const QVariantMap value = m_client->parser.call(
+                QJSValueList() << QJSValue(QString(m_client->response))).toVariant().toMap();
+    QCOMPARE(value.value("command").toString(), QString("version"));
+    const QVariantMap body = value.value("body").toMap();
+    QCOMPARE(body.value("UnpausedEvaluate").toBool(), true);
+    QCOMPARE(body.value("ContextEvaluate").toBool(), true);
+    QCOMPARE(body.value("ChangeBreakpoint").toBool(), true);
 }
 
 QTEST_MAIN(tst_QQmlDebugJS)
