@@ -56,16 +56,6 @@ Item {
         }
     }
 
-    PinchHandler {
-        id: pinch
-        objectName: "two-point pinch"
-        target: map
-        minimumScale: 0.1
-        maximumScale: 10
-        onActiveChanged: if (!active) reRenderIfNecessary()
-        grabPermissions: PinchHandler.TakeOverForbidden // don't allow takeover if pinch has started
-    }
-
     DragHandler {
         objectName: "single-point drag"
         target: map
@@ -79,6 +69,16 @@ Item {
         xAxis.enabled: false
         target: null
         onTranslationChanged: tilt.angle = translation.y / -2
+    }
+
+    PinchHandler {
+        id: pinch
+        objectName: "two-point pinch"
+        target: map
+        minimumScale: 0.1
+        maximumScale: 10
+        onActiveChanged: if (!active) reRenderIfNecessary()
+        grabPermissions: PinchHandler.TakeOverForbidden // don't allow takeover if pinch has started
     }
 
     function reRenderIfNecessary() {

@@ -231,7 +231,7 @@ void tst_FlickableInterop::mouseClickButton()
 
     // We can drag <= dragThreshold and the button still acts normal, Flickable doesn't grab
     p1 = button->mapToScene(QPointF(20, 20)).toPoint();
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1, qApp->styleHints()->mouseDoubleClickInterval() + 10);
     QTRY_VERIFY(button->property("pressed").toBool());
     p1 += QPoint(dragThreshold, 0);
     QTest::mouseMove(window, p1);

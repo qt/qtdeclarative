@@ -2519,6 +2519,8 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
     }
     for (int i = 0; i < pointCount; ++i) {
         auto point = event->point(i);
+        if (point->state() == QQuickEventPoint::Pressed && !event->isDoubleClickEvent())
+            point->clearPassiveGrabbers();
         point->setAccepted(false); // because otherwise touchEventForItem will ignore it
         if (point->grabberPointerHandler() && point->state() == QQuickEventPoint::Released)
             point->setGrabberPointerHandler(nullptr, true);
