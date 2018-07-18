@@ -351,19 +351,6 @@ Texture *Atlas::create(const QImage &image)
     return nullptr;
 }
 
-static void swizzleBGRAToRGBA(QImage *image)
-{
-    const int width = image->width();
-    const int height = image->height();
-    uint *p = (uint *) image->bits();
-    int stride = image->bytesPerLine() / 4;
-    for (int i = 0; i < height; ++i) {
-        for (int x = 0; x < width; ++x)
-            p[x] = ((p[x] << 16) & 0xff0000) | ((p[x] >> 16) & 0xff) | (p[x] & 0xff00ff00);
-        p += stride;
-    }
-}
-
 void Atlas::upload(Texture *texture)
 {
     const QImage &image = texture->image();
@@ -395,7 +382,7 @@ void Atlas::upload(Texture *texture)
     }
 
     if (m_externalFormat == GL_RGBA)
-        swizzleBGRAToRGBA(&tmp);
+        tmp = std::move(tmp).convertToFormat(QImage::Format_RGBA8888_Premultiplied);
     QOpenGLContext::currentContext()->functions()->glTexSubImage2D(GL_TEXTURE_2D, 0,
                                                                    r.x(), r.y(), r.width(), r.height(),
                                                                    m_externalFormat, GL_UNSIGNED_BYTE, tmp.constBits());
