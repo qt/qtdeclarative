@@ -917,6 +917,9 @@ void tst_qqmlxmlhttprequest::status()
     QCOMPARE(object->property("loading").toBool(), true);
     QCOMPARE(object->property("done").toBool(), true);
     QCOMPARE(object->property("resetException").toBool(), true);
+    QCOMPARE(object->property("onloadCalled").toBool(), true);
+    QCOMPARE(object->property("onloadendCalled").toBool(), true);
+    QCOMPARE(object->property("onerrorCalled").toBool(), false);
 }
 
 void tst_qqmlxmlhttprequest::status_data()

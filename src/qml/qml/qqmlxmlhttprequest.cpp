@@ -1072,7 +1072,8 @@ private:
     QQmlContextDataRef m_qmlContext;
     bool m_wasConstructedWithQmlContext = true;
 
-    static void dispatchCallbackNow(Object *thisObj);
+    void dispatchCallbackNow(Object *thisObj);
+    static void dispatchCallbackNow(Object *thisObj, bool done, bool error);
     void dispatchCallbackSafely();
 
     int m_status;
@@ -1553,22 +1554,37 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
 
 void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj)
 {
+    dispatchCallbackNow(thisObj, m_state == Done, m_errorFlag);
+}
+
+void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool error)
+{
     Q_ASSERT(thisObj);
 
-    QV4::Scope scope(thisObj->engine());
-    ScopedString s(scope, scope.engine->newString(QStringLiteral("onreadystatechange")));
-    ScopedFunctionObject callback(scope, thisObj->get(s));
-    if (!callback) {
-        // not an error, but no onreadystatechange function to call.
-        return;
-    }
+    const auto dispatch = [thisObj](const QString &eventName) {
+        QV4::Scope scope(thisObj->engine());
+        ScopedString s(scope, scope.engine->newString(eventName));
+        ScopedFunctionObject callback(scope, thisObj->get(s));
+        // not an error, but no event handler to call.
+        if (!callback)
+            return;
 
-    QV4::JSCallData jsCallData(scope);
-    callback->call(jsCallData);
+        QV4::JSCallData jsCallData(scope);
+        callback->call(jsCallData);
 
-    if (scope.engine->hasException) {
-        QQmlError error = scope.engine->catchExceptionAsQmlError();
-        QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
+        if (scope.engine->hasException) {
+            QQmlError error = scope.engine->catchExceptionAsQmlError();
+            QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
+        }
+    };
+
+    dispatch(QStringLiteral("onreadystatechange"));
+    if (done) {
+        if (error)
+            dispatch(QStringLiteral("onerror"));
+        else
+            dispatch(QStringLiteral("onload"));
+        dispatch(QStringLiteral("onloadend"));
     }
 }
 
