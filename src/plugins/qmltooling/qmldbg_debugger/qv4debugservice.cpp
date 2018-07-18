@@ -122,13 +122,6 @@ protected:
         response.insert(QStringLiteral("running"), debugService->debuggerAgent.isRunning());
     }
 
-    QV4DataCollector *saneCollector(QV4Debugger *debugger)
-    {
-        QV4DataCollector *collector = debugger->collector();
-        collector->setNamesAsObjects(debugService->clientRequiresNamesAsObjects());
-        return collector;
-    }
-
     void createErrorResponse(const QString &msg)
     {
         QJsonValue command = req.value(QLatin1String("command"));
@@ -289,7 +282,7 @@ public:
             return;
         }
 
-        BacktraceJob job(saneCollector(debugger), fromFrame, toFrame);
+        BacktraceJob job(debugger->collector(), fromFrame, toFrame);
         debugger->runInEngine(&job);
 
         // response:
@@ -324,7 +317,7 @@ public:
             return;
         }
 
-        FrameJob job(saneCollector(debugger), frameNr);
+        FrameJob job(debugger->collector(), frameNr);
         debugger->runInEngine(&job);
         if (!job.wasSuccessful()) {
             createErrorResponse(QStringLiteral("frame retrieval failed"));
@@ -370,7 +363,7 @@ public:
             return;
         }
 
-        ScopeJob job(saneCollector(debugger), frameNr, scopeNr);
+        ScopeJob job(debugger->collector(), frameNr, scopeNr);
         debugger->runInEngine(&job);
         if (!job.wasSuccessful()) {
             createErrorResponse(QStringLiteral("scope retrieval failed"));
@@ -410,7 +403,7 @@ public:
             debugger = debuggers.first();
         }
 
-        ValueLookupJob job(handles, saneCollector(debugger));
+        ValueLookupJob job(handles, debugger->collector());
         debugger->runInEngine(&job);
         if (!job.exceptionMessage().isEmpty()) {
             createErrorResponse(job.exceptionMessage());
@@ -629,7 +622,7 @@ public:
         }
 
         ExpressionEvalJob job(debugger->engine(), frame, context, expression,
-                              saneCollector(debugger));
+                              debugger->collector());
         debugger->runInEngine(&job);
         if (job.hasExeption()) {
             createErrorResponse(job.exceptionMessage());
@@ -660,7 +653,7 @@ V4CommandHandler *QV4DebugServiceImpl::v4CommandHandler(const QString &command) 
 
 QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QV4DebugService>(1, parent),
-    debuggerAgent(this), theSelectedFrame(0), namesAsObjects(true),
+    debuggerAgent(this), theSelectedFrame(0),
     unknownV4CommandHandler(new UnknownV4CommandHandler)
 {
     addHandler(new V4VersionRequest);
@@ -764,9 +757,7 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
 
         if (type == V4_CONNECT) {
             QJsonObject parameters = QJsonDocument::fromJson(payload).object();
-            namesAsObjects = true;
-            if (parameters.contains("namesAsObjects"))
-                namesAsObjects = parameters.value("namesAsObjects").toBool();
+            Q_UNUSED(parameters); // For future protocol changes
 
             emit messageToClient(name(), packMessage(type));
             stopWaiting();

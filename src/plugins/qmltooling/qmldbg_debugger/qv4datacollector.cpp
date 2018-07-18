@@ -111,7 +111,7 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
 }
 
 QV4DataCollector::QV4DataCollector(QV4::ExecutionEngine *engine)
-    : m_engine(engine), m_namesAsObjects(true)
+    : m_engine(engine)
 {
     m_values.set(engine, engine->newArrayObject());
 }
@@ -192,11 +192,6 @@ QJsonObject QV4DataCollector::lookupRef(Ref ref)
 {
     QJsonObject dict;
 
-    if (m_namesAsObjects) {
-        if (lookupSpecialRef(ref, &dict))
-            return dict;
-    }
-
     dict.insert(QStringLiteral("handle"), qint64(ref));
     QV4::Scope scope(engine());
     QV4::ScopedValue value(scope, getValue(ref));
@@ -206,36 +201,6 @@ QJsonObject QV4DataCollector::lookupRef(Ref ref)
         dict.insert(QStringLiteral("properties"), collectProperties(object));
 
     return dict;
-}
-
-// TODO: Drop this method once we don't need to support namesAsObjects anymore
-QV4DataCollector::Ref QV4DataCollector::addFunctionRef(const QString &functionName)
-{
-    Q_ASSERT(m_namesAsObjects);
-    Ref ref = addRef(QV4::Primitive::emptyValue(), false);
-
-    QJsonObject dict;
-    dict.insert(QStringLiteral("handle"), qint64(ref));
-    dict.insert(QStringLiteral("type"), QStringLiteral("function"));
-    dict.insert(QStringLiteral("name"), functionName);
-    m_specialRefs.insert(ref, dict);
-
-    return ref;
-}
-
-// TODO: Drop this method once we don't need to support namesAsObjects anymore
-QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
-{
-    Q_ASSERT(m_namesAsObjects);
-    Ref ref = addRef(QV4::Primitive::emptyValue(), false);
-
-    QJsonObject dict;
-    dict.insert(QStringLiteral("handle"), qint64(ref));
-    dict.insert(QStringLiteral("type"), QStringLiteral("script"));
-    dict.insert(QStringLiteral("name"), scriptName);
-    m_specialRefs.insert(ref, dict);
-
-    return ref;
 }
 
 bool QV4DataCollector::isValidRef(QV4DataCollector::Ref ref) const
@@ -291,13 +256,8 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     QJsonObject frame;
     frame[QLatin1String("index")] = frameNr;
     frame[QLatin1String("debuggerFrame")] = false;
-    if (m_namesAsObjects) {
-        frame[QLatin1String("func")] = toRef(addFunctionRef(stackFrame.function));
-        frame[QLatin1String("script")] = toRef(addScriptRef(stackFrame.source));
-    } else {
-        frame[QLatin1String("func")] = stackFrame.function;
-        frame[QLatin1String("script")] = stackFrame.source;
-    }
+    frame[QLatin1String("func")] = stackFrame.function;
+    frame[QLatin1String("script")] = stackFrame.source;
     frame[QLatin1String("line")] = stackFrame.line - 1;
     if (stackFrame.column >= 0)
         frame[QLatin1String("column")] = stackFrame.column;
@@ -339,8 +299,6 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
 void QV4DataCollector::clear()
 {
     m_values.set(engine(), engine()->newArrayObject());
-    m_specialRefs.clear();
-    m_namesAsObjects = true;
 }
 
 QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicate)
@@ -366,7 +324,7 @@ QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicat
     QV4::ScopedObject array(scope, m_values.value());
     if (deduplicate) {
         for (Ref i = 0; i < array->getLength(); ++i) {
-            if (array->get(i) == value.rawValue() && !m_specialRefs.contains(i))
+            if (array->get(i) == value.rawValue())
                 return i;
         }
     }
@@ -382,18 +340,6 @@ QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
     QV4::ScopedObject array(scope, m_values.value());
     Q_ASSERT(ref < array->getLength());
     return array->get(ref, nullptr);
-}
-
-// TODO: Drop this method once we don't need to support namesAsObjects anymore
-bool QV4DataCollector::lookupSpecialRef(Ref ref, QJsonObject *dict)
-{
-    Q_ASSERT(m_namesAsObjects);
-    SpecialRefs::const_iterator it = m_specialRefs.constFind(ref);
-    if (it == m_specialRefs.cend())
-        return false;
-
-    *dict = it.value();
-    return true;
 }
 
 QJsonArray QV4DataCollector::collectProperties(const QV4::Object *object)

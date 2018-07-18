@@ -86,8 +86,6 @@ public:
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
-    bool clientRequiresNamesAsObjects() const { return namesAsObjects; }
-
     QV4DebuggerAgent debuggerAgent;
 
 protected:
@@ -106,8 +104,6 @@ private:
     QStringList breakOnSignals;
     static int sequence;
     int theSelectedFrame;
-
-    bool namesAsObjects;
 
     void addHandler(V4CommandHandler* handler);
     QHash<QString, V4CommandHandler*> handlers;

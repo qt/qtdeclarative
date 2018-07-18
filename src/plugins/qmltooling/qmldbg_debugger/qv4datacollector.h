@@ -68,11 +68,6 @@ public:
     QV4DataCollector(QV4::ExecutionEngine *engine);
 
     Ref addValueRef(const QV4::ScopedValue &value);
-    Ref addFunctionRef(const QString &functionName); // only for namesAsObjects
-    Ref addScriptRef(const QString &scriptName);     // only for namesAsObjects
-
-    void setNamesAsObjects(bool namesAsObjects) { m_namesAsObjects = namesAsObjects; }
-    bool namesAsObjects() const { return m_namesAsObjects; }
 
     bool isValidRef(Ref ref) const;
     QJsonObject lookupRef(Ref ref);
@@ -86,7 +81,6 @@ public:
 private:
     Ref addRef(QV4::Value value, bool deduplicate = true);
     QV4::ReturnedValue getValue(Ref ref);
-    bool lookupSpecialRef(Ref ref, QJsonObject *dict); // only for namesAsObjects
 
     QJsonArray collectProperties(const QV4::Object *object);
     QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
@@ -94,9 +88,6 @@ private:
 
     QV4::ExecutionEngine *m_engine;
     QV4::PersistentValue m_values;
-    typedef QHash<Ref, QJsonObject> SpecialRefs; // only for namesAsObjects
-    SpecialRefs m_specialRefs;                   // only for namesAsObjects
-    bool m_namesAsObjects;
 };
 
 QT_END_NAMESPACE
