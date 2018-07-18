@@ -67,21 +67,21 @@ const char *const V4_PAUSE = "interrupt";
 
 QT_BEGIN_NAMESPACE
 
-class V8CommandHandler;
-class UnknownV8CommandHandler;
+class V4CommandHandler;
+class UnknownV4CommandHandler;
 
 using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 int QV4DebugServiceImpl::sequence = 0;
 
-class V8CommandHandler
+class V4CommandHandler
 {
 public:
-    V8CommandHandler(const QString &command)
+    V4CommandHandler(const QString &command)
         : cmd(command)
     {}
 
-    virtual ~V8CommandHandler()
+    virtual ~V4CommandHandler()
     {}
 
     QString command() const { return cmd; }
@@ -158,10 +158,10 @@ protected:
     QJsonObject response;
 };
 
-class UnknownV8CommandHandler: public V8CommandHandler
+class UnknownV4CommandHandler: public V4CommandHandler
 {
 public:
-    UnknownV8CommandHandler(): V8CommandHandler(QString()) {}
+    UnknownV4CommandHandler(): V4CommandHandler(QString()) {}
 
     void handleRequest() override
     {
@@ -173,10 +173,10 @@ public:
 };
 
 namespace {
-class V8VersionRequest: public V8CommandHandler
+class V4VersionRequest: public V4CommandHandler
 {
 public:
-    V8VersionRequest(): V8CommandHandler(QStringLiteral("version")) {}
+    V4VersionRequest(): V4CommandHandler(QStringLiteral("version")) {}
 
     void handleRequest() override
     {
@@ -193,10 +193,10 @@ public:
     }
 };
 
-class V8SetBreakPointRequest: public V8CommandHandler
+class V4SetBreakPointRequest: public V4CommandHandler
 {
 public:
-    V8SetBreakPointRequest(): V8CommandHandler(QStringLiteral("setbreakpoint")) {}
+    V4SetBreakPointRequest(): V4CommandHandler(QStringLiteral("setbreakpoint")) {}
 
     void handleRequest() override
     {
@@ -244,10 +244,10 @@ public:
     }
 };
 
-class V8ClearBreakPointRequest: public V8CommandHandler
+class V4ClearBreakPointRequest: public V4CommandHandler
 {
 public:
-    V8ClearBreakPointRequest(): V8CommandHandler(QStringLiteral("clearbreakpoint")) {}
+    V4ClearBreakPointRequest(): V4CommandHandler(QStringLiteral("clearbreakpoint")) {}
 
     void handleRequest() override
     {
@@ -277,10 +277,10 @@ public:
     }
 };
 
-class V8BacktraceRequest: public V8CommandHandler
+class V4BacktraceRequest: public V4CommandHandler
 {
 public:
-    V8BacktraceRequest(): V8CommandHandler(QStringLiteral("backtrace")) {}
+    V4BacktraceRequest(): V4CommandHandler(QStringLiteral("backtrace")) {}
 
     void handleRequest() override
     {
@@ -311,10 +311,10 @@ public:
     }
 };
 
-class V8FrameRequest: public V8CommandHandler
+class V4FrameRequest: public V4CommandHandler
 {
 public:
-    V8FrameRequest(): V8CommandHandler(QStringLiteral("frame")) {}
+    V4FrameRequest(): V4CommandHandler(QStringLiteral("frame")) {}
 
     void handleRequest() override
     {
@@ -354,10 +354,10 @@ public:
     }
 };
 
-class V8ScopeRequest: public V8CommandHandler
+class V4ScopeRequest: public V4CommandHandler
 {
 public:
-    V8ScopeRequest(): V8CommandHandler(QStringLiteral("scope")) {}
+    V4ScopeRequest(): V4CommandHandler(QStringLiteral("scope")) {}
 
     void handleRequest() override
     {
@@ -400,10 +400,10 @@ public:
     }
 };
 
-class V8LookupRequest: public V8CommandHandler
+class V4LookupRequest: public V4CommandHandler
 {
 public:
-    V8LookupRequest(): V8CommandHandler(QStringLiteral("lookup")) {}
+    V4LookupRequest(): V4CommandHandler(QStringLiteral("lookup")) {}
 
     void handleRequest() override
     {
@@ -441,10 +441,10 @@ public:
     }
 };
 
-class V8ContinueRequest: public V8CommandHandler
+class V4ContinueRequest: public V4CommandHandler
 {
 public:
-    V8ContinueRequest(): V8CommandHandler(QStringLiteral("continue")) {}
+    V4ContinueRequest(): V4CommandHandler(QStringLiteral("continue")) {}
 
     void handleRequest() override
     {
@@ -487,10 +487,10 @@ public:
     }
 };
 
-class V8DisconnectRequest: public V8CommandHandler
+class V4DisconnectRequest: public V4CommandHandler
 {
 public:
-    V8DisconnectRequest(): V8CommandHandler(QStringLiteral("disconnect")) {}
+    V4DisconnectRequest(): V4CommandHandler(QStringLiteral("disconnect")) {}
 
     void handleRequest() override
     {
@@ -505,10 +505,10 @@ public:
     }
 };
 
-class V8SetExceptionBreakRequest: public V8CommandHandler
+class V4SetExceptionBreakRequest: public V4CommandHandler
 {
 public:
-    V8SetExceptionBreakRequest(): V8CommandHandler(QStringLiteral("setexceptionbreak")) {}
+    V4SetExceptionBreakRequest(): V4CommandHandler(QStringLiteral("setexceptionbreak")) {}
 
     void handleRequest() override
     {
@@ -545,10 +545,10 @@ public:
     }
 };
 
-class V8ScriptsRequest: public V8CommandHandler
+class V4ScriptsRequest: public V4CommandHandler
 {
 public:
-    V8ScriptsRequest(): V8CommandHandler(QStringLiteral("scripts")) {}
+    V4ScriptsRequest(): V4CommandHandler(QStringLiteral("scripts")) {}
 
     void handleRequest() override
     {
@@ -617,10 +617,10 @@ public:
 // }
 //
 // The "value" key in "body" is the result of evaluating the expression in the request.
-class V8EvaluateRequest: public V8CommandHandler
+class V4EvaluateRequest: public V4CommandHandler
 {
 public:
-    V8EvaluateRequest(): V8CommandHandler(QStringLiteral("evaluate")) {}
+    V4EvaluateRequest(): V4CommandHandler(QStringLiteral("evaluate")) {}
 
     void handleRequest() override
     {
@@ -662,37 +662,37 @@ public:
 };
 } // anonymous namespace
 
-void QV4DebugServiceImpl::addHandler(V8CommandHandler* handler)
+void QV4DebugServiceImpl::addHandler(V4CommandHandler* handler)
 {
     handlers[handler->command()] = handler;
 }
 
-V8CommandHandler *QV4DebugServiceImpl::v8CommandHandler(const QString &command) const
+V4CommandHandler *QV4DebugServiceImpl::v4CommandHandler(const QString &command) const
 {
-    V8CommandHandler *handler = handlers.value(command, 0);
+    V4CommandHandler *handler = handlers.value(command, 0);
     if (handler)
         return handler;
     else
-        return unknownV8CommandHandler.data();
+        return unknownV4CommandHandler.data();
 }
 
 QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QV4DebugService>(1, parent),
     debuggerAgent(this), theSelectedFrame(0), redundantRefs(true), namesAsObjects(true),
-    unknownV8CommandHandler(new UnknownV8CommandHandler)
+    unknownV4CommandHandler(new UnknownV4CommandHandler)
 {
-    addHandler(new V8VersionRequest);
-    addHandler(new V8SetBreakPointRequest);
-    addHandler(new V8ClearBreakPointRequest);
-    addHandler(new V8BacktraceRequest);
-    addHandler(new V8FrameRequest);
-    addHandler(new V8ScopeRequest);
-    addHandler(new V8LookupRequest);
-    addHandler(new V8ContinueRequest);
-    addHandler(new V8DisconnectRequest);
-    addHandler(new V8SetExceptionBreakRequest);
-    addHandler(new V8ScriptsRequest);
-    addHandler(new V8EvaluateRequest);
+    addHandler(new V4VersionRequest);
+    addHandler(new V4SetBreakPointRequest);
+    addHandler(new V4ClearBreakPointRequest);
+    addHandler(new V4BacktraceRequest);
+    addHandler(new V4FrameRequest);
+    addHandler(new V4ScopeRequest);
+    addHandler(new V4LookupRequest);
+    addHandler(new V4ContinueRequest);
+    addHandler(new V4DisconnectRequest);
+    addHandler(new V4SetExceptionBreakRequest);
+    addHandler(new V4ScriptsRequest);
+    addHandler(new V4EvaluateRequest);
 }
 
 QV4DebugServiceImpl::~QV4DebugServiceImpl()
@@ -805,10 +805,10 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
             else
                 breakOnSignals.removeOne(signalName);
         } else if (type == "v8request") {
-            handleV8Request(payload);
+            handleV4Request(payload);
         } else if (type == V4_DISCONNECT) {
             TRACE_PROTOCOL(qDebug() << "... payload:" << payload.constData());
-            handleV8Request(payload);
+            handleV4Request(payload);
         } else {
             sendSomethingToSomebody(type, 0);
         }
@@ -823,7 +823,7 @@ void QV4DebugServiceImpl::sendSomethingToSomebody(const char *type, int magicNum
     emit messageToClient(name(), packMessage(type, rs.data()));
 }
 
-void QV4DebugServiceImpl::handleV8Request(const QByteArray &payload)
+void QV4DebugServiceImpl::handleV4Request(const QByteArray &payload)
 {
     TRACE_PROTOCOL(qDebug() << "v8request, payload:" << payload.constData());
 
@@ -832,7 +832,7 @@ void QV4DebugServiceImpl::handleV8Request(const QByteArray &payload)
     QJsonValue type = o.value(QLatin1String("type"));
     if (type.toString() == QLatin1String("request")) {
         QJsonValue command = o.value(QLatin1String("command"));
-        V8CommandHandler *h = v8CommandHandler(command.toString());
+        V4CommandHandler *h = v4CommandHandler(command.toString());
         if (h)
             h->handle(o, this);
     }
@@ -846,11 +846,11 @@ QByteArray QV4DebugServiceImpl::packMessage(const QByteArray &command, const QBy
     return rs.data();
 }
 
-void QV4DebugServiceImpl::send(QJsonObject v8Payload)
+void QV4DebugServiceImpl::send(QJsonObject v4Payload)
 {
-    v8Payload[QLatin1String("seq")] = sequence++;
+    v4Payload[QLatin1String("seq")] = sequence++;
     QJsonDocument doc;
-    doc.setObject(v8Payload);
+    doc.setObject(v4Payload);
 #ifdef NO_PROTOCOL_TRACING
     QByteArray responseData = doc.toJson(QJsonDocument::Compact);
 #else
