@@ -49,6 +49,7 @@ private:
     ConnectResult startQmlProcess(const QString &qmlFile);
     void serveRequest(const QString &path);
     QList<QQmlDebugClient *> createClients() override;
+    void verifyProcessOutputContains(const QString &string) const;
 
     QPointer<QQmlPreviewClient> m_client;
 
@@ -105,6 +106,11 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
     return QList<QQmlDebugClient *>({m_client});
 }
 
+void tst_QQmlPreview::verifyProcessOutputContains(const QString &string) const
+{
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains(string), 30000);
+}
+
 void checkFiles(const QStringList &files)
 {
     QVERIFY(!files.contains("/etc/localtime"));
@@ -139,7 +145,7 @@ void tst_QQmlPreview::connect()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
     m_client->triggerLoad(testFileUrl(file));
     QTRY_VERIFY(m_files.contains(testFile(file)));
-    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().contains("qml: window.qml"), 10000);
+    verifyProcessOutputContains(file);
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
     QVERIFY(m_serviceErrors.isEmpty());
@@ -153,13 +159,13 @@ void tst_QQmlPreview::load()
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
     m_client->triggerLoad(testFileUrl(file));
     QTRY_VERIFY(m_files.contains(testFile(file)));
-    QTRY_VERIFY(m_process->output().contains("ms/degrees"));
+    verifyProcessOutputContains("ms/degrees");
 
     const QStringList files({"window2.qml", "window1.qml", "window.qml"});
     for (const QString &newFile : files) {
         m_client->triggerLoad(testFileUrl(newFile));
         QTRY_VERIFY(m_files.contains(testFile(newFile)));
-        QTRY_VERIFY(m_process->output().contains(QString::fromLatin1("qml: %1").arg(newFile)));
+        verifyProcessOutputContains(newFile);
     }
 
     m_process->stop();
@@ -173,13 +179,13 @@ void tst_QQmlPreview::rerun()
     QCOMPARE(startQmlProcess(file), ConnectSuccess);
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl(file));
-    const QLatin1String message("qml: window.qml");
-    QTRY_VERIFY(m_process->output().contains(message));
+    const QLatin1String message("window.qml");
+    verifyProcessOutputContains(message);
     const int pos = m_process->output().lastIndexOf(message) + message.size();
     QVERIFY(pos >= 0);
 
     m_client->triggerRerun();
-    QTRY_VERIFY(m_process->output().indexOf(message, pos) >= pos);
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().indexOf(message, pos) >= pos, 30000);
 
     m_process->stop();
     QVERIFY(m_serviceErrors.isEmpty());
@@ -291,6 +297,11 @@ static float parseZoomFactor(const QString &output)
     return zoomFactor;
 }
 
+static void verifyZoomFactor(const QQmlDebugProcess *process, float factor)
+{
+    QTRY_VERIFY_WITH_TIMEOUT(qFuzzyCompare(parseZoomFactor(process->output()), factor), 30000);
+}
+
 void tst_QQmlPreview::zoom()
 {
     const QString file("zoom.qml");
@@ -299,15 +310,15 @@ void tst_QQmlPreview::zoom()
     m_client->triggerLoad(testFileUrl(file));
     QTRY_VERIFY(m_files.contains(testFile(file)));
     float baseZoomFactor = -1;
-    QTRY_VERIFY((baseZoomFactor = parseZoomFactor(m_process->output())) > 0);
+    QTRY_VERIFY_WITH_TIMEOUT((baseZoomFactor = parseZoomFactor(m_process->output())) > 0, 30000);
     m_client->triggerZoom(2.0f);
-    QTRY_VERIFY(qFuzzyCompare(parseZoomFactor(m_process->output()), baseZoomFactor * 2.0f));
+    verifyZoomFactor(m_process, baseZoomFactor * 2.0f);
     m_client->triggerZoom(1.5f);
-    QTRY_VERIFY(qFuzzyCompare(parseZoomFactor(m_process->output()), baseZoomFactor * 1.5f));
+    verifyZoomFactor(m_process, baseZoomFactor * 1.5f);
     m_client->triggerZoom(0.5f);
-    QTRY_VERIFY(qFuzzyCompare(parseZoomFactor(m_process->output()), baseZoomFactor * 0.5f));
+    verifyZoomFactor(m_process, baseZoomFactor * 0.5f);
     m_client->triggerZoom(-1.0f);
-    QTRY_VERIFY(qFuzzyCompare(parseZoomFactor(m_process->output()), baseZoomFactor));
+    verifyZoomFactor(m_process, baseZoomFactor);
     m_process->stop();
     QVERIFY(m_serviceErrors.isEmpty());
 }
