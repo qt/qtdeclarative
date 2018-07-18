@@ -126,15 +126,7 @@ protected:
     {
         QV4DataCollector *collector = debugger->collector();
         collector->setNamesAsObjects(debugService->clientRequiresNamesAsObjects());
-        collector->setRedundantRefs(debugService->clientRequiresRedundantRefs());
         return collector;
-    }
-
-    // TODO: drop this method once we don't need to support redundantRefs anymore.
-    void addRefs(const QJsonArray &refs)
-    {
-        Q_ASSERT(debugService->clientRequiresRedundantRefs());
-        response.insert(QStringLiteral("refs"), refs);
     }
 
     void createErrorResponse(const QString &msg)
@@ -306,8 +298,6 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        if (debugService->clientRequiresRedundantRefs())
-            addRefs(job.refs());
     }
 };
 
@@ -349,8 +339,6 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        if (debugService->clientRequiresRedundantRefs())
-            addRefs(job.refs());
     }
 };
 
@@ -395,8 +383,6 @@ public:
         addSuccess(true);
         addRunning();
         addBody(job.returnValue());
-        if (debugService->clientRequiresRedundantRefs())
-            addRefs(job.refs());
     }
 };
 
@@ -435,8 +421,6 @@ public:
             addSuccess(true);
             addRunning();
             addBody(job.returnValue());
-            if (debugService->clientRequiresRedundantRefs())
-                addRefs(job.refs());
         }
     }
 };
@@ -655,8 +639,6 @@ public:
             addSuccess(true);
             addRunning();
             addBody(job.returnValue());
-            if (debugService->clientRequiresRedundantRefs())
-                addRefs(job.refs());
         }
     }
 };
@@ -678,7 +660,7 @@ V4CommandHandler *QV4DebugServiceImpl::v4CommandHandler(const QString &command) 
 
 QV4DebugServiceImpl::QV4DebugServiceImpl(QObject *parent) :
     QQmlConfigurableDebugService<QV4DebugService>(1, parent),
-    debuggerAgent(this), theSelectedFrame(0), redundantRefs(true), namesAsObjects(true),
+    debuggerAgent(this), theSelectedFrame(0), namesAsObjects(true),
     unknownV4CommandHandler(new UnknownV4CommandHandler)
 {
     addHandler(new V4VersionRequest);
@@ -783,11 +765,8 @@ void QV4DebugServiceImpl::messageReceived(const QByteArray &message)
         if (type == V4_CONNECT) {
             QJsonObject parameters = QJsonDocument::fromJson(payload).object();
             namesAsObjects = true;
-            redundantRefs = true;
             if (parameters.contains("namesAsObjects"))
                 namesAsObjects = parameters.value("namesAsObjects").toBool();
-            if (parameters.contains("redundantRefs"))
-                redundantRefs = parameters.value("redundantRefs").toBool();
 
             emit messageToClient(name(), packMessage(type));
             stopWaiting();

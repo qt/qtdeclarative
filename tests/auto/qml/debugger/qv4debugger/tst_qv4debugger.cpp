@@ -105,7 +105,7 @@ public:
     void run() {
         QV4::Scope scope(collector->engine());
         QV4::ScopedValue v(scope, *collector->engine()->exceptionValue);
-        exception = collector->collect(v);
+        exception = collector->addValueRef(v);
     }
 
     QV4DataCollector::Ref exceptionValue() const { return exception; }
@@ -238,11 +238,7 @@ public:
             NamedRefs &refs = m_capturedScope.last();
             QJsonObject object = job.returnValue();
             object = object.value(QLatin1String("object")).toObject();
-            if (object.contains("ref") && !object.contains("properties")) {
-                QVERIFY(collector.redundantRefs());
-                object = collector.lookupRef(object.value("ref").toInt(), true);
-                QVERIFY(object.contains("properties"));
-            }
+            QVERIFY(!object.contains("ref") || object.contains("properties"));
             foreach (const QJsonValue &value, object.value(QLatin1String("properties")).toArray()) {
                 QJsonObject property = value.toObject();
                 QString name = property.value(QLatin1String("name")).toString();
@@ -308,14 +304,10 @@ private slots:
     void conditionalBreakPointInQml();
 
     // context access:
-    void readArguments_data() { redundancy_data(); }
     void readArguments();
     void readComplicatedArguments();
-    void readLocals_data() { redundancy_data(); }
     void readLocals();
-    void readObject_data() { redundancy_data(); }
     void readObject();
-    void readContextInAllFrames_data() { redundancy_data(); }
     void readContextInAllFrames();
 
     // exceptions:
@@ -323,9 +315,7 @@ private slots:
     void breakInCatch();
     void breakInWith();
 
-    void evaluateExpression_data() { redundancy_data(); }
     void evaluateExpression();
-    void stepToEndOfScript_data() { redundancy_data(); }
     void stepToEndOfScript();
 
     void lastLineOfConditional_data();
@@ -344,8 +334,6 @@ private:
                                   Q_ARG(int, lineNumber));
         waitForSignal(m_engine, SIGNAL(evaluateFinished()), /*timeout*/0);
     }
-
-    void redundancy_data();
 
     TestEngine *m_engine;
     QV4::ExecutionEngine *m_v4;
@@ -539,9 +527,6 @@ void tst_qv4debugger::conditionalBreakPointInQml()
 
 void tst_qv4debugger::readArguments()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "var f = function(a, b, c, d) {\n"
@@ -565,7 +550,6 @@ void tst_qv4debugger::readArguments()
 
 void tst_qv4debugger::readComplicatedArguments()
 {
-    m_debuggerAgent->collector.setRedundantRefs(false);
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "var f = function(a) {\n"
@@ -586,9 +570,6 @@ void tst_qv4debugger::readComplicatedArguments()
 
 void tst_qv4debugger::readLocals()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "var f = function(a, b) {\n"
@@ -612,9 +593,6 @@ void tst_qv4debugger::readLocals()
 
 void tst_qv4debugger::readObject()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "var f = function(a) {\n"
@@ -636,7 +614,7 @@ void tst_qv4debugger::readObject()
     QVERIFY(!b.contains(QStringLiteral("properties")));
     QVERIFY(b.value("value").isDouble());
     QCOMPARE(b.value("value").toInt(), 2);
-    b = m_debuggerAgent->collector.lookupRef(b.value("ref").toInt(), true);
+    b = m_debuggerAgent->collector.lookupRef(b.value("ref").toInt());
     QVERIFY(b.contains(QStringLiteral("properties")));
     QVERIFY(b.value("properties").isArray());
     QJsonArray b_props = b.value("properties").toArray();
@@ -652,8 +630,7 @@ void tst_qv4debugger::readObject()
     QCOMPARE(b_tail.value("name").toString(), QStringLiteral("tail"));
     QVERIFY(b_tail.contains("ref"));
 
-    QJsonObject b_tail_value = m_debuggerAgent->collector.lookupRef(b_tail.value("ref").toInt(),
-                                                                    true);
+    QJsonObject b_tail_value = m_debuggerAgent->collector.lookupRef(b_tail.value("ref").toInt());
     QCOMPARE(b_tail_value.value("type").toString(), QStringLiteral("object"));
     QVERIFY(b_tail_value.contains("properties"));
     QJsonArray b_tail_props = b_tail_value.value("properties").toArray();
@@ -670,9 +647,6 @@ void tst_qv4debugger::readObject()
 
 void tst_qv4debugger::readContextInAllFrames()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     m_debuggerAgent->m_captureContextInfo = true;
     QString script =
             "var fact = function(n) {\n"
@@ -720,8 +694,7 @@ void tst_qv4debugger::pauseOnThrow()
     QCOMPARE(m_debuggerAgent->m_pauseReason, QV4Debugger::Throwing);
     QCOMPARE(m_debuggerAgent->m_stackTrace.size(), 2);
     QVERIFY(m_debuggerAgent->m_thrownValue >= qint64(0));
-    QJsonObject exception = m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_thrownValue,
-                                                                 true);
+    QJsonObject exception = m_debuggerAgent->collector.lookupRef(m_debuggerAgent->m_thrownValue);
 //    DUMP_JSON(exception);
     QCOMPARE(exception.value("type").toString(), QStringLiteral("string"));
     QCOMPARE(exception.value("value").toString(), QStringLiteral("hard"));
@@ -765,9 +738,6 @@ void tst_qv4debugger::breakInWith()
 
 void tst_qv4debugger::evaluateExpression()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     QString script =
             "function testFunction() {\n"
             "    var x = 10\n"
@@ -809,9 +779,6 @@ void tst_qv4debugger::evaluateExpression()
 
 void tst_qv4debugger::stepToEndOfScript()
 {
-    QFETCH(bool, redundantRefs);
-    m_debuggerAgent->collector.setRedundantRefs(redundantRefs);
-
     QString script =
             "var ret = 0;\n"
             "ret += 4;\n"
@@ -930,13 +897,6 @@ void tst_qv4debugger::readThis()
     QCOMPARE(a.value("name").toString(), QStringLiteral("a"));
     QCOMPARE(a.value("type").toString(), QStringLiteral("number"));
     QCOMPARE(a.value("value").toInt(), 5);
-}
-
-void tst_qv4debugger::redundancy_data()
-{
-    QTest::addColumn<bool>("redundantRefs");
-    QTest::addRow("redundant") << true;
-    QTest::addRow("sparse")    << false;
 }
 
 QTEST_MAIN(tst_qv4debugger)

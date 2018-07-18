@@ -150,7 +150,6 @@ void BacktraceJob::run()
         result.insert(QStringLiteral("toFrame"), fromFrame + frameArray.size());
         result.insert(QStringLiteral("frames"), frameArray);
     }
-    flushRedundantRefs();
 }
 
 FrameJob::FrameJob(QV4DataCollector *collector, int frameNr) :
@@ -165,7 +164,6 @@ void FrameJob::run()
         success = false;
     } else {
         result = collector->buildFrame(frames[frameNr], frameNr);
-        flushRedundantRefs();
         success = true;
     }
 }
@@ -195,7 +193,6 @@ void ScopeJob::run()
     result[QLatin1String("index")] = scopeNr;
     result[QLatin1String("frameIndex")] = frameNr;
     result[QLatin1String("object")] = object;
-    flushRedundantRefs();
 }
 
 bool ScopeJob::wasSuccessful() const
@@ -228,9 +225,8 @@ void ValueLookupJob::run()
             exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);
             break;
         }
-        result[QString::number(ref)] = collector->lookupRef(ref, true);
+        result[QString::number(ref)] = collector->lookupRef(ref);
     }
-    flushRedundantRefs();
 }
 
 const QString &ValueLookupJob::exceptionMessage() const
@@ -249,9 +245,7 @@ void ExpressionEvalJob::handleResult(QV4::ScopedValue &value)
 {
     if (hasExeption())
         exception = value->toQStringNoThrow();
-    result = collector->lookupRef(collector->collect(value), true);
-    if (collector->redundantRefs())
-        collectedRefs = collector->flushCollectedRefs();
+    result = collector->lookupRef(collector->addValueRef(value));
 }
 
 const QString &ExpressionEvalJob::exceptionMessage() const
@@ -262,13 +256,6 @@ const QString &ExpressionEvalJob::exceptionMessage() const
 const QJsonObject &ExpressionEvalJob::returnValue() const
 {
     return result;
-}
-
-// TODO: Drop this method once we don't need to support redundantRefs anymore
-const QJsonArray &ExpressionEvalJob::refs() const
-{
-    Q_ASSERT(collector->redundantRefs());
-    return collectedRefs;
 }
 
 GatherSourcesJob::GatherSourcesJob(QV4::ExecutionEngine *engine)

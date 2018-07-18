@@ -111,18 +111,14 @@ int QV4DataCollector::encodeScopeType(QV4::Heap::ExecutionContext::ContextType s
 }
 
 QV4DataCollector::QV4DataCollector(QV4::ExecutionEngine *engine)
-    : m_engine(engine), m_namesAsObjects(true), m_redundantRefs(true)
+    : m_engine(engine), m_namesAsObjects(true)
 {
     m_values.set(engine, engine->newArrayObject());
 }
 
-// TODO: Directly call addRef() once we don't need to support redundantRefs anymore
-QV4DataCollector::Ref QV4DataCollector::collect(const QV4::ScopedValue &value)
+QV4DataCollector::Ref QV4DataCollector::addValueRef(const QV4::ScopedValue &value)
 {
-    Ref ref = addRef(value);
-    if (m_redundantRefs)
-        m_collectedRefs.append(ref);
-    return ref;
+    return addRef(value);
 }
 
 const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::ExecutionEngine *engine,
@@ -192,7 +188,7 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
     }
 }
 
-QJsonObject QV4DataCollector::lookupRef(Ref ref, bool deep)
+QJsonObject QV4DataCollector::lookupRef(Ref ref)
 {
     QJsonObject dict;
 
@@ -201,15 +197,12 @@ QJsonObject QV4DataCollector::lookupRef(Ref ref, bool deep)
             return dict;
     }
 
-    if (m_redundantRefs)
-        deep = true;
-
     dict.insert(QStringLiteral("handle"), qint64(ref));
     QV4::Scope scope(engine());
     QV4::ScopedValue value(scope, getValue(ref));
 
     const QV4::Object *object = collectProperty(value, engine(), dict);
-    if (deep && object)
+    if (object)
         dict.insert(QStringLiteral("properties"), collectProperties(object));
 
     return dict;
@@ -226,7 +219,6 @@ QV4DataCollector::Ref QV4DataCollector::addFunctionRef(const QString &functionNa
     dict.insert(QStringLiteral("type"), QStringLiteral("function"));
     dict.insert(QStringLiteral("name"), functionName);
     m_specialRefs.insert(ref, dict);
-    m_collectedRefs.append(ref);
 
     return ref;
 }
@@ -242,7 +234,6 @@ QV4DataCollector::Ref QV4DataCollector::addScriptRef(const QString &scriptName)
     dict.insert(QStringLiteral("type"), QStringLiteral("script"));
     dict.insert(QStringLiteral("name"), scriptName);
     m_specialRefs.insert(ref, dict);
-    m_collectedRefs.append(ref);
 
     return ref;
 }
@@ -273,7 +264,7 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
             QString name = ic->nameMap[i].toQString();
             names.append(name);
             v = static_cast<QV4::Heap::CallContext *>(ctxt->d())->locals[i];
-            collectedRefs.append(collect(v));
+            collectedRefs.append(addValueRef(v));
         }
 
         Q_ASSERT(names.size() == collectedRefs.size());
@@ -284,13 +275,7 @@ bool QV4DataCollector::collectScope(QJsonObject *dict, int frameNr, int scopeNr)
         }
     }
 
-    Ref scopeObjectRef = addRef(scopeObject);
-    if (m_redundantRefs) {
-        dict->insert(QStringLiteral("ref"), qint64(scopeObjectRef));
-        m_collectedRefs.append(scopeObjectRef);
-    } else {
-        *dict = lookupRef(scopeObjectRef, true);
-    }
+    *dict = lookupRef(addRef(scopeObject));
 
     return true;
 }
@@ -330,7 +315,7 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
 
     if (ctxt) {
         QV4::ScopedValue o(scope, ctxt->d()->activation);
-        frame[QLatin1String("receiver")] = toRef(collect(o));
+        frame[QLatin1String("receiver")] = toRef(addValueRef(o));
     }
 
     // Only type and index are used by Qt Creator, so we keep it easy:
@@ -351,30 +336,11 @@ QJsonObject QV4DataCollector::buildFrame(const QV4::StackFrame &stackFrame, int 
     return frame;
 }
 
-// TODO: Drop this method once we don't need to support redundantRefs anymore
-QJsonArray QV4DataCollector::flushCollectedRefs()
-{
-    Q_ASSERT(m_redundantRefs);
-    QJsonArray refs;
-    std::sort(m_collectedRefs.begin(), m_collectedRefs.end());
-    for (int i = 0, ei = m_collectedRefs.size(); i != ei; ++i) {
-        QV4DataCollector::Ref ref = m_collectedRefs.at(i);
-        if (i > 0 && ref == m_collectedRefs.at(i - 1))
-            continue;
-        refs.append(lookupRef(ref, true));
-    }
-
-    m_collectedRefs.clear();
-    return refs;
-}
-
 void QV4DataCollector::clear()
 {
     m_values.set(engine(), engine()->newArrayObject());
-    m_collectedRefs.clear();
     m_specialRefs.clear();
     m_namesAsObjects = true;
-    m_redundantRefs = true;
 }
 
 QV4DataCollector::Ref QV4DataCollector::addRef(QV4::Value value, bool deduplicate)
@@ -459,8 +425,6 @@ QJsonObject QV4DataCollector::collectAsJson(const QString &name, const QV4::Scop
     if (value->isManaged() && !value->isString()) {
         Ref ref = addRef(value);
         dict.insert(QStringLiteral("ref"), qint64(ref));
-        if (m_redundantRefs)
-            m_collectedRefs.append(ref);
     }
 
     collectProperty(value, engine(), dict);

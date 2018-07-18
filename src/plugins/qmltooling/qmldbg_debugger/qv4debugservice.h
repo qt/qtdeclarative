@@ -86,7 +86,6 @@ public:
     int selectedFrame() const;
     void selectFrame(int frameNr);
 
-    bool clientRequiresRedundantRefs() const { return redundantRefs; }
     bool clientRequiresNamesAsObjects() const { return namesAsObjects; }
 
     QV4DebuggerAgent debuggerAgent;
@@ -108,7 +107,6 @@ private:
     static int sequence;
     int theSelectedFrame;
 
-    bool redundantRefs;
     bool namesAsObjects;
 
     void addHandler(V4CommandHandler* handler);
