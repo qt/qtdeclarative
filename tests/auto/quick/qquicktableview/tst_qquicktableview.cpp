@@ -105,6 +105,7 @@ private slots:
     void checkInitialAttachedProperties_data();
     void checkInitialAttachedProperties();
     void checkSpacingValues();
+    void checkDelegateParent();
     void flick_data();
     void flick();
     void flickOvershoot_data();
@@ -730,6 +731,20 @@ void tst_QQuickTableView::checkSpacingValues()
     tableView->setColumnSpacing(NAN);
     QCOMPARE(tableView->rowSpacing(), 42);
     QCOMPARE(tableView->columnSpacing(), 12);
+}
+
+void tst_QQuickTableView::checkDelegateParent()
+{
+    // Check that TableView sets the delegate parent before
+    // bindings are evaluated, so that the app can bind to it.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(view->rootObject()->property("delegateParentSetBeforeCompleted").toBool());
 }
 
 void tst_QQuickTableView::flick_data()

@@ -333,7 +333,13 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
         ownItem = true;
     }
 
-    item->setParentItem(q->contentItem());
+    if (ownItem) {
+        // Parent item is normally set early on from initItemCallback (to
+        // allow bindings to the parent property). But if we created the item
+        // within this function, we need to set it explicit.
+        item->setParentItem(q->contentItem());
+    }
+    Q_TABLEVIEW_ASSERT(item->parentItem() == q->contentItem(), item->parentItem());
 
     FxTableItem *fxTableItem = new FxTableItem(item, q, ownItem);
     fxTableItem->setVisible(false);
@@ -1088,11 +1094,13 @@ void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
 void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 {
     Q_UNUSED(modelIndex);
-    auto attached = getAttachedObject(object);
-    if (!attached)
-        return;
+    Q_Q(QQuickTableView);
 
-    attached->setTableView(q_func());
+    if (auto item = qmlobject_cast<QQuickItem*>(object))
+        item->setParentItem(q->contentItem());
+
+    if (auto attached = getAttachedObject(object))
+        attached->setTableView(q);
 }
 
 void QQuickTableViewPrivate::connectToModel()
