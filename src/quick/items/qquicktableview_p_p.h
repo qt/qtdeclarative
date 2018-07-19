@@ -296,6 +296,8 @@ public:
     void disconnectFromModel();
 
     void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
+    void rowsMovedCallback(const QModelIndex &parent, int start, int end, const QModelIndex &destination, int row);
+    void columnsMovedCallback(const QModelIndex &parent, int start, int end, const QModelIndex &destination, int column);
     void rowsInsertedCallback(const QModelIndex &parent, int begin, int end);
     void rowsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void columnsInsertedCallback(const QModelIndex &parent, int begin, int end);

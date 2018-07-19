@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -1117,6 +1117,8 @@ void QQuickTableViewPrivate::connectToModel()
         // not based on QAIM (like QQmlObjectModel, QQmlListModel, javascript arrays etc), there is currently no way
         // to modify the model at runtime without also re-setting the model on the view.
         connect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
+        connect(aim, &QAbstractItemModel::rowsMoved, this, &QQuickTableViewPrivate::rowsMovedCallback);
+        connect(aim, &QAbstractItemModel::columnsMoved, this, &QQuickTableViewPrivate::columnsMovedCallback);
         connect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
         connect(aim, &QAbstractItemModel::rowsRemoved, this, &QQuickTableViewPrivate::rowsRemovedCallback);
         connect(aim, &QAbstractItemModel::columnsInserted, this, &QQuickTableViewPrivate::columnsInsertedCallback);
@@ -1136,6 +1138,8 @@ void QQuickTableViewPrivate::disconnectFromModel()
 
     if (auto const aim = model->abstractItemModel()) {
         disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
+        disconnect(aim, &QAbstractItemModel::rowsMoved, this, &QQuickTableViewPrivate::rowsMovedCallback);
+        disconnect(aim, &QAbstractItemModel::columnsMoved, this, &QQuickTableViewPrivate::columnsMovedCallback);
         disconnect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
         disconnect(aim, &QAbstractItemModel::rowsRemoved, this, &QQuickTableViewPrivate::rowsRemovedCallback);
         disconnect(aim, &QAbstractItemModel::columnsInserted, this, &QQuickTableViewPrivate::columnsInsertedCallback);
@@ -1158,6 +1162,22 @@ void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool r
 void QQuickTableViewPrivate::dataChangedCallback(const QModelIndex &begin, const QModelIndex &, const QVector<int> &)
 {
     if (begin.parent() != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::rowsMovedCallback(const QModelIndex &parent, int, int, const QModelIndex &, int )
+{
+    if (parent != QModelIndex())
+        return;
+
+    invalidateTable();
+}
+
+void QQuickTableViewPrivate::columnsMovedCallback(const QModelIndex &parent, int, int, const QModelIndex &, int)
+{
+    if (parent != QModelIndex())
         return;
 
     invalidateTable();
