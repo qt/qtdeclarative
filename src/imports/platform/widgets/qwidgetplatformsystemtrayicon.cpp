@@ -84,6 +84,8 @@ void QWidgetPlatformSystemTrayIcon::updateMenu(QPlatformMenu *menu)
         return;
 
     m_systray->setContextMenu(widgetMenu->menu());
+#else
+    Q_UNUSED(menu);
 #endif
 }
 
