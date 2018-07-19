@@ -214,19 +214,6 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
 }
 
 /*!
-  \qmlsignal QtQuick::TapHandler::tapped()
-
-  This signal is emitted when the pointer device taps the item.
- */
-
-/*!
-  \qmlsignal QtQuick::TapHandler::longPressed()
-
-  This signal is emitted when a press occurs that is longer than the
-  \l {TapHandler::longPressThreshold} {long press threshold}.
- */
-
-/*!
     \qmlproperty enumeration QtQuick::TapHandler::gesturePolicy
 
     The spatial constraint for a tap or long press gesture to be recognized,
@@ -247,7 +234,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            will not take the exclusive grab, but merely a passive grab.
 
     \value TapHandler.WithinBounds
-           If the event point leaves the bounds of the \l target item, the tap
+           If the event point leaves the bounds of the \l parentItem, the tap
            gesture is canceled. The TapHandler will take the exclusive grab on
            press, but will release the grab as soon as the boundary constraint
            is no longer satisfied.
@@ -255,7 +242,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \value TapHandler.ReleaseWithinBounds
            At the time of release (the mouse button is released or the finger
            is lifted), if the event point is outside the bounds of the
-           \l target item, a tap gesture is not recognized. This corresponds to
+           \l parentItem, a tap gesture is not recognized. This corresponds to
            typical behavior for button widgets: you can cancel a click by
            dragging outside the button, and you can also change your mind by
            dragging back inside the button before release. Note that it's
@@ -392,23 +379,45 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal TapHandler::singleTapped
-    \since 5.11
+    \qmlsignal QtQuick::TapHandler::tapped
 
-    This signal is emitted when the \l target is tapped once. After an amount
-    of time greater than QStyleHints::mouseDoubleClickInterval, it can be
-    tapped again; but if the time until the next tap is less, \l tapCount
-    will increase.
+    This signal is emitted each time the \l parentItem is tapped.
+
+    That is, if you press and release a touchpoint or button within a time
+    period less than \l longPressThreshold, while any movement does not exceed
+    the drag threshold, then the \c tapped signal will be emitted at the time
+    of release.
 */
 
 /*!
-    \qmlsignal TapHandler::doubleTapped
+    \qmlsignal QtQuick::TapHandler::singleTapped
     \since 5.11
 
-    This signal is emitted when the \l target is tapped twice within a short
-    span of time (QStyleHints::mouseDoubleClickInterval) and distance
-    (QPlatformTheme::MouseDoubleClickDistance or
-    QPlatformTheme::TouchDoubleTapDistance).  This signal always occurs
-    after singleTapped, tapped and tapCountChanged.
+    This signal is emitted when the \l parentItem is tapped once.
+    After an amount of time greater than QStyleHints::mouseDoubleClickInterval,
+    it can be tapped again; but if the time until the next tap is less,
+    \l tapCount will increase.
 */
+
+/*!
+    \qmlsignal QtQuick::TapHandler::doubleTapped
+    \since 5.11
+
+    This signal is emitted when the \l parentItem is tapped twice within a
+    short span of time (QStyleHints::mouseDoubleClickInterval) and distance
+    (QPlatformTheme::MouseDoubleClickDistance or
+    QPlatformTheme::TouchDoubleTapDistance). This signal always occurs after
+    \l singleTapped, \l tapped, and \l tapCountChanged.
+*/
+
+/*!
+    \qmlsignal QtQuick::TapHandler::longPressed
+
+    This signal is emitted when the \l parentItem is pressed and held for a
+    time period greater than \l longPressThreshold. That is, if you press and
+    hold a touchpoint or button, while any movement does not exceed the drag
+    threshold, then the \c longPressed signal will be emitted at the time that
+    \l timeHeld exceeds \l longPressThreshold.
+*/
+
 QT_END_NAMESPACE
