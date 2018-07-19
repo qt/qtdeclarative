@@ -230,7 +230,7 @@ void tst_QQuickTableView::checkImplicitSizeDelegate()
 void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 {
     // Checks that a function isn't assigned to the columnWidthProvider property
-    // and that the column width is equal to the implicitWidth of the delegate.
+    // and that the column width is then equal to sizeHintForColumn.
     LOAD_TABLEVIEW("alternatingrowheightcolumnwidth.qml");
 
     auto model = TestModelAsVariant(10, 10);
@@ -240,10 +240,13 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    for (auto fxItem : tableViewPrivate->loadedItems) {
-        // expectedWidth mirrors the implicit width of the delegate
-        qreal expectedWidth = fxItem->cell.x() % 2 ? 30 : 40;
-        QCOMPARE(fxItem->item->width(), expectedWidth);
+    QRect table = tableViewPrivate->loadedTable;
+    for (int column = table.left(); column <= table.right(); ++column) {
+        const qreal expectedColumnWidth = tableViewPrivate->sizeHintForColumn(column);
+        for (int row = table.top(); row <= table.bottom(); ++row) {
+            const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
+            QCOMPARE(item->width(), expectedColumnWidth);
+        }
     }
 }
 
@@ -308,7 +311,7 @@ void tst_QQuickTableView::checkColumnWidthProviderNotCallable()
 void tst_QQuickTableView::checkRowHeightWithoutProvider()
 {
     // Checks that a function isn't assigned to the rowHeightProvider property
-    // and that the row height is equal to the implicitHeight of the delegate.
+    // and that the row height is then equal to sizeHintForRow.
     LOAD_TABLEVIEW("alternatingrowheightcolumnwidth.qml");
 
     auto model = TestModelAsVariant(10, 10);
@@ -318,10 +321,13 @@ void tst_QQuickTableView::checkRowHeightWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    for (auto fxItem : tableViewPrivate->loadedItems) {
-        // expectedHeight mirrors the implicit height of the delegate
-        qreal expectedHeight = fxItem->cell.y() % 2 ? 30 : 40;
-        QCOMPARE(fxItem->item->height(), expectedHeight);
+    QRect table = tableViewPrivate->loadedTable;
+    for (int row = table.top(); row <= table.bottom(); ++row) {
+        const qreal expectedRowHeight = tableViewPrivate->sizeHintForRow(row);
+        for (int column = table.left(); column <= table.right(); ++column) {
+            const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
+            QCOMPARE(item->height(), expectedRowHeight);
+        }
     }
 }
 
