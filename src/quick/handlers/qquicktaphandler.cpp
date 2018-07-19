@@ -121,6 +121,11 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     // (e.g. DragHandler) gets a chance to take over.
     // Don't forget to emit released in case of a cancel.
     bool ret = false;
+    bool overThreshold = dragOverThreshold(point);
+    if (overThreshold) {
+        m_longPressTimer.stop();
+        m_holdTimer.invalidate();
+    }
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
     case QQuickEventPoint::Released:
@@ -129,7 +134,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     case QQuickEventPoint::Updated:
         switch (m_gesturePolicy) {
         case DragThreshold:
-            ret = !dragOverThreshold(point);
+            ret = !overThreshold;
             break;
         case WithinBounds:
             ret = parentContains(point);
