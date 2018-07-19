@@ -28,7 +28,13 @@ qtConfig(qml-devtools) {
                     qmlplugindump
             }
         }
-        qtHaveModule(widgets): SUBDIRS += qmleasing
+        qtHaveModule(widgets) {
+            QT_FOR_CONFIG += widgets
+            qtConfig(dialogbuttonbox) {
+                SUBDIRS += \
+                    qmleasing
+            }
+        }
     }
     qtHaveModule(qmltest): SUBDIRS += qmltestrunner
     qtConfig(private_tests): SUBDIRS += qmljs
