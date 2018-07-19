@@ -1065,10 +1065,8 @@ void tst_QQuickTableView::modelSignals()
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 10);
 
-    model.setColumnCount(0);
+    model.setColumnCount(1);
     WAIT_UNTIL_POLISHED;
-    // When the QAbstractItemModel's column count is set to 0,
-    // QQmlAdaptorModel::columnCount() returns 1 as long as it is "valid".
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 1);
 
