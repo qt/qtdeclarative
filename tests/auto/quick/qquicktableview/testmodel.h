@@ -120,6 +120,13 @@ public:
         return true;
     }
 
+    void clear() {
+        beginResetModel();
+        m_rows = 0;
+        m_columns = 0;
+        endResetModel();
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();

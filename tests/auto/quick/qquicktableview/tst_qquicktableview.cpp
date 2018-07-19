@@ -1066,11 +1066,26 @@ void tst_QQuickTableView::modelSignals()
     QCOMPARE(tableView->columns(), 10);
 
     model.setColumnCount(0);
-    // TODO: When the QAbstractItemModel's column count is set to 0,
-    // QQmlAdaptorModel::columnCount() likes to return whatever it was previously,
-    // even though the model doesn't actually have any columns... not sure what to do about that.
+    WAIT_UNTIL_POLISHED;
+    // When the QAbstractItemModel's column count is set to 0,
+    // QQmlAdaptorModel::columnCount() returns 1 as long as it is "valid".
     QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 1);
+
+    model.setRowCount(10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 10);
+    QCOMPARE(tableView->columns(), 1);
+
+    model.setColumnCount(10);
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 10);
     QCOMPARE(tableView->columns(), 10);
+
+    model.clear();
+    WAIT_UNTIL_POLISHED;
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 1);
 }
 
 QTEST_MAIN(tst_QQuickTableView)
