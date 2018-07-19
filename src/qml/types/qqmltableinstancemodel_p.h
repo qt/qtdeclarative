@@ -80,7 +80,15 @@ public:
 
 class Q_QML_PRIVATE_EXPORT QQmlTableInstanceModel : public QQmlInstanceModel
 {
+    Q_OBJECT
+
 public:
+
+    enum ReusableFlag {
+        NotReusable,
+        Reusable
+    };
+
     QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent = nullptr);
     ~QQmlTableInstanceModel() override;
 
@@ -99,14 +107,24 @@ public:
     const QAbstractItemModel *abstractItemModel() const override;
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    ReleaseFlags release(QObject *) override;
+    ReleaseFlags release(QObject *object) override { return release(object, NotReusable); }
+    ReleaseFlags release(QObject *object, ReusableFlag reusable);
     void cancel(int) override;
+
+    void insertIntoReusableItemsPool(QQmlDelegateModelItem *modelItem);
+    QQmlDelegateModelItem *takeFromReusableItemsPool(const QQmlComponent *delegate);
+    void drainReusableItemsPool(int maxPoolTime);
+    void reuseItem(QQmlDelegateModelItem *item, int newModelIndex);
 
     QQmlIncubator::Status incubationStatus(int index) override;
 
     QString stringValue(int, const QString &) override { Q_UNREACHABLE(); return QString(); }
     void setWatchedRoles(const QList<QByteArray> &) override { Q_UNREACHABLE(); }
     int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE(); return 0; }
+
+Q_SIGNALS:
+    void itemPooled(int index, QObject *object);
+    void itemReused(int index, QObject *object);
 
 private:
     QQmlComponent *m_delegate = nullptr;
@@ -115,11 +133,14 @@ private:
     QQmlDelegateModelItemMetaType *m_metaType;
 
     QHash<int, QQmlDelegateModelItem *> m_modelItems;
+    QList<QQmlDelegateModelItem *> m_reusableItemsPool;
     QList<QQmlIncubator *> m_finishedIncubationTasks;
 
+    void incubateModelItem(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode);
     void incubatorStatusChanged(QQmlTableInstanceModelIncubationTask *dmIncubationTask, QQmlIncubator::Status status);
     void deleteIncubationTaskLater(QQmlIncubator *incubationTask);
     void deleteAllFinishedIncubationTasks();
+    QQmlDelegateModelItem *resolveModelItem(int index);
 
     static bool isDoneIncubating(QQmlDelegateModelItem *modelItem);
     static void deleteModelItemLater(QQmlDelegateModelItem *modelItem);

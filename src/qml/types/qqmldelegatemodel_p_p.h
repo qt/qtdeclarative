@@ -143,6 +143,8 @@ public:
     QPointer<QObject> object;
     QPointer<QQmlDelegateModelAttached> attached;
     QQDMIncubationTask *incubationTask;
+    QQmlComponent *delegate;
+    int poolTime;
     int objectRef;
     int scriptRef;
     int groups;

@@ -91,6 +91,37 @@ QQmlTableInstanceModel::~QQmlTableInstanceModel()
     // the view needs to be deleted first (and thereby release all
     // its items), before this destructor is run.
     Q_ASSERT(m_modelItems.isEmpty());
+
+    drainReusableItemsPool(0);
+}
+
+QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
+{
+    // Check if an item for the given index is already loaded and ready
+    QQmlDelegateModelItem *modelItem = m_modelItems.value(index, nullptr);
+    if (modelItem)
+        return modelItem;
+
+    QQmlComponent *delegate = m_delegate;
+
+    // Check if the pool contains an item that can be reused
+    modelItem = takeFromReusableItemsPool(delegate);
+    if (modelItem) {
+        reuseItem(modelItem, index);
+        m_modelItems.insert(index, modelItem);
+        return modelItem;
+    }
+
+    // Create a new item from scratch
+    modelItem = m_adaptorModel.createItem(m_metaType, index);
+    if (modelItem) {
+        modelItem->delegate = delegate;
+        m_modelItems.insert(index, modelItem);
+        return modelItem;
+    }
+
+    qWarning() << Q_FUNC_INFO << "failed creating a model item for index: " << index;
+    return nullptr;
 }
 
 QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode incubationMode)
@@ -99,18 +130,9 @@ QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode
     Q_ASSERT(index >= 0 && index < m_adaptorModel.count());
     Q_ASSERT(m_qmlContext && m_qmlContext->isValid());
 
-    // Check if we've already created an item for the given index
-    QQmlDelegateModelItem *modelItem = m_modelItems.value(index, nullptr);
-
-    if (!modelItem) {
-        // Create a new model item
-        modelItem = m_adaptorModel.createItem(m_metaType, index);
-        if (!modelItem) {
-            qWarning() << Q_FUNC_INFO << "Adaptor model failed creating a model item";
-            return nullptr;
-        }
-        m_modelItems.insert(index, modelItem);
-    }
+    QQmlDelegateModelItem *modelItem = resolveModelItem(index);
+    if (!modelItem)
+        return nullptr;
 
     if (modelItem->object) {
         // The model item has already been incubated. So
@@ -119,41 +141,12 @@ QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode
         return modelItem->object;
     }
 
-    // Guard the model item temporarily so that it's not deleted from
-    // incubatorStatusChanged(), in case the incubation is done synchronously.
-    modelItem->scriptRef++;
-
-    if (modelItem->incubationTask) {
-        // We're already incubating the model item from a previous request. If the previous call requested
-        // the item async, but the current request needs it sync, we need to force-complete the incubation.
-        const bool sync = (incubationMode == QQmlIncubator::Synchronous || incubationMode == QQmlIncubator::AsynchronousIfNested);
-        if (sync && modelItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous)
-            modelItem->incubationTask->forceCompletion();
-    } else {
-        modelItem->incubationTask = new QQmlTableInstanceModelIncubationTask(this, modelItem, incubationMode);
-
-        QQmlContextData *ctxt = new QQmlContextData;
-        QQmlContext *creationContext = m_delegate->creationContext();
-        ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
-        ctxt->contextObject = modelItem;
-        modelItem->contextData = ctxt;
-
-        QQmlComponentPrivate::get(m_delegate)->incubateObject(
-                    modelItem->incubationTask,
-                    m_delegate,
-                    m_qmlContext->engine(),
-                    ctxt,
-                    QQmlContextData::get(m_qmlContext));
-    }
-
-    // Remove the temporary guard
-    modelItem->scriptRef--;
-    Q_ASSERT(modelItem->scriptRef == 0);
-
+    // The object is not ready, and needs to be incubated
+    incubateModelItem(modelItem, incubationMode);
     if (!isDoneIncubating(modelItem))
         return nullptr;
 
-    // When incubation is done, the task should be removed
+    // Incubation is done, so the task should be removed
     Q_ASSERT(!modelItem->incubationTask);
 
     if (!modelItem->object) {
@@ -173,7 +166,7 @@ QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode
     return modelItem->object;
 }
 
-QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object)
+QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object, ReusableFlag reusable)
 {
     Q_ASSERT(object);
     auto modelItem = qvariant_cast<QQmlDelegateModelItem *>(object->property(kModelItemTag));
@@ -188,11 +181,19 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object)
         // are e.g delivered async, and the user flicks back and forth quicker than the loading can catch
         // up with. The view might then find that the object is no longer visible and should be released.
         // We detect this case in incubatorStatusChanged(), and delete it there instead. But from the callers
-        // points of view, it should consider it destroyed.
+        // point of view, it should consider it destroyed.
         return QQmlDelegateModel::Destroyed;
     }
 
+    // The item is not referenced by anyone
     m_modelItems.remove(modelItem->index);
+
+    if (reusable == Reusable) {
+        insertIntoReusableItemsPool(modelItem);
+        return QQmlInstanceModel::Referenced;
+    }
+
+    // The item is not reused or referenced by anyone, so just delete it
     modelItem->destroyObject();
     emit destroyingItem(object);
 
@@ -218,6 +219,139 @@ void QQmlTableInstanceModel::cancel(int index)
 
     // modelItem->incubationTask will be deleted from the modelItems destructor
     delete modelItem;
+}
+
+void QQmlTableInstanceModel::insertIntoReusableItemsPool(QQmlDelegateModelItem *modelItem)
+{
+    // Currently, the only way for a view to reuse items is to call QQmlTableInstanceModel::release()
+    // with the second argument explicitly set to QQmlTableInstanceModel::Reusable. If the released
+    // item is no longer referenced, it will be added to the pool. Reusing of items can be specified
+    // per item, in case certain items cannot be recycled.
+    // A QQmlDelegateModelItem knows which delegate its object was created from. So when we are
+    // about to create a new item, we first check if the pool contains an item based on the same
+    // delegate from before. If so, we take it out of the pool (instead of creating a new item), and
+    // update all its context-, and attached properties.
+    // When a view is recycling items, it should call QQmlTableInstanceModel::drainReusableItemsPool()
+    // regularly. As there is currently no logic to 'hibernate' items in the pool, they are only
+    // meant to rest there for a short while, ideally only from the time e.g a row is unloaded
+    // on one side of the view, and until a new row is loaded on the opposite side. In-between
+    // this time, the application will see the item as fully functional and 'alive' (just not
+    // visible on screen). Since this time is supposed to be short, we don't take any action to
+    // notify the application about it, since we don't want to trigger any bindings that can
+    // disturb performance.
+    // A recommended time for calling drainReusableItemsPool() is each time a view has finished
+    // loading e.g a new row or column. If there are more items in the pool after that, it means
+    // that the view most likely doesn't need them anytime soon. Those items should be destroyed to
+    // not consume resources.
+    // Depending on if a view is a list or a table, it can sometimes be performant to keep
+    // items in the pool for a bit longer than one "row out/row in" cycle. E.g for a table, if the
+    // number of visible rows in a view is much larger than the number of visible columns.
+    // In that case, if you flick out a row, and then flick in a column, you would throw away a lot
+    // of items in the pool if completely draining it. The reason is that unloading a row places more
+    // items in the pool than what ends up being recycled when loading a new column. And then, when you
+    // next flick in a new row, you would need to load all those drained items again from scratch. For
+    // that reason, you can specify a maxPoolTime to the drainReusableItemsPool() that allows you to keep
+    // items in the pool for a bit longer, effectively keeping more items in circulation.
+    // A recommended maxPoolTime would be equal to the number of dimenstions in the view, which
+    // means 1 for a list view and 2 for a table view. If you specify 0, all items will be drained.
+    Q_ASSERT(!modelItem->incubationTask);
+    Q_ASSERT(!modelItem->isObjectReferenced());
+    Q_ASSERT(!modelItem->isReferenced());
+    Q_ASSERT(modelItem->object);
+
+    modelItem->poolTime = 0;
+    m_reusableItemsPool.append(modelItem);
+    emit itemPooled(modelItem->index, modelItem->object);
+}
+
+QQmlDelegateModelItem *QQmlTableInstanceModel::takeFromReusableItemsPool(const QQmlComponent *delegate)
+{
+    // Find the oldest item in the pool that was made from the same delegate as
+    // the given argument, remove it from the pool, and return it.
+    if (m_reusableItemsPool.isEmpty())
+        return nullptr;
+
+    for (auto it = m_reusableItemsPool.begin(); it != m_reusableItemsPool.end(); ++it) {
+        if ((*it)->delegate != delegate)
+            continue;
+        auto modelItem = *it;
+        m_reusableItemsPool.erase(it);
+        return modelItem;
+    }
+
+    return nullptr;
+}
+
+void QQmlTableInstanceModel::drainReusableItemsPool(int maxPoolTime)
+{
+    // Rather than releasing all pooled items upon a call to this function, each
+    // item has a poolTime. The poolTime specifies for how many loading cycles an item
+    // has been resting in the pool. And for each invocation of this function, poolTime
+    // will increase. If poolTime is equal to, or exceeds, maxPoolTime, it will be removed
+    // from the pool and released. This way, the view can tweak a bit for how long
+    // items should stay in "circulation", even if they are not recycled right away.
+    for (auto it = m_reusableItemsPool.begin(); it != m_reusableItemsPool.end();) {
+        auto modelItem = *it;
+        modelItem->poolTime++;
+        if (modelItem->poolTime <= maxPoolTime) {
+            ++it;
+        } else {
+            it = m_reusableItemsPool.erase(it);
+            release(modelItem->object, NotReusable);
+        }
+    }
+}
+
+void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModelIndex)
+{
+    // Update the context properties index, row and column on
+    // the delegate item, and inform the application about it.
+    const int newRow = m_adaptorModel.rowAt(newModelIndex);
+    const int newColumn = m_adaptorModel.columnAt(newModelIndex);
+    item->setModelIndex(newModelIndex, newRow, newColumn);
+
+    // Notify the application that all 'dynamic'/role-based context data has
+    // changed as well (their getter function will use the updated index).
+    auto const itemAsList = QList<QQmlDelegateModelItem *>() << item;
+    auto const updateAllRoles = QVector<int>();
+    m_adaptorModel.notify(itemAsList, newModelIndex, 1, updateAllRoles);
+
+    // Inform the view that the item is recycled. This will typically result
+    // in the view updating its own attached delegate item properties.
+    emit itemReused(newModelIndex, item->object);
+}
+
+void QQmlTableInstanceModel::incubateModelItem(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode)
+{
+    // Guard the model item temporarily so that it's not deleted from
+    // incubatorStatusChanged(), in case the incubation is done synchronously.
+    modelItem->scriptRef++;
+
+    if (modelItem->incubationTask) {
+        // We're already incubating the model item from a previous request. If the previous call requested
+        // the item async, but the current request needs it sync, we need to force-complete the incubation.
+        const bool sync = (incubationMode == QQmlIncubator::Synchronous || incubationMode == QQmlIncubator::AsynchronousIfNested);
+        if (sync && modelItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous)
+            modelItem->incubationTask->forceCompletion();
+    } else {
+        modelItem->incubationTask = new QQmlTableInstanceModelIncubationTask(this, modelItem, incubationMode);
+
+        QQmlContextData *ctxt = new QQmlContextData;
+        QQmlContext *creationContext = modelItem->delegate->creationContext();
+        ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_qmlContext.data()));
+        ctxt->contextObject = modelItem;
+        modelItem->contextData = ctxt;
+
+        QQmlComponentPrivate::get(modelItem->delegate)->incubateObject(
+                    modelItem->incubationTask,
+                    modelItem->delegate,
+                    m_qmlContext->engine(),
+                    ctxt,
+                    QQmlContextData::get(m_qmlContext));
+    }
+
+    // Remove the temporary guard
+    modelItem->scriptRef--;
 }
 
 void QQmlTableInstanceModel::incubatorStatusChanged(QQmlTableInstanceModelIncubationTask *incubationTask, QQmlIncubator::Status status)
@@ -299,6 +433,10 @@ QVariant QQmlTableInstanceModel::model() const
 
 void QQmlTableInstanceModel::setModel(const QVariant &model)
 {
+    // Pooled items are still accessible/alive for the application, and
+    // needs to stay in sync with the model. So we need to drain the pool
+    // completely when the model changes.
+    drainReusableItemsPool(0);
     m_adaptorModel.setModel(model, this, m_qmlContext->engine());
 }
 
@@ -336,6 +474,8 @@ void QQmlTableInstanceModelIncubationTask::statusChanged(QQmlIncubator::Status s
 
     tableInstanceModel->incubatorStatusChanged(this, status);
 }
+
+#include "moc_qqmltableinstancemodel_p.cpp"
 
 QT_END_NAMESPACE
 

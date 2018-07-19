@@ -2005,6 +2005,8 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *meta
     , object(nullptr)
     , attached(nullptr)
     , incubationTask(nullptr)
+    , delegate(nullptr)
+    , poolTime(0)
     , objectRef(0)
     , scriptRef(0)
     , groups(0)
