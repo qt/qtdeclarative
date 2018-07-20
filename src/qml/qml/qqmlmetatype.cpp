@@ -818,7 +818,7 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 {
     // Add any enum values defined by 'related' classes
     if (metaObject->d.relatedMetaObjects) {
-        const QMetaObject * const *related = metaObject->d.relatedMetaObjects;
+        const auto *related = metaObject->d.relatedMetaObjects;
         if (related) {
             while (*related)
                 insertEnums(*related++);
