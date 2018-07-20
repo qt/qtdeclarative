@@ -208,6 +208,12 @@ int QV4::Compiler::JSUnitGenerator::registerJSClass(const QStringList &members)
     return jsClassOffsets.size() - 1;
 }
 
+int QV4::Compiler::JSUnitGenerator::registerTranslation(const QV4::CompiledData::TranslationData &translation)
+{
+    translations.append(translation);
+    return translations.size() - 1;
+}
+
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
     registerString(module->fileName);
@@ -285,6 +291,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         for (int i = 0; i < jsClassOffsets.count(); ++i)
             jsClassOffsetTable[i] = jsClassDataOffset + jsClassOffsets.at(i);
     }
+
+    memcpy(dataPtr + unit->offsetToTranslationTable, translations.constData(), translations.count() * sizeof(CompiledData::TranslationData));
 
     // write strings and string table
     if (option == GenerateWithStringTable)
@@ -521,6 +529,12 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     nextOffset = (nextOffset + 7) & ~quint32(0x7);
 
+    unit.translationTableSize = translations.count();
+    unit.offsetToTranslationTable = nextOffset;
+    nextOffset += unit.translationTableSize * sizeof(CompiledData::TranslationData);
+
+    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+
     quint32 functionSize = 0;
 
     for (int i = 0; i < module->functions.size(); ++i) {
@@ -575,6 +589,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     if (showStats) {
         qDebug() << "Generated JS unit that is" << unit.unitSize << "bytes contains:";
         qDebug() << "    " << functionSize << "bytes for non-code function data for" << unit.functionTableSize << "functions";
+        qDebug() << "    " << translations.count() * sizeof(CompiledData::TranslationData) << "bytes for" << translations.count() << "translations";
     }
 
     return unit;

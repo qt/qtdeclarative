@@ -604,23 +604,25 @@ QString Binding::valueAsString(const CompilationUnit *unit) const
 #if !QT_CONFIG(translation)
     case Type_TranslationById:
     case Type_Translation:
-        return unit->stringAt(stringIndex);
+        return unit->stringAt(unit->unitData->translations()[value.translationDataIndex].stringIndex);
 #else
     case Type_TranslationById: {
-        QByteArray id = unit->stringAt(stringIndex).toUtf8();
-        return qtTrId(id.constData(), value.translationData.number);
+        const TranslationData &translation = unit->unitData()->translations()[value.translationDataIndex];
+        QByteArray id = unit->stringAt(translation.stringIndex).toUtf8();
+        return qtTrId(id.constData(), translation.number);
     }
     case Type_Translation: {
+        const TranslationData &translation = unit->unitData()->translations()[value.translationDataIndex];
         // This code must match that in the qsTr() implementation
-        const QString &path = unit->stringAt(unit->data->sourceFileIndex);
+        const QString &path = unit->stringAt(unit->unitData()->sourceFileIndex);
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
                                               : QStringRef();
         QByteArray contextUtf8 = context.toUtf8();
-        QByteArray comment = unit->stringAt(value.translationData.commentIndex).toUtf8();
-        QByteArray text = unit->stringAt(stringIndex).toUtf8();
+        QByteArray comment = unit->stringAt(translation.commentIndex).toUtf8();
+        QByteArray text = unit->stringAt(translation.stringIndex).toUtf8();
         return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
-                                           comment.constData(), value.translationData.number);
+                                           comment.constData(), translation.number);
     }
 #endif
     default:

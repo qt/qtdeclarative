@@ -1120,6 +1120,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         } else {
             return; // first argument is not a string, stop
         }
+        translationData.stringIndex = jsGenerator->registerString(translation.toString());
 
         args = args->next;
 
@@ -1144,8 +1145,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
             return; // too many arguments, stop
 
         binding->type = QV4::CompiledData::Binding::Type_Translation;
-        binding->stringIndex = jsGenerator->registerString(translation.toString());
-        binding->value.translationData = translationData;
+        binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
     } else if (base == QLatin1String("qsTrId")) {
         QV4::CompiledData::TranslationData translationData;
         translationData.number = -1;
@@ -1160,6 +1160,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         } else {
             return; // first argument is not a string, stop
         }
+        translationData.stringIndex = jsGenerator->registerString(id.toString());
 
         args = args->next;
 
@@ -1176,8 +1177,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
             return; // too many arguments, stop
 
         binding->type = QV4::CompiledData::Binding::Type_TranslationById;
-        binding->stringIndex = jsGenerator->registerString(id.toString());
-        binding->value.translationData = translationData;
+        binding->value.translationDataIndex = jsGenerator->registerTranslation(translationData);
     } else if (base == QLatin1String("QT_TR_NOOP") || base == QLatin1String("QT_TRID_NOOP")) {
         if (!args || !args->expression)
             return; // no arguments, stop

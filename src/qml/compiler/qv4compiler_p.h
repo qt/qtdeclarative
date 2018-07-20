@@ -120,6 +120,8 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
 
     int registerJSClass(const QStringList &members);
 
+    int registerTranslation(const CompiledData::TranslationData &translation);
+
     enum GeneratorOption {
         GenerateWithStringTable,
         GenerateWithoutStringTable
@@ -142,6 +144,7 @@ private:
     QVector<ReturnedValue> constants;
     QByteArray jsClassData;
     QVector<int> jsClassOffsets;
+    QVector<CompiledData::TranslationData> translations;
 };
 
 }
