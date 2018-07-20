@@ -32,6 +32,7 @@
 #include <QQmlEngine>
 #include <QProcess>
 #include <QLibraryInfo>
+#include <QStandardPaths>
 #include <QSysInfo>
 #include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
@@ -105,6 +106,13 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
 void tst_qmlcachegen::initTestCase()
 {
     qputenv("QML_FORCE_DISK_CACHE", "1");
+    QStandardPaths::setTestModeEnabled(true);
+
+    // make sure there's no pre-existing cache dir
+    QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    if (!cacheDir.isEmpty())
+        //QDir(cacheDir).removeRecursively();
+        qDebug() << cacheDir;
 }
 
 void tst_qmlcachegen::loadGeneratedFile()

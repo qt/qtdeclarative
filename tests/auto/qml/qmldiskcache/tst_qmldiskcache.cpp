@@ -48,6 +48,7 @@ class tst_qmldiskcache: public QObject
 private slots:
     void initTestCase();
 
+    void loadLocalAsFallback();
     void regenerateAfterChange();
     void registerImportForImplicitComponent();
     void basicVersionChecks();
@@ -204,6 +205,47 @@ struct TestCompiler
 void tst_qmldiskcache::initTestCase()
 {
     qputenv("QML_FORCE_DISK_CACHE", "1");
+    QStandardPaths::setTestModeEnabled(true);
+}
+
+void tst_qmldiskcache::loadLocalAsFallback()
+{
+    QQmlEngine engine;
+    TestCompiler testCompiler(&engine);
+
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral("import QtQml 2.0\n"
+                                                  "QtObject {\n"
+                                                   "    property string blah: Qt.platform;\n"
+                                                   "}");
+
+    QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+
+    // Create an invalid side-by-side .qmlc
+    {
+        QFile f(testCompiler.tempDir.path() + "/test.qmlc");
+        QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        QV4::CompiledData::Unit unit = {};
+        memcpy(unit.magic, QV4::CompiledData::magic_str, sizeof(unit.magic));
+        unit.version = QV4_DATA_STRUCTURE_VERSION;
+        unit.qtVersion = QT_VERSION;
+        unit.sourceTimeStamp = testCompiler.mappedFile.fileTime(QFile::FileModificationTime).toMSecsSinceEpoch();
+        unit.unitSize = ~0U;    // make the size a silly number
+        // write something to the library hash that should cause it not to be loaded
+        memset(unit.libraryVersionHash, 'z', sizeof(unit.libraryVersionHash));
+        memset(unit.md5Checksum, 0, sizeof(unit.md5Checksum));
+
+        // leave the other fields unset, since they don't matter
+
+        f.write(reinterpret_cast<const char *>(&unit), sizeof(unit));
+    }
+
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Compiler::Codegen::createUnitForLoading();
+    bool loaded = unit->loadFromDisk(QUrl::fromLocalFile(testCompiler.testFilePath), QFileInfo(testCompiler.testFilePath).lastModified(),
+                                     &testCompiler.lastErrorString);
+    QVERIFY2(loaded, qPrintable(testCompiler.lastErrorString));
+    QCOMPARE(unit->objectCount(), 1);
 }
 
 void tst_qmldiskcache::regenerateAfterChange()

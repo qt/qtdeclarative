@@ -76,7 +76,18 @@ namespace QV4 {
 
 namespace CompiledData {
 
+#if defined(QML_COMPILE_HASH)
+#  ifdef Q_OS_LINUX
+// Place on a separate section on Linux so it's easier to check from outside
+// what the hash version is.
+__attribute__((section(".qml_compile_hash")))
+#  endif
+const char qml_compile_hash[48 + 1] = QML_COMPILE_HASH;
 static_assert(sizeof(Unit::libraryVersionHash) >= QML_COMPILE_HASH_LENGTH + 1, "Compile hash length exceeds reserved size in data structure. Please adjust and bump the format version");
+#else
+#  error "QML_COMPILE_HASH must be defined for the build of QtDeclarative to ensure version checking for cache files"
+#endif
+
 
 CompilationUnit::CompilationUnit(const Unit *unitData)
 {
@@ -351,26 +362,27 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeS
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
     QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
 
-    QString cachePath = sourcePath + QLatin1Char('c');
-    if (!QFile::exists(cachePath))
-        cachePath = localCacheFilePath(url);
+    const QStringList cachePaths = { sourcePath + QLatin1Char('c'), localCacheFilePath(url) };
+    for (const QString &cachePath : cachePaths) {
+        CompiledData::Unit *mappedUnit = cacheFile->open(cachePath, sourceTimeStamp, errorString);
+        if (!mappedUnit)
+            continue;
 
-    CompiledData::Unit *mappedUnit = cacheFile->open(cachePath, sourceTimeStamp, errorString);
-    if (!mappedUnit)
-        return false;
+        const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
+        QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
 
-    const Unit * const oldDataPtr = (data && !(data->flags & QV4::CompiledData::Unit::StaticData)) ? data : nullptr;
-    QScopedValueRollback<const Unit *> dataPtrChange(data, mappedUnit);
+        if (data->sourceFileIndex != 0 && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
+            *errorString = QStringLiteral("QML source file has moved to a different location.");
+            continue;
+        }
 
-    if (data->sourceFileIndex != 0 && sourcePath != QQmlFile::urlToLocalFileOrQrc(stringAt(data->sourceFileIndex))) {
-        *errorString = QStringLiteral("QML source file has moved to a different location.");
-        return false;
+        dataPtrChange.commit();
+        free(const_cast<Unit*>(oldDataPtr));
+        backingFile.reset(cacheFile.take());
+        return true;
     }
 
-    dataPtrChange.commit();
-    free(const_cast<Unit*>(oldDataPtr));
-    backingFile.reset(cacheFile.take());
-    return true;
+    return false;
 }
 
 void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
@@ -783,7 +795,7 @@ bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString)
     }
 
 #if defined(QML_COMPILE_HASH)
-    if (qstrcmp(QML_COMPILE_HASH, libraryVersionHash) != 0) {
+    if (qstrcmp(CompiledData::qml_compile_hash, libraryVersionHash) != 0) {
         *errorString = QStringLiteral("QML library version mismatch. Expected compile hash does not match");
         return false;
     }
