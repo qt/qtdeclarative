@@ -335,19 +335,19 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     if (!irFunction->idObjectDependencies.isEmpty()) {
         function->nDependingIdObjects = irFunction->idObjectDependencies.count();
-        function->dependingIdObjectsOffset = currentOffset;
+        Q_ASSERT(function->dependingIdObjectsOffset() == currentOffset);
         currentOffset += function->nDependingIdObjects * sizeof(quint32);
     }
 
     if (!irFunction->contextObjectPropertyDependencies.isEmpty()) {
         function->nDependingContextProperties = irFunction->contextObjectPropertyDependencies.count();
-        function->dependingContextPropertiesOffset = currentOffset;
+        Q_ASSERT(function->dependingContextPropertiesOffset() == currentOffset);
         currentOffset += function->nDependingContextProperties * sizeof(quint32) * 2;
     }
 
     if (!irFunction->scopeObjectPropertyDependencies.isEmpty()) {
         function->nDependingScopeProperties = irFunction->scopeObjectPropertyDependencies.count();
-        function->dependingScopePropertiesOffset = currentOffset;
+        Q_ASSERT(function->dependingScopePropertiesOffset() == currentOffset);
         currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
     }
 
@@ -371,19 +371,19 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     memcpy(f + function->lineNumberOffset, irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
 
     // write QML dependencies
-    quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset);
+    quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset());
     for (int id : irFunction->idObjectDependencies) {
         Q_ASSERT(id >= 0);
         *writtenDeps++ = static_cast<quint32>(id);
     }
 
-    writtenDeps = (quint32_le *)(f + function->dependingContextPropertiesOffset);
+    writtenDeps = (quint32_le *)(f + function->dependingContextPropertiesOffset());
     for (auto property : irFunction->contextObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
     }
 
-    writtenDeps = (quint32_le *)(f + function->dependingScopePropertiesOffset);
+    writtenDeps = (quint32_le *)(f + function->dependingScopePropertiesOffset());
     for (auto property : irFunction->scopeObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
