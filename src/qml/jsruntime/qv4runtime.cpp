@@ -1679,6 +1679,7 @@ ReturnedValue Runtime::method_loadQmlImportedScripts(NoThrowEngine *engine)
         return Encode::undefined();
     return context->importedScripts.value();
 }
+#endif // V4_BOOTSTRAP
 
 ReturnedValue Runtime::method_uMinus(const Value &value)
 {
@@ -1708,7 +1709,6 @@ ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, co
 
     return RuntimeHelpers::addHelper(engine, left, right);
 }
-#endif // V4_BOOTSTRAP
 
 ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
 {

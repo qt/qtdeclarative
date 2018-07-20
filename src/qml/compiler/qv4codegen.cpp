@@ -151,7 +151,6 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     if (hasError)
         return _expr.result();
 
-#ifndef V4_BOOTSTRAP
     if (expr.isConstant()) {
         auto v = Value::fromReturnedValue(expr.constant);
         if (v.isNumber()) {
@@ -169,7 +168,6 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
             }
         }
     }
-#endif // V4_BOOTSTRAP
 
     switch (op) {
     case UMinus: {
