@@ -48,13 +48,6 @@ Item {
 
     property alias tableView: tableView
 
-    // currentDelegateCount is the number of currently visible items
-    property int currentDelegateCount: 0
-    // maxDelegateCount is the largest number of items that has ever been visible at the same time
-    property int maxDelegateCount: 0
-    // delegatesCreatedCount is the number of items created during the lifetime of the test
-    property int delegatesCreatedCount: 0
-
     TableView {
         id: tableView
         width: 600
@@ -63,6 +56,14 @@ Item {
         clip: true
         delegate: tableViewDelegate
         cacheBuffer: 0
+    }
+
+    Item {
+        Repeater {
+            model: 100
+            Item { property string someCustomProperty: index }
+        }
+        Component.onCompleted: tableView.model = children
     }
 
     Component {
@@ -74,22 +75,9 @@ Item {
             color: "lightgray"
             border.width: 1
 
-            property int pooledCount: 0
-            property int reusedCount: 0
-            TableView.onPooled: pooledCount++;
-            TableView.onReused: reusedCount++;
-
             Text {
                 anchors.centerIn: parent
                 text: column
-            }
-            Component.onCompleted: {
-                delegatesCreatedCount++;
-                currentDelegateCount++;
-                maxDelegateCount = Math.max(maxDelegateCount, currentDelegateCount);
-            }
-            Component.onDestruction: {
-                currentDelegateCount--;
             }
         }
     }

@@ -50,6 +50,7 @@ using namespace QQuickVisualTestUtil;
 
 static const char* kTableViewPropName = "tableView";
 static const char* kDelegateObjectName = "tableViewDelegate";
+static const char *kDelegatesCreatedCountProp = "delegatesCreatedCount";
 
 Q_DECLARE_METATYPE(QMarginsF);
 
@@ -112,6 +113,12 @@ private slots:
     void flickOvershoot();
     void checkRowColumnCount();
     void modelSignals();
+    void checkIfDelegatesAreReused_data();
+    void checkIfDelegatesAreReused();
+    void checkContextProperties_data();
+    void checkContextProperties();
+    void checkContextPropertiesQQmlListProperyModel_data();
+    void checkContextPropertiesQQmlListProperyModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -757,11 +764,16 @@ void tst_QQuickTableView::flick_data()
 {
     QTest::addColumn<QSizeF>("spacing");
     QTest::addColumn<QMarginsF>("margins");
+    QTest::addColumn<bool>("reuseItems");
 
-    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20);
-    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20);
+    QTest::newRow("s:0 m:0 reuse") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0) << true;
+    QTest::newRow("s:5 m:0 reuse") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0) << true;
+    QTest::newRow("s:0 m:20 reuse") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20) << true;
+    QTest::newRow("s:5 m:20 reuse") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20) << true;
+    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0) << false;
+    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0) << false;
+    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20) << false;
+    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20) << false;
 }
 
 void tst_QQuickTableView::flick()
@@ -770,6 +782,7 @@ void tst_QQuickTableView::flick()
     // with different table configurations.
     QFETCH(QSizeF, spacing);
     QFETCH(QMarginsF, margins);
+    QFETCH(bool, reuseItems);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     const qreal delegateWidth = 100;
@@ -788,6 +801,7 @@ void tst_QQuickTableView::flick()
     tableView->setRightMargin(margins.right());
     tableView->setBottomMargin(margins.bottom());
     tableView->setCacheBuffer(0);
+    tableView->setReuseItems(reuseItems);
     tableView->setWidth(margins.left() + (visualColumnCount * cellWidth) - spacing.width());
     tableView->setHeight(margins.top() + (visualRowCount * cellHeight) - spacing.height());
 
@@ -821,11 +835,16 @@ void tst_QQuickTableView::flickOvershoot_data()
 {
     QTest::addColumn<QSizeF>("spacing");
     QTest::addColumn<QMarginsF>("margins");
+    QTest::addColumn<bool>("reuseItems");
 
-    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20);
-    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20);
+    QTest::newRow("s:0 m:0 reuse") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0) << true;
+    QTest::newRow("s:5 m:0 reuse") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0) << true;
+    QTest::newRow("s:0 m:20 reuse") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20) << true;
+    QTest::newRow("s:5 m:20 reuse") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20) << true;
+    QTest::newRow("s:0 m:0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0) << false;
+    QTest::newRow("s:5 m:0") << QSizeF(5, 5) << QMarginsF(0, 0, 0, 0) << false;
+    QTest::newRow("s:0 m:20") << QSizeF(0, 0) << QMarginsF(20, 20, 20, 20) << false;
+    QTest::newRow("s:5 m:20") << QSizeF(5, 5) << QMarginsF(20, 20, 20, 20) << false;
 }
 
 void tst_QQuickTableView::flickOvershoot()
@@ -836,6 +855,7 @@ void tst_QQuickTableView::flickOvershoot()
     // when everything is flicked out of view.
     QFETCH(QSizeF, spacing);
     QFETCH(QMarginsF, margins);
+    QFETCH(bool, reuseItems);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     const int rowCount = 5;
@@ -857,6 +877,7 @@ void tst_QQuickTableView::flickOvershoot()
     tableView->setRightMargin(margins.right());
     tableView->setBottomMargin(margins.bottom());
     tableView->setCacheBuffer(0);
+    tableView->setReuseItems(reuseItems);
     tableView->setWidth(tableWidth - margins.right() - cellWidth / 2);
     tableView->setHeight(tableHeight - margins.bottom() - cellHeight / 2);
 
@@ -1090,6 +1111,183 @@ void tst_QQuickTableView::modelSignals()
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 1);
+}
+
+void tst_QQuickTableView::checkIfDelegatesAreReused_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+
+    QTest::newRow("reuse = true") << true;
+    QTest::newRow("reuse = false") << false;
+}
+
+void tst_QQuickTableView::checkIfDelegatesAreReused()
+{
+    // Check that we end up reusing delegate items while flicking if
+    // TableView has reuseItems set to true, but otherwise not.
+    QFETCH(bool, reuseItems);
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    const qreal delegateWidth = 100;
+    const int pageFlickCount = 1;
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableView->setReuseItems(reuseItems);
+
+    // Flick half an item to the left, to force one extra column to load before we start.
+    // This will make things less complicated below, when checking how many times the items
+    // have been reused (all items will then report the same number).
+    tableView->setContentX(delegateWidth / 2);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int visibleColumnCount = tableViewPrivate->loadedTable.width();
+    const int visibleRowCount = tableViewPrivate->loadedTable.height();
+    const int delegateCountAfterInit = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
+
+    for (int column = 1; column <= (visibleColumnCount * pageFlickCount); ++column) {
+        // Flick columns to the left (and add one pixel to ensure the left column is completely out)
+        tableView->setContentX((delegateWidth * column) + 1);
+        tableView->polish();
+
+        WAIT_UNTIL_POLISHED;
+
+        // Check that the number of delegate items created so far is what we expect.
+        const int delegatesCreatedCount = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
+        int expectedCount = delegateCountAfterInit + (reuseItems ? 0 : visibleRowCount * column);
+        QCOMPARE(delegatesCreatedCount, expectedCount);
+    }
+
+    // Check that each delegate item has been reused as many times
+    // as we have flicked pages (if reuse is enabled).
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        int pooledCount = fxItem->item->property("pooledCount").toInt();
+        int reusedCount = fxItem->item->property("reusedCount").toInt();
+        if (reuseItems) {
+            QCOMPARE(pooledCount, pageFlickCount);
+            QCOMPARE(reusedCount, pageFlickCount);
+        } else {
+            QCOMPARE(pooledCount, 0);
+            QCOMPARE(reusedCount, 0);
+        }
+    }
+}
+
+void tst_QQuickTableView::checkContextProperties_data()
+{
+    QTest::addColumn<QVariant>("model");
+    QTest::addColumn<bool>("reuseItems");
+
+    auto stringList = QStringList();
+    for (int i = 0; i < 100; ++i)
+        stringList.append(QString::number(i));
+
+    QTest::newRow("QAIM, reuse=false") << TestModelAsVariant(100, 100) << false;
+    QTest::newRow("QAIM, reuse=true") << TestModelAsVariant(100, 100) << true;
+    QTest::newRow("Number model, reuse=false") << QVariant::fromValue(100) << false;
+    QTest::newRow("Number model, reuse=true") << QVariant::fromValue(100) << true;
+    QTest::newRow("QStringList, reuse=false") << QVariant::fromValue(stringList) << false;
+    QTest::newRow("QStringList, reuse=true") << QVariant::fromValue(stringList) << true;
+}
+
+void tst_QQuickTableView::checkContextProperties()
+{
+    // Check that the context properties of the delegate items
+    // are what we expect while flicking, with or without item recycling.
+    QFETCH(QVariant, model);
+    QFETCH(bool, reuseItems);
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+    const int rowCount = 100;
+    const int pageFlickCount = 3;
+
+    tableView->setModel(model);
+    tableView->setReuseItems(reuseItems);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int visibleRowCount = qMin(tableView->rows(), qCeil(tableView->height() / delegateHeight));
+    const int visibleColumnCount = qMin(tableView->columns(), qCeil(tableView->width() / delegateWidth));
+
+    for (int row = 1; row <= (visibleRowCount * pageFlickCount); ++row) {
+        // Flick rows up
+        tableView->setContentY((delegateHeight * row) + (delegateHeight / 2));
+        tableView->polish();
+
+        WAIT_UNTIL_POLISHED;
+
+        for (int col = 0; col < visibleColumnCount; ++col) {
+            const auto item = tableViewPrivate->loadedTableItem(QPoint(col, row))->item;
+            const auto context = qmlContext(item.data());
+            const int contextIndex = context->contextProperty("index").toInt();
+            const int contextRow = context->contextProperty("row").toInt();
+            const int contextColumn = context->contextProperty("column").toInt();
+            const QString contextModelData = context->contextProperty("modelData").toString();
+
+            QCOMPARE(contextIndex, row + (col * rowCount));
+            QCOMPARE(contextRow, row);
+            QCOMPARE(contextColumn, col);
+            QCOMPARE(contextModelData, QStringLiteral("%1").arg(row));
+        }
+    }
+}
+
+void tst_QQuickTableView::checkContextPropertiesQQmlListProperyModel_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+
+    QTest::newRow("reuse=false") << false;
+    QTest::newRow("reuse=true") << true;
+}
+
+void tst_QQuickTableView::checkContextPropertiesQQmlListProperyModel()
+{
+    // Check that the context properties of the delegate items
+    // are what we expect while flicking, with or without item recycling.
+    // This test hard-codes the model to be a QQmlListPropertyModel from
+    // within the qml file.
+    QFETCH(bool, reuseItems);
+    LOAD_TABLEVIEW("qqmllistpropertymodel.qml");
+
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+    const int rowCount = 100;
+    const int pageFlickCount = 3;
+
+    tableView->setReuseItems(reuseItems);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int visibleRowCount = qMin(tableView->rows(), qCeil(tableView->height() / delegateHeight));
+    const int visibleColumnCount = qMin(tableView->columns(), qCeil(tableView->width() / delegateWidth));
+
+    for (int row = 1; row <= (visibleRowCount * pageFlickCount); ++row) {
+        // Flick rows up
+        tableView->setContentY((delegateHeight * row) + (delegateHeight / 2));
+        tableView->polish();
+
+        WAIT_UNTIL_POLISHED;
+
+        for (int col = 0; col < visibleColumnCount; ++col) {
+            const auto item = tableViewPrivate->loadedTableItem(QPoint(col, row))->item;
+            const auto context = qmlContext(item.data());
+            const int contextIndex = context->contextProperty("index").toInt();
+            const int contextRow = context->contextProperty("row").toInt();
+            const int contextColumn = context->contextProperty("column").toInt();
+            const QObject *contextModelData = qvariant_cast<QObject *>(context->contextProperty("modelData"));
+            const QString modelDataProperty = contextModelData->property("someCustomProperty").toString();
+
+            QCOMPARE(contextIndex, row + (col * rowCount));
+            QCOMPARE(contextRow, row);
+            QCOMPARE(contextColumn, col);
+            QCOMPARE(modelDataProperty, QStringLiteral("%1").arg(row));
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickTableView)

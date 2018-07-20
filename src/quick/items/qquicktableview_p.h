@@ -78,6 +78,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(QJSValue columnWidthProvider READ columnWidthProvider WRITE setColumnWidthProvider NOTIFY columnWidthProviderChanged)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged)
 
 public:
     QQuickTableView(QQuickItem *parent = nullptr);
@@ -118,6 +119,9 @@ public:
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *);
 
+    bool reuseItems() const;
+    void setReuseItems(bool reuseItems);
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
@@ -134,6 +138,7 @@ Q_SIGNALS:
     void columnWidthProviderChanged();
     void modelChanged();
     void delegateChanged();
+    void reuseItemsChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -165,6 +170,8 @@ public:
 
 Q_SIGNALS:
     void tableViewChanged();
+    void pooled();
+    void reused();
 
 private:
     QPointer<QQuickTableView> m_tableview;

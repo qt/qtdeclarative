@@ -61,6 +61,16 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
 static const int kBufferTimerInterval = 300;
 
+// Set the maximum life time of an item in the pool to be at least the number of
+// dimensions, which for a table is two. The reason is that the user might flick
+// both e.g the left column and the top row out before a new right column and bottom
+// row gets flicked in. This means we will end up with one column plus one row of
+// items in the pool. And flicking in a new column and a new row will typically happen
+// in separate updatePolish calls (unless you flick them both in at exactly the same
+// time). This means that we should allow flicked out items to stay in the pool for at least
+// two load cycles, to keep more items in circulation instead of deleting them prematurely.
+static const int kMaxPoolTime = 2;
+
 static QLine rectangleEdge(const QRect &rect, Qt::Edge tableEdge)
 {
     switch (tableEdge) {
@@ -372,16 +382,26 @@ void QQuickTableViewPrivate::releaseLoadedItems() {
     auto const tmpList = loadedItems;
     loadedItems.clear();
     for (FxTableItem *item : tmpList)
-        releaseItem(item);
+        releaseItem(item, QQmlTableInstanceModel::NotReusable);
 }
 
-void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem)
+void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag)
 {
-    if (fxTableItem->item) {
-        if (fxTableItem->ownItem)
-            delete fxTableItem->item;
-        else if (model->release(fxTableItem->item) != QQmlInstanceModel::Destroyed)
-            fxTableItem->item->setParentItem(nullptr);
+    Q_TABLEVIEW_ASSERT(fxTableItem->item, fxTableItem->index);
+
+    if (fxTableItem->ownItem) {
+        delete fxTableItem->item;
+    } else {
+        // Only QQmlTableInstanceModel supports reusing items
+        auto releaseFlag = tableModel ?
+                    tableModel->release(fxTableItem->item, reusableFlag) :
+                    model->release(fxTableItem->item);
+
+        if (releaseFlag != QQmlInstanceModel::Destroyed) {
+            // When items are not released, it typically means that the item is reused, or
+            // that the model is an ObjectModel. If so, we just hide the item instead.
+            fxTableItem->setVisible(false);
+        }
     }
 
     delete fxTableItem;
@@ -408,7 +428,7 @@ void QQuickTableViewPrivate::unloadItem(const QPoint &cell)
 {
     const int modelIndex = modelIndexAtCell(cell);
     Q_TABLEVIEW_ASSERT(loadedItems.contains(modelIndex), modelIndex << cell);
-    releaseItem(loadedItems.take(modelIndex));
+    releaseItem(loadedItems.take(modelIndex), reusableFlag);
 }
 
 void QQuickTableViewPrivate::unloadItems(const QLine &items)
@@ -849,6 +869,12 @@ void QQuickTableViewPrivate::processLoadRequest()
 
     loadRequest.markAsDone();
     qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
+
+    if (tableModel) {
+        // Whenever we're done loading a row or column, we drain the
+        // table models reuse pool of superfluous items that weren't reused.
+        tableModel->drainReusableItemsPool(kMaxPoolTime);
+    }
 }
 
 void QQuickTableViewPrivate::beginRebuildTable()
@@ -1106,12 +1132,33 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
         attached->setTableView(q);
 }
 
+void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
+{
+    Q_UNUSED(modelIndex);
+
+    if (auto attached = getAttachedObject(object))
+        emit attached->pooled();
+}
+
+void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
+{
+    Q_UNUSED(modelIndex);
+
+    if (auto attached = getAttachedObject(object))
+        emit attached->reused();
+}
+
 void QQuickTableViewPrivate::connectToModel()
 {
     Q_TABLEVIEW_ASSERT(model, "");
 
     QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::connect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+
+    if (tableModel) {
+        QObjectPrivate::connect(tableModel, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+        QObjectPrivate::connect(tableModel, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    }
 
     if (auto const aim = model->abstractItemModel()) {
         // When the model exposes a QAIM, we connect to it directly. This means that if the current model is
@@ -1138,6 +1185,11 @@ void QQuickTableViewPrivate::disconnectFromModel()
 
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+
+    if (tableModel) {
+        QObjectPrivate::disconnect(tableModel, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+        QObjectPrivate::disconnect(tableModel, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    }
 
     if (auto const aim = model->abstractItemModel()) {
         disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
@@ -1456,6 +1508,22 @@ void QQuickTableView::setDelegate(QQmlComponent *newDelegate)
     d->invalidateTable();
 
     emit delegateChanged();
+}
+
+bool QQuickTableView::reuseItems() const
+{
+    return bool(d_func()->reusableFlag == QQmlTableInstanceModel::Reusable);
+}
+
+void QQuickTableView::setReuseItems(bool reuse)
+{
+    Q_D(QQuickTableView);
+    if (reuseItems() == reuse)
+        return;
+
+    d->reusableFlag = reuse ? QQmlTableInstanceModel::Reusable : QQmlTableInstanceModel::NotReusable;
+
+    emit reuseItemsChanged();
 }
 
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)

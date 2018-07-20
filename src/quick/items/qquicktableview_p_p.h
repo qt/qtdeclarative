@@ -204,6 +204,8 @@ public:
     QTimer cacheBufferDelayTimer;
     bool hasBufferedItems = false;
 
+    QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
+
     bool blockItemCreatedCallback = false;
     bool tableInvalid = false;
     bool tableRebuilding = false;
@@ -264,7 +266,7 @@ public:
     FxTableItem *createFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
     FxTableItem *loadFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
 
-    void releaseItem(FxTableItem *fxTableItem);
+    void releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag);
     void releaseLoadedItems();
     void clear();
 
@@ -291,6 +293,8 @@ public:
 
     void initItemCallback(int modelIndex, QObject *item);
     void itemCreatedCallback(int modelIndex, QObject *object);
+    void itemPooledCallback(int modelIndex, QObject *object);
+    void itemReusedCallback(int modelIndex, QObject *object);
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
 
     void connectToModel();
