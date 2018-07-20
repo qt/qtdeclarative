@@ -1171,6 +1171,14 @@ void tst_QQmlDebugJS::changeBreakpoint()
     int sourceLine1 = 38;
     QCOMPARE(init(qmlscene, CHANGEBREAKPOINT_QMLFILE), ConnectSuccess);
 
+    bool isStopped = false;
+    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() { isStopped = true; });
+
+    auto continueDebugging = [&]() {
+        m_client->continueDebugging(QJSDebugClient::Continue);
+        isStopped = false;
+    };
+
     m_client->connect();
 
     auto extractBody = [&]() {
@@ -1210,7 +1218,7 @@ void tst_QQmlDebugJS::changeBreakpoint()
     QVERIFY(breakpoint2 >= 0);
 
     auto verifyBreakpoint = [&](int sourceLine, int breakpointId) {
-        QVERIFY(waitForClientSignal(SIGNAL(stopped())));
+        QTRY_VERIFY_WITH_TIMEOUT(isStopped, 30000);
         const QVariantMap body = extractBody();
         QCOMPARE(body.value("sourceLine").toInt(), sourceLine);
         QCOMPARE(extractBreakPointId(body), breakpointId);
@@ -1218,7 +1226,7 @@ void tst_QQmlDebugJS::changeBreakpoint()
 
     verifyBreakpoint(sourceLine2, breakpoint2);
 
-    m_client->continueDebugging(QJSDebugClient::Continue);
+    continueDebugging();
     verifyBreakpoint(sourceLine2, breakpoint2);
 
     m_client->changeBreakpoint(breakpoint2, false);
@@ -1227,10 +1235,10 @@ void tst_QQmlDebugJS::changeBreakpoint()
     m_client->changeBreakpoint(breakpoint1, true);
     QVERIFY(waitForClientSignal(SIGNAL(result())));
 
-    m_client->continueDebugging(QJSDebugClient::Continue);
+    continueDebugging();
     verifyBreakpoint(sourceLine1, breakpoint1);
 
-    m_client->continueDebugging(QJSDebugClient::Continue);
+    continueDebugging();
     verifyBreakpoint(sourceLine1, breakpoint1);
 
     m_client->changeBreakpoint(breakpoint2, true);
@@ -1240,7 +1248,7 @@ void tst_QQmlDebugJS::changeBreakpoint()
     QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     for (int i = 0; i < 3; ++i) {
-        m_client->continueDebugging(QJSDebugClient::Continue);
+        continueDebugging();
         verifyBreakpoint(sourceLine2, breakpoint2);
     }
 }
