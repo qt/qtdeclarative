@@ -547,7 +547,7 @@ void tst_qquickwindow::constantUpdatesOnWindow_data()
     window.setTitle(QTest::currentTestFunction());
     window.setGeometry(100, 100, 300, 200);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
     const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
     if (threaded) {
         QTest::newRow("blocked, beforeRender") << true << QByteArray(SIGNAL(beforeRendering()));
