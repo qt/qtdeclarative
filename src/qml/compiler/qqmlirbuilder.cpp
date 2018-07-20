@@ -1758,6 +1758,28 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
 
     qmlUnit->generateChecksum();
 
+    static const bool showStats = qEnvironmentVariableIsSet("QML_SHOW_UNIT_STATS");
+    if (showStats) {
+        qDebug() << "Generated QML unit that is" << qmlUnit->unitSize << "bytes big contains:";
+        qDebug() << "    " << qmlUnit->functionTableSize << "functions";
+        qDebug() << "    " << unitSize << "for JS unit";
+        qDebug() << "    " << importSize << "for imports";
+        qDebug() << "    " << objectsSize << "for" << qmlUnit->nObjects << "objects";
+        quint32 totalBindingCount = 0;
+        for (quint32 i = 0; i < qmlUnit->nObjects; ++i)
+            totalBindingCount += qmlUnit->objectAt(i)->nBindings;
+        qDebug() << "    " << totalBindingCount << "bindings";
+        quint32 totalCodeSize = 0;
+        for (quint32 i = 0; i < qmlUnit->functionTableSize; ++i)
+            totalCodeSize += qmlUnit->functionAt(i)->codeSize;
+        qDebug() << "    " << totalCodeSize << "bytes total byte code";
+        qDebug() << "    " << qmlUnit->stringTableSize << "strings";
+        quint32 totalStringSize = 0;
+        for (quint32 i = 0; i < qmlUnit->stringTableSize; ++i)
+            totalStringSize += QV4::CompiledData::String::calculateSize(qmlUnit->stringAt(i));
+        qDebug() << "    " << totalStringSize << "bytes total strings";
+    }
+
     return qmlUnit;
 }
 

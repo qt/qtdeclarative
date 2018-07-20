@@ -521,15 +521,20 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     nextOffset = (nextOffset + 7) & ~quint32(0x7);
 
+    quint32 functionSize = 0;
+
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *f = module->functions.at(i);
         blockAndFunctionOffsets[i] = nextOffset;
 
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
-        nextOffset += QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
+        quint32 size = QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
                                                                  qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
+        functionSize += size - f->code.size();
+        nextOffset += size;
     }
+
     blockAndFunctionOffsets += module->functions.size();
 
     for (int i = 0; i < module->classes.size(); ++i) {
@@ -565,6 +570,12 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.offsetToObjects = 0;
 
     unit.unitSize = nextOffset;
+
+    static const bool showStats = qEnvironmentVariableIsSet("QML_SHOW_UNIT_STATS");
+    if (showStats) {
+        qDebug() << "Generated JS unit that is" << unit.unitSize << "bytes contains:";
+        qDebug() << "    " << functionSize << "bytes for non-code function data for" << unit.functionTableSize << "functions";
+    }
 
     return unit;
 }
