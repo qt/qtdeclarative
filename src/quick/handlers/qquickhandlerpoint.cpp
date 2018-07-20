@@ -78,6 +78,11 @@ QQuickHandlerPoint::QQuickHandlerPoint()
     , m_pressure(0)
 {}
 
+void QQuickHandlerPoint::localize(QQuickItem *item)
+{
+    m_pressPosition = item->mapFromScene(m_scenePressPosition);
+}
+
 void QQuickHandlerPoint::reset()
 {
     m_id = 0;
@@ -102,7 +107,6 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
         m_pressPosition = point->position();
-        m_scenePressPosition = point->scenePosition();
         m_pressedButtons = event->buttons();
         break;
     case QQuickEventPoint::Released:
@@ -112,6 +116,7 @@ void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
         m_pressedButtons = event->buttons();
         break;
     }
+    m_scenePressPosition = point->scenePressPosition();
     m_pressedModifiers = event->modifiers();
     if (event->asPointerTouchEvent()) {
         const QQuickEventTouchPoint *tp = static_cast<const QQuickEventTouchPoint *>(point);

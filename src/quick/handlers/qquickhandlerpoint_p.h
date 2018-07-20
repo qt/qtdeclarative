@@ -90,6 +90,7 @@ public:
     qreal pressure() const { return m_pressure; }
     QSizeF ellipseDiameters() const { return m_ellipseDiameters; }
     QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
+    void localize(QQuickItem *item);
 
     void reset();
     void reset(const QQuickEventPoint *point);

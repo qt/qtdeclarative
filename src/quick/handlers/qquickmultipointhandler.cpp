@@ -88,8 +88,10 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (ret) {
         const int c = candidatePoints.count();
         m_currentPoints.resize(c);
-        for (int i = 0; i < c; ++i)
+        for (int i = 0; i < c; ++i) {
             m_currentPoints[i].reset(candidatePoints[i]);
+            m_currentPoints[i].localize(parentItem());
+        }
     } else {
         m_currentPoints.clear();
     }
