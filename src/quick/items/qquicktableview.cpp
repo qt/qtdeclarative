@@ -146,7 +146,7 @@ void QQuickTableViewPrivate::dumpTable() const
 
     const QString filename = QStringLiteral("QQuickTableView_dumptable_capture.png");
     const QString path = QDir::current().absoluteFilePath(filename);
-    if (q_func()->window()->grabWindow().save(path))
+    if (q_func()->window() && q_func()->window()->grabWindow().save(path))
         qWarning() << "Window capture saved to:" << path;
 }
 
