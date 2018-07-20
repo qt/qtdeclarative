@@ -56,7 +56,6 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
         QStandardPaths::DataLocation,
         QStandardPaths::CacheLocation,
         QStandardPaths::GenericDataLocation,
-        QStandardPaths::RuntimeLocation,
         QStandardPaths::ConfigLocation,
         QStandardPaths::GenericCacheLocation,
         QStandardPaths::GenericConfigLocation,
