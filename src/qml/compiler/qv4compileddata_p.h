@@ -404,7 +404,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
     };
     union {
         bool b;
-        quint64 doubleValue; // do not access directly, needs endian protected access
+        quint32_le constantValueIndex;
         quint32_le compiledScriptIndex; // used when Type_Script
         quint32_le objectIndex;
         TranslationData translationData; // used when Type_Translation
@@ -470,22 +470,15 @@ struct Q_QML_PRIVATE_EXPORT Binding
     bool isTranslationBinding() const { return type == Type_Translation || type == Type_TranslationById; }
     bool evaluatesToString() const { return type == Type_String || isTranslationBinding(); }
 
-    QString valueAsString(const Unit *unit) const;
-    QString valueAsScriptString(const Unit *unit) const;
-    double valueAsNumber() const
+#ifndef V4_BOOTSTRAP
+    QString valueAsString(const CompilationUnit *unit) const;
+    QString valueAsScriptString(const CompilationUnit *unit) const;
+#endif
+    double valueAsNumber(const Value *constantTable) const
     {
         if (type != Type_Number)
             return 0.0;
-        quint64 intval = qFromLittleEndian<quint64>(value.doubleValue);
-        double d;
-        memcpy(&d, &intval, sizeof(double));
-        return d;
-    }
-    void setNumberValueInternal(double d)
-    {
-        quint64 intval;
-        memcpy(&intval, &d, sizeof(double));
-        value.doubleValue = qToLittleEndian<quint64>(intval);
+        return constantTable[value.constantValueIndex].doubleValue();
     }
 
     bool valueAsBoolean() const

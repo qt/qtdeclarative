@@ -2205,18 +2205,19 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
         memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        td->compilationUnit()->setUnitData(qmlUnit);
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = td->compilationUnit();
+        compilationUnit->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(/*root object*/0);
-        QCOMPARE(qmlUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
+        QCOMPARE(compilationUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
         for (i = 0; i < rootObject->nBindings; ++i) {
             const QV4::CompiledData::Binding *binding = rootObject->bindingTable() + i;
-            if (qmlUnit->stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
+            if (compilationUnit->stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
                 continue;
-            QCOMPARE(binding->valueAsScriptString(qmlUnit), QString("intProperty"));
+            QCOMPARE(binding->valueAsScriptString(compilationUnit.data()), QString("intProperty"));
             const_cast<QV4::CompiledData::Binding*>(binding)->stringIndex = 0; // empty string index
-            QVERIFY(binding->valueAsScriptString(qmlUnit).isEmpty());
+            QVERIFY(binding->valueAsScriptString(compilationUnit.data()).isEmpty());
             break;
         }
         QVERIFY(i < rootObject->nBindings);

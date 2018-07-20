@@ -314,7 +314,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         QQmlBinding::Identifier id = QQmlBinding::Invalid;
 
         if (!binding->isTranslationBinding()) {
-            expression = binding->valueAsString(qmlUnit);
+            expression = binding->valueAsString(compilationUnit.data());
             id = binding->value.compiledScriptIndex;
         }
         expressions << ExpressionChange(propertyName, binding, id, expression, url, line, column);
@@ -328,10 +328,10 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     case QV4::CompiledData::Binding::Type_TranslationById:
         Q_UNREACHABLE();
     case QV4::CompiledData::Binding::Type_String:
-        var = binding->valueAsString(qmlUnit);
+        var = binding->valueAsString(compilationUnit.data());
         break;
     case QV4::CompiledData::Binding::Type_Number:
-        var = binding->valueAsNumber();
+        var = binding->valueAsNumber(compilationUnit->constants);
         break;
     case QV4::CompiledData::Binding::Type_Boolean:
         var = binding->valueAsBoolean();

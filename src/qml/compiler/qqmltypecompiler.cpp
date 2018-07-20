@@ -207,6 +207,11 @@ int QQmlTypeCompiler::registerString(const QString &str)
     return document->jsGenerator.registerString(str);
 }
 
+int QQmlTypeCompiler::registerConstant(QV4::ReturnedValue v)
+{
+    return document->jsGenerator.registerConstant(v);
+}
+
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 {
     return document->javaScriptCompilationUnit->unitData();
@@ -555,7 +560,8 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QS
         COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName.toString()));
     }
     binding->type = QV4::CompiledData::Binding::Type_Number;
-    binding->setNumberValueInternal((double)enumValue);
+    binding->value.constantValueIndex = compiler->registerConstant(QV4::Encode((double)enumValue));
+//    binding->setNumberValueInternal((double)enumValue);
     binding->flags |= QV4::CompiledData::Binding::IsResolvedEnum;
     return true;
 }

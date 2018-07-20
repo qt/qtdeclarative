@@ -358,7 +358,7 @@ public:
         if (!isAddedToObject() || hasError())
             return;
 
-        const QString result = m_binding->valueAsString(m_compilationUnit->unitData());
+        const QString result = m_binding->valueAsString(m_compilationUnit.data());
 
         Q_ASSERT(targetObject());
 

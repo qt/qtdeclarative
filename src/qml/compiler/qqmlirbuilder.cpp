@@ -1069,7 +1069,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
             binding->value.b = false;
         } else if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(expr)) {
             binding->type = QV4::CompiledData::Binding::Type_Number;
-            binding->setNumberValueInternal(lit->value);
+            binding->value.constantValueIndex = jsGenerator->registerConstant(QV4::Encode(lit->value));
         } else if (QQmlJS::AST::CallExpression *call = QQmlJS::AST::cast<QQmlJS::AST::CallExpression *>(expr)) {
             if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base)) {
                 tryGeneratingTranslationBinding(base->name, call->arguments, binding);
@@ -1081,7 +1081,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         } else if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
             if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
                 binding->type = QV4::CompiledData::Binding::Type_Number;
-                binding->setNumberValueInternal(-lit->value);
+                binding->value.constantValueIndex = jsGenerator->registerConstant(QV4::Encode(-lit->value));
             }
         }
     }

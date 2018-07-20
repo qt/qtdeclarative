@@ -373,7 +373,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             propertyType = QMetaType::Int;
         } else {
             // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
-            QVariant value = binding->valueAsString(qmlUnit);
+            QVariant value = binding->valueAsString(compilationUnit.data());
             bool ok = QQmlPropertyPrivate::write(_qobject, *property, value, context);
             Q_ASSERT(ok);
             Q_UNUSED(ok);
@@ -384,7 +384,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     switch (propertyType) {
     case QMetaType::QVariant: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            double n = binding->valueAsNumber();
+            double n = binding->valueAsNumber(compilationUnit->constants);
             if (double(int(n)) == n) {
                 if (property->isVarProperty()) {
                     _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Primitive::fromInt32(int(n)));
@@ -409,7 +409,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 property->writeProperty(_qobject, &value, propertyWriteFlags);
             }
         } else {
-            QString stringValue = binding->valueAsString(qmlUnit);
+            QString stringValue = binding->valueAsString(compilationUnit.data());
             if (property->isVarProperty()) {
                 QV4::ScopedString s(scope, v4->newString(stringValue));
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), s);
@@ -422,25 +422,25 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QVariant::String: {
         Q_ASSERT(binding->evaluatesToString());
-        QString value = binding->valueAsString(qmlUnit);
+        QString value = binding->valueAsString(compilationUnit.data());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::StringList: {
         Q_ASSERT(binding->evaluatesToString());
-        QStringList value(binding->valueAsString(qmlUnit));
+        QStringList value(binding->valueAsString(compilationUnit.data()));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::ByteArray: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
-        QByteArray value(binding->valueAsString(qmlUnit).toUtf8());
+        QByteArray value(binding->valueAsString(compilationUnit.data()).toUtf8());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Url: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
-        QString string = binding->valueAsString(qmlUnit);
+        QString string = binding->valueAsString(compilationUnit.data());
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
         QUrl value = string.isEmpty() ? QUrl() : compilationUnit->finalUrl().resolved(QUrl(string));
@@ -452,7 +452,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QVariant::UInt: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
-        double d = binding->valueAsNumber();
+        double d = binding->valueAsNumber(compilationUnit->constants);
         uint value = uint(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -460,7 +460,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QVariant::Int: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
-        double d = binding->valueAsNumber();
+        double d = binding->valueAsNumber(compilationUnit->constants);
         int value = int(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -468,19 +468,19 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::Float: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
-        float value = float(binding->valueAsNumber());
+        float value = float(binding->valueAsNumber(compilationUnit->constants));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Double: {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
-        double value = binding->valueAsNumber();
+        double value = binding->valueAsNumber(compilationUnit->constants);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Color: {
         bool ok = false;
-        uint colorValue = QQmlStringConverters::rgbaFromString(binding->valueAsString(qmlUnit), &ok);
+        uint colorValue = QQmlStringConverters::rgbaFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         struct { void *data[4]; } buffer;
         if (QQml_valueTypeProvider()->storeValueType(property->propType(), &colorValue, &buffer, sizeof(buffer))) {
@@ -491,21 +491,21 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
 #if QT_CONFIG(datestring)
     case QVariant::Date: {
         bool ok = false;
-        QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(qmlUnit), &ok);
+        QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Time: {
         bool ok = false;
-        QTime value = QQmlStringConverters::timeFromString(binding->valueAsString(qmlUnit), &ok);
+        QTime value = QQmlStringConverters::timeFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::DateTime: {
         bool ok = false;
-        QDateTime value = QQmlStringConverters::dateTimeFromString(binding->valueAsString(qmlUnit), &ok);
+        QDateTime value = QQmlStringConverters::dateTimeFromString(binding->valueAsString(compilationUnit.data()), &ok);
         // ### VME compatibility :(
         {
             const qint64 date = value.date().toJulianDay();
@@ -519,42 +519,42 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
 #endif // datestring
     case QVariant::Point: {
         bool ok = false;
-        QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok).toPoint();
+        QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(compilationUnit.data()), &ok).toPoint();
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::PointF: {
         bool ok = false;
-        QPointF value = QQmlStringConverters::pointFFromString(binding->valueAsString(qmlUnit), &ok);
+        QPointF value = QQmlStringConverters::pointFFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Size: {
         bool ok = false;
-        QSize value = QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok).toSize();
+        QSize value = QQmlStringConverters::sizeFFromString(binding->valueAsString(compilationUnit.data()), &ok).toSize();
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::SizeF: {
         bool ok = false;
-        QSizeF value = QQmlStringConverters::sizeFFromString(binding->valueAsString(qmlUnit), &ok);
+        QSizeF value = QQmlStringConverters::sizeFFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Rect: {
         bool ok = false;
-        QRect value = QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok).toRect();
+        QRect value = QQmlStringConverters::rectFFromString(binding->valueAsString(compilationUnit.data()), &ok).toRect();
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::RectF: {
         bool ok = false;
-        QRectF value = QQmlStringConverters::rectFFromString(binding->valueAsString(qmlUnit), &ok);
+        QRectF value = QQmlStringConverters::rectFFromString(binding->valueAsString(compilationUnit.data()), &ok);
         Q_ASSERT(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
@@ -570,7 +570,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float xp;
             float yp;
         } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector2D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector2D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
@@ -582,7 +582,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float yp;
             float zy;
         } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
@@ -595,7 +595,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float zy;
             float wp;
         } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
@@ -608,7 +608,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float yp;
             float zp;
         } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QQuaternion, binding->valueAsString(qmlUnit), &vec, sizeof(vec));
+        bool ok = QQmlStringConverters::createFromString(QMetaType::QQuaternion, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
         Q_ASSERT(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
@@ -622,12 +622,12 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         if (property->propType() == qMetaTypeId<QList<qreal> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
             QList<qreal> value;
-            value.append(binding->valueAsNumber());
+            value.append(binding->valueAsNumber(compilationUnit->constants));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<int> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
-            double n = binding->valueAsNumber();
+            double n = binding->valueAsNumber(compilationUnit->constants);
             QList<int> value;
             value.append(int(n));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -640,7 +640,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             break;
         } else if (property->propType() == qMetaTypeId<QList<QUrl> >()) {
             Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
-            QString urlString = binding->valueAsString(qmlUnit);
+            QString urlString = binding->valueAsString(compilationUnit.data());
             QUrl u = urlString.isEmpty() ? QUrl()
                                          : compilationUnit->finalUrl().resolved(QUrl(urlString));
             QList<QUrl> value;
@@ -650,7 +650,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         } else if (property->propType() == qMetaTypeId<QList<QString> >()) {
             Q_ASSERT(binding->evaluatesToString());
             QList<QString> value;
-            value.append(binding->valueAsString(qmlUnit));
+            value.append(binding->valueAsString(compilationUnit.data()));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QJSValue>()) {
@@ -658,20 +658,20 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
                 value = QJSValue(binding->valueAsBoolean());
             } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-                double n = binding->valueAsNumber();
+                double n = binding->valueAsNumber(compilationUnit->constants);
                 if (double(int(n)) == n) {
                     value = QJSValue(int(n));
                 } else
                     value = QJSValue(n);
             } else {
-                value = QJSValue(binding->valueAsString(qmlUnit));
+                value = QJSValue(binding->valueAsString(compilationUnit.data()));
             }
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         }
 
         // otherwise, try a custom type assignment
-        QString stringValue = binding->valueAsString(qmlUnit);
+        QString stringValue = binding->valueAsString(compilationUnit.data());
         QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType());
         Q_ASSERT(converter);
         QVariant value = (*converter)(stringValue);
@@ -804,13 +804,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
     // ### resolve this at compile time
     if (bindingProperty && bindingProperty->propType() == qMetaTypeId<QQmlScriptString>()) {
-        QQmlScriptString ss(binding->valueAsScriptString(qmlUnit), context->asQQmlContext(), _scopeObject);
+        QQmlScriptString ss(binding->valueAsScriptString(compilationUnit.data()), context->asQQmlContext(), _scopeObject);
         ss.d.data()->bindingId = binding->type == QV4::CompiledData::Binding::Type_Script ? binding->value.compiledScriptIndex : (quint32)QQmlBinding::Invalid;
         ss.d.data()->lineNumber = binding->location.line;
         ss.d.data()->columnNumber = binding->location.column;
         ss.d.data()->isStringLiteral = binding->type == QV4::CompiledData::Binding::Type_String;
         ss.d.data()->isNumberLiteral = binding->type == QV4::CompiledData::Binding::Type_Number;
-        ss.d.data()->numberValue = binding->valueAsNumber();
+        ss.d.data()->numberValue = binding->valueAsNumber(compilationUnit->constants);
 
         QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor |
                                                             QQmlPropertyData::RemoveBindingOnAliasWrite;

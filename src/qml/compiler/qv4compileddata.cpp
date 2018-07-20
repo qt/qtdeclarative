@@ -588,7 +588,8 @@ void CompilationUnit::setUnitData(const Unit *unitData)
 #endif
 }
 
-QString Binding::valueAsString(const Unit *unit) const
+#ifndef V4_BOOTSTRAP
+QString Binding::valueAsString(const CompilationUnit *unit) const
 {
     switch (type) {
     case Type_Script:
@@ -597,7 +598,7 @@ QString Binding::valueAsString(const Unit *unit) const
     case Type_Boolean:
         return value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Type_Number:
-        return QString::number(valueAsNumber());
+        return QString::number(valueAsNumber(unit->constants));
     case Type_Invalid:
         return QString();
 #if !QT_CONFIG(translation)
@@ -611,7 +612,7 @@ QString Binding::valueAsString(const Unit *unit) const
     }
     case Type_Translation: {
         // This code must match that in the qsTr() implementation
-        const QString &path = unit->stringAt(unit->sourceFileIndex);
+        const QString &path = unit->stringAt(unit->data->sourceFileIndex);
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
                                               : QStringRef();
@@ -671,7 +672,7 @@ QString Binding::escapedString(const QString &string)
     return tmp;
 }
 
-QString Binding::valueAsScriptString(const Unit *unit) const
+QString Binding::valueAsScriptString(const CompilationUnit *unit) const
 {
     if (type == Type_String)
         return escapedString(unit->stringAt(stringIndex));
@@ -679,7 +680,6 @@ QString Binding::valueAsScriptString(const Unit *unit) const
         return valueAsString(unit);
 }
 
-#ifndef V4_BOOTSTRAP
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */

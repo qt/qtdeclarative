@@ -303,7 +303,7 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Object *obj = testUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(2));
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Number));
-        QCOMPARE(obj->bindingTable()->valueAsNumber(), double(42));
+        QCOMPARE(obj->bindingTable()->valueAsNumber(reinterpret_cast<const QV4::Value *>(testUnit->constants())), double(42));
 
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
 

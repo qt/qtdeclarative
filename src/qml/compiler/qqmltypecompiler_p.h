@@ -100,6 +100,7 @@ public:
     void recordError(const QQmlCompileError &error);
 
     int registerString(const QString &str);
+    int registerConstant(QV4::ReturnedValue v);
 
     const QV4::CompiledData::Unit *qmlUnit() const;
 

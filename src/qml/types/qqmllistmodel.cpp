@@ -313,7 +313,7 @@ QString StringOrTranslation::toString(const QQmlListModel *owner) const
     }
     if (!owner)
         return QString();
-    return d.asT2()->valueAsString(owner->m_compilationUnit->unitData());
+    return d.asT2()->valueAsString(owner->m_compilationUnit.data());
 }
 
 QString StringOrTranslation::asString() const
@@ -2682,7 +2682,7 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
                 return false;
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString scriptStr = binding->valueAsScriptString(compilationUnit->unitData());
+        QString scriptStr = binding->valueAsScriptString(compilationUnit.data());
         if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
@@ -2734,13 +2734,13 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
         if (binding->isTranslationBinding()) {
             value = QVariant::fromValue<const QV4::CompiledData::Binding*>(binding);
         } else if (binding->evaluatesToString()) {
-            value = binding->valueAsString(qmlUnit);
+            value = binding->valueAsString(compilationUnit.data());
         } else if (binding->type == QV4::CompiledData::Binding::Type_Number) {
-            value = binding->valueAsNumber();
+            value = binding->valueAsNumber(compilationUnit->constants);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-            QString scriptStr = binding->valueAsScriptString(qmlUnit);
+            QString scriptStr = binding->valueAsScriptString(compilationUnit.data());
             if (definesEmptyList(scriptStr)) {
                 const ListLayout::Role &role = model->getOrCreateListRole(elementName);
                 ListModel *emptyModel = new ListModel(role.subLayout, nullptr);
