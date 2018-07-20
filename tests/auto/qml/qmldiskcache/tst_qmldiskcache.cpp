@@ -89,7 +89,13 @@ static void waitForFileSystem()
     // the newly written file has a modification date newer than an existing cache file, we must
     // wait.
     // Similar effects of lacking precision have been observed on some Linux systems.
-    QThread::sleep(1);
+    static const bool fsHasSubSecondResolution = []() {
+        QDateTime mtime = QFileInfo(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)).lastModified();
+        // 1:1000 chance of a false negative
+        return mtime.toMSecsSinceEpoch() % 1000;
+    }();
+    if (!fsHasSubSecondResolution)
+        QThread::sleep(1);
 }
 
 struct TestCompiler
