@@ -331,7 +331,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     currentOffset += function->nLocals * sizeof(quint32);
 
     function->nLineNumbers = irFunction->lineNumberMapping.size();
-    function->lineNumberOffset = currentOffset;
+    Q_ASSERT(function->lineNumberOffset() == currentOffset);
     currentOffset += function->nLineNumbers * sizeof(CompiledData::CodeOffsetToLine);
 
 
@@ -376,7 +376,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         locals[i] = getStringId(irFunction->locals.at(i));
 
     // write line numbers
-    memcpy(f + function->lineNumberOffset, irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
+    memcpy(f + function->lineNumberOffset(), irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
 
     // write QML dependencies
     quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset());
