@@ -471,15 +471,18 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
     QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
     auto ensureWritableUnit = [&jsUnit, &compilationUnit]() {
         if (jsUnit == compilationUnit->data) {
-            char *unitCopy = (char*)malloc(jsUnit->unitSize);
-            memcpy(unitCopy, jsUnit, jsUnit->unitSize);
+            // Discard the old QML tables as the caller will re-create them anyway.
+            quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
+            char *unitCopy = (char*)malloc(unitSizeWithoutQMLTables);
+            memcpy(unitCopy, jsUnit, unitSizeWithoutQMLTables);
             jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
+            jsUnit->unitSize = unitSizeWithoutQMLTables;
         }
     };
 
     QV4::Compiler::StringTableGenerator &stringTable = irDocument->jsGenerator.stringTable;
 
-    if (jsUnit->sourceFileIndex == quint32(0) || jsUnit->stringAt(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
+    if (jsUnit->sourceFileIndex == quint32(0) || stringTable.stringForIndex(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
         ensureWritableUnit();
         jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
         jsUnit->finalUrlIndex = stringTable.registerString(irDocument->jsModule.finalUrl);
@@ -522,11 +525,7 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 
     // Update signal signatures
     if (!changedSignals.isEmpty()) {
-        if (jsUnit == compilationUnit->data) {
-            char *unitCopy = (char*)malloc(jsUnit->unitSize);
-            memcpy(unitCopy, jsUnit, jsUnit->unitSize);
-            jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
-        }
+        ensureWritableUnit();
 
         for (int i = 0; i < changedSignals.count(); ++i) {
             const uint functionIndex = changedSignals.at(i);

@@ -236,12 +236,37 @@ void tst_qmlcachegen::signalHandlerParameters()
     QVERIFY(QFile::exists(cacheFilePath));
     QVERIFY(QFile::remove(testFilePath));
 
+    quint32 oldImportsOffset = 0;
+    {
+        QFile cache(cacheFilePath);
+        QVERIFY(cache.open(QIODevice::ReadOnly));
+        const QV4::CompiledData::Unit *cacheUnit = reinterpret_cast<const QV4::CompiledData::Unit *>(cache.map(/*offset*/0, sizeof(QV4::CompiledData::Unit)));
+        QVERIFY(cacheUnit);
+        oldImportsOffset = cacheUnit->offsetToImports;
+    }
+
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QMetaObject::invokeMethod(obj.data(), "runTest");
     QCOMPARE(obj->property("result").toInt(), 42);
+
+    {
+        auto componentPrivate = QQmlComponentPrivate::get(&component);
+        QVERIFY(componentPrivate);
+        auto compilationUnit = componentPrivate->compilationUnit;
+        QVERIFY(compilationUnit);
+        QVERIFY(compilationUnit->unitData());
+
+        // The determination of the signal parameters for onTestMe by extending the
+        // formals of the CompiledData::Function of the signal handler implies adding new
+        // strings to the compilation unit. That means discarding the old string table as well as QML
+        // fields (to be newly written) to save memory. That means the first QML specific table
+        // (offsetToImports) should be the same _plus_ one entry in the newly added formals table.
+        const quint32 sizeOfNewFormalsTable = 1 * sizeof(quint32);
+        QCOMPARE(quint32(compilationUnit->unitData()->offsetToImports), oldImportsOffset + sizeOfNewFormalsTable);
+    }
 }
 
 void tst_qmlcachegen::errorOnArgumentsInSignalHandler()
