@@ -70,8 +70,8 @@ public:
     QQuickDesignerCustomParser()
     : QQmlCustomParser(AcceptsAttachedProperties | AcceptsSignalHandlers) {}
 
-    void verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
-    void applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
+    void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props) override;
+    void applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings) override;
 };
 
 QT_END_NAMESPACE

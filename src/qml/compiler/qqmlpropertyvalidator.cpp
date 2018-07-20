@@ -306,7 +306,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         customParser->validator = this;
         customParser->engine = enginePrivate;
         customParser->imports = &imports;
-        customParser->verifyBindings(qmlUnit, customBindings);
+        customParser->verifyBindings(compilationUnit, customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;

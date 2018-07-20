@@ -185,12 +185,12 @@ void SignalTransition::connectTriggered()
     m_signalExpression = expression;
 }
 
-void SignalTransitionParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void SignalTransitionParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
 
-        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
+        QString propName = compilationUnit->stringAt(binding->propertyNameIndex);
 
         if (propName != QLatin1String("onTriggered")) {
             error(props.at(ii), SignalTransition::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
@@ -204,7 +204,7 @@ void SignalTransitionParser::verifyBindings(const QV4::CompiledData::Unit *qmlUn
     }
 }
 
-void SignalTransitionParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SignalTransitionParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SignalTransition *st = qobject_cast<SignalTransition*>(object);
     st->m_compilationUnit = compilationUnit;

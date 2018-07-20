@@ -125,7 +125,7 @@ QVariant myCustomVariantTypeConverter(const QString &data)
 }
 
 
-void CustomBindingParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void CustomBindingParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     CustomBinding *customBinding = qobject_cast<CustomBinding*>(object);
     Q_ASSERT(customBinding);
@@ -154,7 +154,7 @@ void CustomBinding::componentComplete()
     }
 }
 
-void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void EnumSupportingCustomParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     if (bindings.count() != 1) {
         error(bindings.first(), QStringLiteral("Custom parser invoked incorrectly for unit test"));
@@ -162,7 +162,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
     }
 
     const QV4::CompiledData::Binding *binding = bindings.first();
-    if (qmlUnit->stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
+    if (compilationUnit->stringAt(binding->propertyNameIndex) != QStringLiteral("foo")) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property name"));
         return;
     }
@@ -171,7 +171,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Expected script that evaluates to enum"));
         return;
     }
-    QByteArray script = qmlUnit->stringAt(binding->stringIndex).toUtf8();
+    QByteArray script = compilationUnit->stringAt(binding->stringIndex).toUtf8();
     bool ok;
     int v = evaluateEnum(script, &ok);
     if (!ok) {
@@ -184,7 +184,7 @@ void EnumSupportingCustomParser::verifyBindings(const QV4::CompiledData::Unit *q
     }
 }
 
-void SimpleObjectCustomParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &bindings)
+void SimpleObjectCustomParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     SimpleObjectWithCustomParser *o = qobject_cast<SimpleObjectWithCustomParser*>(object);
     Q_ASSERT(o);

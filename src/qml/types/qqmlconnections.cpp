@@ -231,11 +231,11 @@ void QQmlConnections::setIgnoreUnknownSignals(bool ignore)
     d->ignoreUnknownSignals = ignore;
 }
 
-void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQmlConnectionsParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii) {
         const QV4::CompiledData::Binding *binding = props.at(ii);
-        const QString &propName = qmlUnit->stringAt(binding->propertyNameIndex);
+        const QString &propName = compilationUnit->stringAt(binding->propertyNameIndex);
 
         if (!propName.startsWith(QLatin1String("on")) || (propName.length() < 3 || !propName.at(2).isUpper())) {
             error(props.at(ii), QQmlConnections::tr("Cannot assign to non-existent property \"%1\"").arg(propName));
@@ -243,8 +243,8 @@ void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::Unit *qmlUni
         }
 
         if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-            const QV4::CompiledData::Object *target = qmlUnit->objectAt(binding->value.objectIndex);
-            if (!qmlUnit->stringAt(target->inheritedTypeNameIndex).isEmpty())
+            const QV4::CompiledData::Object *target = compilationUnit->objectAt(binding->value.objectIndex);
+            if (!compilationUnit->stringAt(target->inheritedTypeNameIndex).isEmpty())
                 error(binding, QQmlConnections::tr("Connections: nested objects not allowed"));
             else
                 error(binding, QQmlConnections::tr("Connections: syntax error"));
@@ -256,7 +256,7 @@ void QQmlConnectionsParser::verifyBindings(const QV4::CompiledData::Unit *qmlUni
     }
 }
 
-void QQmlConnectionsParser::applyBindings(QObject *object, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQmlConnectionsParser::applyBindings(QObject *object, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQmlConnectionsPrivate *p =
         static_cast<QQmlConnectionsPrivate *>(QObjectPrivate::get(object));

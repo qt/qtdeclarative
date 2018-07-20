@@ -236,19 +236,19 @@ public:
     QQmlProperty property(const QString &);
 };
 
-void QQuickPropertyChangesParser::verifyList(const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesParser::verifyList(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-        error(qmlUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
+        error(compilationUnit->objectAt(binding->value.objectIndex), QQuickPropertyChanges::tr("PropertyChanges does not support creating state-specific objects."));
         return;
     }
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
         || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-        const QV4::CompiledData::Object *subObj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
-            verifyList(qmlUnit, subBinding);
+            verifyList(compilationUnit, subBinding);
         }
     }
 }
@@ -343,13 +343,13 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     properties << qMakePair(propertyName, var);
 }
 
-void QQuickPropertyChangesParser::verifyBindings(const QV4::CompiledData::Unit *qmlUnit, const QList<const QV4::CompiledData::Binding *> &props)
+void QQuickPropertyChangesParser::verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
 {
     for (int ii = 0; ii < props.count(); ++ii)
-        verifyList(qmlUnit, props.at(ii));
+        verifyList(compilationUnit, props.at(ii));
 }
 
-void QQuickPropertyChangesParser::applyBindings(QObject *obj, QV4::CompiledData::CompilationUnit *compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
+void QQuickPropertyChangesParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &bindings)
 {
     QQuickPropertyChangesPrivate *p =
         static_cast<QQuickPropertyChangesPrivate *>(QObjectPrivate::get(obj));

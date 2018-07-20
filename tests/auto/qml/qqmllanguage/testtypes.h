@@ -781,15 +781,15 @@ class MyCustomParserType : public QObject
 class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
 };
 
 class EnumSupportingCustomParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &);
-    virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
 };
 
 class MyParserStatus : public QObject, public QQmlParserStatus
@@ -1282,8 +1282,8 @@ public:
 
 class CustomBindingParser : public QQmlCustomParser
 {
-    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &);
+    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
 };
 
 class SimpleObjectWithCustomParser : public QObject
@@ -1328,8 +1328,8 @@ private:
 
 class SimpleObjectCustomParser : public QQmlCustomParser
 {
-    virtual void verifyBindings(const QV4::CompiledData::Unit *, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, QV4::CompiledData::CompilationUnit *, const QList<const QV4::CompiledData::Binding *> &);
+    virtual void verifyBindings(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
+    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
 };
 
 class RootObjectInCreationTester : public QObject
