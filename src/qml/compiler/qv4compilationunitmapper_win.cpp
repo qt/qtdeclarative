@@ -40,7 +40,7 @@
 #include "qv4compilationunitmapper_p.h"
 
 #include "qv4compileddata_p.h"
-#include <private/qdeferredcleanup_p.h>
+#include <QScopeGuard>
 #include <QFileInfo>
 #include <QDateTime>
 #include <qt_windows.h>
@@ -71,7 +71,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    QDeferredCleanup fileHandleCleanup([handle]{
+    auto fileHandleCleanup = qScopeGuard([handle]{
         CloseHandle(handle);
     });
 
@@ -98,7 +98,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    QDeferredCleanup mappingCleanup([fileMappingHandle]{
+    auto mappingCleanup = qScopeGuard([fileMappingHandle]{
         CloseHandle(fileMappingHandle);
     });
 

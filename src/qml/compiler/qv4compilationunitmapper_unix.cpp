@@ -42,7 +42,7 @@
 #include <sys/mman.h>
 #include <functional>
 #include <private/qcore_unix_p.h>
-#include <private/qdeferredcleanup_p.h>
+#include <QScopeGuard>
 #include <QDateTime>
 
 #include "qv4compileddata_p.h"
@@ -61,7 +61,7 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
         return nullptr;
     }
 
-    QDeferredCleanup cleanup([fd]{
+    auto cleanup = qScopeGuard([fd]{
        qt_safe_close(fd) ;
     });
 

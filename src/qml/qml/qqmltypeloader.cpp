@@ -51,7 +51,6 @@
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
-#include <private/qdeferredcleanup_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -66,6 +65,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlextensioninterface.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtCore/qscopeguard.h>
 
 #include <functional>
 
@@ -2214,7 +2214,7 @@ static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeRefere
 
 void QQmlTypeData::done()
 {
-    QDeferredCleanup cleanup([this]{
+    auto cleanup = qScopeGuard([this]{
         m_document.reset();
         m_typeReferences.clear();
         if (isError())
