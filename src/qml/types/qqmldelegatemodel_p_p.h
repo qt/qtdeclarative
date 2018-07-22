@@ -338,7 +338,6 @@ public:
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
     bool m_waitingToFetchMore : 1;
-    bool m_useFirstColumnOnly : 1;
 
     union {
         struct {
