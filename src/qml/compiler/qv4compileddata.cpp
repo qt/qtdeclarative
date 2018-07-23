@@ -126,10 +126,11 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     Q_ASSERT(!runtimeStrings);
     Q_ASSERT(data);
-    runtimeStrings = (QV4::Heap::String **)malloc(data->stringTableSize * sizeof(QV4::Heap::String*));
+    const quint32 stringCount = totalStringCount();
+    runtimeStrings = (QV4::Heap::String **)malloc(stringCount * sizeof(QV4::Heap::String*));
     // memset the strings to 0 in case a GC run happens while we're within the loop below
-    memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::Heap::String*));
-    for (uint i = 0; i < data->stringTableSize; ++i)
+    memset(runtimeStrings, 0, stringCount * sizeof(QV4::Heap::String*));
+    for (uint i = 0; i < stringCount; ++i)
         runtimeStrings[i] = engine->newString(stringAt(i));
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
@@ -187,7 +188,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         qDebug() << "=== Constant table";
         Moth::dumpConstantTable(constants, data->constantTableSize);
         qDebug() << "=== String table";
-        for (uint i = 0; i < data->stringTableSize; ++i)
+        for (uint i = 0, end = totalStringCount(); i < end; ++i)
             qDebug() << "    " << i << ":" << runtimeStrings[i]->toQString();
         qDebug() << "=== Closure table";
         for (uint i = 0; i < data->functionTableSize; ++i)
@@ -240,7 +241,7 @@ void CompilationUnit::unlink()
 void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 {
     if (runtimeStrings) {
-        for (uint i = 0; i < data->stringTableSize; ++i)
+        for (uint i = 0, end = totalStringCount(); i < end; ++i)
             if (runtimeStrings[i])
                 runtimeStrings[i]->mark(markStack);
     }

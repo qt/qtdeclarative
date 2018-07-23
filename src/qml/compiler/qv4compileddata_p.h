@@ -831,6 +831,7 @@ struct Unit
     /* end QML specific fields*/
 
     QString stringAtInternal(int idx) const {
+        Q_ASSERT(idx < int(stringTableSize));
         const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const quint32_le offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
@@ -1083,12 +1084,22 @@ public:
     bool isRegisteredWithEngine = false;
 
     QScopedPointer<CompilationUnitMapper> backingFile;
+    const QV4::CompiledData::Unit *backingUnit = nullptr;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
     int objectCount() const { return data->nObjects; }
     const Object *objectAt(int index) const { return data->objectAt(index); }
-    QString stringAt(int index) const { return data->stringAtInternal(index); }
+    QString stringAt(int index) const
+    {
+        if (backingUnit) {
+            const qint32 backingUnitStringTableSize = backingUnit->stringTableSize;
+            if (index < backingUnitStringTableSize)
+                return backingUnit->stringAtInternal(index);
+            index -= backingUnitStringTableSize;
+        }
+        return data->stringAtInternal(index);
+    }
 
     struct FunctionIterator
     {
@@ -1117,6 +1128,10 @@ public:
 
 protected:
     void linkBackendToEngine(QV4::ExecutionEngine *engine);
+
+    quint32 totalStringCount() const
+    { return data->stringTableSize + (backingUnit ? backingUnit->stringTableSize : 0); }
+
 #endif // V4_BOOTSTRAP
 
 private:

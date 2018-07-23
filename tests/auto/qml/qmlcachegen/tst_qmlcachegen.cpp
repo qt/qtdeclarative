@@ -266,6 +266,16 @@ void tst_qmlcachegen::signalHandlerParameters()
         // (offsetToImports) should be the same _plus_ one entry in the newly added formals table.
         const quint32 sizeOfNewFormalsTable = 1 * sizeof(quint32);
         QCOMPARE(quint32(compilationUnit->unitData()->offsetToImports), oldImportsOffset + sizeOfNewFormalsTable);
+
+        // Typically the final file name is one of those strings that is not in the original
+        // pre-compiled qml file's string table, while for example the signal parameter
+        // name ("value") is.
+        const auto isStringIndexInOriginalStringTable = [compilationUnit](uint index) {
+            return index < compilationUnit->backingUnit->stringTableSize;
+        };
+
+        QVERIFY(isStringIndexInOriginalStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
+        QVERIFY(!isStringIndexInOriginalStringTable(compilationUnit->unitData()->sourceFileIndex));
     }
 }
 

@@ -80,11 +80,13 @@ struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     int registerString(const QString &str);
     int getStringId(const QString &string) const;
     QString stringForIndex(int index) const { return strings.at(index); }
-    uint stringCount() const { return strings.size(); }
+    uint stringCount() const { return strings.size() - backingUnitTableSize; }
 
-    uint sizeOfTableAndData() const { return stringDataSize + strings.count() * sizeof(uint); }
+    uint sizeOfTableAndData() const { return stringDataSize + stringCount() * sizeof(uint); }
 
     void clear();
+
+    void initializeFromBackingUnit(const CompiledData::Unit *unit);
 
     void serialize(CompiledData::Unit *unit);
 
@@ -92,6 +94,7 @@ private:
     QHash<QString, int> stringToId;
     QStringList strings;
     uint stringDataSize;
+    uint backingUnitTableSize = 0;
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {

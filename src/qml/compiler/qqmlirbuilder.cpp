@@ -2352,9 +2352,7 @@ IRLoader::IRLoader(const QV4::CompiledData::Unit *qmlData, QmlIR::Document *outp
 
 void IRLoader::load()
 {
-    output->jsGenerator.stringTable.clear();
-    for (uint i = 0; i < unit->stringTableSize; ++i)
-        output->jsGenerator.stringTable.registerString(unit->stringAtInternal(i));
+    output->jsGenerator.stringTable.initializeFromBackingUnit(unit);
 
     for (quint32 i = 0; i < unit->nImports; ++i)
         output->imports << unit->importAt(i);

@@ -133,8 +133,12 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
             return nullptr;
     }
 
-    // Compile JS binding expressions and signal handlers
-    if (!document->javaScriptCompilationUnit) {
+    if (document->javaScriptCompilationUnit) {
+        // If this file was loaded from an ahead-of-time built cache file, then set up the original
+        // unit data as backing unit and fetch strings from there to save memory.
+        document->javaScriptCompilationUnit->backingUnit = document->javaScriptCompilationUnit->unitData();
+    } else {
+        // Compile JS binding expressions and signal handlers if necessary
         {
             // We can compile script strings ahead of time, but they must be compiled
             // without type optimizations as their scope is always entirely dynamic.

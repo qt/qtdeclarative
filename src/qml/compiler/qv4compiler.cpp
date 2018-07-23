@@ -77,13 +77,23 @@ void QV4::Compiler::StringTableGenerator::clear()
     stringDataSize = 0;
 }
 
+void QV4::Compiler::StringTableGenerator::initializeFromBackingUnit(const QV4::CompiledData::Unit *unit)
+{
+    clear();
+    for (uint i = 0; i < unit->stringTableSize; ++i)
+        registerString(unit->stringAtInternal(i));
+    backingUnitTableSize = unit->stringTableSize;
+    stringDataSize = 0;
+}
+
 void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
     quint32_le *stringTable = reinterpret_cast<quint32_le *>(dataStart + unit->offsetToStringTable);
     char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
-    for (int i = 0; i < strings.size(); ++i) {
-        stringTable[i] = stringData - dataStart;
+    for (int i = backingUnitTableSize ; i < strings.size(); ++i) {
+        const int index = i - backingUnitTableSize;
+        stringTable[index] = stringData - dataStart;
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
