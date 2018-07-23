@@ -95,7 +95,7 @@ QQuickPointerHandler::~QQuickPointerHandler()
 
      The default value is 0.
 
-     \image pointDistanceThreshold.png
+     \image pointerHandlerMargin.png
 */
 qreal QQuickPointerHandler::margin() const
 {

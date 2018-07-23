@@ -10,17 +10,17 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg6318"
-   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
-   viewBox="0 0 249.99999 100"
+   inkscape:version="0.92.2 2405546, 2018-03-11"
+   viewBox="0 0 148.46917 100.37263"
    version="1.1"
-   sodipodi:docname="pointDistanceThreshold.svg"
-   width="250"
-   height="100"
-   inkscape:export-filename="/home/rutledge/dev/qt510/qtdeclarative/src/quick/doc/images/pointDistanceThreshold.png"
+   sodipodi:docname="pointerHandlerMargin.svg"
+   width="148.46918"
+   height="100.37263"
+   inkscape:export-filename="/home/rutledge/dev/qt5/qtdeclarative/src/quick/doc/images/pointerHandlerMargin.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
   <title
-     id="title892">pointDistanceThreshold</title>
+     id="title892">pointerHandlerMargin</title>
   <defs
      id="defs20">
     <marker
@@ -104,18 +104,18 @@
      id="base"
      bordercolor="#666666"
      inkscape:pageshadow="2"
-     inkscape:window-y="10"
+     inkscape:window-y="0"
      pagecolor="#ffffff"
      inkscape:zoom="2.1818696"
-     inkscape:window-width="3025"
+     inkscape:window-width="1920"
      inkscape:window-maximized="0"
-     inkscape:window-x="275"
+     inkscape:window-x="0"
      showgrid="false"
      borderopacity="1.0"
      inkscape:current-layer="layer1"
-     inkscape:cx="-180.21887"
-     inkscape:cy="-3.6626369"
-     inkscape:window-height="2115"
+     inkscape:cx="-22.660169"
+     inkscape:cy="58.210886"
+     inkscape:window-height="1080"
      inkscape:pageopacity="0.0"
      inkscape:document-units="px"
      fit-margin-top="0"
@@ -126,7 +126,7 @@
      id="layer1"
      inkscape:label="Camada 1"
      inkscape:groupmode="layer"
-     transform="translate(14.90473,-165.12199)">
+     transform="translate(-86.411864,-164.74934)">
     <rect
        style="opacity:1;fill:none;fill-opacity:1;stroke:#006eed;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect4231"
@@ -174,15 +174,15 @@
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker1145)" />
     <text
        id="text1335"
-       y="227.02623"
-       x="-37.15416"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:Sans;-inkscape-font-specification:Sans;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       y="226.88364"
+       x="104.81705"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:125%;font-family:Sans;-inkscape-font-specification:'Sans, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:end;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        xml:space="preserve"
        transform="rotate(-6.0579549)"><tspan
-         y="227.02623"
-         x="-37.15416"
-         id="tspan1333"
-         sodipodi:role="line">pointDistanceThreshold</tspan></text>
+         y="226.88364"
+         x="104.81705"
+         sodipodi:role="line"
+         id="tspan862">margin</tspan></text>
   </g>
   <metadata
      id="metadata19">
@@ -196,10 +196,10 @@
         <dc:publisher>
           <cc:Agent
              rdf:about="http://openclipart.org/">
-            <dc:title></dc:title>
+            <dc:title />
           </cc:Agent>
         </dc:publisher>
-        <dc:title>pointDistanceThreshold</dc:title>
+        <dc:title>pointerHandlerMargin</dc:title>
         <dc:creator>
           <cc:Agent>
             <dc:title>The Qt Company</dc:title>
