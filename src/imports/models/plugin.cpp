@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmlmodule QtQml.Models 2.11
+    \qmlmodule QtQml.Models 2.12
     \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models
@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import QtQml.Models 2.11
+    import QtQml.Models 2.12
     \endcode
 
     Note that QtQml.Models module started at version 2.1 to match the version
