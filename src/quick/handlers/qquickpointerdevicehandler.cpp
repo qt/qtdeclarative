@@ -51,8 +51,7 @@ QT_BEGIN_NAMESPACE
     \preliminary
     \instantiates QQuickPointerDeviceHandler
     \inherits PointerHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
     \brief Abstract handler for pointer events with device-specific constraints.
 
     An intermediate class (not registered as a QML type) for handlers which

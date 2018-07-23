@@ -56,8 +56,8 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     \qmltype PinchHandler
     \instantiates QQuickPinchHandler
     \inherits MultiPointHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-handlers
     \brief Handler for pinch gestures.
 
     PinchHandler is a handler that interprets a multi-finger gesture to

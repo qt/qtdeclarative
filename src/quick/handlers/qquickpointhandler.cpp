@@ -47,8 +47,8 @@ QT_BEGIN_NAMESPACE
     \qmltype PointHandler
     \instantiates QQuickPointHandler
     \inherits SinglePointHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-handlers
     \brief Handler for reacting to a single touchpoint.
 
     PointHandler can be used to show feedback about a touchpoint or the mouse

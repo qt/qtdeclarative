@@ -48,8 +48,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     \preliminary
     \instantiates QQuickSinglePointHandler
     \inherits PointerDeviceHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
     \brief Abstract handler for single-point Pointer Events.
 
     An intermediate class (not registered as a QML type)

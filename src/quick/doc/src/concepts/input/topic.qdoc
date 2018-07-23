@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -35,30 +35,20 @@ design.  Depending on the use-case that an application solves, and the
 form-factor of the device that the application runs on, the best way
 to receive user-input may be different.
 
-\section1 Touch
+\section1 Input from Pointing Devices
 
 Allowing users to physically touch a screen to interact with an application is
 a popular user-interface paradigm on portable devices like smartphones and
-tablets.
+tablets. In desktop applications, detecting and reacting to clicks and presses
+according to the mouse cursor position is a fundamental concept in
+user-interface design.
 
-Qt Quick was designed specifically with touch-driven user-interfaces in mind,
-and thus touch events are supported in various visual object types, from
-\l{Flickable} lists to the generic \l{MultiPointTouchArea} type, as well as
-in the \l{MouseArea} type (which will be documented thoroughly in a proceeding
-section).
+Touch-driven and mouse-driven user interfaces are supported by various
+\l{Qt Quick Input Handlers}{input handler} types, and visual object types
+such as \l{Flickable} and \l{MouseArea}.
 
-
-\section1 Mouse
-
-Mouse input is another important user input for user interfaces. Detecting
-and reacting to clicks and presses according to the mouse cursor position is a fundamental
-concept in user-interface design.
-
-Qt Quick provides the MouseArea visual object type which automatically receives
-mouse events (including clicks and wheel events) which allows developers to
-create custom user-interface objects to handle mouse input.  Please see the
-documentation about \l{qtquick-input-mouseevents.html}
-{mouse events in Qt Quick} for more information on the topic.
+See also the documentation about
+\l{qtquick-input-mouseevents.html} {mouse events in Qt Quick}.
 
 
 \section1 Keyboard Input and Keyboard Focus

@@ -51,8 +51,7 @@ QT_BEGIN_NAMESPACE
     \preliminary
     \instantiates QQuickMultiPointHandler
     \inherits PointerDeviceHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
     \brief Abstract handler for multi-point Pointer Events.
 
     An intermediate class (not registered as a QML type)

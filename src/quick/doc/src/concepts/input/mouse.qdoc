@@ -33,6 +33,13 @@
 
 \tableofcontents
 
+A more modern way of handling events from all pointing devices, including
+mouse and touchscreen, is via \l {Qt Quick Input Handlers}{Input Handlers}.
+This page describes the original Qt Quick \l MouseArea type, which was
+initially designed to handle mouse input, and later began handling single-touch
+events (in the form of synthetic mouse events) in simple touch-oriented user
+interfaces.
+
 \section1 Mouse Types
 
 \list
@@ -44,8 +51,8 @@
 
 QML uses \l{qtqml-syntax-signals.html}{signals and handlers} to
 deliver mouse interactions. Specifically, Qt Quick provides the \l MouseArea
-and \l MouseEvent types which allow developers to define signal handlers which
-accept mouse events within a defined area.
+and \l MouseEvent types that allow developers to define JavaScript callbacks
+(also called signal handlers), which accept mouse events within a defined area.
 
 \section1 Defining a Mouse Area
 
@@ -59,8 +66,8 @@ definable.
 
 \section1 Receiving Events
 
-The MouseArea type provides
-\l{qtqml-syntax-signals.html}{signals and handlers} to detect different
+The MouseArea type emits
+\l{qtqml-syntax-signals.html}{signals} in response to different
 mouse events. The \l MouseArea type documentation describes these
 gestures in greater detail:
 
@@ -76,8 +83,8 @@ gestures in greater detail:
 \li released
 \endlist
 
-These signals have signal handlers that are invoked when the signals are emitted.
-\snippet qml/mousearea/mousearea-snippet.qml mouse handlers
+These signals can have callbacks that are invoked when the signals are emitted.
+\snippet qml/mousearea/mousearea-snippet.qml signal handlers
 
 \section1 Enabling Gestures
 Some mouse gestures and button clicks need to be enabled before they send or
@@ -101,9 +108,9 @@ Additionally, to disable the whole mouse area, set the MouseArea
 
 \section1 MouseEvent Object
 
-Signals and their handlers receive a \l MouseEvent object as a parameter. The
-\c mouse object contain information about the mouse event. For example, the
-mouse button that started the event is queried through the
+Signals and their callbacks receive a \l MouseEvent object as a parameter.
+The \c mouse object contains information about the mouse event. For example,
+the mouse button that started the event is queried through the
 \l {MouseEvent::button}{mouse.button} property.
 
 The \c MouseEvent object can also ignore a mouse event using its \c accepted

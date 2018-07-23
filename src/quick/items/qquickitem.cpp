@@ -357,7 +357,7 @@ void QQuickItemKeyFilter::componentComplete()
     \qmltype KeyNavigation
     \instantiates QQuickKeyNavigationAttached
     \inqmlmodule QtQuick
-    \ingroup qtquick-input
+    \ingroup qtquick-input-handlers
     \brief Supports key navigation by arrow keys.
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
@@ -816,7 +816,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     \qmltype Keys
     \instantiates QQuickKeysAttached
     \inqmlmodule QtQuick
-    \ingroup qtquick-input
+    \ingroup qtquick-input-handlers
     \brief Provides key handling to Items.
 
     All visual primitives support key handling via the Keys

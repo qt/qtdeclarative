@@ -51,8 +51,8 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     \qmltype DragHandler
     \instantiates QQuickDragHandler
     \inherits SinglePointHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-handlers
     \brief Handler for dragging.
 
     DragHandler is a handler that is used to interactively move an Item.

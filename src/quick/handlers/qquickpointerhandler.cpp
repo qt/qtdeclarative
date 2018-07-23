@@ -53,8 +53,7 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
     \since 5.10
     \preliminary
     \instantiates QQuickPointerHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
     \brief Abstract handler for pointer events.
 
     PointerHandler is the base class Input Handler (not registered as a QML type) for

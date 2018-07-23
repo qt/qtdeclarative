@@ -55,8 +55,8 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     \qmltype TapHandler
     \instantiates QQuickTapHandler
     \inherits SinglePointHandler
-    \inqmlmodule Qt.labs.handlers
-    \ingroup qtquick-handlers
+    \inqmlmodule QtQuick
+    \ingroup qtquick-input-handlers
     \brief Handler for taps and clicks.
 
     TapHandler is a handler for taps on a touchscreen or clicks on a mouse.
