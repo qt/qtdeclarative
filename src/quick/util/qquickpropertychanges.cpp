@@ -270,7 +270,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
 {
     Q_Q(QQuickPropertyChanges);
 
-    QString propertyName = propertyPrefix + qmlUnit->stringAt(binding->propertyNameIndex);
+    QString propertyName = propertyPrefix + compilationUnit->stringAt(binding->propertyNameIndex);
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
         || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {

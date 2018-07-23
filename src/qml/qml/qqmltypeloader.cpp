@@ -3076,7 +3076,7 @@ void QQmlScriptBlob::done()
 
 QString QQmlScriptBlob::stringAt(int index) const
 {
-    return m_scriptData->m_precompiledScript->unitData()->stringAt(index);
+    return m_scriptData->m_precompiledScript->stringAt(index);
 }
 
 void QQmlScriptBlob::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace)

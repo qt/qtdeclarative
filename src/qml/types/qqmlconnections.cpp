@@ -276,10 +276,9 @@ void QQmlConnections::connectSignals()
     QQmlData *ddata = QQmlData::get(this);
     QQmlContextData *ctxtdata = ddata ? ddata->outerContext : nullptr;
 
-    const QV4::CompiledData::Unit *qmlUnit = d->compilationUnit->unitData();
     for (const QV4::CompiledData::Binding *binding : qAsConst(d->bindings)) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Script);
-        QString propName = qmlUnit->stringAt(binding->propertyNameIndex);
+        QString propName = d->compilationUnit->stringAt(binding->propertyNameIndex);
 
         QQmlProperty prop(target, propName);
         if (prop.isValid() && (prop.type() & QQmlProperty::SignalProperty)) {

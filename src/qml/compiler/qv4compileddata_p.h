@@ -830,7 +830,7 @@ struct Unit
     }
     /* end QML specific fields*/
 
-    QString stringAt(int idx) const {
+    QString stringAtInternal(int idx) const {
         const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToStringTable);
         const quint32_le offset = offsetTable[idx];
         const String *str = reinterpret_cast<const String*>(reinterpret_cast<const char *>(this) + offset);
@@ -1035,8 +1035,8 @@ public:
     // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
     // They are _not_ intercepted and thus represent the "logical" name for the code.
 
-    QString fileName() const { return data->stringAt(data->sourceFileIndex); }
-    QString finalUrlString() const { return data->stringAt(data->finalUrlIndex); }
+    QString fileName() const { return stringAt(data->sourceFileIndex); }
+    QString finalUrlString() const { return stringAt(data->finalUrlIndex); }
     QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
     QUrl finalUrl() const
     {
@@ -1088,7 +1088,7 @@ public:
     typedef Object CompiledObject;
     int objectCount() const { return data->nObjects; }
     const Object *objectAt(int index) const { return data->objectAt(index); }
-    QString stringAt(int index) const { return data->stringAt(index); }
+    QString stringAt(int index) const { return data->stringAtInternal(index); }
 
     struct FunctionIterator
     {

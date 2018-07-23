@@ -118,7 +118,7 @@ private:
     void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
 
-    QString stringAt(int idx) const { return qmlUnit->stringAt(idx); }
+    QString stringAt(int idx) const { return compilationUnit->stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;

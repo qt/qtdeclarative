@@ -130,7 +130,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     // memset the strings to 0 in case a GC run happens while we're within the loop below
     memset(runtimeStrings, 0, data->stringTableSize * sizeof(QV4::Heap::String*));
     for (uint i = 0; i < data->stringTableSize; ++i)
-        runtimeStrings[i] = engine->newString(data->stringAt(i));
+        runtimeStrings[i] = engine->newString(stringAt(i));
 
     runtimeRegularExpressions = new QV4::Value[data->regexpTableSize];
     // memset the regexps to 0 in case a GC run happens while we're within the loop below
@@ -146,7 +146,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
             ignoreCase = true;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             multiline = true;
-        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, data->stringAt(re->stringIndex), ignoreCase, multiline, global);
+        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, stringAt(re->stringIndex), ignoreCase, multiline, global);
     }
 
     if (data->lookupTableSize) {

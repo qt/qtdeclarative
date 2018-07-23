@@ -1776,7 +1776,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         qDebug() << "    " << qmlUnit->stringTableSize << "strings";
         quint32 totalStringSize = 0;
         for (quint32 i = 0; i < qmlUnit->stringTableSize; ++i)
-            totalStringSize += QV4::CompiledData::String::calculateSize(qmlUnit->stringAt(i));
+            totalStringSize += QV4::CompiledData::String::calculateSize(qmlUnit->stringAtInternal(i));
         qDebug() << "    " << totalStringSize << "bytes total strings";
     }
 
@@ -2354,7 +2354,7 @@ void IRLoader::load()
 {
     output->jsGenerator.stringTable.clear();
     for (uint i = 0; i < unit->stringTableSize; ++i)
-        output->jsGenerator.stringTable.registerString(unit->stringAt(i));
+        output->jsGenerator.stringTable.registerString(unit->stringAtInternal(i));
 
     for (quint32 i = 0; i < unit->nImports; ++i)
         output->imports << unit->importAt(i);
@@ -2491,7 +2491,7 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->location = compiledFunction->location;
         f->nameIndex = compiledFunction->nameIndex;
 
-        const QString name = unit->stringAt(compiledFunction->nameIndex);
+        const QString name = unit->stringAtInternal(compiledFunction->nameIndex);
 
         f->formals.allocate(pool, int(compiledFunction->nFormals));
         const quint32_le *formalNameIdx = compiledFunction->formalsTable();

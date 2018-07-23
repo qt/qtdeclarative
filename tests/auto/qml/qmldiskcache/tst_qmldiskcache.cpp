@@ -282,7 +282,7 @@ void tst_qmldiskcache::regenerateAfterChange()
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
-        QCOMPARE(testUnit->stringAt(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
+        QCOMPARE(testUnit->stringAtInternal(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
         QVERIFY(bindingFunction->codeSize > 0);
         QVERIFY(bindingFunction->codeOffset < testUnit->unitSize);
     }
@@ -308,7 +308,7 @@ void tst_qmldiskcache::regenerateAfterChange()
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
 
         const QV4::CompiledData::Function *bindingFunction = testUnit->functionAt(0);
-        QCOMPARE(testUnit->stringAt(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
+        QCOMPARE(testUnit->stringAtInternal(bindingFunction->nameIndex), QString("expression for blah")); // check if we have the correct function
         QVERIFY(bindingFunction->codeSize > 0);
         QVERIFY(bindingFunction->codeOffset < testUnit->unitSize);
     }
@@ -332,12 +332,12 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
         QCOMPARE(quint32(testUnit->nImports), quint32(2));
-        QCOMPARE(testUnit->stringAt(testUnit->importAt(0)->uriIndex), QStringLiteral("QtQuick"));
+        QCOMPARE(testUnit->stringAtInternal(testUnit->importAt(0)->uriIndex), QStringLiteral("QtQuick"));
 
         QQmlType componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
 
-        QCOMPARE(testUnit->stringAt(testUnit->importAt(1)->uriIndex), QString(componentType.module()));
-        QCOMPARE(testUnit->stringAt(testUnit->importAt(1)->qualifierIndex), QStringLiteral("QmlInternals"));
+        QCOMPARE(testUnit->stringAtInternal(testUnit->importAt(1)->uriIndex), QString(componentType.module()));
+        QCOMPARE(testUnit->stringAtInternal(testUnit->importAt(1)->qualifierIndex), QStringLiteral("QmlInternals"));
 
         QCOMPARE(quint32(testUnit->nObjects), quint32(3));
 
@@ -346,7 +346,7 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Object));
 
         const QV4::CompiledData::Object *implicitComponent = testUnit->objectAt(obj->bindingTable()->value.objectIndex);
-        QCOMPARE(testUnit->stringAt(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType.elementName());
+        QCOMPARE(testUnit->stringAtInternal(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType.elementName());
     }
 }
 
@@ -498,7 +498,7 @@ void tst_qmldiskcache::recompileAfterDirectoryChange()
         const QV4::CompiledData::Unit *unit = testCompiler.mapUnit();
         QVERIFY(unit->sourceFileIndex != 0);
         const QString expectedPath = QUrl::fromLocalFile(testCompiler.testFilePath).toString();
-        QCOMPARE(unit->stringAt(unit->sourceFileIndex), expectedPath);
+        QCOMPARE(unit->stringAtInternal(unit->sourceFileIndex), expectedPath);
         testCompiler.closeMapping();
     }
 

@@ -2699,7 +2699,7 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
 
 bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
-    const QString elementName = qmlUnit->stringAt(binding->propertyNameIndex);
+    const QString elementName = compilationUnit->stringAt(binding->propertyNameIndex);
 
     bool roleSet = false;
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {

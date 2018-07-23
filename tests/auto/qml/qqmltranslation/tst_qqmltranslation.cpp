@@ -89,7 +89,7 @@ void tst_qqmltranslation::translation()
         const QV4::CompiledData::Object *rootObject = unit->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
-            const QString propertyName = unit->stringAt(binding->propertyNameIndex);
+            const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);
 
             const bool expectCompiledTranslation = compiledTranslations.contains(propertyName);
 
@@ -144,7 +144,7 @@ void tst_qqmltranslation::idTranslation()
         const QV4::CompiledData::Object *rootObject = unit->objectAt(/*root object*/0);
         const QV4::CompiledData::Binding *binding = rootObject->bindingTable();
         for (quint32 i = 0; i < rootObject->nBindings; ++i, ++binding) {
-            const QString propertyName = unit->stringAt(binding->propertyNameIndex);
+            const QString propertyName = compilationUnit->stringAt(binding->propertyNameIndex);
             if (propertyName == "idTranslation") {
                 if (binding->type != QV4::CompiledData::Binding::Type_TranslationById)
                     qDebug() << "binding for property" << propertyName << "is not a compiled translation";
