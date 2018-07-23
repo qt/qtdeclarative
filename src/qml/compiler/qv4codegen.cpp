@@ -3534,9 +3534,10 @@ QList<QQmlJS::DiagnosticMessage> Codegen::errors() const
 
 QQmlRefPointer<CompiledData::CompilationUnit> Codegen::generateCompilationUnit(bool generateUnitData)
 {
-    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit;
+    CompiledData::Unit *unitData = nullptr;
     if (generateUnitData)
-        compilationUnit->data = jsUnitGenerator->generateUnit();
+        unitData = jsUnitGenerator->generateUnit();
+    CompiledData::CompilationUnit *compilationUnit = new CompiledData::CompilationUnit(unitData);
 
     QQmlRefPointer<CompiledData::CompilationUnit> unit;
     unit.adopt(compilationUnit);

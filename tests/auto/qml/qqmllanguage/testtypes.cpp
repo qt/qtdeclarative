@@ -138,7 +138,7 @@ void CustomBinding::componentComplete()
     Q_ASSERT(m_target);
 
     foreach (const QV4::CompiledData::Binding *binding, bindings) {
-        QString name = compilationUnit->data->stringAt(binding->propertyNameIndex);
+        QString name = compilationUnit->stringAt(binding->propertyNameIndex);
 
         int bindingId = binding->value.compiledScriptIndex;
 

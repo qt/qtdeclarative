@@ -1512,7 +1512,7 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
 ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classIndex, const Value &superClass, const Value *computedNames)
 {
     const CompiledData::CompilationUnit *unit = engine->currentStackFrame->v4Function->compilationUnit;
-    const QV4::CompiledData::Class *cls = unit->data->classAt(classIndex);
+    const QV4::CompiledData::Class *cls = unit->unitData()->classAt(classIndex);
 
     Scope scope(engine);
     ScopedObject protoParent(scope, engine->objectPrototype());

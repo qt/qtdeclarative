@@ -982,7 +982,6 @@ struct Q_QML_PRIVATE_EXPORT CompilationUnitBase
     QV4::Heap::String **runtimeStrings = nullptr; // Array
     const Value* constants = nullptr;
     QV4::Value *runtimeRegularExpressions = nullptr;
-    const Unit *data = nullptr;
     QV4::Heap::InternalClass **runtimeClasses = nullptr;
 };
 
@@ -993,6 +992,7 @@ Q_STATIC_ASSERT(offsetof(CompilationUnitBase, runtimeRegularExpressions) == offs
 
 struct Q_QML_PRIVATE_EXPORT CompilationUnit final : public CompilationUnitBase
 {
+    const Unit *data = nullptr;
 public:
     CompilationUnit(const Unit *unitData = nullptr);
 #ifdef V4_BOOTSTRAP
@@ -1019,7 +1019,10 @@ public:
     }
 
     // Called only when building QML, when we build the header for JS first and append QML data
-    QV4::CompiledData::Unit *createUnitData(QmlIR::Document *irDocument);
+    Unit *createUnitData(QmlIR::Document *irDocument);
+
+    const Unit *unitData() const { return data; }
+    void setUnitData(const Unit *unitData);
 
 #ifndef V4_BOOTSTRAP
     QIntrusiveListNode nextCompilationUnit;

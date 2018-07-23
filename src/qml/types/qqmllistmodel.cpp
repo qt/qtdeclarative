@@ -313,7 +313,7 @@ QString StringOrTranslation::toString(const QQmlListModel *owner) const
     }
     if (!owner)
         return QString();
-    return d.asT2()->valueAsString(owner->m_compilationUnit->data);
+    return d.asT2()->valueAsString(owner->m_compilationUnit->unitData());
 }
 
 QString StringOrTranslation::asString() const
@@ -2682,7 +2682,7 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
                 return false;
         }
     } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
-        QString scriptStr = binding->valueAsScriptString(compilationUnit->data);
+        QString scriptStr = binding->valueAsScriptString(compilationUnit->unitData());
         if (!binding->isFunctionExpression() && !definesEmptyList(scriptStr)) {
             QByteArray script = scriptStr.toUtf8();
             bool ok;
@@ -2797,7 +2797,7 @@ void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::
     rv->m_engine = qmlEngine(rv)->handle();
     rv->m_compilationUnit = compilationUnit;
 
-    const QV4::CompiledData::Unit *qmlUnit = compilationUnit->data;
+    const QV4::CompiledData::Unit *qmlUnit = compilationUnit->unitData();
 
     bool setRoles = false;
 

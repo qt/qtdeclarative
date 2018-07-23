@@ -136,9 +136,9 @@ int main(int argc, char *argv[])
             QV4::ScopedValue result(scope);
             if (!scope.engine->hasException) {
                 const auto unit = script->compilationUnit;
-                if (cache && unit && !(unit->data->flags & QV4::CompiledData::Unit::StaticData)) {
-                    if (unit->data->sourceTimeStamp == 0) {
-                        const_cast<QV4::CompiledData::Unit*>(unit->data)->sourceTimeStamp = QFileInfo(fn).lastModified().toMSecsSinceEpoch();
+                if (cache && unit && !(unit->unitData()->flags & QV4::CompiledData::Unit::StaticData)) {
+                    if (unit->unitData()->sourceTimeStamp == 0) {
+                        const_cast<QV4::CompiledData::Unit*>(unit->unitData())->sourceTimeStamp = QFileInfo(fn).lastModified().toMSecsSinceEpoch();
                     }
                     QString saveError;
                     if (!unit->saveToDisk(QUrl::fromLocalFile(fn), &saveError)) {

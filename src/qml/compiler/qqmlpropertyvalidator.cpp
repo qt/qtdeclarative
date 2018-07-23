@@ -49,7 +49,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
-    , qmlUnit(compilationUnit->data)
+    , qmlUnit(compilationUnit->unitData())
     , resolvedTypes(compilationUnit->resolvedTypes)
     , propertyCaches(compilationUnit->propertyCaches)
     , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)

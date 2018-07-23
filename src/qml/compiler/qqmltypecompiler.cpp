@@ -161,14 +161,14 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
 
     Q_ASSERT(document->javaScriptCompilationUnit);
     // The js unit owns the data and will free the qml unit.
-    document->javaScriptCompilationUnit->data = qmlUnit;
+    document->javaScriptCompilationUnit->setUnitData(qmlUnit);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit->typeNameCache = typeNameCache;
     compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
-    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->data->nObjects));
+    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->unitData()->nObjects));
 
     if (errors.isEmpty())
         return compilationUnit;
@@ -209,7 +209,7 @@ int QQmlTypeCompiler::registerString(const QString &str)
 
 const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 {
-    return document->javaScriptCompilationUnit->data;
+    return document->javaScriptCompilationUnit->unitData();
 }
 
 const QQmlImports *QQmlTypeCompiler::imports() const

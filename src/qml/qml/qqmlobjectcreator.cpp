@@ -120,7 +120,7 @@ void QQmlObjectCreator::init(QQmlContextData *providedParentContext)
     if (compilationUnit && !compilationUnit->engine)
         compilationUnit->linkToEngine(v4);
 
-    qmlUnit = compilationUnit->data;
+    qmlUnit = compilationUnit->unitData();
     context = nullptr;
     _qobject = nullptr;
     _scopeObject = nullptr;
@@ -1192,7 +1192,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             Q_QML_OC_PROFILE(sharedState->profiler, profiler.update(
                              compilationUnit.data(), obj, typeRef->compilationUnit->fileName(),
                              context->url()));
-            if (typeRef->compilationUnit->data->isSingleton())
+            if (typeRef->compilationUnit->unitData()->isSingleton())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;

@@ -2110,7 +2110,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
-    if (unit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
+    if (unit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
         restoreIR(unit);
         return true;
     }
@@ -2132,8 +2132,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                 return false;
 
             // find the implicit import
-            for (quint32 i = 0; i < m_compiledData->data->nImports; ++i) {
-                const QV4::CompiledData::Import *import = m_compiledData->data->importAt(i);
+            for (quint32 i = 0; i < m_compiledData->unitData()->nImports; ++i) {
+                const QV4::CompiledData::Import *import = m_compiledData->unitData()->importAt(i);
                 if (m_compiledData->stringAt(import->uriIndex) == QLatin1String(".")
                     && import->qualifierIndex == 0
                     && import->majorVersion == -1
@@ -2149,8 +2149,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
-    for (int i = 0, count = m_compiledData->data->nImports; i < count; ++i) {
-        const QV4::CompiledData::Import *import = m_compiledData->data->importAt(i);
+    for (int i = 0, count = m_compiledData->unitData()->nImports; i < count; ++i) {
+        const QV4::CompiledData::Import *import = m_compiledData->unitData()->importAt(i);
         QList<QQmlError> errors;
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
@@ -2199,8 +2199,8 @@ static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeRefere
 {
     for (const auto &typeRef: typeRefs) {
         if (typeRef.typeData) {
-            const auto unit = typeRef.typeData->compilationUnit();
-            hash->addData(unit->data->md5Checksum, sizeof(unit->data->md5Checksum));
+            const auto unit = typeRef.typeData->compilationUnit()->unitData();
+            hash->addData(unit->md5Checksum, sizeof(unit->md5Checksum));
         } else if (typeRef.type.isValid()) {
             const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type.metaObject());
             bool ok = false;
@@ -2334,7 +2334,7 @@ void QQmlTypeData::done()
 
     {
         QQmlType type = QQmlMetaType::qmlType(finalUrl(), true);
-        if (m_compiledData && m_compiledData->data->flags & QV4::CompiledData::Unit::IsSingleton) {
+        if (m_compiledData && m_compiledData->unitData()->flags & QV4::CompiledData::Unit::IsSingleton) {
             if (!type.isValid()) {
                 QQmlError error;
                 error.setDescription(QQmlTypeLoader::tr("No matching type found, pragma Singleton files cannot be used by QQmlComponent."));
@@ -2480,7 +2480,7 @@ bool QQmlTypeData::loadFromSource()
 void QQmlTypeData::restoreIR(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QmlIR::IRLoader loader(unit->data, m_document.data());
+    QmlIR::IRLoader loader(unit->unitData(), m_document.data());
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
@@ -2587,7 +2587,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 {
     Q_ASSERT(m_compiledData.isNull());
 
-    const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit && m_document->javaScriptCompilationUnit->data->flags & QV4::CompiledData::Unit::PendingTypeCompilation;
+    const bool typeRecompilation = m_document && m_document->javaScriptCompilationUnit && m_document->javaScriptCompilationUnit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation;
 
     QQmlEnginePrivate * const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
     QQmlTypeCompiler compiler(enginePrivate, this, m_document.data(), typeNameCache, resolvedTypeCache, dependencyHasher);
@@ -2859,7 +2859,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     QV4::ExecutionEngine *v4 = parentCtxt->engine->handle();
     QV4::Scope scope(v4);
 
-    bool shared = m_precompiledScript->data->flags & QV4::CompiledData::Unit::IsSharedLibrary;
+    bool shared = m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsSharedLibrary;
 
     QQmlContextData *effectiveCtxt = parentCtxt;
     if (shared)
@@ -3009,9 +3009,9 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     QmlIR::QmlUnitGenerator qmlGenerator;
     QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
-    Q_ASSERT(!unit->data);
+    Q_ASSERT(!unit->unitData());
     // The js unit owns the data and will free the qml unit.
-    unit->data = unitData;
+    unit->setUnitData(unitData);
 
     if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
         QString errorString;
@@ -3076,7 +3076,7 @@ void QQmlScriptBlob::done()
 
 QString QQmlScriptBlob::stringAt(int index) const
 {
-    return m_scriptData->m_precompiledScript->data->stringAt(index);
+    return m_scriptData->m_precompiledScript->unitData()->stringAt(index);
 }
 
 void QQmlScriptBlob::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location, const QString &qualifier, const QString &nameSpace)
@@ -3100,8 +3100,8 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Com
 
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
-    Q_ASSERT(m_scriptData->m_precompiledScript->data->flags & QV4::CompiledData::Unit::IsQml);
-    const QV4::CompiledData::Unit *qmlUnit = m_scriptData->m_precompiledScript->data;
+    Q_ASSERT(m_scriptData->m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsQml);
+    const QV4::CompiledData::Unit *qmlUnit = m_scriptData->m_precompiledScript->unitData();
 
     QList<QQmlError> errors;
     for (quint32 i = 0; i < qmlUnit->nImports; ++i) {

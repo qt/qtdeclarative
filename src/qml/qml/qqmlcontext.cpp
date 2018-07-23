@@ -845,7 +845,7 @@ void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::Comp
     typeCompilationUnit = unit;
     componentObjectIndex = subComponentIndex == -1 ? /*root object*/0 : subComponentIndex;
     Q_ASSERT(!idValues);
-    idValueCount = typeCompilationUnit->data->objectAt(componentObjectIndex)->nNamedObjectsInComponent;
+    idValueCount = typeCompilationUnit->unitData()->objectAt(componentObjectIndex)->nNamedObjectsInComponent;
     idValues = new ContextGuard[idValueCount];
 }
 

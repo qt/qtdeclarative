@@ -159,8 +159,9 @@ void tst_qmlcachegen::loadGeneratedFile()
     QVERIFY(componentPrivate);
     auto compilationUnit = componentPrivate->compilationUnit;
     QVERIFY(compilationUnit);
-    QVERIFY(compilationUnit->data);
-    QVERIFY(!(compilationUnit->data->flags & QV4::CompiledData::Unit::StaticData));
+    auto unitData = compilationUnit->unitData();
+    QVERIFY(unitData);
+    QVERIFY(!(unitData->flags & QV4::CompiledData::Unit::StaticData));
 }
 
 void tst_qmlcachegen::translationExpressionSupport()

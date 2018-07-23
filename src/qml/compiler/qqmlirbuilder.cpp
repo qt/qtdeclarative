@@ -1584,7 +1584,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, unitSize);
     memset(data + unitSize, 0, totalSize - unitSize);
-    if (jsUnit != compilationUnit->data)
+    if (jsUnit != compilationUnit->unitData())
         free(jsUnit);
     jsUnit = nullptr;
 
