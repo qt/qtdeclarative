@@ -36,29 +36,29 @@
 
     \include examples-run.qdocinc
 
-    \section1 BorderImage
+    \section1 Scaling with BorderImage
 
     \e BorderImage shows off the various scaling modes of the \l BorderImage
     type by setting its horizontalTileMode and verticalTileMode properties.
 
-    \section1 Image
+    \section1 Image Fill
 
     \e Image shows off the various fill modes of the \l Image type.
 
-    \section1 Shadows
+    \section1 Shadow Effects
 
     \e Shadows shows how to create a drop shadow effect for a rectangular item
     using a \l BorderImage:
     \snippet imageelements/content/ShadowRectangle.qml shadow
 
-    \section1 AnimatedSprite
+    \section1 Sprite Animations with AnimatedSprite
 
     \e AnimatedSprite shows how to display a simple animation using an
     \l AnimatedSprite object:
     \snippet imageelements/animatedsprite.qml sprite
     The sprite animation will loop three times.
 
-    \section1 SpriteSequence
+    \section1 Sprite Animations with SpriteSequence
 
     \e SpriteSequence demonstrates using a sprite sequence to draw an animated
     and interactive bear. The \l SpriteSequence object defines five different
