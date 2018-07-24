@@ -80,6 +80,9 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         return true;
 #endif
 
+    if (event->asPointerScrollEvent())
+        return false;
+
     if (hasCurrentPoints(event))
         return true;
 
