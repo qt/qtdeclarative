@@ -67,6 +67,7 @@ QT_BEGIN_NAMESPACE
     by \l Sprite types.
 
     For full details, see the \l{Sprite Animations} overview.
+    \sa {Sprite animations with SpriteSequence}
 */
 /*!
     \qmlproperty bool QtQuick::SpriteSequence::running
