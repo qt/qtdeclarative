@@ -4,6 +4,7 @@
     "QDocModule": "qtqml",
     "QtUsage": "Used in Qt QML.",
 
+    "Homepage": "https://trac.webkit.org/wiki/JavaScriptCore",
     "License": "BSD 2-clause \"Simplified\" License",
     "LicenseId": "BSD-2-Clause",
     "LicenseFile": "LICENSE",
