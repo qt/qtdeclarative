@@ -1308,7 +1308,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
 void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
 {
     Q_Q(QQuickFlickable);
-    if (!interactive || lastPosTime == -1)
+    if (!interactive || lastPosTime == -1 || event->buttons() == Qt::NoButton)
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
