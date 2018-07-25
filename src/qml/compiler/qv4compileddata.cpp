@@ -470,21 +470,17 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = irDocument->javaScriptCompilationUnit;
     QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
-    auto ensureWritableUnit = [&jsUnit, &compilationUnit]() {
-        if (jsUnit == compilationUnit->data) {
-            // Discard the old QML tables as the caller will re-create them anyway.
-            quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
-            char *unitCopy = (char*)malloc(unitSizeWithoutQMLTables);
-            memcpy(unitCopy, jsUnit, unitSizeWithoutQMLTables);
-            jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
-            jsUnit->unitSize = unitSizeWithoutQMLTables;
-        }
-    };
+    // Discard the old QML tables as the caller will re-create them anyway.
+    quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
+    char *unitCopy = (char*)malloc(unitSizeWithoutQMLTables);
+    memcpy(unitCopy, jsUnit, unitSizeWithoutQMLTables);
+    jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
+    jsUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
+    jsUnit->unitSize = unitSizeWithoutQMLTables;
 
     QV4::Compiler::StringTableGenerator &stringTable = irDocument->jsGenerator.stringTable;
 
     if (jsUnit->sourceFileIndex == quint32(0) || stringTable.stringForIndex(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
-        ensureWritableUnit();
         jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
         jsUnit->finalUrlIndex = stringTable.registerString(irDocument->jsModule.finalUrl);
     }
@@ -526,8 +522,6 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
 
     // Update signal signatures
     if (!changedSignals.isEmpty()) {
-        ensureWritableUnit();
-
         for (int i = 0; i < changedSignals.count(); ++i) {
             const uint functionIndex = changedSignals.at(i);
             // The data is now read-write due to the copy above, so the const_cast is ok.
@@ -550,7 +544,6 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
     }
 
     if (!signalParameterNameTable.isEmpty()) {
-        ensureWritableUnit();
         Q_ASSERT(jsUnit != compilationUnit->data);
         const uint signalParameterTableSize = signalParameterNameTable.count() * sizeof(quint32);
         uint newSize = jsUnit->unitSize + signalParameterTableSize;
@@ -560,9 +553,6 @@ Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
         jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitWithSignalParameters);
         jsUnit->unitSize = newSize;
     }
-
-    if (jsUnit != compilationUnit->data)
-        jsUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
 
     return jsUnit;
 }
