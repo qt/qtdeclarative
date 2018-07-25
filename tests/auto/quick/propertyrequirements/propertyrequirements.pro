@@ -1,4 +1,4 @@
-CONFIG += testcase cpp11
+CONFIG += testcase
 TARGET = tst_propertyrequirements
 macos:CONFIG -= app_bundle
 
