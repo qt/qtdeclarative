@@ -198,7 +198,8 @@ void QQuickIconImage::pixmapChange()
     QQuickImage::pixmapChange();
     d->updateFillMode();
 
-    if (d->color.alpha() > 0) {
+    // Don't apply the color if we're recursing (updateFillMode() can cause us to recurse).
+    if (!d->updatingFillMode && d->color.alpha() > 0) {
         QImage image = d->pix.image();
         if (!image.isNull()) {
             QPainter painter(&image);
