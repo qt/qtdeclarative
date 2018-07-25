@@ -259,13 +259,9 @@ void tst_qmlcachegen::signalHandlerParameters()
         QVERIFY(compilationUnit);
         QVERIFY(compilationUnit->unitData());
 
-        // The determination of the signal parameters for onTestMe by extending the
-        // formals of the CompiledData::Function of the signal handler implies adding new
-        // strings to the compilation unit. That means discarding the old string table as well as QML
-        // fields (to be newly written) to save memory. That means the first QML specific table
-        // (offsetToImports) should be the same _plus_ one entry in the newly added formals table.
-        const quint32 sizeOfNewFormalsTable = 1 * sizeof(quint32);
-        QCOMPARE(quint32(compilationUnit->unitData()->offsetToImports), oldImportsOffset + sizeOfNewFormalsTable);
+        // Verify that the JS unit is used unchanged, no tables were added, by checking the
+        // offset of the first QML specific table.
+        QCOMPARE(quint32(compilationUnit->unitData()->offsetToImports), oldImportsOffset);
 
         // Typically the final file name is one of those strings that is not in the original
         // pre-compiled qml file's string table, while for example the signal parameter

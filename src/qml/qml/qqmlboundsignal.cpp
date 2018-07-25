@@ -110,46 +110,34 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index,
       m_index(index),
       m_target(target)
 {
-    // If the function is marked as having a nested function, then the user wrote:
-    //   onSomeSignal: function() { /*....*/ }
-    // So take that nested function:
-    if (auto closure = function->nestedFunction())
-        function = closure;
-
-    setupFunction(scope, function);
-    init(ctxt, scopeObject);
-}
-
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(QObject *target, int index, QQmlContextData *ctxt, QObject *scope, QV4::Function *runtimeFunction)
-    : QQmlJavaScriptExpression(),
-      m_index(index),
-      m_target(target)
-{
     // It's important to call init first, because m_index gets remapped in case of cloned signals.
-    init(ctxt, scope);
-
-    // If the function is marked as having a nested function, then the user wrote:
-    //   onSomeSignal: function() { /*....*/ }
-    // So take that nested function:
-    if (auto closure = runtimeFunction->nestedFunction())
-        runtimeFunction = closure;
+    init(ctxt, scopeObject);
 
     QV4::ExecutionEngine *engine = ctxt->engine->handle();
 
-    QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
-    if (!signalParameters.isEmpty()) {
-        QString error;
-        QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
-        if (!error.isEmpty()) {
-            qmlWarning(scopeObject()) << error;
-            return;
+    // If the function is marked as having a nested function, then the user wrote:
+    //   onSomeSignal: function() { /*....*/ }
+    // So take that nested function:
+    if (auto closure = function->nestedFunction()) {
+        function = closure;
+    } else {
+        QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
+        if (!signalParameters.isEmpty()) {
+            QString error;
+            QQmlPropertyCache::signalParameterStringForJS(engine, signalParameters, &error);
+            if (!error.isEmpty()) {
+                qmlWarning(scopeObject) << error;
+                return;
+            }
+            function->updateInternalClass(engine, signalParameters);
         }
-        runtimeFunction->updateInternalClass(engine, signalParameters);
     }
 
     QV4::Scope valueScope(engine);
-    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, QV4::QmlContext::create(engine->rootContext(), ctxt, scope));
-    setupFunction(qmlContext, runtimeFunction);
+    QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, scope);
+    if (!qmlContext)
+        qmlContext = QV4::QmlContext::create(engine->rootContext(), ctxt, scopeObject);
+    setupFunction(qmlContext, function);
 }
 
 void QQmlBoundSignalExpression::init(QQmlContextData *ctxt, QObject *scope)
