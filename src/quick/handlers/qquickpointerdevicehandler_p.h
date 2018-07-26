@@ -65,8 +65,7 @@ class Q_AUTOTEST_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
     Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
 
 public:
-    explicit QQuickPointerDeviceHandler(QObject *parent = nullptr);
-    ~QQuickPointerDeviceHandler();
+    explicit QQuickPointerDeviceHandler(QQuickItem *parent = nullptr);
 
     QQuickPointerDevice::DeviceTypes acceptedDevices() const;
     QQuickPointerDevice::PointerTypes acceptedPointerTypes() const;
@@ -86,7 +85,7 @@ Q_SIGNALS:
     void acceptedModifiersChanged();
 
 protected:
-    QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QObject *parent = nullptr);
+    QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QQuickItem *parent = nullptr);
 
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
 

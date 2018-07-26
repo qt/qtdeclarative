@@ -64,8 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
 
 public:
-    explicit QQuickDragHandler(QObject *parent = nullptr);
-    ~QQuickDragHandler();
+    explicit QQuickDragHandler(QQuickItem *parent = nullptr);
 
     void handlePointerEventImpl(QQuickPointerEvent *event) override;
 

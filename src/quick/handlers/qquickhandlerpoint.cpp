@@ -72,9 +72,6 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
 */
 
 QQuickHandlerPoint::QQuickHandlerPoint()
-    : m_id(0)
-    , m_rotation(0)
-    , m_pressure(0)
 {}
 
 void QQuickHandlerPoint::localize(QQuickItem *item)

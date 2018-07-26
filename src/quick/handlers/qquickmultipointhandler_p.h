@@ -66,8 +66,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHand
     Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged)
 
 public:
-    explicit QQuickMultiPointHandler(QObject *parent = nullptr, int minimumPointCount = 2, int maximumPointCount = -1);
-    ~QQuickMultiPointHandler();
+    explicit QQuickMultiPointHandler(QQuickItem *parent = nullptr, int minimumPointCount = 2, int maximumPointCount = -1);
 
     int minimumPointCount() const { return m_minimumPointCount; }
     void setMinimumPointCount(int c);

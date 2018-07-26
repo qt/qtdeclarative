@@ -60,12 +60,12 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
     events from any kind of pointing device (touch, mouse or graphics tablet).
 */
 
-QQuickPointerHandler::QQuickPointerHandler(QObject *parent)
+QQuickPointerHandler::QQuickPointerHandler(QQuickItem *parent)
   : QObject(*(new QQuickPointerHandlerPrivate), parent)
 {
 }
 
-QQuickPointerHandler::QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QObject *parent)
+QQuickPointerHandler::QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QQuickItem *parent)
   : QObject(dd, parent)
 {
 }
@@ -525,10 +525,6 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
   , targetExplicitlySet(false)
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
-{
-}
-
-QQuickPointerHandlerPrivate::~QQuickPointerHandlerPrivate()
 {
 }
 

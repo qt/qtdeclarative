@@ -58,9 +58,8 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     Override handleEventPoint() to implement a single-point handler.
 */
 
-QQuickSinglePointHandler::QQuickSinglePointHandler(QObject *parent)
+QQuickSinglePointHandler::QQuickSinglePointHandler(QQuickItem *parent)
   : QQuickPointerDeviceHandler(parent)
-  , m_ignoreAdditionalPoints(false)
 {
 }
 

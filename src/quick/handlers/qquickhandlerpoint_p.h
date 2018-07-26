@@ -97,18 +97,18 @@ public:
     void reset(const QVector<QQuickHandlerPoint> &points);
 
 private:
-    int m_id;
+    int m_id = 0;
     QPointingDeviceUniqueId m_uniqueId;
-    Qt::MouseButtons m_pressedButtons;
-    Qt::KeyboardModifiers m_pressedModifiers;
+    Qt::MouseButtons m_pressedButtons = Qt::NoButton;
+    Qt::KeyboardModifiers m_pressedModifiers = Qt::NoModifier;
     QPointF m_position;
     QPointF m_scenePosition;
     QPointF m_pressPosition;
     QPointF m_scenePressPosition;
     QPointF m_sceneGrabPosition;
     QVector2D m_velocity;
-    qreal m_rotation;
-    qreal m_pressure;
+    qreal m_rotation = 0;
+    qreal m_pressure = 0;
     QSizeF m_ellipseDiameters;
     friend class QQuickMultiPointHandler;
     friend class QQuickSinglePointHandler;

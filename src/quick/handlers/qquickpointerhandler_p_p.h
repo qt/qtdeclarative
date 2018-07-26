@@ -67,7 +67,6 @@ public:
     static const QQuickPointerHandlerPrivate* get(const QQuickPointerHandler *q) { return q->d_func(); }
 
     QQuickPointerHandlerPrivate();
-    virtual ~QQuickPointerHandlerPrivate() override;
 
     QQuickPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;

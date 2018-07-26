@@ -81,8 +81,7 @@ public:
     };
     Q_ENUM(PinchOrigin)
 
-    explicit QQuickPinchHandler(QObject *parent = nullptr);
-    ~QQuickPinchHandler();
+    explicit QQuickPinchHandler(QQuickItem *parent = nullptr);
 
     qreal minimumScale() const { return m_minimumScale; }
     void setMinimumScale(qreal minimumScale);
@@ -131,28 +130,28 @@ protected:
 
 private:
     // properties
-    qreal m_activeScale;
-    qreal m_accumulatedScale;
-    qreal m_activeRotation;
-    QVector2D m_activeTranslation;
+    qreal m_activeScale = 1;
+    qreal m_accumulatedScale = 1;
+    qreal m_activeRotation = 0;
+    QVector2D m_activeTranslation = QVector2D(0, 0);
 
-    qreal m_minimumScale;
-    qreal m_maximumScale;
+    qreal m_minimumScale = -qInf();
+    qreal m_maximumScale = qInf();
 
-    qreal m_minimumRotation;
-    qreal m_maximumRotation;
+    qreal m_minimumRotation = -qInf();
+    qreal m_maximumRotation = qInf();
 
-    qreal m_minimumX;
-    qreal m_maximumX;
-    qreal m_minimumY;
-    qreal m_maximumY;
+    qreal m_minimumX = -qInf();
+    qreal m_maximumX = qInf();
+    qreal m_minimumY = -qInf();
+    qreal m_maximumY = qInf();
 
-    PinchOrigin m_pinchOrigin;
+    PinchOrigin m_pinchOrigin = PinchOrigin::PinchCenter;
 
     // internal
-    qreal m_startScale;
-    qreal m_startRotation;
-    qreal m_startDistance;
+    qreal m_startScale = 1;
+    qreal m_startRotation = 0;
+    qreal m_startDistance = 0;
     QPointF m_startPos;
 
     QVector<PointData> m_startAngles;

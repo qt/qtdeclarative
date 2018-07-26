@@ -56,9 +56,8 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     \sa MouseArea
 */
 
-QQuickHoverHandler::QQuickHoverHandler(QObject *parent)
+QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
-    , m_hovered(false)
 {
     // Rule out the touchscreen for now (can be overridden in QML in case a hover-detecting touchscreen exists)
     setAcceptedDevices(static_cast<QQuickPointerDevice::DeviceType>(

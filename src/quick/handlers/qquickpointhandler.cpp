@@ -114,14 +114,10 @@ QT_BEGIN_NAMESPACE
     \sa MultiPointTouchArea
 */
 
-QQuickPointHandler::QQuickPointHandler(QObject *parent)
+QQuickPointHandler::QQuickPointHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
 {
     setIgnoreAdditionalPoints();
-}
-
-QQuickPointHandler::~QQuickPointHandler()
-{
 }
 
 bool QQuickPointHandler::wantsEventPoint(QQuickEventPoint *pt)

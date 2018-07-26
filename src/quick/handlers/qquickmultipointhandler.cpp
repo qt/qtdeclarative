@@ -58,14 +58,10 @@ QT_BEGIN_NAMESPACE
     for any type of handler which requires and acts upon a specific number
     of multiple touchpoints.
 */
-QQuickMultiPointHandler::QQuickMultiPointHandler(QObject *parent, int minimumPointCount, int maximumPointCount)
+QQuickMultiPointHandler::QQuickMultiPointHandler(QQuickItem *parent, int minimumPointCount, int maximumPointCount)
     : QQuickPointerDeviceHandler(parent)
     , m_minimumPointCount(minimumPointCount)
     , m_maximumPointCount(maximumPointCount)
-{
-}
-
-QQuickMultiPointHandler::~QQuickMultiPointHandler()
 {
 }
 

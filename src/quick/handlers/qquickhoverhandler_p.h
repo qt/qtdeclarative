@@ -64,7 +64,7 @@ class Q_AUTOTEST_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged)
 
 public:
-    explicit QQuickHoverHandler(QObject *parent = 0);
+    explicit QQuickHoverHandler(QQuickItem *parent = nullptr);
     ~QQuickHoverHandler();
 
     bool isHovered() const { return m_hovered; }
@@ -81,7 +81,7 @@ private:
     void setHovered(bool hovered);
 
 private:
-    bool m_hovered;
+    bool m_hovered = false;
 };
 
 QT_END_NAMESPACE

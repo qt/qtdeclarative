@@ -85,27 +85,8 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     \sa PinchArea
 */
 
-QQuickPinchHandler::QQuickPinchHandler(QObject *parent)
+QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
     : QQuickMultiPointHandler(parent, 2)
-    , m_activeScale(1)
-    , m_accumulatedScale(1)
-    , m_activeRotation(0)
-    , m_activeTranslation(0,0)
-    , m_minimumScale(-qInf())
-    , m_maximumScale(qInf())
-    , m_minimumRotation(-qInf())
-    , m_maximumRotation(qInf())
-    , m_minimumX(-qInf())
-    , m_maximumX(qInf())
-    , m_minimumY(-qInf())
-    , m_maximumY(qInf())
-    , m_pinchOrigin(PinchCenter)
-    , m_startScale(1)
-    , m_startRotation(0)
-{
-}
-
-QQuickPinchHandler::~QQuickPinchHandler()
 {
 }
 

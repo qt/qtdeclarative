@@ -84,13 +84,8 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     \sa MouseArea
 */
 
-QQuickTapHandler::QQuickTapHandler(QObject *parent)
+QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
-    , m_pressed(false)
-    , m_gesturePolicy(DragThreshold)
-    , m_tapCount(0)
-    , m_longPressThreshold(-1)
-    , m_lastTapTimestamp(0.0)
 {
     if (m_mouseMultiClickDistanceSquared < 0) {
         m_multiTapInterval = qApp->styleHints()->mouseDoubleClickInterval() / 1000.0;
@@ -101,10 +96,6 @@ QQuickTapHandler::QQuickTapHandler(QObject *parent)
                     themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
         m_touchMultiTapDistanceSquared *= m_touchMultiTapDistanceSquared;
     }
-}
-
-QQuickTapHandler::~QQuickTapHandler()
-{
 }
 
 static bool dragOverThreshold(const QQuickEventPoint *point)

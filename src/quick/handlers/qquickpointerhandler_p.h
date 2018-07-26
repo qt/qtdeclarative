@@ -73,8 +73,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
 
 public:
-    explicit QQuickPointerHandler(QObject *parent = nullptr);
-    virtual ~QQuickPointerHandler();
+    explicit QQuickPointerHandler(QQuickItem *parent = nullptr);
+    ~QQuickPointerHandler();
 
     enum GrabPermission {
         TakeOverForbidden = 0x0,
@@ -120,7 +120,7 @@ Q_SIGNALS:
     void canceled(QQuickEventPoint *point);
 
 protected:
-    QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QObject *parent);
+    QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QQuickItem *parent);
 
     void classBegin() override;
     void componentComplete() override;

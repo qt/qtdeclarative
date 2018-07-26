@@ -61,8 +61,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointHandler : public QQuickPointerDevi
     Q_OBJECT
     Q_PROPERTY(QQuickHandlerPoint point READ point NOTIFY pointChanged)
 public:
-    explicit QQuickSinglePointHandler(QObject *parent = nullptr);
-    virtual ~QQuickSinglePointHandler() { }
+    explicit QQuickSinglePointHandler(QQuickItem *parent = nullptr);
 
     QQuickHandlerPoint point() const { return m_pointInfo; }
 
@@ -89,7 +88,7 @@ private:
 
 private:
     QQuickHandlerPoint m_pointInfo;
-    bool m_ignoreAdditionalPoints : 1;
+    bool m_ignoreAdditionalPoints = false;
 };
 
 QT_END_NAMESPACE

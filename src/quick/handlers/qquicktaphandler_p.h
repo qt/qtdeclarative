@@ -75,8 +75,7 @@ public:
     };
     Q_ENUM(GesturePolicy)
 
-    explicit QQuickTapHandler(QObject *parent = nullptr);
-    ~QQuickTapHandler();
+    explicit QQuickTapHandler(QQuickItem *parent = nullptr);
 
     bool isPressed() const { return m_pressed; }
 
@@ -113,14 +112,14 @@ private:
     void updateTimeHeld();
 
 private:
-    bool m_pressed;
-    GesturePolicy m_gesturePolicy;
-    int m_tapCount;
-    int m_longPressThreshold;
-    QBasicTimer m_longPressTimer;
-    QElapsedTimer m_holdTimer;
     QPointF m_lastTapPos;
-    qreal m_lastTapTimestamp;
+    qreal m_lastTapTimestamp = 0;
+    QElapsedTimer m_holdTimer;
+    QBasicTimer m_longPressTimer;
+    int m_tapCount = 0;
+    int m_longPressThreshold = -1;
+    GesturePolicy m_gesturePolicy = GesturePolicy::DragThreshold;
+    bool m_pressed = false;
 
     static qreal m_multiTapInterval;
     static int m_mouseMultiClickDistanceSquared;

@@ -57,17 +57,13 @@ QT_BEGIN_NAMESPACE
     An intermediate class (not registered as a QML type) for handlers which
     allow filtering based on device type, pointer type, or keyboard modifiers.
 */
-QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QObject *parent)
+QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickItem *parent)
     : QQuickPointerHandler(*(new QQuickPointerDeviceHandlerPrivate), parent)
 {
 }
 
-QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QObject *parent)
+QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QQuickItem *parent)
     : QQuickPointerHandler(dd, parent)
-{
-}
-
-QQuickPointerDeviceHandler::~QQuickPointerDeviceHandler()
 {
 }
 

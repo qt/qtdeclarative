@@ -88,12 +88,8 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     \sa Drag, MouseArea
 */
 
-QQuickDragHandler::QQuickDragHandler(QObject *parent)
+QQuickDragHandler::QQuickDragHandler(QQuickItem *parent)
     : QQuickMultiPointHandler(parent, 1, 1)
-{
-}
-
-QQuickDragHandler::~QQuickDragHandler()
 {
 }
 
