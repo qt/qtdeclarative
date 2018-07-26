@@ -1554,8 +1554,26 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
 QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
-    QV4::CompiledData::Unit *jsUnit = compilationUnit->createUnitData(&output);
-    const uint unitSize = jsUnit->unitSize;
+
+    const QV4::CompiledData::Unit *jsUnit = nullptr;
+    uint jsUnitSize = 0;
+
+    // We may already have unit data if we're loading an ahead-of-time generated cache file.
+    if (compilationUnit->data) {
+        jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
+        // Discard the old QML tables we will re-create further down anyway.
+        quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
+        jsUnitSize = unitSizeWithoutQMLTables;
+    } else {
+        jsUnit = output.jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
+        jsUnitSize = jsUnit->unitSize;
+    }
+
+    output.jsGenerator.stringTable.registerString(output.jsModule.fileName);
+    output.jsGenerator.stringTable.registerString(output.jsModule.finalUrl);
+
+    // No more new strings after this point, we're calculating offsets.
+    output.jsGenerator.stringTable.freeze();
 
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
@@ -1564,7 +1582,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
 
     int objectsSize = 0;
     for (Object *o : qAsConst(output.objects)) {
-        objectOffsets.insert(o, unitSize + importSize + objectOffsetTableSize + objectsSize);
+        objectOffsets.insert(o, jsUnitSize + importSize + objectOffsetTableSize + objectsSize);
         objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
@@ -1580,12 +1598,10 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         objectsSize += enumTableSize;
     }
 
-    const int totalSize = unitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
+    const int totalSize = jsUnitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
     char *data = (char*)malloc(totalSize);
-    memcpy(data, jsUnit, unitSize);
-    memset(data + unitSize, 0, totalSize - unitSize);
-    if (jsUnit != compilationUnit->unitData())
-        free(jsUnit);
+    memcpy(data, jsUnit, jsUnitSize);
+    memset(data + jsUnitSize, 0, totalSize - jsUnitSize);
     jsUnit = nullptr;
 
     QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
@@ -1594,12 +1610,14 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     // This unit's memory was allocated with malloc on the heap, so it's
     // definitely not suitable for StaticData access.
     qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-    qmlUnit->offsetToImports = unitSize;
+    qmlUnit->offsetToImports = jsUnitSize;
     qmlUnit->nImports = output.imports.count();
-    qmlUnit->offsetToObjects = unitSize + importSize;
+    qmlUnit->offsetToObjects = jsUnitSize + importSize;
     qmlUnit->nObjects = output.objects.count();
     qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
     qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
+    qmlUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
+    qmlUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
 
 #ifndef V4_BOOTSTRAP
     if (dependencyHasher) {
@@ -1762,7 +1780,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
     if (showStats) {
         qDebug() << "Generated QML unit that is" << qmlUnit->unitSize << "bytes big contains:";
         qDebug() << "    " << qmlUnit->functionTableSize << "functions";
-        qDebug() << "    " << unitSize << "for JS unit";
+        qDebug() << "    " << jsUnitSize << "for JS unit";
         qDebug() << "    " << importSize << "for imports";
         qDebug() << "    " << objectsSize << "for" << qmlUnit->nObjects << "objects";
         quint32 totalBindingCount = 0;

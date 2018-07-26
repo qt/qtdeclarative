@@ -463,31 +463,6 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 #endif // QT_CONFIG(temporaryfile)
 }
 
-Unit *CompilationUnit::createUnitData(QmlIR::Document *irDocument)
-{
-    if (!irDocument->javaScriptCompilationUnit->data)
-        return irDocument->jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
-
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = irDocument->javaScriptCompilationUnit;
-    QV4::CompiledData::Unit *jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
-    // Discard the old QML tables as the caller will re-create them anyway.
-    quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
-    char *unitCopy = (char*)malloc(unitSizeWithoutQMLTables);
-    memcpy(unitCopy, jsUnit, unitSizeWithoutQMLTables);
-    jsUnit = reinterpret_cast<QV4::CompiledData::Unit*>(unitCopy);
-    jsUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-    jsUnit->unitSize = unitSizeWithoutQMLTables;
-
-    QV4::Compiler::StringTableGenerator &stringTable = irDocument->jsGenerator.stringTable;
-
-    if (jsUnit->sourceFileIndex == quint32(0) || stringTable.stringForIndex(jsUnit->sourceFileIndex) != irDocument->jsModule.fileName) {
-        jsUnit->sourceFileIndex = stringTable.registerString(irDocument->jsModule.fileName);
-        jsUnit->finalUrlIndex = stringTable.registerString(irDocument->jsModule.finalUrl);
-    }
-
-    return jsUnit;
-}
-
 void CompilationUnit::setUnitData(const Unit *unitData)
 {
     data = unitData;

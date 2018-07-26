@@ -1018,9 +1018,6 @@ public:
         return refCount.load();
     }
 
-    // Called only when building QML, when we build the header for JS first and append QML data
-    Unit *createUnitData(QmlIR::Document *irDocument);
-
     const Unit *unitData() const { return data; }
     void setUnitData(const Unit *unitData);
 

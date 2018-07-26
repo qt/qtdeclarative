@@ -84,6 +84,8 @@ struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
 
     uint sizeOfTableAndData() const { return stringDataSize + stringCount() * sizeof(uint); }
 
+    void freeze() { frozen = true; }
+
     void clear();
 
     void initializeFromBackingUnit(const CompiledData::Unit *unit);
@@ -95,6 +97,7 @@ private:
     QStringList strings;
     uint stringDataSize;
     uint backingUnitTableSize = 0;
+    bool frozen = false;
 };
 
 struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {

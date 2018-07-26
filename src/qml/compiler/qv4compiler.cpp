@@ -55,6 +55,7 @@ QV4::Compiler::StringTableGenerator::StringTableGenerator()
 
 int QV4::Compiler::StringTableGenerator::registerString(const QString &str)
 {
+    Q_ASSERT(!frozen);
     QHash<QString, int>::ConstIterator it = stringToId.constFind(str);
     if (it != stringToId.cend())
         return *it;
@@ -75,6 +76,7 @@ void QV4::Compiler::StringTableGenerator::clear()
     strings.clear();
     stringToId.clear();
     stringDataSize = 0;
+    frozen = false;
 }
 
 void QV4::Compiler::StringTableGenerator::initializeFromBackingUnit(const QV4::CompiledData::Unit *unit)
