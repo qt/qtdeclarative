@@ -1551,7 +1551,7 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
     return QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr);
 }
 
-QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
+void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
 
@@ -1798,7 +1798,7 @@ QV4::CompiledData::Unit *QmlUnitGenerator::generate(Document &output, const QV4:
         qDebug() << "    " << totalStringSize << "bytes total strings";
     }
 
-    return qmlUnit;
+    compilationUnit->setUnitData(qmlUnit);
 }
 
 char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const

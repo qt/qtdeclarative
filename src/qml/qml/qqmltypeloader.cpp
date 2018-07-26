@@ -3008,10 +3008,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     irUnit.javaScriptCompilationUnit = unit;
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::Unit *unitData = qmlGenerator.generate(irUnit);
-    Q_ASSERT(!unit->unitData());
-    // The js unit owns the data and will free the qml unit.
-    unit->setUnitData(unitData);
+    qmlGenerator.generate(irUnit);
 
     if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
         QString errorString;

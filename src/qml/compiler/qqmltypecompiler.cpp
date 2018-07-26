@@ -161,11 +161,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     // Generate QML compiled type data structures
 
     QmlIR::QmlUnitGenerator qmlGenerator;
-    QV4::CompiledData::Unit *qmlUnit = qmlGenerator.generate(*document, dependencyHasher);
-
-    Q_ASSERT(document->javaScriptCompilationUnit);
-    // The js unit owns the data and will free the qml unit.
-    document->javaScriptCompilationUnit->setUnitData(qmlUnit);
+    qmlGenerator.generate(*document, dependencyHasher);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit = document->javaScriptCompilationUnit;

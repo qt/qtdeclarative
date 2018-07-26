@@ -162,7 +162,7 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc, 
     return true;
 }
 
-using SaveFunction = std::function<bool (QV4::CompiledData::CompilationUnit *, QString *)>;
+using SaveFunction = std::function<bool (const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &, QString *)>;
 
 static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFunction, Error *error)
 {
@@ -232,12 +232,12 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 
         QmlIR::QmlUnitGenerator generator;
         irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
+        generator.generate(irDocument);
+        QV4::CompiledData::Unit *unit = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
         unit->flags |= QV4::CompiledData::Unit::PendingTypeCompilation;
-        irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!saveFunction(irDocument.javaScriptCompilationUnit.data(), &error->message))
+        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message))
             return false;
 
         free(unit);
@@ -321,14 +321,13 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         irDocument.jsModule.fileName.clear();
         irDocument.jsModule.finalUrl.clear();
 
-        QmlIR::QmlUnitGenerator generator;
-
         irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
-        QV4::CompiledData::Unit *unit = generator.generate(irDocument);
+        QmlIR::QmlUnitGenerator generator;
+        generator.generate(irDocument);
+        QV4::CompiledData::Unit *unit = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
         unit->flags |= QV4::CompiledData::Unit::StaticData;
-        irDocument.javaScriptCompilationUnit->data = unit;
 
-        if (!saveFunction(irDocument.javaScriptCompilationUnit.data(), &error->message)) {
+        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message)) {
             engine->setDirectives(oldDirs);
             return false;
         }
@@ -339,7 +338,8 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
     return true;
 }
 
-static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName, QV4::CompiledData::CompilationUnit *unit, QString *errorString)
+static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
+                          const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, QString *errorString)
 {
     QSaveFile f(outputFileName);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -527,12 +527,12 @@ int main(int argc, char **argv)
 
         inputFileUrl = QStringLiteral("qrc://") + inputResourcePath;
 
-        saveFunction = [inputResourcePath, outputFileName](QV4::CompiledData::CompilationUnit *unit, QString *errorString) {
+        saveFunction = [inputResourcePath, outputFileName](const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, QString *errorString) {
             return saveUnitAsCpp(inputResourcePath, outputFileName, unit, errorString);
         };
 
     } else {
-        saveFunction = [outputFileName](QV4::CompiledData::CompilationUnit *unit, QString *errorString) {
+        saveFunction = [outputFileName](const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit, QString *errorString) {
             return unit->saveToDisk(outputFileName, errorString);
         };
     }

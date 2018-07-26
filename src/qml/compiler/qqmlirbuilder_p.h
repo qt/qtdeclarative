@@ -563,7 +563,7 @@ public:
 
 struct Q_QML_PRIVATE_EXPORT QmlUnitGenerator
 {
-    QV4::CompiledData::Unit *generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher = QV4::CompiledData::DependentTypesHasher());
+    void generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher = QV4::CompiledData::DependentTypesHasher());
 
 private:
     typedef bool (Binding::*BindingFilter)() const;
