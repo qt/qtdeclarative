@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -53,18 +53,20 @@ Item {
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
             }
-            onTapped: { // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
+            onTapped: { // 'eventPoint' is a signal parameter of type QQuickEventPoint*
+                console.log("tapped button " + eventPoint.event.button + " @ " + eventPoint.scenePosition +
+                            " on device '" + eventPoint.event.device.name + "' " + (tapCount > 1 ? (tapCount + " times") : "for the first time"))
                 if (tapCount > 1) {
                     tapCountLabel.text = tapCount
                     flashAnimation.start()
                 } else {
-                    borderBlink.start()
+                    borderBlink.tapFeedback(eventPoint.event.button)
                 }
             }
             onLongPressed: longPressFeedback.createObject(rect,
                 {"x": point.position.x, "y": point.position.y,
-                 "text": Math.round(handler.timeHeld).toFixed(3) + " sec",
-                 "color": borderBlink.blinkColor})
+                 "text": handler.timeHeld.toFixed(3) + " sec",
+                 "color": buttonToBlinkColor(point.pressedButtons)})
         }
 
         Text {
@@ -99,7 +101,7 @@ Item {
             radius: handler.timeHeld * 100
             visible: radius > 0 && handler.pressed
             border.width: 3
-            border.color: borderBlink.blinkColor
+            border.color: buttonToBlinkColor(handler.point.pressedButtons)
             color: "transparent"
             width: radius * 2
             height: radius * 2
@@ -115,18 +117,24 @@ Item {
 
         SequentialAnimation {
             id: borderBlink
-            property color blinkColor: (function(pbtns) {
-                switch (pbtns) {
-                case Qt.MiddleButton: return "orange";
-                case Qt.RightButton:  return "magenta";
-                default:              return "green";
-                }
-            })(handler.point.pressedButtons)
+            property color blinkColor: "red"
+            function tapFeedback(button) {
+                blinkColor = buttonToBlinkColor(button);
+                start();
+            }
             loops: 3
             ScriptAction { script: rect.border.color = borderBlink.blinkColor }
             PauseAnimation { duration: 100 }
             ScriptAction { script: rect.border.color = "transparent" }
             PauseAnimation { duration: 100 }
+        }
+    }
+
+    function buttonToBlinkColor(button) {
+        switch (button) {
+        case Qt.MiddleButton: return "orange";
+        case Qt.RightButton:  return "magenta";
+        default:              return "green";
         }
     }
 

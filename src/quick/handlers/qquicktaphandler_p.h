@@ -94,9 +94,9 @@ Q_SIGNALS:
     void timeHeldChanged();
     void longPressThresholdChanged();
     void gesturePolicyChanged();
-    void tapped();
-    void singleTapped();
-    void doubleTapped();
+    void tapped(QQuickEventPoint *eventPoint);
+    void singleTapped(QQuickEventPoint *eventPoint);
+    void doubleTapped(QQuickEventPoint *eventPoint);
     void longPressed();
 
 protected:
