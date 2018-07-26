@@ -3097,7 +3097,6 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Com
 
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
-    Q_ASSERT(m_scriptData->m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsQml);
     const QV4::CompiledData::Unit *qmlUnit = m_scriptData->m_precompiledScript->unitData();
 
     QList<QQmlError> errors;

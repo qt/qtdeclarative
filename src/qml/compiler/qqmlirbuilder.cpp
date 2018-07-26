@@ -1613,7 +1613,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
     qmlUnit->unitSize = totalSize;
-    qmlUnit->flags |= QV4::CompiledData::Unit::IsQml;
     // This unit's memory was allocated with malloc on the heap, so it's
     // definitely not suitable for StaticData access.
     qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;

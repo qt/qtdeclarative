@@ -776,11 +776,10 @@ struct Unit
 
     enum : unsigned int {
         IsJavascript = 0x1,
-        IsQml = 0x2,
-        StaticData = 0x4, // Unit data persistent in memory?
-        IsSingleton = 0x8,
-        IsSharedLibrary = 0x10, // .pragma shared?
-        PendingTypeCompilation = 0x20 // the QML data structures present are incomplete and require type compilation
+        StaticData = 0x2, // Unit data persistent in memory?
+        IsSingleton = 0x4,
+        IsSharedLibrary = 0x8, // .pragma shared?
+        PendingTypeCompilation = 0x10 // the QML data structures present are incomplete and require type compilation
     };
     quint32_le flags;
     quint32_le stringTableSize;
