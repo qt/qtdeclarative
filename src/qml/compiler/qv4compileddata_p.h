@@ -1082,6 +1082,7 @@ public:
 
     QScopedPointer<CompilationUnitMapper> backingFile;
     const QV4::CompiledData::Unit *backingUnit = nullptr;
+    QStringList dynamicStrings;
 
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
@@ -1094,6 +1095,8 @@ public:
             if (index < backingUnitStringTableSize)
                 return backingUnit->stringAtInternal(index);
             index -= backingUnitStringTableSize;
+            Q_ASSERT(data->stringTableSize == 0);
+            return dynamicStrings.at(index);
         }
         return data->stringAtInternal(index);
     }

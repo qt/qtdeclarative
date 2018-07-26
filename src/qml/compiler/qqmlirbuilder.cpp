@@ -1575,6 +1575,13 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     // No more new strings after this point, we're calculating offsets.
     output.jsGenerator.stringTable.freeze();
 
+    const bool writeStringTable =
+#ifndef V4_BOOTSTRAP
+            output.javaScriptCompilationUnit->backingUnit == nullptr;
+#else
+            true;
+#endif
+
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
 
@@ -1598,7 +1605,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectsSize += enumTableSize;
     }
 
-    const int totalSize = jsUnitSize + importSize + objectOffsetTableSize + objectsSize + output.jsGenerator.stringTable.sizeOfTableAndData();
+    const int totalSize = jsUnitSize + importSize + objectOffsetTableSize + objectsSize + (writeStringTable ? output.jsGenerator.stringTable.sizeOfTableAndData() : 0);
     char *data = (char*)malloc(totalSize);
     memcpy(data, jsUnit, jsUnitSize);
     memset(data + jsUnitSize, 0, totalSize - jsUnitSize);
@@ -1614,8 +1621,13 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     qmlUnit->nImports = output.imports.count();
     qmlUnit->offsetToObjects = jsUnitSize + importSize;
     qmlUnit->nObjects = output.objects.count();
-    qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
-    qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
+    if (writeStringTable) {
+        qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
+        qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
+    } else {
+        qmlUnit->offsetToStringTable = 0;
+        qmlUnit->stringTableSize = 0;
+    }
     qmlUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
     qmlUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
 
@@ -1772,7 +1784,12 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         }
     }
 
-    output.jsGenerator.stringTable.serialize(qmlUnit);
+    if (writeStringTable)
+        output.jsGenerator.stringTable.serialize(qmlUnit);
+#ifndef V4_BOOTSTRAP
+    else
+        output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
+#endif
 
     qmlUnit->generateChecksum();
 

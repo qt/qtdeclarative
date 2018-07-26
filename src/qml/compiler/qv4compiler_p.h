@@ -91,6 +91,7 @@ struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     void initializeFromBackingUnit(const CompiledData::Unit *unit);
 
     void serialize(CompiledData::Unit *unit);
+    QStringList allStrings() const { return strings.mid(backingUnitTableSize); }
 
 private:
     QHash<QString, int> stringToId;
