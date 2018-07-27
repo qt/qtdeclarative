@@ -1553,34 +1553,70 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
 
 void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
-
-    const QV4::CompiledData::Unit *jsUnit = nullptr;
-    uint jsUnitSize = 0;
-
-    // We may already have unit data if we're loading an ahead-of-time generated cache file.
-    if (compilationUnit->data) {
-        jsUnit = const_cast<QV4::CompiledData::Unit*>(compilationUnit->data);
-        // Discard the old QML tables we will re-create further down anyway.
-        quint32 unitSizeWithoutQMLTables = jsUnit->offsetToImports;
-        jsUnitSize = unitSizeWithoutQMLTables;
-    } else {
-        jsUnit = output.jsGenerator.generateUnit(QV4::Compiler::JSUnitGenerator::GenerateWithoutStringTable);
-        jsUnitSize = jsUnit->unitSize;
-    }
-
     output.jsGenerator.stringTable.registerString(output.jsModule.fileName);
     output.jsGenerator.stringTable.registerString(output.jsModule.finalUrl);
 
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = output.javaScriptCompilationUnit;
+
+    const QV4::CompiledData::Unit *jsUnit = nullptr;
+    std::function<QV4::CompiledData::QmlUnit *(QV4::CompiledData::QmlUnit *, uint)> unitFinalizer
+            = [](QV4::CompiledData::QmlUnit *unit, uint) {
+        return unit;
+    };
+
+    // We may already have unit data if we're loading an ahead-of-time generated cache file.
+    if (compilationUnit->data) {
+        jsUnit = compilationUnit->data;
+#ifndef V4_BOOTSTRAP
+        output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
+#endif
+    } else {
+        QV4::CompiledData::Unit *createdUnit;
+        jsUnit = createdUnit = output.jsGenerator.generateUnit();
+
+        // enable flag if we encountered pragma Singleton
+        for (Pragma *p : qAsConst(output.pragmas)) {
+            if (p->type == Pragma::PragmaSingleton) {
+                createdUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
+                break;
+            }
+        }
+        // This unit's memory was allocated with malloc on the heap, so it's
+        // definitely not suitable for StaticData access.
+        createdUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
+
+#ifndef V4_BOOTSTRAP
+        if (dependencyHasher) {
+            QCryptographicHash hash(QCryptographicHash::Md5);
+            if (dependencyHasher(&hash)) {
+                QByteArray checksum = hash.result();
+                Q_ASSERT(checksum.size() == sizeof(createdUnit->dependencyMD5Checksum));
+                memcpy(createdUnit->dependencyMD5Checksum, checksum.constData(), sizeof(createdUnit->dependencyMD5Checksum));
+            }
+        }
+#else
+        Q_UNUSED(dependencyHasher);
+#endif
+        createdUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
+        createdUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
+
+        // Combine the qml data into the general unit data.
+        unitFinalizer = [&jsUnit](QV4::CompiledData::QmlUnit *qmlUnit, uint qmlDataSize) {
+            void *ptr = const_cast<QV4::CompiledData::Unit*>(jsUnit);
+            QV4::CompiledData::Unit *newUnit = (QV4::CompiledData::Unit *)realloc(ptr, jsUnit->unitSize + qmlDataSize);
+            jsUnit = newUnit;
+            newUnit->offsetToQmlUnit = newUnit->unitSize;
+            newUnit->unitSize += qmlDataSize;
+            memcpy(const_cast<QV4::CompiledData::QmlUnit *>(newUnit->qmlUnit()), qmlUnit, qmlDataSize);
+            free(const_cast<QV4::CompiledData::QmlUnit*>(qmlUnit));
+            qmlUnit = nullptr;
+            newUnit->generateChecksum();
+            return const_cast<QV4::CompiledData::QmlUnit*>(newUnit->qmlUnit());
+        };
+    }
+
     // No more new strings after this point, we're calculating offsets.
     output.jsGenerator.stringTable.freeze();
-
-    const bool writeStringTable =
-#ifndef V4_BOOTSTRAP
-            output.javaScriptCompilationUnit->backingUnit == nullptr;
-#else
-            true;
-#endif
 
     const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
     const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
@@ -1589,7 +1625,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     int objectsSize = 0;
     for (Object *o : qAsConst(output.objects)) {
-        objectOffsets.insert(o, jsUnitSize + importSize + objectOffsetTableSize + objectsSize);
+        objectOffsets.insert(o, sizeof(QV4::CompiledData::QmlUnit) + importSize + objectOffsetTableSize + objectsSize);
         objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
@@ -1605,43 +1641,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectsSize += enumTableSize;
     }
 
-    const int totalSize = jsUnitSize + importSize + objectOffsetTableSize + objectsSize + (writeStringTable ? output.jsGenerator.stringTable.sizeOfTableAndData() : 0);
+    const uint totalSize = sizeof(QV4::CompiledData::QmlUnit) + importSize + objectOffsetTableSize + objectsSize;
     char *data = (char*)malloc(totalSize);
-    memcpy(data, jsUnit, jsUnitSize);
-    memset(data + jsUnitSize, 0, totalSize - jsUnitSize);
-    jsUnit = nullptr;
-
-    QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(data);
-    qmlUnit->unitSize = totalSize;
-    // This unit's memory was allocated with malloc on the heap, so it's
-    // definitely not suitable for StaticData access.
-    qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-    qmlUnit->offsetToImports = jsUnitSize;
+    memset(data, 0, totalSize);
+    QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<QV4::CompiledData::QmlUnit *>(data);
+    qmlUnit->offsetToImports = sizeof(*qmlUnit);
     qmlUnit->nImports = output.imports.count();
-    qmlUnit->offsetToObjects = jsUnitSize + importSize;
+    qmlUnit->offsetToObjects = qmlUnit->offsetToImports + importSize;
     qmlUnit->nObjects = output.objects.count();
-    if (writeStringTable) {
-        qmlUnit->offsetToStringTable = totalSize - output.jsGenerator.stringTable.sizeOfTableAndData();
-        qmlUnit->stringTableSize = output.jsGenerator.stringTable.stringCount();
-    } else {
-        qmlUnit->offsetToStringTable = 0;
-        qmlUnit->stringTableSize = 0;
-    }
-    qmlUnit->sourceFileIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.fileName);
-    qmlUnit->finalUrlIndex = output.jsGenerator.stringTable.getStringId(output.jsModule.finalUrl);
-
-#ifndef V4_BOOTSTRAP
-    if (dependencyHasher) {
-        QCryptographicHash hash(QCryptographicHash::Md5);
-        if (dependencyHasher(&hash)) {
-            QByteArray checksum = hash.result();
-            Q_ASSERT(checksum.size() == sizeof(qmlUnit->dependencyMD5Checksum));
-            memcpy(qmlUnit->dependencyMD5Checksum, checksum.constData(), sizeof(qmlUnit->dependencyMD5Checksum));
-        }
-    }
-#else
-    Q_UNUSED(dependencyHasher);
-#endif
 
     // write imports
     char *importPtr = data + qmlUnit->offsetToImports;
@@ -1775,46 +1782,31 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectPtr += enumTableSize;
     }
 
-    // enable flag if we encountered pragma Singleton
-    for (Pragma *p : qAsConst(output.pragmas)) {
-        if (p->type == Pragma::PragmaSingleton) {
-            qmlUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
-            break;
-        }
-    }
-
-    if (writeStringTable)
-        output.jsGenerator.stringTable.serialize(qmlUnit);
-#ifndef V4_BOOTSTRAP
-    else
-        output.javaScriptCompilationUnit->dynamicStrings = output.jsGenerator.stringTable.allStrings();
-#endif
-
-    qmlUnit->generateChecksum();
+    qmlUnit = unitFinalizer(qmlUnit, totalSize);
 
     static const bool showStats = qEnvironmentVariableIsSet("QML_SHOW_UNIT_STATS");
     if (showStats) {
-        qDebug() << "Generated QML unit that is" << qmlUnit->unitSize << "bytes big contains:";
-        qDebug() << "    " << qmlUnit->functionTableSize << "functions";
-        qDebug() << "    " << jsUnitSize << "for JS unit";
+        qDebug() << "Generated QML unit that is" << totalSize << "bytes big contains:";
+        qDebug() << "    " << jsUnit->functionTableSize << "functions";
+        qDebug() << "    " << jsUnit->unitSize << "for JS unit";
         qDebug() << "    " << importSize << "for imports";
         qDebug() << "    " << objectsSize << "for" << qmlUnit->nObjects << "objects";
         quint32 totalBindingCount = 0;
         for (quint32 i = 0; i < qmlUnit->nObjects; ++i)
-            totalBindingCount += qmlUnit->objectAtInternal(i)->nBindings;
+            totalBindingCount += qmlUnit->objectAt(i)->nBindings;
         qDebug() << "    " << totalBindingCount << "bindings";
         quint32 totalCodeSize = 0;
-        for (quint32 i = 0; i < qmlUnit->functionTableSize; ++i)
-            totalCodeSize += qmlUnit->functionAt(i)->codeSize;
+        for (quint32 i = 0; i < jsUnit->functionTableSize; ++i)
+            totalCodeSize += jsUnit->functionAt(i)->codeSize;
         qDebug() << "    " << totalCodeSize << "bytes total byte code";
-        qDebug() << "    " << qmlUnit->stringTableSize << "strings";
+        qDebug() << "    " << jsUnit->stringTableSize << "strings";
         quint32 totalStringSize = 0;
-        for (quint32 i = 0; i < qmlUnit->stringTableSize; ++i)
-            totalStringSize += QV4::CompiledData::String::calculateSize(qmlUnit->stringAtInternal(i));
+        for (quint32 i = 0; i < jsUnit->stringTableSize; ++i)
+            totalStringSize += QV4::CompiledData::String::calculateSize(jsUnit->stringAtInternal(i));
         qDebug() << "    " << totalStringSize << "bytes total strings";
     }
 
-    compilationUnit->setUnitData(qmlUnit);
+    compilationUnit->setUnitData(jsUnit, qmlUnit, output.jsModule.fileName, output.jsModule.finalUrl);
 }
 
 char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const
@@ -2388,8 +2380,10 @@ void IRLoader::load()
 {
     output->jsGenerator.stringTable.initializeFromBackingUnit(unit);
 
-    for (quint32 i = 0; i < unit->nImports; ++i)
-        output->imports << unit->importAtInternal(i);
+    const QV4::CompiledData::QmlUnit *qmlUnit = unit->qmlUnit();
+
+    for (quint32 i = 0; i < qmlUnit->nImports; ++i)
+        output->imports << qmlUnit->importAt(i);
 
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton) {
         QmlIR::Pragma *p = New<QmlIR::Pragma>();
@@ -2398,8 +2392,8 @@ void IRLoader::load()
         output->pragmas << p;
     }
 
-    for (uint i = 0; i < unit->nObjects; ++i) {
-        const QV4::CompiledData::Object *serializedObject = unit->objectAtInternal(i);
+    for (uint i = 0; i < qmlUnit->nObjects; ++i) {
+        const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);
         QmlIR::Object *object = loadObject(serializedObject);
         output->objects.append(object);
     }

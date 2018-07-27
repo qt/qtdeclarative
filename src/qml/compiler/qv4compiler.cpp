@@ -590,10 +590,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.sourceFileIndex = getStringId(module->fileName);
     unit.finalUrlIndex = getStringId(module->finalUrl);
     unit.sourceTimeStamp = module->sourceTimeStamp.isValid() ? module->sourceTimeStamp.toMSecsSinceEpoch() : 0;
-    unit.nImports = 0;
-    unit.offsetToImports = 0;
-    unit.nObjects = 0;
-    unit.offsetToObjects = 0;
+    unit.offsetToQmlUnit = 0;
 
     unit.unitSize = nextOffset;
 

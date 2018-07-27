@@ -99,8 +99,15 @@ CompilationUnit::CompilationUnit(const Unit *unitData)
 CompilationUnit::~CompilationUnit()
 {
     unlink();
-    if (data && !(data->flags & QV4::CompiledData::Unit::StaticData))
-        free(const_cast<Unit *>(data));
+
+    if (data) {
+        if (data->qmlUnit() != qmlData)
+            free(const_cast<QmlUnit *>(qmlData));
+        qmlData = nullptr;
+
+        if (!(data->flags & QV4::CompiledData::Unit::StaticData))
+            free(const_cast<Unit *>(data));
+    }
     data = nullptr;
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     delete [] constants;
@@ -463,15 +470,21 @@ bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString)
 #endif // QT_CONFIG(temporaryfile)
 }
 
-void CompilationUnit::setUnitData(const Unit *unitData)
+void CompilationUnit::setUnitData(const Unit *unitData, const QmlUnit *qmlUnit,
+                                  const QString &fileName, const QString &finalUrlString)
 {
     data = unitData;
+    qmlData = nullptr;
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     delete [] constants;
 #endif
     constants = nullptr;
+    m_fileName.clear();
+    m_finalUrlString.clear();
     if (!data)
         return;
+
+    qmlData = qmlUnit ? qmlUnit : data->qmlUnit();
 
 #if Q_BYTE_ORDER == Q_BIG_ENDIAN
     Value *bigEndianConstants = new Value[data->constantTableSize];
@@ -482,6 +495,9 @@ void CompilationUnit::setUnitData(const Unit *unitData)
 #else
     constants = reinterpret_cast<const Value*>(data->constants());
 #endif
+
+    m_fileName = !fileName.isEmpty() ? fileName : stringAt(data->sourceFileIndex);
+    m_finalUrlString = !finalUrlString.isEmpty() ? finalUrlString : stringAt(data->finalUrlIndex);
 }
 
 #ifndef V4_BOOTSTRAP

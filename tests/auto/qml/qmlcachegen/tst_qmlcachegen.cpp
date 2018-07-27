@@ -165,7 +165,7 @@ void tst_qmlcachegen::loadGeneratedFile()
     QVERIFY(compilationUnit);
     auto unitData = compilationUnit->unitData();
     QVERIFY(unitData);
-    QVERIFY(!(unitData->flags & QV4::CompiledData::Unit::StaticData));
+    QVERIFY(unitData->flags & QV4::CompiledData::Unit::StaticData);
 }
 
 void tst_qmlcachegen::translationExpressionSupport()
@@ -236,13 +236,11 @@ void tst_qmlcachegen::signalHandlerParameters()
     QVERIFY(QFile::exists(cacheFilePath));
     QVERIFY(QFile::remove(testFilePath));
 
-    quint32 oldImportsOffset = 0;
     {
         QFile cache(cacheFilePath);
         QVERIFY(cache.open(QIODevice::ReadOnly));
         const QV4::CompiledData::Unit *cacheUnit = reinterpret_cast<const QV4::CompiledData::Unit *>(cache.map(/*offset*/0, sizeof(QV4::CompiledData::Unit)));
         QVERIFY(cacheUnit);
-        oldImportsOffset = cacheUnit->offsetToImports;
     }
 
     QQmlEngine engine;
@@ -259,19 +257,18 @@ void tst_qmlcachegen::signalHandlerParameters()
         QVERIFY(compilationUnit);
         QVERIFY(compilationUnit->unitData());
 
-        // Verify that the JS unit is used unchanged, no tables were added, by checking the
-        // offset of the first QML specific table.
-        QCOMPARE(quint32(compilationUnit->unitData()->offsetToImports), oldImportsOffset);
+        // Verify that the QML objects don't come from the original data.
+        QVERIFY(compilationUnit->objectAt(0) != compilationUnit->unitData()->qmlUnit()->objectAt(0));
 
         // Typically the final file name is one of those strings that is not in the original
         // pre-compiled qml file's string table, while for example the signal parameter
         // name ("value") is.
-        const auto isStringIndexInOriginalStringTable = [compilationUnit](uint index) {
-            return index < compilationUnit->backingUnit->stringTableSize;
+        const auto isStringIndexInStringTable = [compilationUnit](uint index) {
+            return index < compilationUnit->unitData()->stringTableSize;
         };
 
-        QVERIFY(isStringIndexInOriginalStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
-        QVERIFY(!isStringIndexInOriginalStringTable(compilationUnit->unitData()->sourceFileIndex));
+        QVERIFY(isStringIndexInStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
+        QVERIFY(!compilationUnit->dynamicStrings.isEmpty());
     }
 }
 

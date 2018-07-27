@@ -272,9 +272,11 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
+        const QV4::CompiledData::QmlUnit *qmlUnit = testUnit->qmlUnit();
 
-        const QV4::CompiledData::Object *obj = testUnit->objectAtInternal(0);
+        QCOMPARE(quint32(qmlUnit->nObjects), quint32(1));
+
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(1));
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Script));
         QCOMPARE(quint32(obj->bindingTable()->value.compiledScriptIndex), quint32(0));
@@ -298,9 +300,11 @@ void tst_qmldiskcache::regenerateAfterChange()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(quint32(testUnit->nObjects), quint32(1));
+        const QV4::CompiledData::QmlUnit *qmlUnit = testUnit->qmlUnit();
 
-        const QV4::CompiledData::Object *obj = testUnit->objectAtInternal(0);
+        QCOMPARE(quint32(qmlUnit->nObjects), quint32(1));
+
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(2));
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Number));
         QCOMPARE(obj->bindingTable()->valueAsNumber(reinterpret_cast<const QV4::Value *>(testUnit->constants())), double(42));
@@ -331,21 +335,22 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         const QV4::CompiledData::Unit *testUnit = testCompiler.mapUnit();
         QVERIFY2(testUnit, qPrintable(testCompiler.lastErrorString));
 
-        QCOMPARE(quint32(testUnit->nImports), quint32(2));
-        QCOMPARE(testUnit->stringAtInternal(testUnit->importAtInternal(0)->uriIndex), QStringLiteral("QtQuick"));
+        const QV4::CompiledData::QmlUnit *qmlUnit = testUnit->qmlUnit();
+        QCOMPARE(quint32(qmlUnit->nImports), quint32(2));
+        QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(0)->uriIndex), QStringLiteral("QtQuick"));
 
         QQmlType componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
 
-        QCOMPARE(testUnit->stringAtInternal(testUnit->importAtInternal(1)->uriIndex), QString(componentType.module()));
-        QCOMPARE(testUnit->stringAtInternal(testUnit->importAtInternal(1)->qualifierIndex), QStringLiteral("QmlInternals"));
+        QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(1)->uriIndex), QString(componentType.module()));
+        QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(1)->qualifierIndex), QStringLiteral("QmlInternals"));
 
-        QCOMPARE(quint32(testUnit->nObjects), quint32(3));
+        QCOMPARE(quint32(qmlUnit->nObjects), quint32(3));
 
-        const QV4::CompiledData::Object *obj = testUnit->objectAtInternal(0);
+        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(0);
         QCOMPARE(quint32(obj->nBindings), quint32(1));
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Object));
 
-        const QV4::CompiledData::Object *implicitComponent = testUnit->objectAtInternal(obj->bindingTable()->value.objectIndex);
+        const QV4::CompiledData::Object *implicitComponent = qmlUnit->objectAt(obj->bindingTable()->value.objectIndex);
         QCOMPARE(testUnit->stringAtInternal(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType.elementName());
     }
 }
