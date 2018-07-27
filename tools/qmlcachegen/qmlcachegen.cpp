@@ -317,6 +317,10 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
             return false;
         }
 
+        // Precompiled files are relocatable and the final location will be set when loading.
+        irDocument.jsModule.fileName.clear();
+        irDocument.jsModule.finalUrl.clear();
+
         QmlIR::QmlUnitGenerator generator;
 
         irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);

@@ -57,9 +57,12 @@ private slots:
     void trickyPaths_data();
     void trickyPaths();
 
-    void scriptImport();
+    void qrcScriptImport();
+    void fsScriptImport();
 
     void enums();
+
+    void sourceFileIndices();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -145,6 +148,7 @@ void tst_qmlcachegen::loadGeneratedFile()
         QVERIFY(cacheUnit);
         QVERIFY(cacheUnit->flags & QV4::CompiledData::Unit::StaticData);
         QVERIFY(cacheUnit->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
+        QCOMPARE(uint(cacheUnit->sourceFileIndex), uint(0));
     }
 
     QVERIFY(QFile::remove(testFilePath));
@@ -443,13 +447,67 @@ void tst_qmlcachegen::trickyPaths()
     QCOMPARE(obj->property("success").toInt(), 42);
 }
 
-void tst_qmlcachegen::scriptImport()
+void tst_qmlcachegen::qrcScriptImport()
 {
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl("qrc:///jsimport.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 42);
+}
+
+void tst_qmlcachegen::fsScriptImport()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
+        QFile f(tempDir.path() + '/' + fileName);
+        const bool ok = f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        Q_ASSERT(ok);
+        f.write(contents);
+        return f.fileName();
+    };
+
+    const QString testFilePath = writeTempFile(
+            "test.qml",
+            "import QtQml 2.0\n"
+            "import \"test.js\" as ScriptTest\n"
+            "QtObject {\n"
+            "    property int value: ScriptTest.value\n"
+            "}\n");
+
+    const QString scriptFilePath = writeTempFile(
+            "test.js",
+            "var value = 42"
+            );
+
+    QVERIFY(generateCache(scriptFilePath));
+    QVERIFY(generateCache(testFilePath));
+
+    const QString scriptCacheFilePath = scriptFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(scriptFilePath));
+
+    {
+        QFile cache(scriptCacheFilePath);
+        QVERIFY(cache.open(QIODevice::ReadOnly));
+        const QV4::CompiledData::Unit *cacheUnit = reinterpret_cast<const QV4::CompiledData::Unit *>(cache.map(/*offset*/0, sizeof(QV4::CompiledData::Unit)));
+        QVERIFY(cacheUnit);
+        QVERIFY(cacheUnit->flags & QV4::CompiledData::Unit::StaticData);
+        QVERIFY(!(cacheUnit->flags & QV4::CompiledData::Unit::PendingTypeCompilation));
+        QCOMPARE(uint(cacheUnit->sourceFileIndex), uint(0));
+    }
+
+    // Remove source code to make sure that when loading succeeds, it is because we loaded
+    // the existing cache files.
+    QVERIFY(QFile::remove(testFilePath));
+    QVERIFY(QFile::remove(scriptFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("value").toInt(), 42);
 }
 
 void tst_qmlcachegen::enums()
@@ -459,6 +517,18 @@ void tst_qmlcachegen::enums()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 200);
+}
+
+void tst_qmlcachegen::sourceFileIndices()
+{
+    QVERIFY(QFile::exists(":/versionchecks.qml"));
+    QCOMPARE(QFileInfo(":/versionchecks.qml").size(), 0);
+
+    QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+    const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/versionchecks.qml"), &error);
+    QVERIFY(unitFromResources);
+    QVERIFY(unitFromResources->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
+    QCOMPARE(uint(unitFromResources->sourceFileIndex), uint(0));
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

@@ -495,6 +495,10 @@ void tst_qmldiskcache::recompileAfterDirectoryChange()
         testCompiler.clearCache();
         QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
         QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+        const QV4::CompiledData::Unit *unit = testCompiler.mapUnit();
+        QVERIFY(unit->sourceFileIndex != 0);
+        const QString expectedPath = QUrl::fromLocalFile(testCompiler.testFilePath).toString();
+        QCOMPARE(unit->stringAt(unit->sourceFileIndex), expectedPath);
         testCompiler.closeMapping();
     }
 
