@@ -270,10 +270,10 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
 IdentifierHash CompilationUnit::createNamedObjectsPerComponent(int componentObjectIndex)
 {
     IdentifierHash namedObjectCache(engine);
-    const CompiledData::Object *component = data->objectAt(componentObjectIndex);
+    const CompiledData::Object *component = objectAt(componentObjectIndex);
     const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
     for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
-        const CompiledData::Object *namedObject = data->objectAt(*namedObjectIndexPtr);
+        const CompiledData::Object *namedObject = objectAt(*namedObjectIndexPtr);
         namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->id);
     }
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
@@ -304,8 +304,8 @@ void CompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine)
     int bindingCount = 0;
     int parserStatusCount = 0;
     int objectCount = 0;
-    for (quint32 i = 0; i < data->nObjects; ++i) {
-        const QV4::CompiledData::Object *obj = data->objectAt(i);
+    for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
+        const QV4::CompiledData::Object *obj = objectAt(i);
         bindingCount += obj->nBindings;
         if (auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
             if (typeRef->type.isValid()) {

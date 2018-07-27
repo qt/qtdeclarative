@@ -168,7 +168,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     compilationUnit->typeNameCache = typeNameCache;
     compilationUnit->resolvedTypes = resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
-    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->unitData()->nObjects));
+    Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->objectCount()));
 
     if (errors.isEmpty())
         return compilationUnit;

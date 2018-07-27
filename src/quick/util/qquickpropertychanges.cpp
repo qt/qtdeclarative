@@ -208,7 +208,7 @@ public:
     bool isExplicit : 1;
 
     void decode();
-    void decodeBinding(const QString &propertyPrefix, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding);
+    void decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &qmlUnit, const QV4::CompiledData::Binding *binding);
 
     class ExpressionChange {
     public:
@@ -259,14 +259,14 @@ void QQuickPropertyChangesPrivate::decode()
         return;
 
     for (const QV4::CompiledData::Binding *binding : qAsConst(bindings))
-        decodeBinding(QString(), compilationUnit->unitData(), binding);
+        decodeBinding(QString(), compilationUnit, binding);
 
     bindings.clear();
 
     decoded = true;
 }
 
-void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding)
+void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     Q_Q(QQuickPropertyChanges);
 
@@ -275,10 +275,10 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
         || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
         QString pre = propertyName + QLatin1Char('.');
-        const QV4::CompiledData::Object *subObj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding) {
-            decodeBinding(pre, qmlUnit, subBinding);
+            decodeBinding(pre, compilationUnit, subBinding);
         }
         return;
     }

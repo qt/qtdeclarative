@@ -2132,8 +2132,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                 return false;
 
             // find the implicit import
-            for (quint32 i = 0; i < m_compiledData->unitData()->nImports; ++i) {
-                const QV4::CompiledData::Import *import = m_compiledData->unitData()->importAt(i);
+            for (quint32 i = 0, count = m_compiledData->importCount(); i < count; ++i) {
+                const QV4::CompiledData::Import *import = m_compiledData->importAt(i);
                 if (m_compiledData->stringAt(import->uriIndex) == QLatin1String(".")
                     && import->qualifierIndex == 0
                     && import->majorVersion == -1
@@ -2149,8 +2149,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
-    for (int i = 0, count = m_compiledData->unitData()->nImports; i < count; ++i) {
-        const QV4::CompiledData::Import *import = m_compiledData->unitData()->importAt(i);
+    for (int i = 0, count = m_compiledData->importCount(); i < count; ++i) {
+        const QV4::CompiledData::Import *import = m_compiledData->importAt(i);
         QList<QQmlError> errors;
         if (!addImport(import, &errors)) {
             Q_ASSERT(errors.size());
@@ -3097,11 +3097,11 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Com
 
     m_importCache.setBaseUrl(finalUrl(), finalUrlString());
 
-    const QV4::CompiledData::Unit *qmlUnit = m_scriptData->m_precompiledScript->unitData();
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> script = m_scriptData->m_precompiledScript;
 
     QList<QQmlError> errors;
-    for (quint32 i = 0; i < qmlUnit->nImports; ++i) {
-        const QV4::CompiledData::Import *import = qmlUnit->importAt(i);
+    for (quint32 i = 0, count = script->importCount(); i < count; ++i) {
+        const QV4::CompiledData::Import *import = script->importAt(i);
         if (!addImport(import, &errors)) {
            Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());

@@ -258,8 +258,8 @@ private:
     TestCaseEnumerationResult enumerateTestCases(CompilationUnit *compilationUnit, const Object *object = nullptr)
     {
         QQmlType testCaseType;
-        for (quint32 i = 0; i < compilationUnit->unitData()->nImports; ++i) {
-            const Import *import = compilationUnit->unitData()->importAt(i);
+        for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
+            const Import *import = compilationUnit->importAt(i);
             if (compilationUnit->stringAt(import->uriIndex) != QLatin1Literal("QtTest"))
                 continue;
 

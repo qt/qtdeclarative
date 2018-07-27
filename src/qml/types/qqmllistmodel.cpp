@@ -2697,14 +2697,14 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::CompiledData:
     return true;
 }
 
-bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Unit *qmlUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
 {
     const QString elementName = compilationUnit->stringAt(binding->propertyNameIndex);
 
     bool roleSet = false;
     if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
         const quint32 targetObjectIndex = binding->value.objectIndex;
-        const QV4::CompiledData::Object *target = qmlUnit->objectAt(targetObjectIndex);
+        const QV4::CompiledData::Object *target = compilationUnit->objectAt(targetObjectIndex);
 
         ListModel *subModel = nullptr;
         if (outterElementIndex == -1) {
@@ -2725,7 +2725,7 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
 
         const QV4::CompiledData::Binding *subBinding = target->bindingTable();
         for (quint32 i = 0; i < target->nBindings; ++i, ++subBinding) {
-            roleSet |= applyProperty(compilationUnit, qmlUnit, subBinding, subModel, elementIndex);
+            roleSet |= applyProperty(compilationUnit, subBinding, subModel, elementIndex);
         }
 
     } else {
@@ -2797,14 +2797,12 @@ void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::
     rv->m_engine = qmlEngine(rv)->handle();
     rv->m_compilationUnit = compilationUnit;
 
-    const QV4::CompiledData::Unit *qmlUnit = compilationUnit->unitData();
-
     bool setRoles = false;
 
     for (const QV4::CompiledData::Binding *binding : bindings) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
             continue;
-        setRoles |= applyProperty(compilationUnit, qmlUnit, binding, rv->m_listModel, /*outter element index*/-1);
+        setRoles |= applyProperty(compilationUnit, binding, rv->m_listModel, /*outter element index*/-1);
     }
 
     if (setRoles == false)

@@ -326,7 +326,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
     QQmlData::get(obj)->hasVMEMetaObject = true;
 
     if (compilationUnit && qmlObjectId >= 0) {
-        compiledObject = compilationUnit->unitData()->objectAt(qmlObjectId);
+        compiledObject = compilationUnit->objectAt(qmlObjectId);
 
         if (compiledObject->nProperties || compiledObject->nFunctions) {
             uint size = compiledObject->nProperties + compiledObject->nFunctions;

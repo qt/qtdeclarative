@@ -166,7 +166,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (subComponentIndex == -1) {
         objectToCreate = /*root object*/0;
     } else {
-        const QV4::CompiledData::Object *compObj = qmlUnit->objectAt(subComponentIndex);
+        const QV4::CompiledData::Object *compObj = compilationUnit->objectAt(subComponentIndex);
         objectToCreate = compObj->bindingTable()->value.objectIndex;
     }
 
@@ -262,7 +262,7 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance, QQmlData::
     int objectIndex = deferredData->deferredIdx;
     qSwap(_compiledObjectIndex, objectIndex);
 
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
 
     qSwap(_ddata, declarativeData);
@@ -322,7 +322,7 @@ bool QQmlObjectCreator::populateDeferredBinding(const QQmlProperty &qmlProperty,
     int objectIndex = deferredData->deferredIdx;
     qSwap(_compiledObjectIndex, objectIndex);
 
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
 
     qSwap(_ddata, declarativeData);
@@ -784,7 +784,7 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
 bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProperty, const QV4::CompiledData::Binding *binding)
 {
     if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-        Q_ASSERT(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
+        Q_ASSERT(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
         QV4::CompiledData::ResolvedTypeReference *tr = resolvedTypes.value(binding->propertyNameIndex);
         Q_ASSERT(tr);
         QQmlType attachedType = tr->type;
@@ -831,7 +831,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         return true;
 
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *obj = compilationUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
 
             QObject *groupObject = nullptr;
@@ -1130,7 +1130,7 @@ void QQmlObjectCreator::createQmlContext()
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
 {
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
     QQmlObjectCreationProfiler profiler(sharedState->profiler.profiler, obj);
 
     ActiveOCRestorer ocRestorer(this, QQmlEnginePrivate::get(engine));
@@ -1257,7 +1257,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         customParser->imports = compilationUnit->typeNameCache.data();
 
         QList<const QV4::CompiledData::Binding *> bindings;
-        const QV4::CompiledData::Object *obj = qmlUnit->objectAt(index);
+        const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
         const QV4::CompiledData::Binding *binding = obj->bindingTable();
         for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
             if (binding->flags & QV4::CompiledData::Binding::IsCustomParserBinding) {
@@ -1424,7 +1424,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_qobject, instance);
     qSwap(_valueTypeProperty, valueTypeProperty);
     qSwap(_compiledObjectIndex, index);
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(_compiledObjectIndex);
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
     qSwap(_compiledObject, obj);
     qSwap(_ddata, declarativeData);
     qSwap(_bindingTarget, bindingTarget);

@@ -1801,7 +1801,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         qDebug() << "    " << objectsSize << "for" << qmlUnit->nObjects << "objects";
         quint32 totalBindingCount = 0;
         for (quint32 i = 0; i < qmlUnit->nObjects; ++i)
-            totalBindingCount += qmlUnit->objectAt(i)->nBindings;
+            totalBindingCount += qmlUnit->objectAtInternal(i)->nBindings;
         qDebug() << "    " << totalBindingCount << "bindings";
         quint32 totalCodeSize = 0;
         for (quint32 i = 0; i < qmlUnit->functionTableSize; ++i)
@@ -2389,7 +2389,7 @@ void IRLoader::load()
     output->jsGenerator.stringTable.initializeFromBackingUnit(unit);
 
     for (quint32 i = 0; i < unit->nImports; ++i)
-        output->imports << unit->importAt(i);
+        output->imports << unit->importAtInternal(i);
 
     if (unit->flags & QV4::CompiledData::Unit::IsSingleton) {
         QmlIR::Pragma *p = New<QmlIR::Pragma>();
@@ -2399,7 +2399,7 @@ void IRLoader::load()
     }
 
     for (uint i = 0; i < unit->nObjects; ++i) {
-        const QV4::CompiledData::Object *serializedObject = unit->objectAt(i);
+        const QV4::CompiledData::Object *serializedObject = unit->objectAtInternal(i);
         QmlIR::Object *object = loadObject(serializedObject);
         output->objects.append(object);
     }

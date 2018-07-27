@@ -2208,7 +2208,7 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = td->compilationUnit();
         compilationUnit->setUnitData(qmlUnit);
 
-        const QV4::CompiledData::Object *rootObject = qmlUnit->objectAt(/*root object*/0);
+        const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
         QCOMPARE(compilationUnit->stringAt(rootObject->inheritedTypeNameIndex), QString("MyTypeObject"));
         quint32 i;
         for (i = 0; i < rootObject->nBindings; ++i) {

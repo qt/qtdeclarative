@@ -54,7 +54,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
     , propertyCaches(compilationUnit->propertyCaches)
     , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)
 {
-    bindingPropertyDataPerObject->resize(qmlUnit->nObjects);
+    bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
 
 QVector<QQmlCompileError> QQmlPropertyValidator::validate()
@@ -82,7 +82,7 @@ struct BindingFinder
 
 QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
-    const QV4::CompiledData::Object *obj = qmlUnit->objectAt(objectIndex);
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(objectIndex);
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         Q_ASSERT(obj->nBindings == 1);
@@ -628,7 +628,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         bool isValueSource = false;
         bool isPropertyInterceptor = false;
 
-        const QV4::CompiledData::Object *targetObject = qmlUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Object *targetObject = compilationUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex)) {
             QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
             const QMetaObject *mo = cache->firstCppMetaObject();
@@ -666,7 +666,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
             }
         }
         return noError;
-    } else if (qmlUnit->objectAt(binding->value.objectIndex)->flags & QV4::CompiledData::Object::IsComponent) {
+    } else if (compilationUnit->objectAt(binding->value.objectIndex)->flags & QV4::CompiledData::Object::IsComponent) {
         return noError;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
@@ -694,7 +694,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
 
         if (!isAssignable) {
             return QQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
-                    .arg(stringAt(qmlUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
+                    .arg(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex)).arg(QLatin1String(QMetaType::typeName(property->propType()))));
         }
     }
     return noError;

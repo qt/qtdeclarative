@@ -814,11 +814,11 @@ struct Unit
 
     bool verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString) const;
 
-    const Import *importAt(int idx) const {
+    const Import *importAtInternal(int idx) const {
         return reinterpret_cast<const Import*>((reinterpret_cast<const char *>(this)) + offsetToImports + idx * sizeof(Import));
     }
 
-    const Object *objectAt(int idx) const {
+    const Object *objectAtInternal(int idx) const {
         const quint32_le *offsetTable = reinterpret_cast<const quint32_le*>((reinterpret_cast<const char *>(this)) + offsetToObjects);
         const quint32_le offset = offsetTable[idx];
         return reinterpret_cast<const Object*>(reinterpret_cast<const char*>(this) + offset);
@@ -1086,7 +1086,9 @@ public:
     // --- interface for QQmlPropertyCacheCreator
     typedef Object CompiledObject;
     int objectCount() const { return data->nObjects; }
-    const Object *objectAt(int index) const { return data->objectAt(index); }
+    const Object *objectAt(int index) const { return data->objectAtInternal(index); }
+    int importCount() const { return data->nImports; }
+    const Import *importAt(int index) const { return data->importAtInternal(index); }
     QString stringAt(int index) const
     {
         if (backingUnit) {
