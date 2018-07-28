@@ -1072,6 +1072,26 @@ qreal QQuickControl::availableHeight() const
     \li \l {Control::}{bottomPadding}
     \endlist
 
+    \note Different styles may specify the default padding for certain controls
+    in different ways, and these ways may change over time as the design
+    guidelines that the style is based on evolve. To ensure that these changes
+    don't affect the padding values you have specified, it is best to use the
+    most specific properties available. For example, rather than setting
+    the \l padding property:
+
+    \code
+    padding: 0
+    \endcode
+
+    set each specific property instead:
+
+    \code
+    leftPadding: 0
+    rightPadding: 0
+    topPadding: 0
+    bottomPadding: 0
+    \endcode
+
     \sa {Control Layout}, availableWidth, availableHeight, topPadding, leftPadding, rightPadding, bottomPadding
 */
 qreal QQuickControl::padding() const
