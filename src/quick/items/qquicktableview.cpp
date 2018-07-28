@@ -105,7 +105,7 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
-    clear();
+    releaseLoadedItems();
     if (tableModel)
         delete tableModel;
 }
@@ -395,23 +395,6 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
     }
 
     delete fxTableItem;
-}
-
-void QQuickTableViewPrivate::clear()
-{
-    tableInvalid = true;
-    tableRebuilding = false;
-    if (loadRequest.isActive())
-        cancelLoadRequest();
-
-    releaseLoadedItems();
-    loadedTable = QRect();
-    loadedTableOuterRect = QRect();
-    loadedTableInnerRect = QRect();
-    contentSizeBenchMarkPoint = QPoint(-1, -1);
-
-    updateContentWidth();
-    updateContentHeight();
 }
 
 void QQuickTableViewPrivate::unloadItem(const QPoint &cell)
@@ -865,10 +848,23 @@ void QQuickTableViewPrivate::processLoadRequest()
 
 void QQuickTableViewPrivate::beginRebuildTable()
 {
+    Q_Q(QQuickTableView);
     qCDebug(lcTableViewDelegateLifecycle());
-    clear();
+
     tableInvalid = false;
     tableRebuilding = true;
+
+    releaseLoadedItems();
+    loadedTable = QRect();
+    loadedTableOuterRect = QRect();
+    loadedTableInnerRect = QRect();
+    contentSizeBenchMarkPoint = QPoint(-1, -1);
+
+    q->setContentWidth(0);
+    q->setContentHeight(0);
+    q->setContentX(0);
+    q->setContentY(0);
+
     calculateTableSize();
     loadInitialTopLeftItem();
     loadAndUnloadVisibleEdges();

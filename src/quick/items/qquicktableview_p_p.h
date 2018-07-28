@@ -268,7 +268,6 @@ public:
 
     void releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag);
     void releaseLoadedItems();
-    void clear();
 
     void unloadItem(const QPoint &cell);
     void unloadItems(const QLine &items);
