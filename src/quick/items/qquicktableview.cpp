@@ -1010,6 +1010,9 @@ void QQuickTableViewPrivate::updatePolish()
     // we check what needs to be done, and load/unload cells accordingly.
     Q_Q(QQuickTableView);
 
+    Q_TABLEVIEW_ASSERT(!polishing, "recursive updatePolish() calls are not allowed!");
+    QBoolBlocker polishGuard(polishing, true);
+
     if (loadRequest.isActive()) {
         // We're currently loading items async to build a new edge in the table. We see the loading
         // as an atomic operation, which means that we don't continue doing anything else until all
@@ -1462,22 +1465,26 @@ QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
 
 void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    Q_D(QQuickTableView);
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
-    // We update the viewport rect from within updatePolish to
-    // ensure that we update when we're ready to update, and not
-    // while we're in the middle of loading/unloading edges.
-    d->updatePolish();
+    polish();
 }
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
 {
     Q_D(QQuickTableView);
     QQuickFlickable::viewportMoved(orientation);
-    // We update the viewport rect from within updatePolish to
-    // ensure that we update when we're ready to update, and not
-    // while we're in the middle of loading/unloading edges.
-    d->updatePolish();
+
+    // Calling polish() will schedule a polish event. But while the user is flicking, several
+    // mouse events will be handled before we get an updatePolish() call. And the updatePolish()
+    // call will only see the last mouse position. This results in a stuttering flick experience
+    // (especially on windows). We improve on this by calling updatePolish() directly. But this
+    // has the pitfall that we open up for recursive callbacks. E.g while inside updatePolish(), we
+    // load/unload items, and emit signals. The application can listen to those signals and set a
+    // new contentX/Y on the flickable. So we need to guard for this, to avoid unexpected behavior.
+    if (!d->polishing)
+        d->updatePolish();
+    else
+        polish();
 }
 
 void QQuickTableView::componentComplete()

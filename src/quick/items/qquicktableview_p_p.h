@@ -209,6 +209,7 @@ public:
     bool tableRebuilding = false;
     bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
+    bool polishing = false;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
