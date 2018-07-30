@@ -86,6 +86,8 @@ private slots:
     void addRemoveSubMenus();
     void scrollable_data();
     void scrollable();
+    void disableWhenTriggered_data();
+    void disableWhenTriggered();
 };
 
 void tst_QQuickMenu::defaults()
@@ -1334,6 +1336,74 @@ void tst_QQuickMenu::scrollable()
 
     QQuickItem *contentItem = menu->contentItem();
     QCOMPARE(contentItem->property("interactive").toBool(), true);
+}
+
+void tst_QQuickMenu::disableWhenTriggered_data()
+{
+    QTest::addColumn<int>("menuItemIndex");
+    QTest::addColumn<int>("subMenuItemIndex");
+
+    QTest::addRow("Action") << 0 << -1;
+    QTest::addRow("MenuItem with Action") << 1 << -1;
+    QTest::addRow("MenuItem with Action declared outside menu") << 2 << -1;
+    QTest::addRow("MenuItem with no Action") << 3 << -1;
+
+    QTest::addRow("Sub-Action") << 4 << 0;
+    QTest::addRow("Sub-MenuItem with Action declared inside") << 4 << 1;
+    QTest::addRow("Sub-MenuItem with Action declared outside menu") << 4 << 2;
+    QTest::addRow("Sub-MenuItem with no Action") << 4 << 3;
+}
+
+// Tests that the menu is dismissed when a menu item sets "enabled = false" in onTriggered().
+void tst_QQuickMenu::disableWhenTriggered()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
+
+    QFETCH(int, menuItemIndex);
+    QFETCH(int, subMenuItemIndex);
+
+    QQuickApplicationHelper helper(this, QLatin1String("disableWhenTriggered.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->findChild<QQuickMenu*>("Menu");
+    QVERIFY(menu);
+
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    QPointer<QQuickMenuItem> menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(menuItemIndex));
+    QVERIFY(menuItem);
+
+    if (subMenuItemIndex == -1) {
+        // Click a top-level menu item.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+        QCOMPARE(menuItem->isEnabled(), false);
+        QVERIFY(!menu->isVisible());
+    } else {
+        // Click a sub-menu item.
+        QPointer<QQuickMenu> subMenu = menuItem->subMenu();
+        QVERIFY(subMenu);
+
+        QPointer<QQuickMenuItem> subMenuItem = qobject_cast<QQuickMenuItem*>(subMenu->itemAt(subMenuItemIndex));
+        QVERIFY(subMenuItem);
+
+        // First, open the sub-menu.
+        QTest::mouseMove(window, menuItem->mapToScene(QPoint(1, 1)).toPoint());
+        QTRY_VERIFY(subMenu->isVisible());
+        QVERIFY(menuItem->isHovered());
+        QTRY_VERIFY(subMenu->contentItem()->property("contentHeight").toReal() > 0.0);
+
+        // Click the item.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            subMenuItem->mapToScene(QPointF(subMenuItem->width() / 2, subMenuItem->height() / 2)).toPoint());
+        QCOMPARE(subMenuItem->isEnabled(), false);
+        QVERIFY(!menu->isVisible());
+    }
 }
 
 QTEST_MAIN(tst_QQuickMenu)
