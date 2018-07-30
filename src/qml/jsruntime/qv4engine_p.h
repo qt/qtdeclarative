@@ -276,9 +276,6 @@ public:
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
-    Property *argumentsAccessors;
-    int nArgumentsAccessors;
-
     enum JSStrings {
         String_Empty,
         String_undefined,
@@ -504,8 +501,6 @@ public:
 
     StackTrace stackTrace(int frameLimit = -1) const;
     QUrl resolvedUrl(const QString &file);
-
-    void requireArgumentsAccessors(int n);
 
     void markObjects(MarkStack *markStack);
 

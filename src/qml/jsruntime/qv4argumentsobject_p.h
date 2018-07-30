@@ -59,27 +59,12 @@ namespace QV4 {
 
 namespace Heap {
 
-#define ArgumentsGetterFunctionMembers(class, Member) \
-    Member(class, NoMark, uint, index)
-
-DECLARE_HEAP_OBJECT(ArgumentsGetterFunction, FunctionObject) {
-    DECLARE_MARKOBJECTS(ArgumentsGetterFunction);
-    inline void init(QV4::ExecutionContext *scope, uint index);
-};
-
-#define ArgumentsSetterFunctionMembers(class, Member) \
-    Member(class, NoMark, uint, index)
-
-DECLARE_HEAP_OBJECT(ArgumentsSetterFunction, FunctionObject) {
-    DECLARE_MARKOBJECTS(ArgumentsSetterFunction);
-    inline void init(QV4::ExecutionContext *scope, uint index);
-};
-
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
     Member(class, Pointer, MemberData *, mappedArguments) \
     Member(class, NoMark, bool, fullyCreated) \
-    Member(class, NoMark, int, nFormals)
+    Member(class, NoMark, uint, argCount) \
+    Member(class, NoMark, quint64, mapped)
 
 DECLARE_HEAP_OBJECT(ArgumentsObject, Object) {
     DECLARE_MARKOBJECTS(ArgumentsObject);
@@ -104,37 +89,6 @@ DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
 
 }
 
-struct ArgumentsGetterFunction: FunctionObject
-{
-    V4_OBJECT2(ArgumentsGetterFunction, FunctionObject)
-
-    uint index() const { return d()->index; }
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-};
-
-inline void
-Heap::ArgumentsGetterFunction::init(QV4::ExecutionContext *scope, uint index)
-{
-    Heap::FunctionObject::init(scope);
-    this->index = index;
-}
-
-struct ArgumentsSetterFunction: FunctionObject
-{
-    V4_OBJECT2(ArgumentsSetterFunction, FunctionObject)
-
-    uint index() const { return d()->index; }
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-};
-
-inline void
-Heap::ArgumentsSetterFunction::init(QV4::ExecutionContext *scope, uint index)
-{
-    Heap::FunctionObject::init(scope);
-    this->index = index;
-}
-
-
 struct ArgumentsObject: Object {
     V4_OBJECT2(ArgumentsObject, Object)
     Q_MANAGED_TYPE(ArgumentsObject)
@@ -154,6 +108,17 @@ struct ArgumentsObject: Object {
     static qint64 virtualGetLength(const Managed *m);
 
     void fullyCreate();
+
+    // There's a slight hack here, as this limits the amount of mapped arguments to 64, but that should be
+    // more than enough for all practical uses of arguments
+    bool isMapped(uint arg) const {
+        return arg < 64 && (d()->mapped & (1ull << arg));
+    }
+
+    void removeMapping(uint arg) {
+        if (arg < 64)
+            (d()->mapped &= ~(1ull << arg));
+    }
 
 };
 

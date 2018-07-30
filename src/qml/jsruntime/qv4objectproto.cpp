@@ -756,8 +756,6 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
             return;
         }
         attrs->setWritable((tmp = o->get(engine->id_writable()))->toBoolean());
-        // writable forces it to be a data descriptor
-        desc->value = Primitive::undefinedValue();
     }
 
     if (o->hasProperty(engine->id_value()->toPropertyKey())) {

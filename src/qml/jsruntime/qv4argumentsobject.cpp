@@ -50,28 +50,8 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 DEFINE_OBJECT_VTABLE(StrictArgumentsObject);
 
-void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
-{
-    ExecutionEngine *v4 = internalClass->engine;
-
-    int nFormals = frame->v4Function->nFormals;
-    QV4::CallContext *context = static_cast<QV4::CallContext *>(frame->context());
-
-    Object::init();
-    fullyCreated = false;
-    this->nFormals = nFormals;
-    this->context.set(v4, context->d());
-    Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
-
-    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->propertyKey()));
-    setProperty(v4, CalleePropertyIndex, context->d()->function);
-    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->propertyKey()));
-    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
-    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->propertyKey()));
-    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
-}
-
 void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
+
 {
     Q_ASSERT(vtable() == QV4::StrictArgumentsObject::staticVTable());
     ExecutionEngine *v4 = internalClass->engine;
@@ -93,164 +73,138 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(frame->originalArgumentsCount));
 }
 
+void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
+{
+    ExecutionEngine *v4 = internalClass->engine;
+
+    QV4::CallContext *context = static_cast<QV4::CallContext *>(frame->context());
+
+    Object::init();
+    this->context.set(v4, context->d());
+    Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
+
+    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->propertyKey()));
+    setProperty(v4, CalleePropertyIndex, context->d()->function);
+    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->propertyKey()));
+    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
+    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->propertyKey()));
+    setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
+
+    fullyCreated = false;
+    argCount = frame->originalArgumentsCount;
+    uint nFormals = frame->v4Function->nFormals;
+    mapped = nFormals > 63 ? std::numeric_limits<quint64>::max() : (1ull << nFormals) - 1;
+}
+
 void ArgumentsObject::fullyCreate()
 {
-    if (fullyCreated())
+    if (d()->fullyCreated)
         return;
 
     Scope scope(engine());
 
-    int argCount = context()->argc();
-    uint numAccessors = qMin(d()->nFormals, argCount);
-    ArrayData::realloc(this, Heap::ArrayData::Sparse, argCount, true);
-    scope.engine->requireArgumentsAccessors(numAccessors);
-
-    Scoped<MemberData> md(scope, d()->mappedArguments);
-    if (numAccessors) {
-        d()->mappedArguments.set(scope.engine, md->allocate(scope.engine, numAccessors));
-        for (uint i = 0; i < numAccessors; ++i) {
-            d()->mappedArguments->values.set(scope.engine, i, context()->args()[i]);
-            arraySet(i, scope.engine->argumentsAccessors + i, Attr_Accessor);
-        }
-    }
-    arrayPut(numAccessors, context()->args() + numAccessors, argCount - numAccessors);
-    for (int i = int(numAccessors); i < argCount; ++i)
-        setArrayAttributes(i, Attr_Data);
+    arrayReserve(d()->argCount);
+    arrayPut(0, context()->args(), d()->argCount);
 
     d()->fullyCreated = true;
 }
 
 bool ArgumentsObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *desc, PropertyAttributes attrs)
 {
-    if (!id.isArrayIndex())
+    ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
+    args->fullyCreate();
+    uint index = id.asArrayIndex();
+
+    if (!args->isMapped(index))
         return Object::virtualDefineOwnProperty(m, id, desc, attrs);
 
-    ArgumentsObject *a = static_cast<ArgumentsObject *>(m);
-    a->fullyCreate();
+    Scope scope(args);
+    PropertyAttributes cAttrs = attrs;
+    ScopedProperty cDesc(scope);
+    cDesc->copy(desc, attrs);
 
-    uint index = id.asArrayIndex();
-    Scope scope(m);
-    ScopedProperty map(scope);
-    PropertyAttributes mapAttrs;
-    uint numAccessors = qMin(a->d()->nFormals, a->context()->argc());
-    bool isMapped = false;
-    if (a->arrayData() && index < numAccessors &&
-        a->arrayData()->attributes(index).isAccessor() &&
-        a->arrayData()->get(index) == scope.engine->argumentsAccessors[index].getter()->asReturnedValue())
-        isMapped = true;
-
-    if (isMapped) {
-        Q_ASSERT(a->arrayData());
-        mapAttrs = a->arrayData()->attributes(index);
-        a->arrayData()->getProperty(index, map, &mapAttrs);
-        a->setArrayAttributes(index, Attr_Data);
-        PropertyIndex arrayIndex{ a->arrayData(), a->arrayData()->values.values + a->arrayData()->mappedIndex(index) };
-        arrayIndex.set(scope.engine, a->d()->mappedArguments->values[index]);
+    if (attrs.isData() && desc->value.isEmpty() && attrs.hasWritable() && !attrs.isWritable()) {
+        cDesc->value = args->context()->args()[index];
+        cAttrs.setType(PropertyAttributes::Data);
     }
 
-    bool result = Object::virtualDefineOwnProperty(m, id, desc, attrs);
-    if (!result)
+    bool allowed = Object::virtualDefineOwnProperty(m, id, cDesc, cAttrs);
+    if (!allowed)
         return false;
 
-    if (isMapped && attrs.isData()) {
-        Q_ASSERT(a->arrayData());
-        ScopedFunctionObject setter(scope, map->setter());
-        JSCallData jsCallData(scope, 1);
-        *jsCallData->thisObject = a->asReturnedValue();
-        jsCallData->args[0] = desc->value;
-        setter->call(jsCallData);
-
-        if (attrs.isWritable()) {
-            a->setArrayAttributes(index, mapAttrs);
-            a->arrayData()->setProperty(m->engine(), index, map);
-        }
+    if (attrs.isAccessor()) {
+        args->removeMapping(index);
+    } else {
+        if (!desc->value.isEmpty())
+            args->context()->setArg(index, desc->value);
+        if (attrs.hasWritable() && !attrs.isWritable())
+            args->removeMapping(index);
     }
-
-    return result;
+    return true;
 }
 
 ReturnedValue ArgumentsObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (id.isArrayIndex() && !args->fullyCreated()) {
-        uint index = id.asArrayIndex();
-        if (index < static_cast<uint>(args->context()->argc())) {
-            if (hasProperty)
-                *hasProperty = true;
-            return args->context()->args()[index].asReturnedValue();
-        }
+    uint index = id.asArrayIndex();
+    if (index < args->d()->argCount && !args->d()->fullyCreated) {
+        if (hasProperty)
+            *hasProperty = true;
+        return args->context()->args()[index].asReturnedValue();
     }
-    return Object::virtualGet(m, id, receiver, hasProperty);
+
+    if (!args->isMapped(index))
+        return Object::virtualGet(m, id, receiver, hasProperty);
+    Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
+    if (hasProperty)
+        *hasProperty = true;
+    return args->context()->args()[index].asReturnedValue();
 }
 
 bool ArgumentsObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (id.isArrayIndex()) {
-        uint index = id.asArrayIndex();
-        if (!args->fullyCreated() && index >= static_cast<uint>(args->context()->argc()))
-            args->fullyCreate();
+    uint index = id.asArrayIndex();
 
-        if (!args->fullyCreated()) {
-            args->context()->setArg(index, value);
-            return true;
-        }
+    if (args == receiver && index < args->d()->argCount && !args->d()->fullyCreated) {
+        args->context()->setArg(index, value);
+        return true;
     }
+
+    bool isMapped = (args == receiver && args->isMapped(index));
+    if (isMapped)
+        args->context()->setArg(index, value);
+
     return Object::virtualPut(m, id, value, receiver);
 }
 
 bool ArgumentsObject::virtualDeleteProperty(Managed *m, PropertyKey id)
 {
     ArgumentsObject *args = static_cast<ArgumentsObject *>(m);
-    if (!args->fullyCreated())
-        args->fullyCreate();
-    return Object::virtualDeleteProperty(m, id);
+    args->fullyCreate();
+    bool result = Object::virtualDeleteProperty(m, id);
+    if (result)
+        args->removeMapping(id.asArrayIndex());
+    return result;
 }
 
 PropertyAttributes ArgumentsObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
-    if (!id.isArrayIndex() || args->fullyCreated())
-        return Object::virtualGetOwnProperty(m, id, p);
-
     uint index = id.asArrayIndex();
-    uint argCount = args->context()->argc();
-    if (index >= argCount)
-        return PropertyAttributes();
+    if (index < args->d()->argCount && !args->d()->fullyCreated) {
+        p->value = args->context()->args()[index];
+        return Attr_Data;
+    }
+
+    PropertyAttributes attrs = Object::virtualGetOwnProperty(m, id, p);
+    if (attrs.isEmpty() || !args->isMapped(index))
+        return attrs;
+
+    Q_ASSERT(index < static_cast<uint>(args->context()->function->formalParameterCount()));
     if (p)
         p->value = args->context()->args()[index];
-    return Attr_Data;
-}
-
-DEFINE_OBJECT_VTABLE(ArgumentsGetterFunction);
-
-ReturnedValue ArgumentsGetterFunction::virtualCall(const FunctionObject *getter, const Value *thisObject, const Value *, int)
-{
-    ExecutionEngine *v4 = getter->engine();
-    Scope scope(v4);
-    const ArgumentsGetterFunction *g = static_cast<const ArgumentsGetterFunction *>(getter);
-    Scoped<ArgumentsObject> o(scope, thisObject->as<ArgumentsObject>());
-    if (!o)
-        return v4->throwTypeError();
-
-    Q_ASSERT(g->index() < static_cast<unsigned>(o->context()->argc()));
-    return o->context()->args()[g->index()].asReturnedValue();
-}
-
-DEFINE_OBJECT_VTABLE(ArgumentsSetterFunction);
-
-ReturnedValue ArgumentsSetterFunction::virtualCall(const FunctionObject *setter, const Value *thisObject, const Value *argv, int argc)
-{
-    ExecutionEngine *v4 = setter->engine();
-    Scope scope(v4);
-    const ArgumentsSetterFunction *s = static_cast<const ArgumentsSetterFunction *>(setter);
-    Scoped<ArgumentsObject> o(scope, thisObject->as<ArgumentsObject>());
-    if (!o)
-        return v4->throwTypeError();
-
-    Q_ASSERT(s->index() < static_cast<unsigned>(o->context()->argc()));
-    o->context()->setArg(s->index(), argc ? argv[0] : Primitive::undefinedValue());
-    return Encode::undefined();
+    return attrs;
 }
 
 qint64 ArgumentsObject::virtualGetLength(const Managed *m)

@@ -148,8 +148,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , globalCode(nullptr)
     , v8Engine(nullptr)
     , publicEngine(jsEngine)
-    , argumentsAccessors(nullptr)
-    , nArgumentsAccessors(0)
     , m_engineId(engineSerial.fetchAndAddOrdered(1))
     , regExpCache(nullptr)
     , m_multiplyWrappedQObjects(nullptr)
@@ -611,7 +609,6 @@ ExecutionEngine::~ExecutionEngine()
     delete jsStack;
     gcStack->deallocate();
     delete gcStack;
-    delete [] argumentsAccessors;
 }
 
 ExecutionContext *ExecutionEngine::currentContext() const
@@ -982,42 +979,8 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
     return base.resolved(src);
 }
 
-void ExecutionEngine::requireArgumentsAccessors(int n)
-{
-    if (n <= nArgumentsAccessors)
-        return;
-
-    Scope scope(this);
-    ScopedFunctionObject get(scope);
-    ScopedFunctionObject set(scope);
-
-    if (n >= nArgumentsAccessors) {
-        Property *oldAccessors = argumentsAccessors;
-        int oldSize = nArgumentsAccessors;
-        nArgumentsAccessors = qMax(8, n);
-        argumentsAccessors = new Property[nArgumentsAccessors];
-        if (oldAccessors) {
-            memcpy(static_cast<void *>(argumentsAccessors), static_cast<const void *>(oldAccessors), oldSize*sizeof(Property));
-            delete [] oldAccessors;
-        }
-        ExecutionContext *global = rootContext();
-        for (int i = oldSize; i < nArgumentsAccessors; ++i) {
-            argumentsAccessors[i].value = ScopedValue(scope, memoryManager->allocate<ArgumentsGetterFunction>(global, i));
-            argumentsAccessors[i].set = ScopedValue(scope, memoryManager->allocate<ArgumentsSetterFunction>(global, i));
-        }
-    }
-}
-
 void ExecutionEngine::markObjects(MarkStack *markStack)
 {
-    for (int i = 0; i < nArgumentsAccessors; ++i) {
-        const Property &pd = argumentsAccessors[i];
-        if (Heap::FunctionObject *getter = pd.getter())
-            getter->mark(markStack);
-        if (Heap::FunctionObject *setter = pd.setter())
-            setter->mark(markStack);
-    }
-
     for (int i = 0; i < NClasses; ++i)
         if (classes[i])
             classes[i]->mark(markStack);
