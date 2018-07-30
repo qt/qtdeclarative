@@ -100,15 +100,34 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("from"), method_from, 1);
     ctor->addSymbolSpecies();
 
+    ScopedObject unscopables(scope, engine->newObject(engine->classes[EngineBase::Class_Empty]->changeVTable(QV4::Object::staticVTable())));
+    ScopedString name(scope);
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
-    defineDefaultProperty(QStringLiteral("copyWithin"), method_copyWithin, 2);
-    defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
-    defineDefaultProperty(QStringLiteral("find"), method_find, 1);
-    defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
+    name = engine->newIdentifier(QStringLiteral("copyWithin"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_copyWithin, 2);
+    name = engine->newIdentifier(QStringLiteral("entries"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_entries, 0);
+    name = engine->newIdentifier(QStringLiteral("fill"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_fill, 1);
+    name = engine->newIdentifier(QStringLiteral("find"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_find, 1);
+    name = engine->newIdentifier(QStringLiteral("findIndex"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_findIndex, 1);
+    name = engine->newIdentifier(QStringLiteral("includes"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_includes, 1);
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
+    name = engine->newIdentifier(QStringLiteral("keys"));
+    unscopables->put(name, Primitive::fromBoolean(true));
+    defineDefaultProperty(name, method_keys, 0);
     defineDefaultProperty(QStringLiteral("pop"), method_pop, 0);
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);
     defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);
@@ -117,12 +136,9 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(QStringLiteral("splice"), method_splice, 2);
     defineDefaultProperty(QStringLiteral("unshift"), method_unshift, 1);
-    defineDefaultProperty(QStringLiteral("includes"), method_includes, 1);
     defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
-    defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
     defineDefaultProperty(QStringLiteral("every"), method_every, 1);
-    defineDefaultProperty(QStringLiteral("fill"), method_fill, 1);
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
     defineDefaultProperty(QStringLiteral("map"), method_map, 1);
@@ -132,8 +148,11 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ScopedString valuesString(scope, engine->newIdentifier(QStringLiteral("values")));
     ScopedObject values(scope, FunctionObject::createBuiltinFunction(engine, valuesString, method_values, 0));
     engine->jsObjects[ExecutionEngine::ArrayProtoValues] = values;
-    defineDefaultProperty(QStringLiteral("values"), values);
+    unscopables->put(valuesString, Primitive::fromBoolean(true));
+    defineDefaultProperty(valuesString, values);
     defineDefaultProperty(engine->symbol_iterator(), values);
+
+    defineReadonlyConfigurableProperty(engine->symbol_unscopables(), unscopables);
 }
 
 ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value *, const Value *argv, int argc)

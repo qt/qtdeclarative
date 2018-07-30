@@ -49,6 +49,7 @@
 #include "qv4string_p.h"
 #include "qv4qmlcontext_p.h"
 #include "qv4stackframe_p.h"
+#include "qv4symbol_p.h"
 
 using namespace QV4;
 
@@ -189,11 +190,27 @@ void ExecutionContext::createMutableBinding(String *name, bool deletable)
         scope.engine->throwTypeError();
 }
 
+static bool unscopable(ExecutionEngine *engine, Heap::Object *withObject, PropertyKey id)
+{
+    if (!withObject)
+        return false;
+    Scope scope(engine);
+    ScopedObject w(scope, withObject);
+    ScopedObject o(scope, w->get(scope.engine->symbol_unscopables()));
+    if (o) {
+        ScopedValue blocked(scope, o->get(id));
+        return blocked->toBoolean();
+    }
+    return false;
+}
+
 bool ExecutionContext::deleteProperty(String *name)
 {
     PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
+    ExecutionEngine *engine = ctx->internalClass->engine;
+
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
         case Heap::ExecutionContext::Type_BlockContext:
@@ -205,13 +222,27 @@ bool ExecutionContext::deleteProperty(String *name)
                 return false;
             Q_FALLTHROUGH();
         }
-        case Heap::ExecutionContext::Type_WithContext:
+        case Heap::ExecutionContext::Type_WithContext: {
+            if (ctx->activation) {
+                Scope scope(this);
+                ScopedObject object(scope, ctx->activation);
+                if (object && object->hasProperty(id)) {
+                    bool u = ::unscopable(engine, ctx->activation, id);
+                    if (engine->hasException)
+                        return false;
+                    if (u)
+                        break;
+                    return object->deleteProperty(id);
+                }
+            }
+            break;
+        }
         case Heap::ExecutionContext::Type_GlobalContext: {
             if (ctx->activation) {
                 Scope scope(this);
                 ScopedObject object(scope, ctx->activation);
-                if (object && object->hasProperty(name->toPropertyKey()))
-                    return object->deleteProperty(name->toPropertyKey());
+                if (object && object->hasProperty(id))
+                    return object->deleteProperty(id);
             }
             break;
         }
@@ -221,22 +252,27 @@ bool ExecutionContext::deleteProperty(String *name)
         }
     }
 
-    return !engine()->currentStackFrame->v4Function->isStrict();
+    return !engine->currentStackFrame->v4Function->isStrict();
 }
 
 ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value &value)
 {
     PropertyKey id = name->toPropertyKey();
 
-    QV4::ExecutionEngine *v4 = engine();
     Heap::ExecutionContext *ctx = d();
+    QV4::ExecutionEngine *engine = ctx->internalClass->engine;
 
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
         case Heap::ExecutionContext::Type_WithContext: {
-            Scope scope(v4);
+            Scope scope(engine);
             ScopedObject w(scope, ctx->activation);
-            if (w->hasProperty(name->toPropertyKey())) {
+            if (w->hasProperty(id)) {
+                bool u = ::unscopable(engine, ctx->activation, id);
+                if (engine->hasException)
+                    return TypeError;
+                if (u)
+                    break;
                 if (!w->put(name, value))
                     return TypeError;
                 return NoError;
@@ -248,7 +284,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
             uint index = c->internalClass->find(id);
             if (index < UINT_MAX) {
-                static_cast<Heap::CallContext *>(c)->locals.set(v4, index, value);
+                static_cast<Heap::CallContext *>(c)->locals.set(engine, index, value);
                 return NoError;
             }
         }
@@ -257,7 +293,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             if (ctx->activation) {
                 uint member = ctx->activation->internalClass->find(id);
                 if (member < UINT_MAX) {
-                    Scope scope(v4);
+                    Scope scope(engine);
                     ScopedObject a(scope, ctx->activation);
                     if (!a->putValue(member, value))
                         return TypeError;
@@ -266,7 +302,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             }
             break;
         case Heap::ExecutionContext::Type_QmlContext: {
-            Scope scope(v4);
+            Scope scope(engine);
             ScopedObject activation(scope, ctx->activation);
             if (!activation->put(name, value))
                 return TypeError;
@@ -284,6 +320,8 @@ ReturnedValue ExecutionContext::getProperty(String *name)
     PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
+    QV4::ExecutionEngine *engine = ctx->internalClass->engine;
+
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
         case Heap::ExecutionContext::Type_BlockContext:
@@ -296,6 +334,19 @@ ReturnedValue ExecutionContext::getProperty(String *name)
             Q_FALLTHROUGH();
         }
         case Heap::ExecutionContext::Type_WithContext:
+            if (ctx->activation) {
+                Scope scope(this);
+                ScopedObject activation(scope, ctx->activation);
+                if (activation->hasProperty(id)) {
+                    bool u = ::unscopable(engine, ctx->activation, id);
+                    if (engine->hasException)
+                        return false;
+                    if (u)
+                        break;
+                    return activation->get(id);
+                }
+            }
+            break;
         case Heap::ExecutionContext::Type_GlobalContext:
         case Heap::ExecutionContext::Type_QmlContext: {
             if (ctx->activation) {
@@ -310,7 +361,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         }
         }
     }
-    return engine()->throwReferenceError(*name);
+    return engine->throwReferenceError(*name);
 }
 
 ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
@@ -319,6 +370,8 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
     PropertyKey id = name->toPropertyKey();
 
     Heap::ExecutionContext *ctx = d();
+    QV4::ExecutionEngine *engine = ctx->internalClass->engine;
+
     for (; ctx; ctx = ctx->outer) {
         switch (ctx->type) {
         case Heap::ExecutionContext::Type_BlockContext:
@@ -342,6 +395,20 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
             break;
         }
         case Heap::ExecutionContext::Type_WithContext:
+            if (ctx->activation) {
+                Scope scope(this);
+                ScopedObject activation(scope, ctx->activation);
+                if (activation->hasProperty(id)) {
+                    bool u = ::unscopable(engine, ctx->activation, id);
+                    if (engine->hasException)
+                        return false;
+                    if (u)
+                        break;
+                    base->setM(activation->d());
+                    return activation->get(id);
+                }
+            }
+            break;
         case Heap::ExecutionContext::Type_QmlContext: {
             Scope scope(this);
             ScopedObject o(scope, ctx->activation);
@@ -355,7 +422,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         }
         }
     }
-    return engine()->throwReferenceError(*name);
+    return engine->throwReferenceError(*name);
 }
 
 void Heap::CallContext::setArg(uint index, Value v)

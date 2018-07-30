@@ -27,8 +27,6 @@ built-ins/Array/isArray/proxy.js fails
 built-ins/Array/length/define-own-prop-length-overflow-realm.js fails
 built-ins/Array/of/proto-from-ctor-realm.js fails
 built-ins/Array/proto-from-ctor-realm.js fails
-built-ins/Array/prototype/Symbol.unscopables/prop-desc.js fails
-built-ins/Array/prototype/Symbol.unscopables/value.js fails
 built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js fails
 built-ins/Array/prototype/concat/Array.prototype.concat_sloppy-arguments-with-dupes.js sloppyFails
 built-ins/Array/prototype/concat/Array.prototype.concat_sloppy-arguments.js fails
@@ -778,13 +776,7 @@ built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js fails
 built-ins/Proxy/getPrototypeOf/trap-is-not-callable-realm.js fails
 built-ins/Proxy/has/call-object-create.js fails
-built-ins/Proxy/has/call-with.js sloppyFails
-built-ins/Proxy/has/return-false-target-not-extensible-using-with.js sloppyFails
-built-ins/Proxy/has/return-false-target-prop-exists-using-with.js sloppyFails
-built-ins/Proxy/has/return-false-targetdesc-not-configurable-using-with.js sloppyFails
-built-ins/Proxy/has/return-is-abrupt-with.js sloppyFails
 built-ins/Proxy/has/trap-is-not-callable-realm.js fails
-built-ins/Proxy/has/trap-is-not-callable-using-with.js sloppyFails
 built-ins/Proxy/isExtensible/trap-is-not-callable-realm.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertynames.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
@@ -2201,7 +2193,6 @@ language/expressions/object/method-definition/yield-as-identifier-in-nested-func
 language/expressions/object/method-definition/yield-as-literal-property-name.js fails
 language/expressions/object/method-definition/yield-as-property-name.js fails
 language/expressions/object/method-definition/yield-star-before-newline.js fails
-language/expressions/object/prop-def-id-eval-error-2.js sloppyFails
 language/expressions/object/properties-names-eval-arguments.js strictFails
 language/expressions/object/scope-gen-meth-body-lex-distinct.js sloppyFails
 language/expressions/object/scope-gen-meth-param-elem-var-close.js sloppyFails
@@ -2658,8 +2649,6 @@ language/statements/try/tco-catch.js strictFails
 language/statements/try/tco-finally.js strictFails
 language/statements/variable/binding-resolution.js sloppyFails
 language/statements/while/tco-body.js strictFails
-language/statements/with/binding-blocked-by-unscopables.js sloppyFails
-language/statements/with/has-property-err.js sloppyFails
 language/statements/with/unscopables-inc-dec.js sloppyFails
 language/types/reference/get-value-prop-base-primitive-realm.js fails
 language/types/reference/put-value-prop-base-primitive-realm.js fails
