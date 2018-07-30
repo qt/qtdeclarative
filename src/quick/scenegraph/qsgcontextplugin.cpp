@@ -73,6 +73,8 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 struct QSGAdaptationBackendData
 {
     QSGAdaptationBackendData();
+    ~QSGAdaptationBackendData();
+    Q_DISABLE_COPY(QSGAdaptationBackendData)
 
     bool tried = false;
     QSGContextFactoryInterface *factory = nullptr;
@@ -89,6 +91,11 @@ QSGAdaptationBackendData::QSGAdaptationBackendData()
 {
     // Fill in the table with the built-in adaptations.
     builtIns.append(new QSGSoftwareAdaptation);
+}
+
+QSGAdaptationBackendData::~QSGAdaptationBackendData()
+{
+    qDeleteAll(builtIns);
 }
 
 Q_GLOBAL_STATIC(QSGAdaptationBackendData, qsg_adaptation_data)
