@@ -119,6 +119,8 @@ private:
     QWindow *activeWindow();
     QTouchDevice *touchDevice();
 
+    Qt::MouseButtons m_pressedButtons;
+
     friend class QQuickTouchEventSequence;
 };
 

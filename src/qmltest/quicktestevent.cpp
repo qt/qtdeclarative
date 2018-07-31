@@ -144,6 +144,7 @@ namespace QtQuickTest
 
     int lastMouseTimestamp = 0;
 
+    // TODO should be Qt::MouseButtons buttons in case multiple buttons are pressed
     static void mouseEvent(MouseAction action, QWindow *window,
                            QObject *item, Qt::MouseButton button,
                            Qt::KeyboardModifiers stateKey, const QPointF &_pos, int delay=-1)
@@ -252,6 +253,7 @@ bool QuickTestEvent::mousePress
     QWindow *view = eventWindow(item);
     if (!view)
         return false;
+    m_pressedButtons.setFlag(Qt::MouseButton(button), true);
     QtQuickTest::mouseEvent(QtQuickTest::MousePress, view, item,
                             Qt::MouseButton(button),
                             Qt::KeyboardModifiers(modifiers),
@@ -281,6 +283,7 @@ bool QuickTestEvent::mouseRelease
     QWindow *view = eventWindow(item);
     if (!view)
         return false;
+    m_pressedButtons.setFlag(Qt::MouseButton(button), false);
     QtQuickTest::mouseEvent(QtQuickTest::MouseRelease, view, item,
                             Qt::MouseButton(button),
                             Qt::KeyboardModifiers(modifiers),
@@ -336,8 +339,9 @@ bool QuickTestEvent::mouseMove
     QWindow *view = eventWindow(item);
     if (!view)
         return false;
+    const Qt::MouseButtons effectiveButtons = buttons ? Qt::MouseButtons(buttons) : m_pressedButtons;
     QtQuickTest::mouseEvent(QtQuickTest::MouseMove, view, item,
-                            Qt::MouseButton(buttons), Qt::NoModifier,
+                            Qt::MouseButton(int(effectiveButtons)), Qt::NoModifier,
                             QPointF(x, y), delay);
     return true;
 }
