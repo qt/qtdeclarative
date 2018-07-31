@@ -444,13 +444,13 @@ ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Valu
     return bound->asReturnedValue();
 }
 
-ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue FunctionPrototype::method_hasInstance(const FunctionObject *, const Value *thisObject, const Value *argv, int argc)
 {
     if (!argc)
-        return false;
+        return Encode(false);
     const Object *o = thisObject->as<Object>();
     if (!o)
-        return f->engine()->throwTypeError();
+        return Encode(false);
 
     return Object::virtualInstanceOf(o, argv[0]);
 }
