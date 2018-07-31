@@ -101,7 +101,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
 
 
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, bool createProto)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     jsCall = vtable()->call;
     jsConstruct = vtable()->callAsConstructor;
@@ -110,13 +110,10 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
     setFunction(function);
     this->scope.set(scope->engine(), scope->d());
     Scope s(scope->engine());
-    ScopedString name(s, function->name());
+    ScopedString name(s, n ? n->d() : function->name());
     ScopedFunctionObject f(s, this);
     if (name)
         f->setName(name);
-
-    if (createProto)
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
@@ -195,9 +192,9 @@ Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext
     return c;
 }
 
-Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function)
+Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function, QV4::String *name)
 {
-    return scope->engine()->memoryManager->allocate<MemberFunction>(scope, function);
+    return scope->engine()->memoryManager->allocate<MemberFunction>(scope, function, name);
 }
 
 Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount)
@@ -515,7 +512,7 @@ ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value 
     return result;
 }
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
@@ -526,7 +523,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     Scope s(scope);
     ScopedFunctionObject f(s, this);
 
-    ScopedString name(s, function->name());
+    ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
     f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);

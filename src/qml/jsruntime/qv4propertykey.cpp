@@ -41,6 +41,7 @@
 
 #include <QtCore/qstring.h>
 #include <qv4string_p.h>
+#include <qv4engine_p.h>
 
 QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngine *e)
 {
@@ -63,8 +64,27 @@ QString QV4::PropertyKey::toQString() const
 {
     if (isArrayIndex())
         return QString::number(asArrayIndex());
-    Heap::Base *b = asStringOrSymbol();
-    Q_ASSERT(b->internalClass->vtable->isStringOrSymbol);
-    Heap::StringOrSymbol *s = static_cast<Heap::StringOrSymbol *>(b);
+    Heap::StringOrSymbol *s = asStringOrSymbol();
+    Q_ASSERT(s->internalClass->vtable->isStringOrSymbol);
     return s->toQString();
+}
+
+QV4::Heap::String *QV4::PropertyKey::asFunctionName(ExecutionEngine *engine, FunctionNamePrefix prefix) const
+{
+    QString n;
+    if (prefix == Getter)
+        n = QStringLiteral("get ");
+    else if (prefix == Setter)
+        n = QStringLiteral("set ");
+    if (isArrayIndex())
+        n += QString::number(asArrayIndex());
+    else {
+        Heap::StringOrSymbol *s = asStringOrSymbol();
+        QString str = s->toQString();
+        if (s->internalClass->vtable->isString)
+            n += s->toQString();
+        else if (str.length() > 1)
+            n += QChar::fromLatin1('[') + str.midRef(1) + QChar::fromLatin1(']');
+    }
+    return engine->newString(n);
 }

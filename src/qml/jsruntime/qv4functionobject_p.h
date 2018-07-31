@@ -82,7 +82,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
 
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
     void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
-    void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
     void init();
     void destroy();
@@ -115,7 +115,7 @@ DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
         Index_Name = FunctionObject::Index_Prototype + 1,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function);
+    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
 };
 
 struct ConstructorFunction : ScriptFunction
@@ -181,7 +181,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, bool isDerivedConstructor);
-    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function, String *name);
     static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }

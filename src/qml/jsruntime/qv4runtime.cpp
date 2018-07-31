@@ -1486,12 +1486,25 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
 
     ScopedPropertyKey name(scope);
     ScopedProperty pd(scope);
+    ScopedFunctionObject fn(scope);
+    ScopedString fnName(scope);
     for (int i = 0; i < additionalArgs; ++i) {
         Q_ASSERT(args->isInteger());
         ObjectLiteralArgument arg = ObjectLiteralArgument(args->integerValue());
         name = args[1].toPropertyKey(engine);
         if (engine->hasException)
             return Encode::undefined();
+        if (args[2].isFunctionObject()) {
+            fn = static_cast<const FunctionObject &>(args[2]);
+            PropertyKey::FunctionNamePrefix prefix = PropertyKey::None;
+            if (arg == ObjectLiteralArgument::Getter)
+                prefix = PropertyKey::Getter;
+            else if (arg == ObjectLiteralArgument::Setter)
+                prefix = PropertyKey::Setter;
+
+            fnName = name->asFunctionName(engine, prefix);
+            fn->setName(fnName);
+        }
         Q_ASSERT(arg == ObjectLiteralArgument::Value || args[2].isFunctionObject());
         if (arg == ObjectLiteralArgument::Value || arg == ObjectLiteralArgument::Getter) {
             pd->value = args[2];
@@ -1569,10 +1582,18 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         }
         QV4::Function *f = unit->runtimeFunctions[methods[i].function];
         Q_ASSERT(f);
+        PropertyKey::FunctionNamePrefix prefix = PropertyKey::None;
+        if (methods[i].type == CompiledData::Method::Getter)
+            prefix = PropertyKey::Getter;
+        else if (methods[i].type == CompiledData::Method::Setter)
+            prefix = PropertyKey::Setter;
+
+        name = propertyName->asFunctionName(engine, prefix);
+
         if (f->isGenerator())
-            function = MemberGeneratorFunction::create(current, f);
+            function = MemberGeneratorFunction::create(current, f, name);
         else
-            function = FunctionObject::createMemberFunction(current, f);
+            function = FunctionObject::createMemberFunction(current, f, name);
         Q_ASSERT(function);
         PropertyAttributes attributes;
         switch (methods[i].type) {

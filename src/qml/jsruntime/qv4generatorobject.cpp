@@ -235,10 +235,10 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
 
 DEFINE_OBJECT_VTABLE(MemberGeneratorFunction);
 
-Heap::FunctionObject *MemberGeneratorFunction::create(ExecutionContext *context, Function *function)
+Heap::FunctionObject *MemberGeneratorFunction::create(ExecutionContext *context, Function *function, String *name)
 {
     Scope scope(context);
-    Scoped<GeneratorFunction> g(scope, context->engine()->memoryManager->allocate<MemberGeneratorFunction>(context, function));
+    Scoped<GeneratorFunction> g(scope, context->engine()->memoryManager->allocate<MemberGeneratorFunction>(context, function, name));
     ScopedObject proto(scope, scope.engine->newObject());
     proto->setPrototypeOf(scope.engine->generatorPrototype());
     g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);

@@ -118,7 +118,7 @@ struct MemberGeneratorFunction : GeneratorFunction
     V4_OBJECT2(MemberGeneratorFunction, GeneratorFunction)
     V4_INTERNALCLASS(MemberGeneratorFunction)
 
-    static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
+    static Heap::FunctionObject *create(ExecutionContext *scope, Function *function, String *name);
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 

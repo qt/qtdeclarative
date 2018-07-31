@@ -131,6 +131,13 @@ public:
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
     quint64 id() const { return val; }
 
+    enum FunctionNamePrefix {
+        None,
+        Getter,
+        Setter
+    };
+    Heap::String *asFunctionName(ExecutionEngine *e, FunctionNamePrefix prefix) const;
+
     bool operator ==(const PropertyKey &other) const { return val == other.val; }
     bool operator !=(const PropertyKey &other) const { return val != other.val; }
     bool operator <(const PropertyKey &other) const { return val < other.val; }
