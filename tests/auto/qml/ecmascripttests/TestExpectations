@@ -2098,8 +2098,6 @@ language/expressions/generators/yield-as-literal-property-name.js fails
 language/expressions/generators/yield-as-property-name.js fails
 language/expressions/generators/yield-identifier-non-strict.js sloppyFails
 language/expressions/generators/yield-star-before-newline.js fails
-language/expressions/instanceof/prototype-getter-with-object-throws.js fails
-language/expressions/instanceof/prototype-getter-with-object.js fails
 language/expressions/logical-and/tco-right.js strictFails
 language/expressions/logical-or/tco-right.js strictFails
 language/expressions/new.target/value-via-reflect-construct.js fails

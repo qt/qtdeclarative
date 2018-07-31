@@ -91,8 +91,6 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
 
     unsigned int formalParameterCount() { return function ? function->nFormals : 0; }
     unsigned int varCount() { return function ? function->compiledFunction->nLocals : 0; }
-
-    const QV4::Object *protoProperty() const { return propertyData(Index_Prototype)->as<QV4::Object>(); }
 };
 
 struct FunctionCtor : FunctionObject {
@@ -189,6 +187,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
     bool isBoundFunction() const;
+
+    ReturnedValue protoProperty() const { return get(engine()->id_prototype()); }
+
 
     QQmlSourceLocation sourceLocation() const;
 };

@@ -742,8 +742,10 @@ ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &v
     if (!lhs)
         return Encode(false);
 
+    Scope scope(f->internalClass->engine);
     // 15.3.5.3, 2
-    const Object *o = f->protoProperty();
+    ScopedFunctionObject ff(scope, f);
+    ScopedObject o(scope, ff->protoProperty());
     if (!o) // 15.3.5.3, 3
         return engine->throwTypeError();
 

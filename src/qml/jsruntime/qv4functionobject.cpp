@@ -469,7 +469,7 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     if (nt->d() == f->d()) {
         ic = f->classForConstructor();
     } else {
-        const Object *o = nt->d()->protoProperty();
+        ScopedObject o(scope, nt->protoProperty());
         ic = scope.engine->internalClasses(EngineBase::Class_Object);
         if (o)
             ic = ic->changePrototype(o->d());
@@ -537,14 +537,15 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
 
 Heap::InternalClass *ScriptFunction::classForConstructor() const
 {
-    const Object *o = d()->protoProperty();
-    if (d()->cachedClassForConstructor && d()->cachedClassForConstructor->prototype == o->d())
+    Scope scope(engine());
+    ScopedValue o(scope, protoProperty());
+    if (d()->cachedClassForConstructor && d()->cachedClassForConstructor->prototype == o->heapObject())
         return d()->cachedClassForConstructor;
 
-    Scope scope(engine());
     Scoped<InternalClass> ic(scope, engine()->internalClasses(EngineBase::Class_Object));
-    if (o)
-        ic = ic->changePrototype(o->d());
+    ScopedObject p(scope, o);
+    if (p)
+        ic = ic->changePrototype(p->d());
     d()->cachedClassForConstructor.set(scope.engine, ic->d());
 
     return ic->d();
