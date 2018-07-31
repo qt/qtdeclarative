@@ -4253,9 +4253,9 @@ void tst_QJSEngine::functionToString_data()
     QTest::addColumn<QString>("expectedString");
 
     QTest::newRow("named function") << QString::fromLatin1("function f() {}; f.toString()")
-        << QString::fromLatin1("function f() { [code] }");
+        << QString::fromLatin1("function f() { [native code] }");
     QTest::newRow("anonymous function") << QString::fromLatin1("(function() {}).toString()")
-        << QString::fromLatin1("function() { [code] }");
+        << QString::fromLatin1("function() { [native code] }");
 }
 
 // Tests that function.toString() prints the function's name.

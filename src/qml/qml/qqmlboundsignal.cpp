@@ -168,7 +168,7 @@ void QQmlBoundSignalExpression::expressionChanged()
 QString QQmlBoundSignalExpression::expression() const
 {
     if (expressionFunctionValid())
-        return QStringLiteral("function() { [code] }");
+        return QStringLiteral("function() { [native code] }");
     return QString();
 }
 

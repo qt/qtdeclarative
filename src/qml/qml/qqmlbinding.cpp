@@ -552,7 +552,7 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
 
 QString QQmlBinding::expression() const
 {
-    return QStringLiteral("function() { [code] }");
+    return QStringLiteral("function() { [native code] }");
 }
 
 void QQmlBinding::setTarget(const QQmlProperty &prop)

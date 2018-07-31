@@ -344,7 +344,7 @@ ReturnedValue FunctionPrototype::method_toString(const FunctionObject *b, const 
     if (!functionName.isEmpty())
         functionAsString.append(QLatin1Char(' ') + functionName);
 
-    functionAsString.append(QStringLiteral("() { [code] }"));
+    functionAsString.append(QStringLiteral("() { [native code] }"));
 
     return Encode(v4->newString(functionAsString));
 }
