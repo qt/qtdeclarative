@@ -592,8 +592,8 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 }
 
 /*!
-Returns the QQmlContext the component was created in. This is only
-valid for components created directly from QML.
+    Returns the QQmlContext the component was created in. This is only
+    valid for components created directly from QML.
 */
 QQmlContext *QQmlComponent::creationContext() const
 {
@@ -602,6 +602,17 @@ QQmlContext *QQmlComponent::creationContext() const
         return d->creationContext->asQQmlContext();
 
     return qmlContext(this);
+}
+
+/*!
+    Returns the QQmlEngine of this component.
+
+    \since 5.12
+*/
+QQmlEngine *QQmlComponent::engine() const
+{
+    Q_D(const QQmlComponent);
+    return d->engine;
 }
 
 /*!

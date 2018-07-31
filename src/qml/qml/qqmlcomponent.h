@@ -109,6 +109,7 @@ public:
                 QQmlContext *forContext = nullptr);
 
     QQmlContext *creationContext() const;
+    QQmlEngine *engine() const;
 
     static QQmlComponentAttached *qmlAttachedProperties(QObject *);
 
