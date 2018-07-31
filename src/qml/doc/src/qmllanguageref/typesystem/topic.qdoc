@@ -67,7 +67,7 @@ For example, the standard \c Date and \c Array types are available, as below:
 import QtQuick 2.0
 
 Item {
-    property var theArray: new Array()
+    property var theArray: []
     property var theDate: new Date()
 
     Component.onCompleted: {
