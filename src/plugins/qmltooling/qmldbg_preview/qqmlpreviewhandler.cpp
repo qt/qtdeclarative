@@ -243,18 +243,18 @@ void QQmlPreviewHandler::removeTranslators()
     }
 }
 
-void QQmlPreviewHandler::language(const QUrl &context, const QString &locale)
+void QQmlPreviewHandler::language(const QUrl &context, const QLocale &locale)
 {
     removeTranslators();
 
     m_qtTranslator.reset(new QTranslator(this));
-    if (m_qtTranslator->load(QLatin1String("qt_") + locale,
+    if (m_qtTranslator->load(locale, QLatin1String("qt"), QLatin1String("_"),
                            QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
         QCoreApplication::installTranslator(m_qtTranslator.get());
     }
 
     m_qmlTranslator.reset(new QTranslator(this));
-    if (m_qmlTranslator->load(QLatin1String("qml_" ) + locale,
+    if (m_qmlTranslator->load(locale, QLatin1String("qml"), QLatin1String("_"),
                               context.toLocalFile() + QLatin1String("/i18n"))) {
         QCoreApplication::installTranslator(m_qmlTranslator.get());
     }

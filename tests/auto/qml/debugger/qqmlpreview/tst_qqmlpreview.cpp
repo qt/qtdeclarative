@@ -346,8 +346,8 @@ void tst_QQmlPreview::language()
 {
     QCOMPARE(startQmlProcess("window.qml"), ConnectSuccess);
     QVERIFY(m_client);
-    m_client->triggerLanguage(dataDirectoryUrl(), "qt_QT");
-    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile("i18n/qml_qt_QT.qm")), 30000);
+    m_client->triggerLanguage(dataDirectoryUrl(), "fr_FR");
+    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile("i18n/qml_fr_FR.qm")), 30000);
 }
 
 QTEST_MAIN(tst_QQmlPreview)

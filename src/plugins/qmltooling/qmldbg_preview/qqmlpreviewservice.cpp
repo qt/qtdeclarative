@@ -129,7 +129,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         QString locale;
         packet >> context >> locale;
         emit language(context.isEmpty() ? m_currentUrl : context,
-                      locale.isEmpty() ? QLocale::system().name() : locale);
+                      locale.isEmpty() ? QLocale() : QLocale(locale));
         break;
     }
     default:

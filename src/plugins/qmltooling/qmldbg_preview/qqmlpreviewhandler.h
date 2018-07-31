@@ -69,7 +69,7 @@ public:
     void loadUrl(const QUrl &url);
     void rerun();
     void zoom(qreal newFactor);
-    void language(const QUrl &context, const QString &locale);
+    void language(const QUrl &context, const QLocale &locale);
 
     void clear();
 
