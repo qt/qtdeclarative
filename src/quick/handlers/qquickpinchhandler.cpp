@@ -464,19 +464,13 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             acceptPoints(chosenPoints);
     }
 
-    QPointF centroidParentPos;
-    QRectF bounds(QPointF(xAxis()->minimum(), yAxis()->minimum()), QPointF(xAxis()->maximum(), yAxis()->maximum()) );
-    if (target() && target()->parentItem()) {
-        centroidParentPos = target()->parentItem()->mapFromScene(m_centroid.scenePosition());
-        centroidParentPos = QPointF(qBound(bounds.left(), centroidParentPos.x(), bounds.right()),
-                                   qBound(bounds.top(), centroidParentPos.y(), bounds.bottom()));
-    }
     const qreal totalRotation = m_startRotation + m_activeRotation;
     const qreal rotation = qBound(m_minimumRotation, totalRotation, m_maximumRotation);
     m_activeRotation += (rotation - totalRotation);   //adjust for the potential bounding above
     m_accumulatedScale = m_startScale * m_activeScale;
 
     if (target() && target()->parentItem()) {
+        const QPointF centroidParentPos = target()->parentItem()->mapFromScene(m_centroid.scenePosition());
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
@@ -499,6 +493,11 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         QPointF xformOriginPoint = target()->transformOriginPoint();
         QPointF pos = mat * xformOriginPoint;
         pos -= xformOriginPoint;
+
+        if (xAxis()->enabled())
+            pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
+        if (yAxis()->enabled())
+            pos.setY(qBound(yAxis()->minimum(), pos.y(), yAxis()->maximum()));
 
         target()->setPosition(pos);
         target()->setRotation(rotation);
