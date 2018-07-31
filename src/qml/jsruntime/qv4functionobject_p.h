@@ -80,7 +80,7 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
         Index_ProtoConstructor = 0
     };
 
-    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc));
+    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
     void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, bool createProto = false);
     void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
@@ -104,7 +104,7 @@ struct FunctionPrototype : FunctionObject {
 };
 
 struct IndexedBuiltinFunction : FunctionObject {
-    inline void init(QV4::ExecutionContext *scope, uint index, ReturnedValue (*code)(const QV4::FunctionObject *, const Value *, const Value *, int));
+    inline void init(QV4::ExecutionContext *scope, uint index, VTable::Call call);
     uint index;
 };
 
@@ -231,11 +231,10 @@ struct IndexedBuiltinFunction : FunctionObject
     V4_OBJECT2(IndexedBuiltinFunction, FunctionObject)
 };
 
-void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index,
-                                        ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
+void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index, VTable::Call call)
 {
     Heap::FunctionObject::init(scope);
-    this->jsCall = code;
+    this->jsCall = call;
     this->index = index;
 }
 

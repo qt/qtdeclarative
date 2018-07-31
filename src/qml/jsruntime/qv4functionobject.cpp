@@ -70,10 +70,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
-                                ReturnedValue (*code)(const QV4::FunctionObject *, const Value *thisObject, const Value *argv, int argc))
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call)
 {
-    jsCall = code;
+    jsCall = call;
     jsConstruct = QV4::FunctionObject::virtualCallAsConstructor;
 
     Object::init();
