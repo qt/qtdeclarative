@@ -60,7 +60,7 @@ namespace QQmlJS {
 static inline int classify2(const QChar *s, int parseModeFlags) {
   if (s[0].unicode() == 'a') {
     if (s[1].unicode() == 's') {
-      return (parseModeFlags & Lexer::QmlMode) ? Lexer::T_AS : Lexer::T_IDENTIFIER;
+      return Lexer::T_AS;
     }
   }
   else if (s[0].unicode() == 'd') {
@@ -432,7 +432,7 @@ static inline int classify6(const QChar *s, int parseModeFlags) {
         if (s[3].unicode() == 'o') {
           if (s[4].unicode() == 'r') {
             if (s[5].unicode() == 't') {
-              return (parseModeFlags & Lexer::QmlMode) ? int(Lexer::T_IMPORT) : int(Lexer::T_RESERVED_WORD);
+              return Lexer::T_IMPORT;
             }
           }
         }

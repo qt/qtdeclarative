@@ -1390,7 +1390,7 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
 
         lex(); // skip T_DOT
 
-        if (! (_tokenKind == T_IDENTIFIER || _tokenKind == T_RESERVED_WORD))
+        if (! (_tokenKind == T_IDENTIFIER || _tokenKind == T_IMPORT))
             return true; // expected a valid QML/JS directive
 
         const QString directiveName = tokenText();
@@ -1484,7 +1484,7 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
             //
             // recognize the mandatory `as' followed by the module name
             //
-            if (! (lex() == T_IDENTIFIER && tokenText() == QLatin1String("as") && tokenStartLine() == lineNumber)) {
+            if (! (lex() == T_AS && tokenStartLine() == lineNumber)) {
                 if (fileImport)
                     error->message = QCoreApplication::translate("QQmlParser", "File import requires a qualifier");
                 else

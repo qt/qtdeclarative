@@ -119,7 +119,7 @@
 %token T_FOR_LOOKAHEAD_OK "(for lookahead ok)"
 
 --%left T_PLUS T_MINUS
-%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM
+%nonassoc T_IDENTIFIER T_COLON T_SIGNAL T_PROPERTY T_READONLY T_ON T_SET T_GET T_OF T_STATIC T_FROM T_AS
 %nonassoc REDUCE_HERE
 
 %start TopLevel
@@ -1366,6 +1366,7 @@ JsIdentifier: T_SET;
 JsIdentifier: T_FROM;
 JsIdentifier: T_STATIC;
 JsIdentifier: T_OF;
+JsIdentifier: T_AS;
 
 IdentifierReference: JsIdentifier;
 BindingIdentifier: IdentifierReference;
@@ -1848,6 +1849,7 @@ ReservedIdentifier: T_WITH;
 ReservedIdentifier: T_CLASS;
 ReservedIdentifier: T_EXTENDS;
 ReservedIdentifier: T_EXPORT;
+ReservedIdentifier: T_IMPORT;
 
 ComputedPropertyName: T_LBRACKET AssignmentExpression_In T_RBRACKET;
 /.
