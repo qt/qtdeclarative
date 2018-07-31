@@ -1132,8 +1132,6 @@ public:
     static QString localCacheFilePath(const QUrl &url);
 
 protected:
-    void linkBackendToEngine(QV4::ExecutionEngine *engine);
-
     quint32 totalStringCount() const
     { return data->stringTableSize; }
 

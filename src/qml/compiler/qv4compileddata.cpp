@@ -188,7 +188,26 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         }
     }
 
-    linkBackendToEngine(engine);
+    runtimeFunctions.resize(data->functionTableSize);
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
+        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction);
+    }
+
+    Scope scope(engine);
+    Scoped<InternalClass> ic(scope);
+
+    runtimeBlocks.resize(data->blockTableSize);
+    for (int i = 0 ;i < runtimeBlocks.size(); ++i) {
+        const QV4::CompiledData::Block *compiledBlock = data->blockAt(i);
+        ic = engine->internalClasses(EngineBase::Class_CallContext);
+
+        // first locals
+        const quint32_le *localsIndices = compiledBlock->localsTable();
+        for (quint32 i = 0; i < compiledBlock->nLocals; ++i)
+            ic = ic->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        runtimeBlocks[i] = ic->d();
+    }
 
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
@@ -386,30 +405,6 @@ bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeS
     }
 
     return false;
-}
-
-void CompilationUnit::linkBackendToEngine(ExecutionEngine *engine)
-{
-    runtimeFunctions.resize(data->functionTableSize);
-    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
-        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
-        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction);
-    }
-
-    Scope scope(engine);
-    Scoped<InternalClass> ic(scope);
-
-    runtimeBlocks.resize(data->blockTableSize);
-    for (int i = 0 ;i < runtimeBlocks.size(); ++i) {
-        const QV4::CompiledData::Block *compiledBlock = data->blockAt(i);
-        ic = engine->internalClasses(EngineBase::Class_CallContext);
-
-        // first locals
-        const quint32_le *localsIndices = compiledBlock->localsTable();
-        for (quint32 i = 0; i < compiledBlock->nLocals; ++i)
-            ic = ic->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
-        runtimeBlocks[i] = ic->d();
-    }
 }
 
 #endif // V4_BOOTSTRAP
