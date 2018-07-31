@@ -314,7 +314,7 @@ void QQmlTableInstanceModel::setDelegate(QQmlComponent *delegate)
 
 const QAbstractItemModel *QQmlTableInstanceModel::abstractItemModel() const
 {
-    return m_adaptorModel.aim();
+    return m_adaptorModel.adaptsAim() ? m_adaptorModel.aim() : nullptr;
 }
 
 // --------------------------------------------------------
