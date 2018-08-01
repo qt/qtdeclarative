@@ -115,7 +115,7 @@ struct URIErrorObject : ErrorObject {
     void init(const Value &message);
 };
 
-struct ErrorCtor : Heap::FunctionObject {
+struct ErrorCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
     void init(QV4::ExecutionContext *scope, const QString &name);
 };
@@ -235,48 +235,54 @@ struct ErrorCtor: FunctionObject
 
 struct EvalErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(EvalErrorCtor, ErrorCtor)
+    V4_OBJECT2(EvalErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct RangeErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(RangeErrorCtor, ErrorCtor)
+    V4_OBJECT2(RangeErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct ReferenceErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(ReferenceErrorCtor, ErrorCtor)
+    V4_OBJECT2(ReferenceErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct SyntaxErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(SyntaxErrorCtor, ErrorCtor)
+    V4_OBJECT2(SyntaxErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct TypeErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(TypeErrorCtor, ErrorCtor)
+    V4_OBJECT2(TypeErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct URIErrorCtor: ErrorCtor
 {
-    V4_OBJECT2(URIErrorCtor, ErrorCtor)
+    V4_OBJECT2(URIErrorCtor, FunctionObject)
+    V4_PROTOTYPE(errorCtor)
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 
-struct ErrorPrototype : ErrorObject
+struct ErrorPrototype : Object
 {
     enum {
         Index_Constructor = 0,
@@ -289,32 +295,32 @@ struct ErrorPrototype : ErrorObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct EvalErrorPrototype : ErrorObject
+struct EvalErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::EvalError); }
 };
 
-struct RangeErrorPrototype : ErrorObject
+struct RangeErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::RangeError); }
 };
 
-struct ReferenceErrorPrototype : ErrorObject
+struct ReferenceErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::ReferenceError); }
 };
 
-struct SyntaxErrorPrototype : ErrorObject
+struct SyntaxErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::SyntaxError); }
 };
 
-struct TypeErrorPrototype : ErrorObject
+struct TypeErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::TypeError); }
 };
 
-struct URIErrorPrototype : ErrorObject
+struct URIErrorPrototype : Object
 {
     void init(ExecutionEngine *engine, Object *ctor) { ErrorPrototype::init(engine, ctor, this, Heap::ErrorObject::URIError); }
 };

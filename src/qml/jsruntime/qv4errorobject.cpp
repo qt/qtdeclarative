@@ -242,7 +242,7 @@ ReturnedValue ErrorCtor::virtualCall(const FunctionObject *f, const Value *, con
 
 void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("EvalError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("EvalError"));
 }
 
 ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -253,7 +253,7 @@ ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, c
 
 void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("RangeError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("RangeError"));
 }
 
 ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -264,7 +264,7 @@ ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, 
 
 void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("ReferenceError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("ReferenceError"));
 }
 
 ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -275,7 +275,7 @@ ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject 
 
 void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("SyntaxError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("SyntaxError"));
 }
 
 ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -286,7 +286,7 @@ ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f,
 
 void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("TypeError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("TypeError"));
 }
 
 ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -297,7 +297,7 @@ ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, c
 
 void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
 {
-    Heap::ErrorCtor::init(scope, QStringLiteral("URIError"));
+    Heap::FunctionObject::init(scope, QStringLiteral("URIError"));
 }
 
 ReturnedValue URIErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)

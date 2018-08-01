@@ -387,7 +387,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(index == ErrorObject::Index_LineNumber);
     classes[Class_ErrorObjectWithMessage] = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorObject::Index_Message);
-    ic = newInternalClass(ErrorObject::staticVTable(), objectPrototype());
+    ic = newInternalClass(Object::staticVTable(), objectPrototype());
     ic = ic->addMember(id_constructor()->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
     Q_ASSERT(index == ErrorPrototype::Index_Constructor);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);

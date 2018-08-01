@@ -1259,7 +1259,7 @@ void tst_QJSValue::isError_propertiesOfGlobalObject()
     for (int i = 0; i < errors.size(); ++i) {
         QJSValue ctor = eng.globalObject().property(errors.at(i));
         QVERIFY(ctor.isCallable());
-        QVERIFY(ctor.property("prototype").isError());
+        QVERIFY(ctor.property("prototype").isObject());
     }
 }
 
