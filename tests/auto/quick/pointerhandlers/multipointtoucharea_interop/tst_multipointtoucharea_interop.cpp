@@ -213,26 +213,26 @@ void tst_MptaInterop::touchesThenPinch()
     // Press one more point (pinkie finger)
     QPoint p4 = mpta->mapToScene(QPointF(300, 200)).toPoint();
     touch.move(1, p1).move(2, p2).move(3, p3).press(4, p4).commit();
-    // MPTA grabs the newly pressed point
-    QTRY_COMPARE(pointerEvent->point(0)->exclusiveGrabber(), pinch);
-    QCOMPARE(pointerEvent->point(1)->exclusiveGrabber(), pinch);
-    QCOMPARE(pointerEvent->point(2)->exclusiveGrabber(), pinch);
+    // PinchHandler deactivates, which lets MPTA grab all the points
+    QTRY_COMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
+    QCOMPARE(pointerEvent->point(1)->exclusiveGrabber(), mpta);
+    QCOMPARE(pointerEvent->point(2)->exclusiveGrabber(), mpta);
     QCOMPARE(pointerEvent->point(3)->exclusiveGrabber(), mpta);
-    // Move some more... PinchHandler and MPTA both keep reacting
+    // Move some more... MPTA keeps reacting
     for (int i = 0; i < 8; ++i) {
         p1 += QPoint(4, 4);
         p2 += QPoint(4, 4);
         p3 += QPoint(-4, 4);
         p4 += QPoint(-4, -4);
         touch.move(1, p1).move(2, p2).move(3, p3).move(4, p4).commit();
-        QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), pinch);
-        QCOMPARE(pointerEvent->point(1)->exclusiveGrabber(), pinch);
-        QCOMPARE(pointerEvent->point(2)->exclusiveGrabber(), pinch);
+        QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
+        QCOMPARE(pointerEvent->point(1)->exclusiveGrabber(), mpta);
+        QCOMPARE(pointerEvent->point(2)->exclusiveGrabber(), mpta);
         QCOMPARE(pointerEvent->point(3)->exclusiveGrabber(), mpta);
         QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
-        QCOMPARE(tp.at(1)->property("pressed").toBool(), false);
-        QCOMPARE(tp.at(2)->property("pressed").toBool(), false);
-        QCOMPARE(tp.at(3)->property("pressed").toBool(), false);
+        QCOMPARE(tp.at(1)->property("pressed").toBool(), true);
+        QCOMPARE(tp.at(2)->property("pressed").toBool(), true);
+        QCOMPARE(tp.at(3)->property("pressed").toBool(), true);
     }
 
     // Release the pinkie: PinchHandler acquires passive grabs on the 3 remaining points
@@ -263,13 +263,17 @@ void tst_MptaInterop::touchesThenPinch()
 
     // Release another finger
     touch.stationary(2).release(3, p3).commit();
-    // Move some more: DragHandler reacts.
-    // It had a passive grab this whole time; now it activates and gets an exclusive grab.
+    // Move some more: DragHandler eventually reacts.
+    int dragTookGrab = 0;
     for (int i = 0; i < 8; ++i) {
         p2 += QPoint(8, -8);
         touch.move(2, p2).commit();
-        QTRY_COMPARE(pointerEvent->point(0)->exclusiveGrabber(), drag);
+        if (!dragTookGrab && pointerEvent->point(0)->exclusiveGrabber() == drag)
+            dragTookGrab = i;
     }
+    qCDebug(lcPointerTests) << "drag started after" << dragTookGrab << "moves; ended with translation" << drag->translation();
+    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), drag);
+    QTRY_VERIFY(drag->translation().x() > 0);
 
     touch.release(2, p2).commit();
     QQuickTouchUtils::flush(window);

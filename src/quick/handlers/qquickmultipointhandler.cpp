@@ -78,10 +78,21 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (event->asPointerScrollEvent())
         return false;
 
-    if (hasCurrentPoints(event))
-        return true;
-
+    // If points were pressed or released within parentItem, reset stored state
+    // and check eligible points again. This class of handlers is intended to
+    // handle a specific number of points, so a differing number of points will
+    // usually result in different behavior. But otherwise if the currentPoints
+    // are all still there in the event, we're good to go (do not reset
+    // m_currentPoints, because we don't want to lose the pressPosition, and do
+    // not want to reshuffle the order either).
     const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
+    if (candidatePoints.count() != m_currentPoints.count()) {
+        m_currentPoints.clear();
+        setActive(false);
+    } else if (hasCurrentPoints(event)) {
+        return true;
+    }
+
     const bool ret = (candidatePoints.size() >= minimumPointCount() && candidatePoints.size() <= maximumPointCount());
     if (ret) {
         const int c = candidatePoints.count();
@@ -143,14 +154,13 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
     QVector<QQuickEventPoint *> ret;
     int c = event->pointCount();
     // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
-    // In other cases however, do not steal the grab: that is, if a point has a grabber,
-    // it's not a candidate for this handler.
+    // In other cases however, check whether it would be OK to steal the grab if the handler chooses to do that.
     bool stealingAllowed = event->isPressEvent() || event->isReleaseEvent();
     for (int i = 0; i < c; ++i) {
         QQuickEventPoint *p = event->point(i);
         if (!stealingAllowed) {
             QObject *exclusiveGrabber = p->exclusiveGrabber();
-            if (exclusiveGrabber && exclusiveGrabber != this)
+            if (exclusiveGrabber && exclusiveGrabber != this && !canGrab(p))
                 continue;
         }
         if (p->state() != QQuickEventPoint::Released && wantsEventPoint(p))
