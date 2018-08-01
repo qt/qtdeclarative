@@ -83,7 +83,6 @@ public:
     virtual bool visit(UiObjectMemberList *) { return true; }
     virtual bool visit(UiArrayMemberList *) { return true; }
     virtual bool visit(UiQualifiedId *) { return true; }
-    virtual bool visit(UiQualifiedPragmaId *) { return true; }
     virtual bool visit(UiEnumDeclaration *) { return true; }
     virtual bool visit(UiEnumMemberList *) { return true; }
 
@@ -102,7 +101,6 @@ public:
     virtual void endVisit(UiObjectMemberList *) {}
     virtual void endVisit(UiArrayMemberList *) {}
     virtual void endVisit(UiQualifiedId *) {}
-    virtual void endVisit(UiQualifiedPragmaId *) {}
     virtual void endVisit(UiEnumDeclaration *) {}
     virtual void endVisit(UiEnumMemberList *) { }
 

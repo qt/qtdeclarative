@@ -1304,18 +1304,9 @@ void UiImport::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void UiQualifiedPragmaId::accept0(Visitor *visitor)
-{
-    if (visitor->visit(this)) {
-    }
-
-    visitor->endVisit(this);
-}
-
 void UiPragma::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(pragmaType, visitor);
     }
 
     visitor->endVisit(this);

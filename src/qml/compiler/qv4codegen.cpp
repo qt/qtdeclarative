@@ -806,12 +806,6 @@ bool Codegen::visit(UiQualifiedId *)
     return false;
 }
 
-bool Codegen::visit(UiQualifiedPragmaId *)
-{
-    Q_UNREACHABLE();
-    return false;
-}
-
 bool Codegen::visit(VariableDeclarationList *)
 {
     Q_UNREACHABLE();

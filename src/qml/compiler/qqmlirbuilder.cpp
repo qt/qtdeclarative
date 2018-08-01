@@ -691,9 +691,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
     Pragma *pragma = New<Pragma>();
 
     // For now the only valid pragma is Singleton, so lets validate the input
-    if (!node->pragmaType->name.isNull())
+    if (!node->name.isNull())
     {
-        if (QLatin1String("Singleton") == node->pragmaType->name)
+        if (QLatin1String("Singleton") == node->name)
         {
             pragma->type = Pragma::PragmaSingleton;
         } else {

@@ -248,7 +248,6 @@ public:
         Kind_UiParameterList,
         Kind_UiPublicMember,
         Kind_UiQualifiedId,
-        Kind_UiQualifiedPragmaId,
         Kind_UiScriptBinding,
         Kind_UiSourceElement,
         Kind_UiHeaderItemList,
@@ -2926,51 +2925,13 @@ public:
     UiObjectMember *member;
 };
 
-class QML_PARSER_EXPORT UiQualifiedPragmaId: public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(UiQualifiedPragmaId)
-
-    UiQualifiedPragmaId(const QStringRef &name)
-        : next(this), name(name)
-    { kind = K; }
-
-    UiQualifiedPragmaId(UiQualifiedPragmaId *previous, const QStringRef &name)
-        : name(name)
-    {
-        kind = K;
-        next = previous->next;
-        previous->next = this;
-    }
-
-    UiQualifiedPragmaId *finish()
-    {
-        UiQualifiedPragmaId *head = next;
-        next = nullptr;
-        return head;
-    }
-
-    void accept0(Visitor *visitor) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return identifierToken; }
-
-    SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : identifierToken; }
-
-// attributes
-    UiQualifiedPragmaId *next;
-    QStringRef name;
-    SourceLocation identifierToken;
-};
-
 class QML_PARSER_EXPORT UiPragma: public Node
 {
 public:
     QQMLJS_DECLARE_AST_NODE(UiPragma)
 
-    UiPragma(UiQualifiedPragmaId *type)
-        : pragmaType(type)
+    UiPragma(QStringRef name)
+        : name(name)
     { kind = K; }
 
     void accept0(Visitor *visitor) override;
@@ -2982,7 +2943,7 @@ public:
     { return semicolonToken; }
 
 // attributes
-    UiQualifiedPragmaId *pragmaType;
+    QStringRef name;
     SourceLocation pragmaToken;
     SourceLocation semicolonToken;
 };

@@ -570,7 +570,6 @@ protected:
     bool visit(AST::UiParameterList *ast) override;
     bool visit(AST::UiProgram *ast) override;
     bool visit(AST::UiQualifiedId *ast) override;
-    bool visit(AST::UiQualifiedPragmaId *ast) override;
     bool visit(AST::VariableDeclarationList *ast) override;
 
     bool visit(AST::PatternElement *ast) override;

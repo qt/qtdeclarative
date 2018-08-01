@@ -314,7 +314,6 @@ public:
       AST::UiObjectMemberList *UiObjectMemberList;
       AST::UiArrayMemberList *UiArrayMemberList;
       AST::UiQualifiedId *UiQualifiedId;
-      AST::UiQualifiedPragmaId *UiQualifiedPragmaId;
       AST::UiEnumMemberList *UiEnumMemberList;
     };
 
@@ -398,7 +397,6 @@ protected:
     { return location_stack [tos + index - 1]; }
 
     AST::UiQualifiedId *reparseAsQualifiedId(AST::ExpressionNode *expr);
-    AST::UiQualifiedPragmaId *reparseAsQualifiedPragmaId(AST::ExpressionNode *expr);
 
     void pushToken(int token);
     int lookaheadToken(Lexer *lexer);
@@ -546,18 +544,6 @@ AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
         }
 
         return currentId->finish();
-    }
-
-    return 0;
-}
-
-AST::UiQualifiedPragmaId *Parser::reparseAsQualifiedPragmaId(AST::ExpressionNode *expr)
-{
-    if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
-        AST::UiQualifiedPragmaId *q = new (pool) AST::UiQualifiedPragmaId(idExpr->name);
-        q->identifierToken = idExpr->identifierToken;
-
-        return q->finish();
     }
 
     return 0;
@@ -768,17 +754,20 @@ UiHeaderItemList: UiHeaderItemList UiImport;
     } break;
 ./
 
-PragmaId: MemberExpression;
+PragmaId: JsIdentifier;
 
-ImportId: MemberExpression;
-
-UiPragma: UiPragmaHead T_AUTOMATIC_SEMICOLON;
-UiPragma: UiPragmaHead T_SEMICOLON;
+UiPragma: T_PRAGMA PragmaId T_AUTOMATIC_SEMICOLON;
+UiPragma: T_PRAGMA PragmaId T_SEMICOLON;
 /.
     case $rule_number: {
-        sym(1).UiPragma->semicolonToken = loc(2);
+        AST::UiPragma *pragma = new (pool) AST::UiPragma(stringRef(2));
+        pragma->pragmaToken = loc(1);
+        pragma->semicolonToken = loc(3);
+        sym(1).Node = pragma;
     } break;
 ./
+
+ImportId: MemberExpression;
 
 UiImport: UiImportHead T_AUTOMATIC_SEMICOLON;
 UiImport: UiImportHead T_SEMICOLON;
@@ -819,28 +808,6 @@ UiImport: UiImportHead T_AS QmlIdentifier T_SEMICOLON;
         sym(1).UiImport->semicolonToken = loc(4);
     } break;
 ./
-
-UiPragmaHead: T_PRAGMA PragmaId;
-/.
-    case $rule_number: {
-        AST::UiPragma *node = 0;
-
-        if (AST::UiQualifiedPragmaId *qualifiedId = reparseAsQualifiedPragmaId(sym(2).Expression))
-            node = new (pool) AST::UiPragma(qualifiedId);
-
-        sym(1).Node = node;
-
-        if (node) {
-            node->pragmaToken = loc(1);
-        } else {
-           diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, loc(1),
-             QLatin1String("Expected a qualified name id")));
-
-            return false; // ### remove me
-        }
-    } break;
-./
-
 
 UiImportHead: T_IMPORT ImportId;
 /.
