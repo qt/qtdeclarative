@@ -37,6 +37,9 @@
 **
 ****************************************************************************/
 
+#ifndef QQUICKTABLEVIEW_P_P_H
+#define QQUICKTABLEVIEW_P_P_H
+
 //
 //  W A R N I N G
 //  -------------
@@ -330,3 +333,5 @@ public:
 };
 
 QT_END_NAMESPACE
+
+#endif
