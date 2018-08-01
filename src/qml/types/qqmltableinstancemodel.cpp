@@ -437,7 +437,26 @@ void QQmlTableInstanceModel::setModel(const QVariant &model)
     // needs to stay in sync with the model. So we need to drain the pool
     // completely when the model changes.
     drainReusableItemsPool(0);
+    if (auto const aim = abstractItemModel())
+        disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
     m_adaptorModel.setModel(model, this, m_qmlContext->engine());
+    if (auto const aim = abstractItemModel())
+        connect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
+}
+
+void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
+{
+    // This function is called when model data has changed. In that case, we tell the adaptor model
+    // to go through all the items we have created, find the ones that are affected, and notify that
+    // their model data has changed. This will in turn update QML bindings inside the delegate items.
+    int numberOfRowsChanged = end.row() - begin.row() + 1;
+    int numberOfColumnsChanged = end.column() - begin.column() + 1;
+
+    for (int column = 0; column < numberOfColumnsChanged; ++column) {
+        const int columnIndex = begin.column() + column;
+        const int rowIndex = begin.row() + (columnIndex * rows());
+        m_adaptorModel.notify(m_modelItems.values(), rowIndex, numberOfRowsChanged, roles);
+    }
 }
 
 QQmlComponent *QQmlTableInstanceModel::delegate() const

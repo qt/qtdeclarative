@@ -71,6 +71,9 @@ Item {
             implicitHeight: delegateHeight
             color: "lightgray"
             border.width: 1
+
+            property string modelDataBinding: modelData
+
             Text {
                 anchors.centerIn: parent
                 text: modelData

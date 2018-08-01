@@ -57,10 +57,10 @@ public:
         if (!index.isValid() || role != Qt::DisplayRole)
             return QVariant();
 
-        int cell = index.row() + (index.column() * m_columns);
-        if (selectedCells.contains(cell))
-            return QStringLiteral("selected");
-        return QString("%1").arg(index.row());
+        int serializedIndex = index.row() + (index.column() * m_columns);
+        if (modelData.contains(serializedIndex))
+            return modelData.value(serializedIndex);
+        return QStringLiteral("%1").arg(index.row());
     }
 
     QHash<int, QByteArray> roleNames() const override
@@ -68,12 +68,21 @@ public:
         return { {Qt::DisplayRole, "display"} };
     }
 
-    Q_INVOKABLE void selectCell(int row, int column)
+    Q_INVOKABLE void setModelData(const QPoint &cell, const QSize &span, const QString &prefix)
     {
-        int cell = row + (column * m_columns);
-        selectedCells.insert(cell);
-        auto index = createIndex(row, column, nullptr);
-        emit dataChanged(index, index);
+        for (int c = 0; c < span.width(); ++c) {
+            for (int r = 0; r < span.height(); ++r) {
+                const int changedRow = cell.y() + r;
+                const int changedColumn = cell.x() + c;
+                const int serializedIndex = changedRow + (changedColumn * m_rows);
+                const QString string = prefix + QStringLiteral("%1,%2").arg(changedColumn).arg(changedRow);
+                modelData.insert(serializedIndex, string);
+            }
+        }
+
+        const auto topLeftIndex = createIndex(cell.y(), cell.x(), nullptr);
+        const auto bottomRightIndex = createIndex(cell.y() + span.height() - 1, cell.x() + span.width() - 1, nullptr);
+        emit dataChanged(topLeftIndex, bottomRightIndex);
     }
 
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override
@@ -134,7 +143,7 @@ signals:
 private:
     int m_rows = 0;
     int m_columns = 0;
-    QSet<int> selectedCells;
+    QHash<int, QString> modelData;
 };
 
 #define TestModelAsVariant(...) QVariant::fromValue(QSharedPointer<TestModel>(new TestModel(__VA_ARGS__)))

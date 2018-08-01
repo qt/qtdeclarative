@@ -51,6 +51,7 @@ using namespace QQuickVisualTestUtil;
 static const char* kTableViewPropName = "tableView";
 static const char* kDelegateObjectName = "tableViewDelegate";
 static const char *kDelegatesCreatedCountProp = "delegatesCreatedCount";
+static const char *kModelDataBindingProp = "modelDataBinding";
 
 Q_DECLARE_METATYPE(QMarginsF);
 
@@ -113,6 +114,7 @@ private slots:
     void flickOvershoot();
     void checkRowColumnCount();
     void modelSignals();
+    void dataChangedSignal();
     void checkIfDelegatesAreReused_data();
     void checkIfDelegatesAreReused();
     void checkContextProperties_data();
@@ -1111,6 +1113,55 @@ void tst_QQuickTableView::modelSignals()
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 1);
+}
+
+void tst_QQuickTableView::dataChangedSignal()
+{
+    // Check that bindings to the model inside a delegate gets updated
+    // when the model item they bind to changes.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const QString prefix(QStringLiteral("changed"));
+
+    TestModel model(10, 10);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const auto item = tableViewPrivate->loadedTableItem(fxItem->cell)->item;
+        const QString modelDataBindingProperty = item->property(kModelDataBindingProp).toString();
+        QString expectedModelData = QString::number(fxItem->cell.y());
+        QCOMPARE(modelDataBindingProperty, expectedModelData);
+    }
+
+    // Change one cell in the model
+    model.setModelData(QPoint(0, 0), QSize(1, 1), prefix);
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const QPoint cell = fxItem->cell;
+        const auto modelIndex = model.index(cell.y(), cell.x());
+        QString expectedModelData = model.data(modelIndex, Qt::DisplayRole).toString();
+
+        const auto item = tableViewPrivate->loadedTableItem(fxItem->cell)->item;
+        const QString modelDataBindingProperty = item->property(kModelDataBindingProp).toString();
+
+        QCOMPARE(modelDataBindingProperty, expectedModelData);
+    }
+
+    // Change four cells in one go
+    model.setModelData(QPoint(1, 0), QSize(2, 2), prefix);
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const QPoint cell = fxItem->cell;
+        const auto modelIndex = model.index(cell.y(), cell.x());
+        QString expectedModelData = model.data(modelIndex, Qt::DisplayRole).toString();
+
+        const auto item = tableViewPrivate->loadedTableItem(fxItem->cell)->item;
+        const QString modelDataBindingProperty = item->property(kModelDataBindingProp).toString();
+
+        QCOMPARE(modelDataBindingProperty, expectedModelData);
+    }
 }
 
 void tst_QQuickTableView::checkIfDelegatesAreReused_data()

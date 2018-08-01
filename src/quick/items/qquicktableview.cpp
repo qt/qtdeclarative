@@ -1166,7 +1166,6 @@ void QQuickTableViewPrivate::connectToModel()
         // be our own QQmlTableInstanceModel, which doesn't bother creating change sets at all. For models that are
         // not based on QAIM (like QQmlObjectModel, QQmlListModel, javascript arrays etc), there is currently no way
         // to modify the model at runtime without also re-setting the model on the view.
-        connect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
         connect(aim, &QAbstractItemModel::rowsMoved, this, &QQuickTableViewPrivate::rowsMovedCallback);
         connect(aim, &QAbstractItemModel::columnsMoved, this, &QQuickTableViewPrivate::columnsMovedCallback);
         connect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
@@ -1192,7 +1191,6 @@ void QQuickTableViewPrivate::disconnectFromModel()
     }
 
     if (auto const aim = model->abstractItemModel()) {
-        disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
         disconnect(aim, &QAbstractItemModel::rowsMoved, this, &QQuickTableViewPrivate::rowsMovedCallback);
         disconnect(aim, &QAbstractItemModel::columnsMoved, this, &QQuickTableViewPrivate::columnsMovedCallback);
         disconnect(aim, &QAbstractItemModel::rowsInserted, this, &QQuickTableViewPrivate::rowsInsertedCallback);
@@ -1211,14 +1209,6 @@ void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool r
     Q_UNUSED(reset);
 
     Q_TABLEVIEW_ASSERT(!model->abstractItemModel(), "");
-    invalidateTable();
-}
-
-void QQuickTableViewPrivate::dataChangedCallback(const QModelIndex &begin, const QModelIndex &, const QVector<int> &)
-{
-    if (begin.parent() != QModelIndex())
-        return;
-
     invalidateTable();
 }
 

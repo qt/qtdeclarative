@@ -142,6 +142,8 @@ private:
     void deleteAllFinishedIncubationTasks();
     QQmlDelegateModelItem *resolveModelItem(int index);
 
+    void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
+
     static bool isDoneIncubating(QQmlDelegateModelItem *modelItem);
     static void deleteModelItemLater(QQmlDelegateModelItem *modelItem);
 
