@@ -116,8 +116,6 @@ struct SymbolObject : Object
     Q_MANAGED_TYPE(SymbolObject)
     V4_INTERNALCLASS(SymbolObject)
     V4_PROTOTYPE(symbolPrototype)
-
-    static bool virtualPut(Managed *, PropertyKey, const Value &, Value *) { return false; }
 };
 
 }

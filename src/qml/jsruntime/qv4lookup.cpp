@@ -511,6 +511,9 @@ bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, co
     if (object.isObject())
         return l->resolveSetter(engine, static_cast<Object *>(&object), value);
 
+    if (engine->currentStackFrame->v4Function->isStrict())
+        return false;
+
     Scope scope(engine);
     ScopedObject o(scope, RuntimeHelpers::convertToObject(scope.engine, object));
     if (!o) // type error

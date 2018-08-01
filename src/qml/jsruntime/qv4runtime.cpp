@@ -579,7 +579,14 @@ void Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object,
     Scope scope(engine);
     QV4::Function *v4Function = engine->currentStackFrame->v4Function;
     ScopedString name(scope, v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    ScopedObject o(scope, object.toObject(engine));
+    ScopedObject o(scope, object);
+    if (!o) {
+        if (v4Function->isStrict()) {
+            engine->throwTypeError();
+            return;
+        }
+        o = object.toObject(engine);
+    }
     if ((!o || !o->put(name, value)) && v4Function->isStrict())
         engine->throwTypeError();
 }
@@ -664,7 +671,15 @@ ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &
 static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     Scope scope(engine);
-    ScopedObject o(scope, object.toObject(engine));
+    ScopedObject o(scope, object);
+    if (!o) {
+        if (engine->currentStackFrame->v4Function->isStrict()) {
+            engine->throwTypeError();
+            return false;
+        }
+
+        o = object.toObject(engine);
+    }
     if (engine->hasException)
         return false;
 

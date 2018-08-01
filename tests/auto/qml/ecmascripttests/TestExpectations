@@ -459,7 +459,6 @@ built-ins/Number/prototype/toPrecision/return-values.js fails
 built-ins/Number/string-binary-literal.js fails
 built-ins/Number/string-hex-literal-invalid.js fails
 built-ins/Number/string-octal-literal.js fails
-built-ins/Object/assign/Target-Symbol.js fails
 built-ins/Object/assign/source-own-prop-desc-missing.js fails
 built-ins/Object/create/15.2.3.5-4-14.js strictFails
 built-ins/Object/create/15.2.3.5-4-37.js strictFails
