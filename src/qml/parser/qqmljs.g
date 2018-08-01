@@ -2376,11 +2376,11 @@ EqualityOperator: T_NOT_EQ_EQ;
 
 
 BitwiseANDExpression: EqualityExpression;
-XitwiseANDExpression_In: EqualityExpression_In;
+BitwiseANDExpression_In: EqualityExpression_In;
 
 BitwiseANDExpression: BitwiseANDExpression T_AND EqualityExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-XitwiseANDExpression_In: XitwiseANDExpression_In T_AND EqualityExpression_In;
+BitwiseANDExpression_In: BitwiseANDExpression_In T_AND EqualityExpression_In;
 /.
     case $rule_number: {
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::BitAnd, sym(3).Expression);
@@ -2391,11 +2391,11 @@ XitwiseANDExpression_In: XitwiseANDExpression_In T_AND EqualityExpression_In;
 
 
 BitwiseXORExpression: BitwiseANDExpression;
-BitwiseXORExpression_In: XitwiseANDExpression_In;
+BitwiseXORExpression_In: BitwiseANDExpression_In;
 
 BitwiseXORExpression: BitwiseXORExpression T_XOR BitwiseANDExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-BitwiseXORExpression_In: BitwiseXORExpression_In T_XOR XitwiseANDExpression_In;
+BitwiseXORExpression_In: BitwiseXORExpression_In T_XOR BitwiseANDExpression_In;
 /.
     case $rule_number: {
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::BitXor, sym(3).Expression);
