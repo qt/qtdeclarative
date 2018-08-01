@@ -496,13 +496,7 @@ built-ins/Object/getOwnPropertyDescriptors/proxy-undefined-descriptor.js fails
 built-ins/Object/getOwnPropertyDescriptors/symbols-included.js fails
 built-ins/Object/getOwnPropertyDescriptors/tamper-with-global-object.js fails
 built-ins/Object/getOwnPropertyDescriptors/tamper-with-object-keys.js fails
-built-ins/Object/isExtensible/15.2.3.13-1-1.js fails
-built-ins/Object/isExtensible/15.2.3.13-1-2.js fails
-built-ins/Object/isFrozen/15.2.3.12-1-1.js fails
-built-ins/Object/isFrozen/15.2.3.12-1-2.js fails
 built-ins/Object/keys/proxy-keys.js fails
-built-ins/Object/preventExtensions/15.2.3.10-1-1.js fails
-built-ins/Object/preventExtensions/15.2.3.10-1-2.js fails
 built-ins/Object/proto-from-ctor.js fails
 built-ins/Object/prototype/toLocaleString/primitive_this_value_getter.js strictFails
 built-ins/Object/prototype/toString/no-prototype-property.js fails

@@ -396,9 +396,9 @@ ReturnedValue ObjectPrototype::method_preventExtensions(const FunctionObject *b,
 {
     Scope scope(b);
     if (!argc)
-        return scope.engine->throwTypeError();
+        return Encode::undefined();
 
-    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    ScopedObject o(scope, argv[0]);
     if (!o)
         return argv[0].asReturnedValue();
 
@@ -410,9 +410,9 @@ ReturnedValue ObjectPrototype::method_isSealed(const FunctionObject *b, const Va
 {
     Scope scope(b);
     if (!argc)
-        return scope.engine->throwTypeError();
+        return Encode(true);
 
-    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    ScopedObject o(scope, argv[0]);
     if (!o)
         return Encode(true);
 
@@ -442,9 +442,9 @@ ReturnedValue ObjectPrototype::method_isFrozen(const FunctionObject *b, const Va
 {
     Scope scope(b);
     if (!argc)
-        return scope.engine->throwTypeError();
+        return Encode(true);
 
-    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    ScopedObject o(scope, argv[0]);
     if (!o)
         return Encode(true);
 
@@ -474,9 +474,9 @@ ReturnedValue ObjectPrototype::method_isExtensible(const FunctionObject *b, cons
 {
     Scope scope(b);
     if (!argc)
-        return scope.engine->throwTypeError();
+        return Encode(false);
 
-    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    ScopedObject o(scope, argv[0]);
     if (!o)
         return Encode(false);
 
