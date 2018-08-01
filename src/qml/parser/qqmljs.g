@@ -997,23 +997,9 @@ case $rule_number:
 ./
 
 UiPropertyType: T_VAR;
-/.
-    case $rule_number: {
-        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
-        node->identifierToken = loc(1);
-        sym(1).Node = node;
-    } break;
-./
-
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 UiPropertyType: T_RESERVED_WORD;
-/.
-    case $rule_number: {
-        AST::UiQualifiedId *node = new (pool) AST::UiQualifiedId(stringRef(1));
-        node->identifierToken = loc(1);
-        sym(1).Node = node;
-    } break;
-./
-
+/.  case $rule_number: Q_FALLTHROUGH(); ./
 UiPropertyType: T_IDENTIFIER;
 /.
     case $rule_number: {
