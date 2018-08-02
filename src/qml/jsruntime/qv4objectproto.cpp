@@ -104,6 +104,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("create"), method_create, 2);
     ctor->defineDefaultProperty(QStringLiteral("defineProperty"), method_defineProperty, 3);
     ctor->defineDefaultProperty(QStringLiteral("defineProperties"), method_defineProperties, 2);
+    ctor->defineDefaultProperty(QStringLiteral("entries"), method_entries, 1);
     ctor->defineDefaultProperty(QStringLiteral("seal"), method_seal, 1);
     ctor->defineDefaultProperty(QStringLiteral("freeze"), method_freeze, 1);
     ctor->defineDefaultProperty(QStringLiteral("preventExtensions"), method_preventExtensions, 1);
@@ -336,6 +337,45 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
     }
 
     return O.asReturnedValue();
+}
+
+ReturnedValue ObjectPrototype::method_entries(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
+    ScopedArrayObject a(scope, scope.engine->newArrayObject());
+
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
+    ScopedString name(scope);
+    ScopedArrayObject entry(scope);
+    while (1) {
+        name = it.nextPropertyNameAsString();
+        if (!name)
+            break;
+        entry = scope.engine->newArrayObject();
+        entry->push_back(name);
+        a->push_back(entry);
+    }
+
+    // now add values, do this after the loop above as reading out the values can have side effects
+    uint len = a->getLength();
+    ScopedValue value(scope);
+    for (uint i = 0; i < len; ++i) {
+        entry = a->get(PropertyKey::fromArrayIndex(i));
+        name = entry->get(PropertyKey::fromArrayIndex(0));
+        value = o->get(name->toPropertyKey());
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        entry->push_back(value);
+    }
+
+    return a.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_seal(const FunctionObject *b, const Value *, const Value *argv, int argc)
