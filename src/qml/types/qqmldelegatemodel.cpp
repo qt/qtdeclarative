@@ -1746,7 +1746,7 @@ bool QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const
     if (!o)
         return false;
 
-    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedValue propertyName(scope);
     QV4::ScopedValue v(scope);
     while (1) {

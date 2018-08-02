@@ -305,7 +305,7 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
                 }
             } else if (values->as<Object>()) {
                 ScopedObject object(scope, values);
-                ObjectIterator it(scope, object, ObjectIterator::WithProtoChain|ObjectIterator::EnumerableOnly);
+                ObjectIterator it(scope, object, ObjectIterator::EnumerableOnly);
                 ScopedValue key(scope);
                 QV4::ScopedValue val(scope);
                 while (1) {

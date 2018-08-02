@@ -104,10 +104,7 @@ void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttrib
             return;
         }
 
-        if (flags & WithProtoChain)
-            current->setM(co->getPrototypeOf());
-        else
-            current->setM(nullptr);
+        current->setM(nullptr);
 
         arrayIndex = 0;
         memberIndex = 0;

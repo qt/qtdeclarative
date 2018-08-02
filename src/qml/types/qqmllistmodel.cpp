@@ -563,7 +563,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope);
 
-    QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
+    QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedString propertyName(scope);
     QV4::ScopedValue propertyValue(scope);
     while (1) {
@@ -642,7 +642,7 @@ void ListModel::set(int elementIndex, QV4::Object *object)
     QV4::ExecutionEngine *v4 = object->engine();
     QV4::Scope scope(v4);
 
-    QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::WithProtoChain|QV4::ObjectIterator::EnumerableOnly);
+    QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedString propertyName(scope);
     QV4::ScopedValue propertyValue(scope);
     QV4::ScopedObject o(scope);

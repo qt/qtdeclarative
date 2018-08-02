@@ -61,8 +61,7 @@ struct Q_QML_EXPORT ObjectIteratorData
 {
     enum Flags {
         NoFlags = 0,
-        EnumerableOnly = 0x1,
-        WithProtoChain = 0x2,
+        EnumerableOnly = 0x1
     };
 
     ExecutionEngine *engine;

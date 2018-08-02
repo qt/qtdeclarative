@@ -1223,7 +1223,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope);
     QV4::ScopedObject valueMap(scope, v);
-    QV4::ObjectIterator it(scope, valueMap, QV4::ObjectIterator::EnumerableOnly|QV4::ObjectIterator::WithProtoChain);
+    QV4::ObjectIterator it(scope, valueMap, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedString name(scope);
     QV4::ScopedValue val(scope);
     if (engine->hasException)
