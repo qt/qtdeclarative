@@ -268,6 +268,8 @@ void tst_MptaInterop::touchesThenPinch()
     for (int i = 0; i < 8; ++i) {
         p2 += QPoint(8, -8);
         touch.move(2, p2).commit();
+        QQuickTouchUtils::flush(window);
+        QVERIFY(pointerEvent->point(0)->passiveGrabbers().contains(drag));
         if (!dragTookGrab && pointerEvent->point(0)->exclusiveGrabber() == drag)
             dragTookGrab = i;
     }
