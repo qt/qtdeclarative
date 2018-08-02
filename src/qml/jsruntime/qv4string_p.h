@@ -169,6 +169,7 @@ int String::length() const {
 struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
 #ifndef V4_BOOTSTRAP
     V4_MANAGED(StringOrSymbol, Managed)
+    V4_NEEDS_DESTROY
     enum {
         IsStringOrSymbol = true
     };
@@ -191,7 +192,6 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
     V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)
-    V4_NEEDS_DESTROY
     enum {
         IsString = true
     };
