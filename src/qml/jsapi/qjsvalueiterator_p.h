@@ -61,12 +61,16 @@ class QJSValueIteratorPrivate
 public:
     QJSValueIteratorPrivate(const QJSValue &v);
 
-    QJSValue value;
-    QV4::PersistentValue iterator;
-    QV4::PersistentValue currentName;
-    uint currentIndex;
-    QV4::PersistentValue nextName;
-    uint nextIndex;
+    void init(const QJSValue &v);
+    bool isValid() const;
+
+    void next();
+
+    QV4::ExecutionEngine *engine = nullptr;
+    QV4::PersistentValue object;
+    QScopedPointer<QV4::OwnPropertyKeyIterator> iterator;
+    QV4::PersistentValue currentKey;
+    QV4::PersistentValue nextKey;
 };
 
 

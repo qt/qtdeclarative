@@ -102,6 +102,7 @@ struct StringObject: Object {
 protected:
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
     static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
     static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
 };
 

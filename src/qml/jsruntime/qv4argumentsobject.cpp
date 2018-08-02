@@ -212,3 +212,9 @@ qint64 ArgumentsObject::virtualGetLength(const Managed *m)
     const ArgumentsObject *a = static_cast<const ArgumentsObject *>(m);
     return a->propertyData(Heap::ArgumentsObject::LengthPropertyIndex)->toLength();
 }
+
+OwnPropertyKeyIterator *ArgumentsObject::virtualOwnPropertyKeys(const Object *m)
+{
+    static_cast<ArgumentsObject *>(const_cast<Object *>(m))->fullyCreate();
+    return Object::virtualOwnPropertyKeys(m);
+}

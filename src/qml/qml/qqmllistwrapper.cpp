@@ -157,6 +157,36 @@ void QmlListWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Valu
     return QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
 }
 
+struct QmlListWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    ~QmlListWrapperOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey QmlListWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(o);
+
+    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
+    if (arrayIndex < count) {
+        uint index = arrayIndex;
+        ++arrayIndex;
+        if (attrs)
+            *attrs = QV4::Attr_Data;
+        if (pd)
+            pd->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), index));
+        return PropertyKey::fromArrayIndex(index);
+    }
+
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *QmlListWrapper::virtualOwnPropertyKeys(const Object *)
+{
+    return new QmlListWrapperOwnPropertyKeyIterator;
+}
+
 void PropertyListPrototype::init(ExecutionEngine *)
 {
     defineDefaultProperty(QStringLiteral("push"), method_push, 1);

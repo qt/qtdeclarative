@@ -182,12 +182,11 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     void destroyObject(bool lastCall);
 
-protected:
-    static bool virtualIsEqualTo(Managed *that, Managed *o);
-
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired = true);
+protected:
     static void setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value);
 
+    static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
     static QQmlPropertyData *findProperty(ExecutionEngine *engine, QObject *o, QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, QQmlPropertyData *local);
@@ -197,6 +196,7 @@ protected:
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
     static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
     static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
 
     static ReturnedValue method_connect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_disconnect(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -280,8 +280,8 @@ public:
     }
 
     void initSparseArray();
-    SparseArrayNode *sparseBegin() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : nullptr; }
-    SparseArrayNode *sparseEnd() { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : nullptr; }
+    SparseArrayNode *sparseBegin() const { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->begin() : nullptr; }
+    SparseArrayNode *sparseEnd() const { return arrayType() == Heap::ArrayData::Sparse ? d()->arrayData->sparse->end() : nullptr; }
 
     inline bool protoHasArray() {
         Scope scope(engine());
@@ -355,6 +355,8 @@ public:
     { return vtable()->deleteProperty(this, id); }
     void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
     { vtable()->advanceIterator(this, it, name, index, p, attributes); }
+    OwnPropertyKeyIterator *ownPropertyKeys() const
+    { return vtable()->ownPropertyKeys(this); }
     qint64 getLength() const { return vtable()->getLength(this); }
     ReturnedValue instanceOf(const Value &var) const
     { return vtable()->instanceOf(this, var); }
@@ -376,6 +378,7 @@ protected:
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *);
     static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
     static qint64 virtualGetLength(const Managed *m);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
 
@@ -388,6 +391,16 @@ private:
 
     friend struct ObjectIterator;
     friend struct ObjectPrototype;
+};
+
+struct ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
+{
+    uint arrayIndex = 0;
+    uint memberIndex = 0;
+    SparseArrayNode *arrayNode = nullptr;
+    ~ObjectOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
 };
 
 namespace Heap {

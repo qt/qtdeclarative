@@ -56,6 +56,11 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct OwnPropertyKeyIterator {
+    virtual ~OwnPropertyKeyIterator() = 0;
+    virtual PropertyKey next(const Object *o, Property *p = nullptr, PropertyAttributes *attrs = nullptr) = 0;
+};
+
 struct VTable
 {
     typedef void (*Destroy)(Heap::Base *);
@@ -74,6 +79,7 @@ struct VTable
     typedef bool (*SetPrototypeOf)(Managed *, const Object *);
     typedef qint64 (*GetLength)(const Managed *m);
     typedef void (*AdvanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    typedef OwnPropertyKeyIterator *(*OwnPropertyKeys)(const Object *m);
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -109,6 +115,7 @@ struct VTable
     SetPrototypeOf setPrototypeOf;
     GetLength getLength;
     AdvanceIterator advanceIterator;
+    OwnPropertyKeys ownPropertyKeys;
     InstanceOf instanceOf;
 
     Call call;
@@ -133,6 +140,7 @@ protected:
     static constexpr VTable::SetPrototypeOf virtualSetPrototypeOf = nullptr;
     static constexpr VTable::GetLength virtualGetLength = nullptr;
     static constexpr VTable::AdvanceIterator virtualAdvanceIterator = nullptr;
+    static constexpr VTable::OwnPropertyKeys virtualOwnPropertyKeys = nullptr;
     static constexpr VTable::InstanceOf virtualInstanceOf = nullptr;
 
     static constexpr VTable::Call virtualCall = nullptr;
@@ -172,6 +180,7 @@ protected:
     classname::virtualSetPrototypeOf,       \
     classname::virtualGetLength,            \
     classname::virtualAdvanceIterator,      \
+    classname::virtualOwnPropertyKeys,      \
     classname::virtualInstanceOf,           \
     \
     classname::virtualCall,                 \

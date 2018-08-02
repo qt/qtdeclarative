@@ -176,10 +176,13 @@ struct ModelObject : public QObjectWrapper
     V4_OBJECT2(ModelObject, QObjectWrapper)
     V4_NEEDS_DESTROY
 
+    ListModel *listModel() const { return d()->m_model->m_listModel; }
+
 protected:
     static bool virtualPut(Managed *m, PropertyKey id, const Value& value, Value *receiver);
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
 };
 
 } // namespace QV4

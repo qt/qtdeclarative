@@ -130,6 +130,9 @@ public:
     Q_QML_EXPORT QString toQString() const;
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
     quint64 id() const { return val; }
+    static PropertyKey fromId(quint64 id) {
+        PropertyKey key; key.val = id; return key;
+    }
 
     enum FunctionNamePrefix {
         None,

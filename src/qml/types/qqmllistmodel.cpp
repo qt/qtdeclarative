@@ -1633,6 +1633,44 @@ void ModelObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *
     QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
+struct ModelObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    int roleNameIndex = 0;
+    ~ModelObjectOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const ModelObject *that = static_cast<const ModelObject *>(o);
+
+    ExecutionEngine *v4 = that->engine();
+    if (roleNameIndex < that->listModel()->roleCount()) {
+        Scope scope(that->engine());
+        const ListLayout::Role &role = that->listModel()->getExistingRole(roleNameIndex);
+        ++roleNameIndex;
+        ScopedString roleName(scope, v4->newString(role.name));
+        if (attrs)
+            *attrs = QV4::Attr_Data;
+        if (pd) {
+            QVariant value = that->d()->m_model->data(that->d()->elementIndex(), role.index);
+            pd->value = v4->fromVariant(value);
+        }
+        return roleName->toPropertyKey();
+    }
+
+    // Fall back to QV4::Object as opposed to QV4::QObjectWrapper otherwise it will add
+    // unnecessary entries that relate to the roles used. These just create extra work
+    // later on as they will just be ignored.
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *ModelObject::virtualOwnPropertyKeys(const Object *)
+{
+    return new ModelObjectOwnPropertyKeyIterator;
+}
+
 DEFINE_OBJECT_VTABLE(ModelObject);
 
 } // namespace QV4

@@ -302,6 +302,10 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
             return *this;
         val = other.engine()->memoryManager->m_persistentValues->allocate();
     }
+    if (!other.val) {
+        *val = Encode::undefined();
+        return *this;
+    }
 
     Q_ASSERT(engine() == other.engine());
 
@@ -315,6 +319,10 @@ PersistentValue &PersistentValue::operator=(const WeakValue &other)
         if (!other.valueRef())
             return *this;
         val = other.engine()->memoryManager->m_persistentValues->allocate();
+    }
+    if (!other.valueRef()) {
+        *val = Encode::undefined();
+        return *this;
     }
 
     Q_ASSERT(engine() == other.engine());
@@ -378,6 +386,10 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
         if (!other.val)
             return *this;
         allocVal(other.engine());
+    }
+    if (!other.val) {
+        *val = Encode::undefined();
+        return *this;
     }
 
     Q_ASSERT(engine() == other.engine());

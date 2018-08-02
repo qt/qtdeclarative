@@ -814,6 +814,74 @@ void QObjectWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Valu
     QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
+struct QObjectWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    int propertyIndex = 0;
+    ~QObjectWrapperOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
+    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
+    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
+    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
+
+    const QObjectWrapper *that = static_cast<const QObjectWrapper*>(o);
+
+    QObject *thatObject = that->d()->object();
+    if (thatObject && !QQmlData::wasDeleted(thatObject)) {
+        const QMetaObject *mo = thatObject->metaObject();
+        // These indices don't apply to gadgets, so don't block them.
+        const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
+        const int propertyCount = mo->propertyCount();
+        if (propertyIndex < propertyCount) {
+            ExecutionEngine *thatEngine = that->engine();
+            Scope scope(thatEngine);
+            const QMetaProperty property = mo->property(propertyIndex);
+            ScopedString propName(scope, thatEngine->newString(QString::fromUtf8(property.name())));
+            ++propertyIndex;
+            if (attrs)
+                *attrs= QV4::Attr_Data;
+            if (pd) {
+                QQmlPropertyData local;
+                local.load(property);
+                pd->value = that->getProperty(thatEngine, thatObject, &local);
+            }
+            return propName->toPropertyKey();
+        }
+        const int methodCount = mo->methodCount();
+        while (propertyIndex < propertyCount + methodCount) {
+            Q_ASSERT(propertyIndex >= propertyCount);
+            int index = propertyIndex - propertyCount;
+            const QMetaMethod method = mo->method(index);
+            ++propertyIndex;
+            if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
+                continue;
+            ExecutionEngine *thatEngine = that->engine();
+            Scope scope(thatEngine);
+            ScopedString methodName(scope, thatEngine->newString(QString::fromUtf8(method.name())));
+            if (attrs)
+                *attrs = QV4::Attr_Data;
+            if (pd) {
+                QQmlPropertyData local;
+                local.load(method);
+                pd->value = that->getProperty(thatEngine, thatObject, &local);
+            }
+            return methodName->toPropertyKey();
+        }
+    }
+
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *QObjectWrapper::virtualOwnPropertyKeys(const Object *)
+{
+    return new QObjectWrapperOwnPropertyKeyIterator;
+}
+
 namespace QV4 {
 
 struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase

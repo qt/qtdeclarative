@@ -142,3 +142,8 @@ bool Managed::virtualIsEqualTo(Managed *, Managed *)
 {
     return false;
 }
+
+
+OwnPropertyKeyIterator::~OwnPropertyKeyIterator()
+{
+}

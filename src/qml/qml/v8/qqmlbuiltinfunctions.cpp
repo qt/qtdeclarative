@@ -229,6 +229,15 @@ void QtObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *nam
     QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
+OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m)
+{
+    auto that = static_cast<const QtObject*>(m);
+    if (!that->d()->isComplete())
+        const_cast<QtObject *>(that)->addAll();
+
+    return Object::virtualOwnPropertyKeys(m);
+}
+
 /*!
 \qmlmethod bool Qt::isQtObject(object)
 Returns true if \c object is a valid reference to a Qt or QML object, otherwise false.

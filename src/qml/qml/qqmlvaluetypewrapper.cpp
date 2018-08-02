@@ -282,6 +282,46 @@ void QQmlValueTypeWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it
     QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
 }
 
+struct QQmlValueTypeWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    int propertyIndex = 0;
+    ~QQmlValueTypeWrapperOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey QQmlValueTypeWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs) {
+    const QQmlValueTypeWrapper *that = static_cast<const QQmlValueTypeWrapper *>(o);
+
+    if (const QQmlValueTypeReference *ref = that->as<QQmlValueTypeReference>()) {
+        if (!ref->readReferenceValue())
+            return PropertyKey::invalid();
+    }
+
+    if (that->d()->propertyCache()) {
+        const QMetaObject *mo = that->d()->propertyCache()->createMetaObject();
+        const int propertyCount = mo->propertyCount();
+        if (propertyIndex < propertyCount) {
+            Scope scope(that->engine());
+            ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(propertyIndex).name())));
+            ++propertyIndex;
+            if (attrs)
+                *attrs = QV4::Attr_Data;
+            if (pd)
+                pd->value = that->QV4::Object::get(propName);
+            return propName->toPropertyKey();
+        }
+    }
+
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+
+OwnPropertyKeyIterator *QQmlValueTypeWrapper::virtualOwnPropertyKeys(const Object *)
+{
+    return new QQmlValueTypeWrapperOwnPropertyKeyIterator;
+}
+
 bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 {
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())

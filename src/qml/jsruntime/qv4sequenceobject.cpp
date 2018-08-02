@@ -365,6 +365,38 @@ public:
         QV4::Object::virtualAdvanceIterator(this, it, name, index, p, attrs);
     }
 
+    struct OwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+    {
+        ~OwnPropertyKeyIterator() override = default;
+        PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override
+        {
+            const QQmlSequence *s = static_cast<const QQmlSequence *>(o);
+
+            if (s->d()->isReference) {
+                if (!s->d()->object)
+                    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+                s->loadReference();
+            }
+
+            if (arrayIndex < static_cast<uint>(s->d()->container->size())) {
+                uint index = arrayIndex;
+                ++arrayIndex;
+                if (attrs)
+                    *attrs = QV4::Attr_Data;
+                if (pd)
+                    pd->value = convertElementToValue(s->engine(), s->d()->container->at(index));
+                return PropertyKey::fromArrayIndex(index);
+            }
+
+            return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+        }
+    };
+
+    static OwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *)
+    {
+        return new OwnPropertyKeyIterator;
+    }
+
     bool containerDeleteIndexedProperty(uint index)
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
@@ -589,6 +621,8 @@ public:
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
     static void virtualAdvanceIterator(Managed *that, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
     { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, p, attrs); }
+    static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m)
+    { return static_cast<const QQmlSequence<Container> *>(m)->containerOwnPropertyKeys(m);}
 
 };
 

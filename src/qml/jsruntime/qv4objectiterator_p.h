@@ -111,14 +111,18 @@ private:
 };
 
 namespace Heap {
-struct ForInIteratorObject : Object {
+
+#define ForInIteratorObjectMembers(class, Member) \
+    Member(class, Pointer, Object *, object) \
+    Member(class, Pointer, Object *, current) \
+    Member(class, NoMark, OwnPropertyKeyIterator *, iterator)
+
+DECLARE_HEAP_OBJECT(ForInIteratorObject, Object) {
     void init(QV4::Object *o);
-    ObjectIterator &it() { return *reinterpret_cast<ObjectIterator*>(&itData); }
     Value workArea[2];
 
     static void markObjects(Heap::Base *that, MarkStack *markStack);
-private:
-    ObjectIteratorData itData;
+    void destroy();
 };
 
 }
@@ -135,16 +139,20 @@ struct ForInIteratorObject: Object {
     V4_OBJECT2(ForInIteratorObject, Object)
     Q_MANAGED_TYPE(ForInIterator)
     V4_PROTOTYPE(forInIteratorPrototype)
+    V4_NEEDS_DESTROY
 
-    ReturnedValue nextPropertyName() const { return d()->it().nextPropertyNameAsString(); }
+    PropertyKey nextProperty() const;
 };
 
 inline
 void Heap::ForInIteratorObject::init(QV4::Object *o)
 {
     Object::init();
-    it() = ObjectIterator(internalClass->engine, workArea, workArea + 1, o,
-                          ObjectIterator::EnumerableOnly | ObjectIterator::WithProtoChain);
+    if (!o)
+        return;
+    object.set(o->engine(), o->d());
+    current.set(o->engine(), o->d());
+    iterator = o->ownPropertyKeys();
 }
 
 

@@ -137,24 +137,58 @@ void StringObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value 
     return Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
 }
 
+
+struct StringObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    ~StringObjectOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey StringObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const StringObject *s = static_cast<const StringObject *>(o);
+    uint slen = s->d()->string->toQString().length();
+    if (arrayIndex < slen) {
+        uint index = arrayIndex;
+        ++arrayIndex;
+        if (attrs)
+            *attrs = Attr_NotConfigurable|Attr_NotWritable;
+        if (pd)
+            pd->value = s->getIndex(index);
+        return PropertyKey::fromArrayIndex(index);
+    } else if (arrayIndex == slen) {
+        if (s->arrayData()) {
+            arrayNode = s->sparseBegin();
+            // iterate until we're past the end of the string
+            while (arrayNode && arrayNode->key() < slen)
+                arrayNode = arrayNode->nextNode();
+        }
+    }
+
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *StringObject::virtualOwnPropertyKeys(const Object *)
+{
+    return new StringObjectOwnPropertyKeyIterator;
+}
+
 PropertyAttributes StringObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attributes = Object::virtualGetOwnProperty(m, id, p);
     if (attributes != Attr_Invalid)
         return attributes;
 
-    Object *o = static_cast<Object *>(m);
-    if (id.isArrayIndex()) {
-        uint index = id.asArrayIndex();
-        if (o->isStringObject()) {
-            if (index >= static_cast<const StringObject *>(m)->length())
-                return Attr_Invalid;
-            if (p)
-                p->value = static_cast<StringObject *>(o)->getIndex(index);
-            return Attr_NotConfigurable|Attr_NotWritable;
-        }
+    StringObject *s = static_cast<StringObject *>(m);
+    uint slen = s->d()->string->toQString().length();
+    uint index = id.asArrayIndex();
+    if (index < slen) {
+        if (p)
+            p->value = static_cast<StringObject *>(s)->getIndex(index);
+        return Attr_NotConfigurable|Attr_NotWritable;
     }
-    return Attr_Invalid;
+    return Object::virtualGetOwnProperty(m, id, p);
 }
 
 DEFINE_OBJECT_VTABLE(StringCtor);

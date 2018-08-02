@@ -408,6 +408,78 @@ void Object::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name,
     *attrs = PropertyAttributes();
 }
 
+PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    if (arrayIndex != UINT_MAX && o->arrayData()) {
+        if (!arrayIndex)
+            arrayNode = o->sparseBegin();
+
+        // sparse arrays
+        if (arrayNode) {
+            while (arrayNode != o->sparseEnd()) {
+                uint k = arrayNode->key();
+                uint pidx = arrayNode->value;
+                Heap::SparseArrayData *sa = o->d()->arrayData.cast<Heap::SparseArrayData>();
+                const Property *p = reinterpret_cast<const Property *>(sa->values.data() + pidx);
+                arrayNode = arrayNode->nextNode();
+                PropertyAttributes a = sa->attrs ? sa->attrs[pidx] : Attr_Data;
+                arrayIndex = k + 1;
+                if (pd)
+                    pd->copy(p, a);
+                if (attrs)
+                    *attrs = a;
+                return PropertyKey::fromArrayIndex(k);
+            }
+            arrayNode = nullptr;
+            arrayIndex = UINT_MAX;
+        }
+        // dense arrays
+        while (arrayIndex < o->d()->arrayData->values.size) {
+            Heap::SimpleArrayData *sa = o->d()->arrayData.cast<Heap::SimpleArrayData>();
+            const Value &val = sa->data(arrayIndex);
+            PropertyAttributes a = o->arrayData()->attributes(arrayIndex);
+            int index = arrayIndex;
+            ++arrayIndex;
+            if (!val.isEmpty()) {
+                if (pd)
+                    pd->value = val;
+                if (attrs)
+                    *attrs = a;
+                return PropertyKey::fromArrayIndex(index);
+            }
+        }
+        arrayIndex = UINT_MAX;
+    }
+
+    while (memberIndex < o->internalClass()->size) {
+        PropertyKey n = o->internalClass()->nameMap.at(memberIndex);
+        if (!n.isStringOrSymbol()) {
+            // accessor properties have a dummy entry with n == 0
+            ++memberIndex;
+            continue;
+        }
+
+        uint index = memberIndex;
+        PropertyAttributes a = o->internalClass()->propertyData[memberIndex];
+        ++memberIndex;
+        if (pd) {
+            pd->value = *o->propertyData(index);
+            if (a.isAccessor())
+                pd->set = *o->propertyData(index + Object::SetterOffset);
+        }
+        if (attrs)
+            *attrs = a;
+        return n;
+    }
+
+    return PropertyKey::invalid();
+}
+
+OwnPropertyKeyIterator *Object::virtualOwnPropertyKeys(const Object *)
+{
+    return new ObjectOwnPropertyKeyIterator;
+}
+
 // Section 8.12.3
 ReturnedValue Object::internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const
 {
