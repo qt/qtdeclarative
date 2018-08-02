@@ -427,20 +427,17 @@ void Collector::collect(QJsonArray *out, const QString &parentIName, const QStri
             qint64 numProperties = 0;
             QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::EnumerableOnly);
             QV4::ScopedProperty p(scope);
-            QV4::ScopedString name(scope);
+            QV4::ScopedPropertyKey name(scope);
             while (true) {
                 QV4::PropertyAttributes attrs;
-                uint index;
-                it.next(name.getRef(), &index, p, &attrs);
-                if (attrs.isEmpty())
+                name = it.next(p, &attrs);
+                if (!name->isValid())
                     break;
-                if (name.getPointer()) {
+                if (name->isStringOrSymbol()) {
                     ++numProperties;
                     if (expanded) {
-                        if (name.getPointer()) {
-                            QV4::Value v = p.property->value;
-                            collect(&children, iname, name->toQStringNoThrow(), v);
-                        }
+                        QV4::Value v = p.property->value;
+                        collect(&children, iname, name->toQString(), v);
                     }
                 }
             }

@@ -52,98 +52,75 @@ void ForInIteratorPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("next"), method_next, 0);
 }
 
-void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
+PropertyKey ObjectIterator::next(Property *pd, PropertyAttributes *attrs)
 {
-    if (!object) {
-        *name = Encode::undefined();
-        *attrs = PropertyAttributes();
-        return;
-    }
+    if (!object)
+        return PropertyKey::invalid();
+
     Scope scope(engine);
-    ScopedObject o(scope);
-    ScopedString n(scope);
     ScopedPropertyKey key(scope);
 
     while (1) {
         key = iterator->next(object, pd, attrs);
         if (!key->isValid()) {
             object = nullptr;
-            *name = Encode::undefined();
-            *attrs = PropertyAttributes();
-            return;
+            return key;
         }
         if (key->isSymbol() || ((flags & EnumerableOnly) && !attrs->isEnumerable()))
             continue;
-        *name = key->asStringOrSymbol();
-        *index = key->asArrayIndex();
-        return;
+        return key;
     }
 }
 
 ReturnedValue ObjectIterator::nextPropertyName(Value *value)
 {
-    Object *o = object->objectValue();
-    if (!o)
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
     ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(p, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    *value = o->getValue(p->value, attrs);
-
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(index);
+    *value = object->getValue(p->value, attrs);
+    if (key->isArrayIndex())
+        return Encode(key->asArrayIndex());
+    Q_ASSERT(key->isStringOrSymbol());
+    return key->asStringOrSymbol()->asReturnedValue();
 }
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString(Value *value)
 {
-    Object *o = object->objectValue();
-    if (!o)
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
     ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(p, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    *value = o->getValue(p->value, attrs);
+    *value = object->getValue(p->value, attrs);
 
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(engine->newString(QString::number(index)));
+    return key->toStringOrSymbol(engine)->asReturnedValue();
 }
 
 ReturnedValue ObjectIterator::nextPropertyNameAsString()
 {
-    if (!object->as<Object>())
+    if (!object)
         return Encode::null();
 
     PropertyAttributes attrs;
-    uint index;
     Scope scope(engine);
     ScopedProperty p(scope);
-    ScopedString name(scope);
-    next(name.getRef(), &index, p, &attrs);
-    if (attrs.isEmpty())
+    ScopedPropertyKey key(scope, next(p, &attrs));
+    if (!key->isValid())
         return Encode::null();
 
-    if (!!name)
-        return name->asReturnedValue();
-    Q_ASSERT(index < UINT_MAX);
-    return Encode(engine->newString(QString::number(index)));
+    return key->toStringOrSymbol(engine)->asReturnedValue();
 }
 
 

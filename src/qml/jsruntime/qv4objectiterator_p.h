@@ -82,7 +82,7 @@ struct Q_QML_EXPORT ObjectIterator
         delete iterator;
     }
 
-    void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = nullptr);
+    PropertyKey next(Property *pd = nullptr, PropertyAttributes *attributes = nullptr);
     ReturnedValue nextPropertyName(Value *value);
     ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();

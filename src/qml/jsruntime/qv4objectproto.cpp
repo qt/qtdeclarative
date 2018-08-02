@@ -317,25 +317,20 @@ ReturnedValue ObjectPrototype::method_defineProperties(const FunctionObject *b, 
     ScopedValue val(scope);
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
-    ScopedStringOrSymbol name(scope);
     ScopedProperty pd(scope);
     ScopedProperty n(scope);
+    ScopedPropertyKey key(scope);
     while (1) {
-        uint index;
         PropertyAttributes attrs;
-        it.next(name.getRef(), &index, pd, &attrs);
-        if (attrs.isEmpty())
+        key = it.next(pd, &attrs);
+        if (!key->isValid())
             break;
         PropertyAttributes nattrs;
         val = o->getValue(pd->value, attrs);
         toPropertyDescriptor(scope.engine, val, n, &nattrs);
         if (scope.engine->hasException)
         return QV4::Encode::undefined();
-        bool ok;
-        if (name)
-            ok = O->defineOwnProperty(name->toPropertyKey(), n, nattrs);
-        else
-            ok = O->defineOwnProperty(PropertyKey::fromArrayIndex(index), n, nattrs);
+        bool ok = O->defineOwnProperty(key, n, nattrs);
         if (!ok)
             THROW_TYPE_ERROR();
     }
