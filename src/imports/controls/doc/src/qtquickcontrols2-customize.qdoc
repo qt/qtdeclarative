@@ -736,6 +736,15 @@
         \snippet qtquickcontrols2-spinbox-custom.qml file
 
 
+    \section2 Customizing SplitView
+
+        SplitView consists of a visual \l {SplitView::handle}{handle} delegate.
+
+        \image qtquickcontrols2-splitview-custom.png
+
+        \snippet qtquickcontrols2-splitview-custom.qml 1
+
+
     \section2 Customizing StackView
 
         StackView can have a visual \l {Control::background}{background}

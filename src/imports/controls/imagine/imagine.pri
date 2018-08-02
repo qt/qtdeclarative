@@ -30,6 +30,7 @@ QML_FILES += \
     $$PWD/ScrollIndicator.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \
+    $$PWD/SplitView.qml \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/SwipeView.qml \

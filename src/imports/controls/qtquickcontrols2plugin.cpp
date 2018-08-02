@@ -56,6 +56,7 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquicksplitview_p.h>
 #include <QtQuickControls2/private/qquickclippedtext_p.h>
 #include <QtQuickControls2/private/qquickitemgroup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
@@ -185,6 +186,11 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(resolvedUrl(QStringLiteral("MenuBar.qml")), uri, 2, 3, "MenuBar");
     qmlRegisterType(resolvedUrl(QStringLiteral("MenuBarItem.qml")), uri, 2, 3, "MenuBarItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
+
+    // QtQuick.Controls 2.5 (new types in Qt 5.12)
+    qmlRegisterType(resolvedUrl(QStringLiteral("SplitView.qml")), uri, 2, 5, "SplitView");
+    qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 5, "SplitHandle",
+        QStringLiteral("SplitHandle is only available as an attached property."));
 
     const QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...

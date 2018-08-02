@@ -53,6 +53,7 @@ QML_FILES += \
     $$PWD/ScrollView.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \
+    $$PWD/SplitView.qml \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/Switch.qml \

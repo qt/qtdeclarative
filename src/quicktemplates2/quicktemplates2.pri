@@ -73,6 +73,7 @@ HEADERS += \
     $$PWD/qquickshortcutcontext_p_p.h \
     $$PWD/qquickslider_p.h \
     $$PWD/qquickspinbox_p.h \
+    $$PWD/qquicksplitview_p.h \
     $$PWD/qquickstackelement_p_p.h \
     $$PWD/qquickstacktransition_p_p.h \
     $$PWD/qquickstackview_p.h \
@@ -149,6 +150,7 @@ SOURCES += \
     $$PWD/qquickshortcutcontext.cpp \
     $$PWD/qquickslider.cpp \
     $$PWD/qquickspinbox.cpp \
+    $$PWD/qquicksplitview.cpp \
     $$PWD/qquickstackelement.cpp \
     $$PWD/qquickstacktransition.cpp \
     $$PWD/qquickstackview.cpp \

@@ -51,6 +51,7 @@ QML_FILES += \
     $$PWD/SliderGroove.qml \
     $$PWD/SliderHandle.qml \
     $$PWD/SpinBox.qml \
+    $$PWD/SplitView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/SwitchDelegate.qml \
     $$PWD/SwitchIndicator.qml \

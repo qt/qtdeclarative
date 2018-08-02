@@ -82,6 +82,7 @@
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickspinbox_p.h>
+#include <QtQuickTemplates2/private/qquicksplitview_p.h>
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickswipe_p.h>
 #include <QtQuickTemplates2/private/qquickswipedelegate_p.h>
@@ -337,6 +338,11 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPopupAnchors>();
     qmlRegisterType<QQuickRangeSlider, 5>(uri, 2, 5, "RangeSlider");
     qmlRegisterType<QQuickSlider, 5>(uri, 2, 5, "Slider");
+    qmlRegisterType<QQuickSplitView, 5>(uri, 2, 5, "SplitView");
+    qmlRegisterType<QQuickSplitViewAttached>();
+    qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 5, "SplitHandle",
+        QStringLiteral("SplitHandle is only available as an attached property."));
+    qmlRegisterType<QQuickSplitHandleAttached>();
     qmlRegisterType<QQuickSpinBox, 5>(uri, 2, 5, "SpinBox");
     qmlRegisterType<QQuickTextArea, 5>(uri, 2, 5, "TextArea");
     qmlRegisterType<QQuickTextField, 5>(uri, 2, 5, "TextField");

@@ -40,5 +40,6 @@
         <file>controls/BusyIndicator.qml</file>
         <file>testbench.qml</file>
         <file>controls/MenuBar.qml</file>
+        <file>controls/SplitView.qml</file>
     </qresource>
 </RCC>
