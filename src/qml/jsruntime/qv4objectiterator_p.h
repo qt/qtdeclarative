@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_EXPORT ObjectIteratorData
+struct Q_QML_EXPORT ObjectIterator
 {
     enum Flags {
         NoFlags = 0,
@@ -65,48 +65,27 @@ struct Q_QML_EXPORT ObjectIteratorData
     };
 
     ExecutionEngine *engine;
-    Value *object;
-    Value *current;
-    SparseArrayNode *arrayNode;
-    uint arrayIndex;
-    uint memberIndex;
+    Object *object;
+    OwnPropertyKeyIterator *iterator = nullptr;
     uint flags;
-};
-Q_STATIC_ASSERT(std::is_trivial< ObjectIteratorData >::value);
-
-struct Q_QML_EXPORT ObjectIterator: ObjectIteratorData
-{
-    ObjectIterator(ExecutionEngine *e, Value *scratch1, Value *scratch2, Object *o, uint flags)
-    {
-        engine = e;
-        object = scratch1;
-        current = scratch2;
-        arrayNode = nullptr;
-        arrayIndex = 0;
-        memberIndex = 0;
-        this->flags = flags;
-        init(o);
-    }
 
     ObjectIterator(Scope &scope, const Object *o, uint flags)
     {
         engine = scope.engine;
-        object = scope.alloc();
-        current = scope.alloc();
-        arrayNode = nullptr;
-        arrayIndex = 0;
-        memberIndex = 0;
+        object = static_cast<Object *>(scope.alloc());
         this->flags = flags;
-        init(o);
+        object->setM(o ? o->m() : nullptr);
+        iterator = object->ownPropertyKeys();
+    }
+    ~ObjectIterator()
+    {
+        delete iterator;
     }
 
     void next(Value *name, uint *index, Property *pd, PropertyAttributes *attributes = nullptr);
     ReturnedValue nextPropertyName(Value *value);
     ReturnedValue nextPropertyNameAsString(Value *value);
     ReturnedValue nextPropertyNameAsString();
-
-private:
-    void init(const Object *o);
 };
 
 namespace Heap {

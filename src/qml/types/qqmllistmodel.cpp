@@ -1610,29 +1610,6 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     return that->engine()->fromVariant(value);
 }
 
-void ModelObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-{
-    ModelObject *that = static_cast<ModelObject*>(m);
-    ExecutionEngine *v4 = that->engine();
-    name->setM(nullptr);
-    *index = UINT_MAX;
-    if (it->arrayIndex < uint(that->d()->m_model->m_listModel->roleCount())) {
-        Scope scope(that->engine());
-        const ListLayout::Role &role = that->d()->m_model->m_listModel->getExistingRole(it->arrayIndex);
-        ++it->arrayIndex;
-        ScopedString roleName(scope, v4->newString(role.name));
-        name->setM(roleName->d());
-        *attributes = QV4::Attr_Data;
-        QVariant value = that->d()->m_model->data(that->d()->elementIndex(), role.index);
-        p->value = v4->fromVariant(value);
-        return;
-    }
-    // Fall back to QV4::Object as opposed to QV4::QObjectWrapper otherwise it will add
-    // unnecessary entries that relate to the roles used. These just create extra work
-    // later on as they will just be ignored.
-    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
-}
-
 struct ModelObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     int roleNameIndex = 0;

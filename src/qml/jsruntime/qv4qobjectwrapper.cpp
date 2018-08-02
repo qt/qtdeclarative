@@ -760,60 +760,6 @@ PropertyAttributes QObjectWrapper::virtualGetOwnProperty(Managed *m, PropertyKey
     return QV4::Object::virtualGetOwnProperty(m, id, p);
 }
 
-void QObjectWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-{
-    // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
-    static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");
-    static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
-    static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
-
-    name->setM(nullptr);
-    *index = UINT_MAX;
-
-    QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
-
-    QObject *thatObject = that->d()->object();
-    if (thatObject && !QQmlData::wasDeleted(thatObject)) {
-        const QMetaObject *mo = thatObject->metaObject();
-        // These indices don't apply to gadgets, so don't block them.
-        const bool preventDestruction = mo->superClass() || mo == &QObject::staticMetaObject;
-        const int propertyCount = mo->propertyCount();
-        if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            ExecutionEngine *thatEngine = that->engine();
-            Scope scope(thatEngine);
-            const QMetaProperty property = mo->property(it->arrayIndex);
-            ScopedString propName(scope, thatEngine->newString(QString::fromUtf8(property.name())));
-            name->setM(propName->d());
-            ++it->arrayIndex;
-            *attributes = QV4::Attr_Data;
-
-            QQmlPropertyData local;
-            local.load(property);
-            p->value = that->getProperty(thatEngine, thatObject, &local);
-            return;
-        }
-        const int methodCount = mo->methodCount();
-        while (it->arrayIndex < static_cast<uint>(propertyCount + methodCount)) {
-            const int index = it->arrayIndex - propertyCount;
-            const QMetaMethod method = mo->method(index);
-            ++it->arrayIndex;
-            if (method.access() == QMetaMethod::Private || (preventDestruction && (index == deleteLaterIdx || index == destroyedIdx1 || index == destroyedIdx2)))
-                continue;
-            ExecutionEngine *thatEngine = that->engine();
-            Scope scope(thatEngine);
-            ScopedString methodName(scope, thatEngine->newString(QString::fromUtf8(method.name())));
-            name->setM(methodName->d());
-            *attributes = QV4::Attr_Data;
-
-            QQmlPropertyData local;
-            local.load(method);
-            p->value = that->getProperty(thatEngine, thatObject, &local);
-            return;
-        }
-    }
-    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
-}
-
 struct QObjectWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     int propertyIndex = 0;

@@ -181,7 +181,6 @@ struct ModelObject : public QObjectWrapper
 protected:
     static bool virtualPut(Managed *m, PropertyKey id, const Value& value, Value *receiver);
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
 };
 

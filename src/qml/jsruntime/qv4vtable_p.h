@@ -78,7 +78,6 @@ struct VTable
     typedef Heap::Object *(*GetPrototypeOf)(const Managed *);
     typedef bool (*SetPrototypeOf)(Managed *, const Object *);
     typedef qint64 (*GetLength)(const Managed *m);
-    typedef void (*AdvanceIterator)(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     typedef OwnPropertyKeyIterator *(*OwnPropertyKeys)(const Object *m);
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
@@ -114,7 +113,6 @@ struct VTable
     GetPrototypeOf getPrototypeOf;
     SetPrototypeOf setPrototypeOf;
     GetLength getLength;
-    AdvanceIterator advanceIterator;
     OwnPropertyKeys ownPropertyKeys;
     InstanceOf instanceOf;
 
@@ -139,7 +137,6 @@ protected:
     static constexpr VTable::GetPrototypeOf virtualGetPrototypeOf = nullptr;
     static constexpr VTable::SetPrototypeOf virtualSetPrototypeOf = nullptr;
     static constexpr VTable::GetLength virtualGetLength = nullptr;
-    static constexpr VTable::AdvanceIterator virtualAdvanceIterator = nullptr;
     static constexpr VTable::OwnPropertyKeys virtualOwnPropertyKeys = nullptr;
     static constexpr VTable::InstanceOf virtualInstanceOf = nullptr;
 
@@ -179,7 +176,6 @@ protected:
     classname::virtualGetPrototypeOf,       \
     classname::virtualSetPrototypeOf,       \
     classname::virtualGetLength,            \
-    classname::virtualAdvanceIterator,      \
     classname::virtualOwnPropertyKeys,      \
     classname::virtualInstanceOf,           \
     \

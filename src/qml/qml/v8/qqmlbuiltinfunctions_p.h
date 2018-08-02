@@ -94,7 +94,6 @@ struct QtObject : Object
     V4_OBJECT2(QtObject, Object)
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
 
     static ReturnedValue method_isQtObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);

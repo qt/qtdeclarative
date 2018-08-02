@@ -52,64 +52,32 @@ void ForInIteratorPrototype::init(ExecutionEngine *)
     defineDefaultProperty(QStringLiteral("next"), method_next, 0);
 }
 
-void ObjectIterator::init(const Object *o)
-{
-    object->setM(o ? o->m() : nullptr);
-    current->setM(o ? o->m() : nullptr);
-
-    if (object->as<ArgumentsObject>()) {
-        Scope scope(engine);
-        Scoped<ArgumentsObject> (scope, object->asReturnedValue())->fullyCreate();
-    }
-}
-
 void ObjectIterator::next(Value *name, uint *index, Property *pd, PropertyAttributes *attrs)
 {
-    name->setM(nullptr);
-    *index = UINT_MAX;
-
-    if (!object->as<Object>()) {
+    if (!object) {
+        *name = Encode::undefined();
         *attrs = PropertyAttributes();
         return;
     }
     Scope scope(engine);
     ScopedObject o(scope);
     ScopedString n(scope);
+    ScopedPropertyKey key(scope);
 
     while (1) {
-        Object *co = current->objectValue();
-        if (!co)
-            break;
-
-        while (1) {
-            co->advanceIterator(this, name, index, pd, attrs);
-            if (attrs->isEmpty())
-                break;
-            // check the property is not already defined earlier in the proto chain
-            if (co->heapObject() != object->heapObject()) {
-                o = object->as<Object>();
-                n = *name;
-                bool shadowed = false;
-                while (o->d() != current->heapObject()) {
-                    PropertyKey id = n ? (n->toPropertyKey()) : PropertyKey::fromArrayIndex(*index);
-                    if (id.isValid() && o->getOwnProperty(id) != Attr_Invalid) {
-                        shadowed = true;
-                        break;
-                    }
-                    o = o->getPrototypeOf();
-                }
-                if (shadowed)
-                    continue;
-            }
+        key = iterator->next(object, pd, attrs);
+        if (!key->isValid()) {
+            object = nullptr;
+            *name = Encode::undefined();
+            *attrs = PropertyAttributes();
             return;
         }
-
-        current->setM(nullptr);
-
-        arrayIndex = 0;
-        memberIndex = 0;
+        if (key->isSymbol() || ((flags & EnumerableOnly) && !attrs->isEnumerable()))
+            continue;
+        *name = key->asStringOrSymbol();
+        *index = key->asArrayIndex();
+        return;
     }
-    *attrs = PropertyAttributes();
 }
 
 ReturnedValue ObjectIterator::nextPropertyName(Value *value)

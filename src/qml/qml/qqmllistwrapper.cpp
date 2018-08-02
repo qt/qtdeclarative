@@ -140,23 +140,6 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     return false;
 }
 
-void QmlListWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
-{
-    name->setM(nullptr);
-    *index = UINT_MAX;
-    Q_ASSERT(m->as<QmlListWrapper>());
-    QmlListWrapper *w = static_cast<QmlListWrapper *>(m);
-    quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-    if (it->arrayIndex < count) {
-        *index = it->arrayIndex;
-        ++it->arrayIndex;
-        *attrs = QV4::Attr_Data;
-        p->value = QV4::QObjectWrapper::wrap(w->engine(), w->d()->property().at(&w->d()->property(), *index));
-        return;
-    }
-    return QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
-}
-
 struct QmlListWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     ~QmlListWrapperOwnPropertyKeyIterator() override = default;

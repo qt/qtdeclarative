@@ -353,8 +353,6 @@ public:
 
     bool deleteProperty(PropertyKey id)
     { return vtable()->deleteProperty(this, id); }
-    void advanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-    { vtable()->advanceIterator(this, it, name, index, p, attributes); }
     OwnPropertyKeyIterator *ownPropertyKeys() const
     { return vtable()->ownPropertyKeys(this); }
     qint64 getLength() const { return vtable()->getLength(this); }
@@ -377,7 +375,6 @@ protected:
     static bool virtualPreventExtensions(Managed *);
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *);
-    static void virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
     static qint64 virtualGetLength(const Managed *m);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);

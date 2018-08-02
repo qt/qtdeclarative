@@ -219,16 +219,6 @@ ReturnedValue QtObject::virtualGet(const Managed *m, PropertyKey id, const Value
     return ret;
 }
 
-void QtObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-{
-    auto that = static_cast<QtObject*>(m);
-    if (!that->d()->isComplete()) {
-        that->addAll();
-    }
-
-    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
-}
-
 OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m)
 {
     auto that = static_cast<const QtObject*>(m);

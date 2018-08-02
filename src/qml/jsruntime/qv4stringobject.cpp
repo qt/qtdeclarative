@@ -109,35 +109,6 @@ bool StringObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     return Object::virtualDeleteProperty(m, id);
 }
 
-void StringObject::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
-{
-    name->setM(nullptr);
-    StringObject *s = static_cast<StringObject *>(m);
-    uint slen = s->d()->string->toQString().length();
-    if (it->arrayIndex <= slen) {
-        while (it->arrayIndex < slen) {
-            *index = it->arrayIndex;
-            ++it->arrayIndex;
-            Property pd;
-            PropertyAttributes a = s->getOwnProperty(PropertyKey::fromArrayIndex(*index), &pd);
-            if (!(it->flags & ObjectIterator::EnumerableOnly) || a.isEnumerable()) {
-                *attrs = a;
-                p->copy(&pd, a);
-                return;
-            }
-        }
-        if (s->arrayData()) {
-            it->arrayNode = s->sparseBegin();
-            // iterate until we're past the end of the string
-            while (it->arrayNode && it->arrayNode->key() < slen)
-                it->arrayNode = it->arrayNode->nextNode();
-        }
-    }
-
-    return Object::virtualAdvanceIterator(m, it, name, index, p, attrs);
-}
-
-
 struct StringObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     ~StringObjectOwnPropertyKeyIterator() override = default;

@@ -342,29 +342,6 @@ public:
         return (index < size_t(d()->container->size())) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
-    void containerAdvanceIterator(ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
-    {
-        name->setM(nullptr);
-        *index = UINT_MAX;
-
-        if (d()->isReference) {
-            if (!d()->object) {
-                QV4::Object::virtualAdvanceIterator(this, it, name, index, p, attrs);
-                return;
-            }
-            loadReference();
-        }
-
-        if (it->arrayIndex < static_cast<uint>(d()->container->size())) {
-            *index = it->arrayIndex;
-            ++it->arrayIndex;
-            *attrs = QV4::Attr_Data;
-            p->value = convertElementToValue(engine(), d()->container->at(*index));
-            return;
-        }
-        QV4::Object::virtualAdvanceIterator(this, it, name, index, p, attrs);
-    }
-
     struct OwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
     {
         ~OwnPropertyKeyIterator() override = default;
@@ -619,8 +596,6 @@ public:
     }
     static bool virtualIsEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static void virtualAdvanceIterator(Managed *that, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attrs)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerAdvanceIterator(it, name, index, p, attrs); }
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m)
     { return static_cast<const QQmlSequence<Container> *>(m)->containerOwnPropertyKeys(m);}
 

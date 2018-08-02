@@ -254,34 +254,6 @@ PropertyAttributes QQmlValueTypeWrapper::virtualGetOwnProperty(Managed *m, Prope
     return QV4::Object::virtualGetOwnProperty(m, id, p);
 }
 
-void QQmlValueTypeWrapper::virtualAdvanceIterator(Managed *m, ObjectIterator *it, Value *name, uint *index, Property *p, PropertyAttributes *attributes)
-{
-    name->setM(nullptr);
-    *index = UINT_MAX;
-
-    QQmlValueTypeWrapper *that = static_cast<QQmlValueTypeWrapper*>(m);
-
-    if (QQmlValueTypeReference *ref = that->as<QQmlValueTypeReference>()) {
-        if (!ref->readReferenceValue())
-            return;
-    }
-
-    if (that->d()->propertyCache()) {
-        const QMetaObject *mo = that->d()->propertyCache()->createMetaObject();
-        const int propertyCount = mo->propertyCount();
-        if (it->arrayIndex < static_cast<uint>(propertyCount)) {
-            Scope scope(that->engine());
-            ScopedString propName(scope, that->engine()->newString(QString::fromUtf8(mo->property(it->arrayIndex).name())));
-            name->setM(propName->d());
-            ++it->arrayIndex;
-            *attributes = QV4::Attr_Data;
-            p->value = that->QV4::Object::get(propName);
-            return;
-        }
-    }
-    QV4::Object::virtualAdvanceIterator(m, it, name, index, p, attributes);
-}
-
 struct QQmlValueTypeWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     int propertyIndex = 0;
