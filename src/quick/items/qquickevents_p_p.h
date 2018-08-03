@@ -77,13 +77,13 @@ class QQuickPointerHandler;
 class QQuickKeyEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int key READ key)
-    Q_PROPERTY(QString text READ text)
-    Q_PROPERTY(int modifiers READ modifiers)
-    Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat)
-    Q_PROPERTY(int count READ count)
-    Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(int key READ key CONSTANT)
+    Q_PROPERTY(QString text READ text CONSTANT)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
+    Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat CONSTANT)
+    Q_PROPERTY(int count READ count CONSTANT)
+    Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
 
 public:
     QQuickKeyEvent()
@@ -125,16 +125,16 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x)
-    Q_PROPERTY(qreal y READ y)
-    Q_PROPERTY(int button READ button)
-    Q_PROPERTY(int buttons READ buttons)
-    Q_PROPERTY(int modifiers READ modifiers)
-    Q_PROPERTY(int source READ source REVISION 7)
-    Q_PROPERTY(bool wasHeld READ wasHeld)
-    Q_PROPERTY(bool isClick READ isClick)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_REVISION(11) Q_PROPERTY(int flags READ flags)
+    Q_PROPERTY(qreal x READ x CONSTANT)
+    Q_PROPERTY(qreal y READ y CONSTANT)
+    Q_PROPERTY(int button READ button CONSTANT)
+    Q_PROPERTY(int buttons READ buttons CONSTANT)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
+    Q_PROPERTY(int source READ source CONSTANT REVISION 7)
+    Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT)
+    Q_PROPERTY(bool isClick READ isClick CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_REVISION(11) Q_PROPERTY(int flags READ flags CONSTANT)
 
 public:
     QQuickMouseEvent()
@@ -193,14 +193,14 @@ private:
 class QQuickWheelEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x)
-    Q_PROPERTY(qreal y READ y)
-    Q_PROPERTY(QPoint angleDelta READ angleDelta)
-    Q_PROPERTY(QPoint pixelDelta READ pixelDelta)
-    Q_PROPERTY(int buttons READ buttons)
-    Q_PROPERTY(int modifiers READ modifiers)
-    Q_PROPERTY(bool inverted READ inverted)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(qreal x READ x CONSTANT)
+    Q_PROPERTY(qreal y READ y CONSTANT)
+    Q_PROPERTY(QPoint angleDelta READ angleDelta CONSTANT)
+    Q_PROPERTY(QPoint pixelDelta READ pixelDelta CONSTANT)
+    Q_PROPERTY(int buttons READ buttons CONSTANT)
+    Q_PROPERTY(int modifiers READ modifiers CONSTANT)
+    Q_PROPERTY(bool inverted READ inverted CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
 
 public:
     QQuickWheelEvent()
@@ -244,7 +244,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
 
 public:
     QQuickCloseEvent() {}
@@ -259,17 +259,17 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPointerEvent *event READ pointerEvent)
-    Q_PROPERTY(QPointF position READ position)
-    Q_PROPERTY(QPointF scenePosition READ scenePosition)
-    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition)
-    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition)
-    Q_PROPERTY(State state READ state)
-    Q_PROPERTY(int pointId READ pointId)
-    Q_PROPERTY(qreal timeHeld READ timeHeld)
-    Q_PROPERTY(QVector2D velocity READ velocity)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_PROPERTY(QObject *exclusiveGrabber READ exclusiveGrabber WRITE setExclusiveGrabber)
+    Q_PROPERTY(QQuickPointerEvent *event READ pointerEvent CONSTANT)
+    Q_PROPERTY(QPointF position READ position CONSTANT)
+    Q_PROPERTY(QPointF scenePosition READ scenePosition CONSTANT)
+    Q_PROPERTY(QPointF scenePressPosition READ scenePressPosition CONSTANT)
+    Q_PROPERTY(QPointF sceneGrabPosition READ sceneGrabPosition CONSTANT)
+    Q_PROPERTY(State state READ state CONSTANT)
+    Q_PROPERTY(int pointId READ pointId CONSTANT)
+    Q_PROPERTY(qreal timeHeld READ timeHeld CONSTANT)
+    Q_PROPERTY(QVector2D velocity READ velocity CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_PROPERTY(QObject *exclusiveGrabber READ exclusiveGrabber WRITE setExclusiveGrabber CONSTANT)
 
 public:
     enum State {
@@ -386,10 +386,10 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPointerDevice *device READ device)
-    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers)
-    Q_PROPERTY(Qt::MouseButtons button READ button)
-    Q_PROPERTY(Qt::MouseButtons buttons READ buttons)
+    Q_PROPERTY(QQuickPointerDevice *device READ device CONSTANT)
+    Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers CONSTANT)
+    Q_PROPERTY(Qt::MouseButtons button READ button CONSTANT)
+    Q_PROPERTY(Qt::MouseButtons buttons READ buttons CONSTANT)
 
 public:
     QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)

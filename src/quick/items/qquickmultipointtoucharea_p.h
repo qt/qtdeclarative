@@ -185,8 +185,8 @@ private:
 class QQuickGrabGestureEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints)
-    Q_PROPERTY(qreal dragThreshold READ dragThreshold)
+    Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT)
+    Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT)
 public:
     QQuickGrabGestureEvent() : _dragThreshold(QGuiApplication::styleHints()->startDragDistance()) {}
 
