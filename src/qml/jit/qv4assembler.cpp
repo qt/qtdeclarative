@@ -2245,8 +2245,8 @@ void Assembler::popContext()
     Heap::CallContext ctx;
     Q_UNUSED(ctx)
     pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
-    pasm()->loadAccumulator(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset));
-    pasm()->storeAccumulator(regAddr(CallData::Context));
+    pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
+    pasm()->storeHeapObject(PlatformAssembler::ScratchRegister, regAddr(CallData::Context));
 }
 
 void Assembler::ret()
