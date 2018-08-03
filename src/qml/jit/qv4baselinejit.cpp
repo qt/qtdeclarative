@@ -322,7 +322,7 @@ void BaselineJIT::generate_StoreSuperProperty(int property)
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
     as->passRegAsArg(property, 1);
-    as->passFunctionAsArg(0);
+    as->passEngineAsArg(0);
     JIT_GENERATE_RUNTIME_CALL(Runtime::method_storeSuperProperty, Assembler::IgnoreResult);
     as->checkException();
 }
