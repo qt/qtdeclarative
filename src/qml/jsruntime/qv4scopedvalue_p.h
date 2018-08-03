@@ -268,6 +268,19 @@ struct ScopedPropertyKey
         return *ptr;
     }
 
+    bool operator==(const PropertyKey &other) const {
+        return *ptr == other;
+    }
+    bool operator==(const ScopedPropertyKey &other) const {
+        return *ptr == *other.ptr;
+    }
+    bool operator!=(const PropertyKey &other) const {
+        return *ptr != other;
+    }
+    bool operator!=(const ScopedPropertyKey &other) const {
+        return *ptr != *other.ptr;
+    }
+
     PropertyKey *ptr;
 };
 

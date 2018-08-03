@@ -1570,7 +1570,9 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     QV4::Function *f = cls->constructorFunction != UINT_MAX ? unit->runtimeFunctions[cls->constructorFunction] : nullptr;
     constructor = FunctionObject::createConstructorFunction(current, f, !superClass.isEmpty())->asReturnedValue();
     constructor->setPrototypeUnchecked(constructorParent);
-    constructor->defineDefaultProperty(engine->id_prototype(), proto);
+    Value argCount = Primitive::fromInt32(f ? f->nFormals : 0);
+    constructor->defineReadonlyConfigurableProperty(scope.engine->id_length(), argCount);
+    constructor->defineReadonlyConfigurableProperty(engine->id_prototype(), proto);
     proto->defineDefaultProperty(engine->id_constructor(), constructor);
 
     ScopedString name(scope);
@@ -1589,6 +1591,8 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
             receiver = proto;
         if (methods[i].name == UINT_MAX) {
             propertyName = computedNames->toPropertyKey(engine);
+            if (propertyName == scope.engine->id_prototype()->propertyKey() && receiver->d() == constructor->d())
+                return engine->throwTypeError(QStringLiteral("Cannot declare a static method named 'prototype'."));
             if (engine->hasException)
                 return Encode::undefined();
             ++computedNames;

@@ -1726,13 +1726,9 @@ built-ins/global/global-object.js fails
 built-ins/global/property-descriptor.js fails
 built-ins/isFinite/toprimitive-not-callable-throws.js fails
 built-ins/isNaN/toprimitive-not-callable-throws.js fails
-language/computed-property-names/class/static/generator-prototype.js fails
-language/computed-property-names/class/static/getter-prototype.js fails
-language/computed-property-names/class/static/method-prototype.js fails
 language/computed-property-names/class/static/method-number.js fails
 language/computed-property-names/class/static/method-string.js fails
 language/computed-property-names/class/static/method-symbol.js fails
-language/computed-property-names/class/static/setter-prototype.js fails
 language/eval-code/direct/lex-env-no-init-cls.js fails
 language/eval-code/direct/lex-env-no-init-const.js fails
 language/eval-code/direct/lex-env-no-init-let.js fails
@@ -2302,7 +2298,6 @@ language/statements/class/constructor-inferred-observable-iteration.js fails
 language/statements/class/cptn-decl.js fails
 language/statements/class/definition/accessors.js fails
 language/statements/class/definition/class-method-returns-promise.js fails
-language/statements/class/definition/getters-non-configurable-err.js fails
 language/statements/class/definition/getters-prop-desc.js fails
 language/statements/class/definition/getters-restricted-ids.js fails
 language/statements/class/definition/invalid-extends.js strictFails
@@ -2316,7 +2311,6 @@ language/statements/class/definition/prototype-getter.js fails
 language/statements/class/definition/prototype-property.js fails
 language/statements/class/definition/prototype-setter.js fails
 language/statements/class/definition/prototype-wiring.js fails
-language/statements/class/definition/setters-non-configurable-err.js fails
 language/statements/class/definition/setters-prop-desc.js fails
 language/statements/class/definition/setters-restricted-ids.js fails
 language/statements/class/definition/this-access-restriction-2.js fails
@@ -2339,8 +2333,6 @@ language/statements/class/scope-setter-paramsbody-var-open.js fails
 language/statements/class/scope-static-gen-meth-paramsbody-var-open.js fails
 language/statements/class/scope-static-meth-paramsbody-var-open.js fails
 language/statements/class/scope-static-setter-paramsbody-var-open.js fails
-language/statements/class/static-method-gen-non-configurable-err.js fails
-language/statements/class/static-method-non-configurable-err.js fails
 language/statements/class/subclass/bound-function.js fails
 language/statements/class/subclass/builtin-objects/Array/super-must-be-called.js fails
 language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js fails
