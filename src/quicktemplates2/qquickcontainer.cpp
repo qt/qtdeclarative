@@ -241,7 +241,7 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
 
     updatingCurrent = true;
 
-    item->setParentItem(effectiveContentItem(contentItem));
+    item->setParentItem(effectiveContentItem(getContentItem()));
     QQuickItemPrivate::get(item)->addItemChangeListener(this, changeTypes);
     contentModel->insert(index, item);
 
