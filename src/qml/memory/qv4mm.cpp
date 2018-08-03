@@ -617,21 +617,29 @@ void BlockAllocator::sweep()
 //    qDebug() << "BlockAlloc: sweep";
     usedSlotsAfterLastSweep = 0;
 
-    auto isFree = [this] (Chunk *c) {
+    std::vector<Chunk *> chunksToFree;
+
+    auto isFree = [this, &chunksToFree] (Chunk *c) {
         bool isUsed = c->sweep(engine);
 
         if (isUsed) {
             c->sortIntoBins(freeBins, NumBins);
             usedSlotsAfterLastSweep += c->nUsedSlots();
         } else {
-            Q_V4_PROFILE_DEALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
-            chunkAllocator->free(c);
+            chunksToFree.push_back(c);
         }
         return !isUsed;
     };
 
     auto newEnd = std::remove_if(chunks.begin(), chunks.end(), isFree);
     chunks.erase(newEnd, chunks.end());
+
+    // only free the chunks at the end to avoid that the sweep() calls indirectly
+    // access freed memory
+    for (auto c : chunksToFree) {
+        Q_V4_PROFILE_DEALLOC(engine, Chunk::DataSize, Profiling::HeapPage);
+        chunkAllocator->free(c);
+    }
 }
 
 void BlockAllocator::freeAll()
