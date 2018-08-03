@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -190,8 +190,8 @@ void tst_FlickableInterop::touchDragFlickableBehindButton()
         QTest::touchEvent(window, touchDevice).move(1, p1, window);
         QQuickTouchUtils::flush(window);
     }
+    qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
-    qDebug() << "flickable started moving after" << i << "moves, when we got to" << p1;
     QCOMPARE(i, 2);
     QVERIFY(!button->property("pressed").toBool());
     QTest::touchEvent(window, touchDevice).release(1, p1, window);
@@ -278,7 +278,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindButton()
         p1 += QPoint(1, 0);
         QTest::mouseMove(window, p1);
     }
-    qDebug() << "flickable started moving after" << i << "moves, when we got to" << p1;
+    qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
     QCOMPARE(i, 2);
     QVERIFY(!button->property("pressed").toBool());
@@ -456,7 +456,7 @@ void tst_FlickableInterop::touchDragFlickableBehindSlider()
         QTest::touchEvent(window, touchDevice).move(1, p1, window);
         QQuickTouchUtils::flush(window);
     }
-    qDebug() << "flickable started moving after" << i << "moves, when we got to" << p1;
+    qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
     QCOMPARE(i, 2);
     QVERIFY(!slider->property("pressed").toBool());
@@ -500,7 +500,7 @@ void tst_FlickableInterop::mouseDragFlickableBehindSlider()
         p1 += QPoint(1, 0);
         QTest::mouseMove(window, p1);
     }
-    qDebug() << "flickable started moving after" << i << "moves, when we got to" << p1;
+    qCDebug(lcPointerTests) << "flickable started moving after" << i << "moves, when we got to" << p1;
     QVERIFY(flickable->isMoving());
     QCOMPARE(i, 2);
     QVERIFY(!slider->property("pressed").toBool());
@@ -653,7 +653,7 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
     qreal knobSliderXOffset = qAbs(knob->mapToScene(knob->clipRect().center()).toPoint().x() -
         slider->mapToScene(slider->clipRect().center()).toPoint().x()) - initialXOffset;
     if (knobSliderXOffset > 1)
-        qDebug() << "knob has slipped out of groove by" << knobSliderXOffset << "pixels";
+        qCDebug(lcPointerTests) << "knob has slipped out of groove by" << knobSliderXOffset << "pixels";
     // See if the knob is still centered over the slider's "groove"
     QVERIFY(qAbs(knobSliderXOffset) <= 1);
 
