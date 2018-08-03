@@ -232,6 +232,47 @@ ReturnedValue StringCtor::method_fromCodePoint(const FunctionObject *f, const Va
     return e->newString(result)->asReturnedValue();
 }
 
+ReturnedValue StringCtor::method_raw(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject cooked(scope, argv[0].toObject(scope.engine));
+    if (!cooked)
+        return scope.engine->throwTypeError();
+    ScopedString rawString(scope, scope.engine->newIdentifier(QStringLiteral("raw")));
+    ScopedValue rawValue(scope, cooked->get(rawString));
+    ScopedObject raw(scope, rawValue->toObject(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    ++argv;
+    --argc;
+
+    QString result;
+    uint literalSegments = raw->getLength();
+    if (!literalSegments)
+        return scope.engine->id_empty()->asReturnedValue();
+
+    uint nextIndex = 0;
+    ScopedValue val(scope);
+    while (1) {
+        val = raw->get(nextIndex);
+        result += val->toQString();
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        if (nextIndex + 1 == literalSegments)
+            return scope.engine->newString(result)->asReturnedValue();
+
+        if (nextIndex < static_cast<uint>(argc))
+            result += argv[nextIndex].toQString();
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        ++nextIndex;
+    }
+}
+
 void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
@@ -247,6 +288,7 @@ void StringPrototype::init(ExecutionEngine *engine, Object *ctor)
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("fromCharCode"), StringCtor::method_fromCharCode, 1);
     ctor->defineDefaultProperty(QStringLiteral("fromCodePoint"), StringCtor::method_fromCodePoint, 1);
+    ctor->defineDefaultProperty(QStringLiteral("raw"), StringCtor::method_raw, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString);

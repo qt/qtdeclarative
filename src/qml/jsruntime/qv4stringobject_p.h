@@ -114,6 +114,7 @@ struct StringCtor: FunctionObject
 
     static ReturnedValue method_fromCharCode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_fromCodePoint(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_raw(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct StringPrototype: StringObject
