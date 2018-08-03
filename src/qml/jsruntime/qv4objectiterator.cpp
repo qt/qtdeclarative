@@ -54,7 +54,7 @@ void ForInIteratorPrototype::init(ExecutionEngine *)
 
 PropertyKey ObjectIterator::next(Property *pd, PropertyAttributes *attrs)
 {
-    if (!object)
+    if (!object || !iterator)
         return PropertyKey::invalid();
 
     Scope scope(engine);
@@ -196,6 +196,10 @@ PropertyKey ForInIteratorObject::nextProperty() const
             break;
         delete d()->iterator;
         d()->iterator = c->ownPropertyKeys();
+        if (!d()->iterator) {
+            scope.engine->throwTypeError();
+            return PropertyKey::invalid();
+        }
     }
     return PropertyKey::invalid();
 }

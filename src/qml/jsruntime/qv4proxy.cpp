@@ -42,6 +42,8 @@
 #include "qv4symbol_p.h"
 #include "qv4jscall_p.h"
 #include "qv4objectproto_p.h"
+#include "qv4persistent_p.h"
+#include "qv4objectiterator_p.h"
 
 using namespace QV4;
 
@@ -476,6 +478,158 @@ bool ProxyObject::virtualSetPrototypeOf(Managed *m, const Object *p)
     }
     return true;
 }
+
+struct ProxyObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
+{
+    PersistentValue ownKeys;
+    uint index = 0;
+    uint len = 0;
+
+    ProxyObjectOwnPropertyKeyIterator(ArrayObject *keys);
+    ~ProxyObjectOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+ProxyObjectOwnPropertyKeyIterator::ProxyObjectOwnPropertyKeyIterator(ArrayObject *keys)
+{
+    ownKeys = keys;
+    len = keys->getLength();
+}
+
+PropertyKey ProxyObjectOwnPropertyKeyIterator::next(const Object *m, Property *pd, PropertyAttributes *attrs)
+{
+    if (index >= len)
+        return PropertyKey::invalid();
+
+    Scope scope(m);
+    ScopedObject keys(scope, ownKeys.asManaged());
+    PropertyKey key = PropertyKey::fromId(keys->get(PropertyKey::fromArrayIndex(index)));
+    ++index;
+
+    if (pd || attrs) {
+        ScopedProperty p(scope);
+        PropertyAttributes a = const_cast<Object *>(m)->getOwnProperty(key, pd ? pd : p);
+        if (attrs)
+            *attrs = a;
+    }
+
+    return key;
+}
+
+static bool removeAllOccurrences(ArrayObject *target, ReturnedValue val) {
+    uint len = target->getLength();
+    bool found = false;
+    for (uint i = 0; i < len; ++i) {
+        ReturnedValue v = target->get(i);
+        if (v == val) {
+            found = true;
+            target->put(i, Primitive::undefinedValue());
+        }
+    }
+    return  found;
+}
+
+OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m)
+{
+    Scope scope(m);
+    const ProxyObject *o = static_cast<const ProxyObject *>(m);
+    if (!o->d()->handler) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    ScopedObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("ownKeys")));
+    ScopedValue trap(scope, handler->get(name));
+
+    if (scope.hasException())
+        return nullptr;
+    if (trap->isUndefined())
+        return target->ownPropertyKeys();
+    if (!trap->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    JSCallData cdata(scope, 1, nullptr, handler);
+    cdata.args[0] = target;
+    ScopedObject trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
+    if (!trapResult) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    uint len = trapResult->getLength();
+    ScopedArrayObject trapKeys(scope, scope.engine->newArrayObject());
+    ScopedStringOrSymbol key(scope);
+    for (uint i = 0; i < len; ++i) {
+        key = trapResult->get(i);
+        if (scope.engine->hasException)
+            return nullptr;
+        if (!key) {
+            scope.engine->throwTypeError();
+            return nullptr;
+        }
+        Value keyAsValue = Primitive::fromReturnedValue(key->toPropertyKey().id());
+        trapKeys->push_back(keyAsValue);
+    }
+
+    ScopedArrayObject targetConfigurableKeys(scope, scope.engine->newArrayObject());
+    ScopedArrayObject targetNonConfigurableKeys(scope, scope.engine->newArrayObject());
+    ObjectIterator it(scope, target, ObjectIterator::EnumerableOnly);
+    ScopedPropertyKey k(scope);
+    while (1) {
+        PropertyAttributes attrs;
+        k = it.next(nullptr, &attrs);
+        if (!k->isValid())
+            break;
+        Value keyAsValue = Primitive::fromReturnedValue(k->id());
+        if (attrs.isConfigurable())
+            targetConfigurableKeys->push_back(keyAsValue);
+        else
+            targetNonConfigurableKeys->push_back(keyAsValue);
+    }
+    if (target->isExtensible() && targetNonConfigurableKeys->getLength() == 0)
+        return new ProxyObjectOwnPropertyKeyIterator(trapKeys);
+
+    ScopedArrayObject uncheckedResultKeys(scope, scope.engine->newArrayObject());
+    uncheckedResultKeys->copyArrayData(trapKeys);
+
+    len = targetNonConfigurableKeys->getLength();
+    for (uint i = 0; i < len; ++i) {
+        k = PropertyKey::fromId(targetNonConfigurableKeys->get(i));
+        if (!removeAllOccurrences(uncheckedResultKeys, k->id())) {
+            scope.engine->throwTypeError();
+            return nullptr;
+        }
+    }
+
+    if (target->isExtensible())
+        return new ProxyObjectOwnPropertyKeyIterator(trapKeys);
+
+    len = targetConfigurableKeys->getLength();
+    for (uint i = 0; i < len; ++i) {
+        k = PropertyKey::fromId(targetConfigurableKeys->get(i));
+        if (!removeAllOccurrences(uncheckedResultKeys, k->id())) {
+            scope.engine->throwTypeError();
+            return nullptr;
+        }
+    }
+
+    len = uncheckedResultKeys->getLength();
+    for (uint i = 0; i < len; ++i) {
+        if (targetConfigurableKeys->get(i) != Encode::undefined()) {
+            scope.engine->throwTypeError();
+            return nullptr;
+        }
+    }
+
+    return new ProxyObjectOwnPropertyKeyIterator(trapKeys);
+}
+
 
 //ReturnedValue ProxyObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 //{

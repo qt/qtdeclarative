@@ -95,6 +95,7 @@ struct ProxyObject: Object {
     static bool virtualPreventExtensions(Managed *);
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
 
     // those might require a second proxy object that derives from FunctionObject...
 //    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);

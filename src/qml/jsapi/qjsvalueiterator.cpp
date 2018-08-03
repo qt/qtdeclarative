@@ -71,7 +71,7 @@ void QJSValueIteratorPrivate::init(const QJSValue &v)
 void QJSValueIteratorPrivate::next()
 {
     QV4::Object *o = object.as<QV4::Object>();
-    if (!o)
+    if (!o || !iterator)
         return;
 
     QV4::PropertyKey key;
@@ -86,7 +86,7 @@ void QJSValueIteratorPrivate::next()
 
 bool QJSValueIteratorPrivate::isValid() const
 {
-    if (!engine)
+    if (!engine || !iterator)
         return false;
     QV4::Value *val = object.valueRef();
     return (val && val->isObject());
