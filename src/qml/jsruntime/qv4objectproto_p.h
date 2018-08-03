@@ -97,6 +97,7 @@ struct ObjectPrototype: Object
     static ReturnedValue method_preventExtensions(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_seal(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_setPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

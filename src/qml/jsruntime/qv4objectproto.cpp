@@ -115,6 +115,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineDefaultProperty(QStringLiteral("isExtensible"), method_isExtensible, 1);
     ctor->defineDefaultProperty(QStringLiteral("keys"), method_keys, 1);
     ctor->defineDefaultProperty(QStringLiteral("setPrototypeOf"), method_setPrototypeOf, 2);
+    ctor->defineDefaultProperty(QStringLiteral("values"), method_values, 1);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(v4->id_toString(), method_toString, 0);
@@ -587,6 +588,34 @@ ReturnedValue ObjectPrototype::method_setPrototypeOf(const FunctionObject *f, co
     if (!ok)
         return scope.engine->throwTypeError(QStringLiteral("Could not change prototype."));
     return o->asReturnedValue();
+}
+
+ReturnedValue ObjectPrototype::method_values(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
+
+    ScopedArrayObject a(scope, scope.engine->newArrayObject());
+
+    ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
+    ScopedPropertyKey key(scope);
+    ScopedProperty pd(scope);
+    ScopedValue value(scope);
+    PropertyAttributes attrs;
+    while (1) {
+        key = it.next(pd, &attrs);
+        if (!key->isValid())
+            break;
+        value = o->getValue(pd->value, attrs);
+        a->push_back(value);
+    }
+
+    return a.asReturnedValue();
 }
 
 ReturnedValue ObjectPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
