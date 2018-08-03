@@ -85,6 +85,7 @@ struct ObjectPrototype: Object
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_freeze(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getOwnPropertyDescriptor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_getOwnPropertyDescriptors(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getOwnPropertyNames(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getOwnPropertySymbols(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_getPrototypeOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -98,6 +98,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ctor->defineReadonlyConfigurableProperty(v4->id_length(), Primitive::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
+    ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptors"), method_getOwnPropertyDescriptors, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyNames"), method_getOwnPropertyNames, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertySymbols"), method_getOwnPropertySymbols, 1);
     ctor->defineDefaultProperty(QStringLiteral("assign"), method_assign, 2);
@@ -172,6 +173,35 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
     ScopedProperty desc(scope);
     PropertyAttributes attrs = O->getOwnProperty(name, desc);
     return fromPropertyDescriptor(scope.engine, desc, attrs);
+}
+
+ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptors(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject o(scope, argv[0].toObject(scope.engine));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
+    ScopedObject descriptors(scope, scope.engine->newObject());
+
+    ObjectIterator it(scope, o, ObjectIterator::NoFlags);
+    ScopedProperty pd(scope);
+    PropertyAttributes attrs;
+    ScopedPropertyKey key(scope);
+    ScopedObject entry(scope);
+    while (1) {
+        key = it.next(pd, &attrs);
+        if (!key->isValid())
+            break;
+        entry = fromPropertyDescriptor(scope.engine, pd, attrs);
+        descriptors->put(key, entry);
+    }
+
+    return descriptors.asReturnedValue();
+
 }
 
 ReturnedValue ObjectPrototype::method_getOwnPropertyNames(const FunctionObject *b, const Value *, const Value *argv, int argc)
