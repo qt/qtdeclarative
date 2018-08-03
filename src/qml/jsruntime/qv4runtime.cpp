@@ -1264,7 +1264,8 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
 {
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
-    return static_cast<const FunctionObject &>(func).call(nullptr, argv, argc);
+    Value undef = Primitive::undefinedValue();
+    return static_cast<const FunctionObject &>(func).call(&undef, argv, argc);
 }
 
 ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
