@@ -602,7 +602,7 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
     Scope scope(v4);
 
     if (!c->d()->isDerivedConstructor) {
-        ScopedObject proto(scope, static_cast<const Object *>(newTarget)        ->get(scope.engine->id_prototype()));
+        ScopedObject proto(scope, static_cast<const Object *>(newTarget)->get(scope.engine->id_prototype()));
         ScopedObject c(scope, scope.engine->newObject());
         c->setPrototypeUnchecked(proto);
         return c->asReturnedValue();

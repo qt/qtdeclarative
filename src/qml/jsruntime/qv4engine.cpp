@@ -796,7 +796,7 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
-    return ErrorObject::create<ErrorObject>(this, value);
+    return ErrorObject::create<ErrorObject>(this, value, errorCtor());
 }
 
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
@@ -833,7 +833,7 @@ Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 
 Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 {
-    return ErrorObject::create<URIErrorObject>(this, message);
+    return ErrorObject::create<URIErrorObject>(this, message, uRIErrorCtor());
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)

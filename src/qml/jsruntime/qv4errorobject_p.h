@@ -165,7 +165,7 @@ struct ErrorObject: Object {
     V4_NEEDS_DESTROY
 
     template <typename T>
-    static Heap::Object *create(ExecutionEngine *e, const Value &message);
+    static Heap::Object *create(ExecutionEngine *e, const Value &message, const Value *newTarget);
     template <typename T>
     static Heap::Object *create(ExecutionEngine *e, const QString &message);
     template <typename T>
@@ -333,10 +333,11 @@ inline SyntaxErrorObject *ErrorObject::asSyntaxError()
 
 
 template <typename T>
-Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message) {
+Heap::Object *ErrorObject::create(ExecutionEngine *e, const Value &message, const Value *newTarget) {
     EngineBase::InternalClassType klass = message.isUndefined() ? EngineBase::Class_ErrorObject : EngineBase::Class_ErrorObjectWithMessage;
     Scope scope(e);
-    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(T::defaultPrototype(e)->d()));
+    ScopedObject proto(scope, static_cast<const Object *>(newTarget)->get(scope.engine->id_prototype()));
+    Scoped<InternalClass> ic(scope, e->internalClasses(klass)->changePrototype(proto->d()));
     return e->memoryManager->allocObject<T>(ic->d(), message);
 }
 template <typename T>
