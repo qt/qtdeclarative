@@ -979,7 +979,7 @@ QV4::Bool Runtime::method_compareGreaterThan(const Value &l, const Value &r)
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return sr->compare(sl);
+        return sr->lessThan(sl);
 #endif
     }
 
@@ -1016,7 +1016,7 @@ QV4::Bool Runtime::method_compareLessThan(const Value &l, const Value &r)
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return sl->compare(sr);
+        return sl->lessThan(sr);
 #endif
     }
 
@@ -1053,7 +1053,7 @@ QV4::Bool Runtime::method_compareGreaterEqual(const Value &l, const Value &r)
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return !sl->compare(sr);
+        return !sl->lessThan(sr);
 #endif
     }
 
@@ -1090,7 +1090,7 @@ QV4::Bool Runtime::method_compareLessEqual(const Value &l, const Value &r)
         Q_UNIMPLEMENTED();
         return false;
 #else
-        return !sr->compare(sl);
+        return !sr->lessThan(sl);
 #endif
     }
 

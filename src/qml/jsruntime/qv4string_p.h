@@ -206,7 +206,7 @@ struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
         return d()->isEqualTo(other->d());
     }
 
-    inline bool compare(const String *other) {
+    inline bool lessThan(const String *other) {
         return toQString() < other->toQString();
     }
 
