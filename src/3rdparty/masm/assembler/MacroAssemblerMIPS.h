@@ -27,6 +27,8 @@
 #ifndef MacroAssemblerMIPS_h
 #define MacroAssemblerMIPS_h
 
+#include <Platform.h>
+
 #if ENABLE(ASSEMBLER) && CPU(MIPS)
 
 #include "AbstractMacroAssembler.h"
@@ -266,6 +268,18 @@ public:
             m_assembler.addiu(dataTempRegister, dataTempRegister, -1);
         m_assembler.addu(dataTempRegister, dataTempRegister, immTempRegister);
         m_assembler.sw(dataTempRegister, addrTempRegister, 4);
+    }
+
+    void getEffectiveAddress(BaseIndex address, RegisterID dest)
+    {
+        if (!address.scale && !m_fixedWidth)
+            m_assembler.addu(dest, address.index, address.base);
+        else {
+            m_assembler.sll(addrTempRegister, address.index, address.scale);
+            m_assembler.addu(dest, addrTempRegister, address.base);
+        }
+        if (address.offset)
+            add32(TrustedImm32(address.offset), dest);
     }
 
     void and32(Address src, RegisterID dest)

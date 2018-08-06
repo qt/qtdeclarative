@@ -1,5 +1,7 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2010 University of Szeged
+ * Copyright (C) 2010 Renata Hodovan (hodovan@inf.u-szeged.hu)
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,55 +12,35 @@
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
+ * THIS SOFTWARE IS PROVIDED BY UNIVERSITY OF SZEGED ``AS IS'' AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL UNIVERSITY OF SZEGED OR
  * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "FilePrintStream.h"
+#pragma once
 
-namespace WTF {
+#include <wtf/text/WTFString.h>
 
-FilePrintStream::FilePrintStream(FILE* file, AdoptionMode adoptionMode)
-    : m_file(file)
-    , m_adoptionMode(adoptionMode)
-{
-}
+namespace JSC {
 
-FilePrintStream::~FilePrintStream()
-{
-    if (m_adoptionMode == Borrow)
-        return;
-    fclose(m_file);
-}
+enum RegExpFlags : int8_t {
+    NoFlags = 0,
+    FlagGlobal = 1,
+    FlagIgnoreCase = 2,
+    FlagMultiline = 4,
+    FlagSticky = 8,
+    FlagUnicode = 16,
+    FlagDotAll = 32,
+    InvalidFlags = 64,
+    DeletedValueFlags = -1
+};
 
-std::unique_ptr<FilePrintStream> FilePrintStream::open(const char* filename, const char* mode)
-{
-    FILE* file = fopen(filename, mode);
-    if (!file)
-        return nullptr;
-
-    return std::make_unique<FilePrintStream>(file);
-}
-
-void FilePrintStream::vprintf(const char* format, va_list argList)
-{
-    vfprintf(m_file, format, argList);
-}
-
-void FilePrintStream::flush()
-{
-    fflush(m_file);
-}
-
-} // namespace WTF
-
+} // namespace JSC

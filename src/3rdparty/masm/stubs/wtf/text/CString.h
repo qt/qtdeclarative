@@ -39,4 +39,8 @@
 #ifndef CSTRING_H
 #define CSTRING_H
 
+class CString : public QByteArray {
+
+};
+
 #endif // CSTRING_H

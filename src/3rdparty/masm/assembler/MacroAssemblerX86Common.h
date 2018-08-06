@@ -146,14 +146,24 @@ public:
         m_assembler.andl_rr(src, dest);
     }
 
-    void add32(RegisterID op1, RegisterID op2, RegisterID dest)
+    void add32(RegisterID a, RegisterID b, RegisterID dest)
     {
-        if (op2 == dest) {
-            add32(op1, dest);
-        } else {
-            move(op1, dest);
-            add32(op2, dest);
+        x86Lea32(BaseIndex(a, b, TimesOne), dest);
+    }
+
+    void x86Lea32(BaseIndex index, RegisterID dest)
+    {
+        if (!index.scale && !index.offset) {
+            if (index.base == dest) {
+                add32(index.index, dest);
+                return;
+            }
+            if (index.index == dest) {
+                add32(index.base, dest);
+                return;
+            }
         }
+        m_assembler.leal_mr(index.offset, index.base, index.index, index.scale, dest);
     }
 
     void and32(TrustedImm32 imm, RegisterID dest)
@@ -501,6 +511,11 @@ public:
         load32(address, dest);
     }
 
+    void load16Unaligned(ImplicitAddress address, RegisterID dest)
+    {
+        load16(address, dest);
+    }
+
     void load16Unaligned(BaseIndex address, RegisterID dest)
     {
         load16(address, dest);
@@ -558,6 +573,11 @@ public:
         m_assembler.movzwl_mr(address.offset, address.base, address.index, address.scale, dest);
     }
     
+    void load16(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.movzwl_mr(address.offset, address.base, dest);
+    }
+
     void load16(Address address, RegisterID dest)
     {
         m_assembler.movzwl_mr(address.offset, address.base, dest);

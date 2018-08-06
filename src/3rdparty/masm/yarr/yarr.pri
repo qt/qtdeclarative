@@ -8,5 +8,8 @@ SOURCES += \
     $$PWD/YarrInterpreter.cpp \
     $$PWD/YarrPattern.cpp \
     $$PWD/YarrSyntaxChecker.cpp \
-    $$PWD/YarrCanonicalizeUCS2.cpp
+    $$PWD/YarrCanonicalizeUCS2.cpp \
+    $$PWD/YarrCanonicalizeUnicode.cpp \
+    $$PWD/YarrErrorCode.cpp \
+    $$PWD/YarrUnicodeProperties.cpp
 

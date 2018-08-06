@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2009-2018 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,12 +23,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef YarrJIT_h
-#define YarrJIT_h
+#pragma once
+
+#include <Platform.h>
 
 #if ENABLE(YARR_JIT)
 
-#include "JSGlobalData.h"
 #include "MacroAssemblerCodeRef.h"
 #include "MatchResult.h"
 #include "Yarr.h"
@@ -40,19 +40,39 @@
 #define YARR_CALL
 #endif
 
+#if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
+constexpr size_t patternContextBufferSize = 8192; // Space caller allocates to save nested parenthesis context
+#endif
+
 namespace JSC {
 
-class JSGlobalData;
+class VM;
 class ExecutablePool;
 
 namespace Yarr {
 
+enum class JITFailureReason : uint8_t {
+    DecodeSurrogatePair,
+    BackReference,
+    VariableCountedParenthesisWithNonZeroMinimum,
+    ParenthesizedSubpattern,
+    NonGreedyParenthesizedSubpattern,
+    ExecutableMemoryAllocationFailure,
+};
+
 class YarrCodeBlock {
-#if CPU(X86_64)
+#if CPU(X86_64) || CPU(ARM64)
+#if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
+    typedef MatchResult (*YarrJITCode8)(const LChar* input, unsigned start, unsigned length, int* output, void* freeParenContext, unsigned parenContextSize) YARR_CALL;
+    typedef MatchResult (*YarrJITCode16)(const UChar* input, unsigned start, unsigned length, int* output, void* freeParenContext, unsigned parenContextSize) YARR_CALL;
+    typedef MatchResult (*YarrJITCodeMatchOnly8)(const LChar* input, unsigned start, unsigned length, void*, void* freeParenContext, unsigned parenContextSize) YARR_CALL;
+    typedef MatchResult (*YarrJITCodeMatchOnly16)(const UChar* input, unsigned start, unsigned length, void*, void* freeParenContext, unsigned parenContextSize) YARR_CALL;
+#else
     typedef MatchResult (*YarrJITCode8)(const LChar* input, unsigned start, unsigned length, int* output) YARR_CALL;
     typedef MatchResult (*YarrJITCode16)(const UChar* input, unsigned start, unsigned length, int* output) YARR_CALL;
     typedef MatchResult (*YarrJITCodeMatchOnly8)(const LChar* input, unsigned start, unsigned length) YARR_CALL;
     typedef MatchResult (*YarrJITCodeMatchOnly16)(const UChar* input, unsigned start, unsigned length) YARR_CALL;
+#endif
 #else
     typedef EncodedMatchResult (*YarrJITCode8)(const LChar* input, unsigned start, unsigned length, int* output) YARR_CALL;
     typedef EncodedMatchResult (*YarrJITCode16)(const UChar* input, unsigned start, unsigned length, int* output) YARR_CALL;
@@ -61,17 +81,10 @@ class YarrCodeBlock {
 #endif
 
 public:
-    YarrCodeBlock()
-        : m_needFallBack(false)
-    {
-    }
+    YarrCodeBlock() = default;
 
-    ~YarrCodeBlock()
-    {
-    }
-
-    void setFallBack(bool fallback) { m_needFallBack = fallback; }
-    bool isFallBack() { return m_needFallBack; }
+    void setFallBackWithFailureReason(JITFailureReason failureReason) { m_failureReason = failureReason; }
+    std::optional<JITFailureReason> failureReason() { return m_failureReason; }
 
     bool has8BitCode() { return m_ref8.size(); }
     bool has16BitCode() { return m_ref16.size(); }
@@ -83,6 +96,34 @@ public:
     void set8BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly8 = matchOnly; }
     void set16BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly16 = matchOnly; }
 
+#if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
+    bool usesPatternContextBuffer() { return m_usesPatternContextBuffer; }
+    void setUsesPaternContextBuffer() { m_usesPatternContextBuffer = true; }
+
+    MatchResult execute(const LChar* input, unsigned start, unsigned length, int* output, void* freeParenContext, unsigned parenContextSize)
+    {
+        ASSERT(has8BitCode());
+        return MatchResult(reinterpret_cast<YarrJITCode8>(m_ref8.code().executableAddress())(input, start, length, output, freeParenContext, parenContextSize));
+    }
+
+    MatchResult execute(const UChar* input, unsigned start, unsigned length, int* output, void* freeParenContext, unsigned parenContextSize)
+    {
+        ASSERT(has16BitCode());
+        return MatchResult(reinterpret_cast<YarrJITCode16>(m_ref16.code().executableAddress())(input, start, length, output, freeParenContext, parenContextSize));
+    }
+
+    MatchResult execute(const LChar* input, unsigned start, unsigned length, void* freeParenContext, unsigned parenContextSize)
+    {
+        ASSERT(has8BitCodeMatchOnly());
+        return MatchResult(reinterpret_cast<YarrJITCodeMatchOnly8>(m_matchOnly8.code().executableAddress())(input, start, length, 0, freeParenContext, parenContextSize));
+    }
+
+    MatchResult execute(const UChar* input, unsigned start, unsigned length, void* freeParenContext, unsigned parenContextSize)
+    {
+        ASSERT(has16BitCodeMatchOnly());
+        return MatchResult(reinterpret_cast<YarrJITCodeMatchOnly16>(m_matchOnly16.code().executableAddress())(input, start, length, 0, freeParenContext, parenContextSize));
+    }
+#else
     MatchResult execute(const LChar* input, unsigned start, unsigned length, int* output)
     {
         ASSERT(has8BitCode());
@@ -106,10 +147,46 @@ public:
         ASSERT(has16BitCodeMatchOnly());
         return MatchResult(reinterpret_cast<YarrJITCodeMatchOnly16>(m_matchOnly16.code().executableAddress())(input, start, length));
     }
+#endif
 
 #if ENABLE(REGEXP_TRACING)
-    void *getAddr() { return m_ref.code().executableAddress(); }
+    void *get8BitMatchOnlyAddr()
+    {
+        if (!has8BitCodeMatchOnly())
+            return 0;
+
+        return m_matchOnly8.code().executableAddress();
+    }
+
+    void *get16BitMatchOnlyAddr()
+    {
+        if (!has16BitCodeMatchOnly())
+            return 0;
+
+        return m_matchOnly16.code().executableAddress();
+    }
+
+    void *get8BitMatchAddr()
+    {
+        if (!has8BitCode())
+            return 0;
+
+        return m_ref8.code().executableAddress();
+    }
+
+    void *get16BitMatchAddr()
+    {
+        if (!has16BitCode())
+            return 0;
+
+        return m_ref16.code().executableAddress();
+    }
 #endif
+
+    size_t size() const
+    {
+        return m_ref8.size() + m_ref16.size() + m_matchOnly8.size() + m_matchOnly16.size();
+    }
 
     void clear()
     {
@@ -117,7 +194,7 @@ public:
         m_ref16 = MacroAssemblerCodeRef();
         m_matchOnly8 = MacroAssemblerCodeRef();
         m_matchOnly16 = MacroAssemblerCodeRef();
-        m_needFallBack = false;
+        m_failureReason = std::nullopt;
     }
 
 private:
@@ -125,17 +202,18 @@ private:
     MacroAssemblerCodeRef m_ref16;
     MacroAssemblerCodeRef m_matchOnly8;
     MacroAssemblerCodeRef m_matchOnly16;
-    bool m_needFallBack;
+#if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
+    bool m_usesPatternContextBuffer;
+#endif
+    std::optional<JITFailureReason> m_failureReason;
 };
 
 enum YarrJITCompileMode {
     MatchOnly,
     IncludeSubpatterns
 };
-void jitCompile(YarrPattern&, YarrCharSize, JSGlobalData*, YarrCodeBlock& jitObject, YarrJITCompileMode = IncludeSubpatterns);
+void jitCompile(YarrPattern&, YarrCharSize, VM*, YarrCodeBlock& jitObject, YarrJITCompileMode = IncludeSubpatterns);
 
 } } // namespace JSC::Yarr
 
 #endif
-
-#endif // YarrJIT_h

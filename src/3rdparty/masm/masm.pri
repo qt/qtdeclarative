@@ -79,10 +79,12 @@ HEADERS += $$PWD/disassembler/ARM64/A64DOpcode.h
 
 !qmldevtools_build {
 SOURCES += $$PWD/yarr/YarrCanonicalizeUCS2.cpp \
+           $$PWD/yarr/YarrCanonicalizeUnicode.cpp \
            $$PWD/yarr/YarrInterpreter.cpp \
            $$PWD/yarr/YarrJIT.cpp \
            $$PWD/yarr/YarrPattern.cpp \
-           $$PWD/yarr/YarrSyntaxChecker.cpp
+           $$PWD/yarr/YarrSyntaxChecker.cpp \
+           $$PWD/stubs/yarr/YarrUnicodeProperties.cpp
 
 HEADERS += $$PWD/yarr/Yarr.h \
            $$PWD/yarr/YarrCanonicalizeUCS2.h \
@@ -90,7 +92,8 @@ HEADERS += $$PWD/yarr/Yarr.h \
            $$PWD/yarr/YarrJIT.h \
            $$PWD/yarr/YarrParser.h \
            $$PWD/yarr/YarrPattern.h \
-           $$PWD/yarr/YarrSyntaxChecker.h
+           $$PWD/yarr/YarrSyntaxChecker.h \
+           $$PWD/yarr/YarrUnicodeProperties.h
 }
 
 #
@@ -107,7 +110,7 @@ debug_and_release {
 INCLUDEPATH += $$GENERATEDDIR
 
 retgen.output = $$GENERATEDDIR/RegExpJitTables.h
-retgen.script = $$PWD/create_regex_tables
+retgen.script = $$PWD/yarr/create_regex_tables
 retgen.input = retgen.script
 retgen.CONFIG += no_link
 retgen.commands = python $$retgen.script > ${QMAKE_FILE_OUT}

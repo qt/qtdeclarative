@@ -41,6 +41,7 @@
 #include "qv4engine_p.h"
 #include "qv4scopedvalue_p.h"
 #include <private/qv4mm_p.h>
+#include <runtime/VM.h>
 
 using namespace QV4;
 
@@ -100,16 +101,24 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ig
 
     valid = false;
 
-    const char* error = nullptr;
-    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), ignoreCase, multiLine, &error);
-    if (error)
+    JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
+    JSC::RegExpFlags flags = JSC::NoFlags;
+    if (ignoreCase)
+        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
+    if (multiline)
+        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
+    if (global)
+        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
+
+    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), flags, error);
+    if (error != JSC::Yarr::ErrorCode::NoError)
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;
 #if ENABLE(YARR_JIT)
     if (!yarrPattern.m_containsBackreferences && engine->canJIT()) {
         jitCode = new JSC::Yarr::YarrCodeBlock;
-        JSC::JSGlobalData dummy(internalClass->engine->regExpAllocator);
-        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, &dummy, *jitCode);
+        JSC::VM *vm = static_cast<JSC::VM *>(engine);
+        JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, vm, *jitCode);
     }
 #else
     Q_UNUSED(engine)
@@ -118,8 +127,7 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ig
         valid = true;
         return;
     }
-    OwnPtr<JSC::Yarr::BytecodePattern> p = JSC::Yarr::byteCompile(yarrPattern, internalClass->engine->bumperPointerAllocator);
-    byteCode = p.take();
+    byteCode = JSC::Yarr::byteCompile(yarrPattern, internalClass->engine->bumperPointerAllocator).release();
     if (byteCode)
         valid = true;
 }

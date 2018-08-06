@@ -20,6 +20,7 @@ INCLUDEPATH += $$PWD/assembler
 INCLUDEPATH += $$PWD/runtime
 INCLUDEPATH += $$PWD/wtf
 INCLUDEPATH += $$PWD/stubs
+INCLUDEPATH += $$PWD/stubs/runtime
 INCLUDEPATH += $$PWD/stubs/wtf
 INCLUDEPATH += $$PWD
 

@@ -171,7 +171,7 @@ WTF_EXPORT_PRIVATE void WTFInstallReportBacktraceOnCrashHook();
 #define CRASH() \
     (WTFReportBacktrace(), \
      WTFInvokeCrashHook(), \
-     (*(int *)(uintptr_t)0xbbadbeef = 0), \
+     (*reinterpret_cast<int *>(uintptr_t(0xbbadbeef)) = 0), \
      __builtin_trap())
 #else
 #define CRASH() \
@@ -256,7 +256,7 @@ inline void assertUnused(T& x) { (void)x; }
         (void)0)
 
 #define ASSERT_NOT_REACHED() do { \
-    WTFReportAssertionFailure(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, 0); \
+    WTFReportAssertionFailure(__FILE__, __LINE__, WTF_PRETTY_FUNCTION, nullptr); \
     CRASH(); \
 } while (0)
 

@@ -1980,6 +1980,13 @@ public:
     }
 
     template<int datasize>
+    ALWAYS_INLINE void stp(RegisterID rt, RegisterID rt2, RegisterID rn, unsigned pimm = 0)
+    {
+        CHECK_DATASIZE();
+        insn(loadStoreRegisterPairOffset(MEMPAIROPSIZE_INT(datasize), false, MemOp_STORE, pimm, rn, rt, rt2));
+    }
+
+    template<int datasize>
     ALWAYS_INLINE void str(RegisterID rt, RegisterID rn, RegisterID rm)
     {
         str<datasize>(rt, rn, rm, UXTX, 0);
@@ -3698,6 +3705,23 @@ private:
     ALWAYS_INLINE static int loadStoreRegisterPairPreIndex(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, RegisterID rt, RegisterID rt2)
     {
         return loadStoreRegisterPairPreIndex(size, V, opc, immediate, rn, xOrZrAsFPR(rt), xOrZrAsFPR(rt2));
+    }
+
+    // 'V' means vector
+    ALWAYS_INLINE static int loadStoreRegisterPairOffset(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, FPRegisterID rt, FPRegisterID rt2)
+    {
+        ASSERT(size < 3);
+        ASSERT(opc == (opc & 1)); // Only load or store, load signed 64 is handled via size.
+        ASSERT(V || (size != MemPairOp_LoadSigned_32) || (opc == MemOp_LOAD)); // There isn't an integer store signed.
+        unsigned immedShiftAmount = memPairOffsetShift(V, size);
+        int imm7 = immediate >> immedShiftAmount;
+        ASSERT((imm7 << immedShiftAmount) == immediate && isInt7(imm7));
+        return (0x29000000 | size << 30 | V << 26 | opc << 22 | (imm7 & 0x7f) << 15 | rt2 << 10 | xOrSp(rn) << 5 | rt);
+    }
+
+    ALWAYS_INLINE static int loadStoreRegisterPairOffset(MemPairOpSize size, bool V, MemOp opc, int immediate, RegisterID rn, RegisterID rt, RegisterID rt2)
+    {
+        return loadStoreRegisterPairOffset(size, V, opc, immediate, rn, xOrZrAsFPR(rt), xOrZrAsFPR(rt2));
     }
 
     // 'V' means vector

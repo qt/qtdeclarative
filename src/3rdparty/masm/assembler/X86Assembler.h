@@ -26,6 +26,8 @@
 #ifndef X86Assembler_h
 #define X86Assembler_h
 
+#include <Platform.h>
+
 #if ENABLE(ASSEMBLER) && (CPU(X86) || CPU(X86_64))
 
 #include "AssemblerBuffer.h"
@@ -1417,10 +1419,21 @@ public:
     {
         m_formatter.oneByteOp(OP_LEA, dst, base, offset);
     }
+
+    void leal_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        m_formatter.oneByteOp(OP_LEA, dst, base, index, scale, offset);
+    }
+
 #if CPU(X86_64)
     void leaq_mr(int offset, RegisterID base, RegisterID dst)
     {
         m_formatter.oneByteOp64(OP_LEA, dst, base, offset);
+    }
+
+    void leaq_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        m_formatter.oneByteOp64(OP_LEA, dst, base, index, scale, offset);
     }
 #endif
 

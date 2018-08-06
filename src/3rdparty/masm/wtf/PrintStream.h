@@ -206,6 +206,10 @@ public:
         print(value12);
         print(value13);
     }
+
+    void println();
+    template<typename ...Types>
+    void println(Types... args);
 };
 
 WTF_EXPORT_PRIVATE void printInternal(PrintStream&, const char*);
@@ -225,6 +229,19 @@ template<typename T>
 void printInternal(PrintStream& out, const T& value)
 {
     value.dump(out);
+}
+
+inline
+void PrintStream::println()
+{
+    print("\n");
+}
+
+template<typename ...Types>
+void PrintStream::println(Types... args)
+{
+    print(args...);
+    print("\n");
 }
 
 #define MAKE_PRINT_ADAPTOR(Name, Type, function) \

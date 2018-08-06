@@ -26,6 +26,8 @@
 #ifndef LinkBuffer_h
 #define LinkBuffer_h
 
+#include <Platform.h>
+
 #if ENABLE(ASSEMBLER)
 
 #define DUMP_LINK_STATISTICS 0
@@ -66,7 +68,7 @@ struct DefaultExecutableOffsetCalculator {
 //
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
 class LinkBufferBase {
-    WTF_MAKE_NONCOPYABLE(LinkBufferBase);
+    WTF_MAKE_NONCOPYABLE(LinkBufferBase)
     typedef MacroAssemblerCodeRef CodeRef;
     typedef MacroAssemblerCodePtr CodePtr;
     typedef typename MacroAssembler::Label Label;
@@ -265,7 +267,7 @@ protected:
 
 #define FINALIZE_CODE_IF(condition, linkBufferReference, dataLogFArgumentsForHeading)  \
     (UNLIKELY((condition))                                              \
-     ? ((linkBufferReference).finalizeCodeWithDisassembly dataLogFArgumentsForHeading) \
+     ? ((linkBufferReference).finalizeCodeWithDisassembly (dataLogFArgumentsForHeading)) \
      : (linkBufferReference).finalizeCodeWithoutDisassembly())
 
 // Use this to finalize code, like so:
@@ -516,6 +518,20 @@ public:
 };
 #endif
 
+#endif
+
+#if CPU(ARM_THUMB2)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerARMv7>> DefaultLinkBuffer;
+#elif CPU(ARM64)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerARM64>> DefaultLinkBuffer;
+#elif CPU(ARM_TRADITIONAL)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerARM>> DefaultLinkBuffer;
+#elif CPU(MIPS)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerMIPS>> DefaultLinkBuffer;
+#elif CPU(X86)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerX86>> DefaultLinkBuffer;
+#elif CPU(X86_64)
+typedef LinkBuffer<MacroAssembler<MacroAssemblerX86_64>> DefaultLinkBuffer;
 #endif
 
 } // namespace JSC

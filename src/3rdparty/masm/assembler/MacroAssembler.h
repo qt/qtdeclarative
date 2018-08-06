@@ -805,7 +805,7 @@ public:
 
     Jump branchPtr(RelationalCondition cond, RegisterID left, RegisterID right)
     {
-        return branch64(cond, left, right);
+        return this->branch64(cond, left, right);
     }
 
     Jump branchPtr(RelationalCondition cond, RegisterID left, TrustedImmPtr right)
@@ -840,7 +840,7 @@ public:
     
     Jump branchTestPtr(ResultCondition cond, RegisterID reg, TrustedImm32 mask = TrustedImm32(-1))
     {
-        return branchTest64(cond, reg, mask);
+        return this->branchTest64(cond, reg, mask);
     }
 
     Jump branchTestPtr(ResultCondition cond, Address address, TrustedImm32 mask = TrustedImm32(-1))

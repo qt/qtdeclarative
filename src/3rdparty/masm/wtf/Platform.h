@@ -2,6 +2,7 @@
  * Copyright (C) 2006, 2007, 2008, 2009, 2013 Apple Inc. All rights reserved.
  * Copyright (C) 2007-2009 Torch Mobile, Inc.
  * Copyright (C) 2010, 2011 Research In Motion Limited. All rights reserved.
+ * Copyright (C) 2018 The Qt Company Ltd.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -1048,6 +1049,13 @@
 
 #if !PLATFORM(IOS) && PLATFORM(MAC) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1080
 #define WTF_USE_CONTENT_FILTERING 1
+#endif
+
+#if ENABLE(YARR_JIT)
+#if 0 // CPU(ARM64) || (CPU(X86_64) && !OS(WINDOWS))
+/* Enable JIT'ing Regular Expressions that have nested parenthesis. */
+#define ENABLE_YARR_JIT_ALL_PARENS_EXPRESSIONS 1
+#endif
 #endif
 
 #endif /* WTF_Platform_h */

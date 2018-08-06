@@ -1126,6 +1126,11 @@ public:
         m_assembler.ldrh(dest, address.base, memoryTempRegister);
     }
     
+    void load16Unaligned(ImplicitAddress address, RegisterID dest)
+    {
+        load16(address, dest);
+    }
+
     void load16Unaligned(BaseIndex address, RegisterID dest)
     {
         load16(address, dest);
@@ -1283,6 +1288,16 @@ public:
         return label;
     }
 
+    void storePair64(RegisterID src1, RegisterID src2, RegisterID dest)
+    {
+        storePair64(src1, src2, dest, TrustedImm32(0));
+    }
+
+    void storePair64(RegisterID src1, RegisterID src2, RegisterID dest, TrustedImm32 offset)
+    {
+        m_assembler.stp<64>(src1, src2, dest, offset.m_value);
+    }
+
     void store32(RegisterID src, ImplicitAddress address)
     {
         if (tryStoreWithOffset<32>(src, address.base, address.offset))
@@ -1419,6 +1434,14 @@ public:
         move(imm, getCachedDataTempRegisterIDAndInvalidate());
         store8(dataTempRegister, address);
     }
+
+    void getEffectiveAddress(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.add<64>(dest, address.base, address.index, ARM64Assembler::LSL, address.scale);
+        if (address.offset)
+            add64(TrustedImm32(address.offset), dest);
+    }
+
 
     // Floating-point operations:
 

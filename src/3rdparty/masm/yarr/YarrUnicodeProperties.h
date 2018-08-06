@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2017 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,42 +23,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "config.h"
-#include "FilePrintStream.h"
+#pragma once
 
-namespace WTF {
+#include "Yarr.h"
+#include <wtf/Optional.h>
+#include <wtf/text/WTFString.h>
 
-FilePrintStream::FilePrintStream(FILE* file, AdoptionMode adoptionMode)
-    : m_file(file)
-    , m_adoptionMode(adoptionMode)
-{
-}
+namespace JSC { namespace Yarr {
 
-FilePrintStream::~FilePrintStream()
-{
-    if (m_adoptionMode == Borrow)
-        return;
-    fclose(m_file);
-}
+struct CharacterClass;
 
-std::unique_ptr<FilePrintStream> FilePrintStream::open(const char* filename, const char* mode)
-{
-    FILE* file = fopen(filename, mode);
-    if (!file)
-        return nullptr;
+JS_EXPORT_PRIVATE std::optional<BuiltInCharacterClassID> unicodeMatchPropertyValue(WTF::String, WTF::String);
+JS_EXPORT_PRIVATE std::optional<BuiltInCharacterClassID> unicodeMatchProperty(WTF::String);
 
-    return std::make_unique<FilePrintStream>(file);
-}
+std::unique_ptr<CharacterClass> createUnicodeCharacterClassFor(BuiltInCharacterClassID);
 
-void FilePrintStream::vprintf(const char* format, va_list argList)
-{
-    vfprintf(m_file, format, argList);
-}
-
-void FilePrintStream::flush()
-{
-    fflush(m_file);
-}
-
-} // namespace WTF
-
+} } // namespace JSC::Yarr

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2016 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,6 +27,8 @@
 #include "YarrSyntaxChecker.h"
 
 #include "YarrParser.h"
+#include <wtf/Optional.h>
+#include <wtf/text/WTFString.h>
 
 namespace JSC { namespace Yarr {
 
@@ -35,25 +37,26 @@ public:
     void assertionBOL() {}
     void assertionEOL() {}
     void assertionWordBoundary(bool) {}
-    void atomPatternCharacter(UChar) {}
+    void atomPatternCharacter(UChar32) {}
     void atomBuiltInCharacterClass(BuiltInCharacterClassID, bool) {}
     void atomCharacterClassBegin(bool = false) {}
     void atomCharacterClassAtom(UChar) {}
     void atomCharacterClassRange(UChar, UChar) {}
     void atomCharacterClassBuiltIn(BuiltInCharacterClassID, bool) {}
     void atomCharacterClassEnd() {}
-    void atomParenthesesSubpatternBegin(bool = true) {}
+    void atomParenthesesSubpatternBegin(bool = true, std::optional<String> = std::nullopt) {}
     void atomParentheticalAssertionBegin(bool = false) {}
     void atomParenthesesEnd() {}
     void atomBackReference(unsigned) {}
+    void atomNamedBackReference(String) {}
     void quantifyAtom(unsigned, unsigned, bool) {}
     void disjunction() {}
 };
 
-const char* checkSyntax(const String& pattern)
+ErrorCode checkSyntax(const String& pattern, const String& flags)
 {
     SyntaxChecker syntaxChecker;
-    return parse(syntaxChecker, pattern);
+    return parse(syntaxChecker, pattern, flags.contains('u'));
 }
 
-}} // JSC::YARR
+}} // JSC::Yarr

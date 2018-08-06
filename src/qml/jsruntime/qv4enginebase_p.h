@@ -72,9 +72,8 @@ struct Q_QML_EXPORT EngineBase {
     quint8 hasException = false;
     quint8 writeBarrierActive = false;
     quint16 unused = 0;
-#if QT_POINTER_SIZE == 8
-    quint8 padding[4];
-#endif
+    quint8 isExecutingInRegExpJIT = false;
+    quint8 padding[3];
     MemoryManager *memoryManager = nullptr;
     Runtime runtime;
 
@@ -133,7 +132,7 @@ Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
 Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == 0);
 Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, currentStackFrame) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
-Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + QT_POINTER_SIZE);
+Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
 Q_STATIC_ASSERT(offsetof(EngineBase, runtime) == offsetof(EngineBase, memoryManager) + QT_POINTER_SIZE);
 
 }

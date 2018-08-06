@@ -83,14 +83,22 @@ public:
 private:
     PassRefPtr<T>& operator=(const PassRefPtr<T>& t);
 
-    template <typename PtrType> friend PassRefPtr<PtrType> adoptRef(PtrType*);
+protected:
     mutable T* m_ptr;
 };
 
 template <typename T>
-PassRefPtr<T> adoptRef(T* ptr)
+class Ref : public PassRefPtr<T>
 {
-    PassRefPtr<T> result;
+    using PassRefPtr<T>::PassRefPtr;
+
+    template <typename PtrType> friend Ref<PtrType> adoptRef(PtrType*);
+};
+
+template <typename T>
+Ref<T> adoptRef(T* ptr)
+{
+    Ref<T> result;
     result.m_ptr = ptr;
     return result;
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,52 +36,35 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef UNICODE_H
-#define UNICODE_H
 
-#include <QChar>
+#include "config.h"
+#include "yarr/YarrUnicodeProperties.h"
+#include "qchar.h"
 
-typedef unsigned char LChar;
-typedef unsigned short UChar;
-typedef int32_t UChar32;
+#include "yarr/Yarr.h"
+#include "yarr/YarrPattern.h"
 
-namespace Unicode {
-    inline UChar toLower(UChar ch) {
-        return QChar::toLower(ch);
-    }
+using namespace WTF;
 
-    inline UChar toUpper(UChar ch) {
-        return QChar::toUpper(ch);
-    }
-    inline UChar32 u_tolower(UChar32 ch) {
-        return QChar::toLower(ch);
-    }
-    inline UChar32 u_toupper(UChar32 ch) {
-        return QChar::toUpper(ch);
-    }
+namespace JSC { namespace Yarr {
+
+std::optional<BuiltInCharacterClassID> unicodeMatchPropertyValue(WTF::String unicodePropertyName, WTF::String unicodePropertyValue)
+{
+    Q_UNUSED(unicodePropertyName);
+    Q_UNUSED(unicodePropertyValue);
+    return std::nullopt;
 }
 
-using Unicode::u_toupper;
-using Unicode::u_tolower;
+std::optional<BuiltInCharacterClassID> unicodeMatchProperty(WTF::String unicodePropertyValue)
+{
+    Q_UNUSED(unicodePropertyValue);
+    return std::nullopt;
+}
 
-#define U16_IS_LEAD(ch) QChar::isHighSurrogate((ch))
-#define U16_IS_TRAIL(ch) QChar::isLowSurrogate((ch))
-#define U16_GET_SUPPLEMENTARY(lead, trail) static_cast<UChar32>(QChar::surrogateToUcs4((lead), (trail)))
-#define U_IS_BMP(ch) ((ch) < 0x10000)
-#define U16_LENGTH(c) ((uint32_t)(c)<=0xffff ? 1 : 2)
-#define UCHAR_MAX_VALUE 0x10ffff
+std::unique_ptr<CharacterClass> createUnicodeCharacterClassFor(BuiltInCharacterClassID unicodeClassID)
+{
+    Q_UNUSED(unicodeClassID);
+    return nullptr;
+}
 
-#define U_MASK(category) (1u << (category))
-#define U_GET_GC_MASK(c) U_MASK(QChar::category((c)))
-#define U_GC_L_MASK (U_GC_LU_MASK|U_GC_LL_MASK|U_GC_LT_MASK|U_GC_LM_MASK|U_GC_LO_MASK)
-#define U_GC_LU_MASK U_MASK(QChar::Letter_Uppercase)
-#define U_GC_LL_MASK U_MASK(QChar::Letter_Lowercase)
-#define U_GC_LT_MASK U_MASK(QChar::Letter_Titlecase)
-#define U_GC_LM_MASK U_MASK(QChar::Letter_Modifier)
-#define U_GC_LO_MASK U_MASK(QChar::Letter_Other)
-#define U_GC_MN_MASK U_MASK(QChar::Mark_NonSpacing)
-#define U_GC_MC_MASK U_MASK(QChar::Mark_SpacingCombining)
-#define U_GC_ND_MASK U_MASK(QChar::Number_DecimalDigit)
-#define U_GC_PC_MASK U_MASK(QChar::Punctuation_Connector)
-
-#endif // UNICODE_H
+} } // namespace JSC::Yarr

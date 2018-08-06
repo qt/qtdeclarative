@@ -243,6 +243,26 @@ public:
         add64(imm, Address(scratchRegister));
     }
 
+    void x86Lea64(BaseIndex index, RegisterID dest)
+    {
+        if (!index.scale && !index.offset) {
+            if (index.base == dest) {
+                add64(index.index, dest);
+                return;
+            }
+            if (index.index == dest) {
+                add64(index.base, dest);
+                return;
+            }
+        }
+        m_assembler.leaq_mr(index.offset, index.base, index.index, index.scale, dest);
+    }
+
+    void getEffectiveAddress(BaseIndex address, RegisterID dest)
+    {
+        return x86Lea64(address, dest);
+    }
+
     void and64(RegisterID src, RegisterID dest)
     {
         m_assembler.andq_rr(src, dest);

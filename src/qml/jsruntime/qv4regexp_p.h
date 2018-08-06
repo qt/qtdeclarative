@@ -86,7 +86,7 @@ struct RegExp : Base {
 #endif
     bool hasValidJITCode() const {
 #if ENABLE(YARR_JIT)
-        return jitCode && !jitCode->isFallBack() && jitCode->has16BitCode();
+        return jitCode && !jitCode->failureReason().has_value() && jitCode->has16BitCode();
 #else
         return false;
 #endif

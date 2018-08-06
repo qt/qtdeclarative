@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Apple Inc. All rights reserved.
+ * Copyright (C) 2017 Yusuke Suzuki <utatane.tea@gmail.com>.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -20,45 +20,46 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "config.h"
-#include "FilePrintStream.h"
+#pragma once
 
-namespace WTF {
+namespace JSC {
 
-FilePrintStream::FilePrintStream(FILE* file, AdoptionMode adoptionMode)
-    : m_file(file)
-    , m_adoptionMode(adoptionMode)
+class ExecState;
+class JSObject;
+
+namespace Yarr {
+
+enum class ErrorCode : uint8_t {
+    NoError = 0,
+    PatternTooLarge,
+    QuantifierOutOfOrder,
+    QuantifierWithoutAtom,
+    QuantifierTooLarge,
+    MissingParentheses,
+    ParenthesesUnmatched,
+    ParenthesesTypeInvalid,
+    InvalidGroupName,
+    DuplicateGroupName,
+    CharacterClassUnmatched,
+    CharacterClassOutOfOrder,
+    EscapeUnterminated,
+    InvalidUnicodeEscape,
+    InvalidBackreference,
+    InvalidIdentityEscape,
+    InvalidUnicodePropertyExpression,
+    TooManyDisjunctions,
+    OffsetTooLarge,
+    InvalidRegularExpressionFlags,
+};
+
+JS_EXPORT_PRIVATE const char* errorMessage(ErrorCode);
+inline bool hasError(ErrorCode errorCode)
 {
+    return errorCode != ErrorCode::NoError;
 }
+JS_EXPORT_PRIVATE JSObject* errorToThrow(ExecState*, ErrorCode);
 
-FilePrintStream::~FilePrintStream()
-{
-    if (m_adoptionMode == Borrow)
-        return;
-    fclose(m_file);
-}
-
-std::unique_ptr<FilePrintStream> FilePrintStream::open(const char* filename, const char* mode)
-{
-    FILE* file = fopen(filename, mode);
-    if (!file)
-        return nullptr;
-
-    return std::make_unique<FilePrintStream>(file);
-}
-
-void FilePrintStream::vprintf(const char* format, va_list argList)
-{
-    vfprintf(m_file, format, argList);
-}
-
-void FilePrintStream::flush()
-{
-    fflush(m_file);
-}
-
-} // namespace WTF
-
+} } // namespace JSC::Yarr

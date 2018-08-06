@@ -25,25 +25,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef Yarr_h
-#define Yarr_h
+#pragma once
 
-#include "YarrInterpreter.h"
-#include "YarrPattern.h"
+#include <limits.h>
+#include "YarrErrorCode.h"
 
 namespace JSC { namespace Yarr {
 
-#define YarrStackSpaceForBackTrackInfoPatternCharacter 1 // Only for !fixed quantifiers.
-#define YarrStackSpaceForBackTrackInfoCharacterClass 1 // Only for !fixed quantifiers.
+#define YarrStackSpaceForBackTrackInfoPatternCharacter 2 // Only for !fixed quantifiers.
+#define YarrStackSpaceForBackTrackInfoCharacterClass 2 // Only for !fixed quantifiers.
 #define YarrStackSpaceForBackTrackInfoBackReference 2
 #define YarrStackSpaceForBackTrackInfoAlternative 1 // One per alternative.
 #define YarrStackSpaceForBackTrackInfoParentheticalAssertion 1
-#define YarrStackSpaceForBackTrackInfoParenthesesOnce 1 // Only for !fixed quantifiers.
+#define YarrStackSpaceForBackTrackInfoParenthesesOnce 2
 #define YarrStackSpaceForBackTrackInfoParenthesesTerminal 1
-#define YarrStackSpaceForBackTrackInfoParentheses 2
+#define YarrStackSpaceForBackTrackInfoParentheses 4
+#define YarrStackSpaceForDotStarEnclosure 1
 
 static const unsigned quantifyInfinite = UINT_MAX;
-static const unsigned offsetNoMatch = (unsigned)-1;
+static const unsigned offsetNoMatch = std::numeric_limits<unsigned>::max();
 
 // The below limit restricts the number of "recursive" match calls in order to
 // avoid spending exponential time on complex regular expressions.
@@ -53,9 +53,10 @@ enum JSRegExpResult {
     JSRegExpMatch = 1,
     JSRegExpNoMatch = 0,
     JSRegExpErrorNoMatch = -1,
-    JSRegExpErrorHitLimit = -2,
-    JSRegExpErrorNoMemory = -3,
-    JSRegExpErrorInternal = -4
+    JSRegExpJITCodeFailure = -2,
+    JSRegExpErrorHitLimit = -3,
+    JSRegExpErrorNoMemory = -4,
+    JSRegExpErrorInternal = -5,
 };
 
 enum YarrCharSize {
@@ -63,7 +64,14 @@ enum YarrCharSize {
     Char16
 };
 
+enum class BuiltInCharacterClassID : unsigned {
+    DigitClassID,
+    SpaceClassID,
+    WordClassID,
+    DotClassID,
+    BaseUnicodePropertyID
+};
+
+struct BytecodePattern;
+
 } } // namespace JSC::Yarr
-
-#endif // Yarr_h
-

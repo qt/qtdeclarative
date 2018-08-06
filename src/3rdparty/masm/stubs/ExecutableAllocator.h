@@ -82,7 +82,7 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
 
     inline bool isManaged() const { return true; }
 
-    void* start() { return m_allocation->start(); }
+    void *start() { return m_allocation->start(); }
     size_t sizeInBytes() { return m_size; }
 
     QV4::ExecutableAllocator::ChunkOfPages *chunk() const
@@ -98,7 +98,7 @@ struct ExecutableAllocator {
         : realAllocator(alloc)
     {}
 
-    PassRefPtr<ExecutableMemoryHandle> allocate(JSGlobalData&, size_t size, void*, int)
+    Ref<ExecutableMemoryHandle> allocate(JSGlobalData&, size_t size, void*, int)
     {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
