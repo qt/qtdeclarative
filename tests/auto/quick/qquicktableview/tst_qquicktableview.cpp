@@ -117,6 +117,7 @@ private slots:
     void dataChangedSignal();
     void checkIfDelegatesAreReused_data();
     void checkIfDelegatesAreReused();
+    void checkIfDelegatesAreReusedAsymmetricTableSize();
     void checkContextProperties_data();
     void checkContextProperties();
     void checkContextPropertiesQQmlListProperyModel_data();
@@ -1224,6 +1225,96 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
             QCOMPARE(reusedCount, 0);
         }
     }
+}
+
+void tst_QQuickTableView::checkIfDelegatesAreReusedAsymmetricTableSize()
+{
+    // Check that we end up reusing all delegate items while flicking, also if the table contain
+    // more columns than rows. In that case, if we flick out a whole row, we'll move a lot of
+    // items into the pool. And if we then start flicking in columns, we'll only reuse a few of
+    // them for each column. Still, we don't want the pool to release the superfluous items after
+    // each load, since they are still in circulation and will be needed once we flick in a new
+    // row at the end of the test.
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    const int pageFlickCount = 3;
+    const int columnCount = 20;
+    const int rowCount = 2;
+    const qreal delegateWidth = tableView->width() / columnCount;
+    const qreal delegateHeight = (tableView->height() / rowCount) + 10;
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    // Let the height of each row be much bigger than the width of each column.
+    view->rootObject()->setProperty("delegateWidth", delegateWidth);
+    view->rootObject()->setProperty("delegateHeight", delegateHeight);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto initialTopLeftItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
+    QVERIFY(initialTopLeftItem);
+    int pooledCount = initialTopLeftItem->property("pooledCount").toInt();
+    int reusedCount = initialTopLeftItem->property("reusedCount").toInt();
+    QCOMPARE(pooledCount, 0);
+    QCOMPARE(reusedCount, 0);
+
+    // Flick half an item left+down, to force one extra row and column to load. By doing
+    // so, we force the maximum number of rows and columns to show before we start the test.
+    // This will make things less complicated below, when checking how many
+    // times the items have been reused (all items will then report the same number).
+    tableView->setContentX(delegateWidth * 0.5);
+    tableView->setContentY(delegateHeight * 0.5);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    pooledCount = initialTopLeftItem->property("pooledCount").toInt();
+    reusedCount = initialTopLeftItem->property("reusedCount").toInt();
+    QCOMPARE(pooledCount, 0);
+    QCOMPARE(reusedCount, 0);
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
+
+    // Flick one row out of view. This will move one whole row of items into the
+    // pool without reusing them, since no new row is exposed at the bottom.
+    tableView->setContentY(delegateHeight + 1);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    pooledCount = initialTopLeftItem->property("pooledCount").toInt();
+    reusedCount = initialTopLeftItem->property("reusedCount").toInt();
+    QCOMPARE(pooledCount, 1);
+    QCOMPARE(reusedCount, 0);
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), columnCount + 1);
+
+    const int visibleColumnCount = tableViewPrivate->loadedTable.width();
+    const int delegateCountAfterInit = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
+
+    // Start flicking in a lot of columns, and check that the created count stays the same
+    for (int column = 1; column <= (visibleColumnCount * pageFlickCount); ++column) {
+        tableView->setContentX((delegateWidth * column) + 1);
+        tableView->polish();
+
+        WAIT_UNTIL_POLISHED;
+
+        const int delegatesCreatedCount = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
+        QCOMPARE(delegatesCreatedCount, delegateCountAfterInit);
+    }
+
+    // Finally, flick one row back into view. The pool should still contain
+    // enough items so that we don't have to create any new ones.
+    tableView->setContentY(delegateHeight * 2);
+    tableView->polish();
+
+    WAIT_UNTIL_POLISHED;
+
+    const int delegatesCreatedCount = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
+    QCOMPARE(delegatesCreatedCount, delegateCountAfterInit);
+
+    // After we flicked in a new row, we now expect all items
+    // to be visible in the view, effectively making the pool empty.
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
 }
 
 void tst_QQuickTableView::checkContextProperties_data()

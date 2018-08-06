@@ -55,6 +55,9 @@ Item {
     // delegatesCreatedCount is the number of items created during the lifetime of the test
     property int delegatesCreatedCount: 0
 
+    property real delegateWidth: 100
+    property real delegateHeight: 50
+
     TableView {
         id: tableView
         width: 600
@@ -69,8 +72,8 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: 100
-            implicitHeight: 50
+            implicitWidth: delegateWidth
+            implicitHeight: delegateHeight
             color: "lightgray"
             border.width: 1
 

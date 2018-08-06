@@ -61,16 +61,6 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
 static const int kBufferTimerInterval = 300;
 
-// Set the maximum life time of an item in the pool to be at least the number of
-// dimensions, which for a table is two. The reason is that the user might flick
-// both e.g the left column and the top row out before a new right column and bottom
-// row gets flicked in. This means we will end up with one column plus one row of
-// items in the pool. And flicking in a new column and a new row will typically happen
-// in separate updatePolish calls (unless you flick them both in at exactly the same
-// time). This means that we should allow flicked out items to stay in the pool for at least
-// two load cycles, to keep more items in circulation instead of deleting them prematurely.
-static const int kMaxPoolTime = 2;
-
 static QLine rectangleEdge(const QRect &rect, Qt::Edge tableEdge)
 {
     switch (tableEdge) {
@@ -868,13 +858,9 @@ void QQuickTableViewPrivate::processLoadRequest()
     updateContentHeight();
 
     loadRequest.markAsDone();
-    qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
+    drainReusePoolAfterLoadRequest();
 
-    if (tableModel) {
-        // Whenever we're done loading a row or column, we drain the
-        // table models reuse pool of superfluous items that weren't reused.
-        tableModel->drainReusableItemsPool(kMaxPoolTime);
-    }
+    qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
 }
 
 void QQuickTableViewPrivate::beginRebuildTable()
@@ -977,6 +963,50 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
         }
     } while (tableModified);
 
+}
+
+void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
+{
+    Q_Q(QQuickTableView);
+
+    if (reusableFlag == QQmlTableInstanceModel::NotReusable || !tableModel)
+        return;
+
+    if (q->verticalOvershoot() || q->horizontalOvershoot()) {
+        // Don't drain while we're overshooting, since this will fill up the
+        // pool, but we expect to reuse them all once the content item moves back.
+        return;
+    }
+
+    // When loading edges, we don't want to drain the reuse pool too aggressively. Normally,
+    // all the items in the pool are reused rapidly as the content view is flicked around
+    // anyway. Even if the table is temporarily flicked to a section that contains fewer
+    // cells than what used to be (e.g if the flicked-in rows are taller than average), it
+    // still makes sense to keep all the items in circulation; Chances are, that soon enough,
+    // thinner rows are flicked back in again (meaning that we can fit more items into the
+    // view). But at the same time, if a delegate chooser is in use, the pool might contain
+    // items created from different delegates. And some of those delegates might be used only
+    // occasionally. So to avoid situations where an item ends up in the pool for too long, we
+    // call drain after each load request, but with a sufficiently large pool time. (If an item
+    // in the pool has a large pool time, it means that it hasn't been reused for an equal
+    // amount of load cycles, and should be released).
+    //
+    // We calculate an appropriate pool time by figuring out what the minimum time must be to
+    // not disturb frequently reused items. Since the number of items in a row might be higher
+    // than in a column (or vice versa), the minimum pool time should take into account that
+    // you might be flicking out a single row (filling up the pool), before you continue
+    // flicking in several new columns (taking them out again, but now in smaller chunks). This
+    // will increase the number of load cycles items are kept in the pool (poolTime), but still,
+    // we shouldn't release them, as they are still being reused frequently.
+    // To get a flexible maxValue (that e.g tolerates rows and columns being flicked
+    // in with varying sizes, causing some items not to be resued immediately), we multiply the
+    // value by 2. Note that we also add an extra +1 to the column count, because the number of
+    // visible columns will fluctuate between +1/-1 while flicking.
+    const int w = loadedTable.width();
+    const int h = loadedTable.height();
+    const int minTime = std::ceil(w > h ? qreal(w + 1) / h : qreal(h + 1) / w);
+    const int maxTime = minTime * 2;
+    tableModel->drainReusableItemsPool(maxTime);
 }
 
 void QQuickTableViewPrivate::loadBuffer()
@@ -1523,7 +1553,15 @@ QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
 
 void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
+    Q_D(QQuickTableView);
     QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
+
+    if (d->tableModel) {
+        // When the view changes size, we force the pool to
+        // shrink by releasing all pooled items.
+        d->tableModel->drainReusableItemsPool(0);
+    }
+
     polish();
 }
 

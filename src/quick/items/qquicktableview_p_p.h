@@ -277,6 +277,7 @@ public:
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
     void loadAndUnloadVisibleEdges();
+    void drainReusePoolAfterLoadRequest();
     void cancelLoadRequest();
     void processLoadRequest();
     void beginRebuildTable();

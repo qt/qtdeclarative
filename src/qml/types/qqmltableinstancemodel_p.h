@@ -114,6 +114,7 @@ public:
     void insertIntoReusableItemsPool(QQmlDelegateModelItem *modelItem);
     QQmlDelegateModelItem *takeFromReusableItemsPool(const QQmlComponent *delegate);
     void drainReusableItemsPool(int maxPoolTime);
+    int poolSize() { return m_reusableItemsPool.size(); }
     void reuseItem(QQmlDelegateModelItem *item, int newModelIndex);
 
     QQmlIncubator::Status incubationStatus(int index) override;
