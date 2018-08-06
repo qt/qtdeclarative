@@ -43,6 +43,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4vme_moth_p.h>
 #include <private/qv4context_p.h>
+#include <private/qv4symbol_p.h>
 
 using namespace QV4;
 
@@ -55,6 +56,7 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     // This is a back pointer and there is no need to call addref() on the unit, because the unit
     // owns this object instead.
     unit = moduleUnit;
+    self.set(engine, this);
 
     Function *moduleFunction = unit->runtimeFunctions[unit->unitData()->indexOfRootFunction];
 
@@ -66,4 +68,120 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     scope->locals.size = locals;
     scope->locals.alloc = locals;
     scope->nArgs = 0;
+
+    Scope valueScope(engine);
+    Scoped<QV4::Module> This(valueScope, this);
+    ScopedString name(valueScope, engine->newString(QStringLiteral("Module")));
+    This->insertMember(engine->symbol_toStringTag(), name, Attr_ReadOnly);
+    This->setPrototypeUnchecked(nullptr);
+}
+
+ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+{
+    if (id.isSymbol())
+        return Object::virtualGet(m, id, receiver, hasProperty);
+
+    const Module *module = static_cast<const Module *>(m);
+    Scope scope(m->engine());
+    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
+    const Value *v = module->d()->unit->resolveExport(expectedName);
+    if (hasProperty)
+        *hasProperty = v != nullptr;
+    if (!v)
+        return Encode::undefined();
+    return v->asReturnedValue();
+}
+
+PropertyAttributes Module::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+{
+    if (id.isSymbol())
+        return Object::virtualGetOwnProperty(m, id, p);
+
+    const Module *module = static_cast<const Module *>(m);
+    Scope scope(m->engine());
+    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
+    const Value *v = module->d()->unit->resolveExport(expectedName);
+    if (!v) {
+        if (p)
+            p->value = Encode::undefined();
+        return Attr_Invalid;
+    }
+    if (p)
+        p->value = v->asReturnedValue();
+    return Attr_Data;
+}
+
+bool Module::virtualPreventExtensions(Managed *)
+{
+    return true;
+}
+
+bool Module::virtualDefineOwnProperty(Managed *, PropertyKey, const Property *, PropertyAttributes)
+{
+    return false;
+}
+
+bool Module::virtualPut(Managed *, PropertyKey, const Value &, Value *)
+{
+    return false;
+}
+
+bool Module::virtualDeleteProperty(Managed *m, PropertyKey id)
+{
+    if (id.isSymbol())
+        return Object::virtualDeleteProperty(m, id);
+    const Module *module = static_cast<const Module *>(m);
+    Scope scope(m->engine());
+    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
+    if (!expectedName)
+        return true;
+    const Value *v = module->d()->unit->resolveExport(expectedName);
+    if (v)
+        return false;
+    return true;
+}
+
+struct ModuleNamespaceIterator : ObjectOwnPropertyKeyIterator
+{
+    uint exportIndex = 0;
+    ~ModuleNamespaceIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const Module *module = static_cast<const Module *>(o);
+    if (exportIndex < module->d()->unit->unitData()->localExportEntryTableSize) {
+        if (attrs)
+            *attrs = Attr_Data;
+        if (pd) {
+            const CompiledData::ExportEntry &entry = module->d()->unit->unitData()->localExportEntryTable()[exportIndex];
+            Scope scope(module->engine());
+            ScopedString exportName(scope, module->d()->unit->runtimeStrings[entry.exportName]);
+            pd->value = *module->d()->unit->resolveExport(exportName);
+        }
+        exportIndex++;
+    }
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *)
+{
+    return new ModuleNamespaceIterator;
+}
+
+Heap::Object *Module::virtualGetPrototypeOf(const Managed *)
+{
+    return nullptr;
+}
+
+bool Module::virtualSetPrototypeOf(Managed *, const Object *proto)
+{
+    return proto == nullptr;
+}
+
+bool Module::virtualIsExtensible(const Managed *)
+{
+    return false;
 }

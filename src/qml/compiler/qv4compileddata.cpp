@@ -469,6 +469,9 @@ const Value *CompilationUnit::resolveExportRecursively(QV4::String *exportName, 
 
     (*resolveSet) << ResolveSetEntry(this, exportName);
 
+    if (exportName->toQString() == QLatin1String("*"))
+        return &m_module->self;
+
     Scope scope(engine);
 
     if (auto localExport = lookupNameInExportTable(data->localExportEntryTable(), data->localExportEntryTableSize, exportName)) {

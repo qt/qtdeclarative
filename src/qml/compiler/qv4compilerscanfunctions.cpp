@@ -251,9 +251,6 @@ bool ScanFunctions::visit(ImportDeclaration *declaration)
             entry.importName = QStringLiteral("*");
             entry.localName = import->nameSpaceImport->importedBinding.toString();
             _context->importEntries << entry;
-
-            _cg->throwSyntaxError(import->nameSpaceImport->importedBindingToken, QStringLiteral("* imports are currently not supported."));
-            return false;
         }
 
         if (import->namedImports) {
