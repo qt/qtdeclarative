@@ -1801,10 +1801,13 @@ ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
 {
     TRACE2(left, right);
 
-    if (Value::integerCompatible(left, right) && left.integerValue() > 0 && right.integerValue() > 0) {
-        int intRes = left.integerValue() % right.integerValue();
-        if (intRes != 0 || left.integerValue() >= 0)
-            return Encode(intRes);
+    if (Value::integerCompatible(left, right) && left.integerValue() >= 0 && right.integerValue() > 0) {
+        // special cases are handled by fmod, among them:
+        //  - arithmic execeptions for ints in c++, eg: INT_MIN % -1
+        //  - undefined behavior in c++, e.g.: anything % 0
+        //  - uncommon cases which would complicate the condition, e.g.: negative integers
+        //    (this makes sure that -1 % 1 == -0 by passing it to fmod)
+        return Encode(left.integerValue() % right.integerValue());
     }
 
     double lval = RuntimeHelpers::toNumber(left);
