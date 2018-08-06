@@ -75,12 +75,21 @@ Window {
         Component {
             id: tableViewDelegate
             Rectangle {
-                implicitWidth: column % 3 ? 80 : 50
-                implicitHeight: row % 3 ? 80 : 50
+                id: delegate
+                implicitWidth: 100
+                implicitHeight: 50
+                color: checked ? "lightblue" : "white"
 
                 Text {
-                    anchors.centerIn: parent
-                    text: modelData
+                    anchors.fill: parent
+                    text: display
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            checked = !checked
+                        }
+                    }
                 }
             }
         }

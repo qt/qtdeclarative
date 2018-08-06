@@ -40,6 +40,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QAbstractTableModel>
+#include <QSet>
 
 class TestTableModel : public QAbstractTableModel
 {
@@ -56,23 +57,54 @@ public:
     int columnCount(const QModelIndex & = QModelIndex()) const override { return m_cols; }
     void setColumnCount(int count) { beginResetModel(); m_cols = count; emit columnCountChanged(); endResetModel(); }
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role) const
+    int indexValue(const QModelIndex &index) const
     {
-        Q_UNUSED(orientation);
-        Q_UNUSED(role);
-        return QStringLiteral("Column header");
+        return index.row() + (index.column() * rowCount());
     }
 
     QVariant data(const QModelIndex &index, int role) const override
     {
-        if (!index.isValid() || role != Qt::DisplayRole)
+        if (!index.isValid())
             return QVariant();
-        return QString("[%1-%2]").arg(index.column()).arg(index.row());
+
+        switch (role) {
+        case Qt::DisplayRole:
+            return QString("%1, %2").arg(index.column()).arg(index.row());
+        case Qt::CheckStateRole:
+            return m_checkedCells.contains(indexValue(index));
+        default:
+            return QVariant();
+        }
+
+        return QVariant();
+    }
+
+    bool setData(const QModelIndex &index, const QVariant &value,
+                 int role = Qt::EditRole) override
+    {
+        if (role != Qt::CheckStateRole)
+            return false;
+
+        int i = indexValue(index);
+        bool checked = value.toBool();
+        if (checked == m_checkedCells.contains(i))
+            return false;
+
+        if (checked)
+            m_checkedCells.insert(i);
+        else
+            m_checkedCells.remove(i);
+
+        emit dataChanged(index, index, {role});
+        return true;
     }
 
     QHash<int, QByteArray> roleNames() const override
     {
-        return { {Qt::DisplayRole, "display"} };
+        return {
+            {Qt::DisplayRole, "display"},
+            {Qt::CheckStateRole, "checked"}
+        };
     }
 
 signals:
@@ -82,6 +114,8 @@ signals:
 private:
     int m_rows = 0;
     int m_cols = 0;
+
+    QSet<int> m_checkedCells;
 };
 
 int main(int argc, char *argv[])
