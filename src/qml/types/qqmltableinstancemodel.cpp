@@ -84,14 +84,26 @@ QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject 
 
 QQmlTableInstanceModel::~QQmlTableInstanceModel()
 {
+    for (const auto modelItem : m_modelItems) {
+        // No item in m_modelItems should be referenced at this point. The view
+        // should release all its items before it deletes this model. Only model items
+        // that are still being incubated should be left for us to delete.
+        Q_ASSERT(modelItem->objectRef == 0);
+        Q_ASSERT(modelItem->incubationTask);
+        // Check that we are not being deleted while we're
+        // in the process of e.g emitting a created signal.
+        Q_ASSERT(modelItem->scriptRef == 0);
+
+        if (modelItem->object) {
+            delete modelItem->object;
+            modelItem->object = nullptr;
+            modelItem->contextData->invalidate();
+            modelItem->contextData = nullptr;
+        }
+    }
+
     deleteAllFinishedIncubationTasks();
-
-    // If we have model items loaded at this point, it means that
-    // the view is still holding references to them. So basically
-    // the view needs to be deleted first (and thereby release all
-    // its items), before this destructor is run.
-    Q_ASSERT(m_modelItems.isEmpty());
-
+    qDeleteAll(m_modelItems);
     drainReusableItemsPool(0);
 }
 
