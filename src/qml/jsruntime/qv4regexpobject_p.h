@@ -108,7 +108,8 @@ struct RegExpObject: Object {
     enum Flags {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
-        RegExp_Multiline  = 0x04
+        RegExp_Multiline  = 0x04,
+        RegExp_Unicode    = 0x08
     };
 
     enum {
@@ -117,6 +118,7 @@ struct RegExpObject: Object {
         Index_Global = 2,
         Index_IgnoreCase = 3,
         Index_Multiline = 4,
+        Index_Unicode = 5,
         Index_ArrayIndex = Heap::ArrayObject::LengthPropertyIndex + 1,
         Index_ArrayInput = Index_ArrayIndex + 1
     };

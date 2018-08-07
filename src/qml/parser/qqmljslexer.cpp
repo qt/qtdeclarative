@@ -58,6 +58,7 @@ static inline int regExpFlagFromChar(const QChar &ch)
     case 'g': return Lexer::RegExp_Global;
     case 'i': return Lexer::RegExp_IgnoreCase;
     case 'm': return Lexer::RegExp_Multiline;
+    case 'u': return Lexer::RegExp_Unicode;
     }
     return 0;
 }

@@ -151,6 +151,7 @@ void RegExpObject::initProperties()
     setProperty(Index_Global, Primitive::fromBoolean(global()));
     setProperty(Index_IgnoreCase, Primitive::fromBoolean(value()->ignoreCase));
     setProperty(Index_Multiline, Primitive::fromBoolean(value()->multiLine));
+    setProperty(Index_Unicode, Primitive::fromBoolean(value()->unicode));
 }
 
 // Converts a JS RegExp to a QRegExp.
@@ -191,6 +192,8 @@ uint RegExpObject::flags() const
         f |= QV4::RegExpObject::RegExp_IgnoreCase;
     if (value()->multiLine)
         f |= QV4::RegExpObject::RegExp_Multiline;
+    if (value()->unicode)
+        f |= QV4::RegExpObject::RegExp_Unicode;
     return f;
 }
 

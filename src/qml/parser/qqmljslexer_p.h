@@ -113,7 +113,8 @@ public:
     enum RegExpFlag {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
-        RegExp_Multiline  = 0x04
+        RegExp_Multiline  = 0x04,
+        RegExp_Unicode    = 0x08
     };
 
     enum ParseModeFlags {

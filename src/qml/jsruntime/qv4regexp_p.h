@@ -76,7 +76,7 @@ struct RegExpCacheKey;
 namespace Heap {
 
 struct RegExp : Base {
-    void init(ExecutionEngine *engine, const QString& pattern, bool ignoreCase, bool multiline, bool global);
+    void init(ExecutionEngine *engine, const QString& pattern, bool ignoreCase, bool multiline, bool global, bool unicode);
     void destroy();
 
     QString *pattern;
@@ -96,6 +96,7 @@ struct RegExp : Base {
     bool ignoreCase;
     bool multiLine;
     bool global;
+    bool unicode;
     bool valid;
 
     int captureCount() const { return subPatternCount + 1; }
@@ -122,7 +123,7 @@ struct RegExp : public Managed
     bool multiLine() const { return d()->multiLine; }
     bool global() const { return d()->global; }
 
-    static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false, bool global = false);
+    static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false, bool global = false, bool unicode = false);
 
     bool isValid() const { return d()->valid; }
 

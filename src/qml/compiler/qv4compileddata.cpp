@@ -152,13 +152,16 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         bool global = false;
         bool multiline = false;
         bool ignoreCase = false;
+        bool unicode = false;
         if (re->flags & CompiledData::RegExp::RegExp_Global)
             global = true;
         if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
             ignoreCase = true;
         if (re->flags & CompiledData::RegExp::RegExp_Multiline)
             multiline = true;
-        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, stringAt(re->stringIndex), ignoreCase, multiline, global);
+        if (re->flags & CompiledData::RegExp::RegExp_Unicode)
+            unicode = true;
+        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, stringAt(re->stringIndex), ignoreCase, multiline, global, unicode);
     }
 
     if (data->lookupTableSize) {

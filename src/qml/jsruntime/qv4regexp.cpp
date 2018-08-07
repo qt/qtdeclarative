@@ -70,7 +70,7 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline, bool global)
+Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline, bool global, bool unicode)
 {
     RegExpCacheKey key(pattern, ignoreCase, multiline, global);
 
@@ -83,7 +83,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
         return result->d();
 
     Scope scope(engine);
-    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline, global));
+    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline, global, unicode));
 
     result->d()->cache = cache;
     cachedValue.set(engine, result);
@@ -91,12 +91,13 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     return result->d();
 }
 
-void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ignoreCase, bool multiline, bool global)
+void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ignoreCase, bool multiline, bool global, bool unicode)
 {
     Base::init();
     this->pattern = new QString(pattern);
     this->ignoreCase = ignoreCase;
     this->multiLine = multiline;
+    this->unicode = unicode;
     this->global = global;
 
     valid = false;
@@ -109,6 +110,8 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ig
         flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
     if (global)
         flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
+    if (unicode)
+        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
 
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), flags, error);
     if (error != JSC::Yarr::ErrorCode::NoError)

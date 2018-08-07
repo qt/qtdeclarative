@@ -707,7 +707,6 @@ built-ins/RegExp/S15.10.4.1_A2_T2.js fails
 built-ins/RegExp/call_with_non_regexp_same_constructor.js fails
 built-ins/RegExp/call_with_regexp_match_falsy.js fails
 built-ins/RegExp/call_with_regexp_not_same_constructor.js fails
-built-ins/RegExp/dotall/without-dotall-unicode.js fails
 built-ins/RegExp/from-regexp-like-flag-override.js fails
 built-ins/RegExp/from-regexp-like-get-source-err.js fails
 built-ins/RegExp/from-regexp-like-short-circuit.js fails
@@ -874,9 +873,7 @@ built-ins/RegExp/prototype/Symbol.split/u-lastindex-adv-thru-match.js fails
 built-ins/RegExp/prototype/exec/S15.10.6.2_A5_T3.js fails
 built-ins/RegExp/prototype/exec/failure-lastindex-access.js fails
 built-ins/RegExp/prototype/exec/success-lastindex-access.js fails
-built-ins/RegExp/prototype/exec/u-captured-value.js fails
 built-ins/RegExp/prototype/exec/u-lastindex-adv.js fails
-built-ins/RegExp/prototype/exec/u-lastindex-value.js fails
 built-ins/RegExp/prototype/exec/y-fail-lastindex-no-write.js fails
 built-ins/RegExp/prototype/exec/y-fail-lastindex.js fails
 built-ins/RegExp/prototype/exec/y-fail-return.js fails
@@ -913,7 +910,6 @@ built-ins/RegExp/prototype/source/name.js fails
 built-ins/RegExp/prototype/source/prop-desc.js fails
 built-ins/RegExp/prototype/source/this-val-regexp-prototype.js fails
 built-ins/RegExp/prototype/source/value-line-terminator.js fails
-built-ins/RegExp/prototype/source/value-u.js fails
 built-ins/RegExp/prototype/sticky/length.js fails
 built-ins/RegExp/prototype/sticky/name.js fails
 built-ins/RegExp/prototype/sticky/prop-desc.js fails
@@ -930,12 +926,9 @@ built-ins/RegExp/prototype/test/y-set-lastindex.js fails
 built-ins/RegExp/prototype/unicode/length.js fails
 built-ins/RegExp/prototype/unicode/name.js fails
 built-ins/RegExp/prototype/unicode/prop-desc.js fails
-built-ins/RegExp/prototype/unicode/this-val-invalid-obj.js fails
-built-ins/RegExp/prototype/unicode/this-val-non-obj.js fails
 built-ins/RegExp/prototype/unicode/this-val-regexp-prototype.js fails
 built-ins/RegExp/prototype/unicode/this-val-regexp.js fails
 built-ins/RegExp/u180e.js fails
-built-ins/RegExp/unicode_identity_escape.js fails
 built-ins/RegExp/valid-flags-y.js fails
 built-ins/Set/proto-from-ctor-realm.js fails
 built-ins/Set/prototype/add/does-not-have-setdata-internal-slot-weakset.js fails
@@ -2162,14 +2155,7 @@ language/global-code/script-decl-var.js fails
 language/identifiers/other_id_continue.js fails
 language/identifiers/other_id_start-escaped.js fails
 language/identifiers/other_id_start.js fails
-language/literals/regexp/u-astral.js fails
 language/literals/regexp/u-case-mapping.js fails
-language/literals/regexp/u-surrogate-pairs-atom-char-class.js fails
-language/literals/regexp/u-surrogate-pairs-atom-dot.js fails
-language/literals/regexp/u-surrogate-pairs-atom-escape-char-class.js fails
-language/literals/regexp/u-surrogate-pairs-atom-escape-decimal.js fails
-language/literals/regexp/u-surrogate-pairs.js fails
-language/literals/regexp/u-unicode-esc.js fails
 language/literals/regexp/y-assertion-start.js fails
 language/module-code/eval-export-dflt-cls-anon.js strictFails
 language/module-code/eval-export-dflt-cls-name-meth.js strictFails

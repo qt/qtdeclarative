@@ -377,6 +377,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(index == RegExpObject::Index_IgnoreCase);
     ic = ic->addMember((str = newIdentifier(QStringLiteral("multiline")))->propertyKey(), Attr_ReadOnly, &index);
     Q_ASSERT(index == RegExpObject::Index_Multiline);
+    ic = ic->addMember((str = newIdentifier(QStringLiteral("unicode")))->propertyKey(), Attr_ReadOnly, &index);
+    Q_ASSERT(index == RegExpObject::Index_Unicode);
     jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(ic->d());
     classes[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
 
@@ -787,9 +789,10 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int
     bool global = (flags & QV4::CompiledData::RegExp::RegExp_Global);
     bool ignoreCase = (flags & QV4::CompiledData::RegExp::RegExp_IgnoreCase);
     bool multiline = (flags & QV4::CompiledData::RegExp::RegExp_Multiline);
+    bool unicode = (flags & QV4::CompiledData::RegExp::RegExp_Unicode);
 
     Scope scope(this);
-    Scoped<RegExp> re(scope, RegExp::create(this, pattern, ignoreCase, multiline, global));
+    Scoped<RegExp> re(scope, RegExp::create(this, pattern, ignoreCase, multiline, global, unicode));
     return newRegExpObject(re);
 }
 

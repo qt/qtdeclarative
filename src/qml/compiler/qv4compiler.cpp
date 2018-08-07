@@ -178,6 +178,8 @@ int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *r
         re.flags |= CompiledData::RegExp::RegExp_IgnoreCase;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Multiline)
         re.flags |= CompiledData::RegExp::RegExp_Multiline;
+    if (regexp->flags &  QQmlJS::Lexer::RegExp_Unicode)
+        re.flags |= CompiledData::RegExp::RegExp_Unicode;
 
     regexps.append(re);
     return regexps.size() - 1;
