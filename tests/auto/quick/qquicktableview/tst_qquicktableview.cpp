@@ -1180,7 +1180,7 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
     LOAD_TABLEVIEW("countingtableview.qml");
 
     const qreal delegateWidth = 100;
-    const int pageFlickCount = 1;
+    const int pageFlickCount = 4;
 
     auto model = TestModelAsVariant(100, 100);
     tableView->setModel(model);
