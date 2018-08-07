@@ -1354,7 +1354,10 @@ void ListElement::destroy(ListLayout *layout)
             }
         }
 
-        delete m_objectCache;
+        if (m_objectCache) {
+            m_objectCache->~QObject();
+            operator delete(m_objectCache);
+        }
     }
 
     if (next)
