@@ -95,11 +95,19 @@ namespace QQmlPrivate
 {
     void Q_QML_EXPORT qdeclarativeelement_destructor(QObject *);
     template<typename T>
-    class QQmlElement : public T
+    class QQmlElement final : public T
     {
     public:
         ~QQmlElement() override {
             QQmlPrivate::qdeclarativeelement_destructor(this);
+        }
+        static void operator delete(void *ptr) {
+            // We allocate memory from this class in QQmlType::create
+            // along with some additional memory.
+            // So we override the operator delete in order to avoid the
+            // sized operator delete to be called with a different size than
+            // the size that was allocated.
+            ::operator delete (ptr);
         }
     };
 
