@@ -137,15 +137,17 @@ static_assert(sizeof(Location) == 4, "Location structure needs to have the expec
 struct RegExp
 {
     enum Flags : unsigned int {
+        RegExp_NoFlags    = 0x0,
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
         RegExp_Multiline  = 0x04,
-        RegExp_Unicode    = 0x08
+        RegExp_Unicode    = 0x08,
+        RegExp_Sticky     = 0x10
     };
     union {
         quint32 _dummy;
-        quint32_le_bitfield<0, 4> flags;
-        quint32_le_bitfield<4, 28> stringIndex;
+        quint32_le_bitfield<0, 5> flags;
+        quint32_le_bitfield<5, 27> stringIndex;
     };
 
     RegExp() : _dummy(0) { }

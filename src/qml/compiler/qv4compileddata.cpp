@@ -149,19 +149,9 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     memset(runtimeRegularExpressions, 0, data->regexpTableSize * sizeof(QV4::Value));
     for (uint i = 0; i < data->regexpTableSize; ++i) {
         const CompiledData::RegExp *re = data->regexpAt(i);
-        bool global = false;
-        bool multiline = false;
-        bool ignoreCase = false;
-        bool unicode = false;
-        if (re->flags & CompiledData::RegExp::RegExp_Global)
-            global = true;
-        if (re->flags & CompiledData::RegExp::RegExp_IgnoreCase)
-            ignoreCase = true;
-        if (re->flags & CompiledData::RegExp::RegExp_Multiline)
-            multiline = true;
-        if (re->flags & CompiledData::RegExp::RegExp_Unicode)
-            unicode = true;
-        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, stringAt(re->stringIndex), ignoreCase, multiline, global, unicode);
+        uint f = re->flags;
+        const CompiledData::RegExp::Flags flags = static_cast<CompiledData::RegExp::Flags>(f);
+        runtimeRegularExpressions[i] = QV4::RegExp::create(engine, stringAt(re->stringIndex), flags);
     }
 
     if (data->lookupTableSize) {

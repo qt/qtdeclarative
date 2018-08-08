@@ -369,16 +369,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(QV4::RegExpObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_lastIndex()->propertyKey(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == RegExpObject::Index_LastIndex);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("source")))->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == RegExpObject::Index_Source);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("global")))->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == RegExpObject::Index_Global);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("ignoreCase")))->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == RegExpObject::Index_IgnoreCase);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("multiline")))->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == RegExpObject::Index_Multiline);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("unicode")))->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == RegExpObject::Index_Unicode);
     jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(ic->d());
     classes[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
 
@@ -786,13 +776,8 @@ Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
 
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QString &pattern, int flags)
 {
-    bool global = (flags & QV4::CompiledData::RegExp::RegExp_Global);
-    bool ignoreCase = (flags & QV4::CompiledData::RegExp::RegExp_IgnoreCase);
-    bool multiline = (flags & QV4::CompiledData::RegExp::RegExp_Multiline);
-    bool unicode = (flags & QV4::CompiledData::RegExp::RegExp_Unicode);
-
     Scope scope(this);
-    Scoped<RegExp> re(scope, RegExp::create(this, pattern, ignoreCase, multiline, global, unicode));
+    Scoped<RegExp> re(scope, RegExp::create(this, pattern, static_cast<CompiledData::RegExp::Flags>(flags)));
     return newRegExpObject(re);
 }
 

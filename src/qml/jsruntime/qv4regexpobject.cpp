@@ -68,7 +68,7 @@ void Heap::RegExpObject::init()
     Object::init();
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
-    value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), false, false));
+    value.set(scope.engine, QV4::RegExp::create(scope.engine, QString(), CompiledData::RegExp::RegExp_NoFlags));
     o->initProperties();
 }
 
@@ -128,8 +128,8 @@ void Heap::RegExpObject::init(const QRegExp &re)
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    o->d()->value.set(scope.engine,
-                        QV4::RegExp::create(scope.engine, pattern, re.caseSensitivity() == Qt::CaseInsensitive, false));
+    uint flags = (re.caseSensitivity() == Qt::CaseInsensitive ? CompiledData::RegExp::RegExp_IgnoreCase : CompiledData::RegExp::RegExp_NoFlags);
+    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, pattern, flags));
 
     o->initProperties();
 }
@@ -139,20 +139,6 @@ void RegExpObject::initProperties()
     setProperty(Index_LastIndex, Primitive::fromInt32(0));
 
     Q_ASSERT(value());
-
-    QString p = *value()->pattern;
-    if (p.isEmpty()) {
-        p = QStringLiteral("(?:)");
-    } else {
-        // escape certain parts, see ch. 15.10.4
-        p.replace('/', QLatin1String("\\/"));
-    }
-
-    setProperty(Index_Source, engine()->newString(p));
-    setProperty(Index_Global, Primitive::fromBoolean(global()));
-    setProperty(Index_IgnoreCase, Primitive::fromBoolean(value()->ignoreCase));
-    setProperty(Index_Multiline, Primitive::fromBoolean(value()->multiLine));
-    setProperty(Index_Unicode, Primitive::fromBoolean(value()->unicode));
 }
 
 // Converts a JS RegExp to a QRegExp.
@@ -160,20 +146,20 @@ void RegExpObject::initProperties()
 // have different semantics/flags, but we try to do our best.
 QRegExp RegExpObject::toQRegExp() const
 {
-    Qt::CaseSensitivity caseSensitivity = value()->ignoreCase ? Qt::CaseInsensitive : Qt::CaseSensitive;
+    Qt::CaseSensitivity caseSensitivity = (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase) ? Qt::CaseInsensitive : Qt::CaseSensitive;
     return QRegExp(*value()->pattern, caseSensitivity, QRegExp::RegExp2);
 }
 
 QString RegExpObject::toString() const
 {
-    QString result = QLatin1Char('/') + source() + QLatin1Char('/');
-    if (global())
-        result += QLatin1Char('g');
-    if (value()->ignoreCase)
-        result += QLatin1Char('i');
-    if (value()->multiLine)
-        result += QLatin1Char('m');
-    return result;
+    QString p = *value()->pattern;
+    if (p.isEmpty()) {
+        p = QStringLiteral("(?:)");
+    } else {
+        // escape certain parts, see ch. 15.10.4
+        p.replace('/', QLatin1String("\\/"));
+    }
+    return p;
 }
 
 QString RegExpObject::source() const
@@ -186,16 +172,7 @@ QString RegExpObject::source() const
 
 uint RegExpObject::flags() const
 {
-    uint f = 0;
-    if (global())
-        f |= QV4::RegExpObject::RegExp_Global;
-    if (value()->ignoreCase)
-        f |= QV4::RegExpObject::RegExp_IgnoreCase;
-    if (value()->multiLine)
-        f |= QV4::RegExpObject::RegExp_Multiline;
-    if (value()->unicode)
-        f |= QV4::RegExpObject::RegExp_Unicode;
-    return f;
+    return d()->value->flags;
 }
 
 ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *str)
@@ -286,28 +263,30 @@ ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, con
     if (scope.hasException())
         return Encode::undefined();
 
-    bool global = false;
-    bool ignoreCase = false;
-    bool multiLine = false;
+    uint flags = CompiledData::RegExp::RegExp_NoFlags;
     if (!f->isUndefined()) {
         ScopedString s(scope, f->toString(scope.engine));
         if (scope.hasException())
             return Encode::undefined();
         QString str = s->toQString();
         for (int i = 0; i < str.length(); ++i) {
-            if (str.at(i) == QLatin1Char('g') && !global) {
-                global = true;
-            } else if (str.at(i) == QLatin1Char('i') && !ignoreCase) {
-                ignoreCase = true;
-            } else if (str.at(i) == QLatin1Char('m') && !multiLine) {
-                multiLine = true;
+            if (str.at(i) == QLatin1Char('g') && !(flags & CompiledData::RegExp::RegExp_Global)) {
+                flags |= CompiledData::RegExp::RegExp_Global;
+            } else if (str.at(i) == QLatin1Char('i') && !(flags & CompiledData::RegExp::RegExp_IgnoreCase)) {
+                flags |= CompiledData::RegExp::RegExp_IgnoreCase;
+            } else if (str.at(i) == QLatin1Char('m') && !(flags & CompiledData::RegExp::RegExp_Multiline)) {
+                flags |= CompiledData::RegExp::RegExp_Multiline;
+            } else if (str.at(i) == QLatin1Char('u') && !(flags & CompiledData::RegExp::RegExp_Unicode)) {
+                flags |= CompiledData::RegExp::RegExp_Unicode;
+            } else if (str.at(i) == QLatin1Char('y') && !(flags & CompiledData::RegExp::RegExp_Sticky)) {
+                flags |= CompiledData::RegExp::RegExp_Sticky;
             } else {
                 return scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
             }
         }
     }
 
-    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, ignoreCase, multiLine, global));
+    Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, flags));
     if (!regexp->isValid()) {
         return scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
     }
@@ -357,11 +336,20 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, nullptr);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
+    defineAccessorProperty(QStringLiteral("flags"), method_get_flags, nullptr);
+    defineAccessorProperty(QStringLiteral("global"), method_get_global, nullptr);
+    defineAccessorProperty(QStringLiteral("ignoreCase"), method_get_ignoreCase, nullptr);
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
+    defineDefaultProperty(engine->symbol_match(), method_match, 1);
+    defineAccessorProperty(QStringLiteral("multiline"), method_get_multiline, nullptr);
+    defineAccessorProperty(QStringLiteral("source"), method_get_source, nullptr);
+    defineAccessorProperty(QStringLiteral("sticky"), method_get_sticky, nullptr);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
+    defineAccessorProperty(QStringLiteral("unicode"), method_get_unicode, nullptr);
+
+    // another web extension
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
-    defineDefaultProperty(engine->symbol_match(), method_match, 1);
 }
 
 /* used by String.match */
@@ -442,33 +430,64 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     return  r->builtinExec(scope.engine, str);
 }
 
-ReturnedValue RegExpPrototype::method_test(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue RegExpPrototype::method_get_flags(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
-    Value res = Value::fromReturnedValue(method_exec(b, thisObject, argv, argc));
-    return Encode(!res.isNull());
-}
-
-ReturnedValue RegExpPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
-{
-    ExecutionEngine *v4 = b->engine();
-    const RegExpObject *r = thisObject->as<RegExpObject>();
-    if (!r)
-        return v4->throwTypeError();
-
-    return Encode(v4->newString(r->toString()));
-}
-
-ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
-{
-    Scope scope(b);
-    Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
-    if (!r)
+    Scope scope(f);
+    ScopedObject o(scope, thisObject);
+    if (!o)
         return scope.engine->throwTypeError();
 
-    Scoped<RegExpObject> re(scope, scope.engine->regExpCtor()->callAsConstructor(argv, argc));
+    QString result;
+    ScopedValue v(scope);
+    ScopedString key(scope);
+    v = o->get((key = scope.engine->newString(QStringLiteral("global"))));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (v->toBoolean())
+        result += QLatin1Char('g');
+    v = o->get((key = scope.engine->newString(QStringLiteral("ignoreCase"))));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (v->toBoolean())
+        result += QLatin1Char('i');
+    v = o->get((key = scope.engine->newString(QStringLiteral("multiline"))));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (v->toBoolean())
+        result += QLatin1Char('m');
+    v = o->get((key = scope.engine->newString(QStringLiteral("unicode"))));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (v->toBoolean())
+        result += QLatin1Char('u');
+    v = o->get((key = scope.engine->newString(QStringLiteral("sticky"))));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (v->toBoolean())
+        result += QLatin1Char('y');
+    return scope.engine->newString(result)->asReturnedValue();
+}
 
-    r->d()->value.set(scope.engine, re->value());
-    return Encode::undefined();
+ReturnedValue RegExpPrototype::method_get_global(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    bool b = re->value()->flags & CompiledData::RegExp::RegExp_Global;
+    return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_get_ignoreCase(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    bool b = re->value()->flags & CompiledData::RegExp::RegExp_IgnoreCase;
+    return Encode(b);
 }
 
 ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -488,6 +507,90 @@ ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value
 
     // ####
     return scope.engine->throwTypeError();
+}
+
+ReturnedValue RegExpPrototype::method_get_multiline(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    bool b = re->value()->flags & CompiledData::RegExp::RegExp_Multiline;
+    return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    return scope.engine->newString(re->toString())->asReturnedValue();
+}
+
+ReturnedValue RegExpPrototype::method_get_sticky(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    bool b = re->value()->flags & CompiledData::RegExp::RegExp_Sticky;
+    return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_test(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Value res = Value::fromReturnedValue(method_exec(b, thisObject, argv, argc));
+    return Encode(!res.isNull());
+}
+
+ReturnedValue RegExpPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    const Object *r = thisObject->as<Object>();
+    if (!r)
+        return scope.engine->throwTypeError();
+
+    ScopedString key(scope);
+    ScopedValue v(scope);
+    v = r->get((key = scope.engine->newString(QStringLiteral("source"))));
+    ScopedString source(scope, v->toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+    v = r->get((key = scope.engine->newString(QStringLiteral("flags"))));
+    ScopedString flags(scope, v->toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    QString result = QLatin1Char('/') + source->toQString() + QLatin1Char('/') + flags->toQString();
+    return Encode(scope.engine->newString(result));
+}
+
+ReturnedValue RegExpPrototype::method_get_unicode(const FunctionObject *f, const Value *thisObject, const Value *, int)
+{
+    Scope scope(f);
+    Scoped<RegExpObject> re(scope, thisObject);
+    if (!re)
+        return scope.engine->throwTypeError();
+
+    bool b = re->value()->flags & CompiledData::RegExp::RegExp_Unicode;
+    return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
+    if (!r)
+        return scope.engine->throwTypeError();
+
+    Scoped<RegExpObject> re(scope, scope.engine->regExpCtor()->callAsConstructor(argv, argc));
+
+    r->d()->value.set(scope.engine, re->value());
+    return Encode::undefined();
 }
 
 template <uint index>

@@ -76,9 +76,25 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
 
-Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase, bool multiline, bool global, bool unicode)
+QString Heap::RegExp::flagsAsString() const
 {
-    RegExpCacheKey key(pattern, ignoreCase, multiline, global);
+    QString result;
+    if (flags & CompiledData::RegExp::RegExp_Global)
+        result += QLatin1Char('g');
+    if (flags & CompiledData::RegExp::RegExp_IgnoreCase)
+        result += QLatin1Char('i');
+    if (flags & CompiledData::RegExp::RegExp_Multiline)
+        result += QLatin1Char('m');
+    if (flags & CompiledData::RegExp::RegExp_Unicode)
+        result += QLatin1Char('u');
+    if (flags & CompiledData::RegExp::RegExp_Sticky)
+        result += QLatin1Char('y');
+    return result;
+}
+
+Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, uint flags)
+{
+    RegExpCacheKey key(pattern, flags);
 
     RegExpCache *cache = engine->regExpCache;
     if (!cache)
@@ -89,7 +105,7 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
         return result->d();
 
     Scope scope(engine);
-    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, ignoreCase, multiline, global, unicode));
+    Scoped<RegExp> result(scope, engine->memoryManager->alloc<RegExp>(engine, pattern, flags));
 
     result->d()->cache = cache;
     cachedValue.set(engine, result);
@@ -97,29 +113,28 @@ Heap::RegExp *RegExp::create(ExecutionEngine* engine, const QString& pattern, bo
     return result->d();
 }
 
-void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, bool ignoreCase, bool multiline, bool global, bool unicode)
+void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, uint flags)
 {
     Base::init();
     this->pattern = new QString(pattern);
-    this->ignoreCase = ignoreCase;
-    this->multiLine = multiline;
-    this->unicode = unicode;
-    this->global = global;
+    this->flags = flags;
 
     valid = false;
 
     JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
-    JSC::RegExpFlags flags = JSC::NoFlags;
-    if (ignoreCase)
-        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
-    if (multiline)
-        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
-    if (global)
-        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
-    if (unicode)
-        flags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
+    JSC::RegExpFlags jscFlags = JSC::NoFlags;
+    if (flags & CompiledData::RegExp::RegExp_Global)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
+    if (flags & CompiledData::RegExp::RegExp_IgnoreCase)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
+    if (flags & CompiledData::RegExp::RegExp_Multiline)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
+    if (flags & CompiledData::RegExp::RegExp_Unicode)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
+    if (flags & CompiledData::RegExp::RegExp_Sticky)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagSticky);
 
-    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), flags, error);
+    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags, error);
     if (error != JSC::Yarr::ErrorCode::NoError)
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;

@@ -180,6 +180,8 @@ int QV4::Compiler::JSUnitGenerator::registerRegExp(QQmlJS::AST::RegExpLiteral *r
         re.flags |= CompiledData::RegExp::RegExp_Multiline;
     if (regexp->flags &  QQmlJS::Lexer::RegExp_Unicode)
         re.flags |= CompiledData::RegExp::RegExp_Unicode;
+    if (regexp->flags &  QQmlJS::Lexer::RegExp_Sticky)
+        re.flags |= CompiledData::RegExp::RegExp_Sticky;
 
     regexps.append(re);
     return regexps.size() - 1;

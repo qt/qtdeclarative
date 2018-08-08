@@ -514,12 +514,11 @@ void tst_QJSEngine::newRegExp()
     // prototype should be RegExp.prototype
     QVERIFY(!rexp.prototype().isUndefined());
     QCOMPARE(rexp.prototype().isObject(), true);
-    QCOMPARE(rexp.prototype().isRegExp(), true);
     // Get [[Class]] internal property of RegExp Prototype Object.
     // See ECMA-262 Section 8.6.2, "Object Internal Properties and Methods".
     // See ECMA-262 Section 15.10.6, "Properties of the RegExp Prototype Object".
     QJSValue r = eng.evaluate("Object.prototype.toString.call(RegExp.prototype)");
-    QCOMPARE(r.toString(), QString::fromLatin1("[object RegExp]"));
+    QCOMPARE(r.toString(), QString::fromLatin1("[object Object]"));
     QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
 
     QCOMPARE(qjsvalue_cast<QRegExp>(rexp).pattern(), QRegExp("foo").pattern());
@@ -545,8 +544,7 @@ void tst_QJSEngine::jsRegExp()
     QVERIFY(r2.strictlyEquals(r));
 
     QJSValue r3 = rxCtor.call(QJSValueList() << r << "gim");
-    QVERIFY(r3.isError());
-    QVERIFY(r3.toString().contains(QString::fromLatin1("TypeError"))); // Cannot supply flags when constructing one RegExp from another
+    QVERIFY(!r3.isError());
 
     QJSValue r4 = rxCtor.call(QJSValueList() << "foo" << "gim");
     QVERIFY(r4.isRegExp());
@@ -554,9 +552,7 @@ void tst_QJSEngine::jsRegExp()
     QJSValue r5 = rxCtor.callAsConstructor(QJSValueList() << r);
     QVERIFY(r5.isRegExp());
     QCOMPARE(r5.toString(), QString::fromLatin1("/foo/gim"));
-    // In JSC, constructing a RegExp from another produces the same identical object.
-    // This is different from SpiderMonkey and old back-end.
-    QVERIFY(!r5.strictlyEquals(r));
+    QVERIFY(r5.strictlyEquals(r));
 
     // See ECMA-262 Section 15.10.4.1, "new RegExp(pattern, flags)".
     QJSValue r6 = rxCtor.callAsConstructor(QJSValueList() << "foo" << "bar");

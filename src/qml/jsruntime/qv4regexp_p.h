@@ -76,7 +76,7 @@ struct RegExpCacheKey;
 namespace Heap {
 
 struct RegExp : Base {
-    void init(ExecutionEngine *engine, const QString& pattern, bool ignoreCase, bool multiline, bool global, bool unicode);
+    void init(ExecutionEngine *engine, const QString& pattern, uint flags);
     void destroy();
 
     QString *pattern;
@@ -93,12 +93,10 @@ struct RegExp : Base {
     }
     RegExpCache *cache;
     int subPatternCount;
-    bool ignoreCase;
-    bool multiLine;
-    bool global;
-    bool unicode;
+    uint flags;
     bool valid;
 
+    QString flagsAsString() const;
     int captureCount() const { return subPatternCount + 1; }
 };
 Q_STATIC_ASSERT(std::is_trivial< RegExp >::value);
@@ -119,11 +117,13 @@ struct RegExp : public Managed
 #endif
     RegExpCache *cache() const { return d()->cache; }
     int subPatternCount() const { return d()->subPatternCount; }
-    bool ignoreCase() const { return d()->ignoreCase; }
-    bool multiLine() const { return d()->multiLine; }
-    bool global() const { return d()->global; }
+    bool ignoreCase() const { return d()->flags & CompiledData::RegExp::RegExp_IgnoreCase; }
+    bool multiLine() const { return d()->flags & CompiledData::RegExp::RegExp_Multiline; }
+    bool global() const { return d()->flags & CompiledData::RegExp::RegExp_Global; }
+    bool unicode() const { return d()->flags & CompiledData::RegExp::RegExp_Unicode; }
+    bool sticky() const { return d()->flags & CompiledData::RegExp::RegExp_Sticky; }
 
-    static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, bool ignoreCase = false, bool multiline = false, bool global = false, bool unicode = false);
+    static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, uint flags = CompiledData::RegExp::RegExp_NoFlags);
 
     bool isValid() const { return d()->valid; }
 
@@ -136,30 +136,23 @@ struct RegExp : public Managed
 
 struct RegExpCacheKey
 {
-    RegExpCacheKey(const QString &pattern, bool ignoreCase, bool multiLine, bool global)
-        : pattern(pattern)
-        , ignoreCase(ignoreCase)
-        , multiLine(multiLine)
-        , global(global)
+    RegExpCacheKey(const QString &pattern, uint flags)
+        : pattern(pattern), flags(flags)
     { }
     explicit inline RegExpCacheKey(const RegExp::Data *re);
 
     bool operator==(const RegExpCacheKey &other) const
-    { return pattern == other.pattern && ignoreCase == other.ignoreCase && multiLine == other.multiLine && global == other.global; }
+    { return pattern == other.pattern && flags == other.flags;; }
     bool operator!=(const RegExpCacheKey &other) const
     { return !operator==(other); }
 
     QString pattern;
-    uint ignoreCase : 1;
-    uint multiLine : 1;
-    uint global : 1;
+    uint flags;
 };
 
 inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
     : pattern(*re->pattern)
-    , ignoreCase(re->ignoreCase)
-    , multiLine(re->multiLine)
-    , global(re->global)
+    , flags(re->flags)
 {}
 
 inline uint qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW

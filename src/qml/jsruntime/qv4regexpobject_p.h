@@ -76,7 +76,7 @@ namespace Heap {
     Member(class, Pointer, RegExp *, value)
 
 DECLARE_HEAP_OBJECT(RegExpObject, Object) {
-    DECLARE_MARKOBJECTS(RegExpObject);
+    DECLARE_MARKOBJECTS(RegExpObject)
 
     void init();
     void init(QV4::RegExp *value);
@@ -109,16 +109,12 @@ struct RegExpObject: Object {
         RegExp_Global     = 0x01,
         RegExp_IgnoreCase = 0x02,
         RegExp_Multiline  = 0x04,
-        RegExp_Unicode    = 0x08
+        RegExp_Unicode    = 0x08,
+        RegExp_Sticky     = 0x10
     };
 
     enum {
         Index_LastIndex = 0,
-        Index_Source = 1,
-        Index_Global = 2,
-        Index_IgnoreCase = 3,
-        Index_Multiline = 4,
-        Index_Unicode = 5,
         Index_ArrayIndex = Heap::ArrayObject::LengthPropertyIndex + 1,
         Index_ArrayInput = Index_ArrayIndex + 1
     };
@@ -126,7 +122,7 @@ struct RegExpObject: Object {
     enum { NInlineProperties = 5 };
 
     Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->value->global; }
+    bool global() const { return d()->value->flags & CompiledData::RegExp::RegExp_Global; }
 
     void initProperties();
 
@@ -165,13 +161,21 @@ struct RegExpPrototype: RegExpObject
     void init(ExecutionEngine *engine, Object *ctor);
 
     static ReturnedValue method_exec(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_flags(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_global(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_ignoreCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_multiline(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_source(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_sticky(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_test(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get_unicode(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+    // Web extension
     static ReturnedValue method_compile(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-
-
+    // properties on the constructor, web extensions
     template <uint index>
     static ReturnedValue method_get_lastMatch_n(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_lastParen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
