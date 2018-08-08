@@ -3991,7 +3991,7 @@ ScriptBody: StatementList;
 
 Module: ModuleBodyOpt;
 /.  case $rule_number: {
-        sym(1).Node = new (pool) AST::ESModule(sym(1).ModuleItemList);
+        sym(1).Node = new (pool) AST::ESModule(sym(1).ModuleItemList, pool);
     } break;
 ./
 
@@ -4233,6 +4233,14 @@ ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARA
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead AssignmentExpression_In; -- [lookahead ∉ { function, class }]
 /.
     case $rule_number: {
+        // if lhs is an identifier expression and rhs is an anonymous function expression, we need to assign the name of lhs to the function
+        if (auto *f = asAnonymousFunctionDefinition(sym(4).Node)) {
+            f->name = stringRef(2);
+        }
+        if (auto *c = asAnonymousClassDefinition(sym(4).Expression)) {
+            c->name = stringRef(2);
+        }
+
         auto exportDeclaration = new (pool) AST::ExportDeclaration(/*exportDefault=*/true, sym(4).Node);
         exportDeclaration->exportToken = loc(1);
         sym(1).ExportDeclaration = exportDeclaration;

@@ -178,6 +178,7 @@ struct Context {
     QStringList locals;
     QVector<ImportEntry> importEntries;
     QVector<ExportEntry> exportEntries;
+    bool hasDefaultExport = false;
     QVector<Context *> nestedContexts;
 
     ControlFlow *controlFlow = nullptr;

@@ -1166,10 +1166,17 @@ void ModuleItemList::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         for (ModuleItemList *it = this; it; it = it->next) {
-            // The statement list is concatenated together between module list
-            // items and stored in the ESModule, thus not visited from there.
-            if (it->item && it->item->kind == Kind_StatementList)
-                continue;
+            if (it->item) {
+                // The statement list is concatenated together between module list
+                // items and stored in the ESModule, thus not visited from there.
+                if (it->item->kind == Kind_StatementList)
+                    continue;
+                // Export declaration are also injected into the statement list for
+                // processing of declarations an variable statements, so don't visit
+                // it here to avoid double visits.
+                if (it->item->kind == Kind_ExportDeclaration)
+                    continue;
+            }
             accept(it->item, visitor);
         }
     }
@@ -1177,13 +1184,17 @@ void ModuleItemList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-StatementList *ModuleItemList::buildStatementList() const
+StatementList *ModuleItemList::buildStatementList(MemoryPool *pool) const
 {
     StatementList *statements = nullptr;
     for (const ModuleItemList *item = this; item; item = item->next) {
         AST::StatementList *listItem = AST::cast<AST::StatementList*>(item->item);
-        if (!listItem)
-            continue;
+        if (!listItem) {
+            if (AST::ExportDeclaration *exportDecl = AST::cast<AST::ExportDeclaration*>(item->item))
+                listItem = new (pool) AST::StatementList(exportDecl);
+            else
+                continue;
+        }
         if (statements)
             statements = statements->append(listItem);
         else

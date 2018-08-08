@@ -789,6 +789,36 @@ bool Codegen::visit(PatternPropertyList *)
     return false;
 }
 
+bool Codegen::visit(ExportDeclaration *ast)
+{
+    if (!ast->exportDefault)
+        return true;
+
+    Reference exportedValue;
+
+    if (auto *fdecl = AST::cast<FunctionDeclaration*>(ast->variableStatementOrDeclaration)) {
+        Result r;
+        qSwap(_expr, r);
+        visit(static_cast<FunctionExpression*>(fdecl));
+        qSwap(_expr, r);
+        exportedValue = r.result();
+    } else if (auto *classDecl = AST::cast<ClassDeclaration*>(ast->variableStatementOrDeclaration)) {
+        Result r;
+        qSwap(_expr, r);
+        visit(static_cast<ClassExpression*>(classDecl));
+        qSwap(_expr, r);
+        exportedValue = r.result();
+    } else if (ExpressionNode *expr = ast->variableStatementOrDeclaration->expressionCast()) {
+        exportedValue = expression(expr);
+    }
+
+    exportedValue.loadInAccumulator();
+    Reference defaultExportSlot = Reference::fromScopedLocal(this, 0, /*scope*/0);
+    defaultExportSlot.storeConsumeAccumulator();
+
+    return false;
+}
+
 bool Codegen::visit(StatementList *)
 {
     Q_UNREACHABLE();

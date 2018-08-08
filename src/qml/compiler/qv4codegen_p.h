@@ -589,6 +589,8 @@ protected:
     bool visit(AST::PatternProperty *ast) override;
     bool visit(AST::PatternPropertyList *ast) override;
 
+    bool visit(AST::ExportDeclaration *ast) override;
+
     // expressions
     bool visit(AST::Expression *ast) override;
     bool visit(AST::ArrayPattern *ast) override;

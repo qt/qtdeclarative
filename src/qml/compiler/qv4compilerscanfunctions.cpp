@@ -201,21 +201,30 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
         }
     } else if (auto *classDecl = AST::cast<AST::ClassDeclaration*>(declaration->variableStatementOrDeclaration)) {
         QString name = classDecl->name.toString();
-        Compiler::ExportEntry entry;
-        entry.localName = name;
-        entry.exportName = name;
-        _context->exportEntries << entry;
+        if (!name.isEmpty()) {
+            Compiler::ExportEntry entry;
+            entry.localName = name;
+            entry.exportName = name;
+            _context->exportEntries << entry;
+        }
     } else if (auto *fdef = declaration->variableStatementOrDeclaration->asFunctionDefinition()) {
         QString name = fdef->name.toString();
-        Compiler::ExportEntry entry;
-        entry.localName = name;
-        entry.exportName = name;
-        _context->exportEntries << entry;
-    } else if (declaration->exportDefault) {
+        // Our parser gives `export default (function() {}` the name "default", which
+        // we don't want to export here.
+        if (!name.isEmpty() && name != QStringLiteral("default")) {
+            Compiler::ExportEntry entry;
+            entry.localName = name;
+            entry.exportName = name;
+            _context->exportEntries << entry;
+        }
+    }
+
+    if (declaration->exportDefault) {
         Compiler::ExportEntry entry;
         entry.localName = QStringLiteral("*default*");
         entry.exportName = QStringLiteral("default");
         _context->exportEntries << entry;
+        _context->hasDefaultExport = true;
     }
 
     return true; // scan through potential assignment expression code, etc.

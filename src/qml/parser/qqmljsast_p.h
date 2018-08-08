@@ -2675,7 +2675,7 @@ public:
     ExportsList *exportsList = nullptr;
 };
 
-class QML_PARSER_EXPORT ExportDeclaration: public Node
+class QML_PARSER_EXPORT ExportDeclaration: public Statement
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ExportDeclaration)
@@ -2753,7 +2753,7 @@ public:
         return head;
     }
 
-    StatementList *buildStatementList() const;
+    StatementList *buildStatementList(MemoryPool *pool) const;
 
     void accept0(Visitor *visitor) override;
 
@@ -2773,12 +2773,12 @@ class QML_PARSER_EXPORT ESModule: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(Module)
 
-    ESModule(ModuleItemList *body)
+    ESModule(ModuleItemList *body, MemoryPool *pool)
         : body(body)
     {
         kind = K;
         if (body)
-            statements = body->buildStatementList();
+            statements = body->buildStatementList(pool);
     }
 
     void accept0(Visitor *visitor) override;
