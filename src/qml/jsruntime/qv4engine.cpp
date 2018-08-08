@@ -374,7 +374,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(QV4::RegExpObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_lastIndex()->propertyKey(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
     Q_ASSERT(index == RegExpObject::Index_LastIndex);
-    jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(ic->d());
+    jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(classes[Class_Object]);
     classes[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
 
     ic = classes[Class_ArrayObject]->addMember(id_index()->propertyKey(), Attr_Data, &index);

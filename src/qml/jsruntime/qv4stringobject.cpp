@@ -799,8 +799,11 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
                 break;
             offset = qMax(offset + 1, matchOffsets[oldSize + 1]);
         }
-        if (regExp->global())
+        if (regExp->global()) {
             regExp->setLastIndex(0);
+            if (scope.hasException())
+                return Encode::undefined();
+        }
         numStringMatches = nMatchOffsets / (regExp->value()->captureCount() * 2);
         numCaptures = regExp->value()->captureCount();
     } else {

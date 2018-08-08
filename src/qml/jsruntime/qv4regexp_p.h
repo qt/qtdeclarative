@@ -91,6 +91,13 @@ struct RegExp : Base {
         return false;
 #endif
     }
+
+    bool ignoreCase() const { return flags & CompiledData::RegExp::RegExp_IgnoreCase; }
+    bool multiLine() const { return flags & CompiledData::RegExp::RegExp_Multiline; }
+    bool global() const { return flags & CompiledData::RegExp::RegExp_Global; }
+    bool unicode() const { return flags & CompiledData::RegExp::RegExp_Unicode; }
+    bool sticky() const { return flags & CompiledData::RegExp::RegExp_Sticky; }
+
     RegExpCache *cache;
     int subPatternCount;
     uint flags;
@@ -117,11 +124,11 @@ struct RegExp : public Managed
 #endif
     RegExpCache *cache() const { return d()->cache; }
     int subPatternCount() const { return d()->subPatternCount; }
-    bool ignoreCase() const { return d()->flags & CompiledData::RegExp::RegExp_IgnoreCase; }
-    bool multiLine() const { return d()->flags & CompiledData::RegExp::RegExp_Multiline; }
-    bool global() const { return d()->flags & CompiledData::RegExp::RegExp_Global; }
-    bool unicode() const { return d()->flags & CompiledData::RegExp::RegExp_Unicode; }
-    bool sticky() const { return d()->flags & CompiledData::RegExp::RegExp_Sticky; }
+    bool ignoreCase() const { return d()->ignoreCase(); }
+    bool multiLine() const { return d()->multiLine(); }
+    bool global() const { return d()->global(); }
+    bool unicode() const { return d()->unicode(); }
+    bool sticky() const { return d()->sticky(); }
 
     static Heap::RegExp *create(ExecutionEngine* engine, const QString& pattern, uint flags = CompiledData::RegExp::RegExp_NoFlags);
 

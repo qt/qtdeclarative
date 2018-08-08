@@ -180,7 +180,7 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
     QString s = str->toQString();
 
     Scope scope(engine);
-    int offset = global() ? lastIndex() : 0;
+    int offset = (global() || sticky()) ? lastIndex() : 0;
     if (offset < 0 || offset > s.length()) {
         setLastIndex(0);
         RETURN_RESULT(Encode::null());
@@ -193,7 +193,8 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
     regExpCtor->d()->clearLastMatch();
 
     if (result == -1) {
-        setLastIndex(0);
+        if (global() || sticky())
+            setLastIndex(0);
         RETURN_RESULT(Encode::null());
     }
 
@@ -221,7 +222,7 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
     dd->lastMatchStart = matchOffsets[0];
     dd->lastMatchEnd = matchOffsets[1];
 
-    if (global())
+    if (global() || sticky())
         setLastIndex(matchOffsets[1]);
 
     return array.asReturnedValue();
@@ -473,8 +474,11 @@ ReturnedValue RegExpPrototype::method_get_global(const FunctionObject *f, const 
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return Encode::undefined();
         return scope.engine->throwTypeError();
+    }
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Global;
     return Encode(b);
@@ -484,8 +488,11 @@ ReturnedValue RegExpPrototype::method_get_ignoreCase(const FunctionObject *f, co
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return Encode::undefined();
         return scope.engine->throwTypeError();
+    }
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_IgnoreCase;
     return Encode(b);
@@ -557,8 +564,11 @@ ReturnedValue RegExpPrototype::method_get_multiline(const FunctionObject *f, con
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return Encode::undefined();
         return scope.engine->throwTypeError();
+    }
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Multiline;
     return Encode(b);
@@ -705,8 +715,11 @@ ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const 
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return scope.engine->newString(QStringLiteral("(?:)"))->asReturnedValue();
         return scope.engine->throwTypeError();
+    }
 
     return scope.engine->newString(re->toString())->asReturnedValue();
 }
@@ -715,8 +728,11 @@ ReturnedValue RegExpPrototype::method_get_sticky(const FunctionObject *f, const 
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return Encode::undefined();
         return scope.engine->throwTypeError();
+    }
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Sticky;
     return Encode(b);
@@ -754,8 +770,11 @@ ReturnedValue RegExpPrototype::method_get_unicode(const FunctionObject *f, const
 {
     Scope scope(f);
     Scoped<RegExpObject> re(scope, thisObject);
-    if (!re)
+    if (!re) {
+        if (thisObject->sameValue(*scope.engine->regExpPrototype()))
+            return Encode::undefined();
         return scope.engine->throwTypeError();
+    }
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Unicode;
     return Encode(b);

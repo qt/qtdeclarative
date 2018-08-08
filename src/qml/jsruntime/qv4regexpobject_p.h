@@ -122,7 +122,8 @@ struct RegExpObject: Object {
     enum { NInlineProperties = 5 };
 
     Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->value->flags & CompiledData::RegExp::RegExp_Global; }
+    bool global() const { return d()->value->global(); }
+    bool sticky() const { return d()->value->sticky(); }
 
     void initProperties();
 
@@ -132,6 +133,10 @@ struct RegExpObject: Object {
     }
     void setLastIndex(int index) {
         Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->propertyKey()));
+        if (!internalClass()->propertyData[Index_LastIndex].isWritable()) {
+            engine()->throwTypeError();
+            return;
+        }
         return setProperty(Index_LastIndex, Primitive::fromInt32(index));
     }
 
@@ -156,7 +161,7 @@ struct RegExpCtor: FunctionObject
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct RegExpPrototype: RegExpObject
+struct RegExpPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 
