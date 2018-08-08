@@ -342,6 +342,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(engine->symbol_match(), method_match, 1);
     defineAccessorProperty(scope.engine->id_multiline(), method_get_multiline, nullptr);
+    defineDefaultProperty(engine->symbol_replace(), method_replace, 2);
     defineDefaultProperty(engine->symbol_search(), method_search, 1);
     defineAccessorProperty(QStringLiteral("source"), method_get_source, nullptr);
     defineAccessorProperty(scope.engine->id_sticky(), method_get_sticky, nullptr);
@@ -490,6 +491,24 @@ ReturnedValue RegExpPrototype::method_get_ignoreCase(const FunctionObject *f, co
     return Encode(b);
 }
 
+static void advanceLastIndexOnEmptyMatch(ExecutionEngine *e, bool unicode, Object *rx, const String *matchString, const QString &str)
+{
+    Scope scope(e);
+    if (matchString->d()->length() == 0) {
+        ScopedValue v(scope, rx->get(scope.engine->id_lastIndex()));
+        int lastIndex = v->toLength();
+        if (unicode) {
+            if (lastIndex < str.length() - 1 &&
+                str.at(lastIndex).isHighSurrogate() &&
+                str.at(lastIndex + 1).isLowSurrogate())
+                ++lastIndex;
+        }
+        ++lastIndex;
+        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(lastIndex)))
+            scope.engine->throwTypeError();
+    }
+}
+
 ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f);
@@ -524,25 +543,12 @@ ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value
             return a->asReturnedValue();
         }
         Q_ASSERT(result->isObject());
-        match = static_cast<Object &>(*result).getIndexed(0);
+        match = static_cast<Object &>(*result).get(PropertyKey::fromArrayIndex(0));
         matchString = match->toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();
         a->push_back(matchString);
-        if (matchString->d()->length() == 0) {
-            v = rx->get(scope.engine->id_lastIndex());
-            int lastIndex = v->toLength();
-            if (unicode) {
-                QString str = s->toQString();
-                if (lastIndex < str.length() - 1 &&
-                    str.at(lastIndex).isHighSurrogate() &&
-                    str.at(lastIndex + 1).isLowSurrogate())
-                    ++lastIndex;
-            }
-            ++lastIndex;
-            if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(lastIndex)))
-                return scope.engine->throwTypeError();
-        }
+        advanceLastIndexOnEmptyMatch(scope.engine, unicode, rx, matchString, s->toQString());
         ++n;
     }
 }
@@ -556,6 +562,108 @@ ReturnedValue RegExpPrototype::method_get_multiline(const FunctionObject *f, con
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Multiline;
     return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    ScopedObject rx(scope, thisObject);
+    if (!rx)
+        return scope.engine->throwTypeError();
+
+    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    int lengthS = s->toQString().length();
+
+    ScopedString replaceValue(scope);
+    ScopedFunctionObject replaceFunction(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()));
+    bool functionalReplace = !!replaceFunction;
+    if (!functionalReplace)
+        replaceValue = (argc > 1 ? argv[1] : Primitive::undefinedValue()).toString(scope.engine);
+
+    ScopedValue v(scope);
+    bool global = (v = rx->get(scope.engine->id_global()))->toBoolean();
+    bool unicode = false;
+    if (global) {
+        unicode = (v = rx->get(scope.engine->id_unicode()))->toBoolean();
+        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0)))
+            return scope.engine->throwTypeError();
+    }
+
+    ScopedArrayObject results(scope, scope.engine->newArrayObject());
+    ScopedValue result(scope);
+    ScopedValue match(scope);
+    ScopedString matchString(scope);
+    while (1) {
+        result = exec(scope.engine, rx, s);
+        if (scope.hasException())
+            return Encode::undefined();
+        if (result->isNull())
+            break;
+        results->push_back(result);
+        if (!global)
+            break;
+        match = static_cast<Object &>(*result).get(PropertyKey::fromArrayIndex(0));
+        matchString = match->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+        advanceLastIndexOnEmptyMatch(scope.engine, unicode, rx, matchString, s->toQString());
+    }
+    QString accumulatedResult;
+    int nextSourcePosition = 0;
+    int resultsLength = results->getLength();
+    ScopedObject resultObject(scope);
+    for (int i = 0; i < resultsLength; ++i) {
+        resultObject = results->get(PropertyKey::fromArrayIndex(i));
+        if (scope.hasException())
+            return Encode::undefined();
+
+        int nCaptures = resultObject->getLength();
+        nCaptures = qMax(nCaptures - 1, 0);
+        match = resultObject->get(PropertyKey::fromArrayIndex(0));
+        matchString = match->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+        QString m = matchString->toQString();
+        int matchLength = m.length();
+        v = resultObject->get(scope.engine->id_index());
+        int position = v->toInt32();
+        position = qMax(qMin(position, lengthS), 0);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        int n = 1;
+        Scope innerScope(scope.engine);
+        JSCallData cData(scope, nCaptures + 3);
+        while (n <= nCaptures) {
+            v = resultObject->get(PropertyKey::fromArrayIndex(n));
+            if (!v->isUndefined())
+                cData->args[n] = v->toString(scope.engine);
+            ++n;
+        }
+        QString replacement;
+        if (functionalReplace) {
+            cData->args[0] = matchString;
+            cData->args[nCaptures + 1] = Encode(position);
+            cData->args[nCaptures + 2] = s;
+            ScopedValue replValue(scope, replaceFunction->call(cData));
+            replacement = replValue->toQString();
+        } else {
+            replacement = RegExp::getSubstitution(matchString->toQString(), s->toQString(), position, cData.args, nCaptures, replaceValue->toQString());
+        }
+        if (scope.hasException())
+            return Encode::undefined();
+        if (position >= nextSourcePosition) {
+            accumulatedResult += s->toQString().midRef(nextSourcePosition, position - nextSourcePosition) + replacement;
+            nextSourcePosition = position + matchLength;
+        }
+    }
+    if (nextSourcePosition < lengthS) {
+        accumulatedResult += s->toQString().midRef(nextSourcePosition);
+    }
+    return scope.engine->newString(accumulatedResult)->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_search(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -591,6 +699,7 @@ ReturnedValue RegExpPrototype::method_search(const FunctionObject *f, const Valu
     Q_ASSERT(o);
     return o->get(scope.engine->id_index());
 }
+
 
 ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {

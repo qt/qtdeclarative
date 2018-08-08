@@ -131,6 +131,8 @@ struct RegExp : public Managed
 
     int captureCount() const { return subPatternCount() + 1; }
 
+    static QString getSubstitution(const QString &matched, const QString &str, int position, const Value *captures, int nCaptures, const QString &replacement);
+
     friend class RegExpCache;
 };
 

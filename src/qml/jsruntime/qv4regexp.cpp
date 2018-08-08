@@ -76,6 +76,60 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
 
+QString RegExp::getSubstitution(const QString &matched, const QString &str, int position, const Value *captures, int nCaptures, const QString &replacement)
+{
+    QString result;
+
+    int matchedLength = matched.length();
+    Q_ASSERT(position >= 0 && position <= str.length());
+    int tailPos = position + matchedLength;
+    int seenDollar = -1;
+    for (int i = 0; i < replacement.length(); ++i) {
+        QChar ch = replacement.at(i);
+        if (seenDollar >= 0) {
+            if (ch.unicode() == '$') {
+                result += QLatin1Char('$');
+            } else if (ch.unicode() == '&') {
+                result += matched;
+            } else if (ch.unicode() == '`') {
+                result += str.left(position);
+            } else if (ch.unicode() == '\'') {
+                result += str.mid(tailPos);
+            } else if (ch.unicode() >= '0' && ch.unicode() <= '9') {
+                int n = ch.unicode() - '0';
+                if (i + 1 < replacement.length()) {
+                    ch = replacement.at(i + 1);
+                    if (ch.unicode() >= '0' && ch.unicode() <= '9') {
+                        n = n*10 + (ch.unicode() - '0');
+                        ++i;
+                    }
+                }
+                if (n > 0 && n <= nCaptures) {
+                    String *s = captures[n].stringValue();
+                    if (s)
+                        result += s->toQString();
+                } else {
+                    for (int j = seenDollar; j <= i; ++j)
+                        result += replacement.at(j);
+                }
+            } else {
+                result += QLatin1Char('$');
+                result += ch;
+            }
+            seenDollar = -1;
+        } else {
+            if (ch == QLatin1Char('$')) {
+                seenDollar = i;
+                continue;
+            }
+            result += ch;
+        }
+    }
+    if (seenDollar >= 0)
+        result += QLatin1Char('$');
+    return result;
+}
+
 QString Heap::RegExp::flagsAsString() const
 {
     QString result;
