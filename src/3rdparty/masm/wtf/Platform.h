@@ -741,10 +741,6 @@
 #define ENABLE_JIT 0
 #endif
 
-#if !defined(ENABLE_JIT) && CPU(SH4) && PLATFORM(QT)
-#define ENABLE_JIT 1
-#endif
-
 /* The JIT is enabled by default on all x86, x86-64, ARM & MIPS platforms. */
 #if !defined(ENABLE_JIT) \
     && (CPU(X86) || CPU(X86_64) || CPU(ARM) || CPU(MIPS) || CPU(ARM64)) \

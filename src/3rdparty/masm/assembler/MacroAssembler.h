@@ -57,12 +57,6 @@ namespace JSC { typedef MacroAssemblerX86 MacroAssemblerBase; };
 #include "MacroAssemblerX86_64.h"
 namespace JSC { typedef MacroAssemblerX86_64 MacroAssemblerBase; };
 
-#elif CPU(SH4)
-#include "MacroAssemblerSH4.h"
-namespace JSC {
-typedef MacroAssemblerSH4 MacroAssemblerBase;
-};
-
 #else
 #error "The MacroAssembler is not supported on this platform."
 #endif
@@ -1497,8 +1491,6 @@ typedef MacroAssembler<MacroAssemblerMIPS> DefaultMacroAssembler;
 typedef MacroAssembler<MacroAssemblerX86> DefaultMacroAssembler;
 #elif CPU(X86_64)
 typedef MacroAssembler<MacroAssemblerX86_64> DefaultMacroAssembler;
-#elif CPU(SH4)
-typedef JSC::MacroAssemblerSH4 DefaultMacroAssembler;
 #endif
 
 } // namespace JSC
