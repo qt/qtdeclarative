@@ -391,9 +391,12 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     int len = r->value()->captureCount();
     array->arrayReserve(len);
     ScopedValue v(scope);
+    int strlen = str->d()->length();
     for (int i = 0; i < len; ++i) {
         int start = matchOffsets[i * 2];
         int end = matchOffsets[i * 2 + 1];
+        if (end > strlen)
+            end = strlen;
         v = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
         array->arrayPut(i, v);
     }

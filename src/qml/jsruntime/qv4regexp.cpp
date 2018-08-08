@@ -63,8 +63,14 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     WTF::String s(string);
 
 #if ENABLE(YARR_JIT)
-    if (d()->hasValidJITCode())
+    if (d()->hasValidJITCode()) {
+#if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
+        char buffer[8192];
+        return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets, buffer, 8192).start);
+#else
         return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
+#endif
+    }
 #endif
 
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);

@@ -1048,7 +1048,7 @@
 #endif
 
 #if ENABLE(YARR_JIT)
-#if 0 // CPU(ARM64) || (CPU(X86_64) && !OS(WINDOWS))
+#if CPU(ARM64) || (CPU(X86_64) && !OS(WINDOWS))
 /* Enable JIT'ing Regular Expressions that have nested parenthesis. */
 #define ENABLE_YARR_JIT_ALL_PARENS_EXPRESSIONS 1
 #endif
