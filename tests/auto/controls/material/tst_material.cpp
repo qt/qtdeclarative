@@ -39,7 +39,6 @@
 
 int main(int argc, char *argv[])
 {
-    QTEST_ADD_GPU_BLACKLIST_SUPPORT
     QTEST_SET_MAIN_SOURCE_PATH
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
     QQuickStyle::setStyle("Material");

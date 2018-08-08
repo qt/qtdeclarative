@@ -69,15 +69,11 @@ static int runTests(QObject *testObject, int argc, char *argv[])
 }
 
 #define QTEST_QUICKCONTROLS_MAIN(TestCase) \
-QT_BEGIN_NAMESPACE \
-QTEST_ADD_GPU_BLACKLIST_SUPPORT_DEFS \
-QT_END_NAMESPACE \
 int main(int argc, char *argv[]) \
 { \
     qputenv("QML_NO_TOUCH_COMPRESSION", "1"); \
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling); \
     QGuiApplication app(argc, argv); \
-    QTEST_ADD_GPU_BLACKLIST_SUPPORT \
     TestCase tc; \
     QTEST_SET_MAIN_SOURCE_PATH \
     return runTests(&tc, argc, argv); \
