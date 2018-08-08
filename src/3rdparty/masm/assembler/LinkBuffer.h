@@ -524,8 +524,6 @@ public:
 typedef LinkBuffer<MacroAssembler<MacroAssemblerARMv7>> DefaultLinkBuffer;
 #elif CPU(ARM64)
 typedef LinkBuffer<MacroAssembler<MacroAssemblerARM64>> DefaultLinkBuffer;
-#elif CPU(ARM_TRADITIONAL)
-typedef LinkBuffer<MacroAssembler<MacroAssemblerARM>> DefaultLinkBuffer;
 #elif CPU(MIPS)
 typedef LinkBuffer<MacroAssembler<MacroAssemblerMIPS>> DefaultLinkBuffer;
 #elif CPU(X86)

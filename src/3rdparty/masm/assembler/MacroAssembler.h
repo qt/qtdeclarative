@@ -39,10 +39,6 @@ namespace JSC { typedef MacroAssemblerARMv7 MacroAssemblerBase; };
 #elif CPU(ARM64)
 namespace JSC { typedef MacroAssemblerARM64 MacroAssemblerBase; };
 
-#elif CPU(ARM_TRADITIONAL)
-#include "MacroAssemblerARM.h"
-namespace JSC { typedef MacroAssemblerARM MacroAssemblerBase; };
-
 #elif CPU(MIPS)
 #include "MacroAssemblerMIPS.h"
 namespace JSC {
@@ -1483,8 +1479,6 @@ public:
 typedef MacroAssembler<MacroAssemblerARMv7> DefaultMacroAssembler;
 #elif CPU(ARM64)
 typedef MacroAssembler<MacroAssemblerARM64> DefaultMacroAssembler;
-#elif CPU(ARM_TRADITIONAL)
-typedef MacroAssembler<MacroAssemblerARM> DefaultMacroAssembler;
 #elif CPU(MIPS)
 typedef MacroAssembler<MacroAssemblerMIPS> DefaultMacroAssembler;
 #elif CPU(X86)
