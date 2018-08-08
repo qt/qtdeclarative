@@ -166,6 +166,7 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_get_ignoreCase(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_multiline(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_search(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_source(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_sticky(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_test(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

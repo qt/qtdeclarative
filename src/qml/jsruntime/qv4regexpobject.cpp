@@ -342,6 +342,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(engine->symbol_match(), method_match, 1);
     defineAccessorProperty(scope.engine->id_multiline(), method_get_multiline, nullptr);
+    defineDefaultProperty(engine->symbol_search(), method_search, 1);
     defineAccessorProperty(QStringLiteral("source"), method_get_source, nullptr);
     defineAccessorProperty(scope.engine->id_sticky(), method_get_sticky, nullptr);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
@@ -555,6 +556,40 @@ ReturnedValue RegExpPrototype::method_get_multiline(const FunctionObject *f, con
 
     bool b = re->value()->flags & CompiledData::RegExp::RegExp_Multiline;
     return Encode(b);
+}
+
+ReturnedValue RegExpPrototype::method_search(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    ScopedObject rx(scope, thisObject);
+    if (!rx)
+        return scope.engine->throwTypeError();
+
+    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    ScopedValue previousLastIndex(scope, rx->get(scope.engine->id_lastIndex()));
+    if (previousLastIndex->toNumber() != 0) {
+        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0)))
+            return scope.engine->throwTypeError();
+    }
+
+    ScopedValue result(scope, exec(scope.engine, rx, s));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    ScopedValue currentLastIndex(scope, rx->get(scope.engine->id_lastIndex()));
+    if (!currentLastIndex->sameValue(previousLastIndex)) {
+        if (!rx->put(scope.engine->id_lastIndex(), previousLastIndex))
+            return scope.engine->throwTypeError();
+    }
+
+    if (result->isNull())
+        return Encode(-1);
+    ScopedObject o(scope, result);
+    Q_ASSERT(o);
+    return o->get(scope.engine->id_index());
 }
 
 ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const Value *thisObject, const Value *, int)
