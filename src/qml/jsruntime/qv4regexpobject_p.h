@@ -143,6 +143,8 @@ struct RegExpObject: Object {
     QString toString() const;
     QString source() const;
     uint flags() const;
+
+    ReturnedValue builtinExec(ExecutionEngine *engine, const String *s);
 };
 
 struct RegExpCtor: FunctionObject
@@ -167,6 +169,9 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_compile(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
+    static ReturnedValue method_match(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+
+
     template <uint index>
     static ReturnedValue method_get_lastMatch_n(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_lastParen(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -175,6 +180,8 @@ struct RegExpPrototype: RegExpObject
     static ReturnedValue method_get_rightContext(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue execFirstMatch(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue exec(ExecutionEngine *engine, const Object *o, const String *s);
 };
 
 }

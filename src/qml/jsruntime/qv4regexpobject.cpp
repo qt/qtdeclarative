@@ -44,6 +44,7 @@
 #include <private/qv4mm_p.h>
 #include "qv4scopedvalue_p.h"
 #include "qv4jscall_p.h"
+#include "qv4symbol_p.h"
 
 #include "private/qlocale_tools_p.h"
 
@@ -197,6 +198,58 @@ uint RegExpObject::flags() const
     return f;
 }
 
+ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *str)
+{
+    QString s = str->toQString();
+
+    Scope scope(engine);
+    int offset = global() ? lastIndex() : 0;
+    if (offset < 0 || offset > s.length()) {
+        setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    Q_ALLOCA_VAR(uint, matchOffsets, value()->captureCount() * 2 * sizeof(uint));
+    const int result = Scoped<RegExp>(scope, value())->match(s, offset, matchOffsets);
+
+    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
+    regExpCtor->d()->clearLastMatch();
+
+    if (result == -1) {
+        setLastIndex(0);
+        RETURN_RESULT(Encode::null());
+    }
+
+    // fill in result data
+    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->internalClasses(EngineBase::Class_RegExpExecArray)));
+    int len = value()->captureCount();
+    array->arrayReserve(len);
+    ScopedValue v(scope);
+    int strlen = s.length();
+    for (int i = 0; i < len; ++i) {
+        int start = matchOffsets[i * 2];
+        int end = matchOffsets[i * 2 + 1];
+        if (end > strlen)
+            end = strlen;
+        v = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
+        array->arrayPut(i, v);
+    }
+    array->setArrayLengthUnchecked(len);
+    array->setProperty(Index_ArrayIndex, Primitive::fromInt32(result));
+    array->setProperty(Index_ArrayInput, *str);
+
+    RegExpCtor::Data *dd = regExpCtor->d();
+    dd->lastMatch.set(scope.engine, array);
+    dd->lastInput.set(scope.engine, str->d());
+    dd->lastMatchStart = matchOffsets[0];
+    dd->lastMatchEnd = matchOffsets[1];
+
+    if (global())
+        setLastIndex(matchOffsets[1]);
+
+    return array.asReturnedValue();
+}
+
 DEFINE_OBJECT_VTABLE(RegExpCtor);
 
 void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
@@ -308,6 +361,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
+    defineDefaultProperty(engine->symbol_match(), method_match, 1);
 }
 
 /* used by String.match */
@@ -356,6 +410,23 @@ ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Val
     return retVal;
 }
 
+ReturnedValue RegExpPrototype::exec(ExecutionEngine *engine, const Object *o, const String *s)
+{
+    Scope scope(engine);
+    ScopedString key(scope, scope.engine->newString(QStringLiteral("exec")));
+    ScopedFunctionObject exec(scope, o->get(key));
+    if (exec) {
+        ScopedValue result(scope, exec->call(o, s, 1));
+        if (!result->isNull() && !result->isObject())
+            return scope.engine->throwTypeError();
+        return result->asReturnedValue();
+    }
+    Scoped<RegExpObject> re(scope, o);
+    if (!re)
+        return scope.engine->throwTypeError();
+    return re->builtinExec(engine, s);
+}
+
 ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
@@ -367,53 +438,8 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     ScopedString str(scope, arg->toString(scope.engine));
     if (scope.hasException())
         RETURN_UNDEFINED();
-    QString s = str->toQString();
 
-    int offset = r->global() ? r->lastIndex() : 0;
-    if (offset < 0 || offset > s.length()) {
-        r->setLastIndex(0);
-        RETURN_RESULT(Encode::null());
-    }
-
-    Q_ALLOCA_VAR(uint, matchOffsets, r->value()->captureCount() * 2 * sizeof(uint));
-    const int result = Scoped<RegExp>(scope, r->value())->match(s, offset, matchOffsets);
-
-    RegExpCtor *regExpCtor = static_cast<RegExpCtor *>(scope.engine->regExpCtor());
-    regExpCtor->d()->clearLastMatch();
-
-    if (result == -1) {
-        r->setLastIndex(0);
-        RETURN_RESULT(Encode::null());
-    }
-
-    // fill in result data
-    ScopedArrayObject array(scope, scope.engine->newArrayObject(scope.engine->internalClasses(EngineBase::Class_RegExpExecArray)));
-    int len = r->value()->captureCount();
-    array->arrayReserve(len);
-    ScopedValue v(scope);
-    int strlen = str->d()->length();
-    for (int i = 0; i < len; ++i) {
-        int start = matchOffsets[i * 2];
-        int end = matchOffsets[i * 2 + 1];
-        if (end > strlen)
-            end = strlen;
-        v = (start != -1) ? scope.engine->memoryManager->alloc<ComplexString>(str->d(), start, end - start)->asReturnedValue() : Encode::undefined();
-        array->arrayPut(i, v);
-    }
-    array->setArrayLengthUnchecked(len);
-    array->setProperty(Index_ArrayIndex, Primitive::fromInt32(result));
-    array->setProperty(Index_ArrayInput, str);
-
-    RegExpCtor::Data *dd = regExpCtor->d();
-    dd->lastMatch.set(scope.engine, array);
-    dd->lastInput.set(scope.engine, str->d());
-    dd->lastMatchStart = matchOffsets[0];
-    dd->lastMatchEnd = matchOffsets[1];
-
-    if (r->global())
-        r->setLastIndex(matchOffsets[1]);
-
-    return array.asReturnedValue();
+    return  r->builtinExec(scope.engine, str);
 }
 
 ReturnedValue RegExpPrototype::method_test(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -443,6 +469,25 @@ ReturnedValue RegExpPrototype::method_compile(const FunctionObject *b, const Val
 
     r->d()->value.set(scope.engine, re->value());
     return Encode::undefined();
+}
+
+ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    ScopedObject rx(scope, thisObject);
+    if (!rx)
+        return scope.engine->throwTypeError();
+    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+    ScopedString key(scope, scope.engine->newString(QStringLiteral("global")));
+    bool global = ScopedValue(scope, rx->get(key))->toBoolean();
+
+    if (!global)
+        return exec(scope.engine, rx, s);
+
+    // ####
+    return scope.engine->throwTypeError();
 }
 
 template <uint index>
