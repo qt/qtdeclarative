@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -30,6 +30,7 @@
 #include <QtTest/qsignalspy.h>
 
 #include <QtCore/qmath.h>
+#include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlfileselector.h>
@@ -69,6 +70,7 @@ private slots:
     void color();
     void fileSelectors();
     void imageProvider();
+    void translucentColors();
 
 private:
     void setTheme();
@@ -526,6 +528,35 @@ void tst_qquickiconimage::imageProvider()
     QImage image = grabItemToImage(iconImage);
     QVERIFY(!image.isNull());
     QCOMPARE(image.pixelColor(image.width() / 2, image.height() / 2), QColor(Qt::red));
+}
+
+/*
+    QQuickIconImage::componentComplete() calls QQuickIconImagePrivate::updateIcon(),
+    which loads the icon's image via QQuickImageBase::load(). That eventually calls
+    QQuickImageBase::requestFinished(), which calls QQuickIconImage::pixmapChange().
+    That then calls QQuickIconImagePrivate::updateFillMode(), which can in turn
+    cause QQuickIconImage::pixmapChange() to be called again, causing recursion.
+
+    This was a problem because it resulted in icon.color being applied twice.
+
+    This test checks that that doesn't happen.
+*/
+void tst_qquickiconimage::translucentColors()
+{
+    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
+        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
+
+    // Doesn't reproduce with QQuickView.
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("translucentColors.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+
+    QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(window->findChild<QQuickIconImage*>());
+    QVERIFY(iconImage);
+
+    const QImage image = grabItemToImage(iconImage);
+    QVERIFY(!image.isNull());
+    QCOMPARE(image.pixelColor(image.width() / 2, image.height() / 2), QColor::fromRgba(0x80000000));
 }
 
 int main(int argc, char *argv[])
