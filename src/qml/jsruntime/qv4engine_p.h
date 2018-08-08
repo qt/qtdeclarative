@@ -322,6 +322,11 @@ public:
         String_next,
         String_done,
         String_return,
+        String_global,
+        String_ignoreCase,
+        String_multiline,
+        String_unicode,
+        String_sticky,
 
         NJSStrings
     };
@@ -385,6 +390,11 @@ public:
     String *id_next() const { return reinterpret_cast<String *>(jsStrings + String_next); }
     String *id_done() const { return reinterpret_cast<String *>(jsStrings + String_done); }
     String *id_return() const { return reinterpret_cast<String *>(jsStrings + String_return); }
+    String *id_global() const { return reinterpret_cast<String *>(jsStrings + String_global); }
+    String *id_ignoreCase() const { return reinterpret_cast<String *>(jsStrings + String_ignoreCase); }
+    String *id_multiline() const { return reinterpret_cast<String *>(jsStrings + String_multiline); }
+    String *id_unicode() const { return reinterpret_cast<String *>(jsStrings + String_unicode); }
+    String *id_sticky() const { return reinterpret_cast<String *>(jsStrings + String_sticky); }
 
     Symbol *symbol_hasInstance() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_hasInstance); }
     Symbol *symbol_isConcatSpreadable() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_isConcatSpreadable); }

@@ -337,16 +337,16 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineAccessorProperty(QStringLiteral("flags"), method_get_flags, nullptr);
-    defineAccessorProperty(QStringLiteral("global"), method_get_global, nullptr);
-    defineAccessorProperty(QStringLiteral("ignoreCase"), method_get_ignoreCase, nullptr);
+    defineAccessorProperty(scope.engine->id_global(), method_get_global, nullptr);
+    defineAccessorProperty(scope.engine->id_ignoreCase(), method_get_ignoreCase, nullptr);
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
     defineDefaultProperty(engine->symbol_match(), method_match, 1);
-    defineAccessorProperty(QStringLiteral("multiline"), method_get_multiline, nullptr);
+    defineAccessorProperty(scope.engine->id_multiline(), method_get_multiline, nullptr);
     defineAccessorProperty(QStringLiteral("source"), method_get_source, nullptr);
-    defineAccessorProperty(QStringLiteral("sticky"), method_get_sticky, nullptr);
+    defineAccessorProperty(scope.engine->id_sticky(), method_get_sticky, nullptr);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
-    defineAccessorProperty(QStringLiteral("unicode"), method_get_unicode, nullptr);
+    defineAccessorProperty(scope.engine->id_unicode(), method_get_unicode, nullptr);
 
     // another web extension
     defineDefaultProperty(QStringLiteral("compile"), method_compile, 2);
@@ -439,28 +439,27 @@ ReturnedValue RegExpPrototype::method_get_flags(const FunctionObject *f, const V
 
     QString result;
     ScopedValue v(scope);
-    ScopedString key(scope);
-    v = o->get((key = scope.engine->newString(QStringLiteral("global"))));
+    v = o->get(scope.engine->id_global());
     if (scope.hasException())
         return Encode::undefined();
     if (v->toBoolean())
         result += QLatin1Char('g');
-    v = o->get((key = scope.engine->newString(QStringLiteral("ignoreCase"))));
+    v = o->get(scope.engine->id_ignoreCase());
     if (scope.hasException())
         return Encode::undefined();
     if (v->toBoolean())
         result += QLatin1Char('i');
-    v = o->get((key = scope.engine->newString(QStringLiteral("multiline"))));
+    v = o->get(scope.engine->id_multiline());
     if (scope.hasException())
         return Encode::undefined();
     if (v->toBoolean())
         result += QLatin1Char('m');
-    v = o->get((key = scope.engine->newString(QStringLiteral("unicode"))));
+    v = o->get(scope.engine->id_unicode());
     if (scope.hasException())
         return Encode::undefined();
     if (v->toBoolean())
         result += QLatin1Char('u');
-    v = o->get((key = scope.engine->newString(QStringLiteral("sticky"))));
+    v = o->get(scope.engine->id_sticky());
     if (scope.hasException())
         return Encode::undefined();
     if (v->toBoolean())
@@ -499,14 +498,52 @@ ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value
     ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
-    ScopedString key(scope, scope.engine->newString(QStringLiteral("global")));
-    bool global = ScopedValue(scope, rx->get(key))->toBoolean();
+    bool global = ScopedValue(scope, rx->get(scope.engine->id_global()))->toBoolean();
 
     if (!global)
         return exec(scope.engine, rx, s);
 
-    // ####
-    return scope.engine->throwTypeError();
+    bool unicode = ScopedValue(scope, rx->get(scope.engine->id_unicode()))->toBoolean();
+
+    rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0));
+    ScopedArrayObject a(scope, scope.engine->newArrayObject());
+    uint n = 0;
+
+    ScopedValue result(scope);
+    ScopedValue match(scope);
+    ScopedString matchString(scope);
+    ScopedValue v(scope);
+    while (1) {
+        result = exec(scope.engine, rx, s);
+        if (scope.hasException())
+            return Encode::undefined();
+        if (result->isNull()) {
+            if (!n)
+                return Encode::null();
+            return a->asReturnedValue();
+        }
+        Q_ASSERT(result->isObject());
+        match = static_cast<Object &>(*result).getIndexed(0);
+        matchString = match->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+        a->push_back(matchString);
+        if (matchString->d()->length() == 0) {
+            v = rx->get(scope.engine->id_lastIndex());
+            int lastIndex = v->toLength();
+            if (unicode) {
+                QString str = s->toQString();
+                if (lastIndex < str.length() - 1 &&
+                    str.at(lastIndex).isHighSurrogate() &&
+                    str.at(lastIndex + 1).isLowSurrogate())
+                    ++lastIndex;
+            }
+            ++lastIndex;
+            if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(lastIndex)))
+                return scope.engine->throwTypeError();
+        }
+        ++n;
+    }
 }
 
 ReturnedValue RegExpPrototype::method_get_multiline(const FunctionObject *f, const Value *thisObject, const Value *, int)
