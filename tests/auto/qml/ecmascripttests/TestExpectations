@@ -929,8 +929,6 @@ built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.
 built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js fails
 built-ins/String/prototype/indexOf/position-tointeger.js fails
 built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js fails
-built-ins/String/prototype/match/invoke-builtin-match.js fails
-built-ins/String/prototype/match/cstm-matcher-invocation.js fails
 built-ins/String/prototype/replace/cstm-replace-invocation.js fails
 built-ins/String/prototype/replace/this-value-not-obj-coercible.js fails
 built-ins/String/prototype/search/cstm-search-invocation.js fails

@@ -554,6 +554,19 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
         return v4->throwTypeError();
 
     Scope scope(v4);
+    if (argc && !argv[0].isNullOrUndefined()) {
+        ScopedObject r(scope, argv[0].toObject(scope.engine));
+        if (scope.hasException())
+            return Encode::undefined();
+        ScopedValue f(scope, r->get(scope.engine->symbol_match()));
+        if (!f->isNullOrUndefined()) {
+            ScopedFunctionObject fo(scope, f);
+            if (!fo)
+                return scope.engine->throwTypeError();
+            return fo->call(r, thisObject, 1);
+        }
+    }
+
     ScopedString s(scope, thisObject->toString(v4));
     if (v4->hasException)
         return Encode::undefined();
@@ -567,35 +580,10 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
     }
     Q_ASSERT(!!that);
 
-    bool global = that->global();
-
-    if (!global)
-        return RegExpPrototype::method_exec(b, that, s, 1);
-
-    // rx is now in thisObject
-    that->setLastIndex(0);
-    ScopedArrayObject a(scope, scope.engine->newArrayObject());
-
-    int previousLastIndex = 0;
-    uint n = 0;
-    while (1) {
-        Value result = Primitive::fromReturnedValue(RegExpPrototype::execFirstMatch(b, that, s, 1));
-        if (result.isNull())
-            break;
-        int index = that->lastIndex();
-        if (previousLastIndex == index) {
-            previousLastIndex = index + 1;
-            that->setLastIndex(previousLastIndex);
-        } else {
-            previousLastIndex = index;
-        }
-        a->arraySet(n, result);
-        ++n;
-    }
-    if (!n)
-        return Encode::null();
-    else
-        return a.asReturnedValue();
+    ScopedFunctionObject match(scope, that->get(scope.engine->symbol_match()));
+    if (!match)
+        return scope.engine->throwTypeError();
+    return match->call(that, s, 1);
 }
 
 ReturnedValue StringPrototype::method_normalize(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
