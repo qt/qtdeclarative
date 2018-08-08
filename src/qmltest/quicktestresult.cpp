@@ -792,7 +792,6 @@ void QuickTestResult::setProgramName(const char *name)
 {
     if (name) {
         QTestPrivate::parseBlackList();
-        QTestPrivate::parseGpuBlackList();
         QTestResult::reset();
     } else if (!name && loggingStarted) {
         QTestResult::setCurrentTestObject(globalProgramName);
