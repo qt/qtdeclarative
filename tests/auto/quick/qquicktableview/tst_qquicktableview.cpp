@@ -96,6 +96,7 @@ private slots:
     void checkRowHeightProviderInvalidReturnValues();
     void checkRowHeightProviderNotCallable();
     void checkContentWidthAndHeight();
+    void checkExplicitContentWidthAndHeight();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -479,6 +480,24 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
 
     QCOMPARE(tableView->contentWidth(), expectedFullSize);
     QCOMPARE(tableView->contentHeight(), expectedFullSize);
+}
+
+void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
+{
+    // Check that you can set a custom contentWidth/Height, and that
+    // TableView doesn't override it while loading more rows and columns.
+    LOAD_TABLEVIEW("contentwidthheight.qml");
+
+    tableView->setContentWidth(1000);
+    tableView->setContentHeight(1000);
+    QCOMPARE(tableView->contentWidth(), 1000);
+    QCOMPARE(tableView->contentHeight(), 1000);
+
+    // Flick somewhere. It should not affect the contentWidth/Height
+    tableView->setContentX(500);
+    tableView->setContentY(500);
+    QCOMPARE(tableView->contentWidth(), 1000);
+    QCOMPARE(tableView->contentHeight(), 1000);
 }
 
 void tst_QQuickTableView::noDelegate()

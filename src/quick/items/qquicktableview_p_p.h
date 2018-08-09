@@ -219,6 +219,18 @@ public:
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
 
+    // TableView uses contentWidth/height to report the size of the table (this
+    // will e.g make scrollbars written for Flickable work out of the box). This
+    // value is continuously calculated, and will change/improve as more columns
+    // are loaded into view. At the same time, we want to open up for the
+    // possibility that the application can set the content width explicitly, in
+    // case it knows what the exact width should be from the start. We therefore
+    // override the contentWidth/height properties from QQuickFlickable, to be able
+    // to implement this combined behavior. This also lets us lazy build the table
+    // if the application needs to know the content size early on.
+    QQmlNullableValue<qreal> explicitContentWidth;
+    QQmlNullableValue<qreal> explicitContentHeight;
+
     const static QPoint kLeft;
     const static QPoint kRight;
     const static QPoint kUp;
@@ -310,6 +322,8 @@ public:
     void columnsInsertedCallback(const QModelIndex &parent, int begin, int end);
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void modelResetCallback();
+
+    bool updatePolishIfPossible() const;
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;

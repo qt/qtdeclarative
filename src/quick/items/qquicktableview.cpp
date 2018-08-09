@@ -168,6 +168,12 @@ void QQuickTableViewPrivate::updateContentWidth()
 {
     Q_Q(QQuickTableView);
 
+    if (explicitContentWidth.isValid()) {
+        // Don't calculate contentWidth when it
+        // was set explicitly by the application.
+        return;
+    }
+
     const qreal thresholdBeforeAdjust = 0.1;
     int currentRightColumn = loadedTable.right();
 
@@ -202,6 +208,12 @@ void QQuickTableViewPrivate::updateContentWidth()
 void QQuickTableViewPrivate::updateContentHeight()
 {
     Q_Q(QQuickTableView);
+
+    if (explicitContentHeight.isValid()) {
+        // Don't calculate contentHeight when it
+        // was set explicitly by the application.
+        return;
+    }
 
     const qreal thresholdBeforeAdjust = 0.1;
     int currentBottomRow = loadedTable.bottom();
@@ -860,8 +872,6 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadedTableInnerRect = QRect();
     contentSizeBenchMarkPoint = QPoint(-1, -1);
 
-    q->setContentWidth(0);
-    q->setContentHeight(0);
     q->setContentX(0);
     q->setContentY(0);
 
@@ -1291,9 +1301,23 @@ void QQuickTableViewPrivate::modelResetCallback()
     invalidateTable();
 }
 
+bool QQuickTableViewPrivate::updatePolishIfPossible() const
+{
+    if (polishing || !q_func()->isComponentComplete()) {
+        // We shouldn't recurse into updatePolish(). And we shouldn't
+        // build the table before the component is complete.
+        return false;
+    }
+
+    const_cast<QQuickTableViewPrivate *>(this)->updatePolish();
+    return true;
+}
+
 QQuickTableView::QQuickTableView(QQuickItem *parent)
     : QQuickFlickable(*(new QQuickTableViewPrivate), parent)
 {
+    connect(this, &QQuickFlickable::contentWidthChanged, this, &QQuickTableView::contentWidthOverrideChanged);
+    connect(this, &QQuickFlickable::contentHeightChanged, this, &QQuickTableView::contentHeightOverrideChanged);
 }
 
 int QQuickTableView::rows() const
@@ -1542,6 +1566,54 @@ void QQuickTableView::setReuseItems(bool reuse)
     emit reuseItemsChanged();
 }
 
+qreal QQuickTableView::explicitContentWidth() const
+{
+    Q_D(const QQuickTableView);
+
+    if (d->tableInvalid && d->explicitContentWidth.isNull) {
+        // The table is pending to be rebuilt. Since we don't
+        // know the contentWidth before this is done, we do the
+        // rebuild now, instead of waiting for the polish event.
+       d->updatePolishIfPossible();
+    }
+
+    return contentWidth();
+}
+
+void QQuickTableView::setExplicitContentWidth(qreal width)
+{
+    Q_D(QQuickTableView);
+    d->explicitContentWidth = width;
+    if (width == contentWidth())
+        return;
+
+    setContentWidth(width);
+}
+
+qreal QQuickTableView::explicitContentHeight() const
+{
+    Q_D(const QQuickTableView);
+
+    if (d->tableInvalid && d->explicitContentHeight.isNull) {
+        // The table is pending to be rebuilt. Since we don't
+        // know the contentHeight before this is done, we do the
+        // rebuild now, instead of waiting for the polish event.
+       d->updatePolishIfPossible();
+    }
+
+    return contentHeight();
+}
+
+void QQuickTableView::setExplicitContentHeight(qreal height)
+{
+    Q_D(QQuickTableView);
+    d->explicitContentHeight = height;
+    if (height == contentHeight())
+        return;
+
+    setContentHeight(height);
+}
+
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
 {
     return new QQuickTableViewAttached(obj);
@@ -1563,7 +1635,6 @@ void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &o
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
 {
-    Q_D(QQuickTableView);
     QQuickFlickable::viewportMoved(orientation);
 
     // Calling polish() will schedule a polish event. But while the user is flicking, several
@@ -1573,9 +1644,7 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
     // has the pitfall that we open up for recursive callbacks. E.g while inside updatePolish(), we
     // load/unload items, and emit signals. The application can listen to those signals and set a
     // new contentX/Y on the flickable. So we need to guard for this, to avoid unexpected behavior.
-    if (!d->polishing)
-        d->updatePolish();
-    else
+    if (!d_func()->updatePolishIfPossible())
         polish();
 }
 
