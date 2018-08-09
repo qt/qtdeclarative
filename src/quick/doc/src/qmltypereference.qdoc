@@ -95,8 +95,7 @@ available when you import \c QtQuick.
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
 
     \list
-    \li By a \l{http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG color name}, such as
-        "red", "green" or "lightsteelblue".
+    \li By a \l{SVG Color Reference}{SVG color name}, such as "red", "green" or "lightsteelblue".
     \li By a hexadecimal triplet or quad in the form \c "#RRGGBB" and \c "#AARRGGBB"
         respectively. For example, the color red corresponds to a triplet of \c "#FF0000"
         and a slightly transparent blue to a quad of \c "#800000FF".
@@ -136,6 +135,13 @@ available when you import \c QtQuick.
     converted into a \c color value, and vice-versa.
 
     This basic type is provided by the QtQuick import.
+
+    \section1 SVG Color Reference
+
+    The following table lists the available
+    \l {http://www.w3.org/TR/SVG/types.html#ColorKeywords}{SVG colors}:
+
+    \include svg-colors.qdocinc
 
     \sa {QML Basic Types}
 */
