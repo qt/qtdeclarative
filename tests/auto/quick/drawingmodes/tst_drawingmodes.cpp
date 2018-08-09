@@ -51,8 +51,8 @@ public:
         view.setResizeMode(QQuickView::SizeViewToRootObject);
         view.setSource(testFileUrl(fileName));
         view.setVisible(true);
-        QTest::qWaitForWindowExposed(&view);
-        return view.grabWindow();
+        bool exposed = QTest::qWaitForWindowExposed(&view);
+        return exposed ? view.grabWindow() : QImage();
     }
 
     //It is important for platforms that only are able to show fullscreen windows
