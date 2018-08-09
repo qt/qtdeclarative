@@ -95,6 +95,7 @@ private slots:
     void checkRowHeightProvider();
     void checkRowHeightProviderInvalidReturnValues();
     void checkRowHeightProviderNotCallable();
+    void checkContentWidthAndHeight();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -398,6 +399,86 @@ void tst_QQuickTableView::checkRowHeightProviderNotCallable()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
+}
+
+void tst_QQuickTableView::checkContentWidthAndHeight()
+{
+    // Check that contentWidth/Height reports the correct size of the the
+    // table, based on knowledge of the rows and columns that has been loaded.
+    LOAD_TABLEVIEW("contentwidthheight.qml");
+
+    // Vertical and horizontal properties should be mirrored, so we only have
+    // to do the calculations once, and use them for both axis, below.
+    QCOMPARE(tableView->width(), tableView->height());
+    QCOMPARE(tableView->rowSpacing(), tableView->columnSpacing());
+    QCOMPARE(tableView->leftMargin(), tableView->rightMargin());
+    QCOMPARE(tableView->topMargin(), tableView->bottomMargin());
+
+    const int tableSize = 100;
+    const int cellSizeSmall = 100;
+    const int cellSizeLarge = 200;
+    const int spacing = 1;
+    const int margin = 10;
+    const int smallCellCount = 20;
+    const int largeCellCount = tableSize - smallCellCount;
+    const qreal spacingAndMargins = ((tableSize - 1) * spacing) + (margin * 2);
+    auto model = TestModelAsVariant(tableSize, tableSize);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal expectedSizeInit = (tableSize * cellSizeSmall) + ((tableSize - 1) * spacing) + (margin * 2);
+    QCOMPARE(tableView->contentWidth(), expectedSizeInit);
+    QCOMPARE(tableView->contentHeight(), expectedSizeInit);
+
+    // Flick in 5 more rows and columns, but not so far that we start loading in
+    // the ones that are bigger. Loading in more rows and columns of the same
+    // size as the initial ones should not change the first prediction.
+    qreal flickTo = ((cellSizeSmall + spacing) * 5) + margin;
+    tableView->setContentX(flickTo);
+    tableView->setContentY(flickTo);
+
+    QCOMPARE(tableView->contentWidth(), expectedSizeInit);
+    QCOMPARE(tableView->contentHeight(), expectedSizeInit);
+
+    // Flick to row and column 20 (smallCellCount), since there the row and
+    // column sizes increases with 100. Check that TableView then adjusts
+    // contentWidth and contentHeight accordingly.
+    flickTo = ((cellSizeSmall + spacing) * smallCellCount) + margin - spacing;
+    tableView->setContentX(flickTo);
+    tableView->setContentY(flickTo);
+
+    const int largeSizeCellCountInView = qCeil(tableView->width() / cellSizeLarge);
+    const int bottomRow = smallCellCount + largeSizeCellCountInView - 1;
+    QCOMPARE(tableViewPrivate->loadedTable.right(), bottomRow);
+
+    const qreal firstHalfLength = smallCellCount * cellSizeSmall;
+    const qreal secondHalfOneScreenLength = largeSizeCellCountInView * cellSizeLarge;
+    const qreal lengthAfterFlick = firstHalfLength + secondHalfOneScreenLength;
+    const qreal averageCellSize = lengthAfterFlick / (smallCellCount + largeSizeCellCountInView);
+    const qreal expectedSizeHalf = (tableSize * averageCellSize) + spacingAndMargins;
+
+    QCOMPARE(tableView->contentWidth(), expectedSizeHalf);
+    QCOMPARE(tableView->contentHeight(), expectedSizeHalf);
+
+    // Flick to the end (row/column 100, and overshoot a bit), and
+    // check that we then end up with the exact content width/height.
+    const qreal secondHalfLength = largeCellCount * cellSizeLarge;
+    const qreal expectedFullSize = (firstHalfLength + secondHalfLength) + spacingAndMargins;
+    tableView->setContentX(expectedFullSize);
+    tableView->setContentY(expectedFullSize);
+
+    QCOMPARE(tableView->contentWidth(), expectedFullSize);
+    QCOMPARE(tableView->contentHeight(), expectedFullSize);
+
+    // Flick back to start. Since we know the actual table
+    // size, contentWidth/Height shouldn't change.
+    tableView->setContentX(0);
+    tableView->setContentY(0);
+
+    QCOMPARE(tableView->contentWidth(), expectedFullSize);
+    QCOMPARE(tableView->contentHeight(), expectedFullSize);
 }
 
 void tst_QQuickTableView::noDelegate()

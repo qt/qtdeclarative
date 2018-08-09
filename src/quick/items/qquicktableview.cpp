@@ -174,14 +174,14 @@ void QQuickTableViewPrivate::updateContentWidth()
     if (currentRightColumn > contentSizeBenchMarkPoint.x()) {
         contentSizeBenchMarkPoint.setX(currentRightColumn);
 
-        qreal currentWidth = loadedTableOuterRect.right();
-        qreal averageCellSize = currentWidth / (currentRightColumn + 1);
-        qreal averageSize = averageCellSize + cellSpacing.width();
-        qreal estimatedWith = (tableSize.width() * averageSize) - cellSpacing.width();
+        const qreal spacing = currentRightColumn * cellSpacing.width();
+        const qreal margins = tableMargins.left() + tableMargins.right();
+        qreal currentWidth = loadedTableOuterRect.right() - tableMargins.left();
+        const qreal averageCellWidth = (currentWidth - spacing) / (currentRightColumn + 1);
+        qreal estimatedWidth = (tableSize.width() * (averageCellWidth + cellSpacing.width())) - cellSpacing.width();
 
-        // loadedTableOuterRect has already been adjusted for left margin
-        currentWidth += tableMargins.right();
-        estimatedWith += tableMargins.right();
+        currentWidth += margins;
+        estimatedWidth += margins;
 
         if (currentRightColumn >= tableSize.width() - 1) {
             // We are at the last column, and can set the exact width
@@ -189,12 +189,12 @@ void QQuickTableViewPrivate::updateContentWidth()
                 q->setContentWidth(currentWidth);
         } else if (currentWidth >= q->implicitWidth()) {
             // We are at the estimated width, but there are still more columns
-            q->setContentWidth(estimatedWith);
+            q->setContentWidth(estimatedWidth);
         } else {
             // Only set a new width if the new estimate is substantially different
-            qreal diff = 1 - (estimatedWith / q->implicitWidth());
+            qreal diff = 1 - (estimatedWidth / q->implicitWidth());
             if (qAbs(diff) > thresholdBeforeAdjust)
-                q->setContentWidth(estimatedWith);
+                q->setContentWidth(estimatedWidth);
         }
     }
 }
@@ -209,14 +209,14 @@ void QQuickTableViewPrivate::updateContentHeight()
     if (currentBottomRow > contentSizeBenchMarkPoint.y()) {
         contentSizeBenchMarkPoint.setY(currentBottomRow);
 
-        qreal currentHeight = loadedTableOuterRect.bottom();
-        qreal averageCellSize = currentHeight / (currentBottomRow + 1);
-        qreal averageSize = averageCellSize + cellSpacing.height();
-        qreal estimatedHeight = (tableSize.height() * averageSize) - cellSpacing.height();
+        const qreal spacing = currentBottomRow * cellSpacing.height();
+        const qreal margins = tableMargins.top() + tableMargins.bottom();
+        qreal currentHeight = loadedTableOuterRect.bottom() - tableMargins.top();
+        const qreal averageCellHeight = (currentHeight - spacing) / (currentBottomRow + 1);
+        qreal estimatedHeight = (tableSize.height() * (averageCellHeight + cellSpacing.height())) - cellSpacing.height();
 
-        // loadedTableOuterRect has already been adjusted for top margin
-        currentHeight += tableMargins.bottom();
-        estimatedHeight += tableMargins.bottom();
+        currentHeight += margins;
+        estimatedHeight += margins;
 
         if (currentBottomRow >= tableSize.height() - 1) {
             // We are at the last row, and can set the exact height
