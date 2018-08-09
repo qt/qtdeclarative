@@ -95,6 +95,7 @@ private slots:
     void checkRowHeightProvider();
     void checkRowHeightProviderInvalidReturnValues();
     void checkRowHeightProviderNotCallable();
+    void checkForceLayoutFunction();
     void checkContentWidthAndHeight();
     void checkExplicitContentWidthAndHeight();
     void noDelegate();
@@ -400,6 +401,35 @@ void tst_QQuickTableView::checkRowHeightProviderNotCallable()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
+}
+
+void tst_QQuickTableView::checkForceLayoutFunction()
+{
+    // When we set the 'columnWidths' property in the test file, the
+    // columnWidthProvider should return other values than it did during
+    // start-up. Check that this takes effect after a call to the 'forceLayout()' function.
+    LOAD_TABLEVIEW("forcelayout.qml");
+
+    const char *propertyName = "columnWidths";
+    auto model = TestModelAsVariant(10, 10);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the initial column widths are as specified in the QML file
+    const qreal initialColumnWidth = view->rootObject()->property(propertyName).toReal();
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), initialColumnWidth);
+
+    // Change the return value from the columnWidthProvider to something else
+    const qreal newColumnWidth = 100;
+    view->rootObject()->setProperty(propertyName, newColumnWidth);
+    tableView->forceLayout();
+    // We don't have to polish; The re-layout happens immediately
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), newColumnWidth);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()

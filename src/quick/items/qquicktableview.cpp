@@ -648,12 +648,14 @@ qreal QQuickTableViewPrivate::resolveRowHeight(int row)
 void QQuickTableViewPrivate::relayoutTable()
 {
     relayoutTableItems();
-    columnRowPositionsInvalid = false;
-
     syncLoadedTableRectFromLoadedTable();
+    enforceTableAtOrigin();
     contentSizeBenchMarkPoint = QPoint(-1, -1);
     updateContentWidth();
     updateContentHeight();
+    // Return back to updatePolish to loadAndUnloadVisibleEdges()
+    // since the re-layout might have caused some edges to be pushed
+    // out, while others might have been pushed in.
 }
 
 void QQuickTableViewPrivate::relayoutTableItems()
@@ -884,10 +886,16 @@ void QQuickTableViewPrivate::endRebuildTable()
 {
     tableRebuilding = false;
 
-    if (loadedItems.isEmpty())
-        return;
+    if (rowHeightProvider.isNull() && columnWidthProvider.isNull()) {
+        // Since we have no size providers, we need to calculate the size
+        // of each row and column based on the size of the delegate items.
+        // This couldn't be done while we were loading the initial rows and
+        // columns, since during the process, we didn't have all the items
+        // available yet for the calculation. So we mark that it needs to be
+        // done now, from within updatePolish().
+        columnRowPositionsInvalid = true;
+    }
 
-    relayoutTable();
     qCDebug(lcTableViewDelegateLifecycle()) << tableLayoutToString();
 }
 
@@ -1612,6 +1620,14 @@ void QQuickTableView::setExplicitContentHeight(qreal height)
         return;
 
     setContentHeight(height);
+}
+
+void QQuickTableView::forceLayout()
+{
+    Q_D(QQuickTableView);
+    d->columnRowPositionsInvalid = true;
+    if (!d->updatePolishIfPossible())
+        polish();
 }
 
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)

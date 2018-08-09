@@ -129,6 +129,8 @@ public:
     qreal explicitContentHeight() const;
     void setExplicitContentHeight(qreal height);
 
+    Q_INVOKABLE void forceLayout();
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
