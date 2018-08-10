@@ -327,6 +327,8 @@ public:
         String_multiline,
         String_unicode,
         String_sticky,
+        String_source,
+        String_flags,
 
         NJSStrings
     };
@@ -395,6 +397,8 @@ public:
     String *id_multiline() const { return reinterpret_cast<String *>(jsStrings + String_multiline); }
     String *id_unicode() const { return reinterpret_cast<String *>(jsStrings + String_unicode); }
     String *id_sticky() const { return reinterpret_cast<String *>(jsStrings + String_sticky); }
+    String *id_source() const { return reinterpret_cast<String *>(jsStrings + String_source); }
+    String *id_flags() const { return reinterpret_cast<String *>(jsStrings + String_flags); }
 
     Symbol *symbol_hasInstance() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_hasInstance); }
     Symbol *symbol_isConcatSpreadable() const { return reinterpret_cast<Symbol *>(jsSymbols + Symbol_isConcatSpreadable); }

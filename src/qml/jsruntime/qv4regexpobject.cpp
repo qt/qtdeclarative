@@ -165,8 +165,7 @@ QString RegExpObject::toString() const
 QString RegExpObject::source() const
 {
     Scope scope(engine());
-    ScopedString source(scope, scope.engine->newIdentifier(QStringLiteral("source")));
-    ScopedValue s(scope, const_cast<RegExpObject *>(this)->get(source));
+    ScopedValue s(scope, get(scope.engine->id_source()));
     return s->toQString();
 }
 
@@ -244,31 +243,26 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *)
+static bool isRegExp(ExecutionEngine *e, const Value *arg)
 {
-    Scope scope(fo->engine());
-    ScopedValue r(scope, argc ? argv[0] : Primitive::undefinedValue());
-    ScopedValue f(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
-    Scoped<RegExpObject> re(scope, r);
-    if (re) {
-        if (!f->isUndefined())
-            return scope.engine->throwTypeError();
+    const Object *o = arg->objectValue();
+    if (!o)
+        return false;
 
-        Scoped<RegExp> regexp(scope, re->value());
-        return Encode(scope.engine->newRegExpObject(regexp));
-    }
+    Value isRegExp = Primitive::fromReturnedValue(o->get(e->symbol_match()));
+    if (!isRegExp.isUndefined())
+        return isRegExp.toBoolean();
+    const RegExpObject *re = o->as<RegExpObject>();
+    return re ? true : false;
+}
 
-    QString pattern;
-    if (!r->isUndefined())
-        pattern = r->toQString();
-    if (scope.hasException())
-        return Encode::undefined();
-
+uint parseFlags(Scope &scope, const Value *f)
+{
     uint flags = CompiledData::RegExp::RegExp_NoFlags;
     if (!f->isUndefined()) {
         ScopedString s(scope, f->toString(scope.engine));
         if (scope.hasException())
-            return Encode::undefined();
+            return flags;
         QString str = s->toQString();
         for (int i = 0; i < str.length(); ++i) {
             if (str.at(i) == QLatin1Char('g') && !(flags & CompiledData::RegExp::RegExp_Global)) {
@@ -282,10 +276,61 @@ ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, con
             } else if (str.at(i) == QLatin1Char('y') && !(flags & CompiledData::RegExp::RegExp_Sticky)) {
                 flags |= CompiledData::RegExp::RegExp_Sticky;
             } else {
-                return scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
+                scope.engine->throwSyntaxError(QStringLiteral("Invalid flags supplied to RegExp constructor"));
+                return flags;
             }
         }
     }
+    return flags;
+}
+
+ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *newTarget)
+{
+    Scope scope(fo);
+
+    bool patternIsRegExp = argc ? ::isRegExp(scope.engine, argv) : false;
+
+    if (newTarget == fo) {
+        if (patternIsRegExp && (argc < 2 || argv[1].isUndefined())) {
+            const Object *pattern = static_cast<const Object *>(argv);
+            ScopedValue patternConstructor(scope, pattern->get(scope.engine->id_constructor()));
+            if (patternConstructor->sameValue(*newTarget))
+                return pattern->asReturnedValue();
+        }
+    }
+
+    ScopedValue p(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue f(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    Scoped<RegExpObject> re(scope, p);
+    QString pattern;
+    uint flags = CompiledData::RegExp::RegExp_NoFlags;
+
+    if (re) {
+        if (f->isUndefined()) {
+            Scoped<RegExp> regexp(scope, re->value());
+            return Encode(scope.engine->newRegExpObject(regexp));
+        }
+        pattern = *re->value()->pattern;
+        flags = parseFlags(scope, f);
+    } else if (patternIsRegExp) {
+        const Object *po = static_cast<const Object *>(argv);
+        p = po->get(scope.engine->id_source());
+        if (!p->isUndefined())
+            pattern = p->toQString();
+        if (scope.hasException())
+            return Encode::undefined();
+        if (f->isUndefined())
+            f = po->get(scope.engine->id_flags());
+        flags = parseFlags(scope, f);
+    } else {
+        if (!p->isUndefined())
+            pattern = p->toQString();
+        if (scope.hasException())
+            return Encode::undefined();
+        flags = parseFlags(scope, f);
+    }
+    if (scope.hasException())
+        return Encode::undefined();
 
     Scoped<RegExp> regexp(scope, RegExp::create(scope.engine, pattern, flags));
     if (!regexp->isValid()) {
@@ -297,11 +342,6 @@ ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, con
 
 ReturnedValue RegExpCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    if (argc > 0 && argv[0].as<RegExpObject>()) {
-        if (argc == 1 || argv[1].isUndefined())
-            return Encode(argv[0]);
-    }
-
     return virtualCallAsConstructor(f, argv, argc, f);
 }
 
@@ -337,7 +377,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ctor->defineAccessorProperty(QStringLiteral("$'"), method_get_rightContext, nullptr);
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
-    defineAccessorProperty(QStringLiteral("flags"), method_get_flags, nullptr);
+    defineAccessorProperty(scope.engine->id_flags(), method_get_flags, nullptr);
     defineAccessorProperty(scope.engine->id_global(), method_get_global, nullptr);
     defineAccessorProperty(scope.engine->id_ignoreCase(), method_get_ignoreCase, nullptr);
     defineDefaultProperty(QStringLiteral("exec"), method_exec, 1);
@@ -345,7 +385,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineAccessorProperty(scope.engine->id_multiline(), method_get_multiline, nullptr);
     defineDefaultProperty(engine->symbol_replace(), method_replace, 2);
     defineDefaultProperty(engine->symbol_search(), method_search, 1);
-    defineAccessorProperty(QStringLiteral("source"), method_get_source, nullptr);
+    defineAccessorProperty(scope.engine->id_source(), method_get_source, nullptr);
     defineAccessorProperty(scope.engine->id_sticky(), method_get_sticky, nullptr);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
@@ -751,13 +791,12 @@ ReturnedValue RegExpPrototype::method_toString(const FunctionObject *b, const Va
     if (!r)
         return scope.engine->throwTypeError();
 
-    ScopedString key(scope);
     ScopedValue v(scope);
-    v = r->get((key = scope.engine->newString(QStringLiteral("source"))));
+    v = r->get(scope.engine->id_source());
     ScopedString source(scope, v->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
-    v = r->get((key = scope.engine->newString(QStringLiteral("flags"))));
+    v = r->get(scope.engine->id_flags());
     ScopedString flags(scope, v->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();

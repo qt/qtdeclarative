@@ -291,6 +291,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_multiline] = newIdentifier(QStringLiteral("multiline"));
     jsStrings[String_unicode] = newIdentifier(QStringLiteral("unicode"));
     jsStrings[String_sticky] = newIdentifier(QStringLiteral("sticky"));
+    jsStrings[String_source] = newIdentifier(QStringLiteral("source"));
+    jsStrings[String_flags] = newIdentifier(QStringLiteral("flags"));
 
     jsSymbols[Symbol_hasInstance] = Symbol::create(this, QStringLiteral("@Symbol.hasInstance"));
     jsSymbols[Symbol_isConcatSpreadable] = Symbol::create(this, QStringLiteral("@Symbol.isConcatSpreadable"));
