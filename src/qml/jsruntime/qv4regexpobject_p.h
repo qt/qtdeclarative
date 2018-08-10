@@ -121,9 +121,6 @@ struct RegExpObject: Object {
 
     enum { NInlineProperties = 5 };
 
-    Heap::RegExp *value() const { return d()->value; }
-    bool global() const { return d()->value->global(); }
-    bool sticky() const { return d()->value->sticky(); }
 
     void initProperties();
 
@@ -143,7 +140,12 @@ struct RegExpObject: Object {
     QRegExp toQRegExp() const;
     QString toString() const;
     QString source() const;
-    uint flags() const;
+
+    Heap::RegExp *value() const { return d()->value; }
+    uint flags() const { return d()->value->flags; }
+    bool global() const { return d()->value->global(); }
+    bool sticky() const { return d()->value->sticky(); }
+    bool unicode() const { return d()->value->unicode(); }
 
     ReturnedValue builtinExec(ExecutionEngine *engine, const String *s);
 };
@@ -174,6 +176,7 @@ struct RegExpPrototype: Object
     static ReturnedValue method_replace(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_search(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_source(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_split(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_sticky(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_test(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -169,11 +169,6 @@ QString RegExpObject::source() const
     return s->toQString();
 }
 
-uint RegExpObject::flags() const
-{
-    return d()->value->flags;
-}
-
 ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *str)
 {
     QString s = str->toQString();
@@ -386,6 +381,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     defineDefaultProperty(engine->symbol_replace(), method_replace, 2);
     defineDefaultProperty(engine->symbol_search(), method_search, 1);
     defineAccessorProperty(scope.engine->id_source(), method_get_source, nullptr);
+    defineDefaultProperty(engine->symbol_split(), method_split, 2);
     defineAccessorProperty(scope.engine->id_sticky(), method_get_sticky, nullptr);
     defineDefaultProperty(QStringLiteral("test"), method_test, 1);
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
@@ -538,19 +534,24 @@ ReturnedValue RegExpPrototype::method_get_ignoreCase(const FunctionObject *f, co
     return Encode(b);
 }
 
+static int advanceStringIndex(int index, const QString &str, bool unicode)
+{
+    if (unicode) {
+        if (index < str.length() - 1 &&
+            str.at(index).isHighSurrogate() &&
+            str.at(index + 1).isLowSurrogate())
+            ++index;
+    }
+    ++index;
+    return index;
+}
+
 static void advanceLastIndexOnEmptyMatch(ExecutionEngine *e, bool unicode, Object *rx, const String *matchString, const QString &str)
 {
     Scope scope(e);
     if (matchString->d()->length() == 0) {
         ScopedValue v(scope, rx->get(scope.engine->id_lastIndex()));
-        int lastIndex = v->toLength();
-        if (unicode) {
-            if (lastIndex < str.length() - 1 &&
-                str.at(lastIndex).isHighSurrogate() &&
-                str.at(lastIndex + 1).isLowSurrogate())
-                ++lastIndex;
-        }
-        ++lastIndex;
+        int lastIndex = advanceStringIndex(v->toLength(), str, unicode);
         if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(lastIndex)))
             scope.engine->throwTypeError();
     }
@@ -762,6 +763,122 @@ ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const 
     }
 
     return scope.engine->newString(re->toString())->asReturnedValue();
+}
+
+static const FunctionObject *speciesConstructor(Scope &scope, const Object *o, const FunctionObject *defaultConstructor)
+{
+    ScopedValue C(scope, o->get(scope.engine->id_constructor()));
+    if (C->isUndefined())
+        return defaultConstructor;
+    const Object *c = C->objectValue();
+    if (!c) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    ScopedValue S(scope, c->get(scope.engine->symbol_species()));
+    if (S->isNullOrUndefined())
+        return defaultConstructor;
+    if (!S->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    return static_cast<const FunctionObject *>(S.ptr);
+}
+
+ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    ScopedObject rx(scope, thisObject);
+    if (!rx)
+        return scope.engine->throwTypeError();
+
+    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    ScopedValue flagsValue(scope, rx->get(scope.engine->id_flags()));
+    ScopedString flags(scope, flagsValue->toString(scope.engine));
+    if (scope.hasException())
+        return Encode::undefined();
+    QString flagsString = flags->toQString();
+    if (!flagsString.contains(QLatin1Char('y')))
+        flags = scope.engine->newString(flagsString + QLatin1Char('y'));
+    bool unicodeMatching = flagsString.contains(QLatin1Char('u'));
+
+    const FunctionObject *C = speciesConstructor(scope, rx, scope.engine->regExpCtor());
+    if (!C)
+        return Encode::undefined();
+
+    Value *args = scope.alloc(2);
+    args[0] = rx;
+    args[1] = flags;
+    ScopedObject splitter(scope, C->callAsConstructor(args, 2, f));
+    if (scope.hasException())
+        return Encode::undefined();
+
+    ScopedArrayObject A(scope, scope.engine->newArrayObject());
+    uint lengthA = 0;
+    uint limit = argc < 2 ? UINT_MAX : argv[1].toUInt32();
+    if (limit == 0)
+        return A->asReturnedValue();
+
+    QString S = s->toQString();
+    int size = S.length();
+    if (size == 0) {
+        ScopedValue z(scope, exec(scope.engine, splitter, s));
+        if (z->isNull())
+            A->push_back(s);
+        return A->asReturnedValue();
+    }
+
+    int p = 0;
+    int q = 0;
+    ScopedValue v(scope);
+    ScopedValue z(scope);
+    ScopedObject zz(scope);
+    ScopedString t(scope);
+    while (q < size) {
+        Value qq = Primitive::fromInt32(q);
+        if (!splitter->put(scope.engine->id_lastIndex(), qq))
+            return scope.engine->throwTypeError();
+        z = exec(scope.engine, splitter, s);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        if (z->isNull()) {
+            q = advanceStringIndex(q, S, unicodeMatching);
+            continue;
+        }
+
+        v = splitter->get(scope.engine->id_lastIndex());
+        int e = qMin(v->toInt32(), size);
+        if (e == p) {
+            q = advanceStringIndex(q, S, unicodeMatching);
+            continue;
+        }
+        QString T = S.mid(p, q - p);
+        t = scope.engine->newString(T);
+        A->push_back(t);
+        ++lengthA;
+        if (lengthA == limit)
+            return A->asReturnedValue();
+        p = e;
+        zz = *z;
+        uint numberOfCaptures = qMax(zz->getLength() - 1, 0ll);
+        for (uint i = 1; i <= numberOfCaptures; ++i) {
+            v = zz->get(PropertyKey::fromArrayIndex(i));
+            A->push_back(v);
+            ++lengthA;
+            if (lengthA == limit)
+                return A->asReturnedValue();
+        }
+        q = p;
+    }
+
+    QString T = S.mid(p);
+    t = scope.engine->newString(T);
+    A->push_back(t);
+    return A->asReturnedValue();
 }
 
 ReturnedValue RegExpPrototype::method_get_sticky(const FunctionObject *f, const Value *thisObject, const Value *, int)
