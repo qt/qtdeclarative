@@ -60,18 +60,18 @@ class StorageModel : public QAbstractTableModel
     Q_OBJECT
     Q_DISABLE_COPY(StorageModel)
 public:
-    enum Column {
-        ColumnRootPath = 0,
-        ColumnName,
-        ColumnDevice,
-        ColumnFileSystemName,
-        ColumnTotal,
-        ColumnFree,
-        ColumnAvailable,
-        ColumnIsReady,
-        ColumnIsReadOnly,
-        ColumnIsValid,
-        ColumnCount
+    enum class Column : int {
+        RootPath = 0,
+        Name,
+        Device,
+        FileSystemName,
+        Total,
+        Free,
+        Available,
+        IsReady,
+        IsReadOnly,
+        IsValid,
+        Count
     };
 
     explicit StorageModel(QObject *parent = nullptr);

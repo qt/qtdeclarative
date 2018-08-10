@@ -78,7 +78,7 @@ void StorageModel::refresh()
 
 int StorageModel::columnCount(const QModelIndex &/*parent*/) const
 {
-    return ColumnCount;
+    return int(Column::Count);
 }
 
 int StorageModel::rowCount(const QModelIndex &parent) const
@@ -91,11 +91,11 @@ int StorageModel::rowCount(const QModelIndex &parent) const
 Qt::ItemFlags StorageModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags result = QAbstractTableModel::flags(index);
-    switch (index.column()) {
-    case ColumnAvailable:
-    case ColumnIsReady:
-    case ColumnIsReadOnly:
-    case ColumnIsValid:
+    switch (Column(index.column())) {
+    case Column::Available:
+    case Column::IsReady:
+    case Column::IsReadOnly:
+    case Column::IsValid:
         result |= Qt::ItemIsUserCheckable;
         break;
     default:
@@ -111,47 +111,47 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole) {
         const QStorageInfo &volume = m_volumes.at(index.row());
-        switch (index.column()) {
-        case ColumnRootPath:
+        switch (Column(index.column())) {
+        case Column::RootPath:
             return QDir::toNativeSeparators(volume.rootPath());
-        case ColumnName:
+        case Column::Name:
             return volume.name();
-        case ColumnDevice:
+        case Column::Device:
             return volume.device();
-        case ColumnFileSystemName:
+        case Column::FileSystemName:
             return volume.fileSystemType();
-        case ColumnTotal:
+        case Column::Total:
             return QLocale().formattedDataSize(volume.bytesTotal());
-        case ColumnFree:
+        case Column::Free:
             return QLocale().formattedDataSize(volume.bytesFree());
-        case ColumnAvailable:
+        case Column::Available:
             return QLocale().formattedDataSize(volume.bytesAvailable());
-        case ColumnIsReady:
+        case Column::IsReady:
             return volume.isReady();
-        case ColumnIsReadOnly:
+        case Column::IsReadOnly:
             return volume.isReadOnly();
-        case ColumnIsValid:
+        case Column::IsValid:
             return volume.isValid();
         default:
             break;
         }
     } else if (role == Qt::CheckStateRole) {
         const QStorageInfo &volume = m_volumes.at(index.row());
-        switch (index.column()) {
-        case ColumnIsReady:
+        switch (Column(index.column())) {
+        case Column::IsReady:
             return volume.isReady();
-        case ColumnIsReadOnly:
+        case Column::IsReadOnly:
             return volume.isReadOnly();
-        case ColumnIsValid:
+        case Column::IsValid:
             return volume.isValid();
         default:
             break;
         }
     } else if (role == Qt::TextAlignmentRole) {
-        switch (index.column()) {
-        case ColumnTotal:
-        case ColumnFree:
-        case ColumnAvailable:
+        switch (Column(index.column())) {
+        case Column::Total:
+        case Column::Free:
+        case Column::Available:
             return Qt::AlignTrailing;
         default:
             break;
@@ -197,26 +197,26 @@ QVariant StorageModel::headerData(int section, Qt::Orientation orientation, int 
     if (role != Qt::DisplayRole)
         return QVariant();
 
-    switch (section) {
-    case ColumnRootPath:
+    switch (Column(section)) {
+    case Column::RootPath:
         return tr("Root Path");
-    case ColumnName:
+    case Column::Name:
         return tr("Volume Name");
-    case ColumnDevice:
+    case Column::Device:
         return tr("Device");
-    case ColumnFileSystemName:
+    case Column::FileSystemName:
         return tr("File System");
-    case ColumnTotal:
+    case Column::Total:
         return tr("Total");
-    case ColumnFree:
+    case Column::Free:
         return tr("Free");
-    case ColumnAvailable:
+    case Column::Available:
         return tr("Available");
-    case ColumnIsReady:
+    case Column::IsReady:
         return tr("Ready");
-    case ColumnIsReadOnly:
+    case Column::IsReadOnly:
         return tr("Read-only");
-    case ColumnIsValid:
+    case Column::IsValid:
         return tr("Valid");
     default:
         break;
