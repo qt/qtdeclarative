@@ -496,6 +496,38 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+template<typename T, int metaObjectRevision>
+int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
+                          const char *qmlName, QQmlCustomParser *parser)
+{
+    QML_GETTYPENAMES
+
+    QQmlPrivate::RegisterType type = {
+        1,
+
+        qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+        qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+        sizeof(T), QQmlPrivate::createInto<T>,
+        QString(),
+
+        uri, versionMajor, versionMinor, qmlName, &T::staticMetaObject,
+
+        QQmlPrivate::attachedPropertiesFunc<T>(),
+        QQmlPrivate::attachedPropertiesMetaObject<T>(),
+
+        QQmlPrivate::StaticCastSelector<T,QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T,QQmlPropertyValueInterceptor>::cast(),
+
+        nullptr, nullptr,
+
+        parser,
+        metaObjectRevision
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
 template<typename T, typename E>
 int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int versionMinor,
                           const char *qmlName, QQmlCustomParser *parser)

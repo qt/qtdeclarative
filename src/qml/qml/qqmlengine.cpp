@@ -220,13 +220,15 @@ void QQmlEnginePrivate::registerBaseTypes(const char *uri, int versionMajor, int
     qmlRegisterType<QObject>(uri,versionMajor,versionMinor,"QtObject");
     qmlRegisterType<QQmlBind>(uri, versionMajor, versionMinor,"Binding");
     qmlRegisterType<QQmlBind,8>(uri, versionMajor, (versionMinor < 8 ? 8 : versionMinor), "Binding"); //Only available in >=2.8
-    qmlRegisterType<QQmlConnections,1>(uri, versionMajor, (versionMinor < 3 ? 3 : versionMinor), "Connections"); //Only available in >=2.3
-    qmlRegisterType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections");
+    qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, 0, "Connections", new QQmlConnectionsParser);
+    if (!strcmp(uri, "QtQuick"))
+        qmlRegisterCustomType<QQmlConnections,1>(uri, versionMajor, 7, "Connections", new QQmlConnectionsParser); //Only available in QtQuick >=2.7
+    else
+        qmlRegisterCustomType<QQmlConnections,1>(uri, versionMajor, 3, "Connections", new QQmlConnectionsParser); //Only available in QtQml >=2.3
 #if QT_CONFIG(qml_animation)
     qmlRegisterType<QQmlTimer>(uri, versionMajor, versionMinor,"Timer");
 #endif
     qmlRegisterType<QQmlInstantiator>(uri, versionMajor, (versionMinor < 1 ? 1 : versionMinor), "Instantiator"); //Only available in >=2.1
-    qmlRegisterCustomType<QQmlConnections>(uri, versionMajor, versionMinor,"Connections", new QQmlConnectionsParser);
     qmlRegisterType<QQmlInstanceModel>();
 
     qmlRegisterType<QQmlLoggingCategory>(uri, versionMajor, 8, "LoggingCategory"); //Only available in >=2.8
