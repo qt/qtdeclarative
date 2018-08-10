@@ -59,7 +59,7 @@ ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, co
 {
     Scope scope(f->engine());
     Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
-    if (!buffer)
+    if (!buffer || buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
     double bo = argc > 1 ? argv[1].toNumber() : 0;
@@ -162,6 +162,8 @@ ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const V
         return b->engine()->throwTypeError();
     idx += v->d()->byteOffset;
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
     T t = T(v->d()->buffer->data->data()[idx]);
 
     return Encode((int)t);
@@ -181,6 +183,8 @@ ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value
 
     bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
     T t = littleEndian
             ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
             : qFromBigEndian<T>((uchar *)v->d()->buffer->data->data() + idx);
@@ -201,6 +205,9 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
     idx += v->d()->byteOffset;
 
     bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
+
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
 
     if (sizeof(T) == 4) {
         // float
@@ -238,6 +245,10 @@ ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const V
     idx += v->d()->byteOffset;
 
     int val = argc >= 2 ? argv[1].toInt32() : 0;
+
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
+
     v->d()->buffer->data->data()[idx] = (char)val;
 
     RETURN_UNDEFINED();
@@ -258,6 +269,9 @@ ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value
     int val = argc >= 2 ? argv[1].toInt32() : 0;
 
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
+
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
 
     if (littleEndian)
         qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
@@ -281,6 +295,8 @@ ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const 
 
     double val = argc >= 2 ? argv[1].toNumber() : qt_qnan();
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
 
     if (sizeof(T) == 4) {
         // float

@@ -69,7 +69,15 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object {
     void destroy();
     QTypedArrayData<char> *data;
 
-    uint byteLength() const { return data->size; }
+    uint byteLength() const { return data ? data->size : 0; }
+
+    void detachArrayBuffer() {
+        if (data && !data->ref.deref())
+            QTypedArrayData<char>::deallocate(data);
+        data = nullptr;
+    }
+    bool isDetachedBuffer() const { return !data; }
+    bool isSharedArrayBuffer() const { return false; }
 };
 
 }
@@ -96,8 +104,11 @@ struct Q_QML_PRIVATE_EXPORT ArrayBuffer : Object
     char *data() { detach(); return d()->data ? d()->data->data() : nullptr; }
     const char *constData() { detach(); return d()->data ? d()->data->data() : nullptr; }
 
-private:
+    bool isShared() { return d()->data && d()->data->ref.isShared(); }
+    bool isDetachedBuffer() const { return !d()->data; }
+    bool isSharedArrayBuffer() const { return false; }
     void detach();
+    void detachArrayBuffer() { d()->detachArrayBuffer(); }
 };
 
 struct ArrayBufferPrototype: Object

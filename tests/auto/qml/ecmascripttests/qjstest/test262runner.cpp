@@ -37,6 +37,7 @@
 #include <private/qv4script_p.h>
 #include "private/qv4globalobject_p.h"
 #include "private/qqmlbuiltinfunctions_p.h"
+#include "private/qv4arraybuffer_p.h"
 
 #include "qrunnable.h"
 
@@ -67,6 +68,42 @@ static const char *excludedFeatures[] = {
     "caller",
     nullptr
 };
+
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+
+static ReturnedValue method_detachArrayBuffer(const FunctionObject *f, const Value *, const Value *argv, int argc)
+{
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+    Scoped<ArrayBuffer> a(scope, argv[0]);
+    if (!a)
+        return scope.engine->throwTypeError();
+
+    if (a->isShared())
+        return scope.engine->throwTypeError();
+
+    a->d()->detachArrayBuffer();
+
+    return Encode::null();
+}
+
+static void initD262(ExecutionEngine *e)
+{
+    Scope scope(e);
+    ScopedObject d262(scope, e->newObject());
+
+    d262->defineDefaultProperty(QStringLiteral("detachArrayBuffer"), method_detachArrayBuffer, 1);
+
+    ScopedString s(scope, e->newString(QStringLiteral("$262")));
+    e->globalObject->put(s, d262);
+}
+
+}
+
+QT_END_NAMESPACE
 
 Test262Runner::Test262Runner(const QString &command, const QString &dir)
     : command(command), testDir(dir)
@@ -450,6 +487,7 @@ static bool executeTest(const QByteArray &data, bool runAsModule = false, const 
     QV4::Scope scope(&vm);
 
     QV4::GlobalExtensions::init(vm.globalObject, QJSEngine::ConsoleExtension | QJSEngine::GarbageCollectionExtension);
+    QV4::initD262(&vm);
 
     if (runAsModule) {
         const QUrl rootModuleUrl = QUrl::fromLocalFile(testCasePath);

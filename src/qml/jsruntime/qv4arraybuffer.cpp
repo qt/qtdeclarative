@@ -165,7 +165,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
-    if (!a)
+    if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
         return b->engine()->throwTypeError();
 
     return Encode(a->d()->data->size);
@@ -175,7 +175,7 @@ ReturnedValue ArrayBufferPrototype::method_slice(const FunctionObject *b, const 
 {
     ExecutionEngine *v4 = b->engine();
     const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
-    if (!a)
+    if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
         return v4->throwTypeError();
 
     double start = argc > 0 ? argv[0].toInteger() : 0;

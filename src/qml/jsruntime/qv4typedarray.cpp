@@ -246,6 +246,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     if (!!typedArray) {
         // ECMA 6 22.2.1.2
         Scoped<ArrayBuffer> buffer(scope, typedArray->d()->buffer);
+        if (!buffer || buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
         uint srcElementSize = typedArray->d()->type->bytesPerElement;
         uint destElementSize = operations[that->d()->type].bytesPerElement;
         uint byteLength = typedArray->d()->byteLength;
@@ -285,6 +287,10 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         // ECMA 6 22.2.1.4
 
         double dbyteOffset = argc > 1 ? argv[1].toInteger() : 0;
+
+        if (buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+
         uint byteOffset = (uint)dbyteOffset;
         uint elementSize = operations[that->d()->type].bytesPerElement;
         if (dbyteOffset < 0 || (byteOffset % elementSize) || dbyteOffset > buffer->byteLength())
@@ -299,6 +305,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             double l = qBound(0., argv[2].toInteger(), (double)UINT_MAX);
             if (scope.engine->hasException)
                 return Encode::undefined();
+            if (buffer->isDetachedBuffer())
+                return scope.engine->throwTypeError();
             l *= elementSize;
             if (buffer->byteLength() - byteOffset < l)
                 return scope.engine->throwRangeError(QStringLiteral("new TypedArray: invalid length"));
@@ -508,12 +516,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     if (!a)
         return scope.engine->throwTypeError();
     Scoped<ArrayBuffer> buffer(scope, a->d()->buffer);
-    if (!buffer)
-        scope.engine->throwTypeError();
 
     double doffset = argc >= 2 ? argv[1].toInteger() : 0;
     if (scope.engine->hasException)
         RETURN_UNDEFINED();
+    if (!buffer || buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
     if (doffset < 0 || doffset >= UINT_MAX)
         RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
@@ -536,6 +544,8 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
             RETURN_RESULT(scope.engine->throwRangeError(QStringLiteral("TypedArray.set: out of range")));
 
         uint idx = 0;
+        if (buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
         char *b = buffer->d()->data->data() + a->d()->byteOffset + offset*elementSize;
         ScopedValue val(scope);
         while (idx < l) {
@@ -551,7 +561,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
 
     // src is a typed array
     Scoped<ArrayBuffer> srcBuffer(scope, srcTypedArray->d()->buffer);
-    if (!srcBuffer)
+    if (!srcBuffer || srcBuffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
     uint l = srcTypedArray->length();
@@ -599,7 +609,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
         return scope.engine->throwTypeError();
 
     Scoped<ArrayBuffer> buffer(scope, a->d()->buffer);
-    if (!buffer)
+    if (!buffer || buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
     int len = a->length();
