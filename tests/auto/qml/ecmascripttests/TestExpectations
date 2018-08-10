@@ -218,11 +218,7 @@ built-ins/Atomics/xor/shared-nonint-views.js fails
 built-ins/Boolean/proto-from-ctor-realm.js fails
 built-ins/DataView/custom-proto-access-throws.js fails
 built-ins/DataView/custom-proto-if-object-is-used.js fails
-built-ins/DataView/detached-buffer.js fails
-built-ins/DataView/newtarget-undefined-throws.js fails
 built-ins/DataView/proto-from-ctor-realm.js fails
-built-ins/DataView/toindex-bytelength.js fails
-built-ins/DataView/toindex-byteoffset.js fails
 built-ins/Date/UTC/infinity-make-day.js fails
 built-ins/Date/UTC/nans.js fails
 built-ins/Date/UTC/no-arg.js fails

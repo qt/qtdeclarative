@@ -55,31 +55,56 @@ void Heap::DataViewCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("DataView"));
 }
 
-ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+static uint toIndex(ExecutionEngine *e, const Value &v)
+{
+    if (v.isUndefined())
+        return 0;
+    double index = v.toInteger();
+    if (index < 0) {
+        e->throwRangeError(QStringLiteral("index out of range"));
+        return 0;
+    }
+    uint idx = static_cast<uint>(index);
+    if (idx != index) {
+        e->throwRangeError(QStringLiteral("index out of range"));
+        return 0;
+    }
+    return idx;
+}
+
+ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f->engine());
     Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
-    if (!buffer || buffer->isDetachedBuffer())
+    if (!newTarget || !buffer)
         return scope.engine->throwTypeError();
 
-    double bo = argc > 1 ? argv[1].toNumber() : 0;
-    uint byteOffset = (uint)bo;
+    uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1]: Primitive::undefinedValue());
+    if (scope.hasException())
+        return Encode::undefined();
+    if (buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
     uint bufferLength = buffer->d()->data->size;
-    double bl = argc < 3 || argv[2].isUndefined() ? (bufferLength - bo) : argv[2].toNumber();
-    uint byteLength = (uint)bl;
-    if (bo != byteOffset || bl != byteLength || byteOffset + byteLength > bufferLength)
+    if (offset > bufferLength)
+        return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
+
+    uint byteLength = (argc < 3 || argv[2].isUndefined()) ? (bufferLength - offset) : ::toIndex(scope.engine, argv[2]);
+    if (scope.hasException())
+        return Encode::undefined();
+    if (offset + byteLength > bufferLength)
         return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->allocate<DataView>());
     a->d()->buffer.set(scope.engine, buffer->d());
     a->d()->byteLength = byteLength;
-    a->d()->byteOffset = byteOffset;
+    a->d()->byteOffset = offset;
     return a.asReturnedValue();
 }
 
-ReturnedValue DataViewCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue DataViewCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
-    return virtualCallAsConstructor(f, argv, argc, f);
+    return f->engine()->throwTypeError();
 }
 
 void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -121,23 +146,6 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUInt8"), method_setChar<unsigned char>, 1);
     defineDefaultProperty(QStringLiteral("setUInt16"), method_set<unsigned short>, 1);
     defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 1);
-}
-
-static uint toIndex(ExecutionEngine *e, const Value &v)
-{
-    if (v.isUndefined())
-        return 0;
-    double index = v.toInteger();
-    if (index < 0) {
-        e->throwRangeError(QStringLiteral("index out of range"));
-        return 0;
-    }
-    uint idx = static_cast<uint>(index);
-    if (idx != index) {
-        e->throwRangeError(QStringLiteral("index out of range"));
-        return 0;
-    }
-    return idx;
 }
 
 ReturnedValue DataViewPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
