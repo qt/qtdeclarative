@@ -1,3 +1,5 @@
 # Blacklist for testing
 [shadersource-dynamic-sourceobject::test_endresult]
 linux
+[shadersource-dynamic-shadersource::test_endresult]
+ubuntu-18.04
