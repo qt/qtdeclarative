@@ -55,7 +55,6 @@ Item {
         anchors.margins: 1
         clip: true
         delegate: tableViewDelegate
-        cacheBuffer: 0
     }
 
     Item {

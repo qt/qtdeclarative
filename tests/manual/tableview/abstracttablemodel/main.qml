@@ -68,7 +68,6 @@ Window {
 
             model: tableModel
             delegate: tableViewDelegate
-            cacheBuffer: 500
             columnSpacing: 1
             rowSpacing: 1
         }

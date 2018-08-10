@@ -761,7 +761,6 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     tableView->setTopMargin(margins.top());
     tableView->setRightMargin(margins.right());
     tableView->setBottomMargin(margins.bottom());
-    tableView->setCacheBuffer(0);
 
     WAIT_UNTIL_POLISHED;
 
@@ -933,7 +932,6 @@ void tst_QQuickTableView::flick()
     tableView->setTopMargin(margins.top());
     tableView->setRightMargin(margins.right());
     tableView->setBottomMargin(margins.bottom());
-    tableView->setCacheBuffer(0);
     tableView->setReuseItems(reuseItems);
     tableView->setWidth(margins.left() + (visualColumnCount * cellWidth) - spacing.width());
     tableView->setHeight(margins.top() + (visualRowCount * cellHeight) - spacing.height());
@@ -1009,7 +1007,6 @@ void tst_QQuickTableView::flickOvershoot()
     tableView->setTopMargin(margins.top());
     tableView->setRightMargin(margins.right());
     tableView->setBottomMargin(margins.bottom());
-    tableView->setCacheBuffer(0);
     tableView->setReuseItems(reuseItems);
     tableView->setWidth(tableWidth - margins.right() - cellWidth / 2);
     tableView->setHeight(tableHeight - margins.bottom() - cellHeight / 2);

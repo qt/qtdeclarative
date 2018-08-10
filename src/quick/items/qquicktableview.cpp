@@ -1446,26 +1446,6 @@ void QQuickTableView::setRightMargin(qreal margin)
     emit rightMarginChanged();
 }
 
-int QQuickTableView::cacheBuffer() const
-{
-    return d_func()->cacheBuffer;
-}
-
-void QQuickTableView::setCacheBuffer(int newBuffer)
-{
-    Q_D(QQuickTableView);
-    if (d->cacheBuffer == newBuffer || newBuffer < 0)
-        return;
-
-    d->cacheBuffer = newBuffer;
-
-    if (newBuffer == 0)
-        d->unloadBuffer();
-
-    emit cacheBufferChanged();
-    polish();
-}
-
 QJSValue QQuickTableView::rowHeightProvider() const
 {
     return d_func()->rowHeightProvider;

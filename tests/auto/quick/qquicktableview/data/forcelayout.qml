@@ -54,7 +54,6 @@ Item {
         height: 400
         anchors.margins: 1
         delegate: tableViewDelegate
-        cacheBuffer: 0
         columnSpacing: 1
         rowSpacing: 1
 
