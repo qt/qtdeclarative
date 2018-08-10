@@ -264,7 +264,7 @@ public:
     void updateContentWidth();
     void updateContentHeight();
 
-    void enforceFirstRowColumnAtOrigo();
+    void enforceTableAtOrigin();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
 

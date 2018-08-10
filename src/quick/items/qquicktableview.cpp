@@ -246,7 +246,7 @@ void QQuickTableViewPrivate::updateContentHeight()
     }
 }
 
-void QQuickTableViewPrivate::enforceFirstRowColumnAtOrigo()
+void QQuickTableViewPrivate::enforceTableAtOrigin()
 {
     // Gaps before the first row/column can happen if rows/columns
     // changes size while flicking e.g because of spacing changes or
@@ -848,7 +848,7 @@ void QQuickTableViewPrivate::processLoadRequest()
     layoutTableEdgeFromLoadRequest();
 
     syncLoadedTableRectFromLoadedTable();
-    enforceFirstRowColumnAtOrigo();
+    enforceTableAtOrigin();
     updateContentWidth();
     updateContentHeight();
 
