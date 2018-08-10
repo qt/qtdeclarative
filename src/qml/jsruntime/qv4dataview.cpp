@@ -123,6 +123,23 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("setUInt32"), method_set<unsigned int>, 1);
 }
 
+static uint toIndex(ExecutionEngine *e, const Value &v)
+{
+    if (v.isUndefined())
+        return 0;
+    double index = v.toInteger();
+    if (index < 0) {
+        e->throwRangeError(QStringLiteral("index out of range"));
+        return 0;
+    }
+    uint idx = static_cast<uint>(index);
+    if (idx != index) {
+        e->throwRangeError(QStringLiteral("index out of range"));
+        return 0;
+    }
+    return idx;
+}
+
 ReturnedValue DataViewPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     const DataView *v = thisObject->as<DataView>();
@@ -138,6 +155,9 @@ ReturnedValue DataViewPrototype::method_get_byteLength(const FunctionObject *b, 
     if (!v)
         return b->engine()->throwTypeError();
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
+
     return Encode(v->d()->byteLength);
 }
 
@@ -147,23 +167,28 @@ ReturnedValue DataViewPrototype::method_get_byteOffset(const FunctionObject *b, 
     if (!v)
         return b->engine()->throwTypeError();
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return b->engine()->throwTypeError();
+
     return Encode(v->d()->byteOffset);
 }
 
 template <typename T>
 ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
+    if (v->d()->buffer->isDetachedBuffer())
+        return e->throwTypeError();
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
     idx += v->d()->byteOffset;
 
-    if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
     T t = T(v->d()->buffer->data->data()[idx]);
 
     return Encode((int)t);
@@ -172,19 +197,21 @@ ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const V
 template <typename T>
 ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
+    if (v->d()->buffer->isDetachedBuffer())
+        return e->throwTypeError();
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
     idx += v->d()->byteOffset;
 
     bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
 
-    if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
     T t = littleEndian
             ? qFromLittleEndian<T>((uchar *)v->d()->buffer->data->data() + idx)
             : qFromBigEndian<T>((uchar *)v->d()->buffer->data->data() + idx);
@@ -195,19 +222,20 @@ ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value
 template <typename T>
 ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
+    if (v->d()->buffer->isDetachedBuffer())
+        return e->throwTypeError();
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
     idx += v->d()->byteOffset;
 
     bool littleEndian = argc < 2 ? false : argv[1].toBoolean();
-
-    if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
 
     if (sizeof(T) == 4) {
         // float
@@ -235,19 +263,22 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
 template <typename T>
 ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
-    idx += v->d()->byteOffset;
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
 
     int val = argc >= 2 ? argv[1].toInt32() : 0;
 
     if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
+        return e->throwTypeError();
+
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
+    idx += v->d()->byteOffset;
 
     v->d()->buffer->data->data()[idx] = (char)val;
 
@@ -257,21 +288,24 @@ ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const V
 template <typename T>
 ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
-    idx += v->d()->byteOffset;
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
 
     int val = argc >= 2 ? argv[1].toInt32() : 0;
-
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
 
     if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
+        return e->throwTypeError();
+
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
+    idx += v->d()->byteOffset;
+
 
     if (littleEndian)
         qToLittleEndian<T>(val, (uchar *)v->d()->buffer->data->data() + idx);
@@ -284,19 +318,23 @@ ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value
 template <typename T>
 ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    ExecutionEngine *e = b->engine();
     const DataView *v = thisObject->as<DataView>();
-    if (!v || argc < 1)
-        return b->engine()->throwTypeError();
-    double l = argv[0].toNumber();
-    uint idx = (uint)l;
-    if (l != idx || idx + sizeof(T) > v->d()->byteLength)
-        return b->engine()->throwTypeError();
-    idx += v->d()->byteOffset;
+    if (!v)
+        return e->throwTypeError();
+    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    if (e->hasException)
+        return Encode::undefined();
 
     double val = argc >= 2 ? argv[1].toNumber() : qt_qnan();
     bool littleEndian = argc < 3 ? false : argv[2].toBoolean();
+
     if (v->d()->buffer->isDetachedBuffer())
-        return b->engine()->throwTypeError();
+        return e->throwTypeError();
+
+    if (idx + sizeof(T) > v->d()->byteLength)
+        return e->throwRangeError(QStringLiteral("index out of range"));
+    idx += v->d()->byteOffset;
 
     if (sizeof(T) == 4) {
         // float
