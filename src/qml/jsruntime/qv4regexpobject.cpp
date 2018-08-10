@@ -765,26 +765,6 @@ ReturnedValue RegExpPrototype::method_get_source(const FunctionObject *f, const 
     return scope.engine->newString(re->toString())->asReturnedValue();
 }
 
-static const FunctionObject *speciesConstructor(Scope &scope, const Object *o, const FunctionObject *defaultConstructor)
-{
-    ScopedValue C(scope, o->get(scope.engine->id_constructor()));
-    if (C->isUndefined())
-        return defaultConstructor;
-    const Object *c = C->objectValue();
-    if (!c) {
-        scope.engine->throwTypeError();
-        return nullptr;
-    }
-    ScopedValue S(scope, c->get(scope.engine->symbol_species()));
-    if (S->isNullOrUndefined())
-        return defaultConstructor;
-    if (!S->isFunctionObject()) {
-        scope.engine->throwTypeError();
-        return nullptr;
-    }
-    return static_cast<const FunctionObject *>(S.ptr);
-}
-
 ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(f);
@@ -805,7 +785,7 @@ ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value
         flags = scope.engine->newString(flagsString + QLatin1Char('y'));
     bool unicodeMatching = flagsString.contains(QLatin1Char('u'));
 
-    const FunctionObject *C = speciesConstructor(scope, rx, scope.engine->regExpCtor());
+    const FunctionObject *C = rx->speciesConstructor(scope, scope.engine->regExpCtor());
     if (!C)
         return Encode::undefined();
 

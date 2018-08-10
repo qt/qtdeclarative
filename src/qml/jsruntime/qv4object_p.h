@@ -361,6 +361,8 @@ public:
 
     bool isConcatSpreadable() const;
     bool isArray() const;
+    const FunctionObject *speciesConstructor(Scope &scope, const FunctionObject *defaultConstructor) const;
+
 
 protected:
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);

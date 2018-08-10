@@ -960,6 +960,26 @@ bool Object::isArray() const
     return false;
 }
 
+const FunctionObject *Object::speciesConstructor(Scope &scope, const FunctionObject *defaultConstructor) const
+{
+    ScopedValue C(scope, get(scope.engine->id_constructor()));
+    if (C->isUndefined())
+        return defaultConstructor;
+    const Object *c = C->objectValue();
+    if (!c) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    ScopedValue S(scope, c->get(scope.engine->symbol_species()));
+    if (S->isNullOrUndefined())
+        return defaultConstructor;
+    if (!S->isFunctionObject()) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    return static_cast<const FunctionObject *>(S.ptr);
+}
+
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 
