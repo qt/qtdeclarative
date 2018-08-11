@@ -163,6 +163,18 @@ public:
         }
     };
 
+    enum class RebuildState {
+        NotStarted = 0,
+        LoadInitalTable,
+        VerifyTable,
+        LayoutTable,
+        LoadAndUnloadAfterLayout,
+        PreloadColumns,
+        PreloadRows,
+        MovePreloadedItemsToPool,
+        Done
+    };
+
 public:
     QQuickTableViewPrivate();
     ~QQuickTableViewPrivate() override;
@@ -196,6 +208,7 @@ public:
 
     QSize tableSize;
 
+    RebuildState rebuildState = RebuildState::NotStarted;
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
@@ -205,8 +218,6 @@ public:
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 
     bool blockItemCreatedCallback = false;
-    bool tableInvalid = false;
-    bool tableRebuilding = false;
     bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
@@ -289,8 +300,11 @@ public:
     void drainReusePoolAfterLoadRequest();
     void cancelLoadRequest();
     void processLoadRequest();
+
+    void processRebuildTable();
+    bool moveToNextRebuildState();
     void beginRebuildTable();
-    void endRebuildTable();
+    void layoutAfterLoadingInitialTable();
 
     void invalidateTable();
     void invalidateColumnRowPositions();

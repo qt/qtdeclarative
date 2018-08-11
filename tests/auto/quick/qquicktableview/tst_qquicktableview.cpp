@@ -85,6 +85,7 @@ private slots:
     void setAndGetModel();
     void emptyModel_data();
     void emptyModel();
+    void checkPreload();
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
     void checkColumnWidthWithoutProvider();
@@ -189,6 +190,22 @@ void tst_QQuickTableView::emptyModel()
     tableView->setModel(model);
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
+}
+
+void tst_QQuickTableView::checkPreload()
+{
+    // Check that the reuse pool is filled up with one extra row and
+    // column (pluss corner) after rebuilding the table.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    QSize visibleTableSize = tableViewPrivate->loadedTable.size();
+    int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
 }
 
 void tst_QQuickTableView::checkZeroSizedDelegate()
@@ -1127,9 +1144,12 @@ void tst_QQuickTableView::checkRowColumnCount()
 
     WAIT_UNTIL_POLISHED;
 
-    const int tableViewCount = tableViewPrivate->loadedItems.count();
+    // We expect that the number of created items after start-up should match
+    //the size of the visible table, pluss one extra preloaded row and column.
+    const QSize visibleTableSize = tableViewPrivate->loadedTable.size();
     const int qmlCountAfterInit = view->rootObject()->property(maxDelegateCountProp).toInt();
-    QCOMPARE(tableViewCount, qmlCountAfterInit);
+    const int expectedCount = (visibleTableSize.width() + 1) * (visibleTableSize.height() + 1);
+    QCOMPARE(qmlCountAfterInit, expectedCount);
 
     // This test will keep track of the maximum number of delegate items TableView
     // had to show at any point while flicking (in countingtableview.qml). Because
@@ -1304,6 +1324,7 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
     LOAD_TABLEVIEW("countingtableview.qml");
 
     const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
     const int pageFlickCount = 4;
 
     auto model = TestModelAsVariant(100, 100);
@@ -1312,13 +1333,20 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
 
     WAIT_UNTIL_POLISHED;
 
-    // Flick half an item to the left, to force one extra column to load before we start.
+    // Flick half an item to the side, to force one extra row and column to load before we start.
     // This will make things less complicated below, when checking how many times the items
     // have been reused (all items will then report the same number).
     tableView->setContentX(delegateWidth / 2);
-    tableView->polish();
+    tableView->setContentY(delegateHeight / 2);
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
 
-    WAIT_UNTIL_POLISHED;
+    // Some items have already been pooled and reused after we moved the content view, because
+    // we preload one extra row and column at start-up. So reset the count-properties back to 0
+    // before we continue.
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        fxItem->item->setProperty("pooledCount", 0);
+        fxItem->item->setProperty("reusedCount", 0);
+    }
 
     const int visibleColumnCount = tableViewPrivate->loadedTable.width();
     const int visibleRowCount = tableViewPrivate->loadedTable.height();
@@ -1327,10 +1355,6 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
     for (int column = 1; column <= (visibleColumnCount * pageFlickCount); ++column) {
         // Flick columns to the left (and add one pixel to ensure the left column is completely out)
         tableView->setContentX((delegateWidth * column) + 1);
-        tableView->polish();
-
-        WAIT_UNTIL_POLISHED;
-
         // Check that the number of delegate items created so far is what we expect.
         const int delegatesCreatedCount = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
         int expectedCount = delegateCountAfterInit + (reuseItems ? 0 : visibleRowCount * column);

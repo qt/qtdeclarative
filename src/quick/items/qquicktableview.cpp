@@ -805,7 +805,7 @@ void QQuickTableViewPrivate::cancelLoadRequest()
     loadRequest.markAsDone();
     model->cancel(modelIndexAtCell(loadRequest.currentCell()));
 
-    if (tableInvalid) {
+    if (rebuildState == RebuildState::NotStarted) {
         // No reason to rollback already loaded edge items
         // since we anyway are about to reload all items.
         return;
@@ -857,13 +857,77 @@ void QQuickTableViewPrivate::processLoadRequest()
     qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
 }
 
+void QQuickTableViewPrivate::processRebuildTable()
+{
+    moveToNextRebuildState();
+
+    if (rebuildState == RebuildState::LoadInitalTable) {
+        beginRebuildTable();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::VerifyTable) {
+        if (loadedItems.isEmpty()) {
+            qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded, meaning empty model or no delegate";
+            rebuildState = RebuildState::Done;
+            return;
+        }
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::LayoutTable) {
+        layoutAfterLoadingInitialTable();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::LoadAndUnloadAfterLayout) {
+        loadAndUnloadVisibleEdges();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::PreloadColumns) {
+        if (loadedTable.right() < tableSize.width() - 1)
+            loadEdge(Qt::RightEdge, QQmlIncubator::AsynchronousIfNested);
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::PreloadRows) {
+        if (loadedTable.bottom() < tableSize.height() - 1)
+            loadEdge(Qt::BottomEdge, QQmlIncubator::AsynchronousIfNested);
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::MovePreloadedItemsToPool) {
+        while (Qt::Edge edge = nextEdgeToUnload(viewportRect))
+            unloadEdge(edge);
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    Q_TABLEVIEW_ASSERT(rebuildState == RebuildState::Done, int(rebuildState));
+}
+
+bool QQuickTableViewPrivate::moveToNextRebuildState()
+{
+    if (loadRequest.isActive()) {
+        // Items are still loading async, which means
+        // that the current state is not yet done.
+        return false;
+    }
+    rebuildState = RebuildState(int(rebuildState) + 1);
+    qCDebug(lcTableViewDelegateLifecycle()) << int(rebuildState);
+    return true;
+}
+
 void QQuickTableViewPrivate::beginRebuildTable()
 {
     Q_Q(QQuickTableView);
-    qCDebug(lcTableViewDelegateLifecycle());
-
-    tableInvalid = false;
-    tableRebuilding = true;
 
     releaseLoadedItems();
     loadedTable = QRect();
@@ -879,21 +943,16 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadAndUnloadVisibleEdges();
 }
 
-void QQuickTableViewPrivate::endRebuildTable()
+void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
 {
-    tableRebuilding = false;
-
-    if (rowHeightProvider.isNull() && columnWidthProvider.isNull()) {
-        // Since we have no size providers, we need to calculate the size
-        // of each row and column based on the size of the delegate items.
+    if (rowHeightProvider.isNull() || columnWidthProvider.isNull()) {
+        // Since we don't have both size providers, we need to calculate the
+        // size of each row and column based on the size of the delegate items.
         // This couldn't be done while we were loading the initial rows and
         // columns, since during the process, we didn't have all the items
-        // available yet for the calculation. So we mark that it needs to be
-        // done now, from within updatePolish().
-        columnRowPositionsInvalid = true;
+        // available yet for the calculation. So we do it now.
+        relayoutTable();
     }
-
-    qCDebug(lcTableViewDelegateLifecycle()) << tableLayoutToString();
 }
 
 void QQuickTableViewPrivate::loadInitialTopLeftItem()
@@ -1020,7 +1079,7 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
 }
 
 void QQuickTableViewPrivate::invalidateTable() {
-    tableInvalid = true;
+    rebuildState = RebuildState::NotStarted;
     if (loadRequest.isActive())
         cancelLoadRequest();
     q_func()->polish();
@@ -1056,19 +1115,13 @@ void QQuickTableViewPrivate::updatePolish()
     if (!viewportRect.isValid())
         return;
 
-    if (tableInvalid) {
-        beginRebuildTable();
-        if (loadRequest.isActive())
-            return;
-    }
-
-    if (tableRebuilding)
-        endRebuildTable();
-
-    if (loadedItems.isEmpty()) {
-        qCDebug(lcTableViewDelegateLifecycle()) << "no items loaded, meaning empty model or no delegate";
+    if (rebuildState != RebuildState::Done) {
+        processRebuildTable();
         return;
     }
+
+    if (loadedItems.isEmpty())
+        return;
 
     if (columnRowPositionsInvalid)
         relayoutTable();
@@ -1499,7 +1552,8 @@ qreal QQuickTableView::explicitContentWidth() const
 {
     Q_D(const QQuickTableView);
 
-    if (d->tableInvalid && d->explicitContentWidth.isNull) {
+    if (d->rebuildState == QQuickTableViewPrivate::RebuildState::NotStarted
+            && d->explicitContentWidth.isNull) {
         // The table is pending to be rebuilt. Since we don't
         // know the contentWidth before this is done, we do the
         // rebuild now, instead of waiting for the polish event.
@@ -1523,7 +1577,8 @@ qreal QQuickTableView::explicitContentHeight() const
 {
     Q_D(const QQuickTableView);
 
-    if (d->tableInvalid && d->explicitContentHeight.isNull) {
+    if (d->rebuildState == QQuickTableViewPrivate::RebuildState::NotStarted
+            && d->explicitContentHeight.isNull) {
         // The table is pending to be rebuilt. Since we don't
         // know the contentHeight before this is done, we do the
         // rebuild now, instead of waiting for the polish event.
