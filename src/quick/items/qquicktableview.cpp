@@ -460,19 +460,19 @@ bool QQuickTableViewPrivate::canUnloadTableEdge(Qt::Edge tableEdge, const QRectF
     case Qt::LeftEdge:
         if (loadedTable.width() <= 1)
             return false;
-        return loadedTableInnerRect.left() < fillRect.left();
+        return loadedTableInnerRect.left() <= fillRect.left();
     case Qt::RightEdge:
         if (loadedTable.width() <= 1)
             return false;
-        return loadedTableInnerRect.right() > fillRect.right();
+        return loadedTableInnerRect.right() >= fillRect.right();
     case Qt::TopEdge:
         if (loadedTable.height() <= 1)
             return false;
-        return loadedTableInnerRect.top() < fillRect.top();
+        return loadedTableInnerRect.top() <= fillRect.top();
     case Qt::BottomEdge:
         if (loadedTable.height() <= 1)
             return false;
-        return loadedTableInnerRect.bottom() > fillRect.bottom();
+        return loadedTableInnerRect.bottom() >= fillRect.bottom();
     }
     Q_TABLEVIEW_UNREACHABLE(tableEdge);
     return false;
