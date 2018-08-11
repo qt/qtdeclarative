@@ -59,7 +59,6 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 #define Q_TABLEVIEW_ASSERT(cond, output) Q_ASSERT((cond) || [&](){ dumpTable(); qWarning() << "output:" << output; return false;}())
 
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
-static const int kBufferTimerInterval = 300;
 
 static QLine rectangleEdge(const QRect &rect, Qt::Edge tableEdge)
 {
@@ -99,8 +98,6 @@ const QPoint QQuickTableViewPrivate::kDown = QPoint(0, 1);
 QQuickTableViewPrivate::QQuickTableViewPrivate()
     : QQuickFlickablePrivate()
 {
-    cacheBufferDelayTimer.setSingleShot(true);
-    QObject::connect(&cacheBufferDelayTimer, &QTimer::timeout, [=]{ loadBuffer(); });
 }
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
@@ -958,13 +955,12 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
         return;
     }
 
-    const QRectF unloadRect = hasBufferedItems ? bufferRect() : viewportRect;
     bool tableModified;
 
     do {
         tableModified = false;
 
-        if (Qt::Edge edge = nextEdgeToUnload(unloadRect)) {
+        if (Qt::Edge edge = nextEdgeToUnload(viewportRect)) {
             tableModified = true;
             unloadEdge(edge);
         }
@@ -1023,44 +1019,6 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
     tableModel->drainReusableItemsPool(maxTime);
 }
 
-void QQuickTableViewPrivate::loadBuffer()
-{
-    // Rather than making sure to stop the timer from all locations that can
-    // violate the "buffering allowed" state, we just check that we're in the
-    // right state here before we start buffering.
-    if (cacheBuffer <= 0 || loadRequest.isActive() || loadedItems.isEmpty())
-        return;
-
-    qCDebug(lcTableViewDelegateLifecycle());
-    const QRectF loadRect = bufferRect();
-    while (Qt::Edge edge = nextEdgeToLoad(loadRect)) {
-        loadEdge(edge, QQmlIncubator::Asynchronous);
-        if (loadRequest.isActive())
-            break;
-    }
-
-    hasBufferedItems = true;
-}
-
-void QQuickTableViewPrivate::unloadBuffer()
-{
-    if (!hasBufferedItems)
-        return;
-
-    qCDebug(lcTableViewDelegateLifecycle());
-    hasBufferedItems = false;
-    cacheBufferDelayTimer.stop();
-    if (loadRequest.isActive())
-        cancelLoadRequest();
-    while (Qt::Edge edge = nextEdgeToUnload(viewportRect))
-        unloadEdge(edge);
-}
-
-QRectF QQuickTableViewPrivate::bufferRect()
-{
-    return viewportRect.adjusted(-cacheBuffer, -cacheBuffer, cacheBuffer, cacheBuffer);
-}
-
 void QQuickTableViewPrivate::invalidateTable() {
     tableInvalid = true;
     if (loadRequest.isActive())
@@ -1115,24 +1073,7 @@ void QQuickTableViewPrivate::updatePolish()
     if (columnRowPositionsInvalid)
         relayoutTable();
 
-    if (hasBufferedItems && nextEdgeToLoad(viewportRect)) {
-        // We are about to load more edges, so trim down the table as much
-        // as possible to avoid loading cells that are outside the viewport.
-        unloadBuffer();
-    }
-
     loadAndUnloadVisibleEdges();
-
-    if (loadRequest.isActive())
-        return;
-
-    if (cacheBuffer > 0) {
-        // When polish hasn't been called for a while (which means that the viewport
-        // rect hasn't changed), we start buffering items. We delay this operation by
-        // using a timer to increase performance (by not loading hidden items) while
-        // the user is flicking.
-        cacheBufferDelayTimer.start(kBufferTimerInterval);
-    }
 }
 
 void QQuickTableViewPrivate::createWrapperModel()
