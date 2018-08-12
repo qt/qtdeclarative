@@ -662,8 +662,11 @@ ReturnedValue IntrinsicTypedArrayCtor::virtualCall(const FunctionObject *f, cons
 
 void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor)
 {
+    Scope scope(engine);
     ctor->defineReadonlyProperty(engine->id_prototype(), *this);
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ScopedString s(scope, engine->newString(QStringLiteral("TypedArray")));
+    ctor->defineReadonlyConfigurableProperty(engine->id_name(), s);
     ctor->addSymbolSpecies();
 
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
@@ -676,7 +679,6 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
 
-    Scope scope(engine);
     ScopedString valuesString(scope, engine->newIdentifier(QStringLiteral("values")));
     ScopedObject values(scope, FunctionObject::createBuiltinFunction(engine, valuesString, method_values, 0));
     defineDefaultProperty(QStringLiteral("values"), values);
