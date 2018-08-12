@@ -683,9 +683,6 @@ built-ins/TypedArray/from/iter-next-value-error.js fails
 built-ins/TypedArray/from/length.js fails
 built-ins/TypedArray/from/name.js fails
 built-ins/TypedArray/from/prop-desc.js fails
-built-ins/TypedArray/of/length.js fails
-built-ins/TypedArray/of/name.js fails
-built-ins/TypedArray/of/prop-desc.js fails
 built-ins/TypedArray/prototype/byteLength/detached-buffer.js fails
 built-ins/TypedArray/prototype/byteOffset/detached-buffer.js fails
 built-ins/TypedArray/prototype/constructor.js fails
@@ -1146,14 +1143,6 @@ built-ins/TypedArrays/internals/Set/key-is-not-integer.js fails
 built-ins/TypedArrays/internals/Set/key-is-out-of-bounds.js fails
 built-ins/TypedArrays/internals/Set/tonumber-value-detached-buffer.js fails
 built-ins/TypedArrays/internals/Set/tonumber-value-throws.js strictFails
-built-ins/TypedArrays/of/argument-number-value-throws.js fails
-built-ins/TypedArrays/of/custom-ctor-returns-other-instance.js fails
-built-ins/TypedArrays/of/custom-ctor.js fails
-built-ins/TypedArrays/of/nan-conversion.js fails
-built-ins/TypedArrays/of/new-instance-empty.js fails
-built-ins/TypedArrays/of/new-instance-from-zero.js fails
-built-ins/TypedArrays/of/new-instance-using-custom-ctor.js fails
-built-ins/TypedArrays/of/new-instance.js fails
 built-ins/WeakMap/constructor.js fails
 built-ins/WeakMap/empty-iterable.js fails
 built-ins/WeakMap/get-set-method-failure.js fails

@@ -150,6 +150,8 @@ struct IntrinsicTypedArrayCtor: FunctionObject
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+
+    static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct TypedArrayCtor: FunctionObject

@@ -660,6 +660,42 @@ ReturnedValue IntrinsicTypedArrayCtor::virtualCall(const FunctionObject *f, cons
     return f->engine()->throwTypeError();
 }
 
+static bool validateTypedArray(const Object *o)
+{
+    const TypedArray *a = o->as<TypedArray>();
+    if (!a)
+        return false;
+    if (a->d()->buffer->isDetachedBuffer())
+        return false;
+    return true;
+}
+
+ReturnedValue IntrinsicTypedArrayCtor::method_of(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    int len = argc;
+    const Value *items = argv;
+    const FunctionObject *C = thisObject->as<FunctionObject>();
+    if (!C)
+        return scope.engine->throwTypeError();
+
+    Value lenValue = Primitive::fromInt32(len);
+    ScopedObject newObj(scope, C->callAsConstructor(&lenValue, 1));
+    if (scope.hasException())
+        return Encode::undefined();
+    if (!::validateTypedArray(newObj))
+        return scope.engine->throwTypeError();
+    TypedArray *a = newObj->as<TypedArray>();
+    Q_ASSERT(a);
+    if (a->getLength() < len)
+        return scope.engine->throwTypeError();
+
+    for (int k = 0; k < len; ++k) {
+        newObj->put(PropertyKey::fromArrayIndex(k), items[k]);
+    }
+    return newObj->asReturnedValue();
+}
+
 void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedArrayCtor *ctor)
 {
     Scope scope(engine);
@@ -667,6 +703,8 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
     ScopedString s(scope, engine->newString(QStringLiteral("TypedArray")));
     ctor->defineReadonlyConfigurableProperty(engine->id_name(), s);
+    s = scope.engine->newString(QStringLiteral("of"));
+    ctor->defineDefaultProperty(s, IntrinsicTypedArrayCtor::method_of);
     ctor->addSymbolSpecies();
 
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
