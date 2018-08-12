@@ -683,8 +683,6 @@ built-ins/TypedArray/from/iter-next-value-error.js fails
 built-ins/TypedArray/from/length.js fails
 built-ins/TypedArray/from/name.js fails
 built-ins/TypedArray/from/prop-desc.js fails
-built-ins/TypedArray/prototype/byteLength/detached-buffer.js fails
-built-ins/TypedArray/prototype/byteOffset/detached-buffer.js fails
 built-ins/TypedArray/prototype/constructor.js fails
 built-ins/TypedArray/prototype/copyWithin/bit-precision.js fails
 built-ins/TypedArray/prototype/copyWithin/coerced-values-end.js fails
@@ -711,7 +709,6 @@ built-ins/TypedArray/prototype/copyWithin/return-abrupt-from-start.js fails
 built-ins/TypedArray/prototype/copyWithin/return-abrupt-from-target.js fails
 built-ins/TypedArray/prototype/copyWithin/return-this.js fails
 built-ins/TypedArray/prototype/copyWithin/undefined-end.js fails
-built-ins/TypedArray/prototype/entries/detached-buffer.js fails
 built-ins/TypedArray/prototype/every/callbackfn-arguments-with-thisarg.js fails
 built-ins/TypedArray/prototype/every/callbackfn-arguments-without-thisarg.js fails
 built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js fails
@@ -870,7 +867,6 @@ built-ins/TypedArray/prototype/join/prop-desc.js fails
 built-ins/TypedArray/prototype/join/result-from-tostring-on-each-simple-value.js fails
 built-ins/TypedArray/prototype/join/result-from-tostring-on-each-value.js fails
 built-ins/TypedArray/prototype/join/return-abrupt-from-separator.js fails
-built-ins/TypedArray/prototype/keys/detached-buffer.js fails
 built-ins/TypedArray/prototype/lastIndexOf/fromIndex-infinity.js fails
 built-ins/TypedArray/prototype/lastIndexOf/fromIndex-minus-zero.js fails
 built-ins/TypedArray/prototype/lastIndexOf/get-length-uses-internal-arraylength.js fails
@@ -885,7 +881,6 @@ built-ins/TypedArray/prototype/lastIndexOf/search-found-returns-index.js fails
 built-ins/TypedArray/prototype/lastIndexOf/search-not-found-returns-minus-one.js fails
 built-ins/TypedArray/prototype/lastIndexOf/strict-comparison.js fails
 built-ins/TypedArray/prototype/lastIndexOf/tointeger-fromindex.js fails
-built-ins/TypedArray/prototype/length/detached-buffer.js fails
 built-ins/TypedArray/prototype/map/arraylength-internal.js fails
 built-ins/TypedArray/prototype/map/callbackfn-arguments-with-thisarg.js fails
 built-ins/TypedArray/prototype/map/callbackfn-arguments-without-thisarg.js fails
@@ -1048,7 +1043,6 @@ built-ins/TypedArray/prototype/toLocaleString/this-is-not-object.js fails
 built-ins/TypedArray/prototype/toLocaleString/this-is-not-typedarray-instance.js fails
 built-ins/TypedArray/prototype/toString.js fails
 built-ins/TypedArray/prototype/toString/detached-buffer.js fails
-built-ins/TypedArray/prototype/values/detached-buffer.js fails
 built-ins/TypedArrays/ctors/buffer-arg/custom-proto-access-throws.js fails
 built-ins/TypedArrays/ctors/buffer-arg/defined-negative-length.js fails
 built-ins/TypedArrays/ctors/buffer-arg/proto-from-ctor-realm.js fails

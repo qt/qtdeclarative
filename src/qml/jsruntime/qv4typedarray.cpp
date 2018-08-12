@@ -450,6 +450,9 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteLength(const Function
     if (!v)
         return v4->throwTypeError();
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return Encode(0);
+
     return Encode(v->d()->byteLength);
 }
 
@@ -459,6 +462,9 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_byteOffset(const Function
     const TypedArray *v = thisObject->as<TypedArray>();
     if (!v)
         return v4->throwTypeError();
+
+    if (v->d()->buffer->isDetachedBuffer())
+        return Encode(0);
 
     return Encode(v->d()->byteOffset);
 }
@@ -470,17 +476,20 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_length(const FunctionObje
     if (!v)
         return v4->throwTypeError();
 
+    if (v->d()->buffer->isDetachedBuffer())
+        return Encode(0);
+
     return Encode(v->d()->byteLength/v->d()->type->bytesPerElement);
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
-    Scoped<TypedArray> O(scope, thisObject);
-    if (!O)
-        THROW_TYPE_ERROR();
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
-    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
     ao->d()->iterationKind = IteratorKind::KeyValueIteratorKind;
     return ao->asReturnedValue();
 }
@@ -488,11 +497,11 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject 
 ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
-    Scoped<TypedArray> O(scope, thisObject);
-    if (!O)
-        THROW_TYPE_ERROR();
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
-    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
     ao->d()->iterationKind = IteratorKind::KeyIteratorKind;
     return ao->asReturnedValue();
 }
@@ -500,11 +509,11 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b,
 ReturnedValue IntrinsicTypedArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
-    Scoped<TypedArray> O(scope, thisObject);
-    if (!O)
-        THROW_TYPE_ERROR();
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
-    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(O));
+    Scoped<ArrayIteratorObject> ao(scope, scope.engine->newArrayIteratorObject(v));
     ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
 }
