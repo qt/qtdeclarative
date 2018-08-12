@@ -482,6 +482,56 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_length(const FunctionObje
     return Encode(v->d()->byteLength/v->d()->type->bytesPerElement);
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_copyWithin(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+    Scoped<TypedArray> O(scope, thisObject);
+    if (!O || O->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    if (!argc)
+        return O->asReturnedValue();
+
+    qint64 len = static_cast<uint>(O->length());
+
+    qint64 to = static_cast<qint64>(argv[0].toInteger());
+    if (to < 0)
+        to = qMax(len + to, 0ll);
+    else
+        to = qMin(to, len);
+
+    qint64 from = (argc > 1) ? static_cast<qint64>(argv[1].toInteger()) : 0ll;
+    if (from < 0)
+        from = qMax(len + from, 0ll);
+    else
+        from = qMin(from, len);
+
+    double fend = argv[2].toInteger();
+    if (fend > len)
+        fend = len;
+    qint64 end = (argc > 2 && !argv[2].isUndefined()) ? static_cast<qint64>(fend) : len;
+    if (end < 0)
+        end = qMax(len + end, 0ll);
+    else
+        end = qMin(end, len);
+
+    qint64 count = qMin(end - from, len - to);
+
+    if (count <= 0)
+        return O->asReturnedValue();
+
+    if (O->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    if (from != to) {
+        int elementSize = O->d()->type->bytesPerElement;
+        char *data = O->d()->buffer->data->data() + O->d()->byteOffset;
+        memmove(data + to*elementSize, data + from*elementSize, count*elementSize);
+    }
+
+    return O->asReturnedValue();
+}
+
 ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
@@ -721,6 +771,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineAccessorProperty(QStringLiteral("byteOffset"), method_get_byteOffset, nullptr);
     defineAccessorProperty(QStringLiteral("length"), method_get_length, nullptr);
 
+    defineDefaultProperty(QStringLiteral("copyWithin"), method_copyWithin, 2);
     defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);

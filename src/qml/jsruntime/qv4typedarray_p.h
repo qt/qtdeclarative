@@ -174,6 +174,7 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_length(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
+    static ReturnedValue method_copyWithin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

@@ -432,7 +432,7 @@ ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const V
 
     double len = instance->getLength();
     double target = argv[0].toInteger();
-    double start = argv[1].toInteger();
+    double start = argc > 1 ? argv[1].toInteger() : 0;
     double end = len;
 
     if (argc > 2 && !argv[2].isUndefined()) {
