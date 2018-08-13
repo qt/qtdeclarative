@@ -1636,8 +1636,10 @@ ReturnedValue ExecutionEngine::global()
 QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
 {
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
-    if (!f.open(QIODevice::ReadOnly))
+    if (!f.open(QIODevice::ReadOnly)) {
+        throwError(QStringLiteral("Could not open module %1 for reading").arg(url.toString()));
         return nullptr;
+    }
 
     const QString sourceCode = QString::fromUtf8(f.readAll());
     f.close();
