@@ -2164,7 +2164,6 @@ language/module-code/eval-rqstd-order.js strictFails
 language/module-code/instn-iee-bndng-cls.js strictFails
 language/module-code/instn-iee-bndng-const.js strictFails
 language/module-code/instn-iee-bndng-let.js strictFails
-language/module-code/instn-iee-star-cycle.js strictFails
 language/module-code/instn-iee-trlng-comma.js strictFails
 language/module-code/instn-local-bndng-cls.js strictFails
 language/module-code/instn-local-bndng-const.js strictFails
@@ -2184,14 +2183,8 @@ language/module-code/instn-named-bndng-dflt-named.js strictFails
 language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/instn-named-bndng-let.js strictFails
 language/module-code/instn-named-id-name.js strictFails
-language/module-code/instn-named-star-cycle.js strictFails
 language/module-code/instn-same-global.js strictFails
-language/module-code/instn-star-ambiguous.js strictFails
 language/module-code/instn-star-equality.js strictFails
-language/module-code/instn-star-props-circular.js strictFails
-language/module-code/instn-star-props-dflt-skip.js strictFails
-language/module-code/instn-star-props-nrml.js strictFails
-language/module-code/instn-star-star-cycle.js strictFails
 language/module-code/namespace/internals/define-own-property.js strictFails
 language/module-code/namespace/internals/delete-exported-uninit.js strictFails
 language/module-code/namespace/internals/enumerate-binding-uninit.js strictFails

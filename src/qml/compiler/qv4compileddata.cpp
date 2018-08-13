@@ -394,6 +394,11 @@ QStringList CompilationUnit::moduleRequests() const
         requests << stringAt(entry.moduleRequest);
     }
 
+    for (uint i = 0; i < data->starExportEntryTableSize; ++i) {
+        const ExportEntry &entry = data->starExportEntryTable()[i];
+        requests << stringAt(entry.moduleRequest);
+    }
+
     return requests;
 }
 
@@ -490,7 +495,31 @@ const Value *CompilationUnit::resolveExportRecursively(QV4::String *exportName, 
         return dependentModuleUnit->resolveExportRecursively(importName, resolveSet);
     }
 
-    return nullptr;
+
+    if (exportName->toQString() == QLatin1String("default"))
+        return nullptr;
+
+    const Value *starResolution = nullptr;
+
+    for (uint i = 0; i < data->starExportEntryTableSize; ++i) {
+        const CompiledData::ExportEntry &entry = data->starExportEntryTable()[i];
+        auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(entry.moduleRequest)), this);
+        if (!dependentModuleUnit)
+            return nullptr;
+
+        const Value *resolution = dependentModuleUnit->resolveExportRecursively(exportName, resolveSet);
+        // ### handle ambiguous
+        if (resolution) {
+            if (!starResolution) {
+                starResolution = resolution;
+                continue;
+            }
+            if (resolution != starResolution)
+                return nullptr;
+        }
+    }
+
+    return starResolution;
 }
 
 const ExportEntry *CompilationUnit::lookupNameInExportTable(const ExportEntry *firstExportEntry, int tableSize, QV4::String *name) const
