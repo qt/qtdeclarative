@@ -1087,13 +1087,6 @@ QString QQmlType::noCreationReason() const
     return d->extraData.cd->noCreationReason;
 }
 
-int QQmlType::createSize() const
-{
-    if (!d || d->regType != CppType)
-        return 0;
-    return d->extraData.cd->allocationSize;
-}
-
 bool QQmlType::isCreatable() const
 {
     return d && d->regType == CppType && d->extraData.cd->newFunc;

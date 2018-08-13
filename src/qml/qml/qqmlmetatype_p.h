@@ -196,8 +196,6 @@ public:
 
     typedef void (*CreateFunc)(void *);
     CreateFunc createFunction() const;
-    int createSize() const;
-
     QQmlCustomParser *customParser() const;
 
     bool isCreatable() const;
