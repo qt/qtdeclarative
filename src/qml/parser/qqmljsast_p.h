@@ -2391,7 +2391,7 @@ public:
 
     ImportsList *finish()
     {
-        ImportsList *head = this;
+        ImportsList *head = next;
         next = nullptr;
         return head;
     }
