@@ -389,6 +389,11 @@ QStringList CompilationUnit::moduleRequests() const
         requests << stringAt(entry.moduleRequest);
     }
 
+    for (uint i = 0; i < data->indirectExportEntryTableSize; ++i) {
+        const ExportEntry &entry = data->indirectExportEntryTable()[i];
+        requests << stringAt(entry.moduleRequest);
+    }
+
     return requests;
 }
 
@@ -429,36 +434,71 @@ Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
         imports[i] = valuePtr;
     }
 
+    for (uint i = 0; i < data->indirectExportEntryTableSize; ++i) {
+        const CompiledData::ExportEntry &entry = data->indirectExportEntryTable()[i];
+        auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(entry.moduleRequest)), this);
+        if (!dependentModuleUnit)
+            return nullptr;
+
+        ScopedString importName(scope, runtimeStrings[entry.importName]);
+        if (!dependentModuleUnit->resolveExport(importName)) {
+            QString referenceErrorMessage = QStringLiteral("Unable to resolve re-export reference ");
+            referenceErrorMessage += importName->toQString();
+            engine->throwReferenceError(referenceErrorMessage, fileName(), /*### line*/1, /*### column*/1);
+            return nullptr;
+        }
+    }
+
     return m_module;
 }
 
 const Value *CompilationUnit::resolveExport(QV4::String *exportName)
 {
+    QVector<ResolveSetEntry> resolveSet;
+    return resolveExportRecursively(exportName, &resolveSet);
+}
+
+const Value *CompilationUnit::resolveExportRecursively(QV4::String *exportName, QVector<ResolveSetEntry> *resolveSet)
+{
     if (!m_module)
         return nullptr;
 
-    Scope scope(engine);
-    ScopedString localName(scope, localNameForExportName(exportName));
-    if (!localName)
-        return nullptr;
+    for (const auto &entry: *resolveSet)
+        if (entry.module == this && entry.exportName->isEqualTo(exportName))
+            return nullptr;
 
-    uint index = m_module->scope->internalClass->find(localName->toPropertyKey());
-    if (index < UINT_MAX)
-        return &m_module->scope->locals[index];
+    (*resolveSet) << ResolveSetEntry(this, exportName);
+
+    Scope scope(engine);
+
+    if (auto localExport = lookupNameInExportTable(data->localExportEntryTable(), data->localExportEntryTableSize, exportName)) {
+        ScopedString localName(scope, runtimeStrings[localExport->localName]);
+        uint index = m_module->scope->internalClass->find(localName->toPropertyKey());
+        if (index < UINT_MAX)
+            return &m_module->scope->locals[index];
+        return nullptr;
+    }
+
+    if (auto indirectExport = lookupNameInExportTable(data->indirectExportEntryTable(), data->indirectExportEntryTableSize, exportName)) {
+        auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(indirectExport->moduleRequest)), this);
+        if (!dependentModuleUnit)
+            return nullptr;
+        ScopedString importName(scope, runtimeStrings[indirectExport->importName]);
+        return dependentModuleUnit->resolveExportRecursively(importName, resolveSet);
+    }
 
     return nullptr;
 }
 
-Heap::String *CompilationUnit::localNameForExportName(QV4::String *exportName) const
+const ExportEntry *CompilationUnit::lookupNameInExportTable(const ExportEntry *firstExportEntry, int tableSize, QV4::String *name) const
 {
-    const CompiledData::ExportEntry *firstExport = data->localExportEntryTable();
-    const CompiledData::ExportEntry *lastExport = data->localExportEntryTable() + data->localExportEntryTableSize;
-    auto matchingExport = std::lower_bound(firstExport, lastExport, exportName, [this](const CompiledData::ExportEntry &lhs, QV4::String *name) {
+    const CompiledData::ExportEntry *lastExportEntry = firstExportEntry + tableSize;
+    auto matchingExport = std::lower_bound(firstExportEntry, lastExportEntry, name, [this](const CompiledData::ExportEntry &lhs, QV4::String *name) {
         return stringAt(lhs.exportName) < name->toQString();
     });
-    if (matchingExport == lastExport || stringAt(matchingExport->exportName) != exportName->toQString())
+    if (matchingExport == lastExportEntry || stringAt(matchingExport->exportName) != name->toQString())
         return nullptr;
-    return runtimeStrings[matchingExport->localName];
+    return matchingExport;
 }
 
 void CompilationUnit::evaluate()

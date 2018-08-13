@@ -1163,7 +1163,6 @@ public:
     QStringList moduleRequests() const;
     Heap::Module *instantiate(ExecutionEngine *engine);
     const Value *resolveExport(QV4::String *exportName);
-    Heap::String *localNameForExportName(QV4::String *exportName) const;
     void evaluate();
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
@@ -1185,6 +1184,18 @@ protected:
 
 private:
     void destroy();
+
+    struct ResolveSetEntry
+    {
+        ResolveSetEntry() {}
+        ResolveSetEntry(CompilationUnit *module, QV4::String *exportName)
+            : module(module), exportName(exportName) {}
+        CompilationUnit *module = nullptr;
+        QV4::String *exportName = nullptr;
+    };
+
+    const Value *resolveExportRecursively(QV4::String *exportName, QVector<ResolveSetEntry> *resolveSet);
+    const ExportEntry *lookupNameInExportTable(const ExportEntry *firstExportEntry, int tableSize, QV4::String *name) const;
 
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex
