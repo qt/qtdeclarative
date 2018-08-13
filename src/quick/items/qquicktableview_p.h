@@ -159,28 +159,27 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
 {
     Q_OBJECT
-
-    Q_PROPERTY(QQuickTableView *tableView READ tableView NOTIFY tableViewChanged)
+    Q_PROPERTY(QQuickTableView *view READ view NOTIFY viewChanged)
 
 public:
     QQuickTableViewAttached(QObject *parent)
         : QObject(parent) {}
 
-    QQuickTableView *tableView() const { return m_tableview; }
-    void setTableView(QQuickTableView *newTableView) {
-        if (newTableView == m_tableview)
+    QQuickTableView *view() const { return m_view; }
+    void setView(QQuickTableView *newTableView) {
+        if (newTableView == m_view)
             return;
-        m_tableview = newTableView;
-        Q_EMIT tableViewChanged();
+        m_view = newTableView;
+        Q_EMIT viewChanged();
     }
 
 Q_SIGNALS:
-    void tableViewChanged();
+    void viewChanged();
     void pooled();
     void reused();
 
 private:
-    QPointer<QQuickTableView> m_tableview;
+    QPointer<QQuickTableView> m_view;
 
     friend class QQuickTableViewPrivate;
 };

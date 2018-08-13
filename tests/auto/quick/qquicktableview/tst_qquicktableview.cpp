@@ -831,6 +831,7 @@ void tst_QQuickTableView::checkInitialAttachedProperties()
         QCOMPARE(contextCell.x(), cell.x());
         QCOMPARE(contextIndex, index);
         QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
+        QCOMPARE(getAttachedObject(item)->view(), tableView);
     }
 }
 

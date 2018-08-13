@@ -1173,7 +1173,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
         item->setParentItem(q->contentItem());
 
     if (auto attached = getAttachedObject(object))
-        attached->setTableView(q);
+        attached->setView(q);
 }
 
 void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
