@@ -44,6 +44,7 @@
 #include <private/qv4vme_moth_p.h>
 #include <private/qv4context_p.h>
 #include <private/qv4symbol_p.h>
+#include <private/qv4identifiertable_p.h>
 
 using namespace QV4;
 
@@ -70,6 +71,24 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     scope->nArgs = 0;
 
     Scope valueScope(engine);
+
+    // It's possible for example to re-export an import, for example:
+    //     import * as foo from "./bar.js"
+    //     export { foo }
+    // Since we don't add imports to the locals, it won't be found typically.
+    // Except now we add imports at the end of the internal class in the index
+    // space past the locals, so that resolveExport can find it.
+    {
+        Scoped<QV4::InternalClass> ic(valueScope, scope->internalClass);
+
+        for (uint i = 0; i < unit->data->importEntryTableSize; ++i) {
+            const CompiledData::ImportEntry &import = unit->data->importEntryTable()[i];
+            ic = ic->addMember(engine->identifierTable->asPropertyKey(unit->runtimeStrings[import.localName]), Attr_NotConfigurable);
+        }
+        scope->internalClass.set(engine, ic->d());
+    }
+
+
     Scoped<QV4::Module> This(valueScope, this);
     ScopedString name(valueScope, engine->newString(QStringLiteral("Module")));
     This->insertMember(engine->symbol_toStringTag(), name, Attr_ReadOnly);
