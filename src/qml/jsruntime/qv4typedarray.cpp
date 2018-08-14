@@ -972,6 +972,48 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_lastIndexOf(const FunctionObj
     return Encode(-1);
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    const FunctionObject *constructor = instance->speciesConstructor(scope, scope.engine->typedArrayCtors + instance->d()->arrayType);
+    if (!constructor)
+        return scope.engine->throwTypeError();
+
+    Value *arguments = scope.alloc(1);
+    arguments[0] = Encode(len);
+    Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
+    if (!a || a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+    if (a->length() < len)
+        return scope.engine->throwTypeError();
+
+    ScopedValue v(scope);
+    ScopedValue mapped(scope);
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    arguments = scope.alloc(3);
+
+    for (uint k = 0; k < len; ++k) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        arguments[0] = instance->get(k);
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = instance;
+        mapped = callback->call(that, arguments, 3);
+        a->put(k, mapped);
+    }
+    return a.asReturnedValue();
+}
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
@@ -1402,6 +1444,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("join"), method_join, 1);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
     defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(QStringLiteral("map"), method_map, 1);
     defineDefaultProperty(QStringLiteral("reduce"), method_reduce, 1);
     defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
     defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);

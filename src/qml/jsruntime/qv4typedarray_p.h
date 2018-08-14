@@ -187,6 +187,7 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_join(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_map(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_reverse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
