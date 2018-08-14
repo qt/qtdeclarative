@@ -178,6 +178,7 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_fill(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_filter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);

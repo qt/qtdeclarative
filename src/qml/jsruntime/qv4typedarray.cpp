@@ -625,6 +625,60 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
     return v.asReturnedValue();
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue selected(scope);
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    Value *arguments = scope.alloc(3);
+    Value *list = arguments;
+
+    uint to = 0;
+    for (uint k = 0; k < len; ++k) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        bool exists;
+        arguments[0] = instance->get(k, &exists);
+        if (!exists)
+            continue;
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = instance;
+        selected = callback->call(that, arguments, 3);
+        if (selected->toBoolean()) {
+            ++arguments;
+            scope.alloc(1);
+            ++to;
+        }
+    }
+
+    const FunctionObject *constructor = instance->speciesConstructor(scope, scope.engine->typedArrayCtors + instance->d()->arrayType);
+    if (!constructor)
+        return scope.engine->throwTypeError();
+
+    arguments = scope.alloc(1);
+    arguments[0] = Encode(to);
+    Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
+    if (!a || a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+    if (a->length() < to)
+        return scope.engine->throwTypeError();
+
+    for (uint i = 0; i < to; ++i)
+        a->put(i, list[i]);
+
+    return a->asReturnedValue();
+}
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_find(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
@@ -1310,7 +1364,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_of(const FunctionObject *f, const 
         return scope.engine->throwTypeError();
     TypedArray *a = newObj->as<TypedArray>();
     Q_ASSERT(a);
-    if (a->getLength() < len)
+    if (a->length() < static_cast<uint>(len))
         return scope.engine->throwTypeError();
 
     for (int k = 0; k < len; ++k) {
@@ -1339,6 +1393,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
     defineDefaultProperty(QStringLiteral("every"), method_every, 1);
     defineDefaultProperty(QStringLiteral("fill"), method_fill, 1);
+    defineDefaultProperty(QStringLiteral("filter"), method_filter, 1);
     defineDefaultProperty(QStringLiteral("find"), method_find, 1);
     defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
     defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
