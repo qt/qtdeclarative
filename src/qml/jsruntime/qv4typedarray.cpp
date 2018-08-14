@@ -625,6 +625,24 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
     return v.asReturnedValue();
 }
 
+static TypedArray *typedArraySpeciesCreate(Scope &scope, const TypedArray *instance, uint len)
+{
+    const FunctionObject *constructor = instance->speciesConstructor(scope, scope.engine->typedArrayCtors + instance->d()->arrayType);
+    if (!constructor) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+
+    Value *arguments = scope.alloc(1);
+    arguments[0] = Encode(len);
+    Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
+    if (!a || a->d()->buffer->isDetachedBuffer() || a->length() < len) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    return a;
+}
+
 ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
@@ -662,17 +680,9 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_filter(const FunctionObject *
         }
     }
 
-    const FunctionObject *constructor = instance->speciesConstructor(scope, scope.engine->typedArrayCtors + instance->d()->arrayType);
-    if (!constructor)
-        return scope.engine->throwTypeError();
-
-    arguments = scope.alloc(1);
-    arguments[0] = Encode(to);
-    Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
-    if (!a || a->d()->buffer->isDetachedBuffer())
-        return scope.engine->throwTypeError();
-    if (a->length() < to)
-        return scope.engine->throwTypeError();
+    TypedArray *a = typedArraySpeciesCreate(scope, instance, to);
+    if (!a)
+        return Encode::undefined();
 
     for (uint i = 0; i < to; ++i)
         a->put(i, list[i]);
@@ -985,22 +995,14 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, 
         THROW_TYPE_ERROR();
     const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
 
-    const FunctionObject *constructor = instance->speciesConstructor(scope, scope.engine->typedArrayCtors + instance->d()->arrayType);
-    if (!constructor)
-        return scope.engine->throwTypeError();
-
-    Value *arguments = scope.alloc(1);
-    arguments[0] = Encode(len);
-    Scoped<TypedArray> a(scope, constructor->callAsConstructor(arguments, 1));
-    if (!a || a->d()->buffer->isDetachedBuffer())
-        return scope.engine->throwTypeError();
-    if (a->length() < len)
-        return scope.engine->throwTypeError();
+    TypedArray *a = typedArraySpeciesCreate(scope, instance, len);
+    if (!a)
+        return Encode::undefined();
 
     ScopedValue v(scope);
     ScopedValue mapped(scope);
     ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
-    arguments = scope.alloc(3);
+    Value *arguments = scope.alloc(3);
 
     for (uint k = 0; k < len; ++k) {
         if (instance->d()->buffer->isDetachedBuffer())
@@ -1012,7 +1014,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_map(const FunctionObject *b, 
         mapped = callback->call(that, arguments, 3);
         a->put(k, mapped);
     }
-    return a.asReturnedValue();
+    return a->asReturnedValue();
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -1285,6 +1287,53 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     RETURN_UNDEFINED();
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    double s = (argc ? argv[0] : Primitive::undefinedValue()).toInteger();
+    uint start;
+    if (s < 0)
+        start = (uint)qMax(len + s, 0.);
+    else if (s > len)
+        start = len;
+    else
+        start = (uint) s;
+    uint end = len;
+    if (argc > 1 && !argv[1].isUndefined()) {
+        double e = argv[1].toInteger();
+        if (e < 0)
+            end = (uint)qMax(len + e, 0.);
+        else if (e > len)
+            end = len;
+        else
+            end = (uint) e;
+    }
+    uint count = start > end ? 0 : end - start;
+
+    TypedArray *a = typedArraySpeciesCreate(scope, instance, count);
+    if (!a)
+        return Encode::undefined();
+
+    ScopedValue v(scope);
+    uint n = 0;
+    for (uint i = start; i < end; ++i) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        v = instance->get(i);
+        if (a->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        a->put(n, v);
+        ++n;
+    }
+    return a->asReturnedValue();
+}
+
 ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(builtin);
@@ -1450,6 +1499,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
+    defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 2);
     defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString, 0);
     ScopedObject f(scope, engine->arrayPrototype()->get(engine->id_toString()));

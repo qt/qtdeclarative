@@ -194,6 +194,7 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
