@@ -331,12 +331,26 @@ public:
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
 
     struct ChangeListener {
-        ChangeListener(QQuickItemChangeListener *l = nullptr, QQuickItemPrivate::ChangeTypes t = nullptr) : listener(l), types(t), gTypes(QQuickGeometryChange::All) {}
-        ChangeListener(QQuickItemChangeListener *l, QQuickGeometryChange gt) : listener(l), types(Geometry), gTypes(gt) {}
+        using ChangeTypes = QQuickItemPrivate::ChangeTypes;
+
+        ChangeListener(QQuickItemChangeListener *l = nullptr, ChangeTypes t = nullptr)
+            : listener(l)
+            , types(t)
+            , gTypes(QQuickGeometryChange::All)
+        {}
+
+        ChangeListener(QQuickItemChangeListener *l, QQuickGeometryChange gt)
+            : listener(l)
+            , types(Geometry)
+            , gTypes(gt)
+        {}
+
+        bool operator==(const ChangeListener &other) const
+        { return listener == other.listener && types == other.types; }
+
         QQuickItemChangeListener *listener;
-        QQuickItemPrivate::ChangeTypes types;
+        ChangeTypes types;
         QQuickGeometryChange gTypes;  //NOTE: not used for ==
-        bool operator==(const ChangeListener &other) const { return listener == other.listener && types == other.types; }
     };
 
     struct ExtraData {
