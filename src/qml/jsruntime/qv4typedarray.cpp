@@ -1230,13 +1230,36 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
     return constructor->callAsConstructor(arguments, 3);
 }
 
-ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    // ### FIXME
-    Scope scope(builtin);
-    ScopedString key(scope, scope.engine->newIdentifier(QStringLiteral("toLocaleString")));
-    ScopedFunctionObject f(scope, scope.engine->arrayPrototype()->get(key->toPropertyKey()));
-    return f->call(thisObject, argv, argc);
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+    const QString separator = QStringLiteral(",");
+
+    QString R;
+
+    ScopedValue v(scope);
+    ScopedString s(scope);
+
+    for (uint k = 0; k < len; ++k) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        if (k)
+            R += separator;
+
+        v = instance->get(k);
+        v = Runtime::method_callElement(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        s = v->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        R += s->toQString();
+    }
+    return scope.engine->newString(R)->asReturnedValue();
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *, int)
@@ -1328,7 +1351,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
-    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString, 0);
     ScopedObject f(scope, engine->arrayPrototype()->get(engine->id_toString()));
     defineDefaultProperty(engine->id_toString(), f);
 

@@ -108,8 +108,6 @@ built-ins/Array/prototype/splice/create-species.js fails
 built-ins/Array/prototype/splice/length-and-deleteCount-exceeding-integer-limit.js fails
 built-ins/Array/prototype/splice/length-exceeding-integer-limit-shrink-array.js fails
 built-ins/Array/prototype/splice/length-near-integer-limit-grow-array.js fails
-built-ins/Array/prototype/toLocaleString/S15.4.4.3_A1_T1.js fails
-built-ins/Array/prototype/toLocaleString/S15.4.4.3_A3_T1.js fails
 built-ins/Array/prototype/toLocaleString/primitive_this_value.js strictFails
 built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js strictFails
 built-ins/Array/prototype/unshift/clamps-to-integer-limit.js fails
@@ -793,17 +791,6 @@ built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor-retu
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor.js fails
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor.js fails
 built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js fails
-built-ins/TypedArray/prototype/toLocaleString/calls-tolocalestring-from-each-value.js fails
-built-ins/TypedArray/prototype/toLocaleString/calls-tostring-from-each-value.js fails
-built-ins/TypedArray/prototype/toLocaleString/calls-valueof-from-each-value.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-firstelement-tolocalestring.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-firstelement-tostring.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-firstelement-valueof.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-nextelement-tolocalestring.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-nextelement-tostring.js fails
-built-ins/TypedArray/prototype/toLocaleString/return-abrupt-from-nextelement-valueof.js fails
-built-ins/TypedArray/prototype/toLocaleString/this-is-not-object.js fails
-built-ins/TypedArray/prototype/toLocaleString/this-is-not-typedarray-instance.js fails
 built-ins/TypedArrays/ctors/buffer-arg/custom-proto-access-throws.js fails
 built-ins/TypedArrays/ctors/buffer-arg/defined-negative-length.js fails
 built-ins/TypedArrays/ctors/buffer-arg/proto-from-ctor-realm.js fails

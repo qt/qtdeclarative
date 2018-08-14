@@ -315,6 +315,7 @@ public:
         String_index,
         String_input,
         String_toString,
+        String_toLocaleString,
         String_destroy,
         String_valueOf,
         String_byteLength,
@@ -385,6 +386,7 @@ public:
     String *id_index() const { return reinterpret_cast<String *>(jsStrings + String_index); }
     String *id_input() const { return reinterpret_cast<String *>(jsStrings + String_input); }
     String *id_toString() const { return reinterpret_cast<String *>(jsStrings + String_toString); }
+    String *id_toLocaleString() const { return reinterpret_cast<String *>(jsStrings + String_toLocaleString); }
     String *id_destroy() const { return reinterpret_cast<String *>(jsStrings + String_destroy); }
     String *id_valueOf() const { return reinterpret_cast<String *>(jsStrings + String_valueOf); }
     String *id_byteLength() const { return reinterpret_cast<String *>(jsStrings + String_byteLength); }

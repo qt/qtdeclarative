@@ -104,7 +104,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ScopedString name(scope);
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
-    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
     name = engine->newIdentifier(QStringLiteral("copyWithin"));
     unscopables->put(name, Primitive::fromBoolean(true));
@@ -369,9 +369,36 @@ ReturnedValue ArrayPrototype::method_toString(const FunctionObject *builtin, con
     return ObjectPrototype::method_toString(builtin, that, argv, argc);
 }
 
-ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    return method_toString(builtin, thisObject, argv, argc);
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject);
+    if (!instance)
+        return scope.engine->throwTypeError();
+
+    uint len = instance->getLength();
+    const QString separator = QStringLiteral(",");
+
+    QString R;
+
+    ScopedValue v(scope);
+    ScopedString s(scope);
+
+    for (uint k = 0; k < len; ++k) {
+        if (k)
+            R += separator;
+
+        v = instance->get(k);
+        if (v->isNullOrUndefined())
+            continue;
+        v = Runtime::method_callElement(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        s = v->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        R += s->toQString();
+    }
+    return scope.engine->newString(R)->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value *that, const Value *argv, int argc)
