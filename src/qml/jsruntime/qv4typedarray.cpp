@@ -43,6 +43,7 @@
 #include "qv4string_p.h"
 #include "qv4jscall_p.h"
 #include "qv4symbol_p.h"
+#include "qv4runtime_p.h"
 
 #include <cmath>
 
@@ -544,6 +545,323 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_entries(const FunctionObject 
     return ao->asReturnedValue();
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedValue r(scope);
+    Value *arguments = scope.alloc(3);
+
+    const char *data = v->d()->buffer->data->data();
+    uint bytesPerElement = v->d()->type->bytesPerElement;
+    uint byteOffset = v->d()->byteOffset;
+
+    bool ok = true;
+    for (uint k = 0; ok && k < len; ++k) {
+        if (v->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+
+        arguments[0] = v->d()->type->read(data, byteOffset + k * bytesPerElement);
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = v;
+        r = callback->call(that, arguments, 3);
+        ok = r->toBoolean();
+    }
+    return Encode(ok);
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+    double dlen = len;
+    double relativeStart = argc > 1 ? argv[1].toInteger() : 0.;
+    double relativeEnd = len;
+    if (argc > 2 && !argv[2].isUndefined())
+        relativeEnd = argv[2].toInteger();
+
+    uint k = 0;
+    uint fin = 0;
+
+    if (relativeStart < 0) {
+        k = static_cast<uint>(std::max(len+relativeStart, 0.));
+    } else {
+        k = static_cast<uint>(std::min(relativeStart, dlen));
+    }
+
+    if (relativeEnd < 0) {
+        fin = static_cast<uint>(std::max(len + relativeEnd, 0.));
+    } else {
+        fin = static_cast<uint>(std::min(relativeEnd, dlen));
+    }
+
+    double val = argc ? argv[0].toNumber() : std::numeric_limits<double>::quiet_NaN();
+    Value value = Primitive::fromDouble(val);
+
+    char *data = v->d()->buffer->data->data();
+    uint bytesPerElement = v->d()->type->bytesPerElement;
+    uint byteOffset = v->d()->byteOffset;
+
+    while (k < fin) {
+        v->d()->type->write(scope.engine, data, byteOffset + k * bytesPerElement, value);
+        k++;
+    }
+
+    return v.asReturnedValue();
+}
+
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_find(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+
+    if (!argc || !argv[0].isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue result(scope);
+    Value *arguments = scope.alloc(3);
+
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+
+    for (uint k = 0; k < len; ++k) {
+        if (v->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        arguments[0] = v->get(k);
+        CHECK_EXCEPTION();
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = v;
+        result = callback->call(that, arguments, 3);
+
+        CHECK_EXCEPTION();
+        if (result->toBoolean())
+            return arguments[0].asReturnedValue();
+    }
+
+    RETURN_UNDEFINED();
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_findIndex(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+
+    if (!argc || !argv[0].isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue result(scope);
+    Value *arguments = scope.alloc(3);
+
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+
+    for (uint k = 0; k < len; ++k) {
+        if (v->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        arguments[0] = v->get(k);
+        CHECK_EXCEPTION();
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = v;
+        result = callback->call(that, arguments, 3);
+
+        CHECK_EXCEPTION();
+        if (result->toBoolean())
+            return Encode(k);
+    }
+
+    return Encode(-1);
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_forEach(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    Value *arguments = scope.alloc(3);
+
+    for (uint k = 0; k < len; ++k) {
+        if (v->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        bool exists;
+        arguments[0] = v->get(k, &exists);
+        if (!exists)
+            continue;
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = v;
+        callback->call(that, arguments, 3);
+    }
+    RETURN_UNDEFINED();
+}
+
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_includes(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+    if (len == 0) {
+        return Encode(false);
+    }
+
+    double n = 0;
+    if (argc > 1 && !argv[1].isUndefined()) {
+        n = argv[1].toInteger();
+    }
+
+    double k = 0;
+    if (n >= 0) {
+        k = n;
+    } else {
+        k = len + n;
+        if (k < 0) {
+            k = 0;
+        }
+    }
+
+    while (k < len) {
+        ScopedValue val(scope, v->get(k));
+        if (val->sameValueZero(argv[0])) {
+            return Encode(true);
+        }
+        k++;
+    }
+
+    return Encode(false);
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_indexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+    if (!len)
+        return Encode(-1);
+
+    ScopedValue searchValue(scope, argc ? argv[0] : Primitive::undefinedValue());
+    uint fromIndex = 0;
+
+    if (argc >= 2) {
+        double f = argv[1].toInteger();
+        CHECK_EXCEPTION();
+        if (f >= len)
+            return Encode(-1);
+        if (f < 0)
+            f = qMax(len + f, 0.);
+        fromIndex = (uint) f;
+    }
+
+    if (v->isStringObject()) {
+        ScopedValue value(scope);
+        for (uint k = fromIndex; k < len; ++k) {
+            bool exists;
+            value = v->get(k, &exists);
+            if (exists && RuntimeHelpers::strictEqual(value, searchValue))
+                return Encode(k);
+        }
+        return Encode(-1);
+    }
+
+    ScopedValue value(scope);
+
+    for (uint i = fromIndex; i < len; ++i) {
+        bool exists;
+        value = v->get(i, &exists);
+        CHECK_EXCEPTION();
+        if (exists && RuntimeHelpers::strictEqual(value, searchValue))
+            return Encode(i);
+    }
+    return Encode(-1);
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_join(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> v(scope, thisObject);
+    if (!v || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = v->length();
+
+    ScopedValue arg(scope, argc ? argv[0] : Primitive::undefinedValue());
+
+    QString r4;
+    if (arg->isUndefined())
+        r4 = QStringLiteral(",");
+    else
+        r4 = arg->toQString();
+
+    const quint32 r2 = len;
+
+    if (!r2)
+        return Encode(scope.engine->newString());
+
+    QString R;
+
+    //
+    // crazy!
+    //
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("0")));
+    ScopedValue r6(scope, v->get(name));
+    if (!r6->isNullOrUndefined())
+        R = r6->toQString();
+
+    ScopedValue r12(scope);
+    for (quint32 k = 1; k < r2; ++k) {
+        R += r4;
+
+        name = Primitive::fromDouble(k).toString(scope.engine);
+        r12 = v->get(name);
+        CHECK_EXCEPTION();
+
+        if (!r12->isNullOrUndefined())
+            R += r12->toQString();
+    }
+
+    return Encode(scope.engine->newString(R));
+}
+
 ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
@@ -555,6 +873,218 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_keys(const FunctionObject *b,
     ao->d()->iterationKind = IteratorKind::KeyIteratorKind;
     return ao->asReturnedValue();
 }
+
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_lastIndexOf(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+    if (!len)
+        return Encode(-1);
+
+    ScopedValue searchValue(scope);
+    uint fromIndex = len;
+
+    if (argc >= 1)
+        searchValue = argv[0];
+    else
+        searchValue = Primitive::undefinedValue();
+
+    if (argc >= 2) {
+        double f = argv[1].toInteger();
+        CHECK_EXCEPTION();
+        if (f > 0)
+            f = qMin(f, (double)(len - 1));
+        else if (f < 0) {
+            f = len + f;
+            if (f < 0)
+                return Encode(-1);
+        }
+        fromIndex = (uint) f + 1;
+    }
+
+    ScopedValue value(scope);
+    for (uint k = fromIndex; k > 0;) {
+        --k;
+        bool exists;
+        value = instance->get(k, &exists);
+        if (exists && RuntimeHelpers::strictEqual(value, searchValue))
+            return Encode(k);
+    }
+    return Encode(-1);
+}
+
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_reduce(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    uint k = 0;
+    ScopedValue acc(scope);
+    ScopedValue v(scope);
+
+    if (argc > 1) {
+        acc = argv[1];
+    } else {
+        bool kPresent = false;
+        while (k < len && !kPresent) {
+            v = instance->get(k, &kPresent);
+            if (kPresent)
+                acc = v;
+            ++k;
+        }
+        if (!kPresent)
+            THROW_TYPE_ERROR();
+    }
+
+    Value *arguments = scope.alloc(4);
+
+    while (k < len) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        bool kPresent;
+        v = instance->get(k, &kPresent);
+        if (kPresent) {
+            arguments[0] = acc;
+            arguments[1] = v;
+            arguments[2] = Primitive::fromDouble(k);
+            arguments[3] = instance;
+            acc = callback->call(nullptr, arguments, 4);
+        }
+        ++k;
+    }
+    return acc->asReturnedValue();
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_reduceRight(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    if (len == 0) {
+        if (argc == 1)
+            THROW_TYPE_ERROR();
+        return argv[1].asReturnedValue();
+    }
+
+    uint k = len;
+    ScopedValue acc(scope);
+    ScopedValue v(scope);
+    if (argc > 1) {
+        acc = argv[1];
+    } else {
+        bool kPresent = false;
+        while (k > 0 && !kPresent) {
+            v = instance->get(k - 1, &kPresent);
+            if (kPresent)
+                acc = v;
+            --k;
+        }
+        if (!kPresent)
+            THROW_TYPE_ERROR();
+    }
+
+    Value *arguments = scope.alloc(4);
+
+    while (k > 0) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        bool kPresent;
+        v = instance->get(k - 1, &kPresent);
+        if (kPresent) {
+            arguments[0] = acc;
+            arguments[1] = v;
+            arguments[2] = Primitive::fromDouble(k - 1);
+            arguments[3] = instance;
+            acc = callback->call(nullptr, arguments, 4);
+        }
+        --k;
+    }
+    return acc->asReturnedValue();
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_reverse(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint length = instance->length();
+
+    int lo = 0, hi = length - 1;
+
+    ScopedValue lval(scope);
+    ScopedValue hval(scope);
+    for (; lo < hi; ++lo, --hi) {
+        bool loExists, hiExists;
+        lval = instance->get(lo, &loExists);
+        hval = instance->get(hi, &hiExists);
+        Q_ASSERT(hiExists && loExists);
+        bool ok;
+        ok = instance->put(lo, hval);
+        Q_ASSERT(ok);
+        ok = instance->put(hi, lval);
+        Q_ASSERT(ok);
+    }
+    return instance->asReturnedValue();
+}
+
+ReturnedValue IntrinsicTypedArrayPrototype::method_some(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<TypedArray> instance(scope, thisObject);
+    if (!instance || instance->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    uint len = instance->length();
+
+    if (!argc || !argv->isFunctionObject())
+        THROW_TYPE_ERROR();
+    const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
+
+    ScopedValue that(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedValue result(scope);
+    Value *arguments = scope.alloc(3);
+
+    for (uint k = 0; k < len; ++k) {
+        if (instance->d()->buffer->isDetachedBuffer())
+            return scope.engine->throwTypeError();
+        bool exists;
+        arguments[0] = instance->get(k, &exists);
+        if (!exists)
+            continue;
+
+        arguments[1] = Primitive::fromDouble(k);
+        arguments[2] = instance;
+        result = callback->call(that, arguments, 3);
+        if (result->toBoolean())
+            return Encode(true);
+    }
+    return Encode(false);
+}
+
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_values(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
@@ -700,6 +1230,15 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
     return constructor->callAsConstructor(arguments, 3);
 }
 
+ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+{
+    // ### FIXME
+    Scope scope(builtin);
+    ScopedString key(scope, scope.engine->newIdentifier(QStringLiteral("toLocaleString")));
+    ScopedFunctionObject f(scope, scope.engine->arrayPrototype()->get(key->toPropertyKey()));
+    return f->call(thisObject, argv, argc);
+}
+
 ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *, int)
 {
     const TypedArray *a = thisObject->as<TypedArray>();
@@ -773,9 +1312,25 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
 
     defineDefaultProperty(QStringLiteral("copyWithin"), method_copyWithin, 2);
     defineDefaultProperty(QStringLiteral("entries"), method_entries, 0);
+    defineDefaultProperty(QStringLiteral("every"), method_every, 1);
+    defineDefaultProperty(QStringLiteral("fill"), method_fill, 1);
+    defineDefaultProperty(QStringLiteral("find"), method_find, 1);
+    defineDefaultProperty(QStringLiteral("findIndex"), method_findIndex, 1);
+    defineDefaultProperty(QStringLiteral("forEach"), method_forEach, 1);
+    defineDefaultProperty(QStringLiteral("includes"), method_includes, 1);
+    defineDefaultProperty(QStringLiteral("indexOf"), method_indexOf, 1);
+    defineDefaultProperty(QStringLiteral("join"), method_join, 1);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
+    defineDefaultProperty(QStringLiteral("lastIndexOf"), method_lastIndexOf, 1);
+    defineDefaultProperty(QStringLiteral("reduce"), method_reduce, 1);
+    defineDefaultProperty(QStringLiteral("reduceRight"), method_reduceRight, 1);
+    defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);
+    defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
     defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
+    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    ScopedObject f(scope, engine->arrayPrototype()->get(engine->id_toString()));
+    defineDefaultProperty(engine->id_toString(), f);
 
     ScopedString valuesString(scope, engine->newIdentifier(QStringLiteral("values")));
     ScopedObject values(scope, FunctionObject::createBuiltinFunction(engine, valuesString, method_values, 0));
