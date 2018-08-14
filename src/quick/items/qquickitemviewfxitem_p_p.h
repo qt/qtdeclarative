@@ -94,13 +94,13 @@ public:
 
     virtual bool contains(qreal x, qreal y) const = 0;
 
-    int index = -1;
     QPointer<QQuickItem> item;
-    bool ownItem;
     QQuickItemChangeListener *changeListener;
     QQuickItemViewTransitionableItem *transitionableItem;
-    bool releaseAfterTransition;
-    bool trackGeom;
+    int index = -1;
+    bool ownItem : 1;
+    bool releaseAfterTransition : 1;
+    bool trackGeom : 1;
 };
 
 QT_END_NAMESPACE
