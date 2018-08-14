@@ -287,7 +287,6 @@ public:
       AST::PatternProperty *PatternProperty;
       AST::PatternPropertyList *PatternPropertyList;
       AST::ClassElementList *ClassElementList;
-      AST::ModuleItemList *ModuleItemList;
       AST::ImportClause *ImportClause;
       AST::FromClause *FromClause;
       AST::NameSpaceImport *NameSpaceImport;
@@ -3991,43 +3990,47 @@ ScriptBody: StatementList;
 
 Module: ModuleBodyOpt;
 /.  case $rule_number: {
-        sym(1).Node = new (pool) AST::ESModule(sym(1).ModuleItemList, pool);
+        sym(1).Node = new (pool) AST::ESModule(sym(1).StatementList);
     } break;
 ./
 
 ModuleBody: ModuleItemList;
 /.
     case $rule_number: {
-        sym(1).ModuleItemList = sym(1).ModuleItemList->finish();
+        sym(1).StatementList = sym(1).StatementList->finish();
     } break;
 ./
 
 ModuleBodyOpt: ;
 /.
     case $rule_number: {
-        sym(1).ModuleItemList = nullptr;
+        sym(1).StatementList = nullptr;
     } break;
 ./
 ModuleBodyOpt: ModuleBody;
 
 ModuleItemList: ModuleItem;
-/.
-    case $rule_number: {
-        sym(1).ModuleItemList = new (pool) AST::ModuleItemList(sym(1).Node);
-    } break;
-./
 
 ModuleItemList: ModuleItemList ModuleItem;
 /.
     case $rule_number: {
-        sym(1).ModuleItemList = new (pool) AST::ModuleItemList(sym(1).ModuleItemList, sym(2).Node);
+        sym(1).StatementList = sym(1).StatementList->append(sym(2).StatementList);
     } break;
 ./
 
 ModuleItem: ImportDeclaration T_AUTOMATIC_SEMICOLON;
+/. case $rule_number:  Q_FALLTHROUGH(); ./
 ModuleItem: ImportDeclaration T_SEMICOLON;
+/. case $rule_number:  Q_FALLTHROUGH(); ./
 ModuleItem: ExportDeclaration T_AUTOMATIC_SEMICOLON;
+/. case $rule_number:  Q_FALLTHROUGH(); ./
 ModuleItem: ExportDeclaration T_SEMICOLON;
+/.
+    case $rule_number: {
+        sym(1).StatementList = new (pool) AST::StatementList(sym(1).Node);
+    } break;
+./
+
 ModuleItem: StatementListItem;
 
 ImportDeclaration: T_IMPORT ImportClause FromClause;

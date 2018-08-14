@@ -1162,45 +1162,10 @@ void ExportDeclaration::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void ModuleItemList::accept0(Visitor *)
-{
-    // See ESModule::accept0
-    Q_UNREACHABLE();
-}
-
-StatementList *ModuleItemList::buildStatementList(MemoryPool *pool) const
-{
-    StatementList *statements = nullptr;
-    for (const ModuleItemList *item = this; item; item = item->next) {
-        AST::StatementList *listItem = AST::cast<AST::StatementList*>(item->item);
-        if (!listItem) {
-            if (AST::ExportDeclaration *exportDecl = AST::cast<AST::ExportDeclaration*>(item->item))
-                listItem = new (pool) AST::StatementList(exportDecl);
-            else if (AST::ImportDeclaration *importDecl = AST::cast<AST::ImportDeclaration*>(item->item))
-                listItem = new (pool) AST::StatementList(importDecl);
-            else
-                continue;
-        }
-        if (statements)
-            statements = statements->append(listItem);
-        else
-            statements = listItem;
-    }
-    if (statements)
-        statements = statements->finish();
-    return statements;
-}
-
-
 void ESModule::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        // We don't accept the ModuleItemList (body) as instead the statement list items
-        // as well as the import/export declarations are linked together in the statement
-        // list. That way they are processed in correct order and can be used with the codegen's
-        // defineFunction() that expects a statement list.
-        // accept(body, visitor);
-        accept(statements, visitor);
+        accept(body, visitor);
     }
 
     visitor->endVisit(this);

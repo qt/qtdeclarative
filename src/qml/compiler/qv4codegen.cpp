@@ -169,7 +169,7 @@ void Codegen::generateFromModule(const QString &fileName,
     std::sort(_module->starExportEntries.begin(), _module->starExportEntries.end(), ExportEntry::lessThan);
     std::sort(_module->indirectExportEntries.begin(), _module->indirectExportEntries.end(), ExportEntry::lessThan);
 
-    defineFunction(QStringLiteral("%entry"), node, nullptr, node->statements);
+    defineFunction(QStringLiteral("%entry"), node, nullptr, node->body);
 }
 
 void Codegen::enterContext(Node *node)

@@ -172,7 +172,6 @@ class ImportClause;
 class FromClause;
 class ImportDeclaration;
 class ModuleItem;
-class ModuleItemList;
 class ESModule;
 class DebuggerStatement;
 class NestedExpression;

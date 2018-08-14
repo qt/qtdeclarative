@@ -188,7 +188,6 @@ public:
         Kind_ExportsList,
         Kind_ExportClause,
         Kind_ExportDeclaration,
-        Kind_ModuleItemList,
         Kind_NewExpression,
         Kind_NewMemberExpression,
         Kind_NotExpression,
@@ -2722,63 +2721,15 @@ public:
     bool exportDefault = false;
 };
 
-class QML_PARSER_EXPORT ModuleItemList: public Node
-{
-public:
-    QQMLJS_DECLARE_AST_NODE(ModuleItemList)
-
-    ModuleItemList(Node *item)
-        : item(item)
-    {
-        kind = K;
-        next = this;
-    }
-
-    ModuleItemList(ModuleItemList *previous, Node *item)
-        : item(item)
-    {
-        kind = K;
-        if (previous) {
-            next = previous->next;
-            previous->next = this;
-        } else {
-            next = this;
-        }
-    }
-
-    ModuleItemList *finish()
-    {
-        ModuleItemList *head = next;
-        next = nullptr;
-        return head;
-    }
-
-    StatementList *buildStatementList(MemoryPool *pool) const;
-
-    void accept0(Visitor *) override;
-
-    SourceLocation firstSourceLocation() const override
-    { return item->firstSourceLocation(); }
-
-    SourceLocation lastSourceLocation() const override
-    { return next ? next->lastSourceLocation() : item->lastSourceLocation(); }
-
-// attributes
-    Node *item; // ImportDeclaration, ExportDeclaration or StatementList
-    ModuleItemList *next;
-};
-
 class QML_PARSER_EXPORT ESModule: public Node
 {
 public:
     QQMLJS_DECLARE_AST_NODE(Module)
 
-    ESModule(ModuleItemList *body, MemoryPool *pool)
+    ESModule(StatementList *body)
         : body(body)
     {
         kind = K;
-        if (body)
-            statements = body->buildStatementList(pool);
     }
 
     void accept0(Visitor *visitor) override;
@@ -2790,8 +2741,7 @@ public:
     { return body ? body->lastSourceLocation() : SourceLocation(); }
 
 // attributes
-    ModuleItemList *body;
-    StatementList *statements = nullptr;
+    StatementList *body;
 };
 
 class QML_PARSER_EXPORT DebuggerStatement: public Statement
