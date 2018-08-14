@@ -140,6 +140,7 @@ struct Module {
     QVector<ExportEntry> indirectExportEntries;
     QVector<ExportEntry> starExportEntries;
     QVector<ImportEntry> importEntries;
+    QStringList moduleRequests;
 };
 
 
@@ -176,6 +177,7 @@ struct Context {
     QQmlJS::AST::FormalParameterList *formals = nullptr;
     QStringList arguments;
     QStringList locals;
+    QStringList moduleRequests;
     QVector<ImportEntry> importEntries;
     QVector<ExportEntry> exportEntries;
     bool hasDefaultExport = false;

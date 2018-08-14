@@ -2159,7 +2159,6 @@ language/literals/regexp/u-case-mapping.js fails
 language/literals/regexp/y-assertion-start.js fails
 language/module-code/eval-export-dflt-cls-anon.js strictFails
 language/module-code/eval-gtbndng-indirect-update-dflt.js strictFails
-language/module-code/eval-rqstd-order.js strictFails
 language/module-code/instn-iee-bndng-cls.js strictFails
 language/module-code/instn-iee-bndng-const.js strictFails
 language/module-code/instn-iee-bndng-let.js strictFails
@@ -2180,7 +2179,6 @@ language/module-code/instn-named-bndng-dflt-gen-named.js strictFails
 language/module-code/instn-named-bndng-dflt-named.js strictFails
 language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/instn-named-bndng-let.js strictFails
-language/module-code/instn-same-global.js strictFails
 language/module-code/instn-star-equality.js strictFails
 language/module-code/namespace/internals/define-own-property.js strictFails
 language/module-code/namespace/internals/delete-exported-uninit.js strictFails

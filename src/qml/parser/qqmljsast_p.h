@@ -2539,7 +2539,7 @@ public:
     QStringRef moduleSpecifier;
 };
 
-class QML_PARSER_EXPORT ImportDeclaration: public Node
+class QML_PARSER_EXPORT ImportDeclaration: public Statement
 {
 public:
     QQMLJS_DECLARE_AST_NODE(ImportDeclaration)
@@ -2755,7 +2755,7 @@ public:
 
     StatementList *buildStatementList(MemoryPool *pool) const;
 
-    void accept0(Visitor *visitor) override;
+    void accept0(Visitor *) override;
 
     SourceLocation firstSourceLocation() const override
     { return item->firstSourceLocation(); }

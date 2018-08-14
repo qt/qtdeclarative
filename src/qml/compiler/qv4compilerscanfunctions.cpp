@@ -164,8 +164,11 @@ void ScanFunctions::endVisit(ESModule *)
 bool ScanFunctions::visit(ExportDeclaration *declaration)
 {
     QString module;
-    if (declaration->fromClause)
+    if (declaration->fromClause) {
         module = declaration->fromClause->moduleSpecifier.toString();
+        if (!module.isEmpty())
+            _context->moduleRequests << module;
+    }
 
     if (declaration->exportAll) {
         Compiler::ExportEntry entry;
@@ -233,8 +236,14 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
 bool ScanFunctions::visit(ImportDeclaration *declaration)
 {
     QString module;
-    if (declaration->fromClause)
+    if (declaration->fromClause) {
         module = declaration->fromClause->moduleSpecifier.toString();
+        if (!module.isEmpty())
+            _context->moduleRequests << module;
+    }
+
+    if (!declaration->moduleSpecifier.isEmpty())
+        _context->moduleRequests << declaration->moduleSpecifier.toString();
 
     if (ImportClause *import = declaration->importClause) {
         if (!import->importedDefaultBinding.isEmpty()) {

@@ -369,9 +369,6 @@ public:
     virtual bool visit(ModuleItem *) { return true; }
     virtual void endVisit(ModuleItem *) {}
 
-    virtual bool visit(ModuleItemList *) { return true; }
-    virtual void endVisit(ModuleItemList *) {}
-
     virtual bool visit(ESModule *) { return true; }
     virtual void endVisit(ESModule *) {}
 

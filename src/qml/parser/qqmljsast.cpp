@@ -1162,26 +1162,10 @@ void ExportDeclaration::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void ModuleItemList::accept0(Visitor *visitor)
+void ModuleItemList::accept0(Visitor *)
 {
-    if (visitor->visit(this)) {
-        for (ModuleItemList *it = this; it; it = it->next) {
-            if (it->item) {
-                // The statement list is concatenated together between module list
-                // items and stored in the ESModule, thus not visited from there.
-                if (it->item->kind == Kind_StatementList)
-                    continue;
-                // Export declaration are also injected into the statement list for
-                // processing of declarations an variable statements, so don't visit
-                // it here to avoid double visits.
-                if (it->item->kind == Kind_ExportDeclaration)
-                    continue;
-            }
-            accept(it->item, visitor);
-        }
-    }
-
-    visitor->endVisit(this);
+    // See ESModule::accept0
+    Q_UNREACHABLE();
 }
 
 StatementList *ModuleItemList::buildStatementList(MemoryPool *pool) const
@@ -1192,6 +1176,8 @@ StatementList *ModuleItemList::buildStatementList(MemoryPool *pool) const
         if (!listItem) {
             if (AST::ExportDeclaration *exportDecl = AST::cast<AST::ExportDeclaration*>(item->item))
                 listItem = new (pool) AST::StatementList(exportDecl);
+            else if (AST::ImportDeclaration *importDecl = AST::cast<AST::ImportDeclaration*>(item->item))
+                listItem = new (pool) AST::StatementList(importDecl);
             else
                 continue;
         }
@@ -1209,7 +1195,11 @@ StatementList *ModuleItemList::buildStatementList(MemoryPool *pool) const
 void ESModule::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(body, visitor);
+        // We don't accept the ModuleItemList (body) as instead the statement list items
+        // as well as the import/export declarations are linked together in the statement
+        // list. That way they are processed in correct order and can be used with the codegen's
+        // defineFunction() that expects a statement list.
+        // accept(body, visitor);
         accept(statements, visitor);
     }
 

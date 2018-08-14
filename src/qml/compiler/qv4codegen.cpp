@@ -160,6 +160,9 @@ void Codegen::generateFromModule(const QString &fileName,
             }
         }
         _module->importEntries = moduleContext->importEntries;
+
+        _module->moduleRequests = std::move(moduleContext->moduleRequests);
+        _module->moduleRequests.removeDuplicates();
     }
 
     std::sort(_module->localExportEntries.begin(), _module->localExportEntries.end(), ExportEntry::lessThan);

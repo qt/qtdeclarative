@@ -383,22 +383,9 @@ bool CompilationUnit::verifyChecksum(const DependentTypesHasher &dependencyHashe
 QStringList CompilationUnit::moduleRequests() const
 {
     QStringList requests;
-
-    for (uint i = 0; i < data->importEntryTableSize; ++i) {
-        const ImportEntry &entry = data->importEntryTable()[i];
-        requests << stringAt(entry.moduleRequest);
-    }
-
-    for (uint i = 0; i < data->indirectExportEntryTableSize; ++i) {
-        const ExportEntry &entry = data->indirectExportEntryTable()[i];
-        requests << stringAt(entry.moduleRequest);
-    }
-
-    for (uint i = 0; i < data->starExportEntryTableSize; ++i) {
-        const ExportEntry &entry = data->starExportEntryTable()[i];
-        requests << stringAt(entry.moduleRequest);
-    }
-
+    requests.reserve(data->moduleRequestTableSize);
+    for (uint i = 0; i < data->moduleRequestTableSize; ++i)
+        requests << stringAt(data->moduleRequestTable()[i]);
     return requests;
 }
 

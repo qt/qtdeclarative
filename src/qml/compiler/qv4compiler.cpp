@@ -260,6 +260,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(entry.importName);
             registerString(entry.localName);
         }
+
+        for (const QString &request: module->moduleRequests)
+            registerString(request);
     }
 
     Q_ALLOCA_VAR(quint32_le, blockClassAndFunctionOffsets, (module->functions.size() + module->classes.size() + module->blocks.size()) * sizeof(quint32_le));
@@ -350,6 +353,14 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             entryToWrite->importName = getStringId(entry.importName);
             entryToWrite->localName = getStringId(entry.localName);
             entryToWrite++;
+        }
+    }
+
+    {
+        quint32_le *moduleRequestEntryToWrite = reinterpret_cast<quint32_le *>(dataPtr + unit->offsetToModuleRequestTable);
+        for (const QString &moduleRequest: module->moduleRequests) {
+            *moduleRequestEntryToWrite = getStringId(moduleRequest);
+            moduleRequestEntryToWrite++;
         }
     }
 
@@ -608,6 +619,12 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.importEntryTableSize = module->importEntries.count();
     unit.offsetToImportEntryTable = nextOffset;
     nextOffset += unit.importEntryTableSize * sizeof(CompiledData::ImportEntry);
+    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+
+
+    unit.moduleRequestTableSize = module->moduleRequests.count();
+    unit.offsetToModuleRequestTable = nextOffset;
+    nextOffset += unit.moduleRequestTableSize * sizeof(uint);
     nextOffset = (nextOffset + 7) & ~quint32(0x7);
 
     quint32 functionSize = 0;
