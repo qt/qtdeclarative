@@ -781,16 +781,6 @@ built-ins/TypedArray/prototype/sort/return-same-instance.js fails
 built-ins/TypedArray/prototype/sort/sortcompare-with-no-tostring.js fails
 built-ins/TypedArray/prototype/sort/sorted-values-nan.js fails
 built-ins/TypedArray/prototype/sort/sorted-values.js fails
-built-ins/TypedArray/prototype/subarray/detached-buffer.js fails
-built-ins/TypedArray/prototype/subarray/length.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor-inherited.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-ctor.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-abrupt.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor-invocation.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor-returns-another-instance.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-custom-ctor.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species-use-default-ctor.js fails
-built-ins/TypedArray/prototype/subarray/speciesctor-get-species.js fails
 built-ins/TypedArrays/ctors/buffer-arg/custom-proto-access-throws.js fails
 built-ins/TypedArrays/ctors/buffer-arg/defined-negative-length.js fails
 built-ins/TypedArrays/ctors/buffer-arg/proto-from-ctor-realm.js fails

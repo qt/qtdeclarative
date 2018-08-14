@@ -1198,8 +1198,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
         return scope.engine->throwTypeError();
 
     Scoped<ArrayBuffer> buffer(scope, a->d()->buffer);
-    if (!buffer || buffer->isDetachedBuffer())
-        return scope.engine->throwTypeError();
+    Q_ASSERT(buffer);
 
     int len = a->length();
     double b = argc > 0 ? argv[0].toInteger() : 0;
@@ -1219,7 +1218,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
 
     int newLen = end - begin;
 
-    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
+    ScopedFunctionObject constructor(scope, a->speciesConstructor(scope, scope.engine->typedArrayCtors + a->d()->arrayType));
     if (!constructor)
         return scope.engine->throwTypeError();
 
@@ -1227,7 +1226,10 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_subarray(const FunctionObject
     arguments[0] = buffer;
     arguments[1] = Encode(a->d()->byteOffset + begin*a->d()->type->bytesPerElement);
     arguments[2] = Encode(newLen);
-    return constructor->callAsConstructor(arguments, 3);
+    a = constructor->callAsConstructor(arguments, 3);
+    if (!a || a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+    return a->asReturnedValue();
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -1350,7 +1352,7 @@ void IntrinsicTypedArrayPrototype::init(ExecutionEngine *engine, IntrinsicTypedA
     defineDefaultProperty(QStringLiteral("reverse"), method_reverse, 0);
     defineDefaultProperty(QStringLiteral("some"), method_some, 1);
     defineDefaultProperty(QStringLiteral("set"), method_set, 1);
-    defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 0);
+    defineDefaultProperty(QStringLiteral("subarray"), method_subarray, 2);
     defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString, 0);
     ScopedObject f(scope, engine->arrayPrototype()->get(engine->id_toString()));
     defineDefaultProperty(engine->id_toString(), f);
