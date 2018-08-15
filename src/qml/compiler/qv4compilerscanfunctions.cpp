@@ -306,7 +306,7 @@ bool ScanFunctions::visit(PatternElement *ast)
         checkName(QStringRef(&name), ast->identifierToken);
         if (name == QLatin1String("arguments"))
             _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-        if (ast->scope == VariableScope::Const && !ast->initializer && !ast->destructuringPattern()) {
+        if (ast->scope == VariableScope::Const && !ast->initializer && !ast->isForDeclaration && !ast->destructuringPattern()) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
             return false;
         }

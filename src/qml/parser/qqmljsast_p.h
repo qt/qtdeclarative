@@ -726,6 +726,7 @@ public:
     Type type = Literal;
     // when used in a VariableDeclarationList
     VariableScope scope = VariableScope::NoScope;
+    bool isForDeclaration = false;
 };
 
 class QML_PARSER_EXPORT PatternElementList : public Node

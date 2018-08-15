@@ -2059,11 +2059,8 @@ language/statements/const/function-local-use-before-initialization-in-prior-stat
 language/statements/const/global-closure-get-before-initialization.js fails
 language/statements/const/global-use-before-initialization-in-declaration-statement.js fails
 language/statements/const/global-use-before-initialization-in-prior-statement.js fails
-language/statements/const/syntax/const-invalid-assignment-statement-body-for-in.js fails
-language/statements/const/syntax/const-invalid-assignment-statement-body-for-of.js fails
 language/statements/do-while/tco-body.js strictFails
 language/statements/for-in/head-const-bound-names-fordecl-tdz.js fails
-language/statements/for-in/head-const-fresh-binding-per-iteration.js fails
 language/statements/for-in/head-let-bound-names-fordecl-tdz.js fails
 language/statements/for-in/head-lhs-let.js sloppyFails
 language/statements/for-in/head-var-bound-names-let.js sloppyFails
@@ -2107,7 +2104,6 @@ language/statements/for-of/generator-close-via-continue.js fails
 language/statements/for-of/generator-close-via-return.js fails
 language/statements/for-of/generator-close-via-throw.js fails
 language/statements/for-of/head-const-bound-names-fordecl-tdz.js fails
-language/statements/for-of/head-const-fresh-binding-per-iteration.js fails
 language/statements/for-of/head-let-bound-names-fordecl-tdz.js fails
 language/statements/for-of/head-var-bound-names-let.js sloppyFails
 language/statements/for-of/iterator-close-via-continue.js fails
