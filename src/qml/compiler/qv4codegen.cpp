@@ -816,7 +816,10 @@ bool Codegen::visit(ExportDeclaration *ast)
     }
 
     exportedValue.loadInAccumulator();
-    Reference defaultExportSlot = Reference::fromScopedLocal(this, 0, /*scope*/0);
+
+    const int defaultExportIndex = _context->locals.indexOf(_context->localNameForDefaultExport);
+    Q_ASSERT(defaultExportIndex != -1);
+    Reference defaultExportSlot = Reference::fromScopedLocal(this, defaultExportIndex, /*scope*/0);
     defaultExportSlot.storeConsumeAccumulator();
 
     return false;

@@ -1955,9 +1955,7 @@ language/module-code/instn-named-bndng-const.js strictFails
 language/module-code/instn-named-bndng-dflt-cls.js strictFails
 language/module-code/instn-named-bndng-dflt-expr.js strictFails
 language/module-code/instn-named-bndng-dflt-fun-anon.js strictFails
-language/module-code/instn-named-bndng-dflt-fun-named.js strictFails
 language/module-code/instn-named-bndng-dflt-gen-anon.js strictFails
-language/module-code/instn-named-bndng-dflt-gen-named.js strictFails
 language/module-code/instn-named-bndng-dflt-named.js strictFails
 language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/instn-named-bndng-let.js strictFails

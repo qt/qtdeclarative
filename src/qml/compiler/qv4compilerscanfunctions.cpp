@@ -170,6 +170,8 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             _context->moduleRequests << module;
     }
 
+    QString localNameForDefaultExport = QStringLiteral("*default*");
+
     if (declaration->exportAll) {
         Compiler::ExportEntry entry;
         entry.moduleRequest = declaration->fromClause->moduleSpecifier.toString();
@@ -209,25 +211,35 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             entry.localName = name;
             entry.exportName = name;
             _context->exportEntries << entry;
+            if (declaration->exportDefault)
+                localNameForDefaultExport = entry.localName;
         }
     } else if (auto *fdef = declaration->variableStatementOrDeclaration->asFunctionDefinition()) {
-        QString name = fdef->name.toString();
-        // Our parser gives `export default (function() {}` the name "default", which
-        // we don't want to export here.
-        if (!name.isEmpty() && name != QStringLiteral("default")) {
+        QString functionName;
+
+        // Only function definitions for which we enter their name into the local environment
+        // can result in exports. Nested expressions such as (function foo() {}) are not accessible
+        // as locals and can only be exported as default exports (further down).
+        auto ast = declaration->variableStatementOrDeclaration;
+        if (AST::cast<AST::ExpressionStatement*>(ast) || AST::cast<AST::FunctionDeclaration*>(ast))
+            functionName = fdef->name.toString();
+
+        if (!functionName.isEmpty()) {
             Compiler::ExportEntry entry;
-            entry.localName = name;
-            entry.exportName = name;
+            entry.localName = functionName;
+            entry.exportName = functionName;
             _context->exportEntries << entry;
+            if (declaration->exportDefault)
+                localNameForDefaultExport = entry.localName;
         }
     }
 
     if (declaration->exportDefault) {
         Compiler::ExportEntry entry;
-        entry.localName = QStringLiteral("*default*");
+        entry.localName = localNameForDefaultExport;
+        _context->localNameForDefaultExport = localNameForDefaultExport;
         entry.exportName = QStringLiteral("default");
         _context->exportEntries << entry;
-        _context->hasDefaultExport = true;
     }
 
     return true; // scan through potential assignment expression code, etc.

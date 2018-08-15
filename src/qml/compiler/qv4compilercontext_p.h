@@ -180,7 +180,7 @@ struct Context {
     QStringList moduleRequests;
     QVector<ImportEntry> importEntries;
     QVector<ExportEntry> exportEntries;
-    bool hasDefaultExport = false;
+    QString localNameForDefaultExport;
     QVector<Context *> nestedContexts;
 
     ControlFlow *controlFlow = nullptr;

@@ -295,9 +295,12 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     Q_ASSERT(nRegisters == 0);
     registerOffset = bytecodeGenerator->currentRegister();
 
-    if (contextType == ContextType::ESModule && hasDefaultExport) {
-        // allocate a local slot for the default export
-        locals.append(QStringLiteral("*default*"));
+    if (contextType == ContextType::ESModule && !localNameForDefaultExport.isEmpty()) {
+        if (!members.contains(localNameForDefaultExport)) {
+            // allocate a local slot for the default export, to be used in
+            // CodeGen::visit(ExportDeclaration*).
+            locals.append(localNameForDefaultExport);
+        }
     }
 
     switch (contextType) {
