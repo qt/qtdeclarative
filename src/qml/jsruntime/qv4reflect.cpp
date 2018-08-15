@@ -211,12 +211,32 @@ ReturnedValue Reflect::method_isExtensible(const FunctionObject *f, const Value 
 }
 
 
-ReturnedValue Reflect::method_ownKeys(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue Reflect::method_ownKeys(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     if (!argc || !argv[0].isObject())
         return f->engine()->throwTypeError();
 
-    return ObjectPrototype::method_getOwnPropertyNames(f, thisObject, argv, argc);
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    ScopedObject O(scope, argv[0].toObject(scope.engine));
+    if (!O)
+        return Encode::undefined();
+
+    ScopedArrayObject keys(scope, ObjectPrototype::getOwnPropertyNames(scope.engine, O));
+
+    Heap::InternalClass *ic = O->d()->internalClass;
+    ScopedValue n(scope);
+    for (uint i = 0; i < ic->size; ++i) {
+        PropertyKey id = ic->nameMap.at(i);
+        n = id.asStringOrSymbol();
+        if (!n || !n->isSymbol())
+            continue;
+        keys->push_back(n);
+    }
+    return keys->asReturnedValue();
+
 }
 
 ReturnedValue Reflect::method_preventExtensions(const FunctionObject *f, const Value *, const Value *argv, int argc)

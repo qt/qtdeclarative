@@ -692,7 +692,6 @@ built-ins/Proxy/set/trap-is-undefined-receiver.js fails
 built-ins/Proxy/setPrototypeOf/trap-is-not-callable-realm.js fails
 built-ins/Reflect/construct/newtarget-is-not-constructor-throws.js fails
 built-ins/Reflect/construct/return-with-newtarget-argument.js fails
-built-ins/Reflect/ownKeys/return-on-corresponding-order.js fails
 built-ins/Reflect/set/creates-a-data-descriptor.js fails
 built-ins/Reflect/set/different-property-descriptors.js fails
 built-ins/Reflect/set/receiver-is-not-object.js fails
@@ -1320,7 +1319,6 @@ built-ins/TypedArrays/internals/HasProperty/key-is-not-integer.js fails
 built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes-and-string-and-symbol-keys-.js fails
 built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes-and-string-keys.js fails
 built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes.js fails
-built-ins/TypedArrays/internals/OwnPropertyKeys/not-enumerable-keys.js fails
 built-ins/TypedArrays/internals/Set/detached-buffer-key-is-not-numeric-index.js fails
 built-ins/TypedArrays/internals/Set/detached-buffer-key-is-symbol.js fails
 built-ins/TypedArrays/internals/Set/detached-buffer-realm.js fails
