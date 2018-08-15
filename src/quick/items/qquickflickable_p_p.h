@@ -223,7 +223,6 @@ public:
     bool pixelAligned : 1;
     bool syncDrag : 1;
     QElapsedTimer timer;
-    QBasicTimer movementEndingTimer;
     qint64 lastPosTime;
     qint64 lastPressTime;
     QPointF lastPos;
