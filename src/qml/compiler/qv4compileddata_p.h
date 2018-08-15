@@ -1169,6 +1169,7 @@ public:
     QStringList moduleRequests() const;
     Heap::Module *instantiate(ExecutionEngine *engine);
     const Value *resolveExport(QV4::String *exportName);
+    QStringList exportedNames() const;
     void evaluate();
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
@@ -1202,6 +1203,7 @@ private:
 
     const Value *resolveExportRecursively(QV4::String *exportName, QVector<ResolveSetEntry> *resolveSet);
     const ExportEntry *lookupNameInExportTable(const ExportEntry *firstExportEntry, int tableSize, QV4::String *name) const;
+    void getExportedNamesRecursively(QStringList *names, QVector<const CompilationUnit *> *exportNameSet, bool includeDefaultExport = true) const;
 
     QString m_fileName; // initialized from data->sourceFileIndex
     QString m_finalUrlString; // initialized from data->finalUrlIndex

@@ -1700,7 +1700,7 @@ void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::Compilatio
     modules.insert(moduleUnit->finalUrl(), moduleUnit);
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, CompiledData::CompilationUnit *referrer)
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer)
 {
     QUrl url = QQmlTypeLoader::normalize(_url);
     if (referrer)

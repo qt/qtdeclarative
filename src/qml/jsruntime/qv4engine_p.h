@@ -582,7 +582,7 @@ public:
 
     QHash<QUrl, QQmlRefPointer<CompiledData::CompilationUnit>> modules;
     void injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit);
-    QQmlRefPointer<CompiledData::CompilationUnit> loadModule(const QUrl &_url, CompiledData::CompilationUnit *referrer = nullptr);
+    QQmlRefPointer<CompiledData::CompilationUnit> loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer = nullptr);
 #endif
 
 private:

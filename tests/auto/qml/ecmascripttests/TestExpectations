@@ -1969,8 +1969,6 @@ language/module-code/namespace/internals/get-str-found-uninit.js strictFails
 language/module-code/namespace/internals/object-hasOwnProperty-binding-uninit.js strictFails
 language/module-code/namespace/internals/object-keys-binding-uninit.js strictFails
 language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js strictFails
-language/module-code/namespace/internals/own-property-keys-binding-types.js strictFails
-language/module-code/namespace/internals/own-property-keys-sort.js strictFails
 language/statements/async-function/cptn-decl.js fails
 language/statements/async-function/declaration-returns-promise.js fails
 language/statements/async-function/evaluation-body.js fails

@@ -440,6 +440,17 @@ const Value *CompilationUnit::resolveExport(QV4::String *exportName)
     return resolveExportRecursively(exportName, &resolveSet);
 }
 
+QStringList CompilationUnit::exportedNames() const
+{
+    QStringList names;
+    QVector<const CompiledData::CompilationUnit*> exportNameSet;
+    getExportedNamesRecursively(&names, &exportNameSet);
+    names.sort();
+    auto last = std::unique(names.begin(), names.end());
+    names.erase(last, names.end());
+    return names;
+}
+
 const Value *CompilationUnit::resolveExportRecursively(QV4::String *exportName, QVector<ResolveSetEntry> *resolveSet)
 {
     if (!m_module)
@@ -510,6 +521,37 @@ const ExportEntry *CompilationUnit::lookupNameInExportTable(const ExportEntry *f
     if (matchingExport == lastExportEntry || stringAt(matchingExport->exportName) != name->toQString())
         return nullptr;
     return matchingExport;
+}
+
+void CompilationUnit::getExportedNamesRecursively(QStringList *names, QVector<const CompilationUnit*> *exportNameSet, bool includeDefaultExport) const
+{
+    if (exportNameSet->contains(this))
+        return;
+    exportNameSet->append(this);
+
+    const auto append = [names, includeDefaultExport](const QString &name) {
+        if (!includeDefaultExport && name == QLatin1String("default"))
+            return;
+        names->append(name);
+    };
+
+    for (uint i = 0; i < data->localExportEntryTableSize; ++i) {
+        const CompiledData::ExportEntry &entry = data->localExportEntryTable()[i];
+        append(stringAt(entry.exportName));
+    }
+
+    for (uint i = 0; i < data->indirectExportEntryTableSize; ++i) {
+        const CompiledData::ExportEntry &entry = data->indirectExportEntryTable()[i];
+        append(stringAt(entry.exportName));
+    }
+
+    for (uint i = 0; i < data->starExportEntryTableSize; ++i) {
+        const CompiledData::ExportEntry &entry = data->starExportEntryTable()[i];
+        auto dependentModuleUnit = engine->loadModule(QUrl(stringAt(entry.moduleRequest)), this);
+        if (!dependentModuleUnit)
+            return;
+        dependentModuleUnit->getExportedNamesRecursively(names, exportNameSet, /*includeDefaultExport*/false);
+    }
 }
 
 void CompilationUnit::evaluate()

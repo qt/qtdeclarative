@@ -162,7 +162,9 @@ bool Module::virtualDeleteProperty(Managed *m, PropertyKey id)
 
 struct ModuleNamespaceIterator : ObjectOwnPropertyKeyIterator
 {
-    uint exportIndex = 0;
+    QStringList exportedNames;
+    int exportIndex = 0;
+    ModuleNamespaceIterator(const QStringList &names) : exportedNames(names) {}
     ~ModuleNamespaceIterator() override = default;
     PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
 
@@ -171,23 +173,23 @@ struct ModuleNamespaceIterator : ObjectOwnPropertyKeyIterator
 PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
 {
     const Module *module = static_cast<const Module *>(o);
-    if (exportIndex < module->d()->unit->unitData()->localExportEntryTableSize) {
+    if (exportIndex < exportedNames.count()) {
         if (attrs)
             *attrs = Attr_Data;
-        if (pd) {
-            const CompiledData::ExportEntry &entry = module->d()->unit->unitData()->localExportEntryTable()[exportIndex];
-            Scope scope(module->engine());
-            ScopedString exportName(scope, module->d()->unit->runtimeStrings[entry.exportName]);
-            pd->value = *module->d()->unit->resolveExport(exportName);
-        }
+        Scope scope(module->engine());
+        ScopedString exportName(scope, scope.engine->newString(exportedNames.at(exportIndex)));
         exportIndex++;
+        if (pd)
+            pd->value = *module->d()->unit->resolveExport(exportName);
+        return exportName->toPropertyKey();
     }
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *o)
 {
-    return new ModuleNamespaceIterator;
+    const Module *module = static_cast<const Module *>(o);
+    return new ModuleNamespaceIterator(module->d()->unit->exportedNames());
 }
 
 Heap::Object *Module::virtualGetPrototypeOf(const Managed *)
