@@ -4237,6 +4237,14 @@ ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARA
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION ClassDeclaration_Default;
 /.
     case $rule_number: {
+        // Emulate 15.2.3.11
+        if (auto *cls = AST::cast<AST::ClassDeclaration*>(sym(5).Node)) {
+            if (cls->name.isEmpty()) {
+                cls->name = stringRef(2);
+                cls->identifierToken = loc(2);
+            }
+        }
+
         auto exportDeclaration = new (pool) AST::ExportDeclaration(/*exportDefault=*/true, sym(5).Node);
         exportDeclaration->exportToken = loc(1);
         sym(1).ExportDeclaration = exportDeclaration;
