@@ -376,7 +376,7 @@ void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardBut
     case QPlatformDialogHelper::Apply: emit applyClicked(); break;
     case QPlatformDialogHelper::Reset: emit resetClicked(); break;
     case QPlatformDialogHelper::RestoreDefaults: emit restoreDefaultsClicked(); break;
-    default: qmlWarning(this) << "unknown button" << button; break;
+    default: qmlWarning(this) << "unknown button" << int(button); break;
     }
 }
 
