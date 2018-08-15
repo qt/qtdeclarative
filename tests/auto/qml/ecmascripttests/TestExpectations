@@ -1963,7 +1963,6 @@ language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/instn-named-bndng-let.js strictFails
 language/module-code/namespace/internals/delete-exported-uninit.js strictFails
 language/module-code/namespace/internals/enumerate-binding-uninit.js strictFails
-language/module-code/namespace/internals/get-own-property-str-found-init.js strictFails
 language/module-code/namespace/internals/get-own-property-str-found-uninit.js strictFails
 language/module-code/namespace/internals/get-str-found-uninit.js strictFails
 language/module-code/namespace/internals/object-hasOwnProperty-binding-uninit.js strictFails

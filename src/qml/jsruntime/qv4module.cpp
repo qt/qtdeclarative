@@ -127,7 +127,7 @@ PropertyAttributes Module::virtualGetOwnProperty(Managed *m, PropertyKey id, Pro
     }
     if (p)
         p->value = v->asReturnedValue();
-    return Attr_Data;
+    return Attr_Data | Attr_NotConfigurable;
 }
 
 bool Module::virtualPreventExtensions(Managed *)
