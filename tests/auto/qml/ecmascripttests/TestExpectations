@@ -18,6 +18,12 @@ language/statements/labeled/let-identifier-with-newline.js sloppyFails
 language/statements/while/let-identifier-with-newline.js sloppyFails
 language/statements/with/let-identifier-with-newline.js sloppyFails
 
+# The ES6/7 spec says that [[DefineOwnProperty]] on the module namespace exotic object
+# always returns false. This was changed in https://github.com/tc39/ecma262/pull/858
+# but it's not in the published spec yet.
+language/module-code/namespace/internals/define-own-property.js strictFails
+# This test includes the above and therefore also fails.
+language/module-code/namespace/internals/set.js strictFails
 
 # ----- test failures that should be fixed
 built-ins/Array/from/iter-cstm-ctor-err.js fails
@@ -1957,7 +1963,6 @@ language/module-code/instn-named-bndng-dflt-gen-named.js strictFails
 language/module-code/instn-named-bndng-dflt-named.js strictFails
 language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/instn-named-bndng-let.js strictFails
-language/module-code/namespace/internals/define-own-property.js strictFails
 language/module-code/namespace/internals/delete-exported-uninit.js strictFails
 language/module-code/namespace/internals/enumerate-binding-uninit.js strictFails
 language/module-code/namespace/internals/get-own-property-str-found-init.js strictFails
@@ -1968,7 +1973,6 @@ language/module-code/namespace/internals/object-keys-binding-uninit.js strictFai
 language/module-code/namespace/internals/object-propertyIsEnumerable-binding-uninit.js strictFails
 language/module-code/namespace/internals/own-property-keys-binding-types.js strictFails
 language/module-code/namespace/internals/own-property-keys-sort.js strictFails
-language/module-code/namespace/internals/set.js strictFails
 language/statements/async-function/cptn-decl.js fails
 language/statements/async-function/declaration-returns-promise.js fails
 language/statements/async-function/evaluation-body.js fails
