@@ -3483,9 +3483,8 @@ FunctionDeclaration_Default: FunctionDeclaration;
 FunctionDeclaration_Default: Function T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
         node->functionToken = loc(1);
-        node->identifierToken = loc(1);
         node->lparenToken = loc(2);
         node->rparenToken = loc(4);
         node->lbraceToken = loc(5);
@@ -3766,9 +3765,8 @@ GeneratorDeclaration_Default: GeneratorDeclaration;
 GeneratorDeclaration_Default: Function T_STAR GeneratorLParen FormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(1), sym(4).FormalParameterList, sym(7).StatementList);
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(4).FormalParameterList, sym(7).StatementList);
         node->functionToken = loc(1);
-        node->identifierToken = loc(1);
         node->lparenToken = loc(3);
         node->rparenToken = loc(5);
         node->lbraceToken = loc(6);
@@ -4226,7 +4224,16 @@ ExportDeclaration: T_EXPORT Declaration;
     } break;
 ./
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION HoistableDeclaration_Default;
-/. case $rule_number:  Q_FALLTHROUGH(); ./
+/.
+    case $rule_number: {
+        if (auto *f = AST::cast<AST::FunctionDeclaration*>(sym(5).Node)) {
+            if (f->name.isEmpty()) {
+                f->name = stringRef(2);
+                f->identifierToken = loc(2);
+            }
+        }
+    } Q_FALLTHROUGH();
+./
 ExportDeclaration: T_EXPORT T_DEFAULT ExportDeclarationLookahead T_FORCE_DECLARATION ClassDeclaration_Default;
 /.
     case $rule_number: {
