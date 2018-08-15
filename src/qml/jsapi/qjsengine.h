@@ -69,6 +69,8 @@ public:
 
     QJSValue evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
 
+    QJSValue importModule(const QString &fileName);
+
     QJSValue newObject();
     QJSValue newArray(uint length = 0);
 

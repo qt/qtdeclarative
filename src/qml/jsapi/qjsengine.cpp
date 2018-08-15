@@ -52,6 +52,7 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4stackframe_p.h>
+#include <private/qv4module_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -479,6 +480,54 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QJSValue retval(v4, result->asReturnedValue());
 
     return retval;
+}
+
+static QUrl moduleUrlForFileName(const QString &fileName)
+{
+    QString absolutePath = QFileInfo(fileName).canonicalFilePath();
+    if (!absolutePath.startsWith(QLatin1Char(':')))
+        return QUrl::fromLocalFile(absolutePath);
+
+    absolutePath.remove(0, 1);
+    QUrl url;
+    url.setPath(absolutePath);
+    url.setScheme(QLatin1String("qrc"));
+    return url;
+}
+
+/*!
+    Imports the module located at \a fileName and returns a module namespace object that
+    contains all exported variables, constants and functions as properties.
+
+    If this is the first time the module is imported in the engine, the file is loaded
+    from the specified location in either the local file system or the Qt resource system
+    and evaluated as an ECMAScript module. The file is expected to be encoded in UTF-8 text.
+
+    Subsequent imports of the same module will return the previously imported instance. Modules
+    are singletons and remain around until the engine is destroyed.
+
+    The specified \a fileName will internally be normalized using \a QFileInfo::canonicalFilePath().
+    That means that multiple imports of the same file on disk using different relative paths will
+    load the file only once.
+
+    \note If an exception is thrown during the loading of the module, the return value
+    will be the exception (typically an \c{Error} object; see QJSValue::isError()).
+
+    \since 5.12
+ */
+QJSValue QJSEngine::importModule(const QString &fileName)
+{
+    const QUrl url = moduleUrlForFileName(fileName);
+    auto moduleUnit = m_v4Engine->loadModule(url);
+    if (m_v4Engine->hasException)
+        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+
+    QV4::Scope scope(m_v4Engine);
+    QV4::Scoped<QV4::Module> moduleNamespace(scope, moduleUnit->instantiate(m_v4Engine));
+    if (m_v4Engine->hasException)
+        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+    moduleUnit->evaluate();
+    return QJSValue(m_v4Engine, moduleNamespace->asReturnedValue());
 }
 
 /*!

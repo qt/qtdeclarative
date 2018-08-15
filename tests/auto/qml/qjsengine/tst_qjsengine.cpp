@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <private/qv4alloca_p.h>
 #include <private/qjsvalue_p.h>
+#include <QScopeGuard>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -222,6 +223,9 @@ private slots:
 
     void throwError();
     void mathMinMax();
+
+    void importModule();
+    void importModuleRelative();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod();
@@ -4337,6 +4341,53 @@ void tst_QJSEngine::mathMinMax()
     QCOMPARE(result.toNumber(), 4.0);
     QVERIFY(QJSValuePrivate::getValue(&result) != nullptr);
     QVERIFY(QJSValuePrivate::getValue(&result)->isInteger());
+}
+
+void tst_QJSEngine::importModule()
+{
+    // This is just a basic test for the API. Primary test coverage is via the ES test suite.
+    QJSEngine engine;
+    QJSValue ns = engine.importModule(QStringLiteral(":/testmodule.mjs"));
+    QCOMPARE(ns.property("value").toInt(), 42);
+    ns.property("sideEffect").call();
+
+    // Make sure that importing a second time will return the same instance.
+    QJSValue secondNamespace = engine.importModule(QStringLiteral(":/testmodule.mjs"));
+    QCOMPARE(secondNamespace.property("value").toInt(), 43);
+}
+
+void tst_QJSEngine::importModuleRelative()
+{
+    const QString oldWorkingDirectory = QDir::currentPath();
+    auto workingDirectoryGuard = qScopeGuard([oldWorkingDirectory]{
+        QDir::setCurrent(oldWorkingDirectory);
+    });
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    QDir::setCurrent(tempDir.path());
+
+    {
+        QFile f(QStringLiteral("relativemodule.mjs"));
+        QVERIFY(f.open(QIODevice::WriteOnly|QIODevice::Truncate));
+        f.write(QByteArrayLiteral("var value = 100; export { value }; export function change() { value = value + 1 }"));
+    }
+
+    QJSEngine engine;
+
+    {
+        QJSValue module = engine.importModule(QStringLiteral("relativemodule.mjs"));
+        QVERIFY2(!module.isError(), qPrintable(module.toString()));
+        QCOMPARE(module.property("value").toInt(), 100);
+
+        module.property("change").call();
+    }
+
+    {
+        QJSValue sameModule = engine.importModule(tempDir.filePath(QStringLiteral("relativemodule.mjs")));
+        QVERIFY2(!sameModule.isError(), qPrintable(sameModule.toString()));
+        QCOMPARE(sameModule.property("value").toInt(), 101);
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)

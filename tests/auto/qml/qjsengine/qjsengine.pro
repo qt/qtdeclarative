@@ -4,5 +4,6 @@ QT +=  qml qml-private widgets testlib gui-private
 macx:CONFIG -= app_bundle
 SOURCES += tst_qjsengine.cpp
 RESOURCES += qjsengine.qrc
+RESOURCES += testmodule.mjs
 
 TESTDATA = script/*
