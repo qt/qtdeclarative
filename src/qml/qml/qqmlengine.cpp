@@ -2106,6 +2106,25 @@ void QQmlEnginePrivate::warning(QQmlEnginePrivate *engine, const QList<QQmlError
         dumpwarning(error);
 }
 
+QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(const QString &fileName, const QList<DiagnosticMessage> &diagnosticMessages)
+{
+    QList<QQmlError> errors;
+    for (const DiagnosticMessage &m : diagnosticMessages) {
+        if (m.isWarning()) {
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
+            continue;
+        }
+
+        QQmlError error;
+        error.setUrl(QUrl(fileName));
+        error.setDescription(m.message);
+        error.setLine(m.loc.startLine);
+        error.setColumn(m.loc.startColumn);
+        errors << error;
+    }
+    return errors;
+}
+
 void QQmlEnginePrivate::cleanupScarceResources()
 {
     // iterate through the list and release them all.

@@ -185,23 +185,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
 
     parser.parseProgram();
 
-    QList<QQmlError> errors;
-
-    const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const DiagnosticMessage &m : diagnosticMessages) {
-        if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
-            continue;
-        }
-
-        QQmlError error;
-        error.setUrl(QUrl(fileName));
-        error.setDescription(m.message);
-        error.setLine(m.loc.startLine);
-        error.setColumn(m.loc.startColumn);
-        errors << error;
-    }
-
+    QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(fileName, parser.diagnosticMessages());
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;

@@ -619,7 +619,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     if (!node->fileName.isNull()) {
         uri = node->fileName.toString();
 
-        if (uri.endsWith(QLatin1String(".js"))) {
+        if (uri.endsWith(QLatin1String(".js")) || uri.endsWith(QLatin1String(".mjs"))) {
             import->type = QV4::CompiledData::Import::ImportScript;
         } else {
             import->type = QV4::CompiledData::Import::ImportFile;

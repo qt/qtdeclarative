@@ -589,6 +589,7 @@ private:
 
     QList<ScriptReference> m_scripts;
     QQmlRefPointer<QQmlScriptData> m_scriptData;
+    const bool m_isModule;
 };
 
 class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob

@@ -245,6 +245,8 @@ public:
     inline static QQmlEngine *get(QQmlEnginePrivate *p);
     inline static QQmlEnginePrivate *get(QV4::ExecutionEngine *e);
 
+    static QList<QQmlError> qmlErrorFromDiagnostics(const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages);
+
     static void registerBaseTypes(const char *uri, int versionMajor, int versionMinor);
     static void registerQtQuick2Types(const char *uri, int versionMajor, int versionMinor);
     static void defineQtQuick2Module();

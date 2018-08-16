@@ -580,8 +580,10 @@ public:
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode);
     static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 
+    mutable QMutex moduleMutex;
     QHash<QUrl, QQmlRefPointer<CompiledData::CompilationUnit>> modules;
     void injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit);
+    QQmlRefPointer<CompiledData::CompilationUnit> moduleForUrl(const QUrl &_url, const CompiledData::CompilationUnit *referrer = nullptr) const;
     QQmlRefPointer<CompiledData::CompilationUnit> loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer = nullptr);
 #endif
 

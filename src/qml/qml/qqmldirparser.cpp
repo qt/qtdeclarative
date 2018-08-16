@@ -272,7 +272,7 @@ bool QQmlDirParser::parse(const QString &source)
             if (parseVersion(sections[1], &major, &minor)) {
                 const QString &fileName = sections[2];
 
-                if (fileName.endsWith(QLatin1String(".js"))) {
+                if (fileName.endsWith(QLatin1String(".js")) || fileName.endsWith(QLatin1String(".mjs"))) {
                     // A 'js' extension indicates a namespaced script import
                     const Script entry(sections[0], fileName, major, minor);
                     _scripts.append(entry);

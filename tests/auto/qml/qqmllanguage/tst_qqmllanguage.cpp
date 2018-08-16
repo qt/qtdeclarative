@@ -39,6 +39,7 @@
 #include <QQmlFileSelector>
 #include <QFileSelector>
 #include <QEasingCurve>
+#include <QScopeGuard>
 
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlmetatype_p.h>
@@ -182,6 +183,8 @@ private slots:
     void importIncorrectCase();
     void importJs_data();
     void importJs();
+    void importJsModule_data();
+    void importJsModule();
     void explicitSelfImport();
     void importInternalType();
 
@@ -3123,6 +3126,36 @@ void tst_qqmllanguage::importJs()
     }
 
     engine.setImportPathList(defaultImportPathList);
+}
+
+void tst_qqmllanguage::importJsModule_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QTest::newRow("plainImport")
+        << "importJsModule.1.qml";
+
+    QTest::newRow("ImportQmlStyle")
+        << "importJsModule.2.qml";
+
+    QTest::newRow("plainImportWithCycle")
+        << "importJsModule.3.qml";
+}
+
+void tst_qqmllanguage::importJsModule()
+{
+    QFETCH(QString, file);
+
+    engine.setImportPathList(QStringList(defaultImportPathList) << testFile("lib"));
+    auto importPathGuard = qScopeGuard([this]{
+        engine.setImportPathList(defaultImportPathList);
+    });
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QCOMPARE(object->property("test").toBool(),true);
 }
 
 void tst_qqmllanguage::explicitSelfImport()

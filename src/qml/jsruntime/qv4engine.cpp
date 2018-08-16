@@ -1682,6 +1682,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(boo
 
     using namespace QV4::Compiler;
     Compiler::Module compilerModule(debugMode);
+    compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
     JSUnitGenerator jsGenerator(&compilerModule);
     Codegen cg(&jsGenerator, /*strictMode*/true);
     cg.generateFromModule(url.fileName(), url.toString(), sourceCode, moduleNode, &compilerModule);
@@ -1697,7 +1698,23 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(boo
 
 void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit)
 {
+    // Injection can happen from the QML type loader thread for example, but instantiation and
+    // evaluation must be limited to the ExecutionEngine's thread.
+    QMutexLocker moduleGuard(&moduleMutex);
     modules.insert(moduleUnit->finalUrl(), moduleUnit);
+}
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::moduleForUrl(const QUrl &_url, const CompiledData::CompilationUnit *referrer) const
+{
+    QUrl url = QQmlTypeLoader::normalize(_url);
+    if (referrer)
+        url = referrer->finalUrl().resolved(url);
+
+    QMutexLocker moduleGuard(&moduleMutex);
+    auto existingModule = modules.find(url);
+    if (existingModule == modules.end())
+        return nullptr;
+    return *existingModule;
 }
 
 QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const QUrl &_url, const CompiledData::CompilationUnit *referrer)
@@ -1706,13 +1723,18 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::loadModule(const 
     if (referrer)
         url = referrer->finalUrl().resolved(url);
 
+    QMutexLocker moduleGuard(&moduleMutex);
     auto existingModule = modules.find(url);
     if (existingModule != modules.end())
         return *existingModule;
 
+    moduleGuard.unlock();
+
     auto newModule = compileModule(url);
-    if (newModule)
+    if (newModule) {
+        moduleGuard.relock();
         modules.insert(url, newModule);
+    }
 
     return newModule;
 }

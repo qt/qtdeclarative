@@ -51,6 +51,7 @@
 #include <private/qqmltypecompiler_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qv4module_p.h>
 
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
@@ -2855,8 +2856,19 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
         return m_value.value();
 
     Q_ASSERT(parentCtxt && parentCtxt->engine);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
     QV4::ExecutionEngine *v4 = parentCtxt->engine->handle();
+
+    if (m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsESModule) {
+        m_loaded = true;
+
+        m_value.set(v4, m_precompiledScript->instantiate(v4));
+        if (!m_value.isNullOrUndefined())
+            m_precompiledScript->evaluate();
+
+        return m_value.value();
+    }
+
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
     QV4::Scope scope(v4);
 
     bool shared = m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsSharedLibrary;
@@ -2945,7 +2957,8 @@ void QQmlScriptData::clear()
 }
 
 QQmlScriptBlob::QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *loader)
-: QQmlTypeLoader::Blob(url, JavaScriptFile, loader)
+    : QQmlTypeLoader::Blob(url, JavaScriptFile, loader)
+    , m_isModule(url.path().endsWith(QLatin1String(".mjs")))
 {
 }
 
@@ -2979,9 +2992,6 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
 
-    QmlIR::Document irUnit(isDebugging());
-
-    irUnit.jsModule.sourceTimeStamp = data.sourceTimeStamp();
     QString error;
     QString source = data.readAll(&error);
     if (!error.isEmpty()) {
@@ -2989,31 +2999,47 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         return;
     }
 
-    QmlIR::ScriptDirectivesCollector collector(&irUnit);
-    irUnit.jsParserEngine.setDirectives(&collector);
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
 
-    QList<QQmlError> errors;
-    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit = QV4::Script::precompile(
-                &irUnit.jsModule, &irUnit.jsParserEngine, &irUnit.jsGenerator, urlString(), finalUrlString(),
-                source, &errors);
-    // No need to addref on unit, it's initial refcount is 1
-    source.clear();
-    if (!errors.isEmpty()) {
-        setError(errors);
-        return;
-    }
-    if (!unit) {
-        unit.adopt(new QV4::CompiledData::CompilationUnit);
-    }
-    irUnit.javaScriptCompilationUnit = unit;
+    if (m_isModule) {
+        QList<QQmlJS::DiagnosticMessage> diagnostics;
+        unit = QV4::ExecutionEngine::compileModule(isDebugging(), url(), source, &diagnostics);
+        QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(urlString(), diagnostics);
+        if (!errors.isEmpty()) {
+            setError(errors);
+            return;
+        }
+    } else {
+        QmlIR::Document irUnit(isDebugging());
 
-    QmlIR::QmlUnitGenerator qmlGenerator;
-    qmlGenerator.generate(irUnit);
+        irUnit.jsModule.sourceTimeStamp = data.sourceTimeStamp();
 
-    if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
-        QString errorString;
-        if (!unit->saveToDisk(url(), &errorString)) {
-            qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->fileName() << "to disk:" << errorString;
+        QmlIR::ScriptDirectivesCollector collector(&irUnit);
+        irUnit.jsParserEngine.setDirectives(&collector);
+
+        QList<QQmlError> errors;
+        unit = QV4::Script::precompile(
+                    &irUnit.jsModule, &irUnit.jsParserEngine, &irUnit.jsGenerator, urlString(), finalUrlString(),
+                    source, &errors);
+        // No need to addref on unit, it's initial refcount is 1
+        source.clear();
+        if (!errors.isEmpty()) {
+            setError(errors);
+            return;
+        }
+        if (!unit) {
+            unit.adopt(new QV4::CompiledData::CompilationUnit);
+        }
+        irUnit.javaScriptCompilationUnit = unit;
+
+        QmlIR::QmlUnitGenerator qmlGenerator;
+        qmlGenerator.generate(irUnit);
+
+        if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
+            QString errorString;
+            if (!unit->saveToDisk(url(), &errorString)) {
+                qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->fileName() << "to disk:" << errorString;
+            }
         }
     }
 
@@ -3049,26 +3075,28 @@ void QQmlScriptBlob::done()
         }
     }
 
-    m_scriptData->typeNameCache = new QQmlTypeNameCache(m_importCache);
+    if (!m_isModule) {
+        m_scriptData->typeNameCache = new QQmlTypeNameCache(m_importCache);
 
-    QSet<QString> ns;
+        QSet<QString> ns;
 
-    for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
-        const ScriptReference &script = m_scripts.at(scriptIndex);
+        for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
+            const ScriptReference &script = m_scripts.at(scriptIndex);
 
-        m_scriptData->scripts.append(script.script);
+            m_scriptData->scripts.append(script.script);
 
-        if (!script.nameSpace.isNull()) {
-            if (!ns.contains(script.nameSpace)) {
-                ns.insert(script.nameSpace);
-                m_scriptData->typeNameCache->add(script.nameSpace);
+            if (!script.nameSpace.isNull()) {
+                if (!ns.contains(script.nameSpace)) {
+                    ns.insert(script.nameSpace);
+                    m_scriptData->typeNameCache->add(script.nameSpace);
+                }
             }
+            m_scriptData->typeNameCache->add(script.qualifier, scriptIndex, script.nameSpace);
         }
-        m_scriptData->typeNameCache->add(script.qualifier, scriptIndex, script.nameSpace);
+
+        m_importCache.populateCache(m_scriptData->typeNameCache);
     }
     m_scripts.clear();
-
-    m_importCache.populateCache(m_scriptData->typeNameCache);
 }
 
 QString QQmlScriptBlob::stringAt(int index) const
@@ -3099,19 +3127,35 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Com
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> script = m_scriptData->m_precompiledScript;
 
-    QList<QQmlError> errors;
-    for (quint32 i = 0, count = script->importCount(); i < count; ++i) {
-        const QV4::CompiledData::Import *import = script->importAt(i);
-        if (!addImport(import, &errors)) {
-           Q_ASSERT(errors.size());
-            QQmlError error(errors.takeFirst());
-            error.setUrl(m_importCache.baseUrl());
-            error.setLine(import->location.line);
-            error.setColumn(import->location.column);
-            errors.prepend(error); // put it back on the list after filling out information.
-            setError(errors);
-            return;
+    if (!m_isModule) {
+        QList<QQmlError> errors;
+        for (quint32 i = 0, count = script->importCount(); i < count; ++i) {
+            const QV4::CompiledData::Import *import = script->importAt(i);
+            if (!addImport(import, &errors)) {
+                Q_ASSERT(errors.size());
+                QQmlError error(errors.takeFirst());
+                error.setUrl(m_importCache.baseUrl());
+                error.setLine(import->location.line);
+                error.setColumn(import->location.column);
+                errors.prepend(error); // put it back on the list after filling out information.
+                setError(errors);
+                return;
+            }
         }
+    }
+
+    auto *v4 = QQmlEnginePrivate::getV4Engine(typeLoader()->engine());
+
+    v4->injectModule(unit);
+
+    for (const QString &request: unit->moduleRequests()) {
+        if (v4->moduleForUrl(QUrl(request), unit.data()))
+            continue;
+
+        const QUrl absoluteRequest = unit->finalUrl().resolved(QUrl(request));
+        QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(absoluteRequest);
+        addDependency(blob.data());
+        scriptImported(blob, /* ### */QV4::CompiledData::Location(), /*qualifier*/QString(), /*namespace*/QString());
     }
 }
 
