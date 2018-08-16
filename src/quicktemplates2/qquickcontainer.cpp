@@ -334,6 +334,21 @@ void QQuickContainerPrivate::reorderItems()
     }
 }
 
+// Helper function needed for derived classes such as QQuickMenuBarPrivate.
+void QQuickContainerPrivate::addObject(QObject *obj)
+{
+    Q_Q(QQuickContainer);
+    QQuickItem *item = qobject_cast<QQuickItem *>(obj);
+    if (item) {
+        if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
+            item->setParentItem(effectiveContentItem(contentItem));
+        else if (contentModel->indexOf(item, nullptr) == -1)
+            q->addItem(item);
+    } else {
+        contentData.append(obj);
+    }
+}
+
 void QQuickContainerPrivate::_q_currentIndexChanged()
 {
     Q_Q(QQuickContainer);
@@ -375,15 +390,7 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     QQuickContainerPrivate *p = QQuickContainerPrivate::get(q);
-    QQuickItem *item = qobject_cast<QQuickItem *>(obj);
-    if (item) {
-        if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
-            item->setParentItem(effectiveContentItem(p->contentItem));
-        else if (p->contentModel->indexOf(item, nullptr) == -1)
-            q->addItem(item);
-    } else {
-        p->contentData.append(obj);
-    }
+    p->addObject(obj);
 }
 
 int QQuickContainerPrivate::contentData_count(QQmlListProperty<QObject> *prop)

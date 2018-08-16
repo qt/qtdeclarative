@@ -66,6 +66,8 @@ public:
         return menuBar->d_func();
     }
 
+    void createItems();
+
     QQuickItem *beginCreateItem();
     void completeCreateItem();
 
