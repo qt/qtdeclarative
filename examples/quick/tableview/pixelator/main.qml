@@ -51,7 +51,6 @@
 import QtQuick 2.12
 
 import QtQuick.Window 2.12
-import Qt.labs.tableview 1.0
 
 import ImageModel 1.0
 

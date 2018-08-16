@@ -64,6 +64,9 @@
 #if QT_CONFIG(quick_pathview)
 #include "qquickpathview_p.h"
 #endif
+#if QT_CONFIG(quick_tableview)
+#include "qquicktableview_p.h"
+#endif
 #if QT_CONFIG(quick_viewtransitions)
 #include "qquickitemviewtransition_p.h"
 #endif
@@ -464,6 +467,9 @@ static void qt_quickitems_defineModule(const char *uri, int major, int minor)
     qmlRegisterType<QQuickGradient, 12>(uri, 2, 12, "Gradient");
     qmlRegisterType<QQuickFlickable, 12>(uri, 2, 12, "Flickable");
     qmlRegisterType<QQuickText, 12>(uri, 2, 12, "Text");
+#if QT_CONFIG(quick_tableview)
+    qmlRegisterType<QQuickTableView>(uri, 2, 12, "TableView");
+#endif
 }
 
 static void initResources()
