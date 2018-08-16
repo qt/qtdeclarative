@@ -542,6 +542,8 @@ public:
 
     QV4::ReturnedValue scriptValueForContext(QQmlContextData *parentCtxt);
 
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit() const { return m_precompiledScript; }
+
 protected:
     void clear() override; // From QQmlCleanup
 

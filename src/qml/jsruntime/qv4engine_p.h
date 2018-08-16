@@ -577,8 +577,8 @@ public:
 
 #ifndef V4_BOOTSTRAP
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url);
-    QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode);
-    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, QList<QQmlJS::DiagnosticMessage> *diagnostics);
+    QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
+    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 
     mutable QMutex moduleMutex;
     QHash<QUrl, QQmlRefPointer<CompiledData::CompilationUnit>> modules;

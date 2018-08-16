@@ -3003,7 +3003,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     if (m_isModule) {
         QList<QQmlJS::DiagnosticMessage> diagnostics;
-        unit = QV4::ExecutionEngine::compileModule(isDebugging(), url(), source, &diagnostics);
+        unit = QV4::ExecutionEngine::compileModule(isDebugging(), url(), source, data.sourceTimeStamp(), &diagnostics);
         QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(urlString(), diagnostics);
         if (!errors.isEmpty()) {
             setError(errors);
@@ -3034,12 +3034,17 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
         QmlIR::QmlUnitGenerator qmlGenerator;
         qmlGenerator.generate(irUnit);
+    }
 
-        if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
-            QString errorString;
-            if (!unit->saveToDisk(url(), &errorString)) {
-                qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->fileName() << "to disk:" << errorString;
+    if ((!disableDiskCache() || forceDiskCache()) && !isDebugging()) {
+        QString errorString;
+        if (unit->saveToDisk(url(), &errorString)) {
+            QString error;
+            if (!unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
+                // ignore error, keep using the in-memory compilation unit.
             }
+        } else {
+            qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of" << unit->fileName() << "to disk:" << errorString;
         }
     }
 

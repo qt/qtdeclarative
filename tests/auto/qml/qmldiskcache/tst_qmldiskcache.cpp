@@ -33,6 +33,7 @@
 #include <private/qv8engine_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4codegen_p.h>
+#include <private/qqmlcomponent_p.h>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQmlFileSelector>
@@ -60,6 +61,7 @@ private slots:
     void stableOrderOfDependentCompositeTypes();
     void singletonDependency();
     void cppRegisteredSingletonDependency();
+    void cacheModuleScripts();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -883,6 +885,51 @@ void tst_qmldiskcache::cppRegisteredSingletonDependency()
         QVariant value;
         QVERIFY(QMetaObject::invokeMethod(obj.data(), "getValue", Q_RETURN_ARG(QVariant, value)));
         QCOMPARE(value.toInt(), 100);
+    }
+}
+
+void tst_qmldiskcache::cacheModuleScripts()
+{
+    const QString cacheDirectory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    QVERIFY(QDir::root().mkpath(cacheDirectory));
+
+    const QString qmlCacheDirectory = cacheDirectory + QLatin1String("/qmlcache/");
+    QVERIFY(QDir(qmlCacheDirectory).removeRecursively());
+    QVERIFY(QDir::root().mkpath(qmlCacheDirectory));
+    QVERIFY(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot).isEmpty());
+
+
+    QQmlEngine engine;
+
+    {
+        CleanlyLoadingComponent component(&engine, QUrl("qrc:/importmodule.qml"));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QVERIFY(obj->property("ok").toBool());
+
+        auto componentPrivate = QQmlComponentPrivate::get(&component);
+        QVERIFY(componentPrivate);
+        auto compilationUnit = componentPrivate->compilationUnit->dependentScripts.first()->compilationUnit();
+        QVERIFY(compilationUnit);
+        auto unitData = compilationUnit->unitData();
+        QVERIFY(unitData);
+        QVERIFY(unitData->flags & QV4::CompiledData::Unit::StaticData);
+        QVERIFY(unitData->flags & QV4::CompiledData::Unit::IsESModule);
+        QVERIFY(!compilationUnit->backingFile.isNull());
+    }
+
+    const QStringList entries = QDir(qmlCacheDirectory).entryList(QStringList("*.mjsc"), QDir::NoDotAndDotDot | QDir::Files);
+    QCOMPARE(entries.count(), 1);
+
+    QDateTime cacheFileTimeStamp;
+
+    {
+        QFile cacheFile(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst());
+        QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
+        QV4::CompiledData::Unit unit;
+        QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
+
+        QVERIFY(unit.flags & QV4::CompiledData::Unit::IsESModule);
     }
 }
 

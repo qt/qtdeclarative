@@ -1633,17 +1633,19 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
         return nullptr;
     }
 
+    const QDateTime timeStamp = QFileInfo(f).lastModified();
+
     const QString sourceCode = QString::fromUtf8(f.readAll());
     f.close();
 
-    return compileModule(url, sourceCode);
+    return compileModule(url, sourceCode, timeStamp);
 }
 
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url, const QString &sourceCode)
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp)
 {
     QList<QQmlJS::DiagnosticMessage> diagnostics;
-    auto unit = compileModule(/*debugMode*/debugger() != nullptr, url, sourceCode, &diagnostics);
+    auto unit = compileModule(/*debugMode*/debugger() != nullptr, url, sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
             throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
@@ -1656,7 +1658,8 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
     return unit;
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, QList<QQmlJS::DiagnosticMessage> *diagnostics)
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(bool debugMode, const QUrl &url, const QString &sourceCode,
+                                                                             const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
     QQmlJS::Engine ee;
     QQmlJS::Lexer lexer(&ee);
@@ -1683,9 +1686,10 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(boo
     using namespace QV4::Compiler;
     Compiler::Module compilerModule(debugMode);
     compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
+    compilerModule.sourceTimeStamp = sourceTimeStamp;
     JSUnitGenerator jsGenerator(&compilerModule);
     Codegen cg(&jsGenerator, /*strictMode*/true);
-    cg.generateFromModule(url.fileName(), url.toString(), sourceCode, moduleNode, &compilerModule);
+    cg.generateFromModule(url.toString(), url.toString(), sourceCode, moduleNode, &compilerModule);
     auto errors = cg.errors();
     if (diagnostics)
         *diagnostics << errors;
