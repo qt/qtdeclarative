@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -72,9 +72,6 @@ QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
 {
     // Tell QQuickPointerDeviceHandler::wantsPointerEvent() to ignore button state
     d_func()->acceptedButtons = Qt::NoButton;
-    // Rule out the touchscreen for now (can be overridden in QML in case a hover-detecting touchscreen exists)
-    setAcceptedDevices(static_cast<QQuickPointerDevice::DeviceType>(
-        static_cast<int>(QQuickPointerDevice::AllDevices) ^ static_cast<int>(QQuickPointerDevice::TouchScreen)));
 }
 
 QQuickHoverHandler::~QQuickHoverHandler()
@@ -103,7 +100,11 @@ bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
 void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
 {
-    setHovered(true);
+    bool hovered = true;
+    if (point->state() == QQuickEventPoint::Released &&
+            point->pointerEvent()->device()->pointerType() == QQuickPointerDevice::Finger)
+        hovered = false;
+    setHovered(hovered);
     setPassiveGrab(point);
 }
 
