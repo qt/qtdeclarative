@@ -3003,7 +3003,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     if (m_isModule) {
         QList<QQmlJS::DiagnosticMessage> diagnostics;
-        unit = QV4::ExecutionEngine::compileModule(isDebugging(), url(), source, data.sourceTimeStamp(), &diagnostics);
+        unit = QV4::ExecutionEngine::compileModule(isDebugging(), urlString(), source, data.sourceTimeStamp(), &diagnostics);
         QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(urlString(), diagnostics);
         if (!errors.isEmpty()) {
             setError(errors);
@@ -3054,7 +3054,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 void QQmlScriptBlob::initializeFromCachedUnit(const QV4::CompiledData::Unit *unit)
 {
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
-    compilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit));
+    compilationUnit.adopt(new QV4::CompiledData::CompilationUnit(unit, urlString(), finalUrlString()));
     initializeFromCompilationUnit(compilationUnit);
 }
 

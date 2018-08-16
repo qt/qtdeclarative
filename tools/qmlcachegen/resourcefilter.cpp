@@ -139,7 +139,9 @@ int filterResourceFile(const QString &input, const QString &output)
             if (currentFileName.isEmpty())
                 continue;
 
-            if (!currentFileName.endsWith(QStringLiteral(".qml")) && !currentFileName.endsWith(QStringLiteral(".js"))) {
+            if (!currentFileName.endsWith(QStringLiteral(".qml"))
+                && !currentFileName.endsWith(QStringLiteral(".js"))
+                && !currentFileName.endsWith(QStringLiteral(".mjs"))) {
                 writer.writeStartElement(QStringLiteral("file"));
 
                 if (!fileAttributes.hasAttribute(QStringLiteral("alias")))

@@ -19,4 +19,6 @@ RESOURCES += Enums.qml
 # QTBUG-46375
 !win32: RESOURCES += trickypaths_umlaut.qrc
 
+RESOURCES += jsmoduleimport.qml script.mjs
+
 QT += core-private qml-private testlib

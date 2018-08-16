@@ -59,6 +59,7 @@ private slots:
 
     void qrcScriptImport();
     void fsScriptImport();
+    void moduleScriptImport();
 
     void enums();
 
@@ -536,6 +537,36 @@ void tst_qmlcachegen::fsScriptImport()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("value").toInt(), 42);
+}
+
+void tst_qmlcachegen::moduleScriptImport()
+{
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///jsmoduleimport.qml"));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QTRY_VERIFY(obj->property("ok").toBool());
+
+    QVERIFY(QFile::exists(":/script.mjs"));
+    QCOMPARE(QFileInfo(":/script.mjs").size(), 0);
+
+    {
+        auto componentPrivate = QQmlComponentPrivate::get(&component);
+        QVERIFY(componentPrivate);
+        auto compilationUnit = componentPrivate->compilationUnit->dependentScripts.first()->compilationUnit();
+        QVERIFY(compilationUnit);
+        auto unitData = compilationUnit->unitData();
+        QVERIFY(unitData);
+        QVERIFY(unitData->flags & QV4::CompiledData::Unit::StaticData);
+        QVERIFY(unitData->flags & QV4::CompiledData::Unit::IsESModule);
+
+        QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+        const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(QUrl("qrc:/script.mjs"), &error);
+        QVERIFY(unitFromResources);
+
+        QCOMPARE(unitFromResources, compilationUnit->unitData());
+    }
 }
 
 void tst_qmlcachegen::enums()

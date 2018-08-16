@@ -462,7 +462,7 @@ static bool executeTest(const QByteArray &data, bool runAsModule = false, const 
             QFile f(url.toLocalFile());
             if (f.open(QIODevice::ReadOnly)) {
                 QByteArray content = harnessForModules + f.readAll();
-                module = vm.compileModule(url, QString::fromUtf8(content), QFileInfo(f).lastModified());
+                module = vm.compileModule(url.toString(), QString::fromUtf8(content), QFileInfo(f).lastModified());
                 if (vm.hasException)
                     break;
                 vm.injectModule(module);

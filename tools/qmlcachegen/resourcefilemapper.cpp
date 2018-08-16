@@ -67,7 +67,7 @@ QStringList ResourceFileMapper::qmlCompilerFiles() const
          it != end; ++it) {
         const QString &qrcPath = it.key();
         const QString suffix = QFileInfo(qrcPath).suffix();
-        if (suffix != QStringLiteral("qml") && suffix != QStringLiteral("js"))
+        if (suffix != QStringLiteral("qml") && suffix != QStringLiteral("js") && suffix != QStringLiteral("mjs"))
             continue;
         files << qrcPath;
     }

@@ -35,7 +35,7 @@ for(res, RESOURCES) {
 
     absRes = $$absolute_path($$res, $$_PRO_FILE_PWD_)
     rccContents = $$system($$QMAKE_RCC_DEP -list $$system_quote($$absRes),lines)
-    contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$) {
+    contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$)|contains(rccContents,.*\\.mjs$) {
         new_resource = $$qmlCacheResourceFileOutputName($$res)
         mkpath($$dirname(new_resource))
         remaining_files = $$system($$QML_CACHEGEN_FILTER -filter-resource-file -o $$system_quote($$new_resource) $$system_quote($$absRes),lines)
@@ -49,7 +49,7 @@ for(res, RESOURCES) {
         QMLCACHE_RESOURCE_FILES += $$absRes
 
         for(candidate, rccContents) {
-            contains(candidate,.*\\.js$)|contains(candidate,.*\\.qml$) {
+            contains(candidate,.*\\.js$)|contains(candidate,.*\\.qml$)|contains(candidate,.*\\.mjs$) {
                 QMLCACHE_FILES += $$candidate
             }
         }
@@ -70,6 +70,7 @@ defineReplace(qmlCacheOutputName) {
     name = $$relative_path($$name, $$_PRO_FILE_PWD_)
     name = $$replace(name, \\.qml$, _qml)
     name = $$replace(name, \\.js$, _js)
+    name = $$replace(name, \\.mjs$, _mjs)
     name = $$replace(name,/,_)
     name = $$QMLCACHE_DIR/$${name}
     return($${name})

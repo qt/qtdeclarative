@@ -34,6 +34,8 @@
 #include <QDateTime>
 #include <QHashFunctions>
 #include <QSaveFile>
+#include <QScopedPointer>
+#include <QScopeGuard>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsparser_p.h>
@@ -67,6 +69,7 @@ struct Error
     QString message;
     void print();
     Error augment(const QString &contextErrorMessage) const;
+    void appendDiagnostics(const QString &inputFileName, const QList<QQmlJS::DiagnosticMessage> &diagnostics);
 };
 
 void Error::print()
@@ -94,6 +97,15 @@ QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::Diagnostic
         message += QLatin1String(" warning: ");
     message += m.message;
     return message;
+}
+
+void Error::appendDiagnostics(const QString &inputFileName, const QList<DiagnosticMessage> &diagnostics)
+{
+    for (const QQmlJS::DiagnosticMessage &parseError: diagnostics) {
+        if (!message.isEmpty())
+            message += QLatin1Char('\n');
+        message += diagnosticErrorMessage(inputFileName, parseError);
+    }
 }
 
 // Ensure that ListElement objects keep all property assignments in their string form
@@ -185,11 +197,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
     {
         QmlIR::IRBuilder irBuilder(illegalNames);
         if (!irBuilder.generateFromQml(sourceCode, inputFileName, &irDocument)) {
-            for (const QQmlJS::DiagnosticMessage &parseError: qAsConst(irBuilder.errors)) {
-                if (!error->message.isEmpty())
-                    error->message += QLatin1Char('\n');
-                error->message += diagnosticErrorMessage(inputFileName, parseError);
-            }
+            error->appendDiagnostics(inputFileName, irBuilder.errors);
             return false;
         }
     }
@@ -213,11 +221,7 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
             const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
             QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
             if (!jsErrors.isEmpty()) {
-                for (const QQmlJS::DiagnosticMessage &e: qAsConst(jsErrors)) {
-                    if (!error->message.isEmpty())
-                        error->message += QLatin1Char('\n');
-                    error->message += diagnosticErrorMessage(inputFileName, e);
-                }
+                error->appendDiagnostics(inputFileName, jsErrors);
                 return false;
             }
 
@@ -247,7 +251,8 @@ static bool compileQmlFile(const QString &inputFileName, SaveFunction saveFuncti
 
 static bool compileJSFile(const QString &inputFileName, const QString &inputFileUrl, SaveFunction saveFunction, Error *error)
 {
-    QmlIR::Document irDocument(/*debugMode*/false);
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
+    QScopedPointer<QV4::CompiledData::Unit, QScopedPointerPodDeleter> unitDataToFree;
 
     QString sourceCode;
     {
@@ -263,79 +268,79 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
         }
     }
 
-    QQmlJS::Engine *engine = &irDocument.jsParserEngine;
-    QmlIR::ScriptDirectivesCollector directivesCollector(&irDocument);
-    QQmlJS::Directives *oldDirs = engine->directives();
-    engine->setDirectives(&directivesCollector);
-
-    QQmlJS::AST::Program *program = nullptr;
-
-    {
-        QQmlJS::Lexer lexer(engine);
-         lexer.setCode(sourceCode, /*line*/1, /*parseAsBinding*/false);
-         QQmlJS::Parser parser(engine);
-
-         bool parsed = parser.parseProgram();
-
-         for (const QQmlJS::DiagnosticMessage &parseError: parser.diagnosticMessages()) {
-             if (!error->message.isEmpty())
-                 error->message += QLatin1Char('\n');
-             error->message += diagnosticErrorMessage(inputFileName, parseError);
-         }
-
-         if (!parsed) {
-             engine->setDirectives(oldDirs);
-             return false;
-         }
-
-         program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
-         if (!program) {
-             lexer.setCode(QStringLiteral("undefined;"), 1, false);
-             parsed = parser.parseProgram();
-             Q_ASSERT(parsed);
-             program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
-             Q_ASSERT(program);
-         }
-    }
-
-    {
-        QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
-                                   &irDocument.jsModule, &irDocument.jsParserEngine,
-                                   irDocument.program, /*import cache*/nullptr,
-                                   &irDocument.jsGenerator.stringTable, illegalNames);
-        v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
-        v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
-                                      &irDocument.jsModule, QV4::Compiler::ContextType::Global);
-        QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
-        if (!jsErrors.isEmpty()) {
-            for (const QQmlJS::DiagnosticMessage &e: qAsConst(jsErrors)) {
-                if (!error->message.isEmpty())
-                    error->message += QLatin1Char('\n');
-                error->message += diagnosticErrorMessage(inputFileName, e);
-            }
-            engine->setDirectives(oldDirs);
-            return false;
-        }
-
+    const bool isModule = inputFileName.endsWith(QLatin1String(".mjs"));
+    if (isModule) {
+        QList<QQmlJS::DiagnosticMessage> diagnostics;
         // Precompiled files are relocatable and the final location will be set when loading.
-        irDocument.jsModule.fileName.clear();
-        irDocument.jsModule.finalUrl.clear();
-
-        irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
-        QmlIR::QmlUnitGenerator generator;
-        generator.generate(irDocument);
-        QV4::CompiledData::Unit *unit = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
-        unit->flags |= QV4::CompiledData::Unit::StaticData;
-
-        if (!saveFunction(irDocument.javaScriptCompilationUnit, &error->message)) {
-            engine->setDirectives(oldDirs);
+        QString url;
+        unit = QV4::ExecutionEngine::compileModule(/*debugMode*/false, url, sourceCode, QDateTime(), &diagnostics);
+        error->appendDiagnostics(inputFileName, diagnostics);
+        if (!unit)
             return false;
+    } else {
+        QmlIR::Document irDocument(/*debugMode*/false);
+
+        QQmlJS::Engine *engine = &irDocument.jsParserEngine;
+        QmlIR::ScriptDirectivesCollector directivesCollector(&irDocument);
+        QQmlJS::Directives *oldDirs = engine->directives();
+        engine->setDirectives(&directivesCollector);
+        auto directivesGuard = qScopeGuard([engine, oldDirs]{
+            engine->setDirectives(oldDirs);
+        });
+
+        QQmlJS::AST::Program *program = nullptr;
+
+        {
+            QQmlJS::Lexer lexer(engine);
+            lexer.setCode(sourceCode, /*line*/1, /*parseAsBinding*/false);
+            QQmlJS::Parser parser(engine);
+
+            bool parsed = parser.parseProgram();
+
+            error->appendDiagnostics(inputFileName, parser.diagnosticMessages());
+
+            if (!parsed)
+                return false;
+
+            program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
+            if (!program) {
+                lexer.setCode(QStringLiteral("undefined;"), 1, false);
+                parsed = parser.parseProgram();
+                Q_ASSERT(parsed);
+                program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
+                Q_ASSERT(program);
+            }
         }
 
-        free(unit);
+        {
+            QmlIR::JSCodeGen v4CodeGen(irDocument.code, &irDocument.jsGenerator,
+                                       &irDocument.jsModule, &irDocument.jsParserEngine,
+                                       irDocument.program, /*import cache*/nullptr,
+                                       &irDocument.jsGenerator.stringTable, illegalNames);
+            v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
+            v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
+                                          &irDocument.jsModule, QV4::Compiler::ContextType::Global);
+            QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
+            if (!jsErrors.isEmpty()) {
+                error->appendDiagnostics(inputFileName, jsErrors);
+                return false;
+            }
+
+            // Precompiled files are relocatable and the final location will be set when loading.
+            irDocument.jsModule.fileName.clear();
+            irDocument.jsModule.finalUrl.clear();
+
+            irDocument.javaScriptCompilationUnit = v4CodeGen.generateCompilationUnit(/*generate unit*/false);
+            QmlIR::QmlUnitGenerator generator;
+            generator.generate(irDocument);
+            QV4::CompiledData::Unit *unitData = const_cast<QV4::CompiledData::Unit*>(irDocument.javaScriptCompilationUnit->data);
+            unitData->flags |= QV4::CompiledData::Unit::StaticData;
+            unitDataToFree.reset(unitData);
+            unit = irDocument.javaScriptCompilationUnit;
+        }
     }
-    engine->setDirectives(oldDirs);
-    return true;
+
+    return saveFunction(unit, &error->message);
 }
 
 static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
@@ -546,7 +551,7 @@ int main(int argc, char **argv)
             error.augment(QLatin1String("Error compiling qml file: ")).print();
             return EXIT_FAILURE;
         }
-    } else if (inputFile.endsWith(QLatin1String(".js"))) {
+    } else if (inputFile.endsWith(QLatin1String(".js")) || inputFile.endsWith(QLatin1String(".mjs"))) {
         Error error;
         if (!compileJSFile(inputFile, inputFileUrl, saveFunction, &error)) {
             error.augment(QLatin1String("Error compiling js file: ")).print();

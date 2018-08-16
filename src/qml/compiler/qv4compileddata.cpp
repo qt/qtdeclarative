@@ -91,9 +91,9 @@ static_assert(sizeof(Unit::libraryVersionHash) >= QML_COMPILE_HASH_LENGTH + 1, "
 #endif
 
 
-CompilationUnit::CompilationUnit(const Unit *unitData)
+CompilationUnit::CompilationUnit(const Unit *unitData, const QString &fileName, const QString &finalUrlString)
 {
-    setUnitData(unitData);
+    setUnitData(unitData, nullptr, fileName, finalUrlString);
 }
 
 #ifndef V4_BOOTSTRAP

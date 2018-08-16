@@ -37,6 +37,22 @@
 **
 ****************************************************************************/
 #include <qv4engine_p.h>
+
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsast_p.h>
+#include <private/qv4compileddata_p.h>
+#include <private/qv4compiler_p.h>
+#include <private/qv4compilercontext_p.h>
+#include <private/qv4codegen_p.h>
+
+#include <QtCore/QTextStream>
+#include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
+
+#ifndef V4_BOOTSTRAP
+
 #include <qv4qmlcontext_p.h>
 #include <qv4value_p.h>
 #include <qv4object_p.h>
@@ -75,10 +91,6 @@
 #include "qv4reflect_p.h"
 #include "qv4proxy_p.h"
 #include "qv4stackframe_p.h"
-#include <private/qqmljsengine_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljsast_p.h>
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -102,11 +114,6 @@
 #endif
 #include <qqmlfile.h>
 
-#include <QtCore/QTextStream>
-#include <QDateTime>
-#include <QDir>
-#include <QFileInfo>
-
 #if USE(PTHREADS)
 #  include <pthread.h>
 #if !defined(Q_OS_INTEGRITY)
@@ -121,9 +128,13 @@
 #include <valgrind/memcheck.h>
 #endif
 
+#endif // #ifndef V4_BOOTSTRAP
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
+
+#ifndef V4_BOOTSTRAP
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
 
@@ -131,19 +142,6 @@ ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const 
 {
     return b->engine()->throwTypeError();
 }
-
-
-#ifdef V4_BOOTSTRAP
-QJSEngine *ExecutionEngine::jsEngine() const
-{
-    return publicEngine;
-}
-
-QQmlEngine *ExecutionEngine::qmlEngine() const
-{
-    return v8Engine->engine();
-}
-#endif // V4_BOOTSTRAP
 
 qint32 ExecutionEngine::maxCallDepth = -1;
 
@@ -1645,7 +1643,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
 QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp)
 {
     QList<QQmlJS::DiagnosticMessage> diagnostics;
-    auto unit = compileModule(/*debugMode*/debugger() != nullptr, url, sourceCode, sourceTimeStamp, &diagnostics);
+    auto unit = compileModule(/*debugMode*/debugger() != nullptr, url.toString(), sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
             throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
@@ -1658,7 +1656,9 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(con
     return unit;
 }
 
-QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(bool debugMode, const QUrl &url, const QString &sourceCode,
+#endif // ifndef V4_BOOTSTRAP
+
+QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(bool debugMode, const QString &url, const QString &sourceCode,
                                                                              const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
     QQmlJS::Engine ee;
@@ -1689,7 +1689,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(boo
     compilerModule.sourceTimeStamp = sourceTimeStamp;
     JSUnitGenerator jsGenerator(&compilerModule);
     Codegen cg(&jsGenerator, /*strictMode*/true);
-    cg.generateFromModule(url.toString(), url.toString(), sourceCode, moduleNode, &compilerModule);
+    cg.generateFromModule(url, url, sourceCode, moduleNode, &compilerModule);
     auto errors = cg.errors();
     if (diagnostics)
         *diagnostics << errors;
@@ -1699,6 +1699,8 @@ QQmlRefPointer<CompiledData::CompilationUnit> ExecutionEngine::compileModule(boo
 
     return cg.generateCompilationUnit();
 }
+
+#ifndef V4_BOOTSTRAP
 
 void ExecutionEngine::injectModule(const QQmlRefPointer<CompiledData::CompilationUnit> &moduleUnit)
 {
@@ -1982,5 +1984,6 @@ static QObject *qtObjectFromJS(QV4::ExecutionEngine *engine, const QV4::Value &v
     return wrapper->object();
 }
 
+#endif // ifndef V4_BOOTSTRAP
 
 QT_END_NAMESPACE

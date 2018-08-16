@@ -55,6 +55,8 @@
 #include "qv4context_p.h"
 #include <private/qintrusivelist_p.h>
 #include "qv4enginebase_p.h"
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmljsengine_p.h>
 
 #ifndef V4_BOOTSTRAP
 #  include "qv4function_p.h"
@@ -575,10 +577,10 @@ public:
 
     double localTZA = 0.0; // local timezone, initialized at startup
 
+    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QString &url, const QString &sourceCode, const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 #ifndef V4_BOOTSTRAP
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url);
     QQmlRefPointer<CompiledData::CompilationUnit> compileModule(const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp);
-    static QQmlRefPointer<CompiledData::CompilationUnit> compileModule(bool debugMode, const QUrl &url, const QString &sourceCode, const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 
     mutable QMutex moduleMutex;
     QHash<QUrl, QQmlRefPointer<CompiledData::CompilationUnit>> modules;
