@@ -1367,12 +1367,14 @@ int visitEnumerations(const QMetaObject &mo, StringVisitor visitString)
     for (int i = 0; i < priv->enumeratorCount; ++i) {
         const uint *enumeratorData = mo.d.data + priv->enumeratorData + i * intsPerEnumerator;
 
-        const uint keyCount = enumeratorData[2];
+        const uint keyCount = enumeratorData[intsPerEnumerator == 5 ? 3 : 2];
         fieldCount += keyCount * 2;
 
         visitString(enumeratorData[0]); // name
+        if (intsPerEnumerator == 5)
+            visitString(enumeratorData[1]); // enum name
 
-        const uint keyOffset = enumeratorData[3];
+        const uint keyOffset = enumeratorData[intsPerEnumerator == 5 ? 4 : 3];
 
         for (uint j = 0; j < keyCount; ++j) {
             visitString(mo.d.data[keyOffset + 2 * j]);
