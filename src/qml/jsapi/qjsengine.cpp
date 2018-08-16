@@ -115,6 +115,45 @@ Q_DECLARE_METATYPE(QList<int>)
   argument is a general-purpose string that is stored in the \c Error
   object for debugging purposes.
 
+  For larger pieces of functionality, you may want to encapsulate
+  your code and data into modules. A module is a file that contains
+  script code, variables, etc., and uses export statements to describe
+  its interface towards the rest of the application. With the help of
+  import statements, a module can refer to functionality from other modules.
+  This allows building a scripted application from smaller connected building blocks
+  in a safe way. In contrast, the approach of using evaluate() carries the risk
+  that internal variables or functions from one evaluate() call accidentally pollute the
+  global object and affect subsequent evaluations.
+
+  The following example provides a module that can add numbers:
+
+  \code
+  export function sum(left, right)
+  {
+      return left + right
+  }
+  \endcode
+
+  This module can be loaded with QJSEngine::import() if it is saved under
+  the name \c{math.mjs}:
+
+  \code
+  QJSvalue module = myEngine.importModule("./math.mjs");
+  QJSValue sumFunction = module.property("sum");
+  QJSValue result = sumFunction.call(args);
+  \endcode
+
+  Modules can also use functionality from other modules using import
+  statements:
+
+  \code
+  import { sum } from "./math.mjs";
+  export function addTwice(left, right)
+  {
+      return sum(left, right) * 2;
+  }
+  \endcode
+
   \section1 Engine Configuration
 
   The globalObject() function returns the \b {Global Object}
