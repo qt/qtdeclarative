@@ -268,21 +268,31 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
         return;
 
     QV4::ExecutionEngine *v4 = QV8Engine::getV4(script);
-    QV4::Scope scope(v4);
-    QScopedPointer<QV4::Script> program;
 
     script->source = url;
 
-    QString error;
-    program.reset(QV4::Script::createFromFileOrCache(v4, /*qml context*/nullptr, fileName, url, &error));
-    if (program.isNull()) {
-        if (!error.isEmpty())
-            qWarning().nospace() << error;
-        return;
-    }
+    if (fileName.endsWith(QLatin1String(".mjs"))) {
+        auto moduleUnit = v4->loadModule(url);
+        if (moduleUnit) {
+            if (moduleUnit->instantiate(v4))
+                moduleUnit->evaluate();
+        } else {
+            v4->throwError(QStringLiteral("Could not load module file"));
+        }
+    } else {
+        QString error;
+        QV4::Scope scope(v4);
+        QScopedPointer<QV4::Script> program;
+        program.reset(QV4::Script::createFromFileOrCache(v4, /*qmlContext*/nullptr, fileName, url, &error));
+        if (program.isNull()) {
+            if (!error.isEmpty())
+                qWarning().nospace() << error;
+            return;
+        }
 
-    if (!v4->hasException)
-        program->run();
+        if (!v4->hasException)
+            program->run();
+    }
 
     if (v4->hasException) {
         QQmlError error = v4->catchExceptionAsQmlError();
@@ -484,22 +494,28 @@ void QQuickWorkerScriptEngine::run()
 
     \snippet qml/workerscript/workerscript.qml 0
 
-    The above worker script specifies a JavaScript file, "script.js", that handles
-    the operations to be performed in the new thread. Here is \c script.js:
+    The above worker script specifies a JavaScript file, "script.mjs", that handles
+    the operations to be performed in the new thread. Here is \c script.mjs:
 
-    \quotefile qml/workerscript/script.js
+    \quotefile qml/workerscript/script.mjs
 
     When the user clicks anywhere within the rectangle, \c sendMessage() is
     called, triggering the \tt WorkerScript.onMessage() handler in
-    \tt script.js. This in turn sends a reply message that is then received
+    \tt script.mjs. This in turn sends a reply message that is then received
     by the \tt onMessage() handler of \tt myWorker.
 
+    The example uses a script that is an ECMAScript module, because it has the ".mjs" extension.
+    It can use import statements to access functionality from other modules and it is run in JavaScript
+    strict mode.
+
+    If a worker script has the extension ".js" instead, then it is considered to contain plain JavaScript
+    statements and it is run in non-strict mode.
 
     \section3 Restrictions
 
     Since the \c WorkerScript.onMessage() function is run in a separate thread, the
     JavaScript file is evaluated in a context separate from the main QML engine. This means
-    that unlike an ordinary JavaScript file that is imported into QML, the \c script.js
+    that unlike an ordinary JavaScript file that is imported into QML, the \c script.mjs
     in the above example cannot access the properties, methods or other attributes
     of the QML item, nor can it access any context properties set on the QML object
     through QQmlContext.
@@ -507,7 +523,8 @@ void QQuickWorkerScriptEngine::run()
     Additionally, there are restrictions on the types of values that can be passed to and
     from the worker script. See the sendMessage() documentation for details.
 
-    Worker script can not use \l {qtqml-javascript-imports.html}{.import} syntax.
+    Worker scripts that are plain JavaScript sources can not use \l {qtqml-javascript-imports.html}{.import} syntax.
+    Scripts that are ECMAScript modules can freely use import and export statements.
 
     \sa {Qt Quick Examples - Threading},
         {Threaded ListModel Example}
@@ -527,6 +544,10 @@ QQuickWorkerScript::~QQuickWorkerScript()
 
     This holds the url of the JavaScript file that implements the
     \tt WorkerScript.onMessage() handler for threaded operations.
+
+    If the file name component of the url ends with ".mjs", then the script
+    is parsed as an ECMAScript module and run in strict mode. Otherwise it is considered to be
+    plain script.
 */
 QUrl QQuickWorkerScript::source() const
 {

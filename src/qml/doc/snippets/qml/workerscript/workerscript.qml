@@ -61,7 +61,7 @@ Rectangle {
 
     WorkerScript {
         id: myWorker
-        source: "script.js"
+        source: "script.mjs"
 
         onMessage: myText.text = messageObject.reply
     }

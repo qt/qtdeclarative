@@ -77,24 +77,30 @@ private:
 void tst_QQuickWorkerScript::source()
 {
     QQmlComponent component(&m_engine, testFileUrl("worker.qml"));
-    QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+    QScopedPointer<QQuickWorkerScript>worker(qobject_cast<QQuickWorkerScript*>(component.create()));
     QVERIFY(worker != nullptr);
     const QMetaObject *mo = worker->metaObject();
 
     QVariant value(100);
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-    waitForEchoMessage(worker);
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), value);
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), value);
 
     QUrl source = testFileUrl("script_fixed_return.js");
     worker->setSource(source);
     QCOMPARE(worker->source(), source);
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-    waitForEchoMessage(worker);
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), qVariantFromValue(QString("Hello_World")));
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello_World")));
+
+    source = testFileUrl("script_module.mjs");
+    worker->setSource(source);
+    QCOMPARE(worker->source(), source);
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello from the module")));
 
     qApp->processEvents();
-    delete worker;
 }
 
 void tst_QQuickWorkerScript::messaging()
