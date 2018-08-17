@@ -54,7 +54,7 @@
 #include <QtCore/qabstractitemmodel.h>
 
 #include "private/qqmllistaccessor_p.h"
-
+#include <private/qqmlglobal_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qqmlnullablevalue_p.h>
 
