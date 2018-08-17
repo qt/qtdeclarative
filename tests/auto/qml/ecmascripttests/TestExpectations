@@ -1939,7 +1939,6 @@ language/global-code/script-decl-var.js fails
 language/identifiers/other_id_continue.js fails
 language/identifiers/other_id_start-escaped.js fails
 language/identifiers/other_id_start.js fails
-language/module-code/eval-gtbndng-indirect-update-dflt.js strictFails
 language/module-code/instn-iee-bndng-cls.js strictFails
 language/module-code/instn-iee-bndng-const.js strictFails
 language/module-code/instn-iee-bndng-let.js strictFails

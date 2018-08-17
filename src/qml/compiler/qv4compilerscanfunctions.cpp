@@ -611,7 +611,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     }
 
 
-    if (!name.isEmpty() && (!formals || !formals->containsName(name)))
+    if (!enterName && (!name.isEmpty() && (!formals || !formals->containsName(name))))
         _context->addLocalVar(name, Context::ThisFunctionName, VariableScope::Var);
     _context->formals = formals;
 
