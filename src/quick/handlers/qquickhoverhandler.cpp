@@ -79,7 +79,7 @@ void QQuickHoverHandler::componentComplete()
 bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     QQuickEventPoint *point = event->point(0);
-    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(point)) {
+    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(point) && parentContains(point)) {
         // assume this is a mouse event, so there's only one point
         setPointId(point->pointId());
         return true;
