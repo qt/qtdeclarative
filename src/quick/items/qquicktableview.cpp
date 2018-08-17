@@ -51,6 +51,359 @@
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 
+/*!
+    \qmltype TableView
+    \instantiates QQuickTableView
+    \inqmlmodule QtQuick
+    \ingroup qtquick-views
+    \inherits Flickable
+    \brief Provides a table view of items provided by the model.
+
+    A TableView has a \l model that defines the data to be displayed, and a
+    \l delegate that defines how the data should be displayed.
+
+    TableView inherits \l Flickable. This means that while the model can have
+    any number of rows and columns, only a subsection of the table is usually
+    visible inside the viewport. As soon as you flick, new rows and columns
+    enter the viewport, while old ones exit and are removed from the viewport.
+    The rows and columns that move out are reused for building the rows and columns
+    that move into the viewport. As such, the TableView support models of any
+    size without affecting performance.
+
+    A TableView displays data from models created from built-in QML types
+    such as ListModel and XmlListModel, which populates the first column only
+    in a TableView. To create models with multiple columns, create a model in
+    C++ that inherits QAbstractItemModel, and expose it to QML.
+
+    \section1 Example Usage
+
+    The following example shows how to create a model from C++ with multiple
+    columns:
+
+    \snippet qml/tableview/tablemodel.cpp 0
+
+    And then how to use it from QML:
+
+    \snippet qml/tableview/tablemodel.qml 0
+
+    \section1 Reusing items
+
+    TableView recycles delegate items by default, instead of instantiating from
+    the \l delegate whenever new rows and columns are flicked into view. This
+    can give a huge performance boost, depending on the complexity of the
+    delegate.
+
+    When an item is flicked out, it moves to the \e{reuse pool}, which is an
+    internal cache of unused items. When this happens, the \l TableView::pooled
+    signal is emitted to inform the item about it. Likewise, when the item is
+    moved back from the pool, the \l TableView::reused signal is emitted.
+
+    Any item properties that come from the model are updated when the
+    item is reused. This includes \c index, \c row, and \c column, but also
+    any model roles.
+
+    \note Avoid storing any state inside a delegate. If you do, reset it
+    manually on receiving the \l TableView::reused signal.
+
+    If an item has timers or animations, consider pausing them on receiving
+    the \l TableView::pooled signal. That way you avoid using the CPU resources
+    for items that are not visible. Likewise, if an item has resources that
+    cannot be reused, they could be freed up.
+
+    If you don't want to reuse items or if the \l delegate cannot support it,
+    you can set the \l reuseItems property to \c false.
+
+    \note While an item is in the pool, it might still be alive and respond
+    to connected signals and bindings.
+
+    The following example shows a delegate that animates a spinning rectangle. When
+    it is pooled, the animation is temporarily paused:
+
+    \snippet qml/tableview/reusabledelegate.qml 0
+
+    \section1 Row heights and column widths
+
+    When a new column is flicked into view, TableView will determine its width
+    by calling the \l columnWidthProvider function. TableView itself will never
+    store row height or column width, as it's designed to support large models
+    containing any number of rows and columns. Instead, it will ask the
+    application whenever it needs to know.
+
+    TableView uses the largest \c implicitWidth among the items as the column
+    width, unless the \l columnWidthProvider property is explicitly set. Once
+    the column width is found, all other items in the same column are resized
+    to this width, even if new items that are flicked in later have larger
+    \c implicitWidth. Setting an explicit \l width on an item is ignored and
+    overwritten.
+
+    \note The calculated width of a column is discarded when it is flicked out
+    of the viewport, and is recalculated if the column is flicked back in. The
+    calculation is always based on the items that are visible when the column
+    is flicked in. This means that it can end up different each time, depending
+    on which row you're at when the column enters. You should therefore have the
+    same \c implicitWidth for all items in a column, or set
+    \l columnWidthProvider. The same logic applies for the row height
+    calculation.
+
+    If you change the values that a \l rowHeightProvider or a
+    \l columnWidthProvider return for rows and columns inside the viewport, you
+    must call \l forceLayout. This informs TableView that it needs to use the
+    provider functions again to recalculate and update the layout.
+
+    \note The size of a row or column should be a whole number to avoid
+    sub-pixel alignment of items.
+
+    The following example shows how to set a simple \c columnWidthProvider
+    together with a timer that modifies the values the function returns. When
+    the array is modified, \l forceLayout is called to let the changes
+    take effect:
+
+    \snippet qml/tableview/tableviewwithprovider.qml 0
+
+    \section1 Overlays and underlays
+
+    Tableview inherits \l Flickable. And when new items are instantiated from the
+    delegate, it will parent them to the \l{Flickable::}{contentItem}
+    with a \c z value equal to \c 1. You can add your own items inside the
+    Tableview, as child items of the Flickable. By controlling their \c z
+    value, you can make them be on top of or underneath the table items.
+
+    Here is an example that shows how to add some text on top of the table, that
+    moves together with the table as you flick:
+
+    \snippet qml/tableview/tableviewwithheader.qml 0
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::rows
+
+    This property holds the number of rows in the table. This is
+    equal to the number of rows in the model.
+
+    This property is read only.
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::columns
+
+    This property holds the number of columns in the table. This is
+    equal to the number of columns in the model. If the model is
+    a list, columns will be 1.
+
+    This property is read only.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::rowSpacing
+
+    This property holds the spacing between the rows.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::columnSpacing
+
+    This property holds the spacing between the columns.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::topMargin
+
+    This property holds the margin between the top of the table and
+    the top of the content view.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::bottomMargin
+
+    This property holds the margin between the bottom of the table and
+    the bottom of the content view.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::leftMargin
+
+    This property holds the margin between the left side of the table and
+    the left side of the content view.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::rightMargin
+
+    This property holds the margin between the right side of the table and
+    the right side of the content view.
+
+    The default value is 0.
+*/
+
+/*!
+    \qmlproperty var QtQuick::TableView::rowHeightProvider
+
+    This property can hold a function that returns the row height for each row
+    in the model. When assigned, it will be called whenever TableView needs to
+    know the height of a specific row. The function takes one argument, \c row,
+    for which the TableView needs to know the height.
+
+    \note The height of a row must always be greater than \c 0.
+
+    \sa columnWidthProvider, {Row heights and column widths}
+*/
+
+/*!
+    \qmlproperty var QtQuick::TableView::columnWidthProvider
+
+    This property can hold a function that returns the column width for each
+    column in the model. When assigned, it is called whenever TableView needs
+    to know the width of a specific column. The function takes one argument,
+    \c column, for which the TableView needs to know the width.
+
+    \note The width of a column must always be greater than \c 0.
+
+    \sa rowHeightProvider, {Row heights and column widths}
+*/
+
+/*!
+    \qmlproperty model QtQuick::TableView::model
+    This property holds the model that provides data for the table.
+
+    The model provides the set of data that is used to create the items
+    in the view. Models can be created directly in QML using \l ListModel,
+    \l XmlListModel or \l VisualItemModel, or provided by a custom C++ model
+    class. If it is a C++ model, it must be a subclass of \l QAbstractItemModel
+    or a simple list.
+
+    \sa {qml-data-models}{Data Models}
+*/
+
+/*!
+    \qmlproperty Component QtQuick::TableView::delegate
+
+    The delegate provides a template defining each cell item instantiated by the
+    view. The model index is exposed as an accessible \c index property. The same
+    applies to \c row and \c column. Properties of the model are also available
+    depending upon the type of \l {qml-data-models}{Data Model}.
+
+    A delegate should specify its size using \l implicitWidth and \l implicitHeight.
+    The TableView lays out the items based on that information. Explicit \l width or
+    \l height settings are ignored and overwritten.
+
+    \note Delegates are instantiated as needed and may be destroyed at any time.
+    They are also reused if the \l reuseItems property is set to \c true. You
+    should therefore avoid storing state information in the delegates.
+
+    \sa {Row heights and column widths}, {Reusing items}
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TableView::reuseItems
+
+    This property holds whether or not items instantiated from the \l delegate
+    should be reused. If set to \c false, any currently pooled items
+    are destroyed.
+
+    \sa {Reusing items}, TableView::pooled, TableView::reused
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::contentWidth
+
+    This property holds the width of the \l contentView, which is also
+    the width of the table (including margins). As a TableView cannot
+    always know the exact width of the table without loading all columns
+    in the model, the \c contentWidth is usually an estimated width based on
+    the columns it has seen so far. This estimate is recalculated whenever
+    new columns are flicked into view, which means that the content width
+    can change dynamically.
+
+    If you know up front what the width of the table will be, assign a value
+    to \c contentWidth explicitly, to avoid unnecessary calculations and
+    updates to the TableView.
+
+    \sa contentHeight
+*/
+
+/*!
+    \qmlproperty real QtQuick::TableView::contentHeight
+
+    This property holds the height of the \l contentView, which is also
+    the height of the table (including margins). As a TableView cannot
+    always know the exact height of the table without loading all rows
+    in the model, the \c contentHeight is usually an estimated height
+    based on the rows it has seen so far. This estimate is recalculated
+    whenever new rows are flicked into view, which means that the content height
+    can change dynamically.
+
+    If you know up front what the height of the table will be, assign a
+    value to \c contentHeight explicitly, to avoid unnecessary calculations and
+    updates to the TableView.
+
+    \sa contentWidth
+*/
+
+/*!
+    \qmlmethod real QtQuick::TableView::forceLayout
+
+    Responding to changes in the model are batched so that they are handled
+    only once per frame. This means the TableView delays showing any changes
+    while a script is being run. The same is also true when changing
+    properties such as \l rowSpacing or \l leftMargin.
+
+    This method forces the TableView to immediately update the layout so
+    that any recent changes take effect.
+
+    Calling this function re-evaluates the size and position of each visible
+    row and column. This is needed if the functions assigned to
+    \l rowHeightProvider or \l columnWidthProvider return different values than
+    what is already assigned.
+*/
+
+/*!
+    \qmlattachedproperty TableView QtQuick::TableView::view
+
+    This attached property holds the view that manages the delegate instance.
+    It is attached to each instance of the delegate.
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::TableView::pooled
+
+    This signal is emitted after an item has been added to the reuse
+    pool. You can use it to pause ongoing timers or animations inside
+    the item, or free up resources that cannot be reused.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, reused
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::TableView::reused
+
+    This signal is emitted after an item has been reused. At this point, the
+    item has been taken out of the pool and placed inside the content view,
+    and the model properties such as index, row, and column have been updated.
+
+    Other properties that are not provided by the model does not change when an item
+    is reused. You should avoid storing any state inside a delegate, but if you do,
+    manually reset that state on receiving this signal.
+
+    This signal is emitted when the item is reused, and not the first time the
+    item is created.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, pooled
+*/
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
