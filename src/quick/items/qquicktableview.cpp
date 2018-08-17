@@ -945,7 +945,7 @@ void QQuickTableViewPrivate::beginRebuildTable()
 
 void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
 {
-    if (rowHeightProvider.isNull() || columnWidthProvider.isNull()) {
+    if (rowHeightProvider.isUndefined() || columnWidthProvider.isUndefined()) {
         // Since we don't have both size providers, we need to calculate the
         // size of each row and column based on the size of the delegate items.
         // This couldn't be done while we were loading the initial rows and
