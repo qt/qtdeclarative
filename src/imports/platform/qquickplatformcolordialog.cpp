@@ -185,8 +185,8 @@ void QQuickPlatformColorDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
         connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
-        colorDialog->setCurrentColor(m_currentColor);
         colorDialog->setOptions(m_options);
+        colorDialog->setCurrentColor(m_currentColor);
     }
 }
 
