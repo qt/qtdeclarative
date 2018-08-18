@@ -165,23 +165,13 @@ ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObject ctor
 {
     ScopedObject a(scope, Primitive::undefinedValue());
 
-    if (ctor) {
-        // ### the spec says that we should only call constructors if
-        // IsConstructor(that), but we have no way of knowing if a builtin is a
-        // constructor. so for the time being, just try call it, and silence any
-        // exceptions-- this is not ideal, as the spec also says that we should
-        // return on exception.
-        //
-        // this also isn't completely kosher. for instance:
+    if (ctor && ctor->isConstructor()) {
+        // this isn't completely kosher. for instance:
         // Array.from.call(Object, []).constructor == Object
         // is expected by the tests, but naturally, we get Number.
         ScopedValue argument(scope, useLen ? QV4::Encode(len) : Primitive::undefinedValue());
         a = ctor->callAsConstructor(argument, useLen ? 1 : 0);
-        if (scope.engine->hasException)
-            scope.engine->catchException(); // probably not a constructor, then.
-    }
-
-    if (!a) {
+    } else {
         a = scope.engine->newArrayObject(len);
     }
 

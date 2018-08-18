@@ -148,8 +148,7 @@ struct IntrinsicTypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static constexpr VTable::Call virtualCall = nullptr;
 
     static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };

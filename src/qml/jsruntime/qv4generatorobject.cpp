@@ -84,11 +84,6 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     return g->d();
 }
 
-ReturnedValue GeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError();
-}
-
 ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     const GeneratorFunction *gf = static_cast<const GeneratorFunction *>(f);
@@ -244,9 +239,4 @@ Heap::FunctionObject *MemberGeneratorFunction::create(ExecutionContext *context,
     g->defineDefaultProperty(scope.engine->id_prototype(), proto, Attr_NotConfigurable|Attr_NotEnumerable);
     g->setPrototypeOf(ScopedObject(scope, scope.engine->generatorFunctionCtor()->get(scope.engine->id_prototype())));
     return g->d();
-}
-
-ReturnedValue MemberGeneratorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
 }

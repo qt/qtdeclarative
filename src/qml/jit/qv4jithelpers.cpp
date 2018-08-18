@@ -42,6 +42,7 @@
 #include "qv4function_p.h"
 #include "qv4value_p.h"
 #include "qv4object_p.h"
+#include "qv4functionobject_p.h"
 #include "qv4lookup_p.h"
 #include <QtCore/private/qnumeric_p.h>
 
@@ -71,7 +72,8 @@ ReturnedValue loadGlobalLookup(ExecutionEngine *engine, Function *f, int index)
 
 ReturnedValue loadSuperConstructor(ExecutionEngine *engine, const Value *t)
 {
-    if (!t->isObject()) {
+    const FunctionObject *f = t->as<FunctionObject>();
+    if (!f || !f->isConstructor()) {
         engine->throwTypeError();
         return Encode::undefined();
     }

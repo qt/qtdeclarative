@@ -1440,16 +1440,6 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_get_toStringTag(const Functio
     return a->engine()->newString(QString::fromLatin1(a->d()->type->name))->asReturnedValue();
 }
 
-ReturnedValue IntrinsicTypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError();
-}
-
-ReturnedValue IntrinsicTypedArrayCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
-{
-    return f->engine()->throwTypeError();
-}
-
 static bool validateTypedArray(const Object *o)
 {
     const TypedArray *a = o->as<TypedArray>();
@@ -1466,7 +1456,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_of(const FunctionObject *f, const 
     int len = argc;
     const Value *items = argv;
     const FunctionObject *C = thisObject->as<FunctionObject>();
-    if (!C)
+    if (!C || !C->isConstructor())
         return scope.engine->throwTypeError();
 
     Value lenValue = Primitive::fromInt32(len);

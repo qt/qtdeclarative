@@ -949,8 +949,8 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(ConvertThisToObject)
 
     MOTH_BEGIN_INSTR(LoadSuperConstructor)
-        const Value *f = &stack[CallData::Function];
-        if (!f->isFunctionObject()) {
+        const FunctionObject *f = stack[CallData::Function].as<FunctionObject>();
+        if (!f || !f->isConstructor()) {
             engine->throwTypeError();
         } else {
             acc = static_cast<const Object *>(f)->getPrototypeOf()->asReturnedValue();

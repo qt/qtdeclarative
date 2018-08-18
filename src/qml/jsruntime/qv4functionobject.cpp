@@ -73,7 +73,7 @@ DEFINE_OBJECT_VTABLE(FunctionObject);
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call)
 {
     jsCall = call;
-    jsConstruct = QV4::FunctionObject::virtualCallAsConstructor;
+    jsConstruct = nullptr;
 
     Object::init();
     this->scope.set(scope->engine(), scope->d());
@@ -163,11 +163,6 @@ void FunctionObject::createDefaultPrototypeProperty(uint protoSlot, uint protoCo
 ReturnedValue FunctionObject::name() const
 {
     return get(scope()->internalClass->engine->id_name());
-}
-
-ReturnedValue FunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError();
 }
 
 ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *, const Value *, int)
@@ -587,11 +582,6 @@ ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Va
 
 DEFINE_OBJECT_VTABLE(MemberFunction);
 
-ReturnedValue MemberFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
-}
-
 DEFINE_OBJECT_VTABLE(DefaultClassConstructorFunction);
 
 ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -651,6 +641,9 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
     this->target.set(s.engine, target->d());
     this->boundArgs.set(s.engine, boundArgs ? boundArgs->d() : nullptr);
     this->boundThis.set(scope->engine(), boundThis);
+
+    if (!target->isConstructor())
+        jsConstruct = nullptr;
 
     ScopedObject f(s, this);
 

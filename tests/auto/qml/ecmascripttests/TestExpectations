@@ -26,7 +26,6 @@ language/module-code/namespace/internals/define-own-property.js strictFails
 language/module-code/namespace/internals/set.js strictFails
 
 # ----- test failures that should be fixed
-built-ins/Array/from/iter-cstm-ctor-err.js fails
 built-ins/Array/from/proto-from-ctor-realm.js fails
 built-ins/Array/isArray/proxy-revoked.js fails
 built-ins/Array/isArray/proxy.js fails
@@ -1491,7 +1490,6 @@ language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.
 language/statements/class/subclass/builtins.js fails
 language/statements/class/subclass/class-definition-null-proto-super.js fails
 language/statements/class/subclass/class-definition-null-proto-this.js fails
-language/statements/class/subclass/class-definition-superclass-generator.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
 language/statements/class/super/in-methods.js fails
 language/statements/const/block-local-closure-get-before-initialization.js fails

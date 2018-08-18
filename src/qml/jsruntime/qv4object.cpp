@@ -308,16 +308,6 @@ PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs
     return { nullptr, nullptr };
 }
 
-ReturnedValue Object::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
-{
-    return f->engine()->throwTypeError();
-}
-
-ReturnedValue Object::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
-{
-    return f->engine()->throwTypeError();
-}
-
 ReturnedValue Object::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (id.isArrayIndex())
@@ -973,11 +963,13 @@ const FunctionObject *Object::speciesConstructor(Scope &scope, const FunctionObj
     ScopedValue S(scope, c->get(scope.engine->symbol_species()));
     if (S->isNullOrUndefined())
         return defaultConstructor;
-    if (!S->isFunctionObject()) {
+    const FunctionObject *f = S->as<FunctionObject>();
+    if (!f || !f->isConstructor()) {
         scope.engine->throwTypeError();
         return nullptr;
     }
-    return static_cast<const FunctionObject *>(S.ptr);
+    Q_ASSERT(f->isFunctionObject());
+    return static_cast<const FunctionObject *>(f);
 }
 
 
