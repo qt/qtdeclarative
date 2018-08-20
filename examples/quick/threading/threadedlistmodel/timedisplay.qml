@@ -66,7 +66,7 @@ Rectangle {
 
         WorkerScript {
             id: worker
-            source: "dataloader.js"
+            source: "dataloader.mjs"
         }
 
 // ![0]
