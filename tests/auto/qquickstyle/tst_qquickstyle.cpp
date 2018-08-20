@@ -252,7 +252,7 @@ void tst_QQuickStyle::qrcInQtQuickControlsStylePathEnvVar_data()
         QDebug stream(&environmentVariable);
         stream.noquote().nospace() << ":/qrcStyles3" << listSeparator
             << ":/qrcStyles4" << listSeparator
-            << QFINDTESTDATA("data");
+            << QFINDTESTDATA("data/dummyStyles");
 
         QStringList expectedAvailableStyles = defaultAvailableStyles;
         expectedAvailableStyles.insert(1, QLatin1String("DummyStyle"));
@@ -266,7 +266,7 @@ void tst_QQuickStyle::qrcInQtQuickControlsStylePathEnvVar_data()
     {
         QString environmentVariable;
         QDebug stream(&environmentVariable);
-        stream.noquote().nospace() << QFINDTESTDATA("data") << listSeparator
+        stream.noquote().nospace() << QFINDTESTDATA("data/dummyStyles") << listSeparator
             << ":/qrcStyles3" << listSeparator
             << ":/qrcStyles4";
 
@@ -284,7 +284,7 @@ void tst_QQuickStyle::qrcInQtQuickControlsStylePathEnvVar_data()
         QDebug stream(&environmentVariable);
         // Same as the last row, except it adds a superfluous separator
         // to ensure that it handles it gracefully rather than failing an assertion.
-        stream.noquote().nospace() << QFINDTESTDATA("data") << listSeparator
+        stream.noquote().nospace() << QFINDTESTDATA("data/dummyStyles") << listSeparator
             << ":/qrcStyles3" << listSeparator
             << ":/qrcStyles4" << listSeparator;
 
