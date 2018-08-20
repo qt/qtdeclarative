@@ -215,6 +215,7 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
         emit stopThread();
         return true;
     } else if (event->type() == (QEvent::Type)WorkerRemoveEvent::WorkerRemove) {
+        QMutexLocker locker(&m_lock);
         WorkerRemoveEvent *workerEvent = static_cast<WorkerRemoveEvent *>(event);
         QHash<int, WorkerScript *>::iterator itr = workers.find(workerEvent->workerId());
         if (itr != workers.end()) {
