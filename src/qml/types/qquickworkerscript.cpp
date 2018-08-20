@@ -145,7 +145,7 @@ public:
         WorkerEngine(QQuickWorkerScriptEnginePrivate *parent);
         ~WorkerEngine() override;
 
-        void init();
+        void init(int id);
 
 #if QT_CONFIG(qml_network)
         QNetworkAccessManager *networkAccessManager() override;
@@ -173,16 +173,14 @@ public:
     QWaitCondition m_wait;
 
     struct WorkerScript {
-        WorkerScript(QQuickWorkerScriptEnginePrivate *parent);
+        WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent);
         ~WorkerScript();
 
         QV4::ExecutionEngine *v4() const { return QV8Engine::getV4(workerEngine.data()); }
         QScopedPointer<WorkerEngine> workerEngine;
         int id;
         QUrl source;
-        bool initialized;
         QQuickWorkerScript *owner;
-        QV4::PersistentValue qmlContext;
     };
 
     QHash<int, WorkerScript *> workers;
@@ -221,17 +219,17 @@ QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
     delete m_v4Engine;
 }
 
-void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
+void QQuickWorkerScriptEnginePrivate::WorkerEngine::init(int id)
 {
     initQmlGlobalObject();
 #define CALL_ONMESSAGE_SCRIPT \
-    "(function(object, message) { "\
+    "(function(message) { "\
         "var isfunction = false; "\
         "try { "\
-            "isfunction = object.WorkerScript.onMessage instanceof Function; "\
+            "isfunction = WorkerScript.onMessage instanceof Function; "\
         "} catch (e) {}" \
         "if (isfunction) "\
-            "object.WorkerScript.onMessage(message); "\
+            "WorkerScript.onMessage(message); "\
     "})"
 
 #define SEND_MESSAGE_CREATE_SCRIPT \
@@ -256,6 +254,12 @@ void QQuickWorkerScriptEnginePrivate::WorkerEngine::init()
     jsCallData->args[0] = function;
     *jsCallData->thisObject = m_v4Engine->global();
     createsend.set(scope.engine, createsendconstructor->call(jsCallData));
+
+
+    QV4::ScopedValue v(scope, sendFunction(id));
+    QV4::ScopedObject api(scope, scope.engine->newObject());
+    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), v);
+    m_v4Engine->globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
 }
 
 // Requires handle and context scope
@@ -316,20 +320,6 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4
     return QV4::Encode::undefined();
 }
 
-QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *script)
-{
-    if (!script->initialized) {
-        script->initialized = true;
-
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(script->workerEngine.get());
-        QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, script->workerEngine->sendFunction(script->id));
-        script->qmlContext.set(v4, QV4::QmlContext::createWorkerContext(v4->rootContext(), script->source, v));
-    }
-
-    return script->qmlContext.value();
-}
-
 bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
 {
     if (event->type() == (QEvent::Type)WorkerDataEvent::WorkerData) {
@@ -367,13 +357,10 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     QV4::ScopedFunctionObject f(scope, script->workerEngine->onmessage.value());
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, script->qmlContext.value());
-    Q_ASSERT(!!qmlContext);
 
-    QV4::JSCallData jsCallData(scope, 2);
+    QV4::JSCallData jsCallData(scope, 1);
     *jsCallData->thisObject = v4->global();
-    jsCallData->args[0] = qmlContext->d()->qml(); // ###
-    jsCallData->args[1] = value;
+    jsCallData->args[0] = value;
     f->call(jsCallData);
     if (scope.hasException()) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
@@ -398,11 +385,8 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 
     script->source = url;
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, getWorker(script));
-    Q_ASSERT(!!qmlContext);
-
     QString error;
-    program.reset(QV4::Script::createFromFileOrCache(v4, qmlContext, fileName, url, &error));
+    program.reset(QV4::Script::createFromFileOrCache(v4, /*qml context*/nullptr, fileName, url, &error));
     if (program.isNull()) {
         if (!error.isEmpty())
             qWarning().nospace() << error;
@@ -512,11 +496,11 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
     d->deleteLater();
 }
 
-QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript(QQuickWorkerScriptEnginePrivate *parent)
-: id(-1), initialized(false), owner(nullptr)
+QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
+: id(id), owner(nullptr)
 {
     workerEngine.reset(new QQuickWorkerScriptEnginePrivate::WorkerEngine(parent));
-    workerEngine->init();
+    workerEngine->init(id);
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
@@ -526,9 +510,8 @@ QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
     typedef QQuickWorkerScriptEnginePrivate::WorkerScript WorkerScript;
-    WorkerScript *script = new WorkerScript(d);
+    WorkerScript *script = new WorkerScript(d->m_nextId++, d);
 
-    script->id = d->m_nextId++;
     script->owner = owner;
 
     d->m_lock.lock();
