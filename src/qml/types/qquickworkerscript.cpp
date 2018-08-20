@@ -512,6 +512,10 @@ void QQuickWorkerScriptEngine::run()
     If a worker script has the extension ".js" instead, then it is considered to contain plain JavaScript
     statements and it is run in non-strict mode.
 
+    \note Each WorkerScript element will instantiate a separate JavaScript engine to ensure perfect
+    isolation and thread-safety. If the impact of that results in a memory consumption that is too
+    high for your environment, then consider sharing a WorkerScript element.
+
     \section3 Restrictions
 
     Since the \c WorkerScript.onMessage() function is run in a separate thread, the
