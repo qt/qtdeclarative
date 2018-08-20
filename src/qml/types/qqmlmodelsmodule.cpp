@@ -44,6 +44,7 @@
 #endif
 #if QT_CONFIG(qml_delegate_model)
 #include <private/qqmldelegatemodel_p.h>
+#include <private/qqmldelegatecomponent_p.h>
 #endif
 #include <private/qqmlobjectmodel_p.h>
 
@@ -65,6 +66,15 @@ void QQmlModelsModule::defineModule()
     qmlRegisterType<QQmlObjectModel,3>(uri, 2, 3, "ObjectModel");
 
     qmlRegisterType<QItemSelectionModel>(uri, 2, 2, "ItemSelectionModel");
+}
+
+void QQmlModelsModule::defineLabsModule()
+{
+    const char uri[] = "Qt.labs.qmlmodels";
+
+    qmlRegisterUncreatableType<QQmlAbstractDelegateComponent>(uri, 1, 0, "AbstractDelegateComponent", QQmlAbstractDelegateComponent::tr("Cannot create instance of abstract class AbstractDelegateComponent."));
+    qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
+    qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
 }
 
 QT_END_NAMESPACE

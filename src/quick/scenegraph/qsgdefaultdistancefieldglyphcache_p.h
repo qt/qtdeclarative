@@ -85,7 +85,10 @@ public:
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }
     int maxTextureCount() const { return m_maxTextureCount; }
 
+
 private:
+    bool loadPregeneratedCache(const QRawFont &font);
+
     struct TextureInfo {
         GLuint texture;
         QSize size;
@@ -96,6 +99,7 @@ private:
         TextureInfo(const QRect &preallocRect = QRect()) : texture(0), allocatedArea(preallocRect) { }
     };
 
+    void createTexture(TextureInfo * texInfo, int width, int height, const void *pixels);
     void createTexture(TextureInfo * texInfo, int width, int height);
     void resizeTexture(TextureInfo * texInfo, int width, int height);
 

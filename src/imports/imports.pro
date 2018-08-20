@@ -4,7 +4,8 @@ SUBDIRS += \
     builtins \
     qtqml \
     folderlistmodel \
-    models
+    models \
+    labsmodels
 
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings

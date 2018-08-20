@@ -72,7 +72,7 @@ class QV4DebugServiceImpl : public QQmlConfigurableDebugService<QV4DebugService>
 {
     Q_OBJECT
 public:
-    explicit QV4DebugServiceImpl(QObject *parent = 0);
+    explicit QV4DebugServiceImpl(QObject *parent = nullptr);
     ~QV4DebugServiceImpl() override;
 
     void engineAdded(QJSEngine *engine) override;

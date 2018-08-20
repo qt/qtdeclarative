@@ -56,8 +56,9 @@ ByteCodeHandler::~ByteCodeHandler()
     { \
         INSTR_##instr(MOTH_DECODE_WITH_BASE) \
         Q_UNUSED(base_ptr); \
+        _currentOffset = _nextOffset; \
+        _nextOffset = code - start; \
         startInstruction(Instr::Type::instr); \
-        _offset = code - start; \
         INSTR_##instr(DISPATCH) \
         endInstruction(Instr::Type::instr); \
         continue; \

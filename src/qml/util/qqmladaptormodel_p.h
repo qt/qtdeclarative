@@ -54,7 +54,7 @@
 #include <QtCore/qabstractitemmodel.h>
 
 #include "private/qqmllistaccessor_p.h"
-
+#include <private/qqmlglobal_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qqmlnullablevalue_p.h>
 
@@ -123,6 +123,7 @@ public:
     int columnCount() const;
     int rowAt(int index) const;
     int columnAt(int index) const;
+    int indexAt(int row, int column) const;
 
     inline bool adaptsAim() const { return qobject_cast<QAbstractItemModel *>(object()); }
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }

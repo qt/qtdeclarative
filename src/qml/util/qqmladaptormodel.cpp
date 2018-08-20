@@ -1005,6 +1005,11 @@ int QQmlAdaptorModel::columnAt(int index) const
     return count <= 0 ? -1 : index / count;
 }
 
+int QQmlAdaptorModel::indexAt(int row, int column) const
+{
+    return column * rowCount() + row;
+}
+
 void QQmlAdaptorModel::objectDestroyed(QObject *)
 {
     setModel(QVariant(), nullptr, nullptr);

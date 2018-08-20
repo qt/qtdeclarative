@@ -34,11 +34,13 @@ qtConfig(qml-list-model) {
 
 qtConfig(qml-delegate-model) {
     SOURCES += \
-        $$PWD/qqmldelegatemodel.cpp
+        $$PWD/qqmldelegatemodel.cpp \
+        $$PWD/qqmldelegatecomponent.cpp
 
     HEADERS += \
         $$PWD/qqmldelegatemodel_p.h \
-        $$PWD/qqmldelegatemodel_p_p.h
+        $$PWD/qqmldelegatemodel_p_p.h \
+        $$PWD/qqmldelegatecomponent_p.h
 }
 
 qtConfig(qml-animation) {

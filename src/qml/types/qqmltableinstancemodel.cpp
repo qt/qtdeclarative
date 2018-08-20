@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qqmltableinstancemodel_p.h"
-#include "qqmltableinstancemodel_p.h"
+#include "qqmldelegatecomponent_p.h"
 
 #include <QtCore/QTimer>
 
@@ -107,6 +107,23 @@ QQmlTableInstanceModel::~QQmlTableInstanceModel()
     drainReusableItemsPool(0);
 }
 
+QQmlComponent *QQmlTableInstanceModel::resolveDelegate(int index)
+{
+    QQmlComponent *delegate = nullptr;
+    if (m_delegateChooser) {
+        const int row = m_adaptorModel.rowAt(index);
+        const int column = m_adaptorModel.columnAt(index);
+        QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
+        do {
+            delegate = chooser->delegate(&m_adaptorModel, row, column);
+            chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
+        } while (chooser);
+    }
+    if (!delegate)
+        delegate = m_delegate;
+    return delegate;
+}
+
 QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
 {
     // Check if an item for the given index is already loaded and ready
@@ -114,7 +131,7 @@ QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
     if (modelItem)
         return modelItem;
 
-    QQmlComponent *delegate = m_delegate;
+    QQmlComponent *delegate = resolveDelegate(index);
 
     // Check if the pool contains an item that can be reused
     modelItem = takeFromReusableItemsPool(delegate);
@@ -478,6 +495,17 @@ QQmlComponent *QQmlTableInstanceModel::delegate() const
 
 void QQmlTableInstanceModel::setDelegate(QQmlComponent *delegate)
 {
+    if (m_delegate == delegate)
+        return;
+
+    m_delegateChooser = nullptr;
+    if (delegate) {
+        QQmlAbstractDelegateComponent *adc =
+                qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
+        if (adc)
+            m_delegateChooser = adc;
+    }
+
     m_delegate = delegate;
 }
 

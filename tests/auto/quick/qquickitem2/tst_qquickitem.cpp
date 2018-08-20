@@ -64,6 +64,7 @@ private slots:
     void activeFocusOnTab8();
     void activeFocusOnTab9();
     void activeFocusOnTab10();
+    void activeFocusOnTab_infiniteLoop();
 
     void nextItemInFocusChain();
     void nextItemInFocusChain2();
@@ -1021,6 +1022,22 @@ void tst_QQuickItem::activeFocusOnTab10()
     QVERIFY(textinput2->hasActiveFocus());
 
     delete window;
+}
+
+void tst_QQuickItem::activeFocusOnTab_infiniteLoop()
+{
+    // see QTBUG-68271
+    // create a window where the currently focused item is not visible
+    QScopedPointer<QQuickView>window(new QQuickView());
+    window->setSource(testFileUrl("activeFocusOnTab_infiniteLoop.qml"));
+    window->show();
+    auto *hiddenChild = findItem<QQuickItem>(window->rootObject(), "hiddenChild");
+    QVERIFY(hiddenChild);
+
+    // move the focus - this used to result in an infinite loop
+    auto *item = hiddenChild->nextItemInFocusChain();
+    // focus is moved to the root object since there is no other candidate
+    QCOMPARE(item, window->rootObject());
 }
 
 void tst_QQuickItem::nextItemInFocusChain()

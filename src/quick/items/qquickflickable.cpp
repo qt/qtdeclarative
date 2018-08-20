@@ -1515,6 +1515,8 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->movementEndingTimer.start(MovementEndingTimerInterval, this);
 #endif
         return;
+    default:
+        return;
     }
 
     if (event->source() == Qt::MouseEventNotSynthesized || event->pixelDelta().isNull()) {

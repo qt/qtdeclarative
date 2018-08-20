@@ -57,6 +57,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlTableInstanceModel;
+class QQmlAbstractDelegateComponent;
 
 class QQmlTableInstanceModelIncubationTask : public QQDMIncubationTask
 {
@@ -128,8 +129,11 @@ Q_SIGNALS:
     void itemReused(int index, QObject *object);
 
 private:
-    QQmlComponent *m_delegate = nullptr;
+    QQmlComponent *resolveDelegate(int index);
+
     QQmlAdaptorModel m_adaptorModel;
+    QQmlAbstractDelegateComponent *m_delegateChooser = nullptr;
+    QQmlComponent *m_delegate = nullptr;
     QPointer<QQmlContext> m_qmlContext;
     QQmlDelegateModelItemMetaType *m_metaType;
 

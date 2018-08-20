@@ -66,7 +66,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
 
-static const int kDefaultCacheBuffer = 300;
 static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
 
@@ -164,6 +163,18 @@ public:
         }
     };
 
+    enum class RebuildState {
+        NotStarted = 0,
+        LoadInitalTable,
+        VerifyTable,
+        LayoutTable,
+        LoadAndUnloadAfterLayout,
+        PreloadColumns,
+        PreloadRows,
+        MovePreloadedItemsToPool,
+        Done
+    };
+
 public:
     QQuickTableViewPrivate();
     ~QQuickTableViewPrivate() override;
@@ -197,21 +208,16 @@ public:
 
     QSize tableSize;
 
+    RebuildState rebuildState = RebuildState::NotStarted;
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
     QSizeF cellSpacing = QSizeF(0, 0);
     QMarginsF tableMargins;
 
-    int cacheBuffer = kDefaultCacheBuffer;
-    QTimer cacheBufferDelayTimer;
-    bool hasBufferedItems = false;
-
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 
     bool blockItemCreatedCallback = false;
-    bool tableInvalid = false;
-    bool tableRebuilding = false;
     bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
@@ -294,12 +300,11 @@ public:
     void drainReusePoolAfterLoadRequest();
     void cancelLoadRequest();
     void processLoadRequest();
-    void beginRebuildTable();
-    void endRebuildTable();
 
-    void loadBuffer();
-    void unloadBuffer();
-    QRectF bufferRect();
+    void processRebuildTable();
+    bool moveToNextRebuildState();
+    void beginRebuildTable();
+    void layoutAfterLoadingInitialTable();
 
     void invalidateTable();
     void invalidateColumnRowPositions();

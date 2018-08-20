@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmldelegatemodel_p_p.h"
+#include "qqmldelegatecomponent_p.h"
 
 #include <QtQml/qqmlinfo.h>
 
@@ -200,7 +201,8 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
-    : m_cacheMetaType(nullptr)
+    : m_delegateChooser(nullptr)
+    , m_cacheMetaType(nullptr)
     , m_context(ctxt)
     , m_parts(nullptr)
     , m_filterGroup(QStringLiteral("items"))
@@ -454,6 +456,8 @@ void QQmlDelegateModel::setModel(const QVariant &model)
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
     model are also available depending upon the type of \l {qml-data-models}{Data Model}.
+
+    \sa DelegateComponent
 */
 QQmlComponent *QQmlDelegateModel::delegate() const
 {
@@ -468,22 +472,25 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
         qmlWarning(this) << tr("The delegate of a DelegateModel cannot be changed within onUpdated.");
         return;
     }
+    if (d->m_delegate == delegate)
+        return;
     bool wasValid = d->m_delegate != nullptr;
     d->m_delegate.setObject(delegate, this);
     d->m_delegateValidated = false;
-    if (wasValid && d->m_complete) {
-        for (int i = 1; i < d->m_groupCount; ++i) {
-            QQmlDelegateModelGroupPrivate::get(d->m_groups[i])->changeSet.remove(
-                    0, d->m_compositor.count(Compositor::Group(i)));
+    if (d->m_delegateChooser)
+        QObject::disconnect(d->m_delegateChooserChanged);
+
+    d->m_delegateChooser = nullptr;
+    if (delegate) {
+        QQmlAbstractDelegateComponent *adc =
+                qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
+        if (adc) {
+            d->m_delegateChooser = adc;
+            d->m_delegateChooserChanged = connect(adc, &QQmlAbstractDelegateComponent::delegateChanged,
+                                               [d](){ d->delegateChanged(); });
         }
     }
-    if (d->m_complete && d->m_delegate) {
-        for (int i = 1; i < d->m_groupCount; ++i) {
-            QQmlDelegateModelGroupPrivate::get(d->m_groups[i])->changeSet.insert(
-                    0, d->m_compositor.count(Compositor::Group(i)));
-        }
-    }
-    d->emitChanges();
+    d->delegateChanged(d->m_delegate, wasValid);
 }
 
 /*!
@@ -1042,7 +1049,18 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             cacheItem->incubationTask->forceCompletion();
         }
     } else if (!cacheItem->object) {
-        QQmlContext *creationContext = m_delegate->creationContext();
+        QQmlComponent *delegate = nullptr;
+        if (m_delegateChooser) {
+            QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
+            do {
+                delegate = chooser->delegate(&m_adaptorModel, index);
+                chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
+            } while (chooser);
+        }
+        if (!delegate)
+            delegate = m_delegate;
+
+        QQmlContext *creationContext = delegate->creationContext();
 
         cacheItem->scriptRef += 1;
 
@@ -1067,10 +1085,10 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             }
         }
 
-        QQmlComponentPrivate *cp = QQmlComponentPrivate::get(m_delegate);
+        QQmlComponentPrivate *cp = QQmlComponentPrivate::get(delegate);
         cp->incubateObject(
                     cacheItem->incubationTask,
-                    m_delegate,
+                    delegate,
                     m_context->engine(),
                     ctxt,
                     QQmlContextData::get(m_context));
@@ -1566,6 +1584,32 @@ void QQmlDelegateModelPrivate::emitModelUpdated(const QQmlChangeSet &changeSet, 
     emit q->modelUpdated(changeSet, reset);
     if (changeSet.difference() != 0)
         emit q->countChanged();
+}
+
+void QQmlDelegateModelPrivate::delegateChanged(bool add, bool remove)
+{
+    Q_Q(QQmlDelegateModel);
+    if (!m_complete)
+        return;
+
+    if (m_transaction) {
+        qmlWarning(q) << QQmlDelegateModel::tr("The delegates of a DelegateModel cannot be changed within onUpdated.");
+        return;
+    }
+
+    if (remove) {
+        for (int i = 1; i < m_groupCount; ++i) {
+            QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.remove(
+                    0, m_compositor.count(Compositor::Group(i)));
+        }
+    }
+    if (add) {
+        for (int i = 1; i < m_groupCount; ++i) {
+            QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.insert(
+                    0, m_compositor.count(Compositor::Group(i)));
+        }
+    }
+    emitChanges();
 }
 
 void QQmlDelegateModelPrivate::emitChanges()

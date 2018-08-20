@@ -73,7 +73,7 @@ void BaselineJIT::generate()
 //    qDebug()<<"done";
 }
 
-#define STORE_IP() as->storeInstructionPointer(instructionOffset())
+#define STORE_IP() as->storeInstructionPointer(nextInstructionOffset())
 #define STORE_ACC() as->saveAccumulatorInFrame()
 
 void BaselineJIT::generate_Ret()
@@ -562,7 +562,7 @@ void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
 void BaselineJIT::generate_SetUnwindHandler(int offset)
 {
     if (offset)
-        as->setUnwindHandler(instructionOffset() + offset);
+        as->setUnwindHandler(absoluteOffsetForJump(offset));
     else
         as->clearUnwindHandler();
 }
@@ -574,7 +574,7 @@ void BaselineJIT::generate_UnwindDispatch()
 
 void BaselineJIT::generate_UnwindToLabel(int level, int offset)
 {
-    as->unwindToLabel(level, instructionOffset() + offset);
+    as->unwindToLabel(level, absoluteOffsetForJump(offset));
 }
 
 
@@ -824,11 +824,11 @@ void BaselineJIT::generate_ToObject()
 
 }
 
-void BaselineJIT::generate_Jump(int offset) { as->jump(instructionOffset() + offset); }
-void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(instructionOffset() + offset); }
-void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(instructionOffset() + offset); }
-void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(instructionOffset() + offset); }
-void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(instructionOffset() + offset); }
+void BaselineJIT::generate_Jump(int offset) { as->jump(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(absoluteOffsetForJump(offset)); }
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
@@ -932,7 +932,7 @@ void BaselineJIT::generate_LoadQmlImportedScripts(int result)
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
     if (hasLabel())
-        as->addLabel(instructionOffset());
+        as->addLabel(currentInstructionOffset());
 }
 
 void BaselineJIT::endInstruction(Instr::Type instr)

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,51 +37,47 @@
 **
 ****************************************************************************/
 
-#ifndef QSGAREAALLOCATOR_P_H
-#define QSGAREAALLOCATOR_P_H
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqml.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qtquickglobal_p.h>
-#include <QtCore/qsize.h>
+#include <private/qqmlmodelsmodule_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QRect;
-class QPoint;
-struct QSGAreaAllocatorNode;
-class Q_QUICK_PRIVATE_EXPORT QSGAreaAllocator
+/*!
+    \qmlmodule Qt.labs.qmlmodels 1.0
+    \title Qt QML Models experimental QML Types
+    \ingroup qmlmodules
+    \brief Provides QML experimental types for data models
+    \since 5.12
+
+    This QML module contains experimental QML types related to data models.
+
+    To use the types in this module, import the module with the following line:
+
+    \code
+    import Qt.labs.qmlmodels 1.0
+    \endcode
+*/
+
+//![class decl]
+class QtQmlLabsModelsPlugin : public QQmlExtensionPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QSGAreaAllocator(const QSize &size);
-    ~QSGAreaAllocator();
+    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent) { }
+    void registerTypes(const char *uri) override
+    {
+        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
+        Q_UNUSED(uri);
+        QQmlModelsModule::defineLabsModule();
 
-    QRect allocate(const QSize &size);
-    bool deallocate(const QRect &rect);
-    bool isEmpty() const { return m_root == nullptr; }
-    QSize size() const { return m_size; }
-
-    QByteArray serialize();
-    const char *deserialize(const char *data, int size);
-
-private:
-    bool allocateInNode(const QSize &size, QPoint &result, const QRect &currentRect, QSGAreaAllocatorNode *node);
-    bool deallocateInNode(const QPoint &pos, QSGAreaAllocatorNode *node);
-    void mergeNodeWithNeighbors(QSGAreaAllocatorNode *node);
-
-    QSGAreaAllocatorNode *m_root;
-    QSize m_size;
+        qmlRegisterModule(uri, 1, 0);
+    }
 };
+//![class decl]
 
 QT_END_NAMESPACE
 
-#endif
+#include "plugin.moc"

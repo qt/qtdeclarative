@@ -1360,19 +1360,21 @@ template <typename StringVisitor>
 int visitEnumerations(const QMetaObject &mo, StringVisitor visitString)
 {
     const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    const int intsPerEnumerator = 4;
+    const int intsPerEnumerator = priv->revision >= 8 ? 5 : 4;
 
     int fieldCount = priv->enumeratorCount * intsPerEnumerator;
 
     for (int i = 0; i < priv->enumeratorCount; ++i) {
         const uint *enumeratorData = mo.d.data + priv->enumeratorData + i * intsPerEnumerator;
 
-        const uint keyCount = enumeratorData[2];
+        const uint keyCount = enumeratorData[intsPerEnumerator == 5 ? 3 : 2];
         fieldCount += keyCount * 2;
 
         visitString(enumeratorData[0]); // name
+        if (intsPerEnumerator == 5)
+            visitString(enumeratorData[1]); // enum name
 
-        const uint keyOffset = enumeratorData[3];
+        const uint keyOffset = enumeratorData[intsPerEnumerator == 5 ? 4 : 3];
 
         for (uint j = 0; j < keyCount; ++j) {
             visitString(mo.d.data[keyOffset + 2 * j]);
@@ -1412,7 +1414,7 @@ bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fie
                                                  int *stringCount)
 {
     const QMetaObjectPrivate *priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    if (priv->revision != 7) {
+    if (priv->revision < 7 || priv->revision > 8) {
         return false;
     }
 

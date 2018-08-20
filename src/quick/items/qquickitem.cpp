@@ -2566,8 +2566,19 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             from = item->parentItem();
     }
     bool skip = false;
-    QQuickItem * startItem = item;
-    QQuickItem * firstFromItem = from;
+
+    QQuickItem *startItem = item;
+    // Protect from endless loop:
+    // If we start on an invisible item we will not find it again.
+    // If there is no other item which can become the focus item, we have a forever loop,
+    // since the protection only works if we encounter the first item again.
+    while (startItem && !startItem->isVisible()) {
+        startItem = startItem->parentItem();
+    }
+    if (!startItem)
+        return item;
+
+    QQuickItem *firstFromItem = from;
     QQuickItem *current = item;
     qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
     qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
