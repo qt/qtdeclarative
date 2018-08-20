@@ -139,48 +139,26 @@ public:
 
     QQuickWorkerScriptEnginePrivate(QQmlEngine *eng);
 
-    class WorkerEngine : public QV8Engine
-    {
-    public:
-        WorkerEngine(QQuickWorkerScriptEnginePrivate *parent);
-        ~WorkerEngine() override;
-
-        void init(int id);
-
-#if QT_CONFIG(qml_network)
-        QNetworkAccessManager *networkAccessManager() override;
-#endif
-
-        QQuickWorkerScriptEnginePrivate *p;
-
-        QV4::ReturnedValue sendFunction(int id);
-
-        QV4::PersistentValue onmessage;
-    private:
-        QV4::PersistentValue createsend;
-#if QT_CONFIG(qml_network)
-        QNetworkAccessManager *accessManager;
-#endif
-    };
-
-    static QQuickWorkerScriptEnginePrivate *get(QV8Engine *e) {
-        return static_cast<WorkerEngine *>(e)->p;
-    }
-
     QQmlEngine *qmlengine;
 
     QMutex m_lock;
     QWaitCondition m_wait;
 
-    struct WorkerScript {
+    struct WorkerScript : public QV8Engine {
         WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent);
-        ~WorkerScript();
+        ~WorkerScript() override;
 
-        QV4::ExecutionEngine *v4() const { return QV8Engine::getV4(workerEngine.data()); }
-        QScopedPointer<WorkerEngine> workerEngine;
-        int id;
+#if QT_CONFIG(qml_network)
+        QNetworkAccessManager *networkAccessManager() override;
+#endif
+
+        QQuickWorkerScriptEnginePrivate *p = nullptr;
         QUrl source;
-        QQuickWorkerScript *owner;
+        QQuickWorkerScript *owner = nullptr;
+#if QT_CONFIG(qml_network)
+        QScopedPointer<QNetworkAccessManager> accessManager;
+#endif
+        int id = -1;
     };
 
     QHash<int, WorkerScript *> workers;
@@ -202,100 +180,6 @@ private:
     void reportScriptException(WorkerScript *, const QQmlError &error);
 };
 
-QQuickWorkerScriptEnginePrivate::WorkerEngine::WorkerEngine(QQuickWorkerScriptEnginePrivate *parent)
-    : QV8Engine(new QV4::ExecutionEngine), p(parent)
-#if QT_CONFIG(qml_network)
-, accessManager(nullptr)
-#endif
-{
-    m_v4Engine->v8Engine = this;
-}
-
-QQuickWorkerScriptEnginePrivate::WorkerEngine::~WorkerEngine()
-{
-#if QT_CONFIG(qml_network)
-    delete accessManager;
-#endif
-    delete m_v4Engine;
-}
-
-void QQuickWorkerScriptEnginePrivate::WorkerEngine::init(int id)
-{
-    initQmlGlobalObject();
-#define CALL_ONMESSAGE_SCRIPT \
-    "(function(message) { "\
-        "var isfunction = false; "\
-        "try { "\
-            "isfunction = WorkerScript.onMessage instanceof Function; "\
-        "} catch (e) {}" \
-        "if (isfunction) "\
-            "WorkerScript.onMessage(message); "\
-    "})"
-
-#define SEND_MESSAGE_CREATE_SCRIPT \
-    "(function(method, engine) { "\
-        "return (function(id) { "\
-            "return (function(message) { "\
-                "if (arguments.length) method(engine, id, message); "\
-            "}); "\
-        "}); "\
-    "})"
-
-    QV4::Scope scope(m_v4Engine);
-    QV4::ExecutionContext *globalContext = scope.engine->rootContext();
-    onmessage.set(scope.engine, QV4::Script(globalContext, QV4::Compiler::ContextType::Global, QString::fromUtf8(CALL_ONMESSAGE_SCRIPT)).run()); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
-    Q_ASSERT(!scope.engine->hasException);
-    QV4::Script createsendscript(globalContext, QV4::Compiler::ContextType::Global, QString::fromUtf8(SEND_MESSAGE_CREATE_SCRIPT)); // do not use QStringLiteral here, MSVC2012 cannot apply this cleanly to the macro
-    QV4::ScopedFunctionObject createsendconstructor(scope, createsendscript.run());
-    Q_ASSERT(!scope.engine->hasException);
-    QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
-    QV4::ScopedValue function(scope, QV4::FunctionObject::createBuiltinFunction(m_v4Engine, name, method_sendMessage, 1));
-    QV4::JSCallData jsCallData(scope, 1);
-    jsCallData->args[0] = function;
-    *jsCallData->thisObject = m_v4Engine->global();
-    createsend.set(scope.engine, createsendconstructor->call(jsCallData));
-
-
-    QV4::ScopedValue v(scope, sendFunction(id));
-    QV4::ScopedObject api(scope, scope.engine->newObject());
-    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), v);
-    m_v4Engine->globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
-}
-
-// Requires handle and context scope
-QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::WorkerEngine::sendFunction(int id)
-{
-    QV4::ExecutionEngine *v4 = createsend.engine();
-    if (!v4)
-        return QV4::Encode::undefined();
-
-    QV4::Scope scope(v4);
-    QV4::ScopedFunctionObject f(scope, createsend.value());
-
-    QV4::ScopedValue v(scope);
-    QV4::JSCallData jsCallData(scope, 1);
-    jsCallData->args[0] = QV4::Primitive::fromInt32(id);
-    *jsCallData->thisObject = m_v4Engine->global();
-    v = f->call(jsCallData);
-    if (scope.hasException())
-        v = scope.engine->catchException();
-    return v->asReturnedValue();
-}
-
-#if QT_CONFIG(qml_network)
-QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAccessManager()
-{
-    if (!accessManager) {
-        if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
-            accessManager = p->qmlengine->networkAccessManagerFactory()->create(p);
-        } else {
-            accessManager = new QNetworkAccessManager(p);
-        }
-    }
-    return accessManager;
-}
-#endif
-
 QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *engine)
 : qmlengine(engine), m_nextId(0)
 {
@@ -305,15 +189,12 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4
                                                                        const QV4::Value *, const QV4::Value *argv, int argc)
 {
     QV4::Scope scope(b);
-    WorkerEngine *engine = static_cast<WorkerEngine *>(scope.engine->v8Engine);
+    WorkerScript *script = static_cast<WorkerScript *>(scope.engine->v8Engine);
 
-    int id = argc > 1 ? argv[1].toInt32() : 0;
-
-    QV4::ScopedValue v(scope, argc > 2 ? argv[2] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue v(scope, argc > 0 ? argv[0] : QV4::Primitive::undefinedValue());
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
 
-    QMutexLocker locker(&engine->p->m_lock);
-    WorkerScript *script = engine->p->workers.value(id);
+    QMutexLocker locker(&script->p->m_lock);
     if (script && script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerDataEvent(0, data));
 
@@ -352,16 +233,23 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::ExecutionEngine *v4 = script->v4();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(script);
     QV4::Scope scope(v4);
-    QV4::ScopedFunctionObject f(scope, script->workerEngine->onmessage.value());
+    QV4::ScopedString v(scope);
+    QV4::ScopedObject worker(scope, v4->globalObject->get((v = v4->newString(QStringLiteral("WorkerScript")))));
+    QV4::ScopedFunctionObject onmessage(scope);
+    if (worker)
+        onmessage = worker->get((v = v4->newString(QStringLiteral("onMessage"))));
+
+    if (!onmessage)
+        return;
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
 
     QV4::JSCallData jsCallData(scope, 1);
     *jsCallData->thisObject = v4->global();
     jsCallData->args[0] = value;
-    f->call(jsCallData);
+    onmessage->call(jsCallData);
     if (scope.hasException()) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();
         reportScriptException(script, error);
@@ -379,7 +267,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
     if (!script)
         return;
 
-    QV4::ExecutionEngine *v4 = script->v4();
+    QV4::ExecutionEngine *v4 = QV8Engine::getV4(script);
     QV4::Scope scope(v4);
     QScopedPointer<QV4::Script> program;
 
@@ -405,9 +293,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 void QQuickWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script,
                                                                   const QQmlError &error)
 {
-    QQuickWorkerScriptEnginePrivate *p = QQuickWorkerScriptEnginePrivate::get(script->workerEngine.data());
-
-    QMutexLocker locker(&p->m_lock);
+    QMutexLocker locker(&script->p->m_lock);
     if (script->owner)
         QCoreApplication::postEvent(script->owner, new WorkerErrorEvent(error));
 }
@@ -497,15 +383,40 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
-: id(id), owner(nullptr)
+    : QV8Engine(new QV4::ExecutionEngine)
+    , p(parent)
+    , id(id)
 {
-    workerEngine.reset(new QQuickWorkerScriptEnginePrivate::WorkerEngine(parent));
-    workerEngine->init(id);
+    m_v4Engine->v8Engine = this;
+
+    initQmlGlobalObject();
+
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedObject api(scope, scope.engine->newObject());
+    QV4::ScopedString name(scope, m_v4Engine->newString(QStringLiteral("sendMessage")));
+    QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(m_v4Engine, name, method_sendMessage, 1));
+    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), sendMessage);
+    m_v4Engine->globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
 {
+    delete m_v4Engine;
 }
+
+#if QT_CONFIG(qml_network)
+QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerScript::networkAccessManager()
+{
+    if (!accessManager) {
+        if (p->qmlengine && p->qmlengine->networkAccessManagerFactory()) {
+            accessManager.reset(p->qmlengine->networkAccessManagerFactory()->create(p));
+        } else {
+            accessManager.reset(new QNetworkAccessManager(p));
+        }
+    }
+    return accessManager.data();
+}
+#endif
 
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
