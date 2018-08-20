@@ -143,7 +143,7 @@ public:
     {
     public:
         WorkerEngine(QQuickWorkerScriptEnginePrivate *parent);
-        ~WorkerEngine();
+        ~WorkerEngine() override;
 
         void init();
 
@@ -163,7 +163,6 @@ public:
 #endif
     };
 
-    WorkerEngine *workerEngine;
     static QQuickWorkerScriptEnginePrivate *get(QV8Engine *e) {
         return static_cast<WorkerEngine *>(e)->p;
     }
@@ -174,9 +173,11 @@ public:
     QWaitCondition m_wait;
 
     struct WorkerScript {
-        WorkerScript();
+        WorkerScript(QQuickWorkerScriptEnginePrivate *parent);
         ~WorkerScript();
 
+        QV4::ExecutionEngine *v4() const { return QV8Engine::getV4(workerEngine.data()); }
+        QScopedPointer<WorkerEngine> workerEngine;
         int id;
         QUrl source;
         bool initialized;
@@ -292,7 +293,7 @@ QNetworkAccessManager *QQuickWorkerScriptEnginePrivate::WorkerEngine::networkAcc
 #endif
 
 QQuickWorkerScriptEnginePrivate::QQuickWorkerScriptEnginePrivate(QQmlEngine *engine)
-: workerEngine(nullptr), qmlengine(engine), m_nextId(0)
+: qmlengine(engine), m_nextId(0)
 {
 }
 
@@ -320,9 +321,9 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::getWorker(WorkerScript *scri
     if (!script->initialized) {
         script->initialized = true;
 
-        QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+        QV4::ExecutionEngine *v4 = QV8Engine::getV4(script->workerEngine.get());
         QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, workerEngine->sendFunction(script->id));
+        QV4::ScopedValue v(scope, script->workerEngine->sendFunction(script->id));
         script->qmlContext.set(v4, QV4::QmlContext::createWorkerContext(v4->rootContext(), script->source, v));
     }
 
@@ -361,9 +362,9 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
     if (!script)
         return;
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
+    QV4::ExecutionEngine *v4 = script->v4();
     QV4::Scope scope(v4);
-    QV4::ScopedFunctionObject f(scope, workerEngine->onmessage.value());
+    QV4::ScopedFunctionObject f(scope, script->workerEngine->onmessage.value());
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, v4));
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, script->qmlContext.value());
@@ -387,13 +388,14 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 
     QString fileName = QQmlFile::urlToLocalFileOrQrc(url);
 
-    QV4::ExecutionEngine *v4 = QV8Engine::getV4(workerEngine);
-    QV4::Scope scope(v4);
-    QScopedPointer<QV4::Script> program;
-
     WorkerScript *script = workers.value(id);
     if (!script)
         return;
+
+    QV4::ExecutionEngine *v4 = script->v4();
+    QV4::Scope scope(v4);
+    QScopedPointer<QV4::Script> program;
+
     script->source = url;
 
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, getWorker(script));
@@ -419,7 +421,7 @@ void QQuickWorkerScriptEnginePrivate::processLoad(int id, const QUrl &url)
 void QQuickWorkerScriptEnginePrivate::reportScriptException(WorkerScript *script,
                                                                   const QQmlError &error)
 {
-    QQuickWorkerScriptEnginePrivate *p = QQuickWorkerScriptEnginePrivate::get(workerEngine);
+    QQuickWorkerScriptEnginePrivate *p = QQuickWorkerScriptEnginePrivate::get(script->workerEngine.data());
 
     QMutexLocker locker(&p->m_lock);
     if (script->owner)
@@ -510,9 +512,11 @@ QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
     d->deleteLater();
 }
 
-QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript()
+QQuickWorkerScriptEnginePrivate::WorkerScript::WorkerScript(QQuickWorkerScriptEnginePrivate *parent)
 : id(-1), initialized(false), owner(nullptr)
 {
+    workerEngine.reset(new QQuickWorkerScriptEnginePrivate::WorkerEngine(parent));
+    workerEngine->init();
 }
 
 QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
@@ -522,7 +526,7 @@ QQuickWorkerScriptEnginePrivate::WorkerScript::~WorkerScript()
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
     typedef QQuickWorkerScriptEnginePrivate::WorkerScript WorkerScript;
-    WorkerScript *script = new WorkerScript;
+    WorkerScript *script = new WorkerScript(d);
 
     script->id = d->m_nextId++;
     script->owner = owner;
@@ -557,9 +561,6 @@ void QQuickWorkerScriptEngine::run()
 {
     d->m_lock.lock();
 
-    d->workerEngine = new QQuickWorkerScriptEnginePrivate::WorkerEngine(d);
-    d->workerEngine->init();
-
     d->m_wait.wakeAll();
 
     d->m_lock.unlock();
@@ -568,8 +569,6 @@ void QQuickWorkerScriptEngine::run()
 
     qDeleteAll(d->workers);
     d->workers.clear();
-
-    delete d->workerEngine; d->workerEngine = nullptr;
 }
 
 
