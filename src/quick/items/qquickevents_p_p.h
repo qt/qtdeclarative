@@ -83,7 +83,7 @@ class QQuickKeyEvent : public QObject
     Q_PROPERTY(bool isAutoRepeat READ isAutoRepeat CONSTANT)
     Q_PROPERTY(int count READ count CONSTANT)
     Q_PROPERTY(quint32 nativeScanCode READ nativeScanCode CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
     QQuickKeyEvent()
@@ -133,7 +133,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(int source READ source CONSTANT REVISION 7)
     Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT)
     Q_PROPERTY(bool isClick READ isClick CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
     Q_REVISION(11) Q_PROPERTY(int flags READ flags CONSTANT)
 
 public:
@@ -200,7 +200,7 @@ class QQuickWheelEvent : public QObject
     Q_PROPERTY(int buttons READ buttons CONSTANT)
     Q_PROPERTY(int modifiers READ modifiers CONSTANT)
     Q_PROPERTY(bool inverted READ inverted CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
     QQuickWheelEvent()
@@ -244,7 +244,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
 
 public:
     QQuickCloseEvent() {}
@@ -268,8 +268,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
     Q_PROPERTY(int pointId READ pointId CONSTANT)
     Q_PROPERTY(qreal timeHeld READ timeHeld CONSTANT)
     Q_PROPERTY(QVector2D velocity READ velocity CONSTANT)
-    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted CONSTANT)
-    Q_PROPERTY(QObject *exclusiveGrabber READ exclusiveGrabber WRITE setExclusiveGrabber CONSTANT)
+    Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+    Q_PROPERTY(QObject *exclusiveGrabber READ exclusiveGrabber WRITE setExclusiveGrabber)
 
 public:
     enum State {
