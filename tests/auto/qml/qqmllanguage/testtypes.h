@@ -1384,6 +1384,30 @@ private:
     QObjectList m_list;
 };
 
+class ScopedEnumsWithNameClash
+{
+    Q_GADGET
+    Q_ENUMS(ScopedEnum)
+    Q_ENUMS(OtherScopedEnum)
+
+public:
+    enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
+    enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
+};
+
+class ScopedEnumsWithResolvedNameClash
+{
+    Q_GADGET
+    Q_ENUMS(ScopedEnum)
+    Q_ENUMS(OtherScopedEnum)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+
+public:
+    enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
+    enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
+};
+
+
 void registerTypes();
 
 #endif // TESTTYPES_H
