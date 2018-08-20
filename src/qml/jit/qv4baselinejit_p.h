@@ -214,7 +214,10 @@ public:
 
 protected:
     bool hasLabel() const
-    { return std::find(labels.cbegin(), labels.cend(), instructionOffset()) != labels.cend(); }
+    { return std::find(labels.cbegin(), labels.cend(), currentInstructionOffset()) != labels.cend(); }
+
+    int absoluteOffsetForJump(int relativeOffset) const
+    { return nextInstructionOffset() + relativeOffset; }
 
 private:
     QV4::Function *function;

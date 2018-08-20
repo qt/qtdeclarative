@@ -91,7 +91,8 @@ public:
 
     void decode(const char *code, uint len);
 
-    int instructionOffset() const { return _offset; }
+    int currentInstructionOffset() const { return _currentOffset; }
+    int nextInstructionOffset() const { return _nextOffset; }
 
     static std::vector<int> collectLabelsInBytecode(const char *code, uint len);
 
@@ -102,7 +103,8 @@ protected:
     virtual void endInstruction(Moth::Instr::Type instr) = 0;
 
 private:
-    int _offset = 0;
+    int _currentOffset = 0;
+    int _nextOffset = 0;
 };
 
 } // Moth namespace
