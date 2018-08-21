@@ -771,13 +771,11 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 
 void QQuickTableViewPrivate::layoutTopLeftItem()
 {
-    // ###todo: support starting with other top-left items than 0,0
     const QPoint cell = loadRequest.firstCell();
-    Q_TABLEVIEW_ASSERT(cell == QPoint(0, 0), loadRequest.toString());
     auto topLeftItem = loadedTableItem(cell);
     auto item = topLeftItem->item;
 
-    item->setPosition(QPoint(tableMargins.left(), tableMargins.top()));
+    item->setPosition(loadRequest.startPosition());
     item->setSize(QSizeF(resolveColumnWidth(cell.x()), resolveRowHeight(cell.y())));
     topLeftItem->setVisible(true);
     qCDebug(lcTableViewDelegateLifecycle) << "geometry:" << topLeftItem->geometry();
@@ -938,18 +936,35 @@ void QQuickTableViewPrivate::beginRebuildTable()
     if (loadRequest.isActive())
         cancelLoadRequest();
 
-    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    QPoint topLeft;
+    QPointF topLeftPos;
+    calculateTableSize();
+
+    if (rebuildOptions & RebuildOption::All) {
+        releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+        topLeft = QPoint(0, 0);
+        topLeftPos = QPointF(tableMargins.left(), tableMargins.top());
+        q->setContentX(0);
+        q->setContentY(0);
+    } else if (rebuildOptions & RebuildOption::ViewportOnly) {
+        // Rebuild the table without flicking the content view back to origin, and
+        // start building from the same top left item that is currently showing
+        // (unless it has been removed from the model).
+        releaseLoadedItems(reusableFlag);
+        topLeft = loadedTable.topLeft();
+        topLeftPos = loadedTableOuterRect.topLeft();
+        topLeft.setX(qMin(topLeft.x(), tableSize.width() - 1));
+        topLeft.setY(qMin(topLeft.y(), tableSize.height() - 1));
+    } else {
+        Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
+    }
 
     loadedTable = QRect();
     loadedTableOuterRect = QRect();
     loadedTableInnerRect = QRect();
     contentSizeBenchMarkPoint = QPoint(-1, -1);
 
-    q->setContentX(0);
-    q->setContentY(0);
-
-    calculateTableSize();
-    loadInitialTopLeftItem();
+    loadInitialTopLeftItem(topLeft, topLeftPos);
     loadAndUnloadVisibleEdges();
 }
 
@@ -965,7 +980,7 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     }
 }
 
-void QQuickTableViewPrivate::loadInitialTopLeftItem()
+void QQuickTableViewPrivate::loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos)
 {
     Q_TABLEVIEW_ASSERT(loadedItems.isEmpty(), "");
 
@@ -980,7 +995,7 @@ void QQuickTableViewPrivate::loadInitialTopLeftItem()
 
     // Load top-left item. After loaded, loadItemsInsideRect() will take
     // care of filling out the rest of the table.
-    loadRequest.begin(QPoint(0, 0), QQmlIncubator::AsynchronousIfNested);
+    loadRequest.begin(cell, pos, QQmlIncubator::AsynchronousIfNested);
     processLoadRequest();
 }
 
