@@ -48,10 +48,13 @@ Window {
     height: 480
     visible: true
 
+    property int selectedX: -1
+    property int selectedY: -1
+
     TestTableModel {
         id: tableModel
         rowCount: 200
-        columnCount: 200
+        columnCount: 5000
     }
 
     Rectangle {
@@ -59,10 +62,42 @@ Window {
         anchors.margins: 10
         color: "darkgray"
 
+        Row {
+            id: menu
+            x: 2
+            y: 2
+            spacing: 1
+            Button {
+                text: "Add row"
+                onClicked: tableModel.insertRows(selectedY, 1)
+            }
+            Button {
+                text: "Remove row"
+                onClicked: tableModel.removeRows(selectedY, 1)
+            }
+            Button {
+                text: "Add column"
+                onClicked: tableModel.insertColumns(selectedX, 1)
+            }
+            Button {
+                text: "Remove column"
+                onClicked: tableModel.removeColumns(selectedX, 1)
+            }
+        }
+        Text {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: 2
+            text: "x:" + selectedX + ", y:" + selectedY
+        }
+
         TableView {
             id: tableView
-            anchors.fill: parent
-            anchors.margins: 1
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: menu.bottom
+            anchors.bottom: parent.bottom
+            anchors.margins: 2
             clip: true
 
             model: tableModel
@@ -77,16 +112,19 @@ Window {
                 id: delegate
                 implicitWidth: 100
                 implicitHeight: 50
-                color: checked ? "lightblue" : "white"
+                color: display
+                border.width: row === selectedY && column == selectedX ? 2 : 0
+                border.color: "darkgreen"
 
                 Text {
                     anchors.fill: parent
-                    text: display
+                    text: column + ", " + row
 
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            checked = !checked
+                            selectedX = column
+                            selectedY = row
                         }
                     }
                 }

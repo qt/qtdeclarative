@@ -2,7 +2,7 @@ TEMPLATE = app
 TARGET = tableview_abstracttablemodel
 QT += qml quick
 SOURCES += main.cpp
-RESOURCES += main.qml
+RESOURCES += main.qml Button.qml
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

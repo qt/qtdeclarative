@@ -41,6 +41,9 @@
 #include <QQmlApplicationEngine>
 #include <QAbstractTableModel>
 #include <QSet>
+#include <QDebug>
+
+typedef QPair<QString, bool> CellData;
 
 class TestTableModel : public QAbstractTableModel
 {
@@ -52,14 +55,36 @@ public:
     TestTableModel(QObject *parent = nullptr) : QAbstractTableModel(parent) { }
 
     int rowCount(const QModelIndex & = QModelIndex()) const override { return m_rows; }
-    void setRowCount(int count) { beginResetModel(); m_rows = count; emit rowCountChanged(); endResetModel(); }
+    void setRowCount(int count) {
+        beginResetModel();
+        m_rows = count;
+        rebuildModel();
+        emit rowCountChanged();
+        endResetModel();
+    }
 
     int columnCount(const QModelIndex & = QModelIndex()) const override { return m_cols; }
-    void setColumnCount(int count) { beginResetModel(); m_cols = count; emit columnCountChanged(); endResetModel(); }
+    void setColumnCount(int count) {
+        beginResetModel();
+        m_cols = count;
+        rebuildModel();
+        emit columnCountChanged();
+        endResetModel();
+    }
 
     int indexValue(const QModelIndex &index) const
     {
         return index.row() + (index.column() * rowCount());
+    }
+
+    void rebuildModel()
+    {
+        m_modelData = QVector<QVector<CellData>>(m_cols);
+        for (int x = 0; x < m_cols; ++x) {
+            m_modelData[x] = QVector<CellData>(m_rows);
+            for (int y = 0; y < m_rows; ++y)
+                m_modelData[x][y] = qMakePair(QStringLiteral("white"), false);
+        }
     }
 
     QVariant data(const QModelIndex &index, int role) const override
@@ -69,9 +94,9 @@ public:
 
         switch (role) {
         case Qt::DisplayRole:
-            return QString("%1, %2").arg(index.column()).arg(index.row());
+            return m_modelData[index.column()][index.row()].first;
         case Qt::CheckStateRole:
-            return m_checkedCells.contains(indexValue(index));
+            return m_modelData[index.column()][index.row()].second;
         default:
             return QVariant();
         }
@@ -85,15 +110,12 @@ public:
         if (role != Qt::CheckStateRole)
             return false;
 
-        int i = indexValue(index);
         bool checked = value.toBool();
-        if (checked == m_checkedCells.contains(i))
+        auto &cellData = m_modelData[index.column()][index.row()];
+        if (checked == cellData.second)
             return false;
 
-        if (checked)
-            m_checkedCells.insert(i);
-        else
-            m_checkedCells.remove(i);
+        cellData.second = checked;
 
         emit dataChanged(index, index, {role});
         return true;
@@ -107,6 +129,106 @@ public:
         };
     }
 
+    Q_INVOKABLE void insertRows(int row, int count)
+    {
+        insertRows(row, count, QModelIndex());
+    }
+
+    Q_INVOKABLE void removeRows(int row, int count)
+    {
+        removeRows(row, count, QModelIndex());
+    }
+
+    Q_INVOKABLE void insertColumns(int column, int count)
+    {
+        insertColumns(column, count, QModelIndex());
+    }
+
+    Q_INVOKABLE void removeColumns(int column, int count)
+    {
+        removeColumns(column, count, QModelIndex());
+    }
+
+    bool insertRows(int row, int count, const QModelIndex &) override
+    {
+        if (row > m_rows)
+            return false;
+
+        beginInsertRows(QModelIndex(), row, row + count - 1);
+
+        m_rows += count;
+
+        for (int y = 0; y < count; ++y) {
+            for (int x = 0; x < m_cols; ++x)
+                m_modelData[x].insert(row, qMakePair(QStringLiteral("lightgreen"), false));
+        }
+
+        endInsertRows();
+
+        return true;
+    }
+
+    bool removeRows(int row, int count, const QModelIndex &) override
+    {
+        if (row + count > m_rows)
+            count = m_rows - row;
+        if (count < 1)
+            return false;
+
+        beginRemoveRows(QModelIndex(), row, row + count - 1);
+
+        m_rows -= count;
+
+        for (int y = 0; y < count; ++y) {
+            for (int x = 0; x < m_cols; ++x)
+                m_modelData[x].remove(row);
+        }
+
+        endRemoveRows();
+
+        return true;
+    }
+
+    bool insertColumns(int column, int count, const QModelIndex &) override
+    {
+        if (column > m_cols)
+            return false;
+
+        beginInsertColumns(QModelIndex(), column, column + count - 1);
+
+        m_cols += count;
+
+        for (int x = 0; x < count; ++x) {
+            const int c = column + x;
+            m_modelData.insert(c, QVector<CellData>(m_rows));
+            for (int y = 0; y < m_rows; ++y)
+                m_modelData[c][y] = qMakePair(QStringLiteral("lightblue"), false);
+        }
+
+        endInsertColumns();
+
+        return true;
+    }
+
+    bool removeColumns(int column, int count, const QModelIndex &) override
+    {
+        if (column + count > m_cols)
+            count = m_cols - column;
+        if (count < 1)
+            return false;
+
+        beginRemoveColumns(QModelIndex(), column, column + count - 1);
+
+        m_cols -= count;
+
+        for (int x = 0; x < count; ++x)
+            m_modelData.remove(column + x);
+
+        endRemoveColumns();
+
+        return true;
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();
@@ -115,7 +237,7 @@ private:
     int m_rows = 0;
     int m_cols = 0;
 
-    QSet<int> m_checkedCells;
+    QVector<QVector<CellData>> m_modelData;
 };
 
 int main(int argc, char *argv[])
