@@ -219,7 +219,7 @@ public:
             case Subscript:
                 return true;
             default:
-                return false;
+                return requiresTDZCheck;
             }
         }
         bool isConstant() const { return type == Const; }
@@ -394,6 +394,7 @@ public:
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
         bool isReferenceToConst = false;
+        bool requiresTDZCheck = false;
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;

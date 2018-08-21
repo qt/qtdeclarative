@@ -134,6 +134,7 @@ public:
     void generate_SetUnwindHandler(int offset) override;
     void generate_UnwindDispatch() override;
     void generate_UnwindToLabel(int level, int offset) override;
+    void generate_DeadTemporalZoneCheck(int name) override;
     void generate_ThrowException() override;
     void generate_GetException() override;
     void generate_SetException() override;
@@ -208,6 +209,7 @@ public:
     void generate_Sub(int lhs) override;
     void generate_LoadQmlContext(int result) override;
     void generate_LoadQmlImportedScripts(int result) override;
+    void generate_InitializeBlockDeadTemporalZone(int firstReg, int count) override;
 
     void startInstruction(Moth::Instr::Type instr) override;
     void endInstruction(Moth::Instr::Type instr) override;

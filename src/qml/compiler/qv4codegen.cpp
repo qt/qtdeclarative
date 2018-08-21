@@ -47,6 +47,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
+#include <QScopeGuard>
 #include <private/qqmljsast_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
@@ -501,8 +502,14 @@ void Codegen::variableDeclaration(PatternElement *ast)
 {
     RegisterScope scope(this);
 
-    if (!ast->initializer)
+    if (!ast->initializer) {
+        if (ast->isLexicallyScoped()) {
+            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            Reference varToStore = targetForPatternElement(ast);
+            varToStore.storeConsumeAccumulator();
+        }
         return;
+    }
     initializeAndDestructureBindingElement(ast, Reference(), /*isDefinition*/ true);
 }
 
@@ -2258,6 +2265,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             r.isVolatile = true;
         r.isArgOrEval = resolved.isArgOrEval;
         r.isReferenceToConst = resolved.isConst;
+        r.requiresTDZCheck = resolved.requiresTDZCheck;
+        r.name = name; // used to show correct name at run-time when TDZ check fails.
         return r;
     }
 
@@ -3818,7 +3827,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         scope = other.scope;
         break;
     case Name:
-        name = other.name;
+        // name is always copied
         break;
     case Member:
         propertyBase = other.propertyBase;
@@ -3848,6 +3857,8 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     codegen = other.codegen;
     isReadonly = other.isReadonly;
     isReferenceToConst = other.isReferenceToConst;
+    name = other.name;
+    requiresTDZCheck = other.requiresTDZCheck;
     stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
     isVolatile = other.isVolatile;
     global = other.global;
@@ -3969,10 +3980,10 @@ void Codegen::Reference::storeOnStack(int slotIndex) const
 
 Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
 {
-    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile))
+    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile) && !requiresTDZCheck)
         return *this;
 
-    if (isStackSlot()) { // temp-to-temp move
+    if (isStackSlot() && !requiresTDZCheck) { // temp-to-temp move
         Reference dest = Reference::fromStackSlot(codegen, slotIndex);
         Instruction::MoveReg move;
         move.srcReg = stackSlot();
@@ -4130,6 +4141,14 @@ void Codegen::Reference::storeAccumulator() const
 
 void Codegen::Reference::loadInAccumulator() const
 {
+    auto tdzGuard = qScopeGuard([this](){
+        if (!requiresTDZCheck)
+            return;
+        Instruction::DeadTemporalZoneCheck check;
+        check.name = codegen->registerString(name);
+        codegen->bytecodeGenerator->addInstruction(check);
+    });
+
     switch (type) {
     case Accumulator:
         return;

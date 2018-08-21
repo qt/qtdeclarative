@@ -66,6 +66,7 @@ namespace JIT {
 #define callHelper(x) PlatformAssemblerCommon::callRuntimeUnchecked(#x, reinterpret_cast<void *>(&x))
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
+const QV4::Value::ValueTypeInternal EmptyTag = QV4::Value::ValueTypeInternal::Empty;
 
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
@@ -170,6 +171,11 @@ public:
     Jump jumpEmpty()
     {
         return branch64(Equal, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
+    }
+
+    Jump jumpNotEmpty()
+    {
+        return branch64(NotEqual, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
     }
 
     void toBoolean(std::function<void(RegisterID)> continuation)
@@ -632,6 +638,11 @@ public:
     Jump jumpEmpty()
     {
         return branch32(Equal, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
+    }
+
+    Jump jumpNotEmpty()
+    {
+        return branch32(NotEqual, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
     }
 
     void toBoolean(std::function<void(RegisterID)> continuation)
@@ -1536,6 +1547,19 @@ void BaselineAssembler::popContext()
     pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
     pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
     pasm()->storeHeapObject(PlatformAssembler::ScratchRegister, regAddr(CallData::Context));
+}
+
+void BaselineAssembler::deadTemporalZoneCheck(int offsetForSavedIP, int variableName)
+{
+    auto valueIsAliveJump = pasm()->jumpNotEmpty();
+    storeInstructionPointer(offsetForSavedIP);
+    saveAccumulatorInFrame();
+    prepareCallWithArgCount(2);
+    passInt32AsArg(variableName, 1);
+    passEngineAsArg(0);
+    ASM_GENERATE_RUNTIME_CALL(Runtime::method_throwReferenceError, CallResultDestination::Ignore);
+    gotoCatchException();
+    valueIsAliveJump.link(pasm());
 }
 
 void BaselineAssembler::ret()

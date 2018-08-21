@@ -290,6 +290,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
             addLabel(code - start + offset);
         COLLECTOR_END_INSTR(UnwindToLabel)
 
+        COLLECTOR_BEGIN_INSTR(DeadTemporalZoneCheck)
+        COLLECTOR_END_INSTR(DeadTemporalZoneCheck)
+
         COLLECTOR_BEGIN_INSTR(ThrowException)
         COLLECTOR_END_INSTR(ThrowException)
 
@@ -518,6 +521,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(Debug)
         COLLECTOR_END_INSTR(Debug)
 #endif // QT_NO_QML_DEBUGGER
+
+        COLLECTOR_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
+        COLLECTOR_END_INSTR(InitializeBlockDeadTemporalZone)
 
         COLLECTOR_BEGIN_INSTR(LoadQmlContext)
         COLLECTOR_END_INSTR(LoadQmlContext)

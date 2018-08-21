@@ -70,6 +70,9 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     scope->locals.alloc = locals;
     scope->nArgs = 0;
 
+    // Prepare the temporal dead zone
+    scope->setupLocalTemporalDeadZone(moduleFunction->compiledFunction);
+
     Scope valueScope(engine);
 
     // It's possible for example to re-export an import, for example:
@@ -106,7 +109,7 @@ ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *
     const Value *v = module->d()->unit->resolveExport(expectedName);
     if (hasProperty)
         *hasProperty = v != nullptr;
-    if (!v)
+    if (!v || v->isEmpty())
         return Encode::undefined();
     return v->asReturnedValue();
 }

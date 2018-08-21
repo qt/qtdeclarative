@@ -398,6 +398,10 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     function->formalsOffset = currentOffset;
     currentOffset += function->nFormals * sizeof(quint32);
 
+    function->sizeOfLocalTemporalDeadZone = irFunction->sizeOfLocalTemporalDeadZone;
+    function->sizeOfRegisterTemporalDeadZone = irFunction->sizeOfRegisterTemporalDeadZone;
+    function->firstTemporalDeadZoneRegister = irFunction->firstTemporalDeadZoneRegister;
+
     function->nLocals = irFunction->locals.size();
     function->localsOffset = currentOffset;
     currentOffset += function->nLocals * sizeof(quint32);
@@ -532,6 +536,7 @@ void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context 
     quint32 currentOffset = sizeof(QV4::CompiledData::Block);
     currentOffset = (currentOffset + 7) & ~quint32(0x7);
 
+    block->sizeOfLocalTemporalDeadZone = irBlock->sizeOfLocalTemporalDeadZone;
     block->nLocals = irBlock->locals.size();
     block->localsOffset = currentOffset;
     currentOffset += block->nLocals * sizeof(quint32);

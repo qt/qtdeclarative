@@ -189,6 +189,9 @@ struct Context {
 
     int nRegisters = 0;
     int registerOffset = -1;
+    int sizeOfLocalTemporalDeadZone = 0;
+    int firstTemporalDeadZoneRegister = 0;
+    int sizeOfRegisterTemporalDeadZone = 0;
     bool hasDirectEval = false;
     bool allVarsEscape = false;
     bool hasNestedFunctions = false;
@@ -323,6 +326,7 @@ struct Context {
         Type type = Unresolved;
         bool isArgOrEval = false;
         bool isConst = false;
+        bool requiresTDZCheck = false;
         int scope = -1;
         int index = -1;
         bool isValid() const { return type != Unresolved; }

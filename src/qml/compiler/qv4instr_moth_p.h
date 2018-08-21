@@ -118,6 +118,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_SetUnwindHandler(op) INSTRUCTION(op, SetUnwindHandler, 1, offset)
 #define INSTR_UnwindDispatch(op) INSTRUCTION(op, UnwindDispatch, 0)
 #define INSTR_UnwindToLabel(op) INSTRUCTION(op, UnwindToLabel, 2, level, offset)
+#define INSTR_DeadTemporalZoneCheck(op) INSTRUCTION(op, DeadTemporalZoneCheck, 1, name)
 #define INSTR_ThrowException(op) INSTRUCTION(op, ThrowException, 0)
 #define INSTR_GetException(op) INSTRUCTION(op, GetException, 0)
 #define INSTR_SetException(op) INSTRUCTION(op, SetException, 0)
@@ -192,6 +193,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_Sub(op) INSTRUCTION(op, Sub, 1, lhs)
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
+#define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
 
 #define FOR_EACH_MOTH_INSTR_ALL(F) \
     F(Nop) \
@@ -295,6 +297,7 @@ QT_BEGIN_NAMESPACE
     F(SetUnwindHandler) \
     F(UnwindDispatch) \
     F(UnwindToLabel) \
+    F(DeadTemporalZoneCheck) \
     F(ThrowException) \
     F(GetException) \
     F(SetException) \
@@ -326,6 +329,7 @@ QT_BEGIN_NAMESPACE
     F(LoadSuperConstructor) \
     F(PushScriptContext) \
     F(PopScriptContext) \
+    F(InitializeBlockDeadTemporalZone) \
     F(Debug) \
 
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)

@@ -181,6 +181,15 @@ struct Q_QML_EXPORT CppStackFrame {
         const Value *end = jsFrame->args + nRegisters;
         for (Value *v = jsFrame->args + argc; v < end; ++v)
             *v = Encode::undefined();
+
+        if (v4Function && v4Function->compiledFunction) {
+            const int firstDeadZoneRegister = v4Function->compiledFunction->firstTemporalDeadZoneRegister;
+            const int registerDeadZoneSize = v4Function->compiledFunction->sizeOfRegisterTemporalDeadZone;
+
+            const Value * tdzEnd = stackSpace + firstDeadZoneRegister + registerDeadZoneSize;
+            for (Value *v = stackSpace + firstDeadZoneRegister; v < tdzEnd; ++v)
+                *v = Primitive::emptyValue().asReturnedValue();
+        }
     }
 #endif
 

@@ -126,6 +126,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
             result.scope = scope;
             result.index = m.index;
             result.isConst = (m.scope == VariableScope::Const);
+            result.requiresTDZCheck = m.isLexicallyScoped();
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             return result;
@@ -162,6 +163,8 @@ Context::ResolvedName Context::resolveName(const QString &name)
                 result.index = i;
                 result.type = ResolvedName::Import;
                 result.isConst = true;
+                // We don't know at compile time whether the imported value is let/const or not.
+                result.requiresTDZCheck = true;
                 return result;
             }
         }
@@ -207,6 +210,13 @@ void Context::emitBlockHeader(Codegen *codegen)
             Instruction::CreateCallContext createContext;
             bytecodeGenerator->addInstruction(createContext);
         }
+    }
+
+    if (contextType == ContextType::Block && sizeOfRegisterTemporalDeadZone > 0) {
+        Instruction::InitializeBlockDeadTemporalZone tdzInit;
+        tdzInit.firstReg = registerOffset + nRegisters - sizeOfRegisterTemporalDeadZone;
+        tdzInit.count = sizeOfRegisterTemporalDeadZone;
+        bytecodeGenerator->addInstruction(tdzInit);
     }
 
     if (usesThis) {
@@ -303,21 +313,37 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         }
     }
 
+    QVector<Context::MemberMap::Iterator> localsInTDZ;
+    const auto registerLocal = [this, &localsInTDZ](Context::MemberMap::iterator member) {
+        if (member->isLexicallyScoped()) {
+            localsInTDZ << member;
+        } else {
+            member->index = locals.size();
+            locals.append(member.key());
+        }
+    };
+
+    QVector<Context::MemberMap::Iterator> registersInTDZ;
+    const auto allocateRegister = [bytecodeGenerator, &registersInTDZ](Context::MemberMap::iterator member) {
+        if (member->isLexicallyScoped())
+            registersInTDZ << member;
+        else
+            member->index = bytecodeGenerator->newRegister();
+    };
+
     switch (contextType) {
     case ContextType::ESModule:
     case ContextType::Block:
     case ContextType::Function:
     case ContextType::Binding: {
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
-            const QString &local = it.key();
             if (it->canEscape) {
-                it->index = locals.size();
-                locals.append(local);
+                registerLocal(it);
             } else {
                 if (it->type == Context::ThisFunctionName)
                     it->index = CallData::Function;
                 else
-                    it->index = bytecodeGenerator->newRegister();
+                    allocateRegister(it);
             }
         }
         break;
@@ -327,15 +353,25 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
             if (!it->isLexicallyScoped() && (contextType == ContextType::Global || !isStrict))
                 continue;
-            if (it->canEscape) {
-                it->index = locals.size();
-                locals.append(it.key());
-            } else {
-                it->index = bytecodeGenerator->newRegister();
-            }
+            if (it->canEscape)
+                registerLocal(it);
+            else
+                allocateRegister(it);
         }
         break;
     }
+
+    sizeOfLocalTemporalDeadZone = localsInTDZ.count();
+    for (auto &member: qAsConst(localsInTDZ)) {
+        member->index = locals.size();
+        locals.append(member.key());
+    }
+
+    sizeOfRegisterTemporalDeadZone = registersInTDZ.count();
+    firstTemporalDeadZoneRegister = bytecodeGenerator->currentRegister();
+    for (auto &member: qAsConst(registersInTDZ))
+        member->index = bytecodeGenerator->newRegister();
+
     nRegisters = bytecodeGenerator->currentRegister() - registerOffset;
 }
 

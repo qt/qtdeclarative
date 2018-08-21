@@ -1470,6 +1470,12 @@ ReturnedValue Runtime::method_popScriptContext(ExecutionEngine *engine)
     return root;
 }
 
+void Runtime::method_throwReferenceError(ExecutionEngine *engine, int nameIndex)
+{
+    Scope scope(engine);
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    engine->throwReferenceError(name);
+}
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {

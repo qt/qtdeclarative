@@ -76,6 +76,8 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     c->locals.size = nLocals;
     c->locals.alloc = nLocals;
 
+    c->setupLocalTemporalDeadZone(function->compilationUnit->unitData()->blockAt(blockIndex));
+
     return c;
 }
 
@@ -114,6 +116,8 @@ Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
     c->locals.alloc = localsAndFormals;
     // memory allocated from the JS heap is 0 initialized, so check if empty is 0
     Q_ASSERT(Primitive::undefinedValue().asReturnedValue() == 0);
+
+    c->setupLocalTemporalDeadZone(compiledFunction);
 
     Value *args = c->locals.values + nLocals;
     ::memcpy(args, frame->originalArguments, frame->originalArgumentsCount * sizeof(Value));
