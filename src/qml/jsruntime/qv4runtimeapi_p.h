@@ -148,7 +148,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     \
     /* literals */ \
     F(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length)) \
-    F(ReturnedValue, objectLiteral, (ExecutionEngine *engine, int classId, int argc, const Value *args)) \
+    F(ReturnedValue, objectLiteral, (ExecutionEngine *engine, int classId, const Value *args, int argc)) \
     F(ReturnedValue, createClass, (ExecutionEngine *engine, int classIndex, const Value &heritage, const Value *computedNames)) \
     \
     /* for-in, for-of and array destructuring */ \

@@ -800,8 +800,8 @@ void BaselineJIT::generate_DefineArray(int argc, int args)
 void BaselineJIT::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
 {
     as->prepareCallWithArgCount(4);
-    as->passJSSlotAsArg(args, 3);
-    as->passInt32AsArg(argc, 2);
+    as->passInt32AsArg(argc, 3);
+    as->passJSSlotAsArg(args, 2);
     as->passInt32AsArg(internalClassId, 1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_objectLiteral, CallResultDestination::InAccumulator);

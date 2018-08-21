@@ -961,7 +961,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(DefineObjectLiteral)
         QV4::Value *arguments = stack + args;
-        acc = Runtime::method_objectLiteral(engine, internalClassId, argc, arguments);
+        acc = Runtime::method_objectLiteral(engine, internalClassId, arguments, argc);
     MOTH_END_INSTR(DefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CreateClass)
