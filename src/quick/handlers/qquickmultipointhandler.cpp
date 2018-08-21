@@ -329,4 +329,13 @@ void QQuickMultiPointHandler::moveTarget(QPointF pos)
     m_centroid.m_position = target()->mapFromScene(m_centroid.m_scenePosition);
 }
 
+/*!
+    \readonly
+    \qmlproperty QQuickHandlerPoint QtQuick::MultiPointHandler::centroid
+
+    A point exactly in the middle of the currently-pressed touch points.
+    If only one point is pressed, it's the same as that point.
+    A handler that has a \l target will normally transform it relative to this point.
+*/
+
 QT_END_NAMESPACE
