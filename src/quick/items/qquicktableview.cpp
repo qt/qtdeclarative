@@ -1339,6 +1339,7 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadedTableOuterRect = QRect();
     loadedTableInnerRect = QRect();
     contentSizeBenchMarkPoint = QPoint(-1, -1);
+    columnRowPositionsInvalid = false;
 
     loadInitialTopLeftItem(topLeft, topLeftPos);
     loadAndUnloadVisibleEdges();
