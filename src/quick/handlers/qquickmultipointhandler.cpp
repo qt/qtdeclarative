@@ -88,7 +88,11 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
     if (candidatePoints.count() != m_currentPoints.count()) {
         m_currentPoints.clear();
-        setActive(false);
+        if (active()) {
+            setActive(false);
+            m_centroid.reset();
+            emit centroidChanged();
+        }
     } else if (hasCurrentPoints(event)) {
         return true;
     }
