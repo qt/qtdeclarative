@@ -126,7 +126,7 @@ static QByteArray functionName(Function *function)
 JIT::PlatformAssemblerCommon::~PlatformAssemblerCommon()
 {}
 
-void PlatformAssemblerCommon::link(Function *function)
+void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
 {
     for (const auto &jumpTarget : jumpsToLink)
         jumpTarget.jump.linkTo(labelForOffset[jumpTarget.offset], this);
@@ -148,7 +148,7 @@ void PlatformAssemblerCommon::link(Function *function)
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
         QByteArray name = functionName(function);
-        codeRef = linkBuffer.finalizeCodeWithDisassembly("%s", name.constData());
+        codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, "%s", name.constData());
 
         WTF::setDataFile(stderr);
         printDisassembledOutputWithCalls(buf.data(), functions);

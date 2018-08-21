@@ -645,7 +645,7 @@ public:
         ehTargets.push_back({ label, offset });
     }
 
-    void link(Function *function);
+    void link(Function *function, const char *jitKind);
 
     Value constant(int idx) const
     { return constantTable[idx]; }
