@@ -1,7 +1,7 @@
 option(host_build)
 TARGET     = QtQmlDevTools
 QT         = core-private
-CONFIG    += minimal_syncqt internal_module qmldevtools_build
+CONFIG    += minimal_syncqt internal_module qmldevtools_build generated_privates
 
 MODULE_INCNAME = QtQml
 INCLUDEPATH += $$OUT_PWD/../qml
