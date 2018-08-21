@@ -932,6 +932,8 @@ void QQuickTableViewPrivate::beginRebuildTable()
     Q_Q(QQuickTableView);
 
     rebuildScheduled = false;
+    rebuildOptions = scheduledRebuildOptions;
+    scheduledRebuildOptions = RebuildOption::None;
 
     if (loadRequest.isActive())
         cancelLoadRequest();
@@ -1086,8 +1088,14 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
     tableModel->drainReusableItemsPool(maxTime);
 }
 
-void QQuickTableViewPrivate::invalidateTable() {
+void QQuickTableViewPrivate::scheduleRebuildTable(RebuildOptions options) {
+    if (!q_func()->isComponentComplete()) {
+        // We'll rebuild the table once complete anyway
+        return;
+    }
+
     rebuildScheduled = true;
+    scheduledRebuildOptions |= options;
     q_func()->polish();
 }
 
@@ -1261,7 +1269,7 @@ void QQuickTableViewPrivate::modelUpdated(const QQmlChangeSet &changeSet, bool r
     Q_UNUSED(reset);
 
     Q_TABLEVIEW_ASSERT(!model->abstractItemModel(), "");
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::rowsMovedCallback(const QModelIndex &parent, int, int, const QModelIndex &, int )
@@ -1269,7 +1277,7 @@ void QQuickTableViewPrivate::rowsMovedCallback(const QModelIndex &parent, int, i
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::columnsMovedCallback(const QModelIndex &parent, int, int, const QModelIndex &, int)
@@ -1277,7 +1285,7 @@ void QQuickTableViewPrivate::columnsMovedCallback(const QModelIndex &parent, int
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::rowsInsertedCallback(const QModelIndex &parent, int, int)
@@ -1285,7 +1293,7 @@ void QQuickTableViewPrivate::rowsInsertedCallback(const QModelIndex &parent, int
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::rowsRemovedCallback(const QModelIndex &parent, int, int)
@@ -1293,7 +1301,7 @@ void QQuickTableViewPrivate::rowsRemovedCallback(const QModelIndex &parent, int,
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::columnsInsertedCallback(const QModelIndex &parent, int, int)
@@ -1301,7 +1309,7 @@ void QQuickTableViewPrivate::columnsInsertedCallback(const QModelIndex &parent, 
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::columnsRemovedCallback(const QModelIndex &parent, int, int)
@@ -1309,12 +1317,12 @@ void QQuickTableViewPrivate::columnsRemovedCallback(const QModelIndex &parent, i
     if (parent != QModelIndex())
         return;
 
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::modelResetCallback()
 {
-    invalidateTable();
+    scheduleRebuildTable(RebuildOption::All);
 }
 
 bool QQuickTableViewPrivate::updatePolishIfPossible() const
@@ -1466,7 +1474,7 @@ void QQuickTableView::setRowHeightProvider(QJSValue provider)
         return;
 
     d->rowHeightProvider = provider;
-    d->invalidateTable();
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
     emit rowHeightProviderChanged();
 }
 
@@ -1482,7 +1490,7 @@ void QQuickTableView::setColumnWidthProvider(QJSValue provider)
         return;
 
     d->columnWidthProvider = provider;
-    d->invalidateTable();
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
     emit columnWidthProviderChanged();
 }
 
@@ -1518,7 +1526,7 @@ void QQuickTableView::setModel(const QVariant &newModel)
     }
 
     d->connectToModel();
-    d->invalidateTable();
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
     emit modelChanged();
 }
 
@@ -1541,7 +1549,7 @@ void QQuickTableView::setDelegate(QQmlComponent *newDelegate)
         d->createWrapperModel();
 
     d->tableModel->setDelegate(newDelegate);
-    d->invalidateTable();
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
 
     emit delegateChanged();
 }

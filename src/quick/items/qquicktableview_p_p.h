@@ -175,6 +175,13 @@ public:
         Done
     };
 
+    enum class RebuildOption {
+        None = 0,
+        ViewportOnly = 0x1,
+        All = 0x2,
+    };
+    Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
+
 public:
     QQuickTableViewPrivate();
     ~QQuickTableViewPrivate() override;
@@ -209,6 +216,9 @@ public:
     QSize tableSize;
 
     RebuildState rebuildState = RebuildState::Done;
+    RebuildOptions rebuildOptions = RebuildOption::All;
+    RebuildOptions scheduledRebuildOptions = RebuildOption::All;
+
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
@@ -307,7 +317,7 @@ public:
     void beginRebuildTable();
     void layoutAfterLoadingInitialTable();
 
-    void invalidateTable();
+    void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
     void invalidateColumnRowPositions();
 
     void createWrapperModel();
