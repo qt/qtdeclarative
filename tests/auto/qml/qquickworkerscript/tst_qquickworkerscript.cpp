@@ -57,7 +57,6 @@ private slots:
     void scriptError_onCall();
     void script_function();
     void script_var();
-    void script_global();
     void stressDispose();
 
 private:
@@ -78,24 +77,30 @@ private:
 void tst_QQuickWorkerScript::source()
 {
     QQmlComponent component(&m_engine, testFileUrl("worker.qml"));
-    QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
+    QScopedPointer<QQuickWorkerScript>worker(qobject_cast<QQuickWorkerScript*>(component.create()));
     QVERIFY(worker != nullptr);
     const QMetaObject *mo = worker->metaObject();
 
     QVariant value(100);
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-    waitForEchoMessage(worker);
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), value);
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), value);
 
     QUrl source = testFileUrl("script_fixed_return.js");
     worker->setSource(source);
     QCOMPARE(worker->source(), source);
-    QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-    waitForEchoMessage(worker);
-    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>(), qVariantFromValue(QString("Hello_World")));
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello_World")));
+
+    source = testFileUrl("script_module.mjs");
+    worker->setSource(source);
+    QCOMPARE(worker->source(), source);
+    QVERIFY(QMetaObject::invokeMethod(worker.data(), "testSend", Q_ARG(QVariant, value)));
+    waitForEchoMessage(worker.data());
+    QCOMPARE(mo->property(mo->indexOfProperty("response")).read(worker.data()).value<QVariant>(), qVariantFromValue(QString("Hello from the module")));
 
     qApp->processEvents();
-    delete worker;
 }
 
 void tst_QQuickWorkerScript::messaging()
@@ -309,47 +314,6 @@ void tst_QQuickWorkerScript::script_var()
 
     qApp->processEvents();
     delete worker;
-}
-
-void tst_QQuickWorkerScript::script_global()
-{
-    {
-        QQmlComponent component(&m_engine, testFileUrl("worker_global.qml"));
-        QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
-        QVERIFY(worker != nullptr);
-
-        QString value("Hello");
-
-        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
-
-        QVERIFY(QMetaObject::invokeMethod(worker, "testSend", Q_ARG(QVariant, value)));
-
-        QTRY_COMPARE(qquickworkerscript_lastWarning,
-                testFileUrl("script_global.js").toString() + QLatin1String(":2: Invalid write to global property \"world\""));
-
-        qInstallMessageHandler(previousMsgHandler);
-
-        qApp->processEvents();
-        delete worker;
-    }
-
-    qquickworkerscript_lastWarning = QString();
-
-    {
-        QtMessageHandler previousMsgHandler = qInstallMessageHandler(qquickworkerscript_warningsHandler);
-
-        QQmlComponent component(&m_engine, testFileUrl("worker_global2.qml"));
-        QQuickWorkerScript *worker = qobject_cast<QQuickWorkerScript*>(component.create());
-        QVERIFY(worker != nullptr);
-
-        QTRY_COMPARE(qquickworkerscript_lastWarning,
-                testFileUrl("script_global2.js").toString() + QLatin1String(":1: Invalid write to global property \"world\""));
-
-        qInstallMessageHandler(previousMsgHandler);
-
-        qApp->processEvents();
-        delete worker;
-    }
 }
 
 // Rapidly create and destroy worker scripts to test resources are being disposed

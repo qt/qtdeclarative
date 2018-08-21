@@ -45,7 +45,7 @@
 
     Inside the worker thread, the ListModel is synchronized once the data is
     finished loading:
-    \snippet threading/threadedlistmodel/dataloader.js 0
+    \snippet threading/threadedlistmodel/dataloader.mjs 0
 
     \section1 WorkerScript
 
@@ -60,7 +60,7 @@
     \snippet threading/workerscript/workerscript.qml 0
 
     The workerscript then is free to take a really long time to calculate it:
-    \snippet threading/workerscript/workerscript.js 0
+    \snippet threading/workerscript/workerscript.mjs 0
 
     When it's done, the result returns to the main scene via the WorkerScript
     type:

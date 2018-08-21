@@ -56,7 +56,7 @@ Rectangle {
 //! [1]
     WorkerScript {
         id: myWorker
-        source: "workerscript.js"
+        source: "workerscript.mjs"
 
         onMessage: {
             if (messageObject.row == rowSpinner.value && messageObject.column == columnSpinner.value){ //Not an old result

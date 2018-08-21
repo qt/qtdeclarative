@@ -1163,8 +1163,10 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     Q_UNUSED(modelIndex);
     Q_Q(QQuickTableView);
 
-    if (auto item = qmlobject_cast<QQuickItem*>(object))
+    if (auto item = qmlobject_cast<QQuickItem*>(object)) {
         item->setParentItem(q->contentItem());
+        item->setZ(1);
+    }
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);

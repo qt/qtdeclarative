@@ -689,6 +689,7 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         qreal expectedY = margins.top() + (cell.y() * (expectedItemHeight + spacing.height()));
         QCOMPARE(item->x(), expectedX);
         QCOMPARE(item->y(), expectedY);
+        QCOMPARE(item->z(), 1);
         QCOMPARE(item->width(), expectedItemWidth);
         QCOMPARE(item->height(), expectedItemHeight);
     }

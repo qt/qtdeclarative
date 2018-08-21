@@ -65,8 +65,6 @@ DEFINE_MANAGED_VTABLE(QmlContext);
 void Heap::QQmlContextWrapper::init(QQmlContextData *context, QObject *scopeObject)
 {
     Object::init();
-    readOnly = true;
-    isNullWrapper = false;
     this->context = new QQmlContextDataRef(context);
     this->scopeObject.init(scopeObject);
 }
@@ -88,9 +86,6 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
     const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
-
-    if (resource->d()->isNullWrapper)
-        return Object::virtualGet(m, id, receiver, hasProperty);
 
     if (v4->callingQmlContext() != *resource->d()->context)
         return Object::virtualGet(m, id, receiver, hasProperty);
@@ -274,18 +269,6 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
     if (member < UINT_MAX)
         return wrapper->putValue(member, value);
 
-    if (wrapper->d()->isNullWrapper) {
-        if (wrapper && wrapper->d()->readOnly) {
-            QString error = QLatin1String("Invalid write to global property \"") + id.toQString() +
-                            QLatin1Char('"');
-            ScopedString e(scope, v4->newString(error));
-            v4->throwError(e);
-            return false;
-        }
-
-        return Object::virtualPut(m, id, value, receiver);
-    }
-
     // It's possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definitely needed.
     QQmlContextData *context = wrapper->getContext();
@@ -321,14 +304,10 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
 
     expressionContext->unresolvedNames = true;
 
-    if (wrapper->d()->readOnly) {
-        QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
-                        QLatin1Char('"');
-        v4->throwError(error);
-        return false;
-    }
-
-    return Object::virtualPut(m, id, value, receiver);
+    QString error = QLatin1String("Invalid write to global property \"") + name->toQString() +
+            QLatin1Char('"');
+    v4->throwError(error);
+    return false;
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
@@ -337,30 +316,6 @@ void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContex
     outer.set(internalClass->engine, outerContext->d());
 
     this->activation.set(internalClass->engine, qml->d());
-}
-
-Heap::QmlContext *QmlContext::createWorkerContext(ExecutionContext *parent, const QUrl &source, Value *sendFunction)
-{
-    Scope scope(parent);
-
-    QQmlContextData *context = new QQmlContextData;
-    context->baseUrl = source;
-    context->baseUrlString = source.toString();
-    context->isInternal = true;
-    context->isJSContext = true;
-
-    Scoped<QQmlContextWrapper> qml(scope, scope.engine->memoryManager->allocate<QQmlContextWrapper>(context, (QObject*)nullptr));
-    qml->d()->isNullWrapper = true;
-
-    qml->setReadOnly(false);
-    QV4::ScopedObject api(scope, scope.engine->newObject());
-    api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), *sendFunction);
-    qml->QV4::Object::put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
-    qml->setReadOnly(true);
-
-    Heap::QmlContext *c = scope.engine->memoryManager->alloc<QmlContext>(parent, qml);
-    Q_ASSERT(c->vtable() == staticVTable());
-    return c;
 }
 
 Heap::QmlContext *QmlContext::create(ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject)

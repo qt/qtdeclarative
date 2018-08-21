@@ -69,8 +69,6 @@ namespace Heap {
 struct QQmlContextWrapper : Object {
     void init(QQmlContextData *context, QObject *scopeObject);
     void destroy();
-    bool readOnly;
-    bool isNullWrapper;
 
     QQmlContextDataRef *context;
     QQmlQPointer<QObject> scopeObject;
@@ -96,8 +94,6 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
     inline QObject *getScopeObject() const { return d()->scopeObject; }
     inline QQmlContextData *getContext() const { return *d()->context; }
 
-    void setReadOnly(bool b) { d()->readOnly = b; }
-
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
 };
@@ -107,7 +103,6 @@ struct Q_QML_EXPORT QmlContext : public ExecutionContext
     V4_MANAGED(QmlContext, ExecutionContext)
     V4_INTERNALCLASS(QmlContext)
 
-    static Heap::QmlContext *createWorkerContext(QV4::ExecutionContext *parent, const QUrl &source, Value *sendFunction);
     static Heap::QmlContext *create(QV4::ExecutionContext *parent, QQmlContextData *context, QObject *scopeObject);
 
     QObject *qmlScope() const {

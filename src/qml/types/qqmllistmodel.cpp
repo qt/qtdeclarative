@@ -1882,13 +1882,13 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
     \snippet ../quick/threading/threadedlistmodel/timedisplay.qml 0
 
-    The included file, \tt dataloader.js, looks like this:
+    The included file, \tt dataloader.mjs, looks like this:
 
-    \snippet ../quick/threading/threadedlistmodel/dataloader.js 0
+    \snippet ../quick/threading/threadedlistmodel/dataloader.mjs 0
 
     The timer in the main example sends messages to the worker script by calling
     \l WorkerScript::sendMessage(). When this message is received,
-    \c WorkerScript.onMessage() is invoked in \c dataloader.js,
+    \c WorkerScript.onMessage() is invoked in \c dataloader.mjs,
     which appends the current time to the list model.
 
     Note the call to sync() from the external thread.
