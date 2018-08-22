@@ -3,7 +3,7 @@
 ** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,28 +37,58 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQuick/private/qquicktableview_p.h>
+import QtQuick 2.12
+import QtQuick.Window 2.3
+import Qt.labs.qmlmodels 1.0
 
-QT_BEGIN_NAMESPACE
+Item {
+    width: 640
+    height: 450
 
-//![class decl]
-class QtQuickTableViewPlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-public:
-    QtQuickTableViewPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
-    {}
+    property alias tableView: tableView
 
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.tableview"));
-        qmlRegisterType<QQuickTableView>(uri, 1, 0, "TableView");
+    TableView {
+        id: tableView
+        width: 600
+        height: 400
+        delegate: DelegateChooser {
+            DelegateChoice {
+                row: 0
+                column: 0
+                delegate: maskDelegate
+            }
+            DelegateChoice {
+                row: 1
+                column: 1
+                delegate: maskDelegate
+            }
+            DelegateChoice {
+                delegate: tableViewDelegate
+            }
+        }
     }
-};
-//![class decl]
 
-QT_END_NAMESPACE
+    Component {
+        // Add this mask delegate, to force QQmlTableInstanceModel to
+        // reuse the precise cells that we want to swap in the test
+        id: maskDelegate
+        Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+            color: "green"
+        }
+    }
 
-#include "plugin.moc"
+    Component {
+        id: tableViewDelegate
+        Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+            Text {
+                anchors.fill: parent
+                text: column + "," + row
+            }
+        }
+    }
+
+}

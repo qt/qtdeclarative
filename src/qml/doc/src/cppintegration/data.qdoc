@@ -420,6 +420,47 @@ To use an enum as a \l {QFlags}{flags} type in QML, see \l Q_FLAG().
 \note The names of enum values must begin with a capital letter in order to
 be accessible from QML.
 
+\code
+...
+enum class Status {
+          Ready,
+          Loading,
+          Error
+}
+Q_ENUM(Status)
+...
+\endcode
+
+Enum classes are registered in QML as scoped and unscoped properties.
+The \c Ready value will be registered at \c Message.Status.Ready and \c Message.Ready .
+
+When using enum classes, there can be multiple enums using the same identifiers.
+The unscoped registration will be overwriten by the last registered enum. For classes
+that contain such name conficts it is possible to disable the unscoped registration by
+annotating your class with a special Q_CLASSINFO macro.
+Use the name \c RegisterEnumClassesUnscoped with the value \c false to prevent scoped
+enums from being merged into the same name space.
+
+\code
+class Message : public QObject
+    {
+        Q_OBJECT
+        Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+        Q_ENUM(ScopedEnum)
+        Q_ENUM(OtherValue)
+
+    public:
+        enum class ScopedEnum {
+              Value1,
+              Value2,
+              OtherValue
+        };
+        enum class OtherValue {
+              Value1,
+              Value2
+        };
+    };
+\endcode
 
 \section2 Enumeration Types as Signal and Method Parameters
 

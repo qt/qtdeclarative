@@ -119,6 +119,7 @@ private slots:
     void checkRowColumnCount();
     void modelSignals();
     void dataChangedSignal();
+    void checkThatPoolIsDrainedWhenReuseIsFalse();
     void checkIfDelegatesAreReused_data();
     void checkIfDelegatesAreReused();
     void checkIfDelegatesAreReusedAsymmetricTableSize();
@@ -126,6 +127,7 @@ private slots:
     void checkContextProperties();
     void checkContextPropertiesQQmlListProperyModel_data();
     void checkContextPropertiesQQmlListProperyModel();
+    void checkRowAndColumnChangedButNotIndex();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -1309,6 +1311,24 @@ void tst_QQuickTableView::dataChangedSignal()
     }
 }
 
+void tst_QQuickTableView::checkThatPoolIsDrainedWhenReuseIsFalse()
+{
+    // Check that the reuse pool is drained
+    // immediately when setting reuseItems to false.
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // The pool should now contain preloaded items
+    QVERIFY(tableViewPrivate->tableModel->poolSize() > 0);
+    tableView->setReuseItems(false);
+    // The pool should now be empty
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
+}
+
 void tst_QQuickTableView::checkIfDelegatesAreReused_data()
 {
     QTest::addColumn<bool>("reuseItems");
@@ -1572,6 +1592,34 @@ void tst_QQuickTableView::checkContextPropertiesQQmlListProperyModel()
             QCOMPARE(modelDataProperty, QStringLiteral("%1").arg(row));
         }
     }
+}
+
+void tst_QQuickTableView::checkRowAndColumnChangedButNotIndex()
+{
+    // Check that context row and column changes even if the index stays the
+    // same when the item is reused. This can happen in rare cases if the item
+    // is first used at e.g (row 1, col 0), but then reused at (row 0, col 1)
+    // while the model has changed row count in-between.
+    LOAD_TABLEVIEW("checkrowandcolumnnotchanged.qml");
+
+    TestModel model(2, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    model.removeRow(1);
+    model.insertColumn(1);
+    tableView->forceLayout();
+
+    const auto item = tableViewPrivate->loadedTableItem(QPoint(1, 0))->item;
+    const auto context = qmlContext(item.data());
+    const int contextIndex = context->contextProperty("index").toInt();
+    const int contextRow = context->contextProperty("row").toInt();
+    const int contextColumn = context->contextProperty("column").toInt();
+
+    QCOMPARE(contextIndex, 1);
+    QCOMPARE(contextRow, 0);
+    QCOMPARE(contextColumn, 1);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

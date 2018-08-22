@@ -51,6 +51,9 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+QT_REQUIRE_CONFIG(quick_tableview);
+
 #include <QtCore/qpointer.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickflickable_p.h>

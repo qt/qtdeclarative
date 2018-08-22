@@ -1,5 +1,0 @@
-module Qt.labs.tableview
-plugin tableviewplugin
-classname QtQuickTableViewPlugin
-typeinfo plugins.qmltypes
-

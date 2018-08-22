@@ -34,6 +34,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qscopeguard.h>
 #include <QSignalSpy>
 #include <QFont>
 #include <QQmlFileSelector>
@@ -218,6 +219,8 @@ private slots:
     void lowercaseEnumCompileTime_data();
     void lowercaseEnumCompileTime();
     void scopedEnum();
+    void scopedEnumsWithNameClash();
+    void scopedEnumsWithResolvedNameClash();
     void qmlEnums();
     void literals_data();
     void literals();
@@ -3791,6 +3794,40 @@ void tst_qqmllanguage::scopedEnum()
     QMetaObject::invokeMethod(o.data(), "assignNewValue");
     QCOMPARE(o->scopedEnum(), MyTypeObject::MyScopedEnum::ScopedVal2);
     QCOMPARE(o->property("noScope").toInt(), (int)MyTypeObject::MyScopedEnum::ScopedVal2);
+}
+
+void tst_qqmllanguage::scopedEnumsWithNameClash()
+{
+    auto typeId = qmlRegisterUncreatableType<ScopedEnumsWithNameClash>("ScopedEnumsWithNameClashTest", 1, 0, "ScopedEnum", "Dummy reason");
+    auto registryGuard = qScopeGuard([typeId]() {
+        qmlUnregisterType(typeId);
+    });
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("scopedEnumsWithNameClash.qml"));
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "Previously registered enum will be overwritten due to name clash: ScopedEnumsWithNameClash.ScopedVal1");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "Previously registered enum will be overwritten due to name clash: ScopedEnumsWithNameClash.ScopedVal2");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "Previously registered enum will be overwritten due to name clash: ScopedEnumsWithNameClash.ScopedVal3");
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->property("success").toBool());
+}
+
+void tst_qqmllanguage::scopedEnumsWithResolvedNameClash()
+{
+    auto typeId = qmlRegisterUncreatableType<ScopedEnumsWithResolvedNameClash>("ScopedEnumsWithResolvedNameClashTest", 1, 0, "ScopedEnum", "Dummy reason");
+    auto registryGuard = qScopeGuard([typeId]() {
+        qmlUnregisterType(typeId);
+    });
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("scopedEnumsWithResolvedNameClash.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj != nullptr);
+    QVERIFY(obj->property("success").toBool());
 }
 
 void tst_qqmllanguage::qmlEnums()

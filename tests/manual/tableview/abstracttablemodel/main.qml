@@ -40,7 +40,6 @@
 import QtQuick 2.12
 import QtQuick.Window 2.3
 import QtQml.Models 2.2
-import Qt.labs.tableview 1.0
 import TestTableModel 0.1
 
 Window {

@@ -69,10 +69,6 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
-#ifdef Q_OS_OSX
-static const int MovementEndingTimerInterval = 100;
-#endif
-
 // Currently std::round can't be used on Android when using ndk g++, so
 // use C version instead. We could just define two versions of Round, one
 // for float and one for double, but then only one of them would be used
@@ -1497,25 +1493,24 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
     case Qt::ScrollUpdate:
         if (d->scrollingPhase)
             d->pressed = true;
-#ifdef Q_OS_MACOS
-        // TODO eliminate this timer when ScrollMomentum has been added
-        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
-#endif
+        break;
+    case Qt::ScrollMomentum:
+        d->pressed = false;
+        d->scrollingPhase = false;
+        d->draggingEnding();
+        event->accept();
+        d->lastPosTime = -1;
         break;
     case Qt::ScrollEnd:
-        // TODO most of this should be done at transition to ScrollMomentum phase,
-        // then do what the movementEndingTimer triggers at transition to ScrollEnd phase
         d->pressed = false;
         d->scrollingPhase = false;
         d->draggingEnding();
         event->accept();
         returnToBounds();
         d->lastPosTime = -1;
-#ifdef Q_OS_MACOS
-        d->movementEndingTimer.start(MovementEndingTimerInterval, this);
-#endif
-        return;
-    default:
+        d->stealMouse = false;
+        if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
+            movementEnding(true, true);
         return;
     }
 
@@ -1710,14 +1705,6 @@ void QQuickFlickable::timerEvent(QTimerEvent *event)
         d->delayedPressTimer.stop();
         if (d->delayedPressEvent) {
             d->replayDelayedPress();
-        }
-    } else if (event->timerId() == d->movementEndingTimer.timerId()) {
-        d->movementEndingTimer.stop();
-        if (!d->scrollingPhase) {
-            d->pressed = false;
-            d->stealMouse = false;
-            if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
-                movementEnding(true, true);
         }
     }
 }
@@ -2579,7 +2566,7 @@ void QQuickFlickablePrivate::draggingStarting()
 void QQuickFlickablePrivate::draggingEnding()
 {
     Q_Q(QQuickFlickable);
-    bool wasDragging = hData.dragging || vData.dragging;
+    const bool wasDragging = hData.dragging || vData.dragging;
     if (hData.dragging) {
         hData.dragging = false;
         emit q->draggingHorizontallyChanged();
@@ -2588,12 +2575,14 @@ void QQuickFlickablePrivate::draggingEnding()
         vData.dragging = false;
         emit q->draggingVerticallyChanged();
     }
-    if (wasDragging && !hData.dragging && !vData.dragging) {
-        emit q->draggingChanged();
-        emit q->dragEnded();
+    if (wasDragging) {
+        if (!hData.dragging && !vData.dragging) {
+            emit q->draggingChanged();
+            emit q->dragEnded();
+        }
+        hData.inRebound = false;
+        vData.inRebound = false;
     }
-    hData.inRebound = false;
-    vData.inRebound = false;
 }
 
 bool QQuickFlickablePrivate::isViewMoving() const

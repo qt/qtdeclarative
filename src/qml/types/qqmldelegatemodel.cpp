@@ -2093,9 +2093,7 @@ void QQmlDelegateModelItem::Dispose()
 
 void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
 {
-    if (idx == index)
-        return;
-
+    const int prevIndex = index;
     const int prevRow = row;
     const int prevColumn = column;
 
@@ -2103,8 +2101,8 @@ void QQmlDelegateModelItem::setModelIndex(int idx, int newRow, int newColumn)
     row = newRow;
     column = newColumn;
 
-    Q_EMIT modelIndexChanged();
-
+    if (idx != prevIndex)
+        emit modelIndexChanged();
     if (row != prevRow)
         emit rowChanged();
     if (column != prevColumn)

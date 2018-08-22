@@ -218,6 +218,7 @@ public:
         int attachedPropertiesId;
         int propertyValueSourceCast;
         int propertyValueInterceptorCast;
+        bool registerEnumClassesUnscoped;
     };
 
     struct QQmlSingletonTypeData
@@ -369,6 +370,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
         extraData.cd->attachedPropertiesType = nullptr;
         extraData.cd->propertyValueSourceCast = -1;
         extraData.cd->propertyValueInterceptorCast = -1;
+        extraData.cd->registerEnumClassesUnscoped = true;
         break;
     case QQmlType::SingletonType:
     case QQmlType::CompositeSingletonType:
@@ -495,9 +497,15 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
     d->extraData.cd->extFunc = type.extensionObjectCreate;
     d->extraData.cd->customParser = type.customParser;
+    d->extraData.cd->registerEnumClassesUnscoped = true;
 
     if (type.extensionMetaObject)
         d->extraData.cd->extMetaObject = type.extensionMetaObject;
+
+    // Check if the user wants only scoped enum classes
+    auto indexOfClassInfo = metaObject()->indexOfClassInfo("RegisterEnumClassesUnscoped");
+    if (indexOfClassInfo != -1 && QString::fromUtf8(metaObject()->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
+        d->extraData.cd->registerEnumClassesUnscoped = false;
 }
 
 QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterCompositeType &type)
@@ -834,7 +842,11 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
-            enums.insert(key, value);
+             if (!isScoped || (regType == QQmlType::CppType && extraData.cd->registerEnumClassesUnscoped)) {
+                if (enums.contains(key))
+                    qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
+                enums.insert(key, value);
+            }
             if (isScoped)
                 scoped->insert(key, value);
         }

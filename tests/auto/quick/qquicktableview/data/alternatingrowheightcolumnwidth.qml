@@ -39,7 +39,6 @@
 
 import QtQuick 2.12
 import QtQuick.Window 2.3
-import Qt.labs.tableview 1.0
 
 Item {
     width: 640
@@ -63,8 +62,8 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: column % 2 ? 30 : 40
-            implicitHeight: row % 2 ? 30 : 40
+            implicitWidth: column % 2 ? 40 : 30
+            implicitHeight: row % 2 ? 40 : 20
             color: "lightgray"
             border.width: 1
             Text {

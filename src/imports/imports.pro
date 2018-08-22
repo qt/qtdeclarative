@@ -17,8 +17,7 @@ qtHaveModule(quick) {
     SUBDIRS += \
         layouts \
         qtquick2 \
-        window \
-        tableview
+        window
 
     qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
