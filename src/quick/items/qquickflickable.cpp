@@ -1847,8 +1847,8 @@ void QQuickFlickable::flick(qreal xVelocity, qreal yVelocity)
     d->vData.velocity = yVelocity;
     d->hData.vTime = d->vData.vTime = d->timeline.time();
 
-    bool flickedX = d->flickX(xVelocity);
-    bool flickedY = d->flickY(yVelocity);
+    const bool flickedX = xflick() && !qFuzzyIsNull(xVelocity) && d->flickX(xVelocity);
+    const bool flickedY = yflick() && !qFuzzyIsNull(yVelocity) && d->flickY(yVelocity);
 
     if (flickedX)
         d->hMoved = true;
