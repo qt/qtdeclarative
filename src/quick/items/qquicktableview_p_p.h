@@ -289,7 +289,7 @@ public:
     FxTableItem *loadFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
 
     void releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag);
-    void releaseLoadedItems();
+    void releaseLoadedItems(QQmlTableInstanceModel::ReusableFlag reusableFlag);
 
     void unloadItem(const QPoint &cell);
     void unloadItems(const QLine &items);

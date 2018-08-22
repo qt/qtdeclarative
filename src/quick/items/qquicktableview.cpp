@@ -102,7 +102,7 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
-    releaseLoadedItems();
+    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
     if (tableModel)
         delete tableModel;
 }
@@ -375,13 +375,13 @@ FxTableItem *QQuickTableViewPrivate::loadFxTableItem(const QPoint &cell, QQmlInc
     return item;
 }
 
-void QQuickTableViewPrivate::releaseLoadedItems() {
+void QQuickTableViewPrivate::releaseLoadedItems(QQmlTableInstanceModel::ReusableFlag reusableFlag) {
     // Make a copy and clear the list of items first to avoid destroyed
     // items being accessed during the loop (QTBUG-61294)
     auto const tmpList = loadedItems;
     loadedItems.clear();
     for (FxTableItem *item : tmpList)
-        releaseItem(item, QQmlTableInstanceModel::NotReusable);
+        releaseItem(item, reusableFlag);
 }
 
 void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag)
@@ -934,7 +934,7 @@ void QQuickTableViewPrivate::beginRebuildTable()
     if (loadRequest.isActive())
         cancelLoadRequest();
 
-    releaseLoadedItems();
+    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
 
     loadedTable = QRect();
     loadedTableOuterRect = QRect();
