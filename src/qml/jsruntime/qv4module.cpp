@@ -109,8 +109,12 @@ ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *
     const Value *v = module->d()->unit->resolveExport(expectedName);
     if (hasProperty)
         *hasProperty = v != nullptr;
-    if (!v || v->isEmpty())
+    if (!v)
         return Encode::undefined();
+    if (v->isEmpty()) {
+        ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
+        return scope.engine->throwReferenceError(propName);
+    }
     return v->asReturnedValue();
 }
 
@@ -129,8 +133,24 @@ PropertyAttributes Module::virtualGetOwnProperty(Managed *m, PropertyKey id, Pro
         return Attr_Invalid;
     }
     if (p)
-        p->value = v->asReturnedValue();
+        p->value = v->isEmpty() ? Encode::undefined() : v->asReturnedValue();
+    if (v->isEmpty()) {
+        ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
+        scope.engine->throwReferenceError(propName);
+    }
     return Attr_Data | Attr_NotConfigurable;
+}
+
+bool Module::virtualHasProperty(const Managed *m, PropertyKey id)
+{
+    if (id.isSymbol())
+        return Object::virtualHasProperty(m, id);
+
+    const Module *module = static_cast<const Module *>(m);
+    Scope scope(m->engine());
+    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
+    const Value *v = module->d()->unit->resolveExport(expectedName);
+    return v != nullptr;
 }
 
 bool Module::virtualPreventExtensions(Managed *)

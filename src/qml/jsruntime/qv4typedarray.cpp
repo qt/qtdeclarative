@@ -467,6 +467,13 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
     return a->d()->type->read(a->d()->buffer->data->data() + byteOffset);
 }
 
+bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
+{
+    bool hasProperty = false;
+    virtualGet(m, id, nullptr, &hasProperty);
+    return hasProperty;
+}
+
 bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
     if (!id.isArrayIndex())

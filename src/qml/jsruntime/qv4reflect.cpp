@@ -200,9 +200,7 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
     if (scope.engine->hasException)
         return false;
 
-    bool hasProperty = false;
-    (void) o->get(name, nullptr, &hasProperty);
-    return Encode(hasProperty);
+    return Encode(o->hasProperty(name));
 }
 
 ReturnedValue Reflect::method_isExtensible(const FunctionObject *f, const Value *, const Value *argv, int argc)
