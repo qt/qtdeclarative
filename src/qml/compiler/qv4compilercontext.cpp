@@ -321,14 +321,6 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     Q_ASSERT(nRegisters == 0);
     registerOffset = bytecodeGenerator->currentRegister();
 
-    if (contextType == ContextType::ESModule && !localNameForDefaultExport.isEmpty()) {
-        if (!members.contains(localNameForDefaultExport)) {
-            // allocate a local slot for the default export, to be used in
-            // CodeGen::visit(ExportDeclaration*).
-            locals.append(localNameForDefaultExport);
-        }
-    }
-
     QVector<Context::MemberMap::Iterator> localsInTDZ;
     const auto registerLocal = [this, &localsInTDZ](Context::MemberMap::iterator member) {
         if (member->isLexicallyScoped()) {
@@ -381,6 +373,15 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     for (auto &member: qAsConst(localsInTDZ)) {
         member->index = locals.size();
         locals.append(member.key());
+    }
+
+    if (contextType == ContextType::ESModule && !localNameForDefaultExport.isEmpty()) {
+        if (!members.contains(localNameForDefaultExport)) {
+            // allocate a local slot for the default export, to be used in
+            // CodeGen::visit(ExportDeclaration*).
+            locals.append(localNameForDefaultExport);
+            ++sizeOfLocalTemporalDeadZone;
+        }
     }
 
     sizeOfRegisterTemporalDeadZone = registersInTDZ.count();

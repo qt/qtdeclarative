@@ -1051,9 +1051,6 @@ language/global-code/script-decl-var.js fails
 language/identifiers/other_id_continue.js fails
 language/identifiers/other_id_start-escaped.js fails
 language/identifiers/other_id_start.js fails
-language/module-code/instn-named-bndng-dflt-expr.js strictFails
-language/module-code/instn-named-bndng-dflt-named.js strictFails
-language/module-code/instn-named-bndng-dflt-star.js strictFails
 language/module-code/namespace/internals/delete-exported-uninit.js strictFails
 language/module-code/namespace/internals/enumerate-binding-uninit.js strictFails
 language/module-code/namespace/internals/get-own-property-str-found-uninit.js strictFails
