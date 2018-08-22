@@ -1547,6 +1547,12 @@ void QQuickTableView::setReuseItems(bool reuse)
 
     d->reusableFlag = reuse ? QQmlTableInstanceModel::Reusable : QQmlTableInstanceModel::NotReusable;
 
+    if (!reuse && d->tableModel) {
+        // When we're told to not reuse items, we
+        // immediately, as documented, drain the pool.
+        d->tableModel->drainReusableItemsPool(0);
+    }
+
     emit reuseItemsChanged();
 }
 

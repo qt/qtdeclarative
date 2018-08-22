@@ -119,6 +119,7 @@ private slots:
     void checkRowColumnCount();
     void modelSignals();
     void dataChangedSignal();
+    void checkThatPoolIsDrainedWhenReuseIsFalse();
     void checkIfDelegatesAreReused_data();
     void checkIfDelegatesAreReused();
     void checkIfDelegatesAreReusedAsymmetricTableSize();
@@ -1307,6 +1308,24 @@ void tst_QQuickTableView::dataChangedSignal()
 
         QCOMPARE(modelDataBindingProperty, expectedModelData);
     }
+}
+
+void tst_QQuickTableView::checkThatPoolIsDrainedWhenReuseIsFalse()
+{
+    // Check that the reuse pool is drained
+    // immediately when setting reuseItems to false.
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // The pool should now contain preloaded items
+    QVERIFY(tableViewPrivate->tableModel->poolSize() > 0);
+    tableView->setReuseItems(false);
+    // The pool should now be empty
+    QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
 }
 
 void tst_QQuickTableView::checkIfDelegatesAreReused_data()
