@@ -202,8 +202,13 @@ PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, Propert
         Scope scope(module->engine());
         ScopedString exportName(scope, scope.engine->newString(exportedNames.at(exportIndex)));
         exportIndex++;
-        if (pd)
-            pd->value = *module->d()->unit->resolveExport(exportName);
+        const Value *v = module->d()->unit->resolveExport(exportName);
+        if (pd) {
+            if (v->isEmpty())
+                scope.engine->throwReferenceError(exportName);
+            else
+                pd->value = *v;
+        }
         return exportName->toPropertyKey();
     }
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);

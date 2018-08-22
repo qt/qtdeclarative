@@ -115,8 +115,7 @@ ReturnedValue ObjectIterator::nextPropertyNameAsString()
 
     PropertyAttributes attrs;
     Scope scope(engine);
-    ScopedProperty p(scope);
-    ScopedPropertyKey key(scope, next(p, &attrs));
+    ScopedPropertyKey key(scope, next(nullptr, &attrs));
     if (!key->isValid())
         return Encode::null();
 
@@ -163,12 +162,13 @@ PropertyKey ForInIteratorObject::nextProperty() const
     Scope scope(this);
     ScopedObject c(scope, d()->current);
     ScopedObject o(scope);
+    ScopedProperty p(scope);
     ScopedPropertyKey key(scope);
     PropertyAttributes attrs;
 
     while (1) {
         while (1) {
-            key = d()->iterator->next(c, nullptr, &attrs);
+            key = d()->iterator->next(c, p, &attrs);
             if (!key->isValid())
                 break;
             if (!attrs.isEnumerable() || key->isSymbol())

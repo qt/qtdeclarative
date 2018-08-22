@@ -1051,8 +1051,6 @@ language/global-code/script-decl-var.js fails
 language/identifiers/other_id_continue.js fails
 language/identifiers/other_id_start-escaped.js fails
 language/identifiers/other_id_start.js fails
-language/module-code/namespace/internals/enumerate-binding-uninit.js strictFails
-language/module-code/namespace/internals/object-keys-binding-uninit.js strictFails
 language/statements/async-function/cptn-decl.js fails
 language/statements/async-function/declaration-returns-promise.js fails
 language/statements/async-function/evaluation-body.js fails
