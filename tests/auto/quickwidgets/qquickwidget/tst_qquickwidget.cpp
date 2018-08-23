@@ -569,7 +569,10 @@ void tst_qquickwidget::mouseEventWindowPos()
 
     QVERIFY(!rootItem->property("wasClicked").toBool());
     QVERIFY(!rootItem->property("wasDoubleClicked").toBool());
-    QVERIFY(!rootItem->property("wasMoved").toBool());
+    // Moving an item under the mouse cursor will trigger a mouse move event.
+    // The above quick->move() will trigger a mouse move event on macOS.
+    // Discard that in order to get a clean slate for the actual tests.
+    rootItem->setProperty("wasMoved", QVariant(false));
 
     QWindow *window = widget.windowHandle();
     QVERIFY(window);
