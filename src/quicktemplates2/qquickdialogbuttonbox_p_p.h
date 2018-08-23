@@ -81,7 +81,7 @@ public:
     Qt::Alignment alignment = 0;
     QQuickDialogButtonBox::Position position = QQuickDialogButtonBox::Footer;
     QPlatformDialogHelper::StandardButtons standardButtons = QPlatformDialogHelper::NoButton;
-    QQuickDialogButtonBox::ButtonLayout buttonLayout = QQuickDialogButtonBox::UnknownLayout;
+    QPlatformDialogHelper::ButtonLayout buttonLayout = QPlatformDialogHelper::UnknownLayout;
     QQmlComponent *delegate = nullptr;
 };
 
