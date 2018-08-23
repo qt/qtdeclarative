@@ -164,7 +164,7 @@ public:
     };
 
     enum class RebuildState {
-        NotStarted = 0,
+        Begin = 0,
         LoadInitalTable,
         VerifyTable,
         LayoutTable,
@@ -208,7 +208,7 @@ public:
 
     QSize tableSize;
 
-    RebuildState rebuildState = RebuildState::NotStarted;
+    RebuildState rebuildState = RebuildState::Done;
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
@@ -221,6 +221,7 @@ public:
     bool columnRowPositionsInvalid = false;
     bool layoutWarningIssued = false;
     bool polishing = false;
+    bool rebuildScheduled = true;
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;

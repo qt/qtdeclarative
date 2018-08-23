@@ -136,6 +136,11 @@ public:
         endResetModel();
     }
 
+    Q_INVOKABLE void addRow(int row)
+    {
+        insertRow(row, QModelIndex());
+    }
+
 signals:
     void rowCountChanged();
     void columnCountChanged();
