@@ -57,16 +57,31 @@ DEFINE_OBJECT_VTABLE(TypedArray);
 
 Q_STATIC_ASSERT((int)ExecutionEngine::NTypedArrayTypes == (int)Heap::TypedArray::NTypes);
 
+static inline int toInt32(Value v)
+{
+    Q_ASSERT(v.isNumber());
+    if (v.isInteger())
+        return v.integerValue();
+    return Double::toInt32(v.doubleValue());
+}
+
+static inline double toDouble(Value v)
+{
+    Q_ASSERT(v.isNumber());
+    if (v.isInteger())
+        return v.integerValue();
+    return v.doubleValue();
+}
+
 ReturnedValue Int8ArrayRead(const char *data, int index)
 {
     return Encode((int)(signed char)data[index]);
 }
 
-void Int8ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void Int8ArrayWrite(char *data, int index, const Value &value)
 {
-    signed char v = (signed char)value.toUInt32();
-    if (e->hasException)
-        return;
+    int n = toInt32(value);
+    signed char v = static_cast<signed char>(n);
     data[index] = v;
 }
 
@@ -75,23 +90,22 @@ ReturnedValue UInt8ArrayRead(const char *data, int index)
     return Encode((int)(unsigned char)data[index]);
 }
 
-void UInt8ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void UInt8ArrayWrite(char *data, int index, const Value &value)
 {
-    unsigned char v = (unsigned char)value.toUInt32();
-    if (e->hasException)
-        return;
+    int n = toInt32(value);
+    unsigned char v = static_cast<unsigned char>(uint(n));
     data[index] = v;
 }
 
-void UInt8ClampedArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void UInt8ClampedArrayWrite(char *data, int index, const Value &value)
 {
+    Q_ASSERT(value.isNumber());
     if (value.isInteger()) {
         data[index] = (char)(unsigned char)qBound(0, value.integerValue(), 255);
         return;
     }
-    double d = value.toNumber();
-    if (e->hasException)
-        return;
+    Q_ASSERT(value.isDouble());
+    double d = value.doubleValue();
     // ### is there a way to optimise this?
     if (d <= 0 || std::isnan(d)) {
         data[index] = 0;
@@ -123,11 +137,10 @@ ReturnedValue Int16ArrayRead(const char *data, int index)
     return Encode((int)*(const short *)(data + index));
 }
 
-void Int16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void Int16ArrayWrite(char *data, int index, const Value &value)
 {
-    short v = (short)value.toInt32();
-    if (e->hasException)
-        return;
+    int n = toInt32(value);
+    short v = static_cast<short>(n);
     *(short *)(data + index) = v;
 }
 
@@ -136,11 +149,10 @@ ReturnedValue UInt16ArrayRead(const char *data, int index)
     return Encode((int)*(const unsigned short *)(data + index));
 }
 
-void UInt16ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void UInt16ArrayWrite(char *data, int index, const Value &value)
 {
-    unsigned short v = (unsigned short)value.toInt32();
-    if (e->hasException)
-        return;
+    int n = toInt32(value);
+    unsigned short v = static_cast<unsigned short>(n);
     *(unsigned short *)(data + index) = v;
 }
 
@@ -149,11 +161,9 @@ ReturnedValue Int32ArrayRead(const char *data, int index)
     return Encode(*(const int *)(data + index));
 }
 
-void Int32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void Int32ArrayWrite(char *data, int index, const Value &value)
 {
-    int v = (int)value.toInt32();
-    if (e->hasException)
-        return;
+    int v = toInt32(value);
     *(int *)(data + index) = v;
 }
 
@@ -162,11 +172,10 @@ ReturnedValue UInt32ArrayRead(const char *data, int index)
     return Encode(*(const unsigned int *)(data + index));
 }
 
-void UInt32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void UInt32ArrayWrite(char *data, int index, const Value &value)
 {
-    unsigned int v = (unsigned int)value.toUInt32();
-    if (e->hasException)
-        return;
+    int n = toInt32(value);
+    unsigned v = static_cast<unsigned>(n);
     *(unsigned int *)(data + index) = v;
 }
 
@@ -175,11 +184,9 @@ ReturnedValue Float32ArrayRead(const char *data, int index)
     return Encode(*(const float *)(data + index));
 }
 
-void Float32ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void Float32ArrayWrite(char *data, int index, const Value &value)
 {
-    float v = value.toNumber();
-    if (e->hasException)
-        return;
+    float v = toDouble(value);
     *(float *)(data + index) = v;
 }
 
@@ -188,11 +195,9 @@ ReturnedValue Float64ArrayRead(const char *data, int index)
     return Encode(*(const double *)(data + index));
 }
 
-void Float64ArrayWrite(ExecutionEngine *e, char *data, int index, const Value &value)
+void Float64ArrayWrite(char *data, int index, const Value &value)
 {
-    double v = value.toNumber();
-    if (e->hasException)
-        return;
+    double v = toDouble(value);
     *(double *)(data + index) = v;
 }
 
@@ -277,7 +282,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             for (uint i = 0; i < l; ++i) {
                 Primitive val;
                 val.setRawValue(read(src, i*srcElementSize));
-                write(scope.engine, dest, i*destElementSize, val);
+                write(dest, i*destElementSize, val);
             }
         }
 
@@ -346,7 +351,10 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
     ScopedValue val(scope);
     while (idx < l) {
         val = o->get(idx);
-        array->d()->type->write(scope.engine, b, 0, val);
+        val = val->convertedToNumber();
+        if (scope.engine->hasException)
+            return Encode::undefined();
+        array->d()->type->write(b, 0, val);
         if (scope.engine->hasException)
             return Encode::undefined();
         ++idx;
@@ -384,6 +392,8 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
     uint index = id.asArrayIndex();
     Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
+    if (a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
@@ -409,13 +419,18 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
 
     Scope scope(v4);
     Scoped<TypedArray> a(scope, static_cast<TypedArray *>(m));
+    if (a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
     if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength())
         return false;
 
-    a->d()->type->write(scope.engine, a->d()->buffer->data->data(), byteOffset, value);
+    Value v = Primitive::fromReturnedValue(value.convertedToNumber());
+    if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+    a->d()->type->write(a->d()->buffer->data->data(), byteOffset, v);
     return true;
 }
 
@@ -612,13 +627,15 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
 
     double val = argc ? argv[0].toNumber() : std::numeric_limits<double>::quiet_NaN();
     Value value = Primitive::fromDouble(val);
+    if (scope.hasException() || v->d()->buffer->isDetachedBuffer())
+        return scope.engine->throwTypeError();
 
     char *data = v->d()->buffer->data->data();
     uint bytesPerElement = v->d()->type->bytesPerElement;
     uint byteOffset = v->d()->byteOffset;
 
     while (k < fin) {
-        v->d()->type->write(scope.engine, data, byteOffset + k * bytesPerElement, value);
+        v->d()->type->write(data, byteOffset + k * bytesPerElement, value);
         k++;
     }
 
@@ -1237,7 +1254,12 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
         ScopedValue val(scope);
         while (idx < l) {
             val = o->get(idx);
-            a->d()->type->write(scope.engine, b, 0, val);
+            if (scope.hasException())
+                return Encode::undefined();
+            val = val->convertedToNumber();
+            if (scope.hasException() || buffer->isDetachedBuffer())
+                return scope.engine->throwTypeError();
+            a->d()->type->write(b, 0, val);
             if (scope.engine->hasException)
                 RETURN_UNDEFINED();
             ++idx;
@@ -1278,7 +1300,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     for (uint i = 0; i < l; ++i) {
         Primitive val;
         val.setRawValue(read(src, i*srcElementSize));
-        write(scope.engine, dest, i*elementSize, val);
+        write(dest, i*elementSize, val);
     }
 
     if (srcCopy)

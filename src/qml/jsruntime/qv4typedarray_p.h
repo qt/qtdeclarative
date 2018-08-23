@@ -61,7 +61,7 @@ namespace QV4 {
 struct ArrayBuffer;
 
 typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(ExecutionEngine *engine, char *data, int index, const Value &value);
+typedef void (*TypedArrayWrite)(char *data, int index, const Value &value);
 
 struct TypedArrayOperations {
     int bytesPerElement;
