@@ -109,7 +109,7 @@ struct GeneratorFunction : ScriptFunction
     V4_INTERNALCLASS(GeneratorFunction)
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
@@ -119,7 +119,6 @@ struct MemberGeneratorFunction : GeneratorFunction
     V4_INTERNALCLASS(MemberGeneratorFunction)
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function, String *name);
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct GeneratorPrototype : Object

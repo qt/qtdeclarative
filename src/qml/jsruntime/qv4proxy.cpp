@@ -48,6 +48,7 @@
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ProxyObject);
+DEFINE_OBJECT_VTABLE(ProxyFunctionObject);
 
 void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handler)
 {
@@ -56,6 +57,18 @@ void Heap::ProxyObject::init(const QV4::Object *target, const QV4::Object *handl
     this->target.set(e, target->d());
     this->handler.set(e, handler->d());
 }
+
+void Heap::ProxyFunctionObject::init(const QV4::FunctionObject *target, const QV4::Object *handler)
+{
+    ExecutionEngine *e = internalClass->engine;
+    FunctionObject::init(e->rootContext());
+    this->target.set(e, target->d());
+    this->handler.set(e, handler->d());
+
+    if (!target->isConstructor())
+        jsConstruct = nullptr;
+}
+
 
 ReturnedValue ProxyObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
@@ -631,15 +644,68 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m)
 }
 
 
-//ReturnedValue ProxyObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
-//{
+ReturnedValue ProxyFunctionObject::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    Scope scope(f);
+    const ProxyObject *o = static_cast<const ProxyObject *>(f);
+    if (!o->d()->handler)
+        return scope.engine->throwTypeError();
 
-//}
+    ScopedFunctionObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("construct")));
+    ScopedValue trap(scope, handler->get(name));
 
-//ReturnedValue ProxyObject::call(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
-//{
+    if (scope.hasException())
+        return Encode::undefined();
+    if (trap->isNullOrUndefined()) {
+        Q_ASSERT(target->isConstructor());
+        return target->callAsConstructor(argv, argc, newTarget);
+    }
+    if (!trap->isFunctionObject())
+        return scope.engine->throwTypeError();
 
-//}
+    ScopedFunctionObject trapFunction(scope, trap);
+    Value *arguments = scope.alloc(3);
+    arguments[0] = target;
+    arguments[1] = scope.engine->newArrayObject(argv, argc);
+    arguments[2] = newTarget ? *newTarget : Primitive::undefinedValue();
+    ScopedObject result(scope, trapFunction->call(handler, arguments, 3));
+
+    if (!result)
+        return scope.engine->throwTypeError();
+    return result->asReturnedValue();
+}
+
+ReturnedValue ProxyFunctionObject::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(f);
+
+    const ProxyObject *o = static_cast<const ProxyObject *>(f);
+    if (!o->d()->handler)
+        return scope.engine->throwTypeError();
+
+    ScopedFunctionObject target(scope, o->d()->target);
+    Q_ASSERT(target);
+    ScopedObject handler(scope, o->d()->handler);
+    ScopedString name(scope, scope.engine->newString(QStringLiteral("apply")));
+    ScopedValue trap(scope, handler->get(name));
+
+    if (scope.hasException())
+        return Encode::undefined();
+    if (trap->isNullOrUndefined())
+        return target->call(thisObject, argv, argc);
+    if (!trap->isFunctionObject())
+        return scope.engine->throwTypeError();
+
+    ScopedFunctionObject trapFunction(scope, trap);
+    Value *arguments = scope.alloc(3);
+    arguments[0] = target;
+    arguments[1] = thisObject ? *thisObject : Primitive::undefinedValue();
+    arguments[2] = scope.engine->newArrayObject(argv, argc);
+    return trapFunction->call(handler, arguments, 3);
+}
 
 DEFINE_OBJECT_VTABLE(Proxy);
 
@@ -668,8 +734,10 @@ ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Val
         if (!phandler->d()->handler)
             return scope.engine->throwTypeError();
 
-    ScopedObject o(scope, scope.engine->memoryManager->allocate<ProxyObject>(target, handler));
-    return o->asReturnedValue();
+    const FunctionObject *targetFunction = target->as<FunctionObject>();
+    if (targetFunction)
+        return scope.engine->memoryManager->allocate<ProxyFunctionObject>(targetFunction, handler)->asReturnedValue();
+    return scope.engine->memoryManager->allocate<ProxyObject>(target, handler)->asReturnedValue();
 }
 
 ReturnedValue Proxy::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
@@ -683,6 +751,7 @@ ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, co
     ScopedObject proxy(scope, Proxy::virtualCallAsConstructor(f, argv, argc, f));
     if (scope.hasException())
         return Encode::undefined();
+    Q_ASSERT(proxy);
 
     ScopedString revoke(scope, scope.engine->newString(QStringLiteral("revoke")));
     ScopedFunctionObject revoker(scope, createBuiltinFunction(scope.engine, revoke, method_revoke, 0));
@@ -698,8 +767,9 @@ ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, co
 ReturnedValue Proxy::method_revoke(const FunctionObject *f, const Value *, const Value *, int)
 {
     Scope scope(f);
-    Scoped<ProxyObject> proxy(scope, f->get(scope.engine->symbol_revokableProxy()));
-    Q_ASSERT(proxy);
+    ScopedObject o(scope, f->get(scope.engine->symbol_revokableProxy()));
+    Q_ASSERT(o);
+    ProxyObject *proxy = o->cast<ProxyObject>();
 
     proxy->d()->target.set(scope.engine, nullptr);
     proxy->d()->handler.set(scope.engine, nullptr);

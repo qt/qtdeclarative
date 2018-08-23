@@ -63,10 +63,14 @@ namespace Heap {
     Member(class, Pointer, Object *, target) \
     Member(class, Pointer, Object *, handler)
 
-DECLARE_HEAP_OBJECT(ProxyObject, Object) {
+DECLARE_HEAP_OBJECT(ProxyObject, FunctionObject) {
     DECLARE_MARKOBJECTS(ProxyObject)
 
     void init(const QV4::Object *target, const QV4::Object *handler);
+};
+
+struct ProxyFunctionObject : ProxyObject {
+    void init(const QV4::FunctionObject *target, const QV4::Object *handler);
 };
 
 #define ProxyMembers(class, Member) \
@@ -80,10 +84,21 @@ DECLARE_HEAP_OBJECT(Proxy, FunctionObject) {
 
 }
 
-struct ProxyObject: Object {
+/*
+ * The inheritance from FunctionObject is a hack. Regular proxy objects are no function objects.
+ * But this helps implement the proxy for function objects, where we need this and thus gives us
+ * all the virtual methods from ProxyObject without having to duplicate them.
+ *
+ * But it does require a few hacks to make sure we don't recognize regular proxy objects as function
+ * objects in the runtime.
+ */
+struct ProxyObject : FunctionObject {
     V4_OBJECT2(ProxyObject, Object)
     Q_MANAGED_TYPE(ProxyObject)
     V4_INTERNALCLASS(ProxyObject)
+    enum {
+        IsFunctionObject = false
+    };
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
@@ -96,10 +111,18 @@ struct ProxyObject: Object {
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+};
 
-    // those might require a second proxy object that derives from FunctionObject...
-//    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
-//    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+struct ProxyFunctionObject : ProxyObject {
+    V4_OBJECT2(ProxyFunctionObject, FunctionObject)
+    Q_MANAGED_TYPE(ProxyObject)
+    V4_INTERNALCLASS(ProxyFunctionObject)
+    enum {
+        IsFunctionObject = true
+    };
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct Proxy : FunctionObject

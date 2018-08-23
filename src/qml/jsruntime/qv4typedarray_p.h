@@ -61,7 +61,7 @@ namespace QV4 {
 struct ArrayBuffer;
 
 typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(ExecutionEngine *engine, char *data, int index, const Value &value);
+typedef void (*TypedArrayWrite)(char *data, int index, const Value &value);
 
 struct TypedArrayOperations {
     int bytesPerElement;
@@ -148,8 +148,9 @@ struct IntrinsicTypedArrayCtor: FunctionObject
 {
     V4_OBJECT2(IntrinsicTypedArrayCtor, FunctionObject)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    static constexpr VTable::Call virtualCall = nullptr;
+
+    static ReturnedValue method_of(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct TypedArrayCtor: FunctionObject
@@ -172,11 +173,29 @@ struct IntrinsicTypedArrayPrototype : Object
     static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_length(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
+    static ReturnedValue method_copyWithin(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_entries(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_every(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_fill(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_filter(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_find(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_findIndex(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_forEach(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_includes(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_indexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_join(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_lastIndexOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_map(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduce(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reduceRight(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_reverse(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_some(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_slice(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_subarray(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_toLocaleString(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue method_get_toStringTag(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 

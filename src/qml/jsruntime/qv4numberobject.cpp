@@ -117,7 +117,7 @@ QT_WARNING_POP
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 1);
-    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString);
     defineDefaultProperty(engine->id_valueOf(), method_valueOf);
     defineDefaultProperty(QStringLiteral("toFixed"), method_toFixed, 1);
     defineDefaultProperty(QStringLiteral("toExponential"), method_toExponential, 1);

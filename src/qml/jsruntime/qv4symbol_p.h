@@ -83,6 +83,7 @@ struct SymbolCtor : FunctionObject
     V4_OBJECT2(SymbolCtor, FunctionObject)
 
     static ReturnedValue virtualCall(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
     static ReturnedValue method_for(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keyFor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };

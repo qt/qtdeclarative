@@ -182,6 +182,7 @@ private slots:
     void snapOneItem_data();
     void snapOneItem();
     void snapOneItemCurrentIndexRemoveAnimation();
+    void snapOneItemWrongDirection();
 
     void QTBUG_9791();
     void QTBUG_33568();
@@ -5670,6 +5671,24 @@ void tst_QQuickListView::snapOneItemCurrentIndexRemoveAnimation()
 
     QCOMPARE(listview->currentIndex(), 0);
     QCOMPARE(currentIndexSpy.count(), 0);
+}
+
+void tst_QQuickListView::snapOneItemWrongDirection()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("snapOneItemWrongDirection.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listview != nullptr);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+
+    listview->flick(0,500);
+    QTRY_VERIFY(!listview->isMovingHorizontally());
+    QCOMPARE(listview->contentX(), qreal(0));
 }
 
 void tst_QQuickListView::attachedProperties_QTBUG_32836()

@@ -80,6 +80,11 @@ ReturnedValue QV4::SymbolCtor::virtualCall(const QV4::FunctionObject *f, const Q
     return Symbol::create(scope.engine, desc)->asReturnedValue();
 }
 
+ReturnedValue SymbolCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *, int, const Value *)
+{
+    return f->engine()->throwTypeError(QStringLiteral("Symbol can't be used together with |new|."));
+}
+
 ReturnedValue SymbolCtor::method_for(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);

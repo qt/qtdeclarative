@@ -1550,8 +1550,9 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         if (superClass.isNull()) {
             protoParent = Encode::null();
         } else {
+            const FunctionObject *superFunction = superClass.as<FunctionObject>();
             // ### check that the heritage object is a constructor
-            if (!superClass.isFunctionObject())
+            if (!superFunction || !superFunction->isConstructor())
                 return engine->throwTypeError(QStringLiteral("The superclass is not a function object."));
             const FunctionObject *s = static_cast<const FunctionObject *>(&superClass);
             ScopedValue result(scope, s->get(scope.engine->id_prototype()));

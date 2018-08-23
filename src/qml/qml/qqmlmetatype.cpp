@@ -503,9 +503,11 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
         d->extraData.cd->extMetaObject = type.extensionMetaObject;
 
     // Check if the user wants only scoped enum classes
-    auto indexOfClassInfo = metaObject()->indexOfClassInfo("RegisterEnumClassesUnscoped");
-    if (indexOfClassInfo != -1 && QString::fromUtf8(metaObject()->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
-        d->extraData.cd->registerEnumClassesUnscoped = false;
+    if (d->baseMetaObject) {
+        auto indexOfClassInfo = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
+        if (indexOfClassInfo != -1 && QString::fromUtf8(d->baseMetaObject->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
+            d->extraData.cd->registerEnumClassesUnscoped = false;
+    }
 }
 
 QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterCompositeType &type)

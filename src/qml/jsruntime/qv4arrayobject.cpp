@@ -104,7 +104,7 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
     ScopedString name(scope);
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(engine->id_toString(), method_toString, 0);
-    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString, 0);
     defineDefaultProperty(QStringLiteral("concat"), method_concat, 1);
     name = engine->newIdentifier(QStringLiteral("copyWithin"));
     unscopables->put(name, Primitive::fromBoolean(true));
@@ -165,23 +165,13 @@ ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObject ctor
 {
     ScopedObject a(scope, Primitive::undefinedValue());
 
-    if (ctor) {
-        // ### the spec says that we should only call constructors if
-        // IsConstructor(that), but we have no way of knowing if a builtin is a
-        // constructor. so for the time being, just try call it, and silence any
-        // exceptions-- this is not ideal, as the spec also says that we should
-        // return on exception.
-        //
-        // this also isn't completely kosher. for instance:
+    if (ctor && ctor->isConstructor()) {
+        // this isn't completely kosher. for instance:
         // Array.from.call(Object, []).constructor == Object
         // is expected by the tests, but naturally, we get Number.
         ScopedValue argument(scope, useLen ? QV4::Encode(len) : Primitive::undefinedValue());
         a = ctor->callAsConstructor(argument, useLen ? 1 : 0);
-        if (scope.engine->hasException)
-            scope.engine->catchException(); // probably not a constructor, then.
-    }
-
-    if (!a) {
+    } else {
         a = scope.engine->newArrayObject(len);
     }
 
@@ -369,9 +359,36 @@ ReturnedValue ArrayPrototype::method_toString(const FunctionObject *builtin, con
     return ObjectPrototype::method_toString(builtin, that, argv, argc);
 }
 
-ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *builtin, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
-    return method_toString(builtin, thisObject, argv, argc);
+    Scope scope(b);
+    ScopedObject instance(scope, thisObject);
+    if (!instance)
+        return scope.engine->throwTypeError();
+
+    uint len = instance->getLength();
+    const QString separator = QStringLiteral(",");
+
+    QString R;
+
+    ScopedValue v(scope);
+    ScopedString s(scope);
+
+    for (uint k = 0; k < len; ++k) {
+        if (k)
+            R += separator;
+
+        v = instance->get(k);
+        if (v->isNullOrUndefined())
+            continue;
+        v = Runtime::method_callElement(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        s = v->toString(scope.engine);
+        if (scope.hasException())
+            return Encode::undefined();
+
+        R += s->toQString();
+    }
+    return scope.engine->newString(R)->asReturnedValue();
 }
 
 ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value *that, const Value *argv, int argc)
@@ -432,7 +449,7 @@ ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const V
 
     double len = instance->getLength();
     double target = argv[0].toInteger();
-    double start = argv[1].toInteger();
+    double start = argc > 1 ? argv[1].toInteger() : 0;
     double end = len;
 
     if (argc > 2 && !argv[2].isUndefined()) {

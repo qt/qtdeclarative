@@ -77,7 +77,7 @@ static bool isLocaleObject(const QV4::Value &val)
 
 void QQmlDateExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->datePrototype()->defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString);
     engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleTimeString"), method_toLocaleTimeString);
     engine->datePrototype()->defineDefaultProperty(QStringLiteral("toLocaleDateString"), method_toLocaleDateString);
     engine->dateCtor()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
@@ -360,7 +360,7 @@ ReturnedValue QQmlDateExtension::method_timeZoneUpdated(const QV4::FunctionObjec
 
 void QQmlNumberExtension::registerExtension(QV4::ExecutionEngine *engine)
 {
-    engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString);
+    engine->numberPrototype()->defineDefaultProperty(engine->id_toLocaleString(), method_toLocaleString);
     engine->numberPrototype()->defineDefaultProperty(QStringLiteral("toLocaleCurrencyString"), method_toLocaleCurrencyString);
     engine->numberCtor()->defineDefaultProperty(QStringLiteral("fromLocaleString"), method_fromLocaleString);
 }

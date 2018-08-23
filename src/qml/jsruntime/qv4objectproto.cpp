@@ -119,7 +119,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
 
     defineDefaultProperty(QStringLiteral("constructor"), (o = ctor));
     defineDefaultProperty(v4->id_toString(), method_toString, 0);
-    defineDefaultProperty(QStringLiteral("toLocaleString"), method_toLocaleString, 0);
+    defineDefaultProperty(v4->id_toLocaleString(), method_toLocaleString, 0);
     defineDefaultProperty(v4->id_valueOf(), method_valueOf, 0);
     defineDefaultProperty(QStringLiteral("hasOwnProperty"), method_hasOwnProperty, 1);
     defineDefaultProperty(QStringLiteral("isPrototypeOf"), method_isPrototypeOf, 1);

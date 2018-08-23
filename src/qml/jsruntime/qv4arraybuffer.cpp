@@ -74,9 +74,9 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
 }
 
 
-ReturnedValue ArrayBufferCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)
+ReturnedValue ArrayBufferCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
-    return virtualCallAsConstructor(f, argv, argc, f);
+    return f->engine()->throwTypeError();
 }
 
 ReturnedValue ArrayBufferCtor::method_isView(const FunctionObject *, const Value *, const Value *argv, int argc)
@@ -188,18 +188,21 @@ ReturnedValue ArrayBufferPrototype::method_slice(const FunctionObject *b, const 
     double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
 
     Scope scope(v4);
-    ScopedFunctionObject constructor(scope, a->get(scope.engine->id_constructor()));
+    const FunctionObject *constructor = a->speciesConstructor(scope, scope.engine->arrayBufferCtor());
     if (!constructor)
         return v4->throwTypeError();
 
     double newLen = qMax(final - first, 0.);
     ScopedValue argument(scope, QV4::Encode(newLen));
     QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->callAsConstructor(argument, 1));
-    if (!newBuffer || newBuffer->d()->data->size < (int)newLen)
+    if (!newBuffer || newBuffer->d()->data->size < (int)newLen ||
+        newBuffer->isDetachedBuffer() || newBuffer->isSharedArrayBuffer() ||
+        newBuffer->sameValue(*a) ||
+        a->isDetachedBuffer())
         return v4->throwTypeError();
 
     memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
-    return Encode::undefined();
+    return newBuffer->asReturnedValue();
 }
 
 ReturnedValue ArrayBufferPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)

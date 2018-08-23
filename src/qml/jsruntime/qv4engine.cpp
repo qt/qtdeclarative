@@ -275,6 +275,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_index] = newIdentifier(QStringLiteral("index"));
     jsStrings[String_input] = newIdentifier(QStringLiteral("input"));
     jsStrings[String_toString] = newIdentifier(QStringLiteral("toString"));
+    jsStrings[String_toLocaleString] = newIdentifier(QStringLiteral("toLocaleString"));
     jsStrings[String_destroy] = newIdentifier(QStringLiteral("destroy"));
     jsStrings[String_valueOf] = newIdentifier(QStringLiteral("valueOf"));
     jsStrings[String_byteLength] = newIdentifier(QStringLiteral("byteLength"));
@@ -401,6 +402,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     Q_ASSERT(index == ErrorPrototype::Index_Name);
 
     classes[Class_ProxyObject] = classes[Class_Empty]->changeVTable(ProxyObject::staticVTable());
+    classes[Class_ProxyFunctionObject] = classes[Class_Empty]->changeVTable(ProxyFunctionObject::staticVTable());
 
     jsObjects[GetStack_Function] = FunctionObject::createBuiltinFunction(this, str = newIdentifier(QStringLiteral("stack")), ErrorObject::method_get_stack, 0);
 

@@ -408,6 +408,7 @@ public:
     }
     static bool toBooleanImpl(Value val);
     double toInteger() const;
+    inline ReturnedValue convertedToNumber() const;
     inline double toNumber() const;
     static double toNumberImpl(Value v);
     double toNumberImpl() const { return toNumberImpl(*this); }
@@ -552,6 +553,15 @@ inline double Value::toNumber() const
     if (isDouble())
         return doubleValue();
     return toNumberImpl();
+}
+
+inline ReturnedValue Value::convertedToNumber() const
+{
+    if (isInteger() || isDouble())
+        return asReturnedValue();
+    Value v;
+    v.setDouble(toNumberImpl());
+    return v.asReturnedValue();
 }
 
 inline

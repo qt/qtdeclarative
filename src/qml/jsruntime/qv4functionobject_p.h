@@ -80,6 +80,10 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
         Index_ProtoConstructor = 0
     };
 
+    bool isConstructor() const {
+        return jsConstruct != nullptr;
+    }
+
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
     void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
@@ -170,13 +174,16 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     ReturnedValue callAsConstructor(const Value *argv, int argc, const Value *newTarget = nullptr) const {
+        if (!d()->jsConstruct)
+            return engine()->throwTypeError(QStringLiteral("Function is not a constructor."));
         return d()->jsConstruct(this, argv, argc, newTarget ? newTarget : this);
     }
     inline ReturnedValue call(const JSCallData &data) const;
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc) const {
+        if (!d()->jsCall)
+            return engine()->throwTypeError(QStringLiteral("Function can only be called with |new|."));
         return d()->jsCall(this, thisObject, argv, argc);
     }
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
@@ -187,6 +194,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
     bool isBinding() const;
     bool isBoundFunction() const;
+    bool isConstructor() const {
+        return d()->isConstructor();
+    }
 
     ReturnedValue protoProperty() const { return get(engine()->id_prototype()); }
 
@@ -261,7 +271,6 @@ struct ConstructorFunction : ScriptFunction {
 struct MemberFunction : ScriptFunction {
     V4_OBJECT2(MemberFunction, ScriptFunction)
     V4_INTERNALCLASS(MemberFunction)
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
 };
 
 

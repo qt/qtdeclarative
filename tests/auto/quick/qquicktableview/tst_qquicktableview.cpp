@@ -128,6 +128,7 @@ private slots:
     void checkContextPropertiesQQmlListProperyModel_data();
     void checkContextPropertiesQQmlListProperyModel();
     void checkRowAndColumnChangedButNotIndex();
+    void checkChangingModelFromDelegate();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -1620,6 +1621,34 @@ void tst_QQuickTableView::checkRowAndColumnChangedButNotIndex()
     QCOMPARE(contextIndex, 1);
     QCOMPARE(contextRow, 0);
     QCOMPARE(contextColumn, 1);
+}
+
+void tst_QQuickTableView::checkChangingModelFromDelegate()
+{
+    // Check that we don't restart a rebuild of the table
+    // while we're in the middle of rebuilding it from before
+    LOAD_TABLEVIEW("changemodelfromdelegate.qml");
+
+    // Set addRowFromDelegate. This will trigger the QML code to add a new
+    // row and call forceLayout(). When TableView instantiates the first
+    // delegate in the new row, the Component.onCompleted handler will try to
+    // add a new row. But since we're currently rebuilding, this should be
+    // scheduled for later.
+    view->rootObject()->setProperty("addRowFromDelegate", true);
+
+    // We now expect two rows in the table, one more than initially
+    QCOMPARE(tableViewPrivate->tableSize.height(), 2);
+    QCOMPARE(tableViewPrivate->loadedTable.height(), 2);
+
+    // And since the QML code tried to add another row as well, we
+    // expect rebuildScheduled to be true, and a polish event to be pending.
+    QCOMPARE(tableViewPrivate->rebuildScheduled, true);
+    QCOMPARE(tableViewPrivate->polishScheduled, true);
+    WAIT_UNTIL_POLISHED;
+
+    // After handling the polish event, we expect also the third row to now be added
+    QCOMPARE(tableViewPrivate->tableSize.height(), 3);
+    QCOMPARE(tableViewPrivate->loadedTable.height(), 3);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

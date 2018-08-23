@@ -805,7 +805,7 @@ void QQuickTableViewPrivate::cancelLoadRequest()
     loadRequest.markAsDone();
     model->cancel(modelIndexAtCell(loadRequest.currentCell()));
 
-    if (rebuildState == RebuildState::NotStarted) {
+    if (rebuildScheduled) {
         // No reason to rollback already loaded edge items
         // since we anyway are about to reload all items.
         return;
@@ -929,7 +929,13 @@ void QQuickTableViewPrivate::beginRebuildTable()
 {
     Q_Q(QQuickTableView);
 
+    rebuildScheduled = false;
+
+    if (loadRequest.isActive())
+        cancelLoadRequest();
+
     releaseLoadedItems();
+
     loadedTable = QRect();
     loadedTableOuterRect = QRect();
     loadedTableInnerRect = QRect();
@@ -1079,9 +1085,7 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
 }
 
 void QQuickTableViewPrivate::invalidateTable() {
-    rebuildState = RebuildState::NotStarted;
-    if (loadRequest.isActive())
-        cancelLoadRequest();
+    rebuildScheduled = true;
     q_func()->polish();
 }
 
@@ -1108,6 +1112,11 @@ void QQuickTableViewPrivate::updatePolish()
         return;
     }
 
+    if (rebuildState != RebuildState::Done) {
+        processRebuildTable();
+        return;
+    }
+
     // viewportRect describes the part of the content view that is actually visible. Since a
     // negative width/height can happen (e.g during start-up), we check for this to avoid rebuilding
     // the table (and e.g calculate initial row/column sizes) based on a premature viewport rect.
@@ -1115,7 +1124,8 @@ void QQuickTableViewPrivate::updatePolish()
     if (!viewportRect.isValid())
         return;
 
-    if (rebuildState != RebuildState::Done) {
+    if (rebuildScheduled) {
+        rebuildState = RebuildState::Begin;
         processRebuildTable();
         return;
     }
@@ -1560,8 +1570,7 @@ qreal QQuickTableView::explicitContentWidth() const
 {
     Q_D(const QQuickTableView);
 
-    if (d->rebuildState == QQuickTableViewPrivate::RebuildState::NotStarted
-            && d->explicitContentWidth.isNull) {
+    if (d->rebuildScheduled && d->explicitContentWidth.isNull) {
         // The table is pending to be rebuilt. Since we don't
         // know the contentWidth before this is done, we do the
         // rebuild now, instead of waiting for the polish event.
@@ -1585,8 +1594,7 @@ qreal QQuickTableView::explicitContentHeight() const
 {
     Q_D(const QQuickTableView);
 
-    if (d->rebuildState == QQuickTableViewPrivate::RebuildState::NotStarted
-            && d->explicitContentHeight.isNull) {
+    if (d->rebuildScheduled && d->explicitContentHeight.isNull) {
         // The table is pending to be rebuilt. Since we don't
         // know the contentHeight before this is done, we do the
         // rebuild now, instead of waiting for the polish event.
