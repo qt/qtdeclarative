@@ -103,7 +103,11 @@ ReturnedValue Reflect::method_apply(const FunctionObject *f, const Value *, cons
 ReturnedValue Reflect::method_construct(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);
-    if (argc < 2 || !argv[0].isFunctionObject() || !argv[1].isObject())
+    if (argc < 2 || !argv[1].isObject())
+        return scope.engine->throwTypeError();
+    const FunctionObject *target = argv[0].as<FunctionObject>();
+    const FunctionObject *newTarget = argc == 3 ? argv[2].as<FunctionObject>() : target;
+    if (!target || !target->isConstructor() || !newTarget || !newTarget->isConstructor())
         return scope.engine->throwTypeError();
 
     const Object *o = static_cast<const Object *>(argv + 1);
@@ -111,7 +115,7 @@ ReturnedValue Reflect::method_construct(const FunctionObject *f, const Value *, 
     if (scope.hasException())
         return Encode::undefined();
 
-    return static_cast<const FunctionObject &>(argv[0]).callAsConstructor(arguments.argv, arguments.argc);
+    return target->callAsConstructor(arguments.argv, arguments.argc, newTarget);
 }
 
 ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Value *, const Value *argv, int argc)
