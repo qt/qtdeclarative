@@ -1618,36 +1618,37 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     // No more new strings after this point, we're calculating offsets.
     output.jsGenerator.stringTable.freeze();
 
-    const int importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
-    const int objectOffsetTableSize = output.objects.count() * sizeof(quint32);
+    const uint importSize = sizeof(QV4::CompiledData::Import) * output.imports.count();
+    const uint objectOffsetTableSize = output.objects.count() * sizeof(quint32);
 
     QHash<const Object*, quint32> objectOffsets;
 
-    int objectsSize = 0;
+    const unsigned int objectOffset = sizeof(QV4::CompiledData::QmlUnit) + importSize;
+    uint nextOffset = objectOffset + objectOffsetTableSize;
     for (Object *o : qAsConst(output.objects)) {
-        objectOffsets.insert(o, sizeof(QV4::CompiledData::QmlUnit) + importSize + objectOffsetTableSize + objectsSize);
-        objectsSize += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
+        objectOffsets.insert(o, nextOffset);
+        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
             signalTableSize += QV4::CompiledData::Signal::calculateSize(s->parameters->count);
 
-        objectsSize += signalTableSize;
+        nextOffset += signalTableSize;
 
         int enumTableSize = 0;
         for (const Enum *e = o->firstEnum(); e; e = e->next)
             enumTableSize += QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
 
-        objectsSize += enumTableSize;
+        nextOffset += enumTableSize;
     }
 
-    const uint totalSize = sizeof(QV4::CompiledData::QmlUnit) + importSize + objectOffsetTableSize + objectsSize;
+    const uint totalSize = nextOffset;
     char *data = (char*)malloc(totalSize);
     memset(data, 0, totalSize);
     QV4::CompiledData::QmlUnit *qmlUnit = reinterpret_cast<QV4::CompiledData::QmlUnit *>(data);
     qmlUnit->offsetToImports = sizeof(*qmlUnit);
     qmlUnit->nImports = output.imports.count();
-    qmlUnit->offsetToObjects = qmlUnit->offsetToImports + importSize;
+    qmlUnit->offsetToObjects = objectOffset;
     qmlUnit->nObjects = output.objects.count();
 
     // write imports
@@ -1660,9 +1661,9 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     // write objects
     quint32_le *objectTable = reinterpret_cast<quint32_le*>(data + qmlUnit->offsetToObjects);
-    char *objectPtr = data + qmlUnit->offsetToObjects + objectOffsetTableSize;
     for (int i = 0; i < output.objects.count(); ++i) {
         const Object *o = output.objects.at(i);
+        char * const objectPtr = data + objectOffsets.value(o);
         *objectTable++ = objectOffsets.value(o);
 
         QV4::CompiledData::Object *objectToWrite = reinterpret_cast<QV4::CompiledData::Object*>(objectPtr);
@@ -1776,10 +1777,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         for (int i = 0; i < o->namedObjectsInComponent.count; ++i) {
             *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }
-
-        objectPtr += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.count);
-        objectPtr += signalTableSize;
-        objectPtr += enumTableSize;
     }
 
     qmlUnit = unitFinalizer(qmlUnit, totalSize);
@@ -1790,7 +1787,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         qDebug() << "    " << jsUnit->functionTableSize << "functions";
         qDebug() << "    " << jsUnit->unitSize << "for JS unit";
         qDebug() << "    " << importSize << "for imports";
-        qDebug() << "    " << objectsSize << "for" << qmlUnit->nObjects << "objects";
+        qDebug() << "    " << nextOffset - objectOffset - objectOffsetTableSize << "for" << qmlUnit->nObjects << "objects";
         quint32 totalBindingCount = 0;
         for (quint32 i = 0; i < qmlUnit->nObjects; ++i)
             totalBindingCount += qmlUnit->objectAt(i)->nBindings;
