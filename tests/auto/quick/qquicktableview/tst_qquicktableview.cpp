@@ -85,6 +85,7 @@ private slots:
     void setAndGetModel();
     void emptyModel_data();
     void emptyModel();
+    void checkPreload_data();
     void checkPreload();
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
@@ -195,20 +196,34 @@ void tst_QQuickTableView::emptyModel()
     QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
 }
 
+void tst_QQuickTableView::checkPreload_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+
+    QTest::newRow("reuse") << true;
+    QTest::newRow("not reuse") << false;
+}
+
 void tst_QQuickTableView::checkPreload()
 {
     // Check that the reuse pool is filled up with one extra row and
-    // column (pluss corner) after rebuilding the table.
+    // column (pluss corner) after rebuilding the table, but only if we reuse items.
+    QFETCH(bool, reuseItems);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     auto model = TestModelAsVariant(100, 100);
     tableView->setModel(model);
+    tableView->setReuseItems(reuseItems);
 
     WAIT_UNTIL_POLISHED;
 
-    QSize visibleTableSize = tableViewPrivate->loadedTable.size();
-    int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
-    QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
+    if (reuseItems) {
+        QSize visibleTableSize = tableViewPrivate->loadedTable.size();
+        int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
+        QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
+    } else {
+        QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
+    }
 }
 
 void tst_QQuickTableView::checkZeroSizedDelegate()

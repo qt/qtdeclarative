@@ -889,15 +889,17 @@ void QQuickTableViewPrivate::processRebuildTable()
             return;
     }
 
+    const bool preload = (reusableFlag == QQmlTableInstanceModel::Reusable);
+
     if (rebuildState == RebuildState::PreloadColumns) {
-        if (loadedTable.right() < tableSize.width() - 1)
+        if (preload && loadedTable.right() < tableSize.width() - 1)
             loadEdge(Qt::RightEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
     }
 
     if (rebuildState == RebuildState::PreloadRows) {
-        if (loadedTable.bottom() < tableSize.height() - 1)
+        if (preload && loadedTable.bottom() < tableSize.height() - 1)
             loadEdge(Qt::BottomEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
