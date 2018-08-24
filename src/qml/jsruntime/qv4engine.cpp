@@ -494,6 +494,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     // typed arrays
 
+    jsObjects[SharedArrayBuffer_Ctor] = memoryManager->allocate<SharedArrayBufferCtor>(global);
+    jsObjects[SharedArrayBufferProto] = memoryManager->allocate<SharedArrayBufferPrototype>();
+    static_cast<SharedArrayBufferPrototype *>(sharedArrayBufferPrototype())->init(this, sharedArrayBufferCtor());
+
     jsObjects[ArrayBuffer_Ctor] = memoryManager->allocate<ArrayBufferCtor>(global);
     jsObjects[ArrayBufferProto] = memoryManager->allocate<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
@@ -539,6 +543,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), *typeErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
 
+    globalObject->defineDefaultProperty(QStringLiteral("SharedArrayBuffer"), *sharedArrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Set"), *setCtor());

@@ -64,7 +64,7 @@ struct DataViewCtor : FunctionObject {
 };
 
 #define DataViewMembers(class, Member) \
-    Member(class, Pointer, ArrayBuffer *, buffer) \
+    Member(class, Pointer, SharedArrayBuffer *, buffer) \
     Member(class, NoMark, uint, byteLength) \
     Member(class, NoMark, uint, byteOffset)
 

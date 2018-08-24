@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -45,13 +45,45 @@
 
 using namespace QV4;
 
+DEFINE_OBJECT_VTABLE(SharedArrayBufferCtor);
 DEFINE_OBJECT_VTABLE(ArrayBufferCtor);
+DEFINE_OBJECT_VTABLE(SharedArrayBuffer);
 DEFINE_OBJECT_VTABLE(ArrayBuffer);
+
+void Heap::SharedArrayBufferCtor::init(QV4::ExecutionContext *scope)
+{
+    Heap::FunctionObject::init(scope, QStringLiteral("SharedArrayBuffer"));
+}
 
 void Heap::ArrayBufferCtor::init(QV4::ExecutionContext *scope)
 {
     Heap::FunctionObject::init(scope, QStringLiteral("ArrayBuffer"));
 }
+
+ReturnedValue SharedArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    Scope scope(f);
+    if (newTarget->isUndefined())
+        return scope.engine->throwTypeError();
+
+    qint64 len = argc ? argv[0].toIndex() : 0;
+    if (scope.engine->hasException)
+        return Encode::undefined();
+    if (len < 0 || len >= INT_MAX)
+        return scope.engine->throwRangeError(QStringLiteral("SharedArrayBuffer: Invalid length."));
+
+    Scoped<SharedArrayBuffer> a(scope, scope.engine->memoryManager->allocate<SharedArrayBuffer>(len));
+    if (scope.engine->hasException)
+        return Encode::undefined();
+
+    return a->asReturnedValue();
+}
+
+ReturnedValue SharedArrayBufferCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
+{
+    return f->engine()->throwTypeError();
+}
+
 
 ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
 {
@@ -73,12 +105,6 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
     return a->asReturnedValue();
 }
 
-
-ReturnedValue ArrayBufferCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
-{
-    return f->engine()->throwTypeError();
-}
-
 ReturnedValue ArrayBufferCtor::method_isView(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     if (argc < 1)
@@ -92,7 +118,7 @@ ReturnedValue ArrayBufferCtor::method_isView(const FunctionObject *, const Value
 }
 
 
-void Heap::ArrayBuffer::init(size_t length)
+void Heap::SharedArrayBuffer::init(size_t length)
 {
     Object::init();
     if (length < UINT_MAX)
@@ -103,16 +129,18 @@ void Heap::ArrayBuffer::init(size_t length)
     }
     data->size = int(length);
     memset(data->data(), 0, length + 1);
+    isShared = true;
 }
 
-void Heap::ArrayBuffer::init(const QByteArray& array)
+void Heap::SharedArrayBuffer::init(const QByteArray& array)
 {
     Object::init();
     data = const_cast<QByteArray&>(array).data_ptr();
     data->ref.ref();
+    isShared = true;
 }
 
-void Heap::ArrayBuffer::destroy()
+void Heap::SharedArrayBuffer::destroy()
 {
     if (data && !data->ref.deref())
         QTypedArrayData<char>::deallocate(data);
@@ -145,6 +173,69 @@ void ArrayBuffer::detach() {
 }
 
 
+void SharedArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
+{
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    ctor->addSymbolSpecies();
+
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
+    defineAccessorProperty(QStringLiteral("byteLength"), method_get_byteLength, nullptr);
+    defineDefaultProperty(QStringLiteral("slice"), method_slice, 2);
+    ScopedString name(scope, engine->newString(QStringLiteral("SharedArrayBuffer")));
+    defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), name);
+}
+
+ReturnedValue SharedArrayBufferPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    const SharedArrayBuffer *a = thisObject->as<SharedArrayBuffer>();
+    if (!a || a->isDetachedBuffer() || !a->isSharedArrayBuffer())
+        return b->engine()->throwTypeError();
+
+    return Encode(a->d()->data->size);
+}
+
+ReturnedValue SharedArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    return slice(b, thisObject, argv, argc, true);
+}
+
+ReturnedValue SharedArrayBufferPrototype::slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc, bool shared)
+{
+    Scope scope(b);
+    const SharedArrayBuffer *a = thisObject->as<SharedArrayBuffer>();
+    if (!a || a->isDetachedBuffer() || (a->isSharedArrayBuffer() != shared))
+        return scope.engine->throwTypeError();
+
+    double start = argc > 0 ? argv[0].toInteger() : 0;
+    double end = (argc < 2 || argv[1].isUndefined()) ?
+                a->d()->data->size : argv[1].toInteger();
+    if (scope.hasException())
+        return QV4::Encode::undefined();
+
+    double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
+    double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
+
+    const FunctionObject *constructor = a->speciesConstructor(scope, shared ? scope.engine->sharedArrayBufferCtor() : scope.engine->arrayBufferCtor());
+    if (!constructor)
+        return scope.engine->throwTypeError();
+
+    double newLen = qMax(final - first, 0.);
+    ScopedValue argument(scope, QV4::Encode(newLen));
+    QV4::Scoped<SharedArrayBuffer> newBuffer(scope, constructor->callAsConstructor(argument, 1));
+    if (!newBuffer || newBuffer->d()->data->size < (int)newLen ||
+        newBuffer->isDetachedBuffer() || (newBuffer->isSharedArrayBuffer() != shared) ||
+        newBuffer->sameValue(*a) ||
+        a->isDetachedBuffer())
+        return scope.engine->throwTypeError();
+
+    memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
+    return newBuffer->asReturnedValue();
+}
+
+
 void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
@@ -162,47 +253,18 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineReadonlyConfigurableProperty(scope.engine->symbol_toStringTag(), name);
 }
 
-ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *b, const Value *thisObject, const Value *, int)
+ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
     const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
     if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
-        return b->engine()->throwTypeError();
+        return f->engine()->throwTypeError();
 
     return Encode(a->d()->data->size);
 }
 
 ReturnedValue ArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
-    ExecutionEngine *v4 = b->engine();
-    const ArrayBuffer *a = thisObject->as<ArrayBuffer>();
-    if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
-        return v4->throwTypeError();
-
-    double start = argc > 0 ? argv[0].toInteger() : 0;
-    double end = (argc < 2 || argv[1].isUndefined()) ?
-                a->d()->data->size : argv[1].toInteger();
-    if (v4->hasException)
-        return QV4::Encode::undefined();
-
-    double first = (start < 0) ? qMax(a->d()->data->size + start, 0.) : qMin(start, (double)a->d()->data->size);
-    double final = (end < 0) ? qMax(a->d()->data->size + end, 0.) : qMin(end, (double)a->d()->data->size);
-
-    Scope scope(v4);
-    const FunctionObject *constructor = a->speciesConstructor(scope, scope.engine->arrayBufferCtor());
-    if (!constructor)
-        return v4->throwTypeError();
-
-    double newLen = qMax(final - first, 0.);
-    ScopedValue argument(scope, QV4::Encode(newLen));
-    QV4::Scoped<ArrayBuffer> newBuffer(scope, constructor->callAsConstructor(argument, 1));
-    if (!newBuffer || newBuffer->d()->data->size < (int)newLen ||
-        newBuffer->isDetachedBuffer() || newBuffer->isSharedArrayBuffer() ||
-        newBuffer->sameValue(*a) ||
-        a->isDetachedBuffer())
-        return v4->throwTypeError();
-
-    memcpy(newBuffer->d()->data->data(), a->d()->data->data() + (uint)first, newLen);
-    return newBuffer->asReturnedValue();
+    return slice(b, thisObject, argv, argc, false);
 }
 
 ReturnedValue ArrayBufferPrototype::method_toString(const FunctionObject *b, const Value *thisObject, const Value *, int)

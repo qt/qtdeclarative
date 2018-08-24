@@ -967,6 +967,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "undefined"
         << "JSON"
         << "ArrayBuffer"
+        << "SharedArrayBuffer"
         << "DataView"
         << "Int8Array"
         << "Uint8Array"

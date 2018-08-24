@@ -190,6 +190,7 @@ namespace Heap {
     struct RegExp;
     struct EvalFunction;
 
+    struct SharedArrayBuffer;
     struct ArrayBuffer;
     struct DataView;
     struct TypedArray;
@@ -236,6 +237,7 @@ struct RegExpObject;
 struct RegExp;
 struct EvalFunction;
 
+struct SharedArrayBuffer;
 struct ArrayBuffer;
 struct DataView;
 struct TypedArray;
