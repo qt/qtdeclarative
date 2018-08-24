@@ -134,8 +134,6 @@ built-ins/AsyncFunction/instance-prototype-property.js fails
 built-ins/AsyncGeneratorPrototype/next/name.js fails
 built-ins/AsyncGeneratorPrototype/return/name.js fails
 built-ins/AsyncGeneratorPrototype/throw/name.js fails
-built-ins/Atomics/isLockFree/corner-cases.js fails
-built-ins/Atomics/isLockFree/value.js fails
 built-ins/Atomics/wait/did-timeout.js fails
 built-ins/Atomics/wait/good-views.js fails
 built-ins/Atomics/wait/nan-timeout.js fails

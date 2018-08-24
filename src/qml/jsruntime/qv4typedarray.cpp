@@ -149,7 +149,7 @@ template <typename T>
 ReturnedValue atomicAdd(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndAddOrdered(*mem, value);
     return typeToValue(value);
 }
@@ -158,7 +158,7 @@ template <typename T>
 ReturnedValue atomicAnd(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndAndOrdered(*mem, value);
     return typeToValue(value);
 }
@@ -167,7 +167,7 @@ template <typename T>
 ReturnedValue atomicExchange(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndStoreOrdered(*mem, value);
     return typeToValue(value);
 }
@@ -176,7 +176,7 @@ template <typename T>
 ReturnedValue atomicOr(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndOrOrdered(*mem, value);
     return typeToValue(value);
 }
@@ -185,7 +185,7 @@ template <typename T>
 ReturnedValue atomicSub(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndSubOrdered(*mem, value);
     return typeToValue(value);
 }
@@ -194,10 +194,39 @@ template <typename T>
 ReturnedValue atomicXor(char *data, Value v)
 {
     T value = valueToType<T>(v);
-    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
     value = QAtomicOps<T>::fetchAndXorOrdered(*mem, value);
     return typeToValue(value);
 }
+
+template <typename T>
+ReturnedValue atomicCompareExchange(char *data, Value expected, Value v)
+{
+    T value = valueToType<T>(v);
+    T exp = valueToType<T>(expected);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    T old;
+    QAtomicOps<T>::testAndSetOrdered(*mem, exp, value, &old);
+    return typeToValue(old);
+}
+
+template <typename T>
+ReturnedValue atomicLoad(char *data)
+{
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    T val = QAtomicOps<T>::load(*mem);
+    return typeToValue(val);
+}
+
+template <typename T>
+ReturnedValue atomicStore(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps<T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    QAtomicOps<T>::store(*mem, value);
+    return typeToValue(value);
+}
+
 
 template<typename T>
 constexpr TypedArrayOperations TypedArrayOperations::create(const char *name)
@@ -206,7 +235,10 @@ constexpr TypedArrayOperations TypedArrayOperations::create(const char *name)
              name,
              ::read<T>,
              ::write<T>,
-             { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr }
+             { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr },
+             nullptr,
+             nullptr,
+             nullptr
     };
 }
 
@@ -217,7 +249,10 @@ constexpr TypedArrayOperations TypedArrayOperations::createWithAtomics(const cha
              name,
              ::read<T>,
              ::write<T>,
-             { ::atomicAdd<T>, ::atomicAnd<T>, ::atomicExchange<T>, ::atomicOr<T>, ::atomicSub<T>, ::atomicXor<T> }
+             { ::atomicAdd<T>, ::atomicAnd<T>, ::atomicExchange<T>, ::atomicOr<T>, ::atomicSub<T>, ::atomicXor<T> },
+             ::atomicCompareExchange<T>,
+             ::atomicLoad<T>,
+             ::atomicStore<T>
     };
 }
 

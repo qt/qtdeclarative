@@ -138,9 +138,31 @@ ReturnedValue Atomics::method_and(const FunctionObject *f, const Value *, const 
     return atomicReadModifyWrite(f, argv, argc, AtomicAnd);
 }
 
-ReturnedValue Atomics::method_compareExchange(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Atomics::method_compareExchange(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return f->engine()->throwTypeError();
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    SharedArrayBuffer *buffer = validateSharedIntegerTypedArray(scope, argv[0]);
+    if (!buffer)
+        return Encode::undefined();
+    const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    if (index < 0)
+        return Encode::undefined();
+
+    Value expected = Primitive::fromReturnedValue((argc > 2 ? argv[2] : Primitive::undefinedValue()).convertedToNumber());
+    if (scope.hasException())
+        return Encode::undefined();
+    Value v = Primitive::fromReturnedValue((argc > 3 ? argv[3] : Primitive::undefinedValue()).convertedToNumber());
+    if (scope.hasException())
+        return Encode::undefined();
+
+    int bytesPerElement = a.d()->type->bytesPerElement;
+    int byteOffset = a.d()->byteOffset + index * bytesPerElement;
+
+    return a.d()->type->atomicCompareExchange(buffer->data() + byteOffset, expected, v);
 }
 
 ReturnedValue Atomics::method_exchange(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -148,14 +170,40 @@ ReturnedValue Atomics::method_exchange(const FunctionObject *f, const Value *, c
     return atomicReadModifyWrite(f, argv, argc, AtomicExchange);
 }
 
-ReturnedValue Atomics::method_isLockFree(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Atomics::method_isLockFree(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    return f->engine()->throwTypeError();
+    if (!argc)
+        return Encode(false);
+    double n = argv[0].toInteger();
+    if (n == 4.)
+        return Encode(true);
+    if (n == 2.)
+        return Encode(QAtomicOps<unsigned short>::isTestAndSetNative());
+#ifdef Q_ATOMIC_INT8_IS_SUPPORTED
+    if (n == 1.)
+        return Encode(QAtomicOps<unsigned char>::isTestAndSetNative());
+#endif
+    return Encode(false);
 }
 
-ReturnedValue Atomics::method_load(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Atomics::method_load(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return f->engine()->throwTypeError();
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    SharedArrayBuffer *buffer = validateSharedIntegerTypedArray(scope, argv[0]);
+    if (!buffer)
+        return Encode::undefined();
+    const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    if (index < 0)
+        return Encode::undefined();
+
+    int bytesPerElement = a.d()->type->bytesPerElement;
+    int byteOffset = a.d()->byteOffset + index * bytesPerElement;
+
+    return a.d()->type->atomicLoad(buffer->data() + byteOffset);
 }
 
 ReturnedValue Atomics::method_or(const FunctionObject *f, const Value *, const Value *argv, int argc)
@@ -163,9 +211,28 @@ ReturnedValue Atomics::method_or(const FunctionObject *f, const Value *, const V
     return atomicReadModifyWrite(f, argv, argc, AtomicOr);
 }
 
-ReturnedValue Atomics::method_store(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue Atomics::method_store(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
-    return f->engine()->throwTypeError();
+    Scope scope(f);
+    if (!argc)
+        return scope.engine->throwTypeError();
+
+    SharedArrayBuffer *buffer = validateSharedIntegerTypedArray(scope, argv[0]);
+    if (!buffer)
+        return Encode::undefined();
+    const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    if (index < 0)
+        return Encode::undefined();
+
+    Value v = Primitive::fromReturnedValue((argc > 2 ? argv[2] : Primitive::undefinedValue()).convertedToNumber());
+    if (scope.hasException())
+        return Encode::undefined();
+
+    int bytesPerElement = a.d()->type->bytesPerElement;
+    int byteOffset = a.d()->byteOffset + index * bytesPerElement;
+
+    return a.d()->type->atomicStore(buffer->data() + byteOffset, v);
 }
 
 ReturnedValue Atomics::method_sub(const FunctionObject *f, const Value *, const Value *argv, int argc)

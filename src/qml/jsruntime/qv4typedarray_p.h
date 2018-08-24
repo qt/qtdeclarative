@@ -87,6 +87,9 @@ struct TypedArrayOperations {
     typedef ReturnedValue (*Read)(const char *data);
     typedef void (*Write)(char *data, Value value);
     typedef ReturnedValue (*AtomicModify)(char *data, Value value);
+    typedef ReturnedValue (*AtomicCompareExchange)(char *data, Value expected, Value v);
+    typedef ReturnedValue (*AtomicLoad)(char *data);
+    typedef ReturnedValue (*AtomicStore)(char *data, Value value);
 
     template<typename T>
     static constexpr TypedArrayOperations create(const char *name);
@@ -98,6 +101,9 @@ struct TypedArrayOperations {
     Read read;
     Write write;
     AtomicModify atomicModifyOps[AtomicModifyOps::NAtomicModifyOps];
+    AtomicCompareExchange atomicCompareExchange;
+    AtomicLoad atomicLoad;
+    AtomicStore atomicStore;
 };
 
 namespace Heap {
