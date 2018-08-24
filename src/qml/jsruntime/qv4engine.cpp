@@ -513,7 +513,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<IntrinsicTypedArrayPrototype *>(intrinsicTypedArrayPrototype())
             ->init(this, static_cast<IntrinsicTypedArrayCtor *>(intrinsicTypedArrayCtor()));
 
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
+    for (int i = 0; i < NTypedArrayTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocate<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocate<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
@@ -549,8 +549,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("Set"), *setCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Map"), *mapCtor());
 
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
+    for (int i = 0; i < NTypedArrayTypes; ++i)
+        globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name()), typedArrayCtors[i]);
     ScopedObject o(scope);
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocate<MathObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocate<JsonObject>()));

@@ -55,7 +55,7 @@ DEFINE_OBJECT_VTABLE(TypedArrayCtor);
 DEFINE_OBJECT_VTABLE(TypedArrayPrototype);
 DEFINE_OBJECT_VTABLE(TypedArray);
 
-Q_STATIC_ASSERT((int)ExecutionEngine::NTypedArrayTypes == (int)Heap::TypedArray::NTypes);
+Q_STATIC_ASSERT((int)ExecutionEngine::NTypedArrayTypes == (int)NTypedArrayTypes);
 
 static inline int toInt32(Value v)
 {
@@ -73,144 +73,97 @@ static inline double toDouble(Value v)
     return v.doubleValue();
 }
 
-ReturnedValue Int8ArrayRead(const char *data, int index)
-{
-    return Encode((int)(signed char)data[index]);
+struct ClampedUInt8 {
+    quint8 c;
+};
+
+template <typename T>
+ReturnedValue typeToValue(T t) {
+    return Encode(t);
 }
 
-void Int8ArrayWrite(char *data, int index, const Value &value)
-{
-    int n = toInt32(value);
-    signed char v = static_cast<signed char>(n);
-    data[index] = v;
+template <>
+ReturnedValue typeToValue(ClampedUInt8 t) {
+    return Encode(t.c);
 }
 
-ReturnedValue UInt8ArrayRead(const char *data, int index)
-{
-    return Encode((int)(unsigned char)data[index]);
-}
-
-void UInt8ArrayWrite(char *data, int index, const Value &value)
-{
-    int n = toInt32(value);
-    unsigned char v = static_cast<unsigned char>(uint(n));
-    data[index] = v;
-}
-
-void UInt8ClampedArrayWrite(char *data, int index, const Value &value)
+template <typename T>
+T valueToType(Value value)
 {
     Q_ASSERT(value.isNumber());
-    if (value.isInteger()) {
-        data[index] = (char)(unsigned char)qBound(0, value.integerValue(), 255);
-        return;
-    }
+    int n = toInt32(value);
+    return static_cast<T>(n);
+}
+
+template <>
+ClampedUInt8 valueToType(Value value)
+{
+    Q_ASSERT(value.isNumber());
+    if (value.isInteger())
+        return { static_cast<quint8>(qBound(0, value.integerValue(), 255)) };
     Q_ASSERT(value.isDouble());
     double d = value.doubleValue();
     // ### is there a way to optimise this?
-    if (d <= 0 || std::isnan(d)) {
-        data[index] = 0;
-        return;
-    }
-    if (d >= 255) {
-        data[index] = (char)(255);
-        return;
-    }
+    if (d <= 0 || std::isnan(d))
+        return { 0 };
+    if (d >= 255)
+        return { 255 };
     double f = std::floor(d);
-    if (f + 0.5 < d) {
-        data[index] = (unsigned char)(f + 1);
-        return;
-    }
-    if (d < f + 0.5) {
-        data[index] = (unsigned char)(f);
-        return;
-    }
-    if (int(f) % 2) {
+    if (f + 0.5 < d)
+        return { (quint8)(f + 1) };
+    if (d < f + 0.5)
+        return { (quint8)(f) };
+    if (int(f) % 2)
         // odd number
-        data[index] = (unsigned char)(f + 1);
-        return;
-    }
-    data[index] = (unsigned char)(f);
+        return { (quint8)(f + 1) };
+    return { (quint8)(f) };
 }
 
-ReturnedValue Int16ArrayRead(const char *data, int index)
+template <>
+float valueToType(Value value)
 {
-    return Encode((int)*(const short *)(data + index));
+    Q_ASSERT(value.isNumber());
+    double d = toDouble(value);
+    return static_cast<float>(d);
 }
 
-void Int16ArrayWrite(char *data, int index, const Value &value)
+template <>
+double valueToType(Value value)
 {
-    int n = toInt32(value);
-    short v = static_cast<short>(n);
-    *(short *)(data + index) = v;
+    Q_ASSERT(value.isNumber());
+    return toDouble(value);
 }
 
-ReturnedValue UInt16ArrayRead(const char *data, int index)
+template <typename T>
+ReturnedValue read(const char *data) {
+    return typeToValue(*reinterpret_cast<const T *>(data));
+}
+template <typename T>
+void write(char *data, Value value)
 {
-    return Encode((int)*(const unsigned short *)(data + index));
+    *reinterpret_cast<T *>(data) = valueToType<T>(value);
 }
 
-void UInt16ArrayWrite(char *data, int index, const Value &value)
+template<typename T>
+constexpr TypedArrayOperations TypedArrayOperations::create(const char *name)
 {
-    int n = toInt32(value);
-    unsigned short v = static_cast<unsigned short>(n);
-    *(unsigned short *)(data + index) = v;
+    return { sizeof(T),
+             name,
+             ::read<T>,
+             ::write<T>
+    };
 }
 
-ReturnedValue Int32ArrayRead(const char *data, int index)
-{
-    return Encode(*(const int *)(data + index));
-}
-
-void Int32ArrayWrite(char *data, int index, const Value &value)
-{
-    int v = toInt32(value);
-    *(int *)(data + index) = v;
-}
-
-ReturnedValue UInt32ArrayRead(const char *data, int index)
-{
-    return Encode(*(const unsigned int *)(data + index));
-}
-
-void UInt32ArrayWrite(char *data, int index, const Value &value)
-{
-    int n = toInt32(value);
-    unsigned v = static_cast<unsigned>(n);
-    *(unsigned int *)(data + index) = v;
-}
-
-ReturnedValue Float32ArrayRead(const char *data, int index)
-{
-    return Encode(*(const float *)(data + index));
-}
-
-void Float32ArrayWrite(char *data, int index, const Value &value)
-{
-    float v = toDouble(value);
-    *(float *)(data + index) = v;
-}
-
-ReturnedValue Float64ArrayRead(const char *data, int index)
-{
-    return Encode(*(const double *)(data + index));
-}
-
-void Float64ArrayWrite(char *data, int index, const Value &value)
-{
-    double v = toDouble(value);
-    *(double *)(data + index) = v;
-}
-
-const TypedArrayOperations operations[Heap::TypedArray::NTypes] = {
-    { 1, "Int8Array", Int8ArrayRead, Int8ArrayWrite },
-    { 1, "Uint8Array", UInt8ArrayRead, UInt8ArrayWrite },
-    { 1, "Uint8ClampedArray", UInt8ArrayRead, UInt8ClampedArrayWrite },
-    { 2, "Int16Array", Int16ArrayRead, Int16ArrayWrite },
-    { 2, "Uint16Array", UInt16ArrayRead, UInt16ArrayWrite },
-    { 4, "Int32Array", Int32ArrayRead, Int32ArrayWrite },
-    { 4, "Uint32Array", UInt32ArrayRead, UInt32ArrayWrite },
-    { 4, "Float32Array", Float32ArrayRead, Float32ArrayWrite },
-    { 8, "Float64Array", Float64ArrayRead, Float64ArrayWrite },
+const TypedArrayOperations operations[NTypedArrayTypes] = {
+    TypedArrayOperations::create<qint8>("Int8Array"),
+    TypedArrayOperations::create<quint8>("Uint8Array"),
+    TypedArrayOperations::create<ClampedUInt8>("Uint8ClampedArray"),
+    TypedArrayOperations::create<qint16>("Int16Array"),
+    TypedArrayOperations::create<quint16>("Uint16Array"),
+    TypedArrayOperations::create<qint32>("Int32Array"),
+    TypedArrayOperations::create<quint32>("Uint32Array"),
+    TypedArrayOperations::create<float>("Float32Array"),
+    TypedArrayOperations::create<double>("Float64Array")
 };
 
 
@@ -281,8 +234,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             TypedArrayWrite write =array->d()->type->write;
             for (uint i = 0; i < l; ++i) {
                 Primitive val;
-                val.setRawValue(read(src, i*srcElementSize));
-                write(dest, i*destElementSize, val);
+                val.setRawValue(read(src + i*srcElementSize));
+                write(dest + i*destElementSize, val);
             }
         }
 
@@ -354,7 +307,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         val = val->convertedToNumber();
         if (scope.engine->hasException)
             return Encode::undefined();
-        array->d()->type->write(b, 0, val);
+        array->d()->type->write(b, val);
         if (scope.engine->hasException)
             return Encode::undefined();
         ++idx;
@@ -373,14 +326,14 @@ ReturnedValue TypedArrayCtor::virtualCall(const FunctionObject *f, const Value *
 void Heap::TypedArray::init(Type t)
 {
     Object::init();
-    type = operations + t;
-    arrayType = t;
+    type = operations + static_cast<int>(t);
+    arrayType = static_cast<int>(t);
 }
 
 Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type t)
 {
     Scope scope(e);
-    Scoped<InternalClass> ic(scope, e->newInternalClass(staticVTable(), e->typedArrayPrototype + t));
+    Scoped<InternalClass> ic(scope, e->newInternalClass(staticVTable(), e->typedArrayPrototype + static_cast<int>(t)));
     return e->memoryManager->allocObject<TypedArray>(ic->d(), t);
 }
 
@@ -404,7 +357,7 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
     }
     if (hasProperty)
         *hasProperty = true;
-    return a->d()->type->read(a->d()->buffer->data->data(), byteOffset);
+    return a->d()->type->read(a->d()->buffer->data->data() + byteOffset);
 }
 
 bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
@@ -430,7 +383,7 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     Value v = Primitive::fromReturnedValue(value.convertedToNumber());
     if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
-    a->d()->type->write(a->d()->buffer->data->data(), byteOffset, v);
+    a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
     return true;
 }
 
@@ -441,12 +394,12 @@ void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 
     ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(3));
     ctor->defineReadonlyProperty(engine->id_prototype(), *this);
-    ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
+    ctor->defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[static_cast<int>(ctor->d()->type)].bytesPerElement));
     ctor->setPrototypeOf(engine->intrinsicTypedArrayCtor());
 
     setPrototypeOf(engine->intrinsicTypedArrayPrototype());
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
-    defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[ctor->d()->type].bytesPerElement));
+    defineReadonlyProperty(QStringLiteral("BYTES_PER_ELEMENT"), Primitive::fromInt32(operations[static_cast<int>(ctor->d()->type)].bytesPerElement));
 }
 
 ReturnedValue IntrinsicTypedArrayPrototype::method_get_buffer(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -586,7 +539,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_every(const FunctionObject *b
         if (v->d()->buffer->isDetachedBuffer())
             return scope.engine->throwTypeError();
 
-        arguments[0] = v->d()->type->read(data, byteOffset + k * bytesPerElement);
+        arguments[0] = v->d()->type->read(data + byteOffset + k * bytesPerElement);
 
         arguments[1] = Primitive::fromDouble(k);
         arguments[2] = v;
@@ -635,7 +588,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_fill(const FunctionObject *b,
     uint byteOffset = v->d()->byteOffset;
 
     while (k < fin) {
-        v->d()->type->write(data, byteOffset + k * bytesPerElement, value);
+        v->d()->type->write(data + byteOffset + k * bytesPerElement, value);
         k++;
     }
 
@@ -1259,7 +1212,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
             val = val->convertedToNumber();
             if (scope.hasException() || buffer->isDetachedBuffer())
                 return scope.engine->throwTypeError();
-            a->d()->type->write(b, 0, val);
+            a->d()->type->write(b, val);
             if (scope.engine->hasException)
                 RETURN_UNDEFINED();
             ++idx;
@@ -1299,8 +1252,8 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
     TypedArrayWrite write = a->d()->type->write;
     for (uint i = 0; i < l; ++i) {
         Primitive val;
-        val.setRawValue(read(src, i*srcElementSize));
-        write(dest, i*elementSize, val);
+        val.setRawValue(read(src + i*srcElementSize));
+        write(dest + i*elementSize, val);
     }
 
     if (srcCopy)

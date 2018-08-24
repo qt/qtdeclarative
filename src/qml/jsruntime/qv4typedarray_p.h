@@ -60,10 +60,26 @@ namespace QV4 {
 
 struct ArrayBuffer;
 
-typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(char *data, int index, const Value &value);
+typedef ReturnedValue (*TypedArrayRead)(const char *data);
+typedef void (*TypedArrayWrite)(char *data, Value value);
+
+enum TypedArrayType {
+    Int8Array,
+    UInt8Array,
+    UInt8ClampedArray,
+    Int16Array,
+    UInt16Array,
+    Int32Array,
+    UInt32Array,
+    Float32Array,
+    Float64Array,
+    NTypedArrayTypes
+};
 
 struct TypedArrayOperations {
+    template<typename T>
+    static constexpr TypedArrayOperations create(const char *name);
+
     int bytesPerElement;
     const char *name;
     TypedArrayRead read;
@@ -81,18 +97,7 @@ namespace Heap {
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
     DECLARE_MARKOBJECTS(TypedArray);
-    enum Type {
-        Int8Array,
-        UInt8Array,
-        UInt8ClampedArray,
-        Int16Array,
-        UInt16Array,
-        Int32Array,
-        UInt32Array,
-        Float32Array,
-        Float64Array,
-        NTypes
-    };
+    using Type = TypedArrayType;
 
     void init(Type t);
 };
