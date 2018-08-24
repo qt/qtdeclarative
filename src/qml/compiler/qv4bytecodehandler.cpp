@@ -542,6 +542,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(LoadQmlImportedScripts)
         COLLECTOR_END_INSTR(LoadQmlImportedScripts)
+
+        COLLECTOR_BEGIN_INSTR(TailCall)
+        COLLECTOR_END_INSTR(TailCall)
     }
 
     return labels;

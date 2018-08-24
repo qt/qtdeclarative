@@ -552,6 +552,19 @@ void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, in
     as->checkException();
 }
 
+void BaselineJIT::generate_TailCall(int func, int thisObject, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passJSSlotAsArg(argv, 3);
+    as->passJSSlotAsArg(thisObject, 2);
+    as->passJSSlotAsArg(func, 1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_tailCall, CallResultDestination::InAccumulator);
+    as->checkException();
+}
+
 
 void BaselineJIT::generate_Construct(int func, int argc, int argv)
 {

@@ -500,6 +500,7 @@ void Codegen::statementList(StatementList *ast)
 
 void Codegen::variableDeclaration(PatternElement *ast)
 {
+    TailCallBlocker blockTailCalls(this);
     RegisterScope scope(this);
 
     if (!ast->initializer) {
@@ -807,6 +808,7 @@ bool Codegen::visit(ExportDeclaration *ast)
     if (!ast->exportDefault)
         return true;
 
+    TailCallBlocker blockTailCalls(this);
     Reference exportedValue;
 
     if (auto *fdecl = AST::cast<FunctionDeclaration*>(ast->variableStatementOrDeclaration)) {
@@ -903,6 +905,8 @@ bool Codegen::visit(VariableDeclarationList *)
 
 bool Codegen::visit(ClassExpression *ast)
 {
+    TailCallBlocker blockTailCalls(this);
+
     Compiler::Class jsClass;
     jsClass.nameIndex = registerString(ast->name.toString());
 
@@ -1007,6 +1011,7 @@ bool Codegen::visit(ClassExpression *ast)
 
 bool Codegen::visit(ClassDeclaration *ast)
 {
+    TailCallBlocker blockTailCalls(this);
     Reference outerVar = referenceForName(ast->name.toString(), true);
     visit(static_cast<ClassExpression *>(ast));
     (void) outerVar.storeRetainAccumulator();
@@ -1018,7 +1023,9 @@ bool Codegen::visit(Expression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     statement(ast->left);
+    blockTailCalls.unblock();
     accept(ast->right);
     return false;
 }
@@ -1027,6 +1034,8 @@ bool Codegen::visit(ArrayPattern *ast)
 {
     if (hasError)
         return false;
+
+    TailCallBlocker blockTailCalls(this);
 
     PatternElementList *it = ast->elements;
 
@@ -1189,6 +1198,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     Reference base = expression(ast->base);
     if (hasError)
         return false;
@@ -1240,11 +1250,14 @@ bool Codegen::visit(BinaryExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
+
     if (ast->op == QSOperator::And) {
         if (_expr.accept(cx)) {
             auto iftrue = bytecodeGenerator->newLabel();
             condition(ast->left, &iftrue, _expr.iffalse(), true);
             iftrue.link();
+            blockTailCalls.unblock();
             condition(ast->right, _expr.iftrue(), _expr.iffalse(), _expr.trueBlockFollowsCondition());
         } else {
             auto iftrue = bytecodeGenerator->newLabel();
@@ -1259,6 +1272,7 @@ bool Codegen::visit(BinaryExpression *ast)
             bytecodeGenerator->jumpFalse().link(endif);
             iftrue.link();
 
+            blockTailCalls.unblock();
             Reference right = expression(ast->right);
             if (hasError)
                 return false;
@@ -1288,6 +1302,7 @@ bool Codegen::visit(BinaryExpression *ast)
             bytecodeGenerator->jumpTrue().link(endif);
             iffalse.link();
 
+            blockTailCalls.unblock();
             Reference right = expression(ast->right);
             if (hasError)
                 return false;
@@ -1320,6 +1335,7 @@ bool Codegen::visit(BinaryExpression *ast)
         left = left.asLValue();
         if (throwSyntaxErrorOnEvalOrArgumentsInStrictMode(left, ast->left->lastSourceLocation()))
             return false;
+        blockTailCalls.unblock();
         Reference r = expression(ast->right);
         if (hasError)
             return false;
@@ -1814,6 +1830,7 @@ bool Codegen::visit(CallExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference base = expression(ast->base);
 
@@ -1845,7 +1862,8 @@ bool Codegen::visit(CallExpression *ast)
     if (hasError)
         return false;
 
-    if (calldata.hasSpread) {
+    blockTailCalls.unblock();
+    if (calldata.hasSpread || _tailCallsAreAllowed) {
         Reference baseObject = base.baseObject();
         if (!baseObject.isStackSlot()) {
             baseObject.storeOnStack(thisObject);
@@ -1856,12 +1874,21 @@ bool Codegen::visit(CallExpression *ast)
             base = Reference::fromStackSlot(this, functionObject);
         }
 
-        Instruction::CallWithSpread call;
-        call.func = base.stackSlot();
-        call.thisObject = baseObject.stackSlot();
-        call.argc = calldata.argc;
-        call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        if (calldata.hasSpread) {
+            Instruction::CallWithSpread call;
+            call.func = base.stackSlot();
+            call.thisObject = baseObject.stackSlot();
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addInstruction(call);
+        } else {
+            Instruction::TailCall call;
+            call.func = base.stackSlot();
+            call.thisObject = baseObject.stackSlot();
+            call.argc = calldata.argc;
+            call.argv = calldata.argv;
+            bytecodeGenerator->addInstruction(call);
+        }
 
         _expr.setResult(Reference::fromAccumulator(this));
         return false;
@@ -2028,10 +2055,13 @@ bool Codegen::visit(ConditionalExpression *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     BytecodeGenerator::Label iftrue = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label iffalse = bytecodeGenerator->newLabel();
     condition(ast->expression, &iftrue, &iffalse, true);
+
+    blockTailCalls.unblock();
 
     iftrue.link();
     Reference ok = expression(ast->ok);
@@ -2058,6 +2088,7 @@ bool Codegen::visit(DeleteExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
     Reference expr = expression(ast->expression);
     if (hasError)
         return false;
@@ -2145,6 +2176,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
         if (id->name == QLatin1String("new")) {
             // new.target
@@ -2265,6 +2297,8 @@ bool Codegen::visit(FunctionExpression *ast)
 {
     if (hasError)
         return false;
+
+    TailCallBlocker blockTailCalls(this);
 
     RegisterScope scope(this);
 
@@ -2395,6 +2429,7 @@ bool Codegen::visit(NewExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference base = expression(ast->expression);
     if (hasError)
@@ -2414,6 +2449,7 @@ bool Codegen::visit(NewMemberExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference base = expression(ast->base);
     if (hasError)
@@ -2432,6 +2468,7 @@ bool Codegen::visit(NotExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     _expr.setResult(unop(Not, expression(ast->expression)));
     return false;
 }
@@ -2462,6 +2499,8 @@ bool Codegen::visit(ObjectPattern *ast)
 {
     if (hasError)
         return false;
+
+    TailCallBlocker blockTailCalls(this);
 
     QVector<QPair<Reference, ObjectPropertyValue>> computedProperties;
     QMap<QString, ObjectPropertyValue> valueMap;
@@ -2684,6 +2723,8 @@ bool Codegen::visit(TemplateLiteral *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
+
     Instruction::LoadRuntimeString instr;
     instr.stringId = registerString(ast->value.toString());
     bytecodeGenerator->addInstruction(instr);
@@ -2742,6 +2783,7 @@ bool Codegen::visit(TildeExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     _expr.setResult(unop(Compl, expression(ast->expression)));
     return false;
 }
@@ -2761,6 +2803,7 @@ bool Codegen::visit(TypeOfExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference expr = expression(ast->expression);
     if (hasError)
@@ -2786,6 +2829,7 @@ bool Codegen::visit(UnaryMinusExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     _expr.setResult(unop(UMinus, expression(ast->expression)));
     return false;
 }
@@ -2795,6 +2839,7 @@ bool Codegen::visit(UnaryPlusExpression *ast)
     if (hasError)
         return false;
 
+    TailCallBlocker blockTailCalls(this);
     _expr.setResult(unop(UPlus, expression(ast->expression)));
     return false;
 }
@@ -2805,6 +2850,7 @@ bool Codegen::visit(VoidExpression *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     statement(ast->expression);
     _expr.setResult(Reference::fromConst(this, Encode::undefined()));
@@ -2816,6 +2862,7 @@ bool Codegen::visit(FunctionDeclaration * ast)
     if (hasError)
         return false;
 
+    // no need to block tail calls: the function body isn't visited here.
     RegisterScope scope(this);
 
     if (_functionContext->contextType == ContextType::Binding)
@@ -2832,6 +2879,7 @@ bool Codegen::visit(YieldExpression *ast)
     }
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
     Reference expr = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
     if (hasError)
         return false;
@@ -2981,38 +3029,43 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         _context->blockIndex = _module->blocks.count() - 1;
     }
 
+    TailCallBlocker maybeBlockTailCalls(this, _context->canHaveTailCalls());
+
     RegisterScope registerScope(this);
     _context->emitBlockHeader(this);
 
-    inFormalParameterList = true;
-    int argc = 0;
-    while (formals) {
-        PatternElement *e = formals->element;
-        if (!e) {
-            if (!formals->next)
-                // trailing comma
-                break;
-            Q_UNREACHABLE();
-        }
+    {
+        QScopedValueRollback<bool> inFormals(inFormalParameterList, true);
+        TailCallBlocker blockTailCalls(this); // we're not in the FunctionBody or ConciseBody yet
 
-        Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
-        if (e->type == PatternElement::RestElement) {
-            Q_ASSERT(!formals->next);
-            Instruction::CreateRestParameter rest;
-            rest.argIndex = argc;
-            bytecodeGenerator->addInstruction(rest);
-            arg.storeConsumeAccumulator();
-        } else {
-            if (e->bindingTarget || e->initializer) {
-                initializeAndDestructureBindingElement(e, arg);
-                if (hasError)
+        int argc = 0;
+        while (formals) {
+            PatternElement *e = formals->element;
+            if (!e) {
+                if (!formals->next)
+                    // trailing comma
                     break;
+                Q_UNREACHABLE();
             }
+
+            Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
+            if (e->type == PatternElement::RestElement) {
+                Q_ASSERT(!formals->next);
+                Instruction::CreateRestParameter rest;
+                rest.argIndex = argc;
+                bytecodeGenerator->addInstruction(rest);
+                arg.storeConsumeAccumulator();
+            } else {
+                if (e->bindingTarget || e->initializer) {
+                    initializeAndDestructureBindingElement(e, arg);
+                    if (hasError)
+                        break;
+                }
+            }
+            formals = formals->next;
+            ++argc;
         }
-        formals = formals->next;
-        ++argc;
     }
-    inFormalParameterList = false;
 
     if (_context->isGenerator) {
         Instruction::Yield yield;
@@ -3083,6 +3136,7 @@ bool Codegen::visit(BreakStatement *ast)
     if (hasError)
         return false;
 
+    // no need to block tail calls here: children aren't visited
     if (!controlFlow) {
         throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Break outside of loop"));
         return false;
@@ -3107,6 +3161,7 @@ bool Codegen::visit(ContinueStatement *ast)
     if (hasError)
         return false;
 
+    // no need to block tail calls here: children aren't visited
     RegisterScope scope(this);
 
     if (!controlFlow) {
@@ -3152,6 +3207,7 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     cond.link();
 
+    TailCallBlocker blockTailCalls(this);
     if (!AST::cast<FalseLiteral *>(ast->expression)) {
         if (AST::cast<TrueLiteral *>(ast->expression))
             bytecodeGenerator->jump().link(body);
@@ -3178,6 +3234,7 @@ bool Codegen::visit(ExpressionStatement *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     if (requiresReturnValue) {
         Reference e = expression(ast->expression);
@@ -3196,6 +3253,7 @@ bool Codegen::visit(ForEachStatement *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference iterator = Reference::fromStackSlot(this);
     Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
@@ -3289,6 +3347,7 @@ bool Codegen::visit(ForStatement *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     ControlFlowBlock controlFlow(this, ast);
 
@@ -3307,7 +3366,9 @@ bool Codegen::visit(ForStatement *ast)
     condition(ast->condition, &body, &end, true);
 
     body.link();
+    blockTailCalls.unblock();
     statement(ast->statement);
+    blockTailCalls.reblock();
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
 
     step.link();
@@ -3329,10 +3390,12 @@ bool Codegen::visit(IfStatement *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     BytecodeGenerator::Label trueLabel = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label falseLabel = bytecodeGenerator->newLabel();
     condition(ast->expression, &trueLabel, &falseLabel, true);
+    blockTailCalls.unblock();
 
     trueLabel.link();
     statement(ast->ok);
@@ -3433,6 +3496,7 @@ bool Codegen::visit(SwitchStatement *ast)
         Reference::fromConst(this, Encode::undefined()).storeOnStack(_returnAddress);
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     if (ast->block) {
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
@@ -3480,6 +3544,7 @@ bool Codegen::visit(SwitchStatement *ast)
         ControlFlowLoop flow(this, &switchEnd);
 
         insideSwitch = true;
+        blockTailCalls.unblock();
         for (CaseClauses *it = ast->block->clauses; it; it = it->next) {
             CaseClause *clause = it->clause;
             blockMap[clause].link();
@@ -3515,6 +3580,7 @@ bool Codegen::visit(ThrowStatement *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference expr = expression(ast->expression);
     if (hasError)
@@ -3534,6 +3600,7 @@ void Codegen::handleTryCatch(TryStatement *ast)
     {
         ControlFlowCatch catchFlow(this, ast->catchExpression);
         RegisterScope scope(this);
+        TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before catch is generated
         statement(ast->statement);
         bytecodeGenerator->jump().link(noException);
     }
@@ -3544,6 +3611,7 @@ void Codegen::handleTryFinally(TryStatement *ast)
 {
     RegisterScope scope(this);
     ControlFlowFinally finally(this, ast->finallyExpression);
+    TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before finally is generated
 
     if (ast->catchExpression) {
         handleTryCatch(ast);
@@ -3587,6 +3655,7 @@ bool Codegen::visit(WhileStatement *ast)
         return false;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
@@ -3595,6 +3664,7 @@ bool Codegen::visit(WhileStatement *ast)
 
     if (!AST::cast<TrueLiteral *>(ast->expression))
         condition(ast->expression, &start, &end, true);
+    blockTailCalls.unblock();
 
     start.link();
     statement(ast->statement);
@@ -3611,6 +3681,7 @@ bool Codegen::visit(WithStatement *ast)
         return true;
 
     RegisterScope scope(this);
+    TailCallBlocker blockTailCalls(this);
 
     Reference src = expression(ast->expression);
     if (hasError)
@@ -3620,6 +3691,7 @@ bool Codegen::visit(WithStatement *ast)
 
     enterContext(ast);
     {
+        blockTailCalls.unblock();
         ControlFlowWith flow(this);
         statement(ast->statement);
     }

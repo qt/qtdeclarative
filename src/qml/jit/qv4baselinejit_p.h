@@ -131,6 +131,7 @@ public:
     void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallWithSpread(int func, int thisObject, int argc, int argv) override;
+    void generate_TailCall(int func, int thisObject, int argc, int argv) override;
     void generate_Construct(int func, int argc, int argv) override;
     void generate_ConstructWithSpread(int func, int argc, int argv) override;
     void generate_SetUnwindHandler(int offset) override;

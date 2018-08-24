@@ -719,6 +719,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
             d << dumpRegister(result, nFormals);
         MOTH_END_INSTR(LoadQmlImportedScripts)
+
+        MOTH_BEGIN_INSTR(TailCall)
+            d << dumpRegister(func, nFormals) << dumpRegister(thisObject, nFormals) << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(TailCall)
     }
 }
 

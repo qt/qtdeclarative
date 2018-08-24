@@ -343,6 +343,17 @@ struct Context {
     void emitBlockFooter(Compiler::Codegen *codegen);
 
     void setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator);
+
+    bool canHaveTailCalls() const
+    {
+        if (!isStrict)
+            return false;
+        if (contextType == ContextType::Function)
+            return !isGenerator;
+        if (contextType == ContextType::Block && parent)
+            return parent->canHaveTailCalls();
+        return false;
+    }
 };
 
 

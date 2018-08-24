@@ -776,6 +776,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallWithSpread)
 
+    MOTH_BEGIN_INSTR(TailCall)
+        STORE_IP();
+        acc = Runtime::method_tailCall(engine, STACK_VALUE(func), STACK_VALUE(thisObject), stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(TailCall)
+
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
         acc = Runtime::method_construct(engine, STACK_VALUE(func), ACC, stack + argv, argc);

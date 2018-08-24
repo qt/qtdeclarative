@@ -1061,8 +1061,6 @@ ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, cons
     return c->asReturnedValue();
 }
 
-
-
 #endif // V4_BOOTSTRAP
 
 uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
@@ -1536,6 +1534,15 @@ ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const
         return Encode::undefined();
 
     return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc, &newTarget);
+}
+
+ReturnedValue Runtime::method_tailCall(ExecutionEngine *engine, const Value &function, const Value &thisObject, Value *argv, int argc)
+{
+    //### unwinding the stack, etc, is done in a subsequent patch
+    if (!function.isFunctionObject())
+        return engine->throwTypeError();
+
+    return static_cast<const FunctionObject &>(function).call(&thisObject, argv, argc);
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)
