@@ -44,6 +44,7 @@
 #include "qv4jscall_p.h"
 #include "qv4symbol_p.h"
 #include "qv4runtime_p.h"
+#include <QtCore/qatomic.h>
 
 #include <cmath>
 
@@ -144,24 +145,95 @@ void write(char *data, Value value)
     *reinterpret_cast<T *>(data) = valueToType<T>(value);
 }
 
+template <typename T>
+ReturnedValue atomicAdd(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndAddOrdered(*mem, value);
+    return typeToValue(value);
+}
+
+template <typename T>
+ReturnedValue atomicAnd(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndAndOrdered(*mem, value);
+    return typeToValue(value);
+}
+
+template <typename T>
+ReturnedValue atomicExchange(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndStoreOrdered(*mem, value);
+    return typeToValue(value);
+}
+
+template <typename T>
+ReturnedValue atomicOr(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndOrOrdered(*mem, value);
+    return typeToValue(value);
+}
+
+template <typename T>
+ReturnedValue atomicSub(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndSubOrdered(*mem, value);
+    return typeToValue(value);
+}
+
+template <typename T>
+ReturnedValue atomicXor(char *data, Value v)
+{
+    T value = valueToType<T>(v);
+    typename QAtomicOps< T>::Type *mem = reinterpret_cast<typename QAtomicOps<T>::Type *>(data);
+    value = QAtomicOps<T>::fetchAndXorOrdered(*mem, value);
+    return typeToValue(value);
+}
+
 template<typename T>
 constexpr TypedArrayOperations TypedArrayOperations::create(const char *name)
 {
     return { sizeof(T),
              name,
              ::read<T>,
-             ::write<T>
+             ::write<T>,
+             { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr }
+    };
+}
+
+template<typename T>
+constexpr TypedArrayOperations TypedArrayOperations::createWithAtomics(const char *name)
+{
+    return { sizeof(T),
+             name,
+             ::read<T>,
+             ::write<T>,
+             { ::atomicAdd<T>, ::atomicAnd<T>, ::atomicExchange<T>, ::atomicOr<T>, ::atomicSub<T>, ::atomicXor<T> }
     };
 }
 
 const TypedArrayOperations operations[NTypedArrayTypes] = {
+#ifdef Q_ATOMIC_INT8_IS_SUPPORTED
+    TypedArrayOperations::createWithAtomics<qint8>("Int8Array"),
+    TypedArrayOperations::createWithAtomics<quint8>("Uint8Array"),
+#else
     TypedArrayOperations::create<qint8>("Int8Array"),
     TypedArrayOperations::create<quint8>("Uint8Array"),
+#endif
+    TypedArrayOperations::createWithAtomics<qint16>("Int16Array"),
+    TypedArrayOperations::createWithAtomics<quint16>("Uint16Array"),
+    TypedArrayOperations::createWithAtomics<qint32>("Int32Array"),
+    TypedArrayOperations::createWithAtomics<quint32>("Uint32Array"),
     TypedArrayOperations::create<ClampedUInt8>("Uint8ClampedArray"),
-    TypedArrayOperations::create<qint16>("Int16Array"),
-    TypedArrayOperations::create<quint16>("Uint16Array"),
-    TypedArrayOperations::create<qint32>("Int32Array"),
-    TypedArrayOperations::create<quint32>("Uint32Array"),
     TypedArrayOperations::create<float>("Float32Array"),
     TypedArrayOperations::create<double>("Float64Array")
 };
@@ -230,8 +302,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         } else {
             // not same size, we need to loop
             uint l = typedArray->length();
-            TypedArrayRead read = typedArray->d()->type->read;
-            TypedArrayWrite write =array->d()->type->write;
+            TypedArrayOperations::Read read = typedArray->d()->type->read;
+            TypedArrayOperations::Write write =array->d()->type->write;
             for (uint i = 0; i < l; ++i) {
                 Primitive val;
                 val.setRawValue(read(src + i*srcElementSize));
@@ -1248,8 +1320,8 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_set(const FunctionObject *b, 
 
     // typed arrays of different kind, need to manually loop
     uint srcElementSize = srcTypedArray->d()->type->bytesPerElement;
-    TypedArrayRead read = srcTypedArray->d()->type->read;
-    TypedArrayWrite write = a->d()->type->write;
+    TypedArrayOperations::Read read = srcTypedArray->d()->type->read;
+    TypedArrayOperations::Write write = a->d()->type->write;
     for (uint i = 0; i < l; ++i) {
         Primitive val;
         val.setRawValue(read(src + i*srcElementSize));

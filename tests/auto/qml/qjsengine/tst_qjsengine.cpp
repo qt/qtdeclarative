@@ -982,6 +982,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "Map"
         << "Reflect"
         << "Proxy"
+        << "Atomics"
         ;
     QSet<QString> actualNames;
     {

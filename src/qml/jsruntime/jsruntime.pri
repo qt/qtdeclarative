@@ -11,6 +11,7 @@ SOURCES += \
     $$PWD/qv4managed.cpp \
     $$PWD/qv4internalclass.cpp \
     $$PWD/qv4sparsearray.cpp \
+    $$PWD/qv4atomics.cpp \
     $$PWD/qv4arraydata.cpp \
     $$PWD/qv4arrayobject.cpp \
     $$PWD/qv4arrayiterator.cpp \
@@ -75,6 +76,7 @@ HEADERS += \
     $$PWD/qv4internalclass_p.h \
     $$PWD/qv4jscall_p.h \
     $$PWD/qv4sparsearray_p.h \
+    $$PWD/qv4atomics_p.h \
     $$PWD/qv4arraydata_p.h \
     $$PWD/qv4arrayobject_p.h \
     $$PWD/qv4arrayiterator_p.h \
