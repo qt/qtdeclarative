@@ -192,9 +192,9 @@ QT_BEGIN_NAMESPACE
     \sa accepted(), rejected(), helpRequested()
 */
 
-static QQuickDialogButtonBox::ButtonLayout platformButtonLayout()
+static QPlatformDialogHelper::ButtonLayout platformButtonLayout()
 {
-    return QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).value<QQuickDialogButtonBox::ButtonLayout>();
+    return QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::DialogButtonBoxLayout).value<QPlatformDialogHelper::ButtonLayout>();
 }
 
 void QQuickDialogButtonBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
@@ -653,13 +653,13 @@ QQuickDialogButtonBoxAttached *QQuickDialogButtonBox::qmlAttachedProperties(QObj
     \value DialogButtonBox.GnomeLayout Use a policy appropriate for applications on GNOME.
     \value DialogButtonBox.AndroidLayout Use a policy appropriate for applications on Android.
 */
-QQuickDialogButtonBox::ButtonLayout QQuickDialogButtonBox::buttonLayout() const
+QPlatformDialogHelper::ButtonLayout QQuickDialogButtonBox::buttonLayout() const
 {
     Q_D(const QQuickDialogButtonBox);
     return d->buttonLayout;
 }
 
-void QQuickDialogButtonBox::setButtonLayout(ButtonLayout layout)
+void QQuickDialogButtonBox::setButtonLayout(QPlatformDialogHelper::ButtonLayout layout)
 {
     Q_D(QQuickDialogButtonBox);
     if (d->buttonLayout == layout)
