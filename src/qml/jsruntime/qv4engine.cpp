@@ -485,6 +485,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     sequencePrototype()->cast<SequencePrototype>()->init();
 #endif
 
+    jsObjects[WeakMap_Ctor] = memoryManager->allocate<WeakMapCtor>(global);
+    jsObjects[WeakMapProto] = memoryManager->allocate<WeakMapPrototype>();
+    static_cast<WeakMapPrototype *>(weakMapPrototype())->init(this, weakMapCtor());
+
     jsObjects[Map_Ctor] = memoryManager->allocate<MapCtor>(global);
     jsObjects[MapProto] = memoryManager->allocate<MapPrototype>();
     static_cast<MapPrototype *>(mapPrototype())->init(this, mapCtor());
@@ -548,6 +552,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Set"), *setCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("WeakMap"), *weakMapCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Map"), *mapCtor());
 
     for (int i = 0; i < NTypedArrayTypes; ++i)

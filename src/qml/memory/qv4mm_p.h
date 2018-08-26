@@ -274,6 +274,8 @@ public:
         return static_cast<typename ManagedType::Data *>(b);
     }
 
+    void registerWeakMap(Heap::MapObject *map);
+
 protected:
     /// expects size to be aligned
     Heap::Base *allocString(std::size_t unmanagedSize);
@@ -296,6 +298,7 @@ public:
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
     QVector<Value *> m_pendingFreedObjectWrapperValue;
+    Heap::MapObject *weakMaps = nullptr;
 
     std::size_t unmanagedHeapSize = 0; // the amount of bytes of heap that is not managed by the memory manager, but which is held onto by managed items.
     std::size_t unmanagedHeapSizeGCLimit;

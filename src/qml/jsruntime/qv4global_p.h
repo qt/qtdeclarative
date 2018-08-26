@@ -195,6 +195,8 @@ namespace Heap {
     struct DataView;
     struct TypedArray;
 
+    struct MapObject;
+
     template <typename T, size_t> struct Pointer;
 }
 
@@ -241,6 +243,8 @@ struct SharedArrayBuffer;
 struct ArrayBuffer;
 struct DataView;
 struct TypedArray;
+
+struct MapObject;
 
 // ReturnedValue is used to return values from runtime methods
 // the type has to be a primitive type (no struct or union), so that the compiler

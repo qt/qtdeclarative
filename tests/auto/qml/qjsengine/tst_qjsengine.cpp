@@ -979,6 +979,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "Float32Array"
         << "Float64Array"
         << "Set"
+        << "WeakMap"
         << "Map"
         << "Reflect"
         << "Proxy"

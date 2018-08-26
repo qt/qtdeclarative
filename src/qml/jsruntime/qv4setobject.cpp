@@ -139,7 +139,7 @@ void Heap::SetObject::destroy()
 void Heap::SetObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     SetObject *s = static_cast<SetObject *>(that);
-    s->esTable->markObjects(markStack);
+    s->esTable->markObjects(markStack, false);
     Object::markObjects(that, markStack);
 }
 

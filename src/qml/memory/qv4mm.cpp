@@ -61,6 +61,7 @@
 #include <algorithm>
 #include "qv4alloca_p.h"
 #include "qv4profiling_p.h"
+#include "qv4mapobject_p.h"
 
 //#define MM_STATS
 
@@ -976,6 +977,18 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         (*it) = Primitive::undefinedValue();
     }
 
+    // remove objects from weak maps and sets
+    Heap::MapObject *map = weakMaps;
+    Heap::MapObject **lastMap = &weakMaps;
+    while (map) {
+        if (map->isMarked()) {
+            map->removeUnmarkedKeys();
+            *lastMap = map;
+            lastMap = &map->nextWeakMap;
+        }
+        map = map->nextWeakMap;
+    }
+
     // onDestruction handlers may have accessed other QObject wrappers and reset their value, so ensure
     // that they are all set to undefined.
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
@@ -1177,6 +1190,12 @@ size_t MemoryManager::getAllocatedMem() const
 size_t MemoryManager::getLargeItemsMem() const
 {
     return hugeItemAllocator.usedMem();
+}
+
+void MemoryManager::registerWeakMap(Heap::MapObject *map)
+{
+    map->nextWeakMap = weakMaps;
+    weakMaps = map;
 }
 
 MemoryManager::~MemoryManager()

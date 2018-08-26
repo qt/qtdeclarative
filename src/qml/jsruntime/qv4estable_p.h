@@ -64,7 +64,7 @@ public:
     ESTable();
     ~ESTable();
 
-    void markObjects(MarkStack *s);
+    void markObjects(MarkStack *s, bool isWeakMap);
     void clear();
     void set(const Value &k, const Value &v);
     bool has(const Value &k) const;
@@ -72,6 +72,8 @@ public:
     bool remove(const Value &k);
     uint size() const;
     void iterate(uint idx, Value *k, Value *v);
+
+    void removeUnmarkedKeys();
 
 private:
     Value *m_keys = nullptr;
