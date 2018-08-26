@@ -157,8 +157,8 @@ bool ESTable::remove(const Value &key)
     }
 
     if (found == true) {
-        memmove(m_keys + idx, m_keys + idx + 1, m_size - idx);
-        memmove(m_values + idx, m_values + idx + 1, m_size - idx);
+        memmove(m_keys + idx, m_keys + idx + 1, (m_size - idx)*sizeof(Value));
+        memmove(m_values + idx, m_values + idx + 1, (m_size - idx)*sizeof(Value));
         m_size--;
     }
     return found;
