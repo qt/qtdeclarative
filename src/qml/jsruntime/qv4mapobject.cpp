@@ -72,15 +72,7 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
 
-        // ### beware, hack alert!
-        // Object iteration seems broken right now. if we allow any object to
-        // iterate, it endlessly loops in the Map/prototype tests in test262...
-        // disable these for now until Object iteration is fixed, just so we can
-        // test this.
-        Scoped<MapObject> mapObjectCheck(scope, argv[0]);
-        Scoped<SetObject> setObjectCheck(scope, argv[0]);
-
-        if (!iterable->isUndefined() && !iterable->isNull() && (mapObjectCheck || setObjectCheck)) {
+        if (!iterable->isNullOrUndefined()) {
             ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("set")))));
             if (!adder)
                 return scope.engine->throwTypeError();
@@ -90,24 +82,38 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
                 return Encode::undefined();
             Q_ASSERT(iter);
 
-            Value *nextValue = scope.alloc(1);
+            ScopedValue obj(scope);
+            Value *arguments = scope.alloc(2);
             ScopedValue done(scope);
             forever {
-                done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
+                done = Runtime::method_iteratorNext(scope.engine, iter, obj);
                 if (scope.hasException())
-                    return Encode::undefined();
+                    break;
                 if (done->toBoolean())
                     return a->asReturnedValue();
-
-                adder->call(a, nextValue, 1);
-                if (scope.engine->hasException) {
-                    ScopedValue falsey(scope, Encode(false));
-                    return Runtime::method_iteratorClose(scope.engine, iter, falsey);
+                const Object *o = obj->objectValue();
+                if (!o) {
+                    scope.engine->throwTypeError();
+                    break;
                 }
+
+                arguments[0] = o->get(PropertyKey::fromArrayIndex(0));
+                if (scope.hasException())
+                    break;
+                arguments[1] = o->get(PropertyKey::fromArrayIndex(1));
+                if (scope.hasException())
+                    break;
+
+                adder->call(a, arguments, 2);
+                if (scope.hasException())
+                    break;
             }
+            ScopedValue falsey(scope, Encode(false));
+            return Runtime::method_iteratorClose(scope.engine, iter, falsey);
         }
     }
     return a->asReturnedValue();
+
 }
 
 ReturnedValue WeakMapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

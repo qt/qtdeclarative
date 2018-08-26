@@ -759,11 +759,15 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     if (!o)
         return engine->throwTypeError();
     ScopedValue d(scope, o->get(engine->id_done()));
+    if (scope.hasException())
+        return Encode::undefined();
     bool done = d->toBoolean();
     if (done) {
         *value = Encode::undefined();
     } else {
         *value = o->get(engine->id_value());
+        if (scope.hasException())
+            return Encode::undefined();
     }
     return Encode(done);
 }
