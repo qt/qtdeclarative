@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,8 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4DATAVIEW_H
-#define QV4DATAVIEW_H
+#ifndef QV4ATOMICS_H
+#define QV4ATOMICS_H
 
 //
 //  W A R N I N G
@@ -59,55 +59,28 @@ namespace QV4 {
 
 namespace Heap {
 
-struct DataViewCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
-};
-
-#define DataViewMembers(class, Member) \
-    Member(class, Pointer, SharedArrayBuffer *, buffer) \
-    Member(class, NoMark, uint, byteLength) \
-    Member(class, NoMark, uint, byteOffset)
-
-DECLARE_HEAP_OBJECT(DataView, Object) {
-    DECLARE_MARKOBJECTS(DataView);
-    void init() { Object::init(); }
+struct Atomics : Object {
+    void init();
 };
 
 }
 
-struct DataViewCtor: FunctionObject
+struct Atomics : Object
 {
-    V4_OBJECT2(DataViewCtor, FunctionObject)
+    V4_OBJECT2(Atomics, Object)
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-};
-
-struct DataView : Object
-{
-    V4_OBJECT2(DataView, Object)
-    V4_PROTOTYPE(dataViewPrototype)
-};
-
-struct DataViewPrototype: Object
-{
-    void init(ExecutionEngine *engine, Object *ctor);
-
-    static ReturnedValue method_get_buffer(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_byteLength(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_byteOffset(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_getChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_getFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_setChar(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    template <typename T>
-    static ReturnedValue method_setFloat(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_and(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_compareExchange(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_exchange(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_isLockFree(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_load(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_or(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_store(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_sub(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_wait(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_wake(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_xor(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 

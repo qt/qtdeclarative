@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
 
-class Assembler;
+class BaselineAssembler;
 
 #ifdef V4_ENABLE_JIT
 class BaselineJIT final: public Moth::ByteCodeHandler
@@ -221,7 +221,7 @@ protected:
 
 private:
     QV4::Function *function;
-    QScopedPointer<Assembler> as;
+    QScopedPointer<BaselineAssembler> as;
     std::vector<int> labels;
 };
 #endif // V4_ENABLE_JIT

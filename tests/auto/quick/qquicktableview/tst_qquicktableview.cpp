@@ -85,6 +85,7 @@ private slots:
     void setAndGetModel();
     void emptyModel_data();
     void emptyModel();
+    void checkPreload_data();
     void checkPreload();
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
@@ -129,6 +130,7 @@ private slots:
     void checkContextPropertiesQQmlListProperyModel();
     void checkRowAndColumnChangedButNotIndex();
     void checkChangingModelFromDelegate();
+    void checkRebuildViewportOnly();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -195,20 +197,34 @@ void tst_QQuickTableView::emptyModel()
     QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
 }
 
+void tst_QQuickTableView::checkPreload_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+
+    QTest::newRow("reuse") << true;
+    QTest::newRow("not reuse") << false;
+}
+
 void tst_QQuickTableView::checkPreload()
 {
     // Check that the reuse pool is filled up with one extra row and
-    // column (pluss corner) after rebuilding the table.
+    // column (pluss corner) after rebuilding the table, but only if we reuse items.
+    QFETCH(bool, reuseItems);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     auto model = TestModelAsVariant(100, 100);
     tableView->setModel(model);
+    tableView->setReuseItems(reuseItems);
 
     WAIT_UNTIL_POLISHED;
 
-    QSize visibleTableSize = tableViewPrivate->loadedTable.size();
-    int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
-    QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
+    if (reuseItems) {
+        QSize visibleTableSize = tableViewPrivate->loadedTable.size();
+        int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
+        QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
+    } else {
+        QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
+    }
 }
 
 void tst_QQuickTableView::checkZeroSizedDelegate()
@@ -1649,6 +1665,59 @@ void tst_QQuickTableView::checkChangingModelFromDelegate()
     // After handling the polish event, we expect also the third row to now be added
     QCOMPARE(tableViewPrivate->tableSize.height(), 3);
     QCOMPARE(tableViewPrivate->loadedTable.height(), 3);
+}
+
+void tst_QQuickTableView::checkRebuildViewportOnly()
+{
+    // Check that we only rebuild from the current top-left cell
+    // when you add or remove rows and columns. There should be
+    // no need to do a rebuild from scratch in such cases.
+    LOAD_TABLEVIEW("countingtableview.qml");
+
+    const char *propName = "delegatesCreatedCount";
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+
+    TestModel model(100, 100);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    // Flick to row/column 50, 50
+    tableView->setContentX(delegateWidth * 50);
+    tableView->setContentY(delegateHeight * 50);
+
+    // Set reuse items to false, just to make it easier to
+    // check the number of items created during a rebuild.
+    tableView->setReuseItems(false);
+    const int itemCountBeforeRebuild = tableViewPrivate->loadedItems.count();
+
+    // Since all cells have the same size, we expect that we end up creating
+    // the same amount of items that were already showing before, even after
+    // adding or removing rows and columns.
+    view->rootObject()->setProperty(propName, 0);
+    model.insertRow(51);
+    WAIT_UNTIL_POLISHED;
+    int countAfterRebuild = view->rootObject()->property(propName).toInt();
+    QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
+
+    view->rootObject()->setProperty(propName, 0);
+    model.removeRow(51);
+    WAIT_UNTIL_POLISHED;
+    countAfterRebuild = view->rootObject()->property(propName).toInt();
+    QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
+
+    view->rootObject()->setProperty(propName, 0);
+    model.insertColumn(51);
+    WAIT_UNTIL_POLISHED;
+    countAfterRebuild = view->rootObject()->property(propName).toInt();
+    QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
+
+    view->rootObject()->setProperty(propName, 0);
+    model.removeColumn(51);
+    WAIT_UNTIL_POLISHED;
+    countAfterRebuild = view->rootObject()->property(propName).toInt();
+    QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

@@ -60,14 +60,50 @@ namespace QV4 {
 
 struct ArrayBuffer;
 
-typedef ReturnedValue (*TypedArrayRead)(const char *data, int index);
-typedef void (*TypedArrayWrite)(char *data, int index, const Value &value);
+enum TypedArrayType {
+    Int8Array,
+    UInt8Array,
+    Int16Array,
+    UInt16Array,
+    Int32Array,
+    UInt32Array,
+    UInt8ClampedArray,
+    Float32Array,
+    Float64Array,
+    NTypedArrayTypes
+};
+
+enum AtomicModifyOps {
+    AtomicAdd,
+    AtomicAnd,
+    AtomicExchange,
+    AtomicOr,
+    AtomicSub,
+    AtomicXor,
+    NAtomicModifyOps
+};
 
 struct TypedArrayOperations {
+    typedef ReturnedValue (*Read)(const char *data);
+    typedef void (*Write)(char *data, Value value);
+    typedef ReturnedValue (*AtomicModify)(char *data, Value value);
+    typedef ReturnedValue (*AtomicCompareExchange)(char *data, Value expected, Value v);
+    typedef ReturnedValue (*AtomicLoad)(char *data);
+    typedef ReturnedValue (*AtomicStore)(char *data, Value value);
+
+    template<typename T>
+    static constexpr TypedArrayOperations create(const char *name);
+    template<typename T>
+    static constexpr TypedArrayOperations createWithAtomics(const char *name);
+
     int bytesPerElement;
     const char *name;
-    TypedArrayRead read;
-    TypedArrayWrite write;
+    Read read;
+    Write write;
+    AtomicModify atomicModifyOps[AtomicModifyOps::NAtomicModifyOps];
+    AtomicCompareExchange atomicCompareExchange;
+    AtomicLoad atomicLoad;
+    AtomicStore atomicStore;
 };
 
 namespace Heap {
@@ -81,18 +117,7 @@ namespace Heap {
 
 DECLARE_HEAP_OBJECT(TypedArray, Object) {
     DECLARE_MARKOBJECTS(TypedArray);
-    enum Type {
-        Int8Array,
-        UInt8Array,
-        UInt8ClampedArray,
-        Int16Array,
-        UInt16Array,
-        Int32Array,
-        UInt32Array,
-        Float32Array,
-        Float64Array,
-        NTypes
-    };
+    using Type = TypedArrayType;
 
     void init(Type t);
 };

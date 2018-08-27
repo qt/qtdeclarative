@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4ASSEMBLER_P_H
-#define QV4ASSEMBLER_P_H
+#ifndef QV4BASELINEASSEMBLER_P_H
+#define QV4BASELINEASSEMBLER_P_H
 
 //
 //  W A R N I N G
@@ -63,22 +63,15 @@ namespace JIT {
 #define JIT_STRINGIFYx(s) #s
 #define JIT_STRINGIFY(s) JIT_STRINGIFYx(s)
 
-#define IN_JIT_GENERATE_RUNTIME_CALL(function, destination) \
+#define GENERATE_RUNTIME_CALL(function, destination) \
     callRuntime(JIT_STRINGIFY(function), \
                 reinterpret_cast<void *>(&function), \
                 destination)
-#define JIT_GENERATE_RUNTIME_CALL(function, destination) \
-    as->IN_JIT_GENERATE_RUNTIME_CALL(function, destination)
 
-class Assembler {
+class BaselineAssembler {
 public:
-    enum CallResultDestination {
-        IgnoreResult,
-        ResultInAccumulator,
-    };
-
-    Assembler(const Value* constantTable);
-    ~Assembler();
+    BaselineAssembler(const Value* constantTable);
+    ~BaselineAssembler();
 
     // codegen infrastructure
     void generatePrologue();
@@ -151,10 +144,10 @@ public:
     void passAccumulatorAsArg(int arg);
     void passFunctionAsArg(int arg);
     void passEngineAsArg(int arg);
-    void passRegAsArg(int reg, int arg);
+    void passJSSlotAsArg(int reg, int arg);
     void passCppFrameAsArg(int arg);
     void passInt32AsArg(int value, int arg);
-    void callRuntime(const char *functionName, const void *funcPtr, Assembler::CallResultDestination dest);
+    void callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest);
     void saveAccumulatorInFrame();
 
     // exception/context stuff
@@ -175,16 +168,9 @@ public:
 protected:
     void *d;
 
-#ifndef QT_NO_DEBUG
-    enum { NoCall = -1 };
-    int remainingArgcForCall = NoCall;
-#endif
-    int argcOnStackForCall = 0;
-
 private:
     typedef unsigned(*CmpFunc)(const Value&,const Value&);
     void cmp(int cond, CmpFunc function, const char *functionName, int lhs);
-    void passAccumulatorAsArg_internal(int arg, bool push);
 };
 
 } // namespace JIT
@@ -192,4 +178,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QV4ASSEMBLER_P_H
+#endif // QV4BASELINEASSEMBLER_P_H

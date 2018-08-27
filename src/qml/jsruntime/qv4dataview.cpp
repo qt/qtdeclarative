@@ -75,7 +75,7 @@ static uint toIndex(ExecutionEngine *e, const Value &v)
 ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f->engine());
-    Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
+    Scoped<SharedArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
     if (!newTarget || !buffer)
         return scope.engine->throwTypeError();
 

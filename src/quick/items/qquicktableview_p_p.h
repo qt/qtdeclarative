@@ -86,7 +86,7 @@ public:
         // done by QQuickTableView.
 
     public:
-        void begin(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode)
+        void begin(const QPoint &cell, const QPointF &pos, QQmlIncubator::IncubationMode incubationMode)
         {
             Q_ASSERT(!active);
             active = true;
@@ -95,6 +95,7 @@ public:
             mode = incubationMode;
             cellCount = 1;
             currentIndex = 0;
+            startPos = pos;
             qCDebug(lcTableViewDelegateLifecycle()) << "begin top-left:" << toString();
         }
 
@@ -125,6 +126,8 @@ public:
         inline Qt::Edge edge() { return tableEdge; }
         inline QQmlIncubator::IncubationMode incubationMode() { return mode; }
 
+        inline QPointF startPosition() { return startPos; }
+
         QString toString()
         {
             QString str;
@@ -154,6 +157,7 @@ public:
         int cellCount = 0;
         bool active = false;
         QQmlIncubator::IncubationMode mode = QQmlIncubator::AsynchronousIfNested;
+        QPointF startPos;
 
         QPoint cellAt(int index)
         {
@@ -174,6 +178,13 @@ public:
         MovePreloadedItemsToPool,
         Done
     };
+
+    enum class RebuildOption {
+        None = 0,
+        ViewportOnly = 0x1,
+        All = 0x2,
+    };
+    Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
 
 public:
     QQuickTableViewPrivate();
@@ -209,6 +220,9 @@ public:
     QSize tableSize;
 
     RebuildState rebuildState = RebuildState::Done;
+    RebuildOptions rebuildOptions = RebuildOption::All;
+    RebuildOptions scheduledRebuildOptions = RebuildOption::All;
+
     TableEdgeLoadRequest loadRequest;
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
@@ -289,12 +303,12 @@ public:
     FxTableItem *loadFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
 
     void releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag);
-    void releaseLoadedItems();
+    void releaseLoadedItems(QQmlTableInstanceModel::ReusableFlag reusableFlag);
 
     void unloadItem(const QPoint &cell);
     void unloadItems(const QLine &items);
 
-    void loadInitialTopLeftItem();
+    void loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos);
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
     void loadAndUnloadVisibleEdges();
@@ -307,7 +321,7 @@ public:
     void beginRebuildTable();
     void layoutAfterLoadingInitialTable();
 
-    void invalidateTable();
+    void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
     void invalidateColumnRowPositions();
 
     void createWrapperModel();

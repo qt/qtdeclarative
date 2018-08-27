@@ -2176,9 +2176,6 @@ bool Codegen::visit(TaggedTemplate *ast)
 
     handleCall(base, calldata);
     return false;
-
-
-    return false;
 }
 
 int Codegen::createTemplateArray(TemplateLiteral *t)

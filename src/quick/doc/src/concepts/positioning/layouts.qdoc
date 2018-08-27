@@ -48,7 +48,7 @@ graphical types:
 
 \annotatedlist qtquick-positioners
 
-\section2 Column
+\section2 Column Items
 
 \div {class="float-right"}
 \inlineimage qml-column.png
@@ -64,7 +64,7 @@ include a small amount of space between the rectangles.
 Note that, since Column inherits directly from Item, any background color
 must be added to a parent Rectangle, if desired.
 
-\section2 Row
+\section2 Row Items
 
 \div {class="float-right"}
 \inlineimage qml-row.png
@@ -80,7 +80,7 @@ left around the edges of the horizontally centered Row item.
 
 \snippet qml/row.qml document
 
-\section2 Grid
+\section2 Grid Items
 
 \div {class="float-right"}
 \inlineimage qml-grid-spacing.png
@@ -100,7 +100,7 @@ themselves.
 Any empty cells in the grid must be created by defining placeholder items
 at the appropriate places in the Grid definition.
 
-\section2 Flow
+\section2 Flow Items
 
 \div {class="float-right"}
 \inlineimage qml-flow-text1.png

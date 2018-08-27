@@ -162,6 +162,7 @@ public:
 #if QT_CONFIG(qml_sequence_object)
         SequenceProto,
 #endif
+        SharedArrayBufferProto,
         ArrayBufferProto,
         DataViewProto,
         SetProto,
@@ -193,6 +194,7 @@ public:
         SyntaxError_Ctor,
         TypeError_Ctor,
         URIError_Ctor,
+        SharedArrayBuffer_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
         Set_Ctor,
@@ -229,6 +231,7 @@ public:
     FunctionObject *syntaxErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + SyntaxError_Ctor); }
     FunctionObject *typeErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + TypeError_Ctor); }
     FunctionObject *uRIErrorCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + URIError_Ctor); }
+    FunctionObject *sharedArrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + SharedArrayBuffer_Ctor); }
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
     FunctionObject *setCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Set_Ctor); }
@@ -262,6 +265,7 @@ public:
     Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
 #endif
 
+    Object *sharedArrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + SharedArrayBufferProto); }
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
     Object *setPrototype() const { return reinterpret_cast<Object *>(jsObjects + SetProto); }

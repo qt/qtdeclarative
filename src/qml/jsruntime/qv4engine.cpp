@@ -91,6 +91,7 @@
 #include "qv4reflect_p.h"
 #include "qv4proxy_p.h"
 #include "qv4stackframe_p.h"
+#include "qv4atomics_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -494,6 +495,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     // typed arrays
 
+    jsObjects[SharedArrayBuffer_Ctor] = memoryManager->allocate<SharedArrayBufferCtor>(global);
+    jsObjects[SharedArrayBufferProto] = memoryManager->allocate<SharedArrayBufferPrototype>();
+    static_cast<SharedArrayBufferPrototype *>(sharedArrayBufferPrototype())->init(this, sharedArrayBufferCtor());
+
     jsObjects[ArrayBuffer_Ctor] = memoryManager->allocate<ArrayBufferCtor>(global);
     jsObjects[ArrayBufferProto] = memoryManager->allocate<ArrayBufferPrototype>();
     static_cast<ArrayBufferPrototype *>(arrayBufferPrototype())->init(this, arrayBufferCtor());
@@ -509,7 +514,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<IntrinsicTypedArrayPrototype *>(intrinsicTypedArrayPrototype())
             ->init(this, static_cast<IntrinsicTypedArrayCtor *>(intrinsicTypedArrayCtor()));
 
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i) {
+    for (int i = 0; i < NTypedArrayTypes; ++i) {
         static_cast<Value &>(typedArrayCtors[i]) = memoryManager->allocate<TypedArrayCtor>(global, Heap::TypedArray::Type(i));
         static_cast<Value &>(typedArrayPrototype[i]) = memoryManager->allocate<TypedArrayPrototype>(Heap::TypedArray::Type(i));
         typedArrayPrototype[i].as<TypedArrayPrototype>()->init(this, static_cast<TypedArrayCtor *>(typedArrayCtors[i].as<Object>()));
@@ -539,14 +544,16 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), *typeErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
 
+    globalObject->defineDefaultProperty(QStringLiteral("SharedArrayBuffer"), *sharedArrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("DataView"), *dataViewCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Set"), *setCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Map"), *mapCtor());
 
-    for (int i = 0; i < Heap::TypedArray::NTypes; ++i)
-        globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name())->toQString(), typedArrayCtors[i]);
+    for (int i = 0; i < NTypedArrayTypes; ++i)
+        globalObject->defineDefaultProperty((str = typedArrayCtors[i].as<FunctionObject>()->name()), typedArrayCtors[i]);
     ScopedObject o(scope);
+    globalObject->defineDefaultProperty(QStringLiteral("Atomics"), (o = memoryManager->allocate<Atomics>()));
     globalObject->defineDefaultProperty(QStringLiteral("Math"), (o = memoryManager->allocate<MathObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("JSON"), (o = memoryManager->allocate<JsonObject>()));
     globalObject->defineDefaultProperty(QStringLiteral("Reflect"), (o = memoryManager->allocate<Reflect>()));
