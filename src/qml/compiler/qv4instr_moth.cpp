@@ -156,7 +156,7 @@ QString dumpRegister(int reg, int nFormals)
         return QStringLiteral("(this)");
     else if (reg == CallData::Argc)
         return QStringLiteral("(argc)");
-    reg -= 4;
+    reg -= CallData::OffsetCount;
     if (reg <= nFormals)
         return QStringLiteral("a%1").arg(reg);
     reg -= nFormals;
