@@ -86,3 +86,6 @@ manifestmeta.highlighted.names = "QtQuick/Qt Quick Demo - Same Game" \
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
 navigation.qmltypespage = "Qt Quick QML Types"
+
+# \svgcolor {#ffdead}
+macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
