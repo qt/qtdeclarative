@@ -27,8 +27,6 @@ language/module-code/namespace/internals/set.js strictFails
 
 # ----- test failures that should be fixed
 built-ins/Array/from/proto-from-ctor-realm.js fails
-built-ins/Array/isArray/proxy-revoked.js fails
-built-ins/Array/isArray/proxy.js fails
 built-ins/Array/length/define-own-prop-length-overflow-realm.js fails
 built-ins/Array/of/proto-from-ctor-realm.js fails
 built-ins/Array/proto-from-ctor-realm.js fails
