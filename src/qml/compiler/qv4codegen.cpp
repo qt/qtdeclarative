@@ -523,7 +523,7 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
 {
     if (!p->bindingIdentifier.isNull())
-        return referenceForName(p->bindingIdentifier.toString(), true);
+        return referenceForName(p->bindingIdentifier.toString(), true, p->firstSourceLocation());
     if (!p->bindingTarget || p->destructuringPattern())
         return Codegen::Reference::fromStackSlot(this);
     Reference lhs = expression(p->bindingTarget);
@@ -2242,9 +2242,9 @@ bool Codegen::visit(FunctionExpression *ast)
     return false;
 }
 
-Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
+Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, const SourceLocation &accessLocation)
 {
-    Context::ResolvedName resolved = _context->resolveName(name);
+    Context::ResolvedName resolved = _context->resolveName(name, accessLocation);
 
     if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack
         || resolved.type == Context::ResolvedName::Import) {
@@ -2302,7 +2302,7 @@ bool Codegen::visit(IdentifierExpression *ast)
     if (hasError)
         return false;
 
-    _expr.setResult(referenceForName(ast->name.toString(), false));
+    _expr.setResult(referenceForName(ast->name.toString(), false, ast->firstSourceLocation()));
     return false;
 }
 
@@ -3111,7 +3111,7 @@ bool Codegen::visit(ForEachStatement *ast)
     Reference lhsValue = Reference::fromStackSlot(this);
 
     // There should be a temporal block, so that variables declared in lhs shadow outside vars.
-    // This block should define a temporal dead zone for those variables, which is not yet implemented.
+    // This block should define a temporal dead zone for those variables.
     {
         RegisterScope innerScope(this);
         ControlFlowBlock controlFlow(this, ast);

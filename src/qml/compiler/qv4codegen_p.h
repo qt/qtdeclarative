@@ -685,7 +685,7 @@ public:
     void handleTryFinally(AST::TryStatement *ast);
 
 
-    Reference referenceForName(const QString &name, bool lhs);
+    Reference referenceForName(const QString &name, bool lhs, const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();

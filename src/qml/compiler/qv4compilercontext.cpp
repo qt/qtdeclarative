@@ -71,7 +71,22 @@ Context *Module::newContext(Node *node, Context *parent, ContextType contextType
     return c;
 }
 
-bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function)
+bool Context::Member::requiresTDZCheck(const SourceLocation &accessLocation, bool accessAcrossContextBoundaries) const
+{
+    if (!isLexicallyScoped())
+        return false;
+
+    if (accessAcrossContextBoundaries)
+        return true;
+
+    if (!accessLocation.isValid() || !endOfInitializerLocation.isValid())
+        return true;
+
+    return accessLocation.begin() < endOfInitializerLocation.end();
+}
+
+bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function,
+                          const QQmlJS::AST::SourceLocation &endOfInitializer)
 {
     // ### can this happen?
     if (name.isEmpty())
@@ -96,17 +111,18 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
 
     // hoist var declarations to the function level
     if (contextType == ContextType::Block && (scope == VariableScope::Var && type != MemberType::FunctionDefinition))
-        return parent->addLocalVar(name, type, scope, function);
+        return parent->addLocalVar(name, type, scope, function, endOfInitializer);
 
     Member m;
     m.type = type;
     m.function = function;
     m.scope = scope;
+    m.endOfInitializerLocation = endOfInitializer;
     members.insert(name, m);
     return true;
 }
 
-Context::ResolvedName Context::resolveName(const QString &name)
+Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AST::SourceLocation &accessLocation)
 {
     int scope = 0;
     Context *c = this;
@@ -126,7 +142,7 @@ Context::ResolvedName Context::resolveName(const QString &name)
             result.scope = scope;
             result.index = m.index;
             result.isConst = (m.scope == VariableScope::Const);
-            result.requiresTDZCheck = m.isLexicallyScoped();
+            result.requiresTDZCheck = m.requiresTDZCheck(accessLocation, c != this);
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             return result;
