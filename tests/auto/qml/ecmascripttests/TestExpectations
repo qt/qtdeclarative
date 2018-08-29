@@ -885,7 +885,6 @@ language/expressions/generators/yield-identifier-non-strict.js sloppyFails
 language/expressions/generators/yield-star-before-newline.js fails
 language/expressions/logical-and/tco-right.js strictFails
 language/expressions/logical-or/tco-right.js strictFails
-language/expressions/new.target/value-via-super-call.js fails
 language/expressions/new.target/value-via-super-property.js fails
 language/expressions/new/non-ctor-err-realm.js fails
 language/expressions/object/let-non-strict-access.js sloppyFails
@@ -943,7 +942,6 @@ language/expressions/prefix-increment/S11.4.4_A5_T3.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T4.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T5.js fails
 language/expressions/prefix-increment/S11.4.4_A6_T3.js fails
-language/expressions/super/call-construct-invocation.js fails
 language/expressions/super/call-proto-not-ctor.js fails
 language/expressions/super/prop-dot-cls-null-proto.js fails
 language/expressions/super/prop-dot-cls-ref-strict.js fails
@@ -1070,7 +1068,6 @@ language/statements/class/definition/numeric-property-names.js fails
 language/statements/class/definition/prototype-getter.js fails
 language/statements/class/definition/prototype-property.js fails
 language/statements/class/definition/prototype-setter.js fails
-language/statements/class/definition/prototype-wiring.js fails
 language/statements/class/definition/setters-prop-desc.js fails
 language/statements/class/definition/setters-restricted-ids.js fails
 language/statements/class/definition/this-access-restriction-2.js fails

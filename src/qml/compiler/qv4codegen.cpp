@@ -2330,11 +2330,10 @@ void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
     if (hasError)
         return;
 
-    if (base.isSuper()) {
-        Reference::fromStackSlot(this, CallData::Function).loadInAccumulator();
-    } else {
+    if (base.isSuper())
+        Reference::fromStackSlot(this, CallData::NewTarget).loadInAccumulator();
+    else
         constructor.loadInAccumulator();
-    }
 
     if (calldata.hasSpread) {
         Instruction::ConstructWithSpread create;
