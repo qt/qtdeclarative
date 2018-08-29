@@ -1049,16 +1049,16 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
             cacheItem->incubationTask->forceCompletion();
         }
     } else if (!cacheItem->object) {
-        QQmlComponent *delegate = nullptr;
+        QQmlComponent *delegate = m_delegate;
         if (m_delegateChooser) {
             QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
             do {
                 delegate = chooser->delegate(&m_adaptorModel, index);
                 chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
             } while (chooser);
+            if (!delegate)
+                return nullptr;
         }
-        if (!delegate)
-            delegate = m_delegate;
 
         QQmlContext *creationContext = delegate->creationContext();
 
