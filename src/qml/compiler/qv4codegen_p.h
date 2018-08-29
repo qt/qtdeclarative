@@ -217,6 +217,7 @@ public:
             case Name:
             case Member:
             case Subscript:
+            case SuperProperty:
                 return true;
             default:
                 return requiresTDZCheck;
