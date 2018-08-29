@@ -252,28 +252,30 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
     bool layoutNeeded = false;
     const qreal flickMargin = 50;
 
-    if (loadedTable.x() == 0 && loadedTableOuterRect.x() != tableMargins.left()) {
+    if (loadedTable.x() == 0 && loadedTableOuterRect.x() > tableMargins.left()) {
         // The table is at the beginning, but not at the edge of the
         // content view. So move the table to origo.
         loadedTableOuterRect.moveLeft(tableMargins.left());
         layoutNeeded = true;
-    } else if (loadedTableOuterRect.x() < 0) {
+    } else if (loadedTableOuterRect.x() < tableMargins.left()) {
         // The table is outside the beginning of the content view. Move
         // the whole table inside, and make some room for flicking.
-        loadedTableOuterRect.moveLeft(tableMargins.left() + loadedTable.x() == 0 ? 0 : flickMargin);
+        loadedTableOuterRect.moveLeft(qFuzzyIsNull(tableMargins.left() + loadedTable.x()) ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
-    if (loadedTable.y() == 0 && loadedTableOuterRect.y() != tableMargins.top()) {
+    if (loadedTable.y() == 0 && loadedTableOuterRect.y() > tableMargins.top()) {
         loadedTableOuterRect.moveTop(tableMargins.top());
         layoutNeeded = true;
-    } else if (loadedTableOuterRect.y() < 0) {
-        loadedTableOuterRect.moveTop(tableMargins.top() + loadedTable.y() == 0 ? 0 : flickMargin);
+    } else if (loadedTableOuterRect.y() < tableMargins.top()) {
+        loadedTableOuterRect.moveTop(qFuzzyIsNull(tableMargins.top() + loadedTable.y()) ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
-    if (layoutNeeded)
+    if (layoutNeeded) {
+        qCDebug(lcTableViewDelegateLifecycle);
         relayoutTableItems();
+    }
 }
 
 void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
