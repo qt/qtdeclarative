@@ -610,6 +610,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         else { // QEvent::MouseButtonPress
             addTouchPoint(me);
             started = true;
+            _mouseQpaTouchPoint.setStartPos(me->localPos());
+            _mouseQpaTouchPoint.setStartScenePos(me->windowPos());
+            _mouseQpaTouchPoint.setStartScreenPos(me->screenPos());
             _mouseQpaTouchPoint.setState(Qt::TouchPointPressed);
         }
         touchPoints << _mouseQpaTouchPoint;
