@@ -312,6 +312,10 @@ bool ScanFunctions::visit(PatternElement *ast)
     QStringList names;
     ast->boundNames(&names);
 
+    QQmlJS::AST::SourceLocation lastInitializerLocation = ast->lastSourceLocation();
+    if (_context->lastBlockInitializerLocation.isValid())
+        lastInitializerLocation = _context->lastBlockInitializerLocation;
+
     for (const QString &name : qAsConst(names)) {
         if (_context->isStrict && (name == QLatin1String("eval") || name == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
@@ -322,7 +326,8 @@ bool ScanFunctions::visit(PatternElement *ast)
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
             return false;
         }
-        if (!_context->addLocalVar(name, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope)) {
+        if (!_context->addLocalVar(name, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope,
+                                   /*function*/nullptr, lastInitializerLocation)) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
             return false;
         }
@@ -485,6 +490,8 @@ void ScanFunctions::endVisit(ForStatement *)
 
 bool ScanFunctions::visit(ForEachStatement *ast) {
     enterEnvironment(ast, ContextType::Block, QStringLiteral("%Foreach"));
+    if (ast->expression)
+        _context->lastBlockInitializerLocation = ast->expression->lastSourceLocation();
     Node::accept(ast->lhs, this);
     Node::accept(ast->expression, this);
 

@@ -47,6 +47,7 @@
 #include <QtCore/QBitArray>
 #include <QtCore/QLinkedList>
 #include <QtCore/QStack>
+#include <QScopeGuard>
 #include <private/qqmljsast_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4value_p.h>
@@ -501,8 +502,14 @@ void Codegen::variableDeclaration(PatternElement *ast)
 {
     RegisterScope scope(this);
 
-    if (!ast->initializer)
+    if (!ast->initializer) {
+        if (ast->isLexicallyScoped()) {
+            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            Reference varToStore = targetForPatternElement(ast);
+            varToStore.storeConsumeAccumulator();
+        }
         return;
+    }
     initializeAndDestructureBindingElement(ast, Reference(), /*isDefinition*/ true);
 }
 
@@ -516,7 +523,7 @@ void Codegen::variableDeclarationList(VariableDeclarationList *ast)
 Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
 {
     if (!p->bindingIdentifier.isNull())
-        return referenceForName(p->bindingIdentifier.toString(), true);
+        return referenceForName(p->bindingIdentifier.toString(), true, p->firstSourceLocation());
     if (!p->bindingTarget || p->destructuringPattern())
         return Codegen::Reference::fromStackSlot(this);
     Reference lhs = expression(p->bindingTarget);
@@ -2235,9 +2242,9 @@ bool Codegen::visit(FunctionExpression *ast)
     return false;
 }
 
-Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
+Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, const SourceLocation &accessLocation)
 {
-    Context::ResolvedName resolved = _context->resolveName(name);
+    Context::ResolvedName resolved = _context->resolveName(name, accessLocation);
 
     if (resolved.type == Context::ResolvedName::Local || resolved.type == Context::ResolvedName::Stack
         || resolved.type == Context::ResolvedName::Import) {
@@ -2258,6 +2265,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs)
             r.isVolatile = true;
         r.isArgOrEval = resolved.isArgOrEval;
         r.isReferenceToConst = resolved.isConst;
+        r.requiresTDZCheck = resolved.requiresTDZCheck;
+        r.name = name; // used to show correct name at run-time when TDZ check fails.
         return r;
     }
 
@@ -2293,7 +2302,7 @@ bool Codegen::visit(IdentifierExpression *ast)
     if (hasError)
         return false;
 
-    _expr.setResult(referenceForName(ast->name.toString(), false));
+    _expr.setResult(referenceForName(ast->name.toString(), false, ast->firstSourceLocation()));
     return false;
 }
 
@@ -2321,11 +2330,10 @@ void Codegen::handleConstruct(const Reference &base, ArgumentList *arguments)
     if (hasError)
         return;
 
-    if (base.isSuper()) {
-        Reference::fromStackSlot(this, CallData::Function).loadInAccumulator();
-    } else {
+    if (base.isSuper())
+        Reference::fromStackSlot(this, CallData::NewTarget).loadInAccumulator();
+    else
         constructor.loadInAccumulator();
-    }
 
     if (calldata.hasSpread) {
         Instruction::ConstructWithSpread create;
@@ -3102,7 +3110,7 @@ bool Codegen::visit(ForEachStatement *ast)
     Reference lhsValue = Reference::fromStackSlot(this);
 
     // There should be a temporal block, so that variables declared in lhs shadow outside vars.
-    // This block should define a temporal dead zone for those variables, which is not yet implemented.
+    // This block should define a temporal dead zone for those variables.
     {
         RegisterScope innerScope(this);
         ControlFlowBlock controlFlow(this, ast);
@@ -3818,7 +3826,7 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
         scope = other.scope;
         break;
     case Name:
-        name = other.name;
+        // name is always copied
         break;
     case Member:
         propertyBase = other.propertyBase;
@@ -3848,6 +3856,8 @@ Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
     codegen = other.codegen;
     isReadonly = other.isReadonly;
     isReferenceToConst = other.isReferenceToConst;
+    name = other.name;
+    requiresTDZCheck = other.requiresTDZCheck;
     stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
     isVolatile = other.isVolatile;
     global = other.global;
@@ -3969,10 +3979,10 @@ void Codegen::Reference::storeOnStack(int slotIndex) const
 
 Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
 {
-    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile))
+    if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile) && !requiresTDZCheck)
         return *this;
 
-    if (isStackSlot()) { // temp-to-temp move
+    if (isStackSlot() && !requiresTDZCheck) { // temp-to-temp move
         Reference dest = Reference::fromStackSlot(codegen, slotIndex);
         Instruction::MoveReg move;
         move.srcReg = stackSlot();
@@ -4130,6 +4140,22 @@ void Codegen::Reference::storeAccumulator() const
 
 void Codegen::Reference::loadInAccumulator() const
 {
+    auto tdzCheck = [this](bool requiresCheck){
+        if (!requiresCheck)
+            return;
+        Instruction::DeadTemporalZoneCheck check;
+        check.name = codegen->registerString(name);
+        codegen->bytecodeGenerator->addInstruction(check);
+    };
+    auto tdzCheckStackSlot = [this, tdzCheck](Moth::StackSlot slot, bool requiresCheck){
+        if (!requiresCheck)
+            return;
+        Instruction::LoadReg load;
+        load.reg = slot;
+        codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(true);
+    };
+
     switch (type) {
     case Accumulator:
         return;
@@ -4137,6 +4163,7 @@ void Codegen::Reference::loadInAccumulator() const
         Q_UNREACHABLE();
         return;
     case SuperProperty:
+        tdzCheckStackSlot(property, subscriptRequiresTDZCheck);
         Instruction::LoadSuperProperty load;
         load.property = property.stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
@@ -4183,6 +4210,7 @@ QT_WARNING_POP
         Instruction::LoadReg load;
         load.reg = stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
     } return;
     case ScopedLocal: {
         if (!scope) {
@@ -4195,6 +4223,7 @@ QT_WARNING_POP
             load.scope = scope;
             codegen->bytecodeGenerator->addInstruction(load);
         }
+        tdzCheck(requiresTDZCheck);
         return;
     }
     case Name:
@@ -4223,13 +4252,13 @@ QT_WARNING_POP
         }
         return;
     case Member:
+        propertyBase.loadInAccumulator();
+        tdzCheck(requiresTDZCheck);
         if (!disable_lookups && codegen->useFastLookups) {
-            propertyBase.loadInAccumulator();
             Instruction::GetLookup load;
             load.index = codegen->registerGetterLookup(propertyNameIndex);
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
-            propertyBase.loadInAccumulator();
             Instruction::LoadProperty load;
             load.name = propertyNameIndex;
             codegen->bytecodeGenerator->addInstruction(load);
@@ -4239,9 +4268,12 @@ QT_WARNING_POP
         Instruction::LoadImport load;
         load.index = index;
         codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
     } return;
     case Subscript: {
+        tdzCheckStackSlot(elementBase, requiresTDZCheck);
         elementSubscript.loadInAccumulator();
+        tdzCheck(subscriptRequiresTDZCheck);
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addInstruction(load);

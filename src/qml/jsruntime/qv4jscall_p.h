@@ -86,6 +86,7 @@ struct JSCallData {
         ptr->context = Encode::undefined();
         ptr->accumulator = Encode::undefined();
         ptr->thisObject = thisObject->asReturnedValue();
+        ptr->newTarget = Encode::undefined();
         ptr->setArgc(argc);
         if (argc)
             memcpy(ptr->args, args, argc*sizeof(Value));

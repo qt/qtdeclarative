@@ -579,6 +579,10 @@ void BaselineJIT::generate_UnwindToLabel(int level, int offset)
     as->unwindToLabel(level, absoluteOffsetForJump(offset));
 }
 
+void BaselineJIT::generate_DeadTemporalZoneCheck(int name)
+{
+    as->deadTemporalZoneCheck(nextInstructionOffset(), name);
+}
 
 void BaselineJIT::generate_ThrowException()
 {
@@ -811,7 +815,7 @@ void BaselineJIT::generate_LoadSuperConstructor()
     as->prepareCallWithArgCount(2);
     as->passJSSlotAsArg(CallData::Function, 1);
     as->passEngineAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadSuperConstructor, CallResultDestination::InAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadSuperConstructor, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -929,6 +933,13 @@ void BaselineJIT::generate_LoadQmlImportedScripts(int result)
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadQmlImportedScripts, CallResultDestination::InAccumulator);
     as->storeReg(result);
+}
+
+void BaselineJIT::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
+{
+    as->loadValue(Primitive::emptyValue().rawValue());
+    for (int i = firstReg, end = firstReg + count; i < end; ++i)
+        as->storeReg(i);
 }
 
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)

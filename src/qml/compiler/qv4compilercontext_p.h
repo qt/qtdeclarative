@@ -167,8 +167,10 @@ struct Context {
         QQmlJS::AST::VariableScope scope = QQmlJS::AST::VariableScope::Var;
         mutable bool canEscape = false;
         QQmlJS::AST::FunctionExpression *function = nullptr;
+        QQmlJS::AST::SourceLocation endOfInitializerLocation;
 
         bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableScope::Var; }
+        bool requiresTDZCheck(const QQmlJS::AST::SourceLocation &accessLocation, bool accessAcrossContextBoundaries) const;
     };
     typedef QMap<QString, Member> MemberMap;
 
@@ -189,6 +191,9 @@ struct Context {
 
     int nRegisters = 0;
     int registerOffset = -1;
+    int sizeOfLocalTemporalDeadZone = 0;
+    int firstTemporalDeadZoneRegister = 0;
+    int sizeOfRegisterTemporalDeadZone = 0;
     bool hasDirectEval = false;
     bool allVarsEscape = false;
     bool hasNestedFunctions = false;
@@ -203,6 +208,7 @@ struct Context {
     bool isWithBlock = false;
     bool isCatchBlock = false;
     QString caughtVariable;
+    QQmlJS::AST::SourceLocation lastBlockInitializerLocation;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
@@ -310,7 +316,8 @@ struct Context {
         usedVariables.insert(name);
     }
 
-    bool addLocalVar(const QString &name, MemberType contextType, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr);
+    bool addLocalVar(const QString &name, MemberType contextType, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr,
+                     const QQmlJS::AST::SourceLocation &endOfInitializer = QQmlJS::AST::SourceLocation());
 
     struct ResolvedName {
         enum Type {
@@ -323,11 +330,13 @@ struct Context {
         Type type = Unresolved;
         bool isArgOrEval = false;
         bool isConst = false;
+        bool requiresTDZCheck = false;
         int scope = -1;
         int index = -1;
+        QQmlJS::AST::SourceLocation endOfDeclarationLocation;
         bool isValid() const { return type != Unresolved; }
     };
-    ResolvedName resolveName(const QString &name);
+    ResolvedName resolveName(const QString &name, const QQmlJS::AST::SourceLocation &accessLocation);
     void emitBlockHeader(Compiler::Codegen *codegen);
     void emitBlockFooter(Compiler::Codegen *codegen);
 

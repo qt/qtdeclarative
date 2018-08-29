@@ -165,7 +165,9 @@ public:
         SharedArrayBufferProto,
         ArrayBufferProto,
         DataViewProto,
+        WeakSetProto,
         SetProto,
+        WeakMapProto,
         MapProto,
         IntrinsicTypedArrayProto,
         ValueTypeProto,
@@ -197,7 +199,9 @@ public:
         SharedArrayBuffer_Ctor,
         ArrayBuffer_Ctor,
         DataView_Ctor,
+        WeakSet_Ctor,
         Set_Ctor,
+        WeakMap_Ctor,
         Map_Ctor,
         IntrinsicTypedArray_Ctor,
 
@@ -234,7 +238,9 @@ public:
     FunctionObject *sharedArrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + SharedArrayBuffer_Ctor); }
     FunctionObject *arrayBufferCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + ArrayBuffer_Ctor); }
     FunctionObject *dataViewCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + DataView_Ctor); }
+    FunctionObject *weakSetCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + WeakSet_Ctor); }
     FunctionObject *setCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Set_Ctor); }
+    FunctionObject *weakMapCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + WeakMap_Ctor); }
     FunctionObject *mapCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Map_Ctor); }
     FunctionObject *intrinsicTypedArrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + IntrinsicTypedArray_Ctor); }
     FunctionObject *typedArrayCtors;
@@ -268,7 +274,9 @@ public:
     Object *sharedArrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + SharedArrayBufferProto); }
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }
     Object *dataViewPrototype() const { return reinterpret_cast<Object *>(jsObjects + DataViewProto); }
+    Object *weakSetPrototype() const { return reinterpret_cast<Object *>(jsObjects + WeakSetProto); }
     Object *setPrototype() const { return reinterpret_cast<Object *>(jsObjects + SetProto); }
+    Object *weakMapPrototype() const { return reinterpret_cast<Object *>(jsObjects + WeakMapProto); }
     Object *mapPrototype() const { return reinterpret_cast<Object *>(jsObjects + MapProto); }
     Object *intrinsicTypedArrayPrototype() const { return reinterpret_cast<Object *>(jsObjects + IntrinsicTypedArrayProto); }
     Object *typedArrayPrototype;

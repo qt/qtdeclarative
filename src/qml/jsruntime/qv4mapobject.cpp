@@ -45,64 +45,111 @@
 
 using namespace QV4;
 
+DEFINE_OBJECT_VTABLE(WeakMapCtor);
 DEFINE_OBJECT_VTABLE(MapCtor);
 DEFINE_OBJECT_VTABLE(MapObject);
+
+void Heap::WeakMapCtor::init(QV4::ExecutionContext *scope)
+{
+    Heap::FunctionObject::init(scope, QStringLiteral("WeakMap"));
+}
 
 void Heap::MapCtor::init(QV4::ExecutionContext *scope)
 {
     Heap::FunctionObject::init(scope, QStringLiteral("Map"));
 }
 
-ReturnedValue MapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool weakMap)
 {
     Scope scope(f);
     Scoped<MapObject> a(scope, scope.engine->memoryManager->allocate<MapObject>());
+    if (weakMap) {
+        a->setPrototypeOf(scope.engine->weakMapPrototype());
+        scope.engine->memoryManager->registerWeakMap(a->d());
+    }
+    a->d()->isWeakMap = weakMap;
 
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
 
-        // ### beware, hack alert!
-        // Object iteration seems broken right now. if we allow any object to
-        // iterate, it endlessly loops in the Map/prototype tests in test262...
-        // disable these for now until Object iteration is fixed, just so we can
-        // test this.
-        Scoped<MapObject> mapObjectCheck(scope, argv[0]);
-        Scoped<SetObject> setObjectCheck(scope, argv[0]);
-
-        if (!iterable->isUndefined() && !iterable->isNull() && (mapObjectCheck || setObjectCheck)) {
+        if (!iterable->isNullOrUndefined()) {
             ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("set")))));
             if (!adder)
                 return scope.engine->throwTypeError();
+
             ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
+            if (scope.hasException())
+                return Encode::undefined();
+            Q_ASSERT(iter);
 
-            CHECK_EXCEPTION();
-            if (!iter)
-                return a.asReturnedValue();
-
-            Value *nextValue = scope.alloc(1);
+            ScopedValue obj(scope);
+            Value *arguments = scope.alloc(2);
             ScopedValue done(scope);
             forever {
-                done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
-                CHECK_EXCEPTION();
+                done = Runtime::method_iteratorNext(scope.engine, iter, obj);
+                if (scope.hasException())
+                    break;
                 if (done->toBoolean())
-                    return a.asReturnedValue();
-
-                adder->call(a, nextValue, 1);
-                if (scope.engine->hasException) {
-                    ScopedValue falsey(scope, Encode(false));
-                    return Runtime::method_iteratorClose(scope.engine, iter, falsey);
+                    return a->asReturnedValue();
+                const Object *o = obj->objectValue();
+                if (!o) {
+                    scope.engine->throwTypeError();
+                    break;
                 }
+
+                arguments[0] = o->get(PropertyKey::fromArrayIndex(0));
+                if (scope.hasException())
+                    break;
+                arguments[1] = o->get(PropertyKey::fromArrayIndex(1));
+                if (scope.hasException())
+                    break;
+
+                adder->call(a, arguments, 2);
+                if (scope.hasException())
+                    break;
             }
+            ScopedValue falsey(scope, Encode(false));
+            return Runtime::method_iteratorClose(scope.engine, iter, falsey);
         }
     }
-    return a.asReturnedValue();
+    return a->asReturnedValue();
+
 }
 
-ReturnedValue MapCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue WeakMapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    return construct(f, argv, argc, newTarget, true);
+}
+
+ReturnedValue WeakMapCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     Scope scope(f);
-    return scope.engine->throwTypeError(QString::fromLatin1("Map requires new"));
+    return scope.engine->throwTypeError(QString::fromLatin1("(Weak)Map requires new"));
 }
+
+
+ReturnedValue MapCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    return construct(f, argv, argc, newTarget, false);
+}
+
+void WeakMapPrototype::init(ExecutionEngine *engine, Object *ctor)
+{
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
+
+    defineDefaultProperty(QStringLiteral("delete"), method_delete, 1);
+    defineDefaultProperty(QStringLiteral("get"), method_get, 1);
+    defineDefaultProperty(QStringLiteral("has"), method_has, 1);
+    defineDefaultProperty(QStringLiteral("set"), method_set, 2);
+
+    ScopedString val(scope, engine->newString(QLatin1String("WeakMap")));
+    defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), val);
+}
+
 
 void MapPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
@@ -119,7 +166,7 @@ void MapPrototype::init(ExecutionEngine *engine, Object *ctor)
     defineDefaultProperty(QStringLiteral("get"), method_get, 1);
     defineDefaultProperty(QStringLiteral("has"), method_has, 1);
     defineDefaultProperty(QStringLiteral("keys"), method_keys, 0);
-    defineDefaultProperty(QStringLiteral("set"), method_set, 0);
+    defineDefaultProperty(QStringLiteral("set"), method_set, 2);
     defineAccessorProperty(QStringLiteral("size"), method_get_size, nullptr);
     defineDefaultProperty(QStringLiteral("values"), method_values, 0);
 
@@ -142,42 +189,97 @@ void Heap::MapObject::init()
 void Heap::MapObject::destroy()
 {
     delete esTable;
-    esTable = 0;
+    esTable = nullptr;
+}
+
+void Heap::MapObject::removeUnmarkedKeys()
+{
+    esTable->removeUnmarkedKeys();
 }
 
 void Heap::MapObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     MapObject *m = static_cast<MapObject *>(that);
-    m->esTable->markObjects(markStack);
+    m->esTable->markObjects(markStack, m->isWeakMap);
     Object::markObjects(that, markStack);
 }
+
+ReturnedValue WeakMapPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<MapObject> that(scope, thisObject);
+    if (!that || !that->d()->isWeakMap)
+        return scope.engine->throwTypeError();
+    if (!argc || !argv[0].isObject())
+        return Encode(false);
+
+    return Encode(that->d()->esTable->remove(argv[0]));
+
+}
+
+ReturnedValue WeakMapPrototype::method_get(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<MapObject> that(scope, thisObject);
+    if (!that || !that->d()->isWeakMap)
+        return scope.engine->throwTypeError();
+    if (!argc || !argv[0].isObject())
+        return Encode::undefined();
+
+    return that->d()->esTable->get(argv[0]);
+}
+
+ReturnedValue WeakMapPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<MapObject> that(scope, thisObject);
+    if (!that || !that->d()->isWeakMap)
+        return scope.engine->throwTypeError();
+    if (!argc || !argv[0].isObject())
+        return Encode(false);
+
+    return Encode(that->d()->esTable->has(argv[0]));
+}
+
+ReturnedValue WeakMapPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<MapObject> that(scope, thisObject);
+    if ((!that || !that->d()->isWeakMap) ||
+        (!argc || !argv[0].isObject()))
+        return scope.engine->throwTypeError();
+
+    that->d()->esTable->set(argv[0], argc > 1 ? argv[1] : Primitive::undefinedValue());
+    return that.asReturnedValue();
+}
+
 
 ReturnedValue MapPrototype::method_clear(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     that->d()->esTable->clear();
     return Encode::undefined();
 }
 
-ReturnedValue MapPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+ReturnedValue MapPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return Encode(that->d()->esTable->remove(argv[0]));
+    return Encode(that->d()->esTable->remove(argc ? argv[0] : Primitive::undefinedValue()));
 }
 
 ReturnedValue MapPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     Scoped<MapIteratorObject> ao(scope, scope.engine->newMapIteratorObject(that));
@@ -189,7 +291,7 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     ScopedFunctionObject callbackfn(scope, argv[0]);
@@ -201,41 +303,41 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
         thisArg = ScopedValue(scope, argv[1]);
 
     Value *arguments = scope.alloc(3);
+    arguments[2] = that;
     for (uint i = 0; i < that->d()->esTable->size(); ++i) {
-        that->d()->esTable->iterate(i, &arguments[0], &arguments[1]); // fill in key (0), value (1)
+        that->d()->esTable->iterate(i, &arguments[1], &arguments[0]); // fill in key (0), value (1)
 
-        arguments[2] = that;
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
     }
     return Encode::undefined();
 }
 
-ReturnedValue MapPrototype::method_get(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+ReturnedValue MapPrototype::method_get(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return that->d()->esTable->get(argv[0]);
+    return that->d()->esTable->get(argc ? argv[0] : Primitive::undefinedValue());
 }
 
-ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return Encode(that->d()->esTable->has(argv[0]));
+    return Encode(that->d()->esTable->has(argc ? argv[0] : Primitive::undefinedValue()));
 }
 
 ReturnedValue MapPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     Scoped<MapIteratorObject> ao(scope, scope.engine->newMapIteratorObject(that));
@@ -243,14 +345,14 @@ ReturnedValue MapPrototype::method_keys(const FunctionObject *b, const Value *th
     return ao->asReturnedValue();
 }
 
-ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int)
+ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    that->d()->esTable->set(argv[0], argv[1]);
+    that->d()->esTable->set(argc ? argv[0] : Primitive::undefinedValue(), argc > 1 ? argv[1] : Primitive::undefinedValue());
     return that.asReturnedValue();
 }
 
@@ -258,7 +360,7 @@ ReturnedValue MapPrototype::method_get_size(const FunctionObject *b, const Value
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     return Encode(that->d()->esTable->size());
@@ -268,12 +370,10 @@ ReturnedValue MapPrototype::method_values(const FunctionObject *b, const Value *
 {
     Scope scope(b);
     Scoped<MapObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
     Scoped<MapIteratorObject> ao(scope, scope.engine->newMapIteratorObject(that));
     ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
 }
-
-

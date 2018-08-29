@@ -49,6 +49,7 @@
 #include "qv4string_p.h"
 #include "qv4symbol_p.h"
 #include <QtCore/qscopedvaluerollback.h>
+#include "qv4proxy_p.h"
 
 using namespace QV4;
 
@@ -157,11 +158,12 @@ void ArrayPrototype::init(ExecutionEngine *engine, Object *ctor)
 
 ReturnedValue ArrayPrototype::method_isArray(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    bool isArray = argc && argv[0].as<ArrayObject>();
-    return Encode(isArray);
+    if (!argc || !argv->objectValue())
+        return Encode(false);
+    return Encode(argv->objectValue()->isArray());
 }
 
-ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObject ctor, bool useLen, int len)
+static ScopedObject createObjectFromCtorOrArray(Scope &scope, ScopedFunctionObject ctor, bool useLen, int len)
 {
     ScopedObject a(scope, Primitive::undefinedValue());
 

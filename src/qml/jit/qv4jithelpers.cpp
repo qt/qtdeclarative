@@ -70,16 +70,6 @@ ReturnedValue loadGlobalLookup(ExecutionEngine *engine, Function *f, int index)
     return l->globalGetter(l, engine);
 }
 
-ReturnedValue loadSuperConstructor(ExecutionEngine *engine, const Value *t)
-{
-    const FunctionObject *f = t->as<FunctionObject>();
-    if (!f || !f->isConstructor()) {
-        engine->throwTypeError();
-        return Encode::undefined();
-    }
-    return static_cast<const Object *>(t)->getPrototypeOf()->asReturnedValue();
-}
-
 ReturnedValue toObject(ExecutionEngine *engine, const Value &obj)
 {
     if (obj.isObject())

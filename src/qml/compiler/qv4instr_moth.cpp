@@ -156,7 +156,7 @@ QString dumpRegister(int reg, int nFormals)
         return QStringLiteral("(this)");
     else if (reg == CallData::Argc)
         return QStringLiteral("(argc)");
-    reg -= 4;
+    reg -= CallData::OffsetCount;
     if (reg <= nFormals)
         return QStringLiteral("a%1").arg(reg);
     reg -= nFormals;
@@ -414,6 +414,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(UnwindToLabel)
                 d << "(" << level << ") " << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(UnwindToLabel)
+
+        MOTH_BEGIN_INSTR(DeadTemporalZoneCheck)
+                d << name;
+        MOTH_END_INSTR(DeadTemporalZoneCheck)
 
         MOTH_BEGIN_INSTR(ThrowException)
         MOTH_END_INSTR(ThrowException)
@@ -689,6 +693,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
 
         MOTH_BEGIN_INSTR(Debug)
         MOTH_END_INSTR(Debug)
+
+        MOTH_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
+            d << dumpRegister(firstReg, nFormals) << ", " << count;
+        MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);

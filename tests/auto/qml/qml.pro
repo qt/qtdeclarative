@@ -73,7 +73,8 @@ PRIVATETESTS += \
     qv4mm \
     qv4identifiertable \
     ecmascripttests \
-    bindingdependencyapi
+    bindingdependencyapi \
+    v4misc
 
 qtHaveModule(widgets) {
     PUBLICTESTS += \

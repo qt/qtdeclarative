@@ -759,11 +759,15 @@ ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value 
     if (!o)
         return engine->throwTypeError();
     ScopedValue d(scope, o->get(engine->id_done()));
+    if (scope.hasException())
+        return Encode::undefined();
     bool done = d->toBoolean();
     if (done) {
         *value = Encode::undefined();
     } else {
         *value = o->get(engine->id_value());
+        if (scope.hasException())
+            return Encode::undefined();
     }
     return Encode(done);
 }
@@ -906,6 +910,22 @@ void Runtime::method_storeSuperProperty(ExecutionEngine *engine, const Value &pr
     if (!result && engine->currentStackFrame->v4Function->isStrict())
         engine->throwTypeError();
 }
+
+ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, const Value &t)
+{
+    if (engine->currentStackFrame->thisObject() != Primitive::emptyValue().asReturnedValue()) {
+        return engine->throwReferenceError(QStringLiteral("super() already called."), QString(), 0, 0); // ### fix line number
+    }
+    const FunctionObject *f = t.as<FunctionObject>();
+    if (!f)
+        return engine->throwTypeError();
+    Heap::Object *c = static_cast<const Object &>(t).getPrototypeOf();
+    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor())
+        return engine->throwTypeError();
+    return c->asReturnedValue();
+}
+
+
 
 #endif // V4_BOOTSTRAP
 
@@ -1364,7 +1384,6 @@ ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &fu
 
 ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, const Value &newTarget, Value *argv, int argc)
 {
-    Q_UNIMPLEMENTED();
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
@@ -1470,6 +1489,12 @@ ReturnedValue Runtime::method_popScriptContext(ExecutionEngine *engine)
     return root;
 }
 
+void Runtime::method_throwReferenceError(ExecutionEngine *engine, int nameIndex)
+{
+    Scope scope(engine);
+    ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
+    engine->throwReferenceError(name);
+}
 
 void Runtime::method_declareVar(ExecutionEngine *engine, bool deletable, int nameIndex)
 {

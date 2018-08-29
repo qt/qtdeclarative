@@ -64,7 +64,12 @@ class ESTable;
 
 namespace Heap {
 
-struct SetCtor : FunctionObject {
+struct WeakSetCtor : FunctionObject {
+    void init(QV4::ExecutionContext *scope);
+};
+
+
+struct SetCtor : WeakSetCtor {
     void init(QV4::ExecutionContext *scope);
 };
 
@@ -72,17 +77,31 @@ struct SetObject : Object {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
     void init();
     void destroy();
+    void removeUnmarkedKeys();
+
     ESTable *esTable;
+    SetObject *nextWeakSet;
+    bool isWeakSet;
 };
 
 }
 
-struct SetCtor: FunctionObject
+
+struct WeakSetCtor: FunctionObject
 {
-    V4_OBJECT2(SetCtor, FunctionObject)
+    V4_OBJECT2(WeakSetCtor, FunctionObject)
+
+    static ReturnedValue construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool weakSet);
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct SetCtor : WeakSetCtor
+{
+    V4_OBJECT2(SetCtor, WeakSetCtor)
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct SetObject : Object
@@ -92,7 +111,17 @@ struct SetObject : Object
     V4_NEEDS_DESTROY
 };
 
-struct SetPrototype : Object
+struct WeakSetPrototype : Object
+{
+    void init(ExecutionEngine *engine, Object *ctor);
+
+    static ReturnedValue method_add(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+};
+
+
+struct SetPrototype : WeakSetPrototype
 {
     void init(ExecutionEngine *engine, Object *ctor);
 

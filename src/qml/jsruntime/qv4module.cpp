@@ -70,6 +70,9 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     scope->locals.alloc = locals;
     scope->nArgs = 0;
 
+    // Prepare the temporal dead zone
+    scope->setupLocalTemporalDeadZone(moduleFunction->compiledFunction);
+
     Scope valueScope(engine);
 
     // It's possible for example to re-export an import, for example:
@@ -108,6 +111,10 @@ ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *
         *hasProperty = v != nullptr;
     if (!v)
         return Encode::undefined();
+    if (v->isEmpty()) {
+        ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
+        return scope.engine->throwReferenceError(propName);
+    }
     return v->asReturnedValue();
 }
 
@@ -126,8 +133,24 @@ PropertyAttributes Module::virtualGetOwnProperty(Managed *m, PropertyKey id, Pro
         return Attr_Invalid;
     }
     if (p)
-        p->value = v->asReturnedValue();
+        p->value = v->isEmpty() ? Encode::undefined() : v->asReturnedValue();
+    if (v->isEmpty()) {
+        ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
+        scope.engine->throwReferenceError(propName);
+    }
     return Attr_Data | Attr_NotConfigurable;
+}
+
+bool Module::virtualHasProperty(const Managed *m, PropertyKey id)
+{
+    if (id.isSymbol())
+        return Object::virtualHasProperty(m, id);
+
+    const Module *module = static_cast<const Module *>(m);
+    Scope scope(m->engine());
+    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
+    const Value *v = module->d()->unit->resolveExport(expectedName);
+    return v != nullptr;
 }
 
 bool Module::virtualPreventExtensions(Managed *)
@@ -179,8 +202,13 @@ PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, Propert
         Scope scope(module->engine());
         ScopedString exportName(scope, scope.engine->newString(exportedNames.at(exportIndex)));
         exportIndex++;
-        if (pd)
-            pd->value = *module->d()->unit->resolveExport(exportName);
+        const Value *v = module->d()->unit->resolveExport(exportName);
+        if (pd) {
+            if (v->isEmpty())
+                scope.engine->throwReferenceError(exportName);
+            else
+                pd->value = *v;
+        }
         return exportName->toPropertyKey();
     }
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);

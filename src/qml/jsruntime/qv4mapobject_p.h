@@ -64,7 +64,11 @@ class ESTable;
 
 namespace Heap {
 
-struct MapCtor : FunctionObject {
+struct WeakMapCtor : FunctionObject {
+    void init(QV4::ExecutionContext *scope);
+};
+
+struct MapCtor : WeakMapCtor {
     void init(QV4::ExecutionContext *scope);
 };
 
@@ -72,17 +76,30 @@ struct MapObject : Object {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
     void init();
     void destroy();
+    void removeUnmarkedKeys();
+
+    MapObject *nextWeakMap;
     ESTable *esTable;
+    bool isWeakMap;
 };
 
 }
 
-struct MapCtor: FunctionObject
+struct WeakMapCtor: FunctionObject
 {
-    V4_OBJECT2(MapCtor, FunctionObject)
+    V4_OBJECT2(WeakMapCtor, FunctionObject)
+
+    static ReturnedValue construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool weakMap);
 
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct MapCtor : WeakMapCtor
+{
+    V4_OBJECT2(MapCtor, WeakMapCtor)
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *);
 };
 
 struct MapObject : Object
@@ -92,7 +109,17 @@ struct MapObject : Object
     V4_NEEDS_DESTROY
 };
 
-struct MapPrototype : Object
+struct WeakMapPrototype : Object
+{
+    void init(ExecutionEngine *engine, Object *ctor);
+
+    static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct MapPrototype : WeakMapPrototype
 {
     void init(ExecutionEngine *engine, Object *ctor);
 

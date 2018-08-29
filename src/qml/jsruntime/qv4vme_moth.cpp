@@ -784,6 +784,15 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         goto handleUnwind;
     MOTH_END_INSTR(UnwindToLabel)
 
+    MOTH_BEGIN_INSTR(DeadTemporalZoneCheck)
+        if (ACC.isEmpty()) {
+            STORE_IP();
+            STORE_ACC();
+            Runtime::method_throwReferenceError(engine, name);
+            goto handleUnwind;
+        }
+    MOTH_END_INSTR(DeadTemporalZoneCheck)
+
     MOTH_BEGIN_INSTR(ThrowException)
         STORE_IP();
         STORE_ACC();
@@ -949,12 +958,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(ConvertThisToObject)
 
     MOTH_BEGIN_INSTR(LoadSuperConstructor)
-        const FunctionObject *f = stack[CallData::Function].as<FunctionObject>();
-        if (!f || !f->isConstructor()) {
-            engine->throwTypeError();
-        } else {
-            acc = static_cast<const Object *>(f)->getPrototypeOf()->asReturnedValue();
-        }
+        acc = Runtime::method_loadSuperConstructor(engine, stack[CallData::Function]);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadSuperConstructor)
 
@@ -1321,6 +1325,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(Ret)
         return acc;
     MOTH_END_INSTR(Ret)
+
+    MOTH_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
+        acc = Encode(Primitive::emptyValue());
+        for (int i = firstReg, end = firstReg + count; i < end; ++i)
+            STACK_VALUE(i) = acc;
+    MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
 
     MOTH_BEGIN_INSTR(Debug)
 #if QT_CONFIG(qml_debug)

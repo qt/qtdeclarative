@@ -217,9 +217,10 @@ public:
             case Name:
             case Member:
             case Subscript:
+            case SuperProperty:
                 return true;
             default:
-                return false;
+                return requiresTDZCheck;
             }
         }
         bool isConstant() const { return type == Const; }
@@ -294,12 +295,14 @@ public:
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
+            r.requiresTDZCheck = baseRef.requiresTDZCheck;
             return r;
         }
         static Reference fromSuperProperty(const Reference &property) {
             Q_ASSERT(property.isStackSlot());
             Reference r(property.codegen, SuperProperty);
             r.property = property.stackSlot();
+            r.subscriptRequiresTDZCheck = property.requiresTDZCheck;
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
@@ -307,6 +310,8 @@ public:
             Reference r(baseRef.codegen, Subscript);
             r.elementBase = baseRef.stackSlot();
             r.elementSubscript = subscript.asRValue();
+            r.requiresTDZCheck = baseRef.requiresTDZCheck;
+            r.subscriptRequiresTDZCheck = subscript.requiresTDZCheck;
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -334,6 +339,9 @@ public:
         static Reference fromThis(Codegen *cg) {
             Reference r = fromStackSlot(cg, CallData::This);
             r.isReadonly = true;
+            // ### Optimize this. Functions that are not derived constructors or arrow functions can't have an
+            // empty this object
+            r.requiresTDZCheck = true;
             return r;
         }
 
@@ -394,6 +402,8 @@ public:
         mutable bool isArgOrEval = false;
         bool isReadonly = false;
         bool isReferenceToConst = false;
+        bool requiresTDZCheck = false;
+        bool subscriptRequiresTDZCheck = false;
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;
@@ -684,7 +694,7 @@ public:
     void handleTryFinally(AST::TryStatement *ast);
 
 
-    Reference referenceForName(const QString &name, bool lhs);
+    Reference referenceForName(const QString &name, bool lhs, const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> createUnitForLoading();

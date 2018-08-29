@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qv4estable_p.h"
+#include "qv4object_p.h"
 
 using namespace QV4;
 
@@ -67,10 +68,11 @@ ESTable::~ESTable()
     m_values = nullptr;
 }
 
-void ESTable::markObjects(MarkStack *s)
+void ESTable::markObjects(MarkStack *s, bool isWeakMap)
 {
     for (uint i = 0; i < m_size; ++i) {
-        m_keys[i].mark(s);
+        if (!isWeakMap)
+            m_keys[i].mark(s);
         m_values[i].mark(s);
     }
 }
@@ -155,8 +157,8 @@ bool ESTable::remove(const Value &key)
     }
 
     if (found == true) {
-        memmove(m_keys + idx, m_keys + idx + 1, m_size - idx);
-        memmove(m_values + idx, m_values + idx + 1, m_size - idx);
+        memmove(m_keys + idx, m_keys + idx + 1, (m_size - idx)*sizeof(Value));
+        memmove(m_values + idx, m_values + idx + 1, (m_size - idx)*sizeof(Value));
         m_size--;
     }
     return found;
@@ -177,5 +179,21 @@ void ESTable::iterate(uint idx, Value *key, Value *value)
     Q_ASSERT(value);
     *key = m_keys[idx];
     *value = m_values[idx];
+}
+
+void ESTable::removeUnmarkedKeys()
+{
+    uint idx = 0;
+    uint toIdx = 0;
+    for (; idx < m_size; ++idx) {
+        Q_ASSERT(m_keys[idx].isObject());
+        Object &o = static_cast<Object &>(m_keys[idx]);
+        if (o.d()->isMarked()) {
+            m_keys[toIdx] = m_keys[idx];
+            m_values[toIdx] = m_values[idx];
+            ++toIdx;
+        }
+    }
+    m_size = toIdx;
 }
 

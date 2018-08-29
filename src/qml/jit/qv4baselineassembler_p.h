@@ -161,6 +161,7 @@ public:
     void unwindToLabel(int level, int offset);
     void pushCatchContext(int index, int name);
     void popContext();
+    void deadTemporalZoneCheck(int offsetForSavedIP, int variableName);
 
     // other stuff
     void ret();

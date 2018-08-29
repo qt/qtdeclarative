@@ -46,17 +46,26 @@
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(SetCtor);
+DEFINE_OBJECT_VTABLE(WeakSetCtor);
 DEFINE_OBJECT_VTABLE(SetObject);
+
+void Heap::WeakSetCtor::init(QV4::ExecutionContext *scope)
+{
+    Heap::FunctionObject::init(scope, QStringLiteral("WeakSet"));
+}
 
 void Heap::SetCtor::init(QV4::ExecutionContext *scope)
 {
     Heap::FunctionObject::init(scope, QStringLiteral("Set"));
 }
 
-ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool isWeak)
 {
     Scope scope(f);
     Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());
+    if (isWeak)
+        a->setPrototypeOf(scope.engine->weakSetPrototype());
+    a->d()->isWeakSet = isWeak;
 
     if (argc > 0) {
         ScopedValue iterable(scope, argv[0]);
@@ -89,10 +98,72 @@ ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const V
     return a.asReturnedValue();
 }
 
-ReturnedValue SetCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
+ReturnedValue WeakSetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    return construct(f, argv, argc, newTarget, true);
+}
+
+ReturnedValue WeakSetCtor::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
 {
     Scope scope(f);
     return scope.engine->throwTypeError(QString::fromLatin1("Set requires new"));
+}
+
+ReturnedValue SetCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
+{
+    return construct(f, argv, argc, newTarget, false);
+}
+
+void WeakSetPrototype::init(ExecutionEngine *engine, Object *ctor)
+{
+    Scope scope(engine);
+    ScopedObject o(scope);
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
+    defineDefaultProperty(engine->id_constructor(), (o = ctor));
+
+    defineDefaultProperty(QStringLiteral("add"), method_add, 1);
+    defineDefaultProperty(QStringLiteral("delete"), method_delete, 1);
+    defineDefaultProperty(QStringLiteral("has"), method_has, 1);
+
+    ScopedString val(scope, engine->newString(QLatin1String("WeakSet")));
+    defineReadonlyConfigurableProperty(engine->symbol_toStringTag(), val);
+}
+
+ReturnedValue WeakSetPrototype::method_add(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if ((!that || !that->d()->isWeakSet) ||
+        (!argc || !argv[0].isObject()))
+        return scope.engine->throwTypeError();
+
+    that->d()->esTable->set(argv[0], Primitive::undefinedValue());
+    return that.asReturnedValue();
+}
+
+ReturnedValue WeakSetPrototype::method_delete(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that || !that->d()->isWeakSet)
+        return scope.engine->throwTypeError();
+    if (!argc || !argv[0].isObject())
+        return Encode(false);
+
+    return Encode(that->d()->esTable->remove(argv[0]));
+}
+
+ReturnedValue WeakSetPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+{
+    Scope scope(b);
+    Scoped<SetObject> that(scope, thisObject);
+    if (!that || !that->d()->isWeakSet)
+        return scope.engine->throwTypeError();
+    if (!argc || !argv[0].isObject())
+        return Encode(false);
+
+    return Encode(that->d()->esTable->has(argv[0]));
 }
 
 void SetPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -136,10 +207,15 @@ void Heap::SetObject::destroy()
     esTable = 0;
 }
 
+void Heap::SetObject::removeUnmarkedKeys()
+{
+    esTable->removeUnmarkedKeys();
+}
+
 void Heap::SetObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     SetObject *s = static_cast<SetObject *>(that);
-    s->esTable->markObjects(markStack);
+    s->esTable->markObjects(markStack, s->isWeakSet);
     Object::markObjects(that, markStack);
 }
 
@@ -147,7 +223,7 @@ ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thi
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     that->d()->esTable->set(argv[0], Primitive::undefinedValue());
@@ -158,7 +234,7 @@ ReturnedValue SetPrototype::method_clear(const FunctionObject *b, const Value *t
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     that->d()->esTable->clear();
@@ -169,7 +245,7 @@ ReturnedValue SetPrototype::method_delete(const FunctionObject *b, const Value *
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     return Encode(that->d()->esTable->remove(argv[0]));
@@ -179,7 +255,7 @@ ReturnedValue SetPrototype::method_entries(const FunctionObject *b, const Value 
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     Scoped<SetIteratorObject> ao(scope, scope.engine->newSetIteratorObject(that));
@@ -191,7 +267,7 @@ ReturnedValue SetPrototype::method_forEach(const FunctionObject *b, const Value 
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     ScopedFunctionObject callbackfn(scope, argv[0]);
@@ -218,7 +294,7 @@ ReturnedValue SetPrototype::method_has(const FunctionObject *b, const Value *thi
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     return Encode(that->d()->esTable->has(argv[0]));
@@ -228,7 +304,7 @@ ReturnedValue SetPrototype::method_get_size(const FunctionObject *b, const Value
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     return Encode(that->d()->esTable->size());
@@ -238,11 +314,10 @@ ReturnedValue SetPrototype::method_values(const FunctionObject *b, const Value *
 {
     Scope scope(b);
     Scoped<SetObject> that(scope, thisObject);
-    if (!that)
+    if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
     Scoped<SetIteratorObject> ao(scope, scope.engine->newSetIteratorObject(that));
     ao->d()->iterationKind = IteratorKind::ValueIteratorKind;
     return ao->asReturnedValue();
 }
-

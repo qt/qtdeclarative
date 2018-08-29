@@ -563,8 +563,9 @@ ReturnedValue ObjectPrototype::method_keys(const FunctionObject *b, const Value 
 
     ObjectIterator it(scope, o, ObjectIterator::EnumerableOnly);
     ScopedValue name(scope);
+    ScopedValue value(scope);
     while (1) {
-        name = it.nextPropertyNameAsString();
+        name = it.nextPropertyNameAsString(value);
         if (name->isNull())
             break;
         a->push_back(name);
