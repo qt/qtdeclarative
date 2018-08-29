@@ -265,6 +265,8 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
             break;
     }
 
+    bool shiftWithinBucket = false;
+
     for (int i = 0; i < alloc; ++i) {
         int idx = (i + start) % alloc;
         Heap::StringOrSymbol *entry = table[idx];
@@ -273,7 +275,7 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
             continue;
         }
         if (entry->isMarked()) {
-            if (lastEntry >= 0 && lastKey == (f(entry) % alloc)) {
+            if (lastEntry >= 0 && ((lastKey == f(entry) % alloc) || shiftWithinBucket)) {
                 Q_ASSERT(table[lastEntry] == nullptr);
                 table[lastEntry] = entry;
                 table[idx] = nullptr;
@@ -282,9 +284,16 @@ int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::
                 do {
                     lastEntry = (lastEntry + 1) % alloc;
                 } while (table[lastEntry] != nullptr);
+
+                // Avoid gaps within a bucket by enabling shift mode
+                // if we've caught up to the current index.
+                shiftWithinBucket = lastEntry == idx;
             }
             continue;
         }
+
+        shiftWithinBucket = false;
+
         if (lastEntry == -1) {
             lastEntry = idx;
             lastKey = f(entry) % alloc;
