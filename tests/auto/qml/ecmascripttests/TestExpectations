@@ -942,7 +942,6 @@ language/expressions/prefix-increment/S11.4.4_A5_T3.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T4.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T5.js fails
 language/expressions/prefix-increment/S11.4.4_A6_T3.js fails
-language/expressions/super/call-proto-not-ctor.js fails
 language/expressions/super/prop-dot-cls-null-proto.js fails
 language/expressions/super/prop-dot-cls-ref-strict.js fails
 language/expressions/super/prop-dot-cls-ref-this.js fails
@@ -1115,7 +1114,6 @@ language/statements/class/subclass/builtin-objects/TypedArray/super-must-be-call
 language/statements/class/subclass/builtin-objects/WeakMap/super-must-be-called.js fails
 language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.js fails
 language/statements/class/subclass/builtins.js fails
-language/statements/class/subclass/class-definition-null-proto-super.js fails
 language/statements/class/subclass/class-definition-null-proto-this.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
 language/statements/class/super/in-methods.js fails

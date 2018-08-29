@@ -917,11 +917,12 @@ ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, cons
         return engine->throwReferenceError(QStringLiteral("super() already called."), QString(), 0, 0); // ### fix line number
     }
     const FunctionObject *f = t.as<FunctionObject>();
-    if (!f || !f->isConstructor()) {
-        engine->throwTypeError();
-        return Encode::undefined();
-    }
-    return static_cast<const Object &>(t).getPrototypeOf()->asReturnedValue();
+    if (!f)
+        return engine->throwTypeError();
+    Heap::Object *c = static_cast<const Object &>(t).getPrototypeOf();
+    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor())
+        return engine->throwTypeError();
+    return c->asReturnedValue();
 }
 
 
