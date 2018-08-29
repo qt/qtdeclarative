@@ -135,6 +135,7 @@ private slots:
     void checkRowAndColumnChangedButNotIndex();
     void checkChangingModelFromDelegate();
     void checkRebuildViewportOnly();
+    void useDelegateChooserWithoutDefault();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -1755,6 +1756,17 @@ void tst_QQuickTableView::checkRebuildViewportOnly()
     countAfterRebuild = view->rootObject()->property(propName).toInt();
     QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
 }
+
+void tst_QQuickTableView::useDelegateChooserWithoutDefault()
+{
+    // Check that the application issues a warning (but doesn't e.g
+    // crash) if the delegate chooser doesn't cover all cells
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*failed"));
+    LOAD_TABLEVIEW("usechooserwithoutdefault.qml");
+    auto model = TestModelAsVariant(2, 1);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+};
 
 QTEST_MAIN(tst_QQuickTableView)
 
