@@ -1368,7 +1368,6 @@ ReturnedValue Runtime::method_construct(ExecutionEngine *engine, const Value &fu
 
 ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const Value &function, const Value &newTarget, Value *argv, int argc)
 {
-    Q_UNIMPLEMENTED();
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
