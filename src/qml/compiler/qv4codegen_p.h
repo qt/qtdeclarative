@@ -294,12 +294,14 @@ public:
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
+            r.requiresTDZCheck = baseRef.requiresTDZCheck;
             return r;
         }
         static Reference fromSuperProperty(const Reference &property) {
             Q_ASSERT(property.isStackSlot());
             Reference r(property.codegen, SuperProperty);
             r.property = property.stackSlot();
+            r.subscriptRequiresTDZCheck = property.requiresTDZCheck;
             return r;
         }
         static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
@@ -307,6 +309,8 @@ public:
             Reference r(baseRef.codegen, Subscript);
             r.elementBase = baseRef.stackSlot();
             r.elementSubscript = subscript.asRValue();
+            r.requiresTDZCheck = baseRef.requiresTDZCheck;
+            r.subscriptRequiresTDZCheck = subscript.requiresTDZCheck;
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -395,6 +399,7 @@ public:
         bool isReadonly = false;
         bool isReferenceToConst = false;
         bool requiresTDZCheck = false;
+        bool subscriptRequiresTDZCheck = false;
         bool stackSlotIsLocalOrArgument = false;
         bool isVolatile = false;
         bool global = false;

@@ -4141,13 +4141,21 @@ void Codegen::Reference::storeAccumulator() const
 
 void Codegen::Reference::loadInAccumulator() const
 {
-    auto tdzGuard = qScopeGuard([this](){
-        if (!requiresTDZCheck)
+    auto tdzCheck = [this](bool requiresCheck){
+        if (!requiresCheck)
             return;
         Instruction::DeadTemporalZoneCheck check;
         check.name = codegen->registerString(name);
         codegen->bytecodeGenerator->addInstruction(check);
-    });
+    };
+    auto tdzCheckStackSlot = [this, tdzCheck](Moth::StackSlot slot, bool requiresCheck){
+        if (!requiresCheck)
+            return;
+        Instruction::LoadReg load;
+        load.reg = slot;
+        codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(true);
+    };
 
     switch (type) {
     case Accumulator:
@@ -4156,6 +4164,7 @@ void Codegen::Reference::loadInAccumulator() const
         Q_UNREACHABLE();
         return;
     case SuperProperty:
+        tdzCheckStackSlot(property, subscriptRequiresTDZCheck);
         Instruction::LoadSuperProperty load;
         load.property = property.stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
@@ -4202,6 +4211,7 @@ QT_WARNING_POP
         Instruction::LoadReg load;
         load.reg = stackSlot();
         codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
     } return;
     case ScopedLocal: {
         if (!scope) {
@@ -4214,6 +4224,7 @@ QT_WARNING_POP
             load.scope = scope;
             codegen->bytecodeGenerator->addInstruction(load);
         }
+        tdzCheck(requiresTDZCheck);
         return;
     }
     case Name:
@@ -4242,13 +4253,13 @@ QT_WARNING_POP
         }
         return;
     case Member:
+        propertyBase.loadInAccumulator();
+        tdzCheck(requiresTDZCheck);
         if (!disable_lookups && codegen->useFastLookups) {
-            propertyBase.loadInAccumulator();
             Instruction::GetLookup load;
             load.index = codegen->registerGetterLookup(propertyNameIndex);
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
-            propertyBase.loadInAccumulator();
             Instruction::LoadProperty load;
             load.name = propertyNameIndex;
             codegen->bytecodeGenerator->addInstruction(load);
@@ -4258,9 +4269,12 @@ QT_WARNING_POP
         Instruction::LoadImport load;
         load.index = index;
         codegen->bytecodeGenerator->addInstruction(load);
+        tdzCheck(requiresTDZCheck);
     } return;
     case Subscript: {
+        tdzCheckStackSlot(elementBase, requiresTDZCheck);
         elementSubscript.loadInAccumulator();
+        tdzCheck(subscriptRequiresTDZCheck);
         Instruction::LoadElement load;
         load.base = elementBase;
         codegen->bytecodeGenerator->addInstruction(load);

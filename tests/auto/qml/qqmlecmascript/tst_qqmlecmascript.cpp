@@ -356,6 +356,7 @@ private slots:
     void callPropertyOnUndefined();
     void jumpStrictNotEqualUndefined();
     void removeBindingsWithNoDependencies();
+    void temporaryDeadZone();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8796,6 +8797,19 @@ void tst_qqmlecmascript::removeBindingsWithNoDependencies()
         QVERIFY(!proxy->subBindings());
     }
 
+}
+
+void tst_qqmlecmascript::temporaryDeadZone()
+{
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1("a; let a;"));
+    QVERIFY(v.isError());
+    v = engine.evaluate(QString::fromLatin1("a.name; let a;"));
+    QVERIFY(v.isError());
+    v = engine.evaluate(QString::fromLatin1("var a = {}; a[b]; let b;"));
+    QVERIFY(v.isError());
+    v = engine.evaluate(QString::fromLatin1("class C { constructor() { super[x]; let x; } }; new C()"));
+    QVERIFY(v.isError());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
