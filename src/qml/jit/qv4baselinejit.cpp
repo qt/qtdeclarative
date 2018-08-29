@@ -815,7 +815,7 @@ void BaselineJIT::generate_LoadSuperConstructor()
     as->prepareCallWithArgCount(2);
     as->passJSSlotAsArg(CallData::Function, 1);
     as->passEngineAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadSuperConstructor, CallResultDestination::InAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_loadSuperConstructor, CallResultDestination::InAccumulator);
     as->checkException();
 }
 

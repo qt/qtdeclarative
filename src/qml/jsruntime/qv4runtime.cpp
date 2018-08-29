@@ -911,6 +911,21 @@ void Runtime::method_storeSuperProperty(ExecutionEngine *engine, const Value &pr
         engine->throwTypeError();
 }
 
+ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, const Value &t)
+{
+    if (engine->currentStackFrame->thisObject() != Primitive::emptyValue().asReturnedValue()) {
+        return engine->throwReferenceError(QStringLiteral("super() already called."), QString(), 0, 0); // ### fix line number
+    }
+    const FunctionObject *f = t.as<FunctionObject>();
+    if (!f || !f->isConstructor()) {
+        engine->throwTypeError();
+        return Encode::undefined();
+    }
+    return static_cast<const Object &>(t).getPrototypeOf()->asReturnedValue();
+}
+
+
+
 #endif // V4_BOOTSTRAP
 
 uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)

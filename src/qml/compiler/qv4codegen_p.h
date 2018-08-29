@@ -338,6 +338,9 @@ public:
         static Reference fromThis(Codegen *cg) {
             Reference r = fromStackSlot(cg, CallData::This);
             r.isReadonly = true;
+            // ### Optimize this. Functions that are not derived constructors or arrow functions can't have an
+            // empty this object
+            r.requiresTDZCheck = true;
             return r;
         }
 

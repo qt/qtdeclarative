@@ -66,7 +66,6 @@ namespace Helpers {
 
 void convertThisToObject(ExecutionEngine *engine, Value *t);
 ReturnedValue loadGlobalLookup(ExecutionEngine *engine, Function *f, int index);
-ReturnedValue loadSuperConstructor(ExecutionEngine *engine, const Value *t);
 ReturnedValue toObject(ExecutionEngine *engine, const Value &obj);
 ReturnedValue exp(const Value &base, const Value &exp);
 ReturnedValue getLookup(ExecutionEngine *engine, Function *f, int index, const Value &base);

@@ -556,7 +556,7 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
     CppStackFrame frame;
     frame.init(v4, f->function(), argv, argc);
     frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
-                       Primitive::undefinedValue(),
+                       Primitive::emptyValue(),
                        newTarget ? *newTarget : Primitive::undefinedValue());
 
     frame.push();
@@ -570,7 +570,7 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
         return Encode::undefined();
     else if (Value::fromReturnedValue(result).isObject())
         return result;
-    else if (!Value::fromReturnedValue(result).isUndefined())
+    else if (!Value::fromReturnedValue(result).isUndefined() || frame.jsFrame->thisObject.isEmpty())
         return v4->throwTypeError();
     return frame.jsFrame->thisObject.asReturnedValue();
 }

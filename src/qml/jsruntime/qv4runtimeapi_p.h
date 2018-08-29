@@ -115,6 +115,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, loadElement, (ExecutionEngine *engine, const Value &object, const Value &index)) \
     F(ReturnedValue, loadSuperProperty, (ExecutionEngine *engine, const Value &property)) \
     F(void, storeSuperProperty, (ExecutionEngine *engine, const Value &property, const Value &value)) \
+    F(ReturnedValue, loadSuperConstructor, (ExecutionEngine *engine, const Value &t)) \
     \
     /* typeof */  \
     F(ReturnedValue, typeofValue, (ExecutionEngine *engine, const Value &val)) \
