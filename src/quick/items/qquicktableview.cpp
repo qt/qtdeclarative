@@ -706,6 +706,8 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
         // Parent item is normally set early on from initItemCallback (to
         // allow bindings to the parent property). But if we created the item
         // within this function, we need to set it explicit.
+        item->setImplicitWidth(kDefaultColumnWidth);
+        item->setImplicitHeight(kDefaultRowHeight);
         item->setParentItem(q->contentItem());
     }
     Q_TABLEVIEW_ASSERT(item->parentItem() == q->contentItem(), item->parentItem());
