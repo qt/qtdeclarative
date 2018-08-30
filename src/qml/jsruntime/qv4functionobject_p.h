@@ -122,13 +122,16 @@ DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
 };
 
-struct ConstructorFunction : ScriptFunction
-{
-    bool isDerivedConstructor;
+#define MemberFunctionMembers(class, Member) \
+    Member(class, Pointer, Object *, homeObject)
+
+DECLARE_HEAP_OBJECT(MemberFunction, ScriptFunction) {
+    DECLARE_MARKOBJECTS(MemberFunction)
 };
 
-struct MemberFunction : ScriptFunction
+struct ConstructorFunction : MemberFunction
 {
+    bool isDerivedConstructor;
 };
 
 struct DefaultClassConstructorFunction : FunctionObject
@@ -187,8 +190,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
-    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, bool isDerivedConstructor);
-    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function, String *name);
+    static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, Object *homeObject, bool isDerivedConstructor);
+    static Heap::FunctionObject *createMemberFunction(ExecutionContext *scope, Function *function, Object *homeObject, String *name);
     static Heap::FunctionObject *createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount);
 
     bool strictMode() const { return d()->function ? d()->function->isStrict() : false; }
@@ -261,18 +264,17 @@ struct ScriptFunction : FunctionObject {
     Heap::InternalClass *classForConstructor() const;
 };
 
-struct ConstructorFunction : ScriptFunction {
-    V4_OBJECT2(ConstructorFunction, ScriptFunction)
-    V4_INTERNALCLASS(ConstructorFunction)
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
-    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-};
-
 struct MemberFunction : ScriptFunction {
     V4_OBJECT2(MemberFunction, ScriptFunction)
     V4_INTERNALCLASS(MemberFunction)
 };
 
+struct ConstructorFunction : MemberFunction {
+    V4_OBJECT2(ConstructorFunction, MemberFunction)
+    V4_INTERNALCLASS(ConstructorFunction)
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
+    static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
 
 struct DefaultClassConstructorFunction : FunctionObject {
     V4_OBJECT2(DefaultClassConstructorFunction, FunctionObject)

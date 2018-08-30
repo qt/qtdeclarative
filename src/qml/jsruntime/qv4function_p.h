@@ -81,6 +81,7 @@ struct Q_QML_EXPORT Function {
     uint nFormals;
     int interpreterCallCount = 0;
     bool hasQmlDependencies;
+    bool isEval = false;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);
     ~Function();

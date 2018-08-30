@@ -1096,7 +1096,6 @@ language/statements/class/subclass/builtin-objects/WeakSet/super-must-be-called.
 language/statements/class/subclass/builtins.js fails
 language/statements/class/subclass/class-definition-null-proto-this.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
-language/statements/class/super/in-methods.js fails
 language/statements/do-while/tco-body.js strictFails
 language/statements/for-in/head-lhs-let.js sloppyFails
 language/statements/for-in/head-var-bound-names-let.js sloppyFails
