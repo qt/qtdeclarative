@@ -1529,30 +1529,48 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
     ScopedProperty pd(scope);
     ScopedFunctionObject fn(scope);
     ScopedString fnName(scope);
+    ScopedValue value(scope);
     for (int i = 0; i < additionalArgs; ++i) {
         Q_ASSERT(args->isInteger());
         ObjectLiteralArgument arg = ObjectLiteralArgument(args->integerValue());
         name = args[1].toPropertyKey(engine);
+        value = args[2];
         if (engine->hasException)
             return Encode::undefined();
-        if (args[2].isFunctionObject()) {
-            fn = static_cast<const FunctionObject &>(args[2]);
+        if (arg != ObjectLiteralArgument::Value) {
+            Q_ASSERT(args[2].isInteger());
+            int functionId = args[2].integerValue();
+            QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
+            Q_ASSERT(clos);
+
             PropertyKey::FunctionNamePrefix prefix = PropertyKey::None;
             if (arg == ObjectLiteralArgument::Getter)
                 prefix = PropertyKey::Getter;
             else if (arg == ObjectLiteralArgument::Setter)
                 prefix = PropertyKey::Setter;
-
+            else
+                arg = ObjectLiteralArgument::Value;
             fnName = name->asFunctionName(engine, prefix);
+
+            ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
+            if (clos->isGenerator())
+                value = MemberGeneratorFunction::create(current, clos, fnName)->asReturnedValue();
+            else
+                value = FunctionObject::createMemberFunction(current, clos, fnName)->asReturnedValue();
+        } else if (args[2].isFunctionObject()) {
+            fn = static_cast<const FunctionObject &>(args[2]);
+
+            fnName = name->asFunctionName(engine, PropertyKey::None);
             fn->setName(fnName);
         }
-        Q_ASSERT(arg == ObjectLiteralArgument::Value || args[2].isFunctionObject());
+        Q_ASSERT(arg != ObjectLiteralArgument::Method);
+        Q_ASSERT(arg == ObjectLiteralArgument::Value || value->isFunctionObject());
         if (arg == ObjectLiteralArgument::Value || arg == ObjectLiteralArgument::Getter) {
-            pd->value = args[2];
+            pd->value = value;
             pd->set = Primitive::emptyValue();
         } else {
             pd->value = Primitive::emptyValue();
-            pd->set = args[2];
+            pd->set = value;
         }
         bool ok = o->defineOwnProperty(name, pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
         if (!ok)

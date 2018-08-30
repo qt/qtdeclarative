@@ -2450,7 +2450,7 @@ bool Codegen::visit(ObjectPattern *ast)
     for (; it; it = it->next) {
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
-        if (cname || p->type == PatternProperty::Getter || p->type == PatternProperty::Setter)
+        if (cname || p->type != PatternProperty::Literal)
             break;
         QString name = p->name->asString();
         uint arrayIndex = QV4::String::toArrayIndex(name);
@@ -2477,7 +2477,9 @@ bool Codegen::visit(ObjectPattern *ast)
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         ObjectLiteralArgument argType = ObjectLiteralArgument::Value;
-        if (p->type == PatternProperty::Getter)
+        if (p->type == PatternProperty::Method)
+            argType = ObjectLiteralArgument::Method;
+        else if (p->type == PatternProperty::Getter)
             argType = ObjectLiteralArgument::Getter;
         else if (p->type == PatternProperty::Setter)
             argType = ObjectLiteralArgument::Setter;
@@ -2508,10 +2510,20 @@ bool Codegen::visit(ObjectPattern *ast)
         push(Reference::fromAccumulator(this));
         {
             RegisterScope innerScope(this);
-            Reference value = expression(p->initializer);
-            if (hasError)
-                return false;
-            value.loadInAccumulator();
+            if (p->type != PatternProperty::Literal) {
+                // need to get the closure id for the method
+                FunctionExpression *f = p->initializer->asFunctionDefinition();
+                Q_ASSERT(f);
+                int function = defineFunction(f->name.toString(), f, f->formals, f->body);
+                if (hasError)
+                    return false;
+                Reference::fromConst(this, Encode(function)).loadInAccumulator();
+            } else {
+                Reference value = expression(p->initializer);
+                if (hasError)
+                    return false;
+                value.loadInAccumulator();
+            }
         }
         push(Reference::fromAccumulator(this));
     }

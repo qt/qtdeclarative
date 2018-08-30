@@ -383,6 +383,7 @@ typedef QVector<StackFrame> StackTrace;
 
 enum class ObjectLiteralArgument {
     Value,
+    Method,
     Getter,
     Setter
 };
