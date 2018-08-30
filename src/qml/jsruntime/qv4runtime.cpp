@@ -877,6 +877,11 @@ ReturnedValue Runtime::method_loadName(ExecutionEngine *engine, int nameIndex)
 
 static Object *getSuperBase(Scope &scope)
 {
+    if (scope.engine->currentStackFrame->jsFrame->thisObject.isEmpty()) {
+        scope.engine->throwReferenceError(QStringLiteral("Missing call to super()."), QString(), 0, 0);
+        return nullptr;
+    }
+
     ScopedFunctionObject f(scope, scope.engine->currentStackFrame->jsFrame->function);
     MemberFunction *m = f->as<MemberFunction>();
     if (!m) {

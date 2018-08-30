@@ -934,10 +934,8 @@ language/expressions/prefix-increment/S11.4.4_A5_T3.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T4.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T5.js fails
 language/expressions/prefix-increment/S11.4.4_A6_T3.js fails
-language/expressions/super/prop-dot-cls-this-uninit.js fails
 language/expressions/super/prop-dot-cls-val-from-arrow.js fails
 language/expressions/super/prop-dot-obj-val-from-arrow.js fails
-language/expressions/super/prop-expr-cls-this-uninit.js fails
 language/expressions/super/prop-expr-cls-val-from-arrow.js fails
 language/expressions/super/prop-expr-obj-val-from-arrow.js fails
 language/expressions/super/realm.js fails
