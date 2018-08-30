@@ -418,6 +418,19 @@ void BaselineJIT::generate_CallValue(int name, int argc, int argv)
     as->checkException();
 }
 
+void BaselineJIT::generate_CallWithReceiver(int name, int thisObject, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(5);
+    as->passInt32AsArg(argc, 4);
+    as->passJSSlotAsArg(argv, 3);
+    as->passJSSlotAsArg(thisObject, 2);
+    as->passJSSlotAsArg(name, 1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callWithReceiver, CallResultDestination::InAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_CallProperty(int name, int base, int argc, int argv)
 {
     STORE_IP();

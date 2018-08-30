@@ -689,6 +689,17 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
 
+    MOTH_BEGIN_INSTR(CallWithReceiver)
+        STORE_IP();
+        Value func = STACK_VALUE(name);
+        if (Q_UNLIKELY(!func.isFunctionObject())) {
+            acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
+            goto handleUnwind;
+        }
+        acc = static_cast<const FunctionObject &>(func).call(stack + thisObject, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallWithReceiver)
+
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
         acc = Runtime::method_callProperty(engine, stack + base, name, stack + argv, argc);

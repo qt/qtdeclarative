@@ -1310,6 +1310,13 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
     return static_cast<const FunctionObject &>(func).call(&undef, argv, argc);
 }
 
+ReturnedValue Runtime::method_callWithReceiver(ExecutionEngine *engine, const Value &func, const Value *thisObject, Value *argv, int argc)
+{
+    if (!func.isFunctionObject())
+        return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
+    return static_cast<const FunctionObject &>(func).call(thisObject, argv, argc);
+}
+
 ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
                                                          int propertyIndex, Value *argv, int argc)
 {

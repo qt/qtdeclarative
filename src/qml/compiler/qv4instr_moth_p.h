@@ -104,6 +104,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 1, base)
 #define INSTR_StoreElement(op) INSTRUCTION(op, StoreElement, 2, base, index)
 #define INSTR_CallValue(op) INSTRUCTION(op, CallValue, 3, name, argc, argv)
+#define INSTR_CallWithReceiver(op) INSTRUCTION(op, CallWithReceiver, 4, name, thisObject, argc, argv)
 #define INSTR_CallProperty(op) INSTRUCTION(op, CallProperty, 4, name, base, argc, argv)
 #define INSTR_CallPropertyLookup(op) INSTRUCTION(op, CallPropertyLookup, 4, lookupIndex, base, argc, argv)
 #define INSTR_CallElement(op) INSTRUCTION(op, CallElement, 4, base, index, argc, argv)
@@ -283,6 +284,7 @@ QT_BEGIN_NAMESPACE
     F(Mod) \
     F(Sub) \
     F(CallValue) \
+    F(CallWithReceiver) \
     F(CallProperty) \
     F(CallPropertyLookup) \
     F(CallElement) \
