@@ -462,95 +462,50 @@ ReturnedValue Object::internalGetIndexed(uint index, const Value *receiver, bool
 // Section 8.12.5
 bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
 {
-    ExecutionEngine *engine = this->engine();
-    if (engine->hasException)
+    Scope scope(this);
+    if (scope.engine->hasException)
         return false;
 
-    uint index = id.asArrayIndex();
-    Scope scope(engine);
-
+    ScopedProperty p(scope);
     PropertyAttributes attrs;
-    PropertyIndex propertyIndex{nullptr, nullptr};
-
-    if (index != UINT_MAX) {
-        if (arrayData())
-            propertyIndex = arrayData()->getValueOrSetter(index, &attrs);
-
-        if (propertyIndex.isNull() && isStringObject()) {
-            if (index < static_cast<StringObject *>(this)->length())
-                // not writable
-                return false;
-        }
-    } else {
-        uint member = internalClass()->find(id);
-        if (member < UINT_MAX) {
-            attrs = internalClass()->propertyData[member];
-            propertyIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
-        }
+    attrs = getOwnProperty(id, p);
+    if (attrs == Attr_Invalid) {
+        ScopedObject p(scope, getPrototypeOf());
+        if (p)
+            return p->put(id, value, receiver);
+        attrs = Attr_Data;
     }
 
-    // clause 1
-    if (!propertyIndex.isNull()) {
-        if (attrs.isAccessor()) {
-            if (propertyIndex->as<FunctionObject>())
-                goto cont;
+    if (attrs.isAccessor()) {
+        ScopedFunctionObject setter(scope, p->setter());
+        if (!setter)
             return false;
-        } else if (!attrs.isWritable())
-            return false;
-        else if (isArrayObject() && id == engine->id_length()->propertyKey()) {
-            bool ok;
-            uint l = value.asArrayLength(&ok);
-            if (!ok) {
-                engine->throwRangeError(value);
-                return false;
-            }
-            ok = setArrayLength(l);
-            if (!ok)
-                return false;
-        } else {
-            propertyIndex.set(engine, value);
-        }
-        return true;
-    } else if (!getPrototypeOf()) {
-        if (!isExtensible())
-            return false;
-    } else {
-        // clause 4
-        propertyIndex = ScopedObject(scope, getPrototypeOf())->getValueOrSetter(id, &attrs);
-        if (!propertyIndex.isNull()) {
-            if (attrs.isAccessor()) {
-                if (!propertyIndex->as<FunctionObject>())
-                    return false;
-            } else if (!isExtensible() || !attrs.isWritable()) {
-                return false;
-            }
-        } else if (!isExtensible()) {
-            return false;
-        }
-    }
-
-    cont:
-
-    // Clause 5
-    if (!propertyIndex.isNull() && attrs.isAccessor()) {
-        Q_ASSERT(propertyIndex->as<FunctionObject>());
-
-        Scope scope(engine);
-        ScopedFunctionObject setter(scope, *propertyIndex);
         JSCallData jsCallData(scope, 1);
         jsCallData->args[0] = value;
         *jsCallData->thisObject = *receiver;
         setter->call(jsCallData);
-        return !engine->hasException;
+        return !scope.engine->hasException;
     }
 
-    if (index != UINT_MAX) {
-        arraySet(index, value);
+    // Data property
+    if (!attrs.isWritable())
+        return false;
+    Object *r = receiver->objectValue();
+    if (!r)
+        return false;
+    attrs = r->getOwnProperty(id, p);
+
+    if (attrs != Attr_Invalid) {
+        if (attrs.isAccessor() || !attrs.isWritable())
+            return false;
     } else {
-        Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
-        insertMember(name, value);
+        if (!r->isExtensible())
+            return false;
+        attrs = Attr_Data;
     }
-    return true;
+
+    p->value = value;
+    return r->defineOwnProperty(id, p, attrs);
 }
 
 // Section 8.12.7
