@@ -695,6 +695,11 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
         model->release(object);
         item = new QQuickItem();
         ownItem = true;
+    } else {
+        QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+        if (anchors && anchors->activeDirections())
+            qmlWarning(item) << "TableView: detected anchors on delegate with index: " << modelIndex
+                             << ". Use implicitWidth and implicitHeight instead.";
     }
 
     if (ownItem) {

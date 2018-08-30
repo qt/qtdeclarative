@@ -93,6 +93,7 @@ private slots:
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
     void checkColumnWidthWithoutProvider();
+    void checkDelegateWithAnchors();
     void checkColumnWidthProvider();
     void checkColumnWidthProviderInvalidReturnValues();
     void checkColumnWidthProviderNotCallable();
@@ -306,6 +307,18 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
             QCOMPARE(item->width(), expectedColumnWidth);
         }
     }
+}
+
+void tst_QQuickTableView::checkDelegateWithAnchors()
+{
+    // Checks that we issue a warning if the delegate has anchors
+    LOAD_TABLEVIEW("delegatewithanchors.qml");
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*anchors"));
+
+    auto model = TestModelAsVariant(1, 1);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
 }
 
 void tst_QQuickTableView::checkColumnWidthProvider()
