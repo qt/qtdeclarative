@@ -89,3 +89,7 @@ navigation.qmltypespage = "Qt Quick QML Types"
 
 # \svgcolor {#ffdead}
 macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
+
+# youtube video thumbnails that show up in offline and online docs
+HTML.extraimages += images/9BcAYDlpuT8.jpg
+qhp.QtQuick.extraFiles += images/9BcAYDlpuT8.jpg
