@@ -74,7 +74,7 @@ public:
     QVector2D translation() const { return m_translation; }
     void setTranslation(const QVector2D &trans);
 
-    Q_INVOKABLE void enforceConstraints();
+    void enforceConstraints();
 
 Q_SIGNALS:
 //    void gestureStarted(QQuickGestureEvent *gesture);
