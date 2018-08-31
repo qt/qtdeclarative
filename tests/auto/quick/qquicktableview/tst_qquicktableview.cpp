@@ -56,10 +56,9 @@ static const char *kModelDataBindingProp = "modelDataBinding";
 Q_DECLARE_METATYPE(QMarginsF);
 
 #define LOAD_TABLEVIEW(fileName) \
-    QScopedPointer<QQuickView> view(createView()); \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
-    QVERIFY(QTest::qWaitForWindowActive(view.data())); \
+    QVERIFY(QTest::qWaitForWindowActive(view)); \
     auto tableView = view->rootObject()->property(kTableViewPropName).value<QQuickTableView *>(); \
     QVERIFY(tableView); \
     auto tableViewPrivate = QQuickTableViewPrivate::get(tableView); \
@@ -78,8 +77,12 @@ public:
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
     QPoint getContextRowAndColumn(const QQuickItem *item) const;
 
+private:
+    QQuickView *view = nullptr;
+
 private slots:
     void initTestCase() override;
+    void cleanupTestCase();
 
     void setAndGetModel_data();
     void setAndGetModel();
@@ -141,6 +144,12 @@ void tst_QQuickTableView::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<TestModel>("TestModel", 0, 1, "TestModel");
+    view = createView();
+}
+
+void tst_QQuickTableView::cleanupTestCase()
+{
+    delete view;
 }
 
 QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *object) const
