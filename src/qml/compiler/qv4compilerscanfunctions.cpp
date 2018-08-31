@@ -656,13 +656,16 @@ void ScanFunctions::calcEscapingVariables()
     Module *m = _cg->_module;
 
     for (Context *inner : qAsConst(m->contextMap)) {
-        if (inner->contextType == ContextType::Block && inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-            Context *c = inner->parent;
-            while (c->contextType == ContextType::Block)
-                c = c->parent;
+        if (inner->usesArgumentsObject != Context::ArgumentsObjectUsed)
+            continue;
+        if (inner->contextType != ContextType::Block && !inner->isArrowFunction)
+            continue;
+        Context *c = inner->parent;
+        while (c && (c->contextType == ContextType::Block || c->isArrowFunction))
+            c = c->parent;
+        if (c)
             c->usesArgumentsObject = Context::ArgumentsObjectUsed;
-            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-        }
+        inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
     for (Context *inner : qAsConst(m->contextMap)) {
         if (!inner->parent || inner->usesArgumentsObject == Context::ArgumentsObjectUnknown)

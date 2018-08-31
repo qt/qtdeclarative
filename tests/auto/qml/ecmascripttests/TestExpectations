@@ -664,7 +664,6 @@ language/eval-code/indirect/var-env-var-non-strict.js strictFails
 language/expressions/arrow-function/cannot-override-this-with-thisArg.js fails
 language/expressions/arrow-function/dflt-params-ref-later.js fails
 language/expressions/arrow-function/dflt-params-ref-self.js fails
-language/expressions/arrow-function/lexical-arguments.js fails
 language/expressions/arrow-function/lexical-new.target-closure-returned.js fails
 language/expressions/arrow-function/lexical-new.target.js fails
 language/expressions/arrow-function/lexical-super-call-from-within-constructor.js fails
