@@ -253,60 +253,29 @@ void IdentifierTable::markObjects(MarkStack *markStack)
 }
 
 template <typename Key>
-int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
+int sweepTable(Heap::StringOrSymbol **&table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
     int freed = 0;
-    uint lastKey = 0;
 
-    int lastEntry = -1;
-    int start = 0;
-    // start at an empty entry so we compress properly
-    for (; start < alloc; ++start) {
-        if (!table[start])
-            break;
-    }
-
-    bool shiftWithinBucket = false;
-
+    Heap::StringOrSymbol **newTable = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::String *));
+    memset(newTable, 0, alloc*sizeof(Heap::StringOrSymbol *));
     for (int i = 0; i < alloc; ++i) {
-        int idx = (i + start) % alloc;
-        Heap::StringOrSymbol *entry = table[idx];
-        if (!entry) {
-            lastEntry = -1;
+        Heap::StringOrSymbol *e = table[i];
+        if (!e)
+            continue;
+        if (!e->isMarked()) {
+            ++freed;
             continue;
         }
-        if (entry->isMarked()) {
-            if (lastEntry >= 0 && ((lastKey == f(entry) % alloc) || shiftWithinBucket)) {
-                Q_ASSERT(table[lastEntry] == nullptr);
-                table[lastEntry] = entry;
-                table[idx] = nullptr;
-
-                // find next free slot just like in addEntry()
-                do {
-                    lastEntry = (lastEntry + 1) % alloc;
-                } while (table[lastEntry] != nullptr);
-
-                // Avoid gaps within a bucket by enabling shift mode
-                // if we've caught up to the current index.
-                shiftWithinBucket = lastEntry == idx;
-            }
-            continue;
+        uint idx = f(e) % alloc;
+        while (newTable[idx]) {
+            ++idx;
+            idx %= alloc;
         }
-
-        shiftWithinBucket = false;
-
-        if (lastEntry == -1) {
-            lastEntry = idx;
-            lastKey = f(entry) % alloc;
-        }
-        table[idx] = nullptr;
-        ++freed;
+        newTable[idx] = e;
     }
-    for (int i = 0; i < alloc; ++i) {
-        Heap::StringOrSymbol *entry = table[i];
-        if (!entry)
-            continue;
-        Q_ASSERT(entry->isMarked());
-    }
+    free(table);
+    table = newTable;
+
     return freed;
 }
 
