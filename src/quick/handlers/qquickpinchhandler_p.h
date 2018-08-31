@@ -66,7 +66,6 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
     Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
     Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
-    Q_PROPERTY(PinchOrigin pinchOrigin READ pinchOrigin WRITE setPinchOrigin NOTIFY pinchOriginChanged)
     Q_PROPERTY(qreal scale READ scale NOTIFY updated)
     Q_PROPERTY(qreal activeScale READ activeScale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
@@ -79,11 +78,6 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
 
 public:
-    enum PinchOrigin {
-        FirstPoint, PinchCenter, TargetCenter
-    };
-    Q_ENUM(PinchOrigin)
-
     explicit QQuickPinchHandler(QQuickItem *parent = nullptr);
 
     qreal minimumScale() const { return m_minimumScale; }
@@ -97,9 +91,6 @@ public:
 
     qreal maximumRotation() const { return m_maximumRotation; }
     void setMaximumRotation(qreal maximumRotation);
-
-    PinchOrigin pinchOrigin() const { return m_pinchOrigin; }
-    void setPinchOrigin(PinchOrigin pinchOrigin);
 
     QVector2D translation() const { return m_activeTranslation; }
     qreal scale() const { return m_accumulatedScale; }
@@ -126,7 +117,6 @@ signals:
     void maximumXChanged();
     void minimumYChanged();
     void maximumYChanged();
-    void pinchOriginChanged();
     void updated();
 
 protected:
@@ -153,8 +143,6 @@ private:
     qreal m_maximumY = qInf();
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
-
-    PinchOrigin m_pinchOrigin = PinchOrigin::PinchCenter;
 
     // internal
     qreal m_startScale = 1;
