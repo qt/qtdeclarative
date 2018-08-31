@@ -172,10 +172,12 @@ void QQmlPreviewServiceImpl::forwardError(const QString &error)
     emit messageToClient(name(), packet.data());
 }
 
-void QQmlPreviewServiceImpl::forwardFps(quint16 frames)
+void QQmlPreviewServiceImpl::forwardFps(const QQmlPreviewHandler::FpsInfo &frames)
 {
     QQmlDebugPacket packet;
-    packet << static_cast<qint8>(Fps) << frames;
+    packet << static_cast<qint8>(Fps)
+           << frames.numSyncs << frames.minSync << frames.maxSync << frames.totalSync
+           << frames.numRenders << frames.minRender << frames.maxRender << frames.totalRender;
     emit messageToClient(name(), packet.data());
 }
 

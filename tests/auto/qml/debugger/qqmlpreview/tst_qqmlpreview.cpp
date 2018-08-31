@@ -57,7 +57,7 @@ private:
     QStringList m_filesNotFound;
     QStringList m_directories;
     QStringList m_serviceErrors;
-    quint16 m_frames = 0;
+    QQmlPreviewClient::FpsInfo m_frameStats;
 
 private slots:
     void cleanup() final;
@@ -105,8 +105,9 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
     QObject::connect(m_client, &QQmlPreviewClient::error, this, [this](const QString &error) {
         m_serviceErrors.append(error);
     });
-    QObject::connect(m_client, &QQmlPreviewClient::fps, this, [this](quint16 frames) {
-        m_frames += frames;
+    QObject::connect(m_client, &QQmlPreviewClient::fps,
+                     this, [this](const QQmlPreviewClient::FpsInfo &info) {
+        m_frameStats = info;
     });
 
     return QList<QQmlDebugClient *>({m_client});
@@ -141,7 +142,7 @@ void tst_QQmlPreview::cleanup()
     m_files.clear();
     m_filesNotFound.clear();
     m_serviceErrors.clear();
-    m_frames = 0;
+    m_frameStats = QQmlPreviewClient::FpsInfo();
 }
 
 void tst_QQmlPreview::connect()
@@ -336,10 +337,19 @@ void tst_QQmlPreview::fps()
     QCOMPARE(startQmlProcess(file), ConnectSuccess);
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl(file));
-    if (QGuiApplication::platformName() != "offscreen")
-        QTRY_VERIFY(m_frames > 100);
-    else
+    if (QGuiApplication::platformName() != "offscreen") {
+        QTRY_VERIFY(m_frameStats.numSyncs > 10);
+        QVERIFY(m_frameStats.minSync <= m_frameStats.maxSync);
+        QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs >= m_frameStats.minSync - 1);
+        QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs <= m_frameStats.maxSync);
+
+        QVERIFY(m_frameStats.numRenders > 0);
+        QVERIFY(m_frameStats.minRender <= m_frameStats.maxRender);
+        QVERIFY(m_frameStats.totalRender / m_frameStats.numRenders >= m_frameStats.minRender - 1);
+        QVERIFY(m_frameStats.totalRender / m_frameStats.numRenders <= m_frameStats.maxRender);
+    } else {
         QSKIP("offscreen rendering doesn't produce any frames");
+    }
 }
 
 void tst_QQmlPreview::language()

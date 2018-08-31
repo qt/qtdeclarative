@@ -76,6 +76,18 @@ public:
         Language
     };
 
+    struct FpsInfo {
+        quint16 numSyncs = 0;
+        quint16 minSync = std::numeric_limits<quint16>::max();
+        quint16 maxSync = 0;
+        quint16 totalSync = 0;
+
+        quint16 numRenders = 0;
+        quint16 minRender = std::numeric_limits<quint16>::max();
+        quint16 maxRender = 0;
+        quint16 totalRender = 0;
+    };
+
     QQmlPreviewClient(QQmlDebugConnection *parent);
     void messageReceived(const QByteArray &message) override;
 
@@ -91,7 +103,7 @@ public:
 signals:
     void request(const QString &path);
     void error(const QString &message);
-    void fps(quint16 frames);
+    void fps(const FpsInfo &info);
 };
 
 QT_END_NAMESPACE

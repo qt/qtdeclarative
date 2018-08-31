@@ -75,9 +75,10 @@ void QQmlPreviewClient::messageReceived(const QByteArray &message)
         break;
     }
     case Fps: {
-        quint16 frames;
-        packet >> frames;
-        emit fps(frames);
+        FpsInfo info;
+        packet >> info.numSyncs >> info.minSync >> info.maxSync >> info.totalSync
+               >> info.numRenders >> info.minRender >> info.maxRender >> info.totalRender;
+        emit fps(info);
         break;
     }
     default:
