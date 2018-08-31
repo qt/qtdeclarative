@@ -163,7 +163,6 @@ void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQui
         reset();
         break;
     }
-    emit singlePointGrabChanged();
 }
 
 void QQuickSinglePointHandler::setIgnoreAdditionalPoints(bool v)

@@ -67,7 +67,6 @@ public:
 
 Q_SIGNALS:
     void pointChanged();
-    void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;

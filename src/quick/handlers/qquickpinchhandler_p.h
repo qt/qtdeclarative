@@ -154,8 +154,6 @@ private:
     QVector<PointData> m_startAngles;
     QMatrix4x4 m_startMatrix;
     QQuickMatrix4x4 m_transform;
-
-
 };
 
 QT_END_NAMESPACE

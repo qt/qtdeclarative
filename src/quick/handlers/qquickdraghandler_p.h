@@ -77,7 +77,6 @@ public:
     void enforceConstraints();
 
 Q_SIGNALS:
-//    void gestureStarted(QQuickGestureEvent *gesture);
     void translationChanged();
 
 protected:
