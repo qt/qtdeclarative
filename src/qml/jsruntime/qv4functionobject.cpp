@@ -175,7 +175,7 @@ Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *sco
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
-Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function, bool isDerivedConstructor)
+Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext *scope, Function *function, Object *homeObject, bool isDerivedConstructor)
 {
     if (!function) {
         Heap::DefaultClassConstructorFunction *c = scope->engine()->memoryManager->allocate<DefaultClassConstructorFunction>(scope);
@@ -183,13 +183,16 @@ Heap::FunctionObject *FunctionObject::createConstructorFunction(ExecutionContext
         return c;
     }
     Heap::ConstructorFunction *c = scope->engine()->memoryManager->allocate<ConstructorFunction>(scope, function);
+    c->homeObject.set(scope->engine(), homeObject->d());
     c->isDerivedConstructor = isDerivedConstructor;
     return c;
 }
 
-Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function, QV4::String *name)
+Heap::FunctionObject *FunctionObject::createMemberFunction(ExecutionContext *scope, Function *function, Object *homeObject, QV4::String *name)
 {
-    return scope->engine()->memoryManager->allocate<MemberFunction>(scope, function, name);
+    Heap::MemberFunction *m = scope->engine()->memoryManager->allocate<MemberFunction>(scope, function, name);
+    m->homeObject.set(scope->engine(), homeObject->d());
+    return m;
 }
 
 Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *engine, StringOrSymbol *nameOrSymbol, VTable::Call code, int argumentCount)

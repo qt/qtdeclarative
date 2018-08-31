@@ -98,6 +98,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)) \
     F(ReturnedValue, callElement, (ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)) \
     F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
+    F(ReturnedValue, callWithReceiver, (ExecutionEngine *engine, const Value &func, const Value *thisObject, Value *argv, int argc)) \
     F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, Value *argv, int argc)) \
     F(ReturnedValue, callWithSpread, (ExecutionEngine *engine, const Value &func, const Value &thisObject, Value *argv, int argc)) \
     \

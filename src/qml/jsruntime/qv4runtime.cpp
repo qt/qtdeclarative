@@ -875,38 +875,65 @@ ReturnedValue Runtime::method_loadName(ExecutionEngine *engine, int nameIndex)
     return static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context).getProperty(name);
 }
 
+static Object *getSuperBase(Scope &scope)
+{
+    if (scope.engine->currentStackFrame->jsFrame->thisObject.isEmpty()) {
+        scope.engine->throwReferenceError(QStringLiteral("Missing call to super()."), QString(), 0, 0);
+        return nullptr;
+    }
+
+    ScopedFunctionObject f(scope, scope.engine->currentStackFrame->jsFrame->function);
+    MemberFunction *m = f->as<MemberFunction>();
+    if (!m) {
+        ScopedContext ctx(scope, static_cast<ExecutionContext *>(&scope.engine->currentStackFrame->jsFrame->context));
+        Q_ASSERT(ctx);
+        while (ctx) {
+            if (CallContext *c = ctx->asCallContext()) {
+                f = c->d()->function;
+                QV4::Function *fn = f->function();
+                if (fn && !fn->isArrowFunction() && !fn->isEval)
+                    break;
+            }
+            ctx = ctx->d()->outer;
+        }
+        m = f->as<MemberFunction>();
+    }
+    if (!m) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    ScopedObject homeObject(scope, m->d()->homeObject);
+    Q_ASSERT(homeObject);
+    ScopedObject proto(scope, homeObject->getPrototypeOf());
+    if (!proto) {
+        scope.engine->throwTypeError();
+        return nullptr;
+    }
+    return proto;
+}
+
 ReturnedValue Runtime::method_loadSuperProperty(ExecutionEngine *engine, const Value &property)
 {
     Scope scope(engine);
-    ScopedObject base(scope, engine->currentStackFrame->thisObject());
+    Object *base = getSuperBase(scope);
     if (!base)
-        return engine->throwTypeError();
-    ScopedObject proto(scope, base->getPrototypeOf());
-    if (!proto)
-        return engine->throwTypeError();
+        return Encode::undefined();
     ScopedPropertyKey key(scope, property.toPropertyKey(engine));
     if (engine->hasException)
         return Encode::undefined();
-    return proto->get(key, base);
+    return base->get(key, &engine->currentStackFrame->jsFrame->thisObject);
 }
 
 void Runtime::method_storeSuperProperty(ExecutionEngine *engine, const Value &property, const Value &value)
 {
     Scope scope(engine);
-    ScopedObject base(scope, engine->currentStackFrame->thisObject());
-    if (!base) {
-        engine->throwTypeError();
+    Object *base = getSuperBase(scope);
+    if (!base)
         return;
-    }
-    ScopedObject proto(scope, base->getPrototypeOf());
-    if (!proto) {
-        engine->throwTypeError();
-        return;
-    }
     ScopedPropertyKey key(scope, property.toPropertyKey(engine));
     if (engine->hasException)
         return;
-    bool result = proto->put(key, value, base);
+    bool result = base->put(key, value, &engine->currentStackFrame->jsFrame->thisObject);
     if (!result && engine->currentStackFrame->v4Function->isStrict())
         engine->throwTypeError();
 }
@@ -1288,6 +1315,13 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
     return static_cast<const FunctionObject &>(func).call(&undef, argv, argc);
 }
 
+ReturnedValue Runtime::method_callWithReceiver(ExecutionEngine *engine, const Value &func, const Value *thisObject, Value *argv, int argc)
+{
+    if (!func.isFunctionObject())
+        return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
+    return static_cast<const FunctionObject &>(func).call(thisObject, argv, argc);
+}
+
 ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
                                                          int propertyIndex, Value *argv, int argc)
 {
@@ -1529,30 +1563,48 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
     ScopedProperty pd(scope);
     ScopedFunctionObject fn(scope);
     ScopedString fnName(scope);
+    ScopedValue value(scope);
     for (int i = 0; i < additionalArgs; ++i) {
         Q_ASSERT(args->isInteger());
         ObjectLiteralArgument arg = ObjectLiteralArgument(args->integerValue());
         name = args[1].toPropertyKey(engine);
+        value = args[2];
         if (engine->hasException)
             return Encode::undefined();
-        if (args[2].isFunctionObject()) {
-            fn = static_cast<const FunctionObject &>(args[2]);
+        if (arg != ObjectLiteralArgument::Value) {
+            Q_ASSERT(args[2].isInteger());
+            int functionId = args[2].integerValue();
+            QV4::Function *clos = static_cast<CompiledData::CompilationUnit*>(engine->currentStackFrame->v4Function->compilationUnit)->runtimeFunctions[functionId];
+            Q_ASSERT(clos);
+
             PropertyKey::FunctionNamePrefix prefix = PropertyKey::None;
             if (arg == ObjectLiteralArgument::Getter)
                 prefix = PropertyKey::Getter;
             else if (arg == ObjectLiteralArgument::Setter)
                 prefix = PropertyKey::Setter;
-
+            else
+                arg = ObjectLiteralArgument::Value;
             fnName = name->asFunctionName(engine, prefix);
+
+            ExecutionContext *current = static_cast<ExecutionContext *>(&engine->currentStackFrame->jsFrame->context);
+            if (clos->isGenerator())
+                value = MemberGeneratorFunction::create(current, clos, o, fnName)->asReturnedValue();
+            else
+                value = FunctionObject::createMemberFunction(current, clos, o, fnName)->asReturnedValue();
+        } else if (args[2].isFunctionObject()) {
+            fn = static_cast<const FunctionObject &>(args[2]);
+
+            fnName = name->asFunctionName(engine, PropertyKey::None);
             fn->setName(fnName);
         }
-        Q_ASSERT(arg == ObjectLiteralArgument::Value || args[2].isFunctionObject());
+        Q_ASSERT(arg != ObjectLiteralArgument::Method);
+        Q_ASSERT(arg == ObjectLiteralArgument::Value || value->isFunctionObject());
         if (arg == ObjectLiteralArgument::Value || arg == ObjectLiteralArgument::Getter) {
-            pd->value = args[2];
+            pd->value = value;
             pd->set = Primitive::emptyValue();
         } else {
             pd->value = Primitive::emptyValue();
-            pd->set = args[2];
+            pd->set = value;
         }
         bool ok = o->defineOwnProperty(name, pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
         if (!ok)
@@ -1594,7 +1646,7 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
 
     ScopedFunctionObject constructor(scope);
     QV4::Function *f = cls->constructorFunction != UINT_MAX ? unit->runtimeFunctions[cls->constructorFunction] : nullptr;
-    constructor = FunctionObject::createConstructorFunction(current, f, !superClass.isEmpty())->asReturnedValue();
+    constructor = FunctionObject::createConstructorFunction(current, f, proto, !superClass.isEmpty())->asReturnedValue();
     constructor->setPrototypeUnchecked(constructorParent);
     Value argCount = Primitive::fromInt32(f ? f->nFormals : 0);
     constructor->defineReadonlyConfigurableProperty(scope.engine->id_length(), argCount);
@@ -1637,9 +1689,9 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         name = propertyName->asFunctionName(engine, prefix);
 
         if (f->isGenerator())
-            function = MemberGeneratorFunction::create(current, f, name);
+            function = MemberGeneratorFunction::create(current, f, receiver, name);
         else
-            function = FunctionObject::createMemberFunction(current, f, name);
+            function = FunctionObject::createMemberFunction(current, f, receiver, name);
         Q_ASSERT(function);
         PropertyAttributes attributes;
         switch (methods[i].type) {

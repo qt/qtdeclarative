@@ -3669,7 +3669,7 @@ MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN Function
         f->rparenToken = loc(4);
         f->lbraceToken = loc(5);
         f->rbraceToken = loc(7);
-        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, f);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, f, AST::PatternProperty::Method);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -3685,7 +3685,7 @@ MethodDefinition: T_STAR PropertyName GeneratorLParen StrictFormalParameters T_R
         f->lbraceToken = loc(6);
         f->rbraceToken = loc(8);
         f->isGenerator = true;
-        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f);
+        AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Method);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;

@@ -357,6 +357,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(name, nFormals) << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallValue)
 
+        MOTH_BEGIN_INSTR(CallWithReceiver)
+            d << dumpRegister(name, nFormals) << dumpRegister(thisObject, nFormals) << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallWithReceiver)
+
         MOTH_BEGIN_INSTR(CallProperty)
             d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallProperty)

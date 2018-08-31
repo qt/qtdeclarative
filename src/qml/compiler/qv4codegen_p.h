@@ -683,7 +683,7 @@ public:
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
     struct Arguments { int argc; int argv; bool hasSpread; };
     Arguments pushArgs(AST::ArgumentList *args);
-    void handleCall(Reference &base, Arguments calldata);
+    void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
 
     Arguments pushTemplateArgs(AST::TemplateLiteral *args);
     int createTemplateArray(AST::TemplateLiteral *t);

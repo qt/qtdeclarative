@@ -253,51 +253,29 @@ void IdentifierTable::markObjects(MarkStack *markStack)
 }
 
 template <typename Key>
-int sweepTable(Heap::StringOrSymbol **table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
+int sweepTable(Heap::StringOrSymbol **&table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
     int freed = 0;
-    uint lastKey = 0;
 
-    int lastEntry = -1;
-    int start = 0;
-    // start at an empty entry so we compress properly
-    for (; start < alloc; ++start) {
-        if (!table[start])
-            break;
-    }
-
+    Heap::StringOrSymbol **newTable = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::String *));
+    memset(newTable, 0, alloc*sizeof(Heap::StringOrSymbol *));
     for (int i = 0; i < alloc; ++i) {
-        int idx = (i + start) % alloc;
-        Heap::StringOrSymbol *entry = table[idx];
-        if (!entry) {
-            lastEntry = -1;
+        Heap::StringOrSymbol *e = table[i];
+        if (!e)
+            continue;
+        if (!e->isMarked()) {
+            ++freed;
             continue;
         }
-        if (entry->isMarked()) {
-            if (lastEntry >= 0 && lastKey == (f(entry) % alloc)) {
-                Q_ASSERT(table[lastEntry] == nullptr);
-                table[lastEntry] = entry;
-                table[idx] = nullptr;
+        uint idx = f(e) % alloc;
+        while (newTable[idx]) {
+            ++idx;
+            idx %= alloc;
+        }
+        newTable[idx] = e;
+    }
+    free(table);
+    table = newTable;
 
-                // find next free slot just like in addEntry()
-                do {
-                    lastEntry = (lastEntry + 1) % alloc;
-                } while (table[lastEntry] != nullptr);
-            }
-            continue;
-        }
-        if (lastEntry == -1) {
-            lastEntry = idx;
-            lastKey = f(entry) % alloc;
-        }
-        table[idx] = nullptr;
-        ++freed;
-    }
-    for (int i = 0; i < alloc; ++i) {
-        Heap::StringOrSymbol *entry = table[i];
-        if (!entry)
-            continue;
-        Q_ASSERT(entry->isMarked());
-    }
     return freed;
 }
 

@@ -246,6 +246,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(CallValue)
         COLLECTOR_END_INSTR(CallValue)
 
+        COLLECTOR_BEGIN_INSTR(CallWithReceiver)
+        COLLECTOR_END_INSTR(CallWithReceiver)
+
         COLLECTOR_BEGIN_INSTR(CallProperty)
         COLLECTOR_END_INSTR(CallProperty)
 

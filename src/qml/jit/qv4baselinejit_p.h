@@ -120,6 +120,7 @@ public:
     void generate_Resume(int) override;
 
     void generate_CallValue(int name, int argc, int argv) override;
+    void generate_CallWithReceiver(int name, int thisObject, int argc, int argv) override;
     void generate_CallProperty(int name, int base, int argc, int argv) override;
     void generate_CallPropertyLookup(int lookupIndex, int base, int argc, int argv) override;
     void generate_CallElement(int base, int index, int argc, int argv) override;

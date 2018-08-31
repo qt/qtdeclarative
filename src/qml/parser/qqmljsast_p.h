@@ -670,6 +670,7 @@ public:
     enum Type {
         // object literal types
         Literal,
+        Method,
         Getter,
         Setter,
 

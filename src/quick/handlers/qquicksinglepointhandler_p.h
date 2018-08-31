@@ -67,7 +67,6 @@ public:
 
 Q_SIGNALS:
     void pointChanged();
-    void singlePointGrabChanged(); // QQuickPointerHandler::grabChanged signal can't be a property notifier here
 
 protected:
     bool wantsPointerEvent(QQuickPointerEvent *event) override;
@@ -75,7 +74,7 @@ protected:
     virtual void handleEventPoint(QQuickEventPoint *point) = 0;
 
     QQuickEventPoint *currentPoint(QQuickPointerEvent *ev) { return ev->pointById(m_pointInfo.m_id); }
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
 
     void setIgnoreAdditionalPoints(bool v = true);
 

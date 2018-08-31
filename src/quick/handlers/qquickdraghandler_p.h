@@ -74,15 +74,14 @@ public:
     QVector2D translation() const { return m_translation; }
     void setTranslation(const QVector2D &trans);
 
-    Q_INVOKABLE void enforceConstraints();
+    void enforceConstraints();
 
 Q_SIGNALS:
-//    void gestureStarted(QQuickGestureEvent *gesture);
     void translationChanged();
 
 protected:
     void onActiveChanged() override;
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
 
 private:
     void ungrab();

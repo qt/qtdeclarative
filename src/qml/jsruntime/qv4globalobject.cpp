@@ -371,6 +371,7 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
     Function *function = script.function();
     if (!function)
         return Encode::undefined();
+    function->isEval = true;
 
     if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));

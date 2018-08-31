@@ -69,6 +69,8 @@ private slots:
     void transformedTouchArea();
     void mouseInteraction();
     void mouseInteraction_data();
+    void mouseGestureStarted_data();
+    void mouseGestureStarted();
     void cancel();
 
 private:
@@ -1194,6 +1196,57 @@ void tst_QQuickMultiPointTouchArea::mouseInteraction()
     QTest::mouseRelease(view.data(), (Qt::MouseButton) buttons);
     QCOMPARE(point1->pressed(), false);
     QCOMPARE(area->property("touchCount").toInt(), 0);
+}
+
+void tst_QQuickMultiPointTouchArea::mouseGestureStarted_data()
+{
+    QTest::addColumn<bool>("grabGesture");
+    QTest::addColumn<int>("distanceFromOrigin");
+
+    QTest::newRow("near origin, don't grab") << false << 4;
+    QTest::newRow("near origin, grab") << true << 4;
+    QTest::newRow("away from origin, don't grab") << false << 100;
+    QTest::newRow("away from origin, grab") << true << 100;
+}
+
+void tst_QQuickMultiPointTouchArea::mouseGestureStarted() // QTBUG-70258
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QFETCH(bool, grabGesture);
+    QFETCH(int, distanceFromOrigin);
+
+    QScopedPointer<QQuickView> view(createAndShowView("mouse.qml"));
+    QVERIFY(view->rootObject() != nullptr);
+
+    QQuickMultiPointTouchArea *area = qobject_cast<QQuickMultiPointTouchArea *>(view->rootObject());
+    QVERIFY(area);
+    area->setProperty("grabGesture", grabGesture);
+    QQuickTouchPoint *point1 = view->rootObject()->findChild<QQuickTouchPoint*>("point1");
+    QCOMPARE(point1->pressed(), false);
+    QSignalSpy gestureStartedSpy(area, SIGNAL(gestureStarted(QQuickGrabGestureEvent *)));
+
+    QPoint p1 = QPoint(distanceFromOrigin, distanceFromOrigin);
+    QTest::mousePress(view.data(), Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(gestureStartedSpy.count(), 0);
+
+    p1 += QPoint(dragThreshold, dragThreshold);
+    QTest::mouseMove(view.data(), p1);
+    QCOMPARE(gestureStartedSpy.count(), 0);
+
+    p1 += QPoint(1, 1);
+    QTest::mouseMove(view.data(), p1);
+    QTRY_COMPARE(gestureStartedSpy.count(), 1);
+    QTRY_COMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
+    QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
+
+    p1 += QPoint(10, 10);
+    QTest::mouseMove(view.data(), p1);
+    // if nobody called gesteure->grab(), gestureStarted will keep happening
+    QTRY_COMPARE(gestureStartedSpy.count(), grabGesture ? 1 : 2);
+    QCOMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
+    QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
+
+    QTest::mouseRelease(view.data(), Qt::LeftButton);
 }
 
 void tst_QQuickMultiPointTouchArea::cancel()

@@ -211,7 +211,7 @@ public:
     // displaying disassembly.
     
     inline CodeRef finalizeCodeWithoutDisassembly();
-    inline CodeRef finalizeCodeWithDisassembly(const char* format, ...) WTF_ATTRIBUTE_PRINTF(2, 3);
+    inline CodeRef finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...) WTF_ATTRIBUTE_PRINTF(3, 4);
 
     CodePtr trampolineAt(Label label)
     {
@@ -265,9 +265,9 @@ protected:
 #endif
 };
 
-#define FINALIZE_CODE_IF(condition, linkBufferReference, dataLogFArgumentsForHeading)  \
+#define FINALIZE_CODE_IF(condition, linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
     (UNLIKELY((condition))                                              \
-     ? ((linkBufferReference).finalizeCodeWithDisassembly (dataLogFArgumentsForHeading)) \
+     ? ((linkBufferReference).finalizeCodeWithDisassembly (jitKind, dataLogFArgumentsForHeading)) \
      : (linkBufferReference).finalizeCodeWithoutDisassembly())
 
 // Use this to finalize code, like so:
@@ -286,11 +286,11 @@ protected:
 // Note that the dataLogFArgumentsForHeading are only evaluated when showDisassembly
 // is true, so you can hide expensive disassembly-only computations inside there.
 
-#define FINALIZE_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, dataLogFArgumentsForHeading)
+#define FINALIZE_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
+    FINALIZE_CODE_IF(Options::showDisassembly(), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
 
-#define FINALIZE_DFG_CODE(linkBufferReference, dataLogFArgumentsForHeading)  \
-    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, dataLogFArgumentsForHeading)
+#define FINALIZE_DFG_CODE(linkBufferReference, jitKind, dataLogFArgumentsForHeading)  \
+    FINALIZE_CODE_IF((Options::showDisassembly() || Options::showDFGDisassembly()), linkBufferReference, jitKind, dataLogFArgumentsForHeading)
 
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
@@ -302,13 +302,13 @@ inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::Code
 }
 
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
-inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char* format, ...)
+inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::CodeRef LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::finalizeCodeWithDisassembly(const char *jitKind, const char* format, ...)
 {
     ASSERT(Options::showDisassembly() || Options::showDFGDisassembly());
 
     CodeRef result = finalizeCodeWithoutDisassembly();
 
-    dataLogF("Generated JIT code for ");
+    dataLogF("Generated %s code for ", jitKind);
     va_list argList;
     va_start(argList, format);
     WTF::dataLogFV(format, argList);

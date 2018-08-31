@@ -152,29 +152,6 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 }
 
 /*!
-    \qmlproperty real QtQuick::PinchHandler::pinchOrigin
-
-    The point to be held in place, around which the \l target is scaled and
-    rotated.
-
-    \value FirstPoint
-        the first touch point, wherever the first finger is pressed
-    \value PinchCenter
-        the centroid between all the touch points at the time when the
-        PinchHandler becomes \l active
-    \value TargetCenter
-        the center of the \l target
-*/
-void QQuickPinchHandler::setPinchOrigin(QQuickPinchHandler::PinchOrigin pinchOrigin)
-{
-    if (m_pinchOrigin == pinchOrigin)
-        return;
-
-    m_pinchOrigin = pinchOrigin;
-    emit pinchOriginChanged();
-}
-
-/*!
     \qmlproperty real QtQuick::PinchHandler::minimumX
 
     The minimum acceptable x coordinate of the centroid
@@ -445,7 +422,6 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             if (!active())
                 return;
         }
-        // TODO check m_pinchOrigin: right now it acts like it's set to PinchCenter
 
         // avoid mapping the minima and maxima, as they might have unmappable values
         // such as -inf/+inf. Because of this we perform the bounding to min/max in local coords.
@@ -523,8 +499,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     \qmlproperty QQuickHandlerPoint QtQuick::PinchHandler::centroid
 
     A point exactly in the middle of the currently-pressed touch points.
-    If \l pinchOrigin is set to \c PinchCenter, the \l target will be rotated
-    around this point.
+    The \l target will be rotated around this point.
 */
 
 /*!

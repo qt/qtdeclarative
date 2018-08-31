@@ -115,7 +115,7 @@ Q_SIGNALS:
     void activeChanged();
     void targetChanged();
     void marginChanged();
-    void grabChanged(QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
+    void grabChanged(QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point);
     void grabPermissionChanged();
     void canceled(QQuickEventPoint *point);
 
@@ -132,7 +132,7 @@ protected:
     void setActive(bool active);
     virtual void onTargetChanged(QQuickItem *oldTarget) { Q_UNUSED(oldTarget); }
     virtual void onActiveChanged() { }
-    virtual void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point);
+    virtual void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point);
     virtual bool canGrab(QQuickEventPoint *point);
     virtual bool approveGrabTransition(QQuickEventPoint *point, QObject *proposedGrabber);
     void setPassiveGrab(QQuickEventPoint *point, bool grab = true);

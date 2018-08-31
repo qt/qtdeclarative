@@ -465,6 +465,8 @@ bool PatternProperty::convertLiteralToAssignmentPattern(MemoryPool *pool, Source
         *errorMessage = QString::fromLatin1("Invalid getter/setter in destructuring expression.");
         return false;
     }
+    if (type == Method)
+        type = Literal;
     Q_ASSERT(type == Literal);
     return PatternElement::convertLiteralToAssignmentPattern(pool, errorLocation, errorMessage);
 }

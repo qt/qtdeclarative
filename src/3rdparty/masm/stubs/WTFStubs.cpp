@@ -91,7 +91,7 @@ void dataLogFV(const char* format, va_list args)
 {
     char buffer[1024];
     qvsnprintf(buffer, sizeof(buffer), format, args);
-    qDebug("%s", buffer);
+    qDebug().nospace().noquote() << buffer;
 }
 
 void dataLogF(const char* format, ...)
@@ -101,12 +101,12 @@ void dataLogF(const char* format, ...)
     va_start(args, format);
     qvsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
-    qDebug("%s", buffer);
+    qDebug().nospace().noquote() << buffer;
 }
 
 void dataLogFString(const char* str)
 {
-    qDebug("%s", str);
+    qDebug().nospace().noquote() << str;
 }
 
 }

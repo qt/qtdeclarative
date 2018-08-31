@@ -116,7 +116,7 @@ void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
     Notification that the grab has changed in some way which is relevant to this handler.
     The \a grabber (subject) will be the Input Handler whose state is changing,
     or null if the state change regards an Item.
-    The \a stateChange (verb) tells what happened.
+    The \a transition (verb) tells what happened.
     The \a point (object) is the point that was grabbed or ungrabbed.
     EventPoint has the sole responsibility to call this function.
     The Input Handler must react in whatever way is appropriate, and must
@@ -125,13 +125,13 @@ void QQuickPointerHandler::setMargin(qreal pointDistanceThreshold)
     call its parent class's implementation in addition to (usually after)
     whatever custom behavior it implements.
 */
-void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point)
+void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
 {
-    qCDebug(lcPointerHandlerGrab) << point << stateChange << grabber;
+    qCDebug(lcPointerHandlerGrab) << point << transition << grabber;
     Q_ASSERT(point);
     if (grabber == this) {
         bool wasCanceled = false;
-        switch (stateChange) {
+        switch (transition) {
         case QQuickEventPoint::GrabPassive:
         case QQuickEventPoint::GrabExclusive:
             break;
@@ -156,7 +156,7 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
         }
         if (wasCanceled)
             emit canceled(point);
-        emit grabChanged(stateChange, point);
+        emit grabChanged(transition, point);
     }
 }
 
@@ -500,12 +500,12 @@ void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 */
 
 /*!
-    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabState stateChange, EventPoint point)
+    \qmlsignal QtQuick::PointerHandler::grabChanged(GrabTransition transition, EventPoint point)
 
     This signal is emitted when the grab has changed in some way which is
     relevant to this handler.
 
-    The \a stateChange (verb) tells what happened.
+    The \a transition (verb) tells what happened.
     The \a point (object) is the point that was grabbed or ungrabbed.
 */
 

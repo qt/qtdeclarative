@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -36,11 +36,11 @@ Rectangle {
 
     Item {
         id: crosshairs
-        x: dragHandler.centroid.position.x - width / 2
-        y: dragHandler.centroid.position.y - height / 2
+        x: pointHandler.point.position.x - width / 2
+        y: pointHandler.point.position.y - height / 2
         width: parent.width / 2; height: parent.height / 2
-        visible: dragHandler.active
-        rotation: dragHandler.centroid.rotation
+        visible: pointHandler.active
+        rotation: pointHandler.point.rotation
 
         Rectangle {
             color: "goldenrod"
@@ -56,7 +56,7 @@ Rectangle {
         }
         Rectangle {
             color: "goldenrod"
-            width: Math.max(2, 50 * dragHandler.centroid.pressure)
+            width: Math.max(2, 50 * pointHandler.point.pressure)
             height: width
             radius: width / 2
             anchors.centerIn: parent
@@ -69,9 +69,9 @@ Rectangle {
                 implicitHeight: label.implicitHeight
                 Text {
                     id: label
-                    text: 'id: ' + dragHandler.centroid.id.toString(16) + " uid: " + dragHandler.centroid.uniqueId.numericId +
-                        '\npos: (' + dragHandler.centroid.position.x.toFixed(2) + ', ' + dragHandler.centroid.position.y.toFixed(2) + ')' +
-                        '\nmodifiers: ' + dragHandler.centroid.modifiers.toString(16)
+                    text: 'id: ' + pointHandler.point.id.toString(16) + " uid: " + pointHandler.point.uniqueId.numericId +
+                        '\npos: (' + pointHandler.point.position.x.toFixed(2) + ', ' + pointHandler.point.position.y.toFixed(2) + ')' +
+                        '\nmodifiers: ' + pointHandler.point.modifiers.toString(16)
                 }
             }
         }
@@ -79,8 +79,8 @@ Rectangle {
             color: "transparent"
             border.color: "white"
             antialiasing: true
-            width: dragHandler.centroid.ellipseDiameters.width
-            height: dragHandler.centroid.ellipseDiameters.height
+            width: pointHandler.point.ellipseDiameters.width
+            height: pointHandler.point.ellipseDiameters.height
             radius: Math.min(width / 2, height / 2)
             anchors.centerIn: parent
         }
@@ -88,11 +88,11 @@ Rectangle {
     Rectangle {
         id: velocityVector
         visible: width > 0
-        width: dragHandler.centroid.velocity.length() * 100
+        width: pointHandler.point.velocity.length() * 100
         height: 2
-        x: dragHandler.centroid.position.x
-        y: dragHandler.centroid.position.y
-        rotation: Math.atan2(dragHandler.centroid.velocity.y, dragHandler.centroid.velocity.x) * 180 / Math.PI
+        x: pointHandler.point.position.x
+        y: pointHandler.point.position.y
+        rotation: Math.atan2(pointHandler.point.velocity.y, pointHandler.point.velocity.x) * 180 / Math.PI
         transformOrigin: Item.BottomLeft
         antialiasing: true
 
@@ -135,17 +135,18 @@ Rectangle {
         }
     }
 
-    DragHandler {
-        id: dragHandler
+    PointHandler {
+        id: pointHandler
         target: null
-//        acceptedButtons: Qt.AllButtons // TODO: only SinglePointHandler has this so far
-        onGrabChanged: if (active) {
-            console.log("grabbed " + centroid.pointId + " @ " + centroid.sceneGrabPos)
-            grabbingLocationIndicator.createObject(root, {"x": centroid.sceneGrabPosition.x, "y": centroid.sceneGrabPosition.y - 16})
+        acceptedButtons: Qt.AllButtons
+        onGrabChanged: if (active) {    // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
+            console.log("grabbed " + point.pointId + " @ " + point.sceneGrabPos)
+            grabbingLocationIndicator.createObject(root, {"x": point.sceneGrabPosition.x, "y": point.sceneGrabPosition.y - 16})
         }
-        onCentroidChanged: {
-            if (centroid.pressedButtons)
-                mouseButtonIndicator.createObject(root, {"x": centroid.pressPosition.x - 44, "y": centroid.pressPosition.y - 64, "buttons": centroid.pressedButtons})
+        onPointChanged: {
+            // Here, 'point' is referring to the property of the PointHandler
+            if (point.pressedButtons)
+                mouseButtonIndicator.createObject(root, {"x": point.pressPosition.x - 44, "y": point.pressPosition.y - 64, "buttons": point.pressedButtons})
         }
     }
 }

@@ -1826,6 +1826,8 @@ bool Codegen::visit(CallExpression *ast)
     case Reference::Super:
         handleConstruct(base, ast->arguments);
         return false;
+    case Reference::SuperProperty:
+        break;
     default:
         base = base.storeOnStack();
         break;
@@ -1861,11 +1863,11 @@ bool Codegen::visit(CallExpression *ast)
 
     }
 
-    handleCall(base, calldata);
+    handleCall(base, calldata, functionObject, thisObject);
     return false;
 }
 
-void Codegen::handleCall(Reference &base, Arguments calldata)
+void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject)
 {
     //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::QmlScopeObject) {
@@ -1924,6 +1926,22 @@ void Codegen::handleCall(Reference &base, Arguments calldata)
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         }
+    } else if (base.type == Reference::SuperProperty) {
+        Reference receiver = base.baseObject();
+        if (!base.isStackSlot()) {
+            base.storeOnStack(slotForFunction);
+            base = Reference::fromStackSlot(this, slotForFunction);
+        }
+        if (!receiver.isStackSlot()) {
+            receiver.storeOnStack(slotForThisObject);
+            receiver = Reference::fromStackSlot(this, slotForThisObject);
+        }
+        Instruction::CallWithReceiver call;
+        call.name = base.stackSlot();
+        call.thisObject = receiver.stackSlot();
+        call.argc = calldata.argc;
+        call.argv = calldata.argv;
+        bytecodeGenerator->addInstruction(call);
     } else {
         Q_ASSERT(base.isStackSlot());
         Instruction::CallValue call;
@@ -2157,6 +2175,8 @@ bool Codegen::visit(TaggedTemplate *ast)
 
     RegisterScope scope(this);
 
+    int functionObject = -1, thisObject = -1;
+
     Reference base = expression(ast->base);
     if (hasError)
         return false;
@@ -2166,6 +2186,10 @@ bool Codegen::visit(TaggedTemplate *ast)
         base = base.asLValue();
         break;
     case Reference::Name:
+        break;
+    case Reference::SuperProperty:
+        thisObject = bytecodeGenerator->newRegister();
+        functionObject = bytecodeGenerator->newRegister();
         break;
     default:
         base = base.storeOnStack();
@@ -2181,7 +2205,7 @@ bool Codegen::visit(TaggedTemplate *ast)
     Q_ASSERT(calldata.argv == arrayTemp + 1);
     --calldata.argv;
 
-    handleCall(base, calldata);
+    handleCall(base, calldata, functionObject, thisObject);
     return false;
 }
 
@@ -2450,7 +2474,7 @@ bool Codegen::visit(ObjectPattern *ast)
     for (; it; it = it->next) {
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
-        if (cname || p->type == PatternProperty::Getter || p->type == PatternProperty::Setter)
+        if (cname || p->type != PatternProperty::Literal)
             break;
         QString name = p->name->asString();
         uint arrayIndex = QV4::String::toArrayIndex(name);
@@ -2477,7 +2501,9 @@ bool Codegen::visit(ObjectPattern *ast)
         PatternProperty *p = it->property;
         AST::ComputedPropertyName *cname = AST::cast<AST::ComputedPropertyName *>(p->name);
         ObjectLiteralArgument argType = ObjectLiteralArgument::Value;
-        if (p->type == PatternProperty::Getter)
+        if (p->type == PatternProperty::Method)
+            argType = ObjectLiteralArgument::Method;
+        else if (p->type == PatternProperty::Getter)
             argType = ObjectLiteralArgument::Getter;
         else if (p->type == PatternProperty::Setter)
             argType = ObjectLiteralArgument::Setter;
@@ -2508,10 +2534,20 @@ bool Codegen::visit(ObjectPattern *ast)
         push(Reference::fromAccumulator(this));
         {
             RegisterScope innerScope(this);
-            Reference value = expression(p->initializer);
-            if (hasError)
-                return false;
-            value.loadInAccumulator();
+            if (p->type != PatternProperty::Literal) {
+                // need to get the closure id for the method
+                FunctionExpression *f = p->initializer->asFunctionDefinition();
+                Q_ASSERT(f);
+                int function = defineFunction(f->name.toString(), f, f->formals, f->body);
+                if (hasError)
+                    return false;
+                Reference::fromConst(this, Encode(function)).loadInAccumulator();
+            } else {
+                Reference value = expression(p->initializer);
+                if (hasError)
+                    return false;
+                value.loadInAccumulator();
+            }
         }
         push(Reference::fromAccumulator(this));
     }
@@ -3966,6 +4002,8 @@ Codegen::Reference Codegen::Reference::baseObject() const
         Q_UNREACHABLE();
     } else if (type == Reference::Subscript) {
         return Reference::fromStackSlot(codegen, elementBase.stackSlot());
+    } else if (type == Reference::SuperProperty) {
+        return Reference::fromStackSlot(codegen, CallData::This);
     } else {
         return Reference::fromConst(codegen, Encode::undefined());
     }

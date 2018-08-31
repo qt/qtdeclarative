@@ -827,7 +827,7 @@ void BaselineAssembler::generateEpilogue()
 
 void BaselineAssembler::link(Function *function)
 {
-    pasm()->link(function);
+    pasm()->link(function, "BaselineJIT");
 }
 
 void BaselineAssembler::addLabel(int offset)
