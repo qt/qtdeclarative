@@ -414,6 +414,17 @@ bool ScanFunctions::visit(TemplateLiteral *ast)
 
 }
 
+bool ScanFunctions::visit(SuperLiteral *)
+{
+    Context *c = _context;
+    while (c && (c->contextType != ContextType::Function || c->isArrowFunction))
+        c = c->parent;
+
+    if (c)
+        c->requiresExecutionContext = true;
+
+    return false;
+}
 bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
