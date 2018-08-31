@@ -1014,7 +1014,7 @@ int main(int argc, char *argv[])
 #endif // QT_WIDGETS_LIB
 
     QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
-    const QStringList args = app->arguments();
+    QStringList args = app->arguments();
     const QString appName = QFileInfo(app->applicationFilePath()).baseName();
     if (args.size() < 2) {
         printUsage(appName);
@@ -1046,6 +1046,10 @@ int main(int argc, char *argv[])
                     return EXIT_INVALIDARGUMENTS;
                 }
                 dependenciesFile = args.at(iArg);
+
+                // Remove absolute path so that it does not show up in the
+                // printed command line inside the plugins.qmltypes file.
+                args[iArg] = QFileInfo(args.at(iArg)).fileName();
             } else if (arg == QLatin1String("--merge")
                        || arg == QLatin1String("-merge")) {
                 if (++iArg == args.size()) {
