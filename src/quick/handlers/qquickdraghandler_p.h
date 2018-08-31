@@ -82,7 +82,7 @@ Q_SIGNALS:
 
 protected:
     void onActiveChanged() override;
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
 
 private:
     void ungrab();

@@ -281,7 +281,7 @@ public:
     Q_DECLARE_FLAGS(States, State)
     Q_FLAG(States)
 
-    enum GrabState {
+    enum GrabTransition {
         GrabPassive = 0x01,
         UngrabPassive = 0x02,
         CancelGrabPassive = 0x03,
@@ -290,7 +290,7 @@ public:
         UngrabExclusive = 0x20,
         CancelGrabExclusive = 0x30,
     };
-    Q_ENUM(GrabState)
+    Q_ENUM(GrabTransition)
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 

@@ -143,13 +143,13 @@ void QQuickMultiPointHandler::onActiveChanged()
     }
 }
 
-void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabState stateChange, QQuickEventPoint *)
+void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *)
 {
     // If another handler or item takes over this set of points, assume it has
     // decided that it's the better fit for them. Don't immediately re-grab
     // at the next opportunity. This should help to avoid grab cycles
     // (e.g. between DragHandler and PinchHandler).
-    if (stateChange == QQuickEventPoint::UngrabExclusive || stateChange == QQuickEventPoint::CancelGrabExclusive)
+    if (transition == QQuickEventPoint::UngrabExclusive || transition == QQuickEventPoint::CancelGrabExclusive)
         m_currentPoints.clear();
 }
 
