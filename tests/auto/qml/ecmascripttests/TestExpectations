@@ -177,7 +177,6 @@ built-ins/Function/internals/Construct/derived-return-val-realm.js fails
 built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js fails
 built-ins/Function/internals/Construct/derived-this-uninitialized.js fails
 built-ins/Function/proto-from-ctor-realm.js fails
-built-ins/Function/prototype/Symbol.hasInstance/this-val-poisoned-prototype.js fails
 built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js fails
 built-ins/Function/prototype/bind/get-fn-realm.js fails
 built-ins/Function/prototype/bind/instance-name-chained.js fails
@@ -871,7 +870,6 @@ language/expressions/object/method-definition/gen-yield-identifier-non-strict.js
 language/expressions/object/method-definition/meth-dflt-params-ref-later.js fails
 language/expressions/object/method-definition/meth-dflt-params-ref-self.js fails
 language/expressions/object/method-definition/name-invoke-ctor.js fails
-language/expressions/object/method-definition/name-prototype-prop.js fails
 language/expressions/object/method-definition/object-method-returns-promise.js fails
 language/expressions/object/method-definition/yield-as-function-expression-binding-identifier.js sloppyFails
 language/expressions/object/method-definition/yield-as-identifier-in-nested-function.js sloppyFails
@@ -1007,16 +1005,12 @@ language/statements/block/tco-stmt-list.js strictFails
 language/statements/block/tco-stmt.js strictFails
 language/statements/class/constructor-inferred-observable-iteration.js fails
 language/statements/class/cptn-decl.js fails
-language/statements/class/definition/accessors.js fails
 language/statements/class/definition/class-method-returns-promise.js fails
-language/statements/class/definition/getters-prop-desc.js fails
 language/statements/class/definition/getters-restricted-ids.js fails
 language/statements/class/definition/methods-gen-yield-as-literal-property-name.js fails
 language/statements/class/definition/methods-gen-yield-as-property-name.js fails
 language/statements/class/definition/methods-gen-yield-star-before-newline.js fails
 language/statements/class/definition/methods-named-eval-arguments.js fails
-language/statements/class/definition/methods.js fails
-language/statements/class/definition/numeric-property-names.js fails
 language/statements/class/definition/prototype-property.js fails
 language/statements/class/definition/setters-prop-desc.js fails
 language/statements/class/definition/setters-restricted-ids.js fails
