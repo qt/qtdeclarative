@@ -112,7 +112,6 @@ built-ins/Array/prototype/unshift/length-near-integer-limit.js fails
 built-ins/Array/prototype/unshift/throws-if-integer-limit-exceeded.js fails
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js fails
 built-ins/ArrayBuffer/proto-from-ctor-realm.js fails
-built-ins/ArrayBuffer/prototype-from-newtarget.js fails
 built-ins/ArrayIteratorPrototype/next/detach-typedarray-in-progress.js fails
 built-ins/AsyncFunction/AsyncFunction-construct.js fails
 built-ins/AsyncFunction/AsyncFunction-is-extensible.js fails
@@ -514,15 +513,11 @@ built-ins/TypedArray/prototype/sort/sorted-values-nan.js fails
 built-ins/TypedArray/prototype/sort/sorted-values.js fails
 built-ins/TypedArrays/ctors/buffer-arg/defined-negative-length.js fails
 built-ins/TypedArrays/ctors/buffer-arg/proto-from-ctor-realm.js fails
-built-ins/TypedArrays/ctors/buffer-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/length-arg/proto-from-ctor-realm.js fails
-built-ins/TypedArrays/ctors/length-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/no-args/proto-from-ctor-realm.js fails
-built-ins/TypedArrays/ctors/no-args/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/object-arg/as-generator-iterable-returns.js fails
 built-ins/TypedArrays/ctors/object-arg/iterator-not-callable-throws.js fails
 built-ins/TypedArrays/ctors/object-arg/proto-from-ctor-realm.js fails
-built-ins/TypedArrays/ctors/object-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/ctors/typedarray-arg/detached-when-species-retrieved-different-type.js fails
 built-ins/TypedArrays/ctors/typedarray-arg/detached-when-species-retrieved-same-type.js fails
 built-ins/TypedArrays/ctors/typedarray-arg/other-ctor-buffer-ctor-custom-species-proto-from-ctor-realm.js fails
@@ -534,7 +529,6 @@ built-ins/TypedArrays/ctors/typedarray-arg/same-ctor-buffer-ctor-species-custom-
 built-ins/TypedArrays/ctors/typedarray-arg/same-ctor-buffer-ctor-species-custom.js fails
 built-ins/TypedArrays/ctors/typedarray-arg/same-ctor-buffer-ctor-species-not-ctor.js fails
 built-ins/TypedArrays/ctors/typedarray-arg/same-ctor-buffer-ctor-value-not-obj-throws.js fails
-built-ins/TypedArrays/ctors/typedarray-arg/use-custom-proto-if-object.js fails
 built-ins/TypedArrays/from/arylk-get-length-error.js fails
 built-ins/TypedArrays/from/arylk-to-length-error.js fails
 built-ins/TypedArrays/from/custom-ctor-returns-other-instance.js fails
@@ -1030,10 +1024,8 @@ language/statements/class/scope-static-gen-meth-paramsbody-var-open.js fails
 language/statements/class/scope-static-meth-paramsbody-var-open.js fails
 language/statements/class/scope-static-setter-paramsbody-var-open.js fails
 language/statements/class/subclass/bound-function.js fails
-language/statements/class/subclass/builtin-objects/ArrayBuffer/regular-subclassing.js fails
 language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js fails
 language/statements/class/subclass/builtin-objects/Promise/super-must-be-called.js fails
-language/statements/class/subclass/builtins.js fails
 language/statements/class/subclass/class-definition-null-proto-this.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
 language/statements/do-while/tco-body.js strictFails

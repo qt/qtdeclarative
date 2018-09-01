@@ -280,10 +280,19 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f->engine());
     const TypedArrayCtor *that = static_cast<const TypedArrayCtor *>(f);
+
+    auto updateProto = [=](Scope &scope, Scoped<TypedArray> &a) {
+        if (newTarget->heapObject() != f->heapObject() && newTarget->isFunctionObject()) {
+            const FunctionObject *nt = static_cast<const FunctionObject *>(newTarget);
+            ScopedObject o(scope, nt->protoProperty());
+            if (o)
+                a->setPrototypeOf(o);
+        }
+    };
 
     if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
@@ -306,6 +315,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = 0;
 
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
     Scoped<TypedArray> typedArray(scope, argc ? argv[0] : Primitive::undefinedValue());
@@ -346,6 +356,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             }
         }
 
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
     Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
@@ -383,6 +394,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->buffer.set(scope.engine, buffer->d());
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = byteOffset;
+
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
 
@@ -421,7 +434,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         b += elementSize;
     }
 
-
+    updateProto(scope, array);
     return array.asReturnedValue();
 }
 

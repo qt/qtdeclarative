@@ -85,7 +85,7 @@ ReturnedValue SharedArrayBufferCtor::virtualCall(const FunctionObject *f, const 
 }
 
 
-ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *v4 = f->engine();
     Scope scope(v4);
@@ -99,6 +99,12 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
         return v4->throwRangeError(QLatin1String("ArrayBuffer constructor: invalid length"));
 
     Scoped<ArrayBuffer> a(scope, v4->newArrayBuffer(len));
+    if (newTarget->heapObject() != f->heapObject() && newTarget->isFunctionObject()) {
+        const FunctionObject *nt = static_cast<const FunctionObject *>(newTarget);
+        ScopedObject o(scope, nt->protoProperty());
+        if (o)
+            a->setPrototypeOf(o);
+    }
     if (scope.engine->hasException)
         return Encode::undefined();
 
