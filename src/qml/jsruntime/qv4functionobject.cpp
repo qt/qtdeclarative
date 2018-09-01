@@ -564,6 +564,7 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
     v4->jsStackTop += frame.requiredJSStackFrameSize();
 
     ReturnedValue result = Moth::VME::exec(&frame, v4);
+    ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
     frame.pop();
 
@@ -571,9 +572,14 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
         return Encode::undefined();
     else if (Value::fromReturnedValue(result).isObject())
         return result;
-    else if (!Value::fromReturnedValue(result).isUndefined() || frame.jsFrame->thisObject.isEmpty())
+    else if (!Value::fromReturnedValue(result).isUndefined())
         return v4->throwTypeError();
-    return frame.jsFrame->thisObject.asReturnedValue();
+    else if (Primitive::fromReturnedValue(thisObject).isEmpty()) {
+        Scope scope(v4);
+        ScopedString s(scope, v4->newString(QStringLiteral("this")));
+        return v4->throwReferenceError(s);
+    }
+    return thisObject;
 }
 
 ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
@@ -613,6 +619,7 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
 
     // Do a super call
     ReturnedValue result = super->callAsConstructor(argv, argc, newTarget);
+    ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
     frame.pop();
 
@@ -622,7 +629,13 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
         return result;
     else if (!Value::fromReturnedValue(result).isUndefined())
         return v4->throwTypeError();
-    return frame.jsFrame->thisObject.asReturnedValue();
+    else if (Primitive::fromReturnedValue(thisObject).isEmpty()) {
+        Scope scope(v4);
+        ScopedString s(scope, v4->newString(QStringLiteral("this")));
+        return v4->throwReferenceError(s);
+    }
+
+    return thisObject;
 }
 
 ReturnedValue DefaultClassConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
