@@ -76,7 +76,6 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARKOBJECTS(FunctionObject);
     enum {
-        Index_Prototype = 0,
         Index_ProtoConstructor = 0
     };
 
@@ -116,7 +115,7 @@ struct IndexedBuiltinFunction : FunctionObject {
 DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
     DECLARE_MARKOBJECTS(ScriptFunction)
     enum {
-        Index_Name = FunctionObject::Index_Prototype + 1,
+        Index_Name,
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
@@ -173,7 +172,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     void setName(String *name) {
         defineReadonlyConfigurableProperty(engine()->id_name(), *name);
     }
-    void createDefaultPrototypeProperty(uint protoSlot, uint protoConstructorSlot);
+    void createDefaultPrototypeProperty(uint protoConstructorSlot);
 
     inline ReturnedValue callAsConstructor(const JSCallData &data) const;
     ReturnedValue callAsConstructor(const Value *argv, int argc, const Value *newTarget = nullptr) const {

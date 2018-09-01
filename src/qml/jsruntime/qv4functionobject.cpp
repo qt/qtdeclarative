@@ -96,7 +96,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
         f->setName(name);
 
     if (createProto)
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
+        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 
@@ -130,8 +130,6 @@ void Heap::FunctionObject::init()
 
     Object::init();
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
-    Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()->propertyKey()) == Index_Prototype);
-    setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
 void Heap::FunctionObject::setFunction(Function *f)
@@ -148,16 +146,15 @@ void Heap::FunctionObject::destroy()
     Object::destroy();
 }
 
-void FunctionObject::createDefaultPrototypeProperty(uint protoSlot, uint protoConstructorSlot)
+void FunctionObject::createDefaultPrototypeProperty(uint protoConstructorSlot)
 {
     Scope s(this);
 
-    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->propertyKey()) == protoSlot);
     Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->propertyKey()) == protoConstructorSlot);
 
     ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
     proto->setProperty(protoConstructorSlot, d());
-    setProperty(protoSlot, proto);
+    defineDefaultProperty(s.engine->id_prototype(), proto, Attr_NotEnumerable|Attr_NotConfigurable);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -524,7 +521,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
-    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
+    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(int(function->compiledFunction->length)));
