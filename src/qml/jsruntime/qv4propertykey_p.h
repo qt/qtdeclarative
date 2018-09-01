@@ -126,6 +126,7 @@ public:
 
     bool isString() const;
     bool isSymbol() const;
+    bool isCanonicalNumericIndexString() const;
 
     Q_QML_EXPORT QString toQString() const;
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);

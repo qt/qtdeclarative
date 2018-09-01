@@ -459,22 +459,26 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
 
 ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (!id.isArrayIndex())
-        return Object::virtualGet(m, id, receiver, hasProperty);
-
     uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualGet(m, id, receiver, hasProperty);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
     if (a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
-    uint bytesPerElement = a->d()->type->bytesPerElement;
-    uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-    if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength()) {
+    if (index >= a->length()) {
         if (hasProperty)
             *hasProperty = false;
         return Encode::undefined();
     }
+
+    uint bytesPerElement = a->d()->type->bytesPerElement;
+    uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
+    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+
     if (hasProperty)
         *hasProperty = true;
     return a->d()->type->read(a->d()->buffer->data->data() + byteOffset);
@@ -482,17 +486,42 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
 
 bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
 {
+    uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualHasProperty(m, id);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
+    const TypedArray *a = static_cast<const TypedArray *>(m);
+    if (a->d()->buffer->isDetachedBuffer()) {
+        a->engine()->throwTypeError();
+        return false;
+    }
+    if (index >= a->length())
+        return false;
+    return true;
+}
+
+PropertyAttributes TypedArray::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+{
+    uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualGetOwnProperty(m, id, p);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     bool hasProperty = false;
-    virtualGet(m, id, nullptr, &hasProperty);
-    return hasProperty;
+    ReturnedValue v = virtualGet(m, id, m, &hasProperty);
+    if (p)
+        p->value = v;
+    return hasProperty ? Attr_NotConfigurable : PropertyAttributes();
 }
 
 bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
-    if (!id.isArrayIndex())
-        return Object::virtualPut(m, id, value, receiver);
-
     uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualPut(m, id, value, receiver);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     if (v4->hasException)
         return false;
@@ -502,10 +531,12 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     if (a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
+    if (index >= a->length())
+        return false;
+
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-    if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength())
-        return false;
+    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
 
     Value v = Primitive::fromReturnedValue(value.convertedToNumber());
     if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
@@ -516,10 +547,12 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
 
 bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
 {
-    TypedArray *a = static_cast<TypedArray *>(m);
-    if (!id.isArrayIndex())
-        return Object::virtualDefineOwnProperty(m, id, p, attrs);
     uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualDefineOwnProperty(m, id, p, attrs);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
+    TypedArray *a = static_cast<TypedArray *>(m);
     if (index >= a->length() || attrs.isAccessor())
         return false;
 
