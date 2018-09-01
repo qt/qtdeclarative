@@ -521,7 +521,7 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
-    if (makeConstructor)
+    if (makeConstructor && !function->isArrowFunction())
         f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);

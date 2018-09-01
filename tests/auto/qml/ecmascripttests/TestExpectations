@@ -655,7 +655,6 @@ language/expressions/arrow-function/lexical-new.target.js fails
 language/expressions/arrow-function/lexical-super-call-from-within-constructor.js fails
 language/expressions/arrow-function/lexical-supercall-from-immediately-invoked-arrow.js fails
 language/expressions/arrow-function/lexical-this.js fails
-language/expressions/arrow-function/prototype-rules.js fails
 language/expressions/arrow-function/scope-body-lex-distinct.js sloppyFails
 language/expressions/arrow-function/scope-param-elem-var-close.js sloppyFails
 language/expressions/arrow-function/scope-param-elem-var-open.js sloppyFails
