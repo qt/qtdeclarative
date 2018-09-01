@@ -514,6 +514,35 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     return true;
 }
 
+bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
+{
+    TypedArray *a = static_cast<TypedArray *>(m);
+    if (!id.isArrayIndex())
+        return Object::virtualDefineOwnProperty(m, id, p, attrs);
+    uint index = id.asArrayIndex();
+    if (index >= a->length() || attrs.isAccessor())
+        return false;
+
+    if (attrs.hasConfigurable() && attrs.isConfigurable())
+        return false;
+    if (attrs.hasEnumerable() && !attrs.isEnumerable())
+        return false;
+    if (attrs.hasWritable() && !attrs.isWritable())
+        return false;
+    if (!p->value.isEmpty()) {
+        ExecutionEngine *engine = a->engine();
+
+        Value v = Primitive::fromReturnedValue(p->value.convertedToNumber());
+        if (engine->hasException || a->d()->buffer->isDetachedBuffer())
+            return engine->throwTypeError();
+        uint bytesPerElement = a->d()->type->bytesPerElement;
+        uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
+        Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+        a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
+    }
+    return true;
+}
+
 void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 {
     Scope scope(engine);
