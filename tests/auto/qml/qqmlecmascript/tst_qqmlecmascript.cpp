@@ -1600,7 +1600,7 @@ void tst_qqmlecmascript::aliasPropertyReset()
 
     // test that a manual write (of undefined) to a non-resettable property fails properly
     QUrl url = testFileUrl("aliasreset/aliasPropertyReset.error.1.qml");
-    QString warning1 = url.toString() + QLatin1String(":15: Error: Cannot assign [undefined] to int");
+    QString warning1 = url.toString() + QLatin1String(": Error: Cannot assign [undefined] to int");
     QQmlComponent e1(&engine, url);
     object = e1.create();
     QVERIFY(object != nullptr);
