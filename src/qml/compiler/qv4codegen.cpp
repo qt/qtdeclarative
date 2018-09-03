@@ -2300,7 +2300,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         return fallback;
 
     Reference r = Reference::fromName(this, name);
-    r.global = (resolved.type == Context::ResolvedName::Global);
+    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
     return r;
 }
 
@@ -4279,7 +4279,7 @@ QT_WARNING_POP
                 return;
             }
         }
-        if (!disable_lookups && codegen->useFastLookups && global) {
+        if (!disable_lookups && global) {
             Instruction::LoadGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
             codegen->bytecodeGenerator->addInstruction(load);
