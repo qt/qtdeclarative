@@ -38,8 +38,11 @@
 ****************************************************************************/
 
 #include "qsgtexturereader_p.h"
-#include <private/qsgcompressedtexture_p.h>
 #include <private/qtexturefilereader_p.h>
+
+#if QT_CONFIG(opengl)
+#include <private/qsgcompressedtexture_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
