@@ -313,6 +313,7 @@ public:
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 
     QString absoluteFilePath(const QString &path);
+    bool fileExists(const QString &path, const QString &file);
     bool directoryExists(const QString &path);
 
     const QQmlTypeLoaderQmldirContent qmldirContent(const QString &filePath);
