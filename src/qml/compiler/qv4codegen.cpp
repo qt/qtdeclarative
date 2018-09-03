@@ -2717,6 +2717,12 @@ bool Codegen::visit(ThisExpression *)
     if (hasError)
         return false;
 
+    if (_context->isArrowFunction) {
+        Reference r = referenceForName(QStringLiteral("this"), false);
+        r.isReadonly = true;
+        _expr.setResult(r);
+        return false;
+    }
     _expr.setResult(Reference::fromThis(this));
     return false;
 }

@@ -445,7 +445,6 @@ built-ins/RegExp/unicode_restricted_quantifiable_assertion.js fails
 built-ins/RegExp/u180e.js fails
 built-ins/Set/proto-from-ctor-realm.js fails
 built-ins/Set/prototype/forEach/iterates-values-revisits-after-delete-re-add.js fails
-built-ins/Set/prototype/forEach/this-arg-explicit-cannot-override-lexical-this-arrow.js fails
 built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js fails
 built-ins/SharedArrayBuffer/proto-from-ctor-realm.js fails
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js fails
@@ -616,14 +615,12 @@ language/eval-code/indirect/var-env-global-lex-non-strict.js fails
 language/eval-code/indirect/var-env-var-init-global-exstng.js strictFails
 language/eval-code/indirect/var-env-var-init-global-new.js strictFails
 language/eval-code/indirect/var-env-var-non-strict.js strictFails
-language/expressions/arrow-function/cannot-override-this-with-thisArg.js fails
 language/expressions/arrow-function/dflt-params-ref-later.js fails
 language/expressions/arrow-function/dflt-params-ref-self.js fails
 language/expressions/arrow-function/lexical-new.target-closure-returned.js fails
 language/expressions/arrow-function/lexical-new.target.js fails
 language/expressions/arrow-function/lexical-super-call-from-within-constructor.js fails
 language/expressions/arrow-function/lexical-supercall-from-immediately-invoked-arrow.js fails
-language/expressions/arrow-function/lexical-this.js fails
 language/expressions/arrow-function/scope-body-lex-distinct.js sloppyFails
 language/expressions/arrow-function/scope-param-elem-var-close.js sloppyFails
 language/expressions/arrow-function/scope-param-elem-var-open.js sloppyFails
@@ -1002,7 +999,6 @@ language/statements/class/scope-static-setter-paramsbody-var-open.js fails
 language/statements/class/subclass/bound-function.js fails
 language/statements/class/subclass/builtin-objects/Promise/regular-subclassing.js fails
 language/statements/class/subclass/builtin-objects/Promise/super-must-be-called.js fails
-language/statements/class/subclass/class-definition-null-proto-this.js fails
 language/statements/class/subclass/default-constructor-spread-override.js fails
 language/statements/do-while/tco-body.js strictFails
 language/statements/for-in/head-lhs-let.js sloppyFails
