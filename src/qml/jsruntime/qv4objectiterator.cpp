@@ -128,7 +128,10 @@ DEFINE_OBJECT_VTABLE(ForInIteratorObject);
 void Heap::ForInIteratorObject::markObjects(Heap::Base *that, MarkStack *markStack)
 {
     ForInIteratorObject *o = static_cast<ForInIteratorObject *>(that);
-    o->object->mark(markStack);
+    if (o->object)
+        o->object->mark(markStack);
+    if (o->current)
+        o->current->mark(markStack);
     o->workArea[0].mark(markStack);
     o->workArea[1].mark(markStack);
     Object::markObjects(that, markStack);
