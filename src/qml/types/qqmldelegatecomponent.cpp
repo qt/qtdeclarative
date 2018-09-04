@@ -59,6 +59,19 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 }
 
 /*!
+    \qmlmodule Qt.labs.qmlmodels 1.0
+    \title Qt Labs QML Models - QML Types
+    \ingroup qmlmodules
+    \brief The Qt Labs QML Models module provides various model-related types for use with views.
+
+    To use this module, import the module with the following line:
+
+    \code
+    import Qt.labs.qmlmodels 1.0
+    \endcode
+*/
+
+/*!
     \qmltype DelegateChoice
     \instantiates QQmlDelegateChoice
     \inqmlmodule Qt.labs.qmlmodels
