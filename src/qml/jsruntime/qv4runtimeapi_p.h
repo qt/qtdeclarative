@@ -101,7 +101,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(ReturnedValue, callWithReceiver, (ExecutionEngine *engine, const Value &func, const Value *thisObject, Value *argv, int argc)) \
     F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, Value *argv, int argc)) \
     F(ReturnedValue, callWithSpread, (ExecutionEngine *engine, const Value &func, const Value &thisObject, Value *argv, int argc)) \
-    F(ReturnedValue, tailCall, (ExecutionEngine *engine, const Value &func, const Value &thisObject, Value *argv, int argc)) \
+    F(ReturnedValue, tailCall, (CppStackFrame *frame, ExecutionEngine *engine)) \
     \
     /* construct */ \
     F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, const Value &newTarget, Value *argv, int argc)) \
@@ -234,6 +234,12 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     FOR_EACH_RUNTIME_METHOD(RUNTIME_METHOD)
 #undef RUNTIME_METHOD
 
+    struct StackOffsets {
+        static const int tailCall_function   = -1;
+        static const int tailCall_thisObject = -2;
+        static const int tailCall_argv       = -3;
+        static const int tailCall_argc       = -4;
+    };
 };
 
 static_assert(std::is_standard_layout<Runtime>::value, "Runtime needs to be standard layout in order for us to be able to use offsetof");

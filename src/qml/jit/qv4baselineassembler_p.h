@@ -67,6 +67,9 @@ namespace JIT {
     callRuntime(JIT_STRINGIFY(function), \
                 reinterpret_cast<void *>(&function), \
                 destination)
+#define GENERATE_TAIL_CALL(function) \
+    tailCallRuntime(JIT_STRINGIFY(function), \
+                reinterpret_cast<void *>(&function))
 
 class BaselineAssembler {
 public:
@@ -149,6 +152,7 @@ public:
     void passInt32AsArg(int value, int arg);
     void callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest);
     void saveAccumulatorInFrame();
+    void jsTailCall(int func, int thisObject, int argc, int argv);
 
     // exception/context stuff
     void checkException();

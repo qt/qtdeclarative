@@ -1446,7 +1446,29 @@ void BaselineAssembler::callRuntime(const char *functionName, const void *funcPt
 void BaselineAssembler::saveAccumulatorInFrame()
 {
     pasm()->storeAccumulator(PlatformAssembler::Address(PlatformAssembler::JSStackFrameRegister,
-                                                       offsetof(CallData, accumulator)));
+                                                        offsetof(CallData, accumulator)));
+}
+
+static ReturnedValue TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing(CppStackFrame *frame, ExecutionEngine *engine)
+{
+    return Runtime::method_tailCall(frame, engine);
+}
+
+void BaselineAssembler::jsTailCall(int func, int thisObject, int argc, int argv)
+{
+    Address tos = pasm()->jsAlloca(4);
+
+    int32_t argcOffset = tos.offset + int32_t(sizeof(Value)) * Runtime::StackOffsets::tailCall_argc;
+    int32_t argvOffset = tos.offset + int32_t(sizeof(Value)) * Runtime::StackOffsets::tailCall_argv;
+    int32_t thisOffset = tos.offset + int32_t(sizeof(Value)) * Runtime::StackOffsets::tailCall_thisObject;
+    int32_t funcOffset = tos.offset + int32_t(sizeof(Value)) * Runtime::StackOffsets::tailCall_function;
+
+    pasm()->storeInt32AsValue(argc,      Address(tos.base, argcOffset));
+    pasm()->storeInt32AsValue(argv,      Address(tos.base, argvOffset));
+    pasm()->moveReg(regAddr(thisObject), Address(tos.base, thisOffset));
+    pasm()->moveReg(regAddr(func),       Address(tos.base, funcOffset));
+    pasm()->tailCallRuntime("TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing",
+                            reinterpret_cast<void *>(TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing));
 }
 
 void BaselineAssembler::checkException()
