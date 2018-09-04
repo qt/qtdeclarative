@@ -2143,10 +2143,15 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
         if (id->name == QLatin1String("new")) {
             // new.target
-            if (ast->name != QLatin1String("target")) {
-                throwSyntaxError(ast->identifierToken, QLatin1String("Expected 'target' after 'new.'."));
+            Q_ASSERT(ast->name == QLatin1String("target"));
+
+            if (_context->isArrowFunction || _context->contextType == ContextType::Eval) {
+                Reference r = referenceForName(QStringLiteral("new.target"), false);
+                r.isReadonly = true;
+                _expr.setResult(r);
                 return false;
             }
+
             Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
             _expr.setResult(r);
             return false;

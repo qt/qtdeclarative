@@ -578,7 +578,6 @@ language/computed-property-names/class/static/method-string.js fails
 language/computed-property-names/class/static/method-symbol.js fails
 language/eval-code/direct/new.target.js fails
 language/eval-code/direct/new.target-arrow.js fails
-language/eval-code/direct/new.target-fn.js fails
 language/eval-code/direct/non-definable-function-with-function.js sloppyFails
 language/eval-code/direct/non-definable-function-with-variable.js sloppyFails
 language/eval-code/direct/non-definable-global-function.js sloppyFails
@@ -617,8 +616,6 @@ language/eval-code/indirect/var-env-var-init-global-new.js strictFails
 language/eval-code/indirect/var-env-var-non-strict.js strictFails
 language/expressions/arrow-function/dflt-params-ref-later.js fails
 language/expressions/arrow-function/dflt-params-ref-self.js fails
-language/expressions/arrow-function/lexical-new.target-closure-returned.js fails
-language/expressions/arrow-function/lexical-new.target.js fails
 language/expressions/arrow-function/lexical-super-call-from-within-constructor.js fails
 language/expressions/arrow-function/lexical-supercall-from-immediately-invoked-arrow.js fails
 language/expressions/arrow-function/scope-body-lex-distinct.js sloppyFails

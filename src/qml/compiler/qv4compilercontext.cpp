@@ -248,6 +248,13 @@ void Context::emitBlockHeader(Codegen *codegen)
         Codegen::Reference r = codegen->referenceForName(QStringLiteral("this"), true);
         r.storeConsumeAccumulator();
     }
+    if (innerFunctionAccessesNewTarget) {
+        Instruction::LoadReg load;
+        load.reg = CallData::NewTarget;
+        bytecodeGenerator->addInstruction(load);
+        Codegen::Reference r = codegen->referenceForName(QStringLiteral("new.target"), true);
+        r.storeConsumeAccumulator();
+    }
 
     if (contextType == ContextType::Global || (contextType == ContextType::Eval && !isStrict)) {
         // variables in global code are properties of the global context object, not locals as with other functions.
