@@ -104,6 +104,7 @@ struct ExportEntry
     QString moduleRequest;
     QString importName;
     QString localName;
+    CompiledData::Location location;
 
     static bool lessThan(const ExportEntry &lhs, const ExportEntry &rhs)
     { return lhs.exportName < rhs.exportName; }
@@ -114,6 +115,7 @@ struct ImportEntry
     QString moduleRequest;
     QString importName;
     QString localName;
+    CompiledData::Location location;
 };
 
 struct Module {
