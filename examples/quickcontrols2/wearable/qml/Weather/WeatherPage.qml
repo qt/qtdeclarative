@@ -50,6 +50,7 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
+import ".."
 import "../Style"
 import "weather.js" as WeatherData
 
@@ -59,7 +60,7 @@ Item {
 
         anchors.fill: parent
 
-        Item {
+        SwipeViewPage {
             id: weatherPage1
 
             Row {
@@ -114,7 +115,7 @@ Item {
             }
         }
 
-        Item {
+        SwipeViewPage {
             id: weatherPage2
 
             Column {
@@ -169,7 +170,7 @@ Item {
             }
         }
 
-        Item {
+        SwipeViewPage {
             id: weatherPage3
 
             Row {
@@ -224,7 +225,7 @@ Item {
             }
         }
 
-        Item {
+        SwipeViewPage {
             id: weatherPage4
 
             Column {

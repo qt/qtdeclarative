@@ -103,5 +103,6 @@
         <file>qml/WorldClock/images/swissnighthour@2x.png</file>
         <file>qml/WorldClock/images/swissnightminute.png</file>
         <file>qml/WorldClock/images/swissnightminute@2x.png</file>
+        <file>qml/SwipeViewPage.qml</file>
     </qresource>
 </RCC>

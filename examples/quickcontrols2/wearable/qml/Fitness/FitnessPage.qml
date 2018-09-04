@@ -50,6 +50,7 @@
 
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQ2
+import ".."
 import "../Style"
 import "fitness.js" as FitnessData
 
@@ -59,7 +60,7 @@ Item {
 
         anchors.fill: parent
 
-        Item {
+        SwipeViewPage {
             id: fitnessPage1
 
             Column {
@@ -87,7 +88,7 @@ Item {
             }
         }
 
-        Item {
+        SwipeViewPage {
             id: fitnessPage2
 
             Column {
