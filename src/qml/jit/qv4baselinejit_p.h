@@ -148,7 +148,7 @@ public:
     void generate_PopScriptContext() override;
     void generate_PopContext() override;
     void generate_GetIterator(int iterator) override;
-    void generate_IteratorNext(int value) override;
+    void generate_IteratorNext(int value, int done) override;
     void generate_IteratorClose(int done) override;
     void generate_DestructureRestElement() override;
     void generate_DeleteProperty(int base, int index) override;

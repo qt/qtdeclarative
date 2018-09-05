@@ -875,6 +875,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(IteratorNext)
         STORE_ACC();
         acc = Runtime::method_iteratorNext(engine, accumulator, &STACK_VALUE(value));
+        STACK_VALUE(done) = acc;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNext)
 

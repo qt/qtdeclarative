@@ -188,33 +188,42 @@ struct ControlFlowUnwind : public ControlFlow
     }
 };
 
-struct ControlFlowLoop : public ControlFlowUnwind
+struct ControlFlowUnwindCleanup : public ControlFlowUnwind
 {
-    QString loopLabel;
-    BytecodeGenerator::Label *breakLabel = nullptr;
-    BytecodeGenerator::Label *continueLabel = nullptr;
-    std::function<void()> unwind = nullptr;
+    std::function<void()> cleanup = nullptr;
 
-    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, std::function<void()> unwind = nullptr)
-        : ControlFlowUnwind(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel), unwind(unwind)
+    ControlFlowUnwindCleanup(Codegen *cg, std::function<void()> cleanup, Type type = Block)
+        : ControlFlowUnwind(cg, type), cleanup(cleanup)
     {
-        if (unwind != nullptr) {
+        if (cleanup) {
             setupUnwindHandler();
             generator()->setUnwindHandler(&unwindLabel);
         }
     }
 
-    ~ControlFlowLoop() {
-        if (unwind != nullptr) {
+    ~ControlFlowUnwindCleanup() {
+        if (cleanup) {
             unwindLabel.link();
             generator()->setUnwindHandler(parentUnwindHandler());
-            unwind();
+            cleanup();
             emitUnwindHandler();
         }
     }
 
     bool requiresUnwind() override {
-        return unwind != nullptr;
+        return cleanup != nullptr;
+    }
+};
+
+struct ControlFlowLoop : public ControlFlowUnwindCleanup
+{
+    QString loopLabel;
+    BytecodeGenerator::Label *breakLabel = nullptr;
+    BytecodeGenerator::Label *continueLabel = nullptr;
+
+    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, std::function<void()> cleanup = nullptr)
+        : ControlFlowUnwindCleanup(cg, cleanup, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel)
+    {
     }
 
     BytecodeGenerator::Label getUnwindTarget(UnwindType type, const QString &label) override {

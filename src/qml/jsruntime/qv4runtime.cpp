@@ -748,28 +748,38 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
 
 ReturnedValue Runtime::method_iteratorNext(ExecutionEngine *engine, const Value &iterator, Value *value)
 {
+    // if we throw an exception from here, return true, not undefined. This is to ensure iteratorDone is set to true
+    // and the stack unwinding won't close the iterator
     Q_ASSERT(iterator.isObject());
 
     Scope scope(engine);
     ScopedFunctionObject f(scope, static_cast<const Object &>(iterator).get(engine->id_next()));
-    if (!f)
-        return engine->throwTypeError();
+    if (!f) {
+        engine->throwTypeError();
+        return Encode(true);
+    }
     JSCallData cData(scope, 0, nullptr, &iterator);
     ScopedObject o(scope, f->call(cData));
-    if (!o)
-        return engine->throwTypeError();
+    if (scope.hasException())
+        return Encode(true);
+    if (!o) {
+        engine->throwTypeError();
+        return Encode(true);
+    }
+
     ScopedValue d(scope, o->get(engine->id_done()));
     if (scope.hasException())
-        return Encode::undefined();
+        return Encode(true);
     bool done = d->toBoolean();
     if (done) {
         *value = Encode::undefined();
-    } else {
-        *value = o->get(engine->id_value());
-        if (scope.hasException())
-            return Encode::undefined();
+        return Encode(true);
     }
-    return Encode(done);
+
+    *value = o->get(engine->id_value());
+    if (scope.hasException())
+        return Encode(true);
+    return Encode(false);
 }
 
 ReturnedValue Runtime::method_iteratorClose(ExecutionEngine *engine, const Value &iterator, const Value &done)

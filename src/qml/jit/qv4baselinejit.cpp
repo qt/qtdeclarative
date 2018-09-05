@@ -682,7 +682,7 @@ void BaselineJIT::generate_GetIterator(int iterator)
     as->checkException();
 }
 
-void BaselineJIT::generate_IteratorNext(int value)
+void BaselineJIT::generate_IteratorNext(int value, int done)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(3);
@@ -690,6 +690,7 @@ void BaselineJIT::generate_IteratorNext(int value)
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, CallResultDestination::InAccumulator);
+    as->storeReg(done);
     as->checkException();
 }
 

@@ -132,7 +132,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PopScriptContext(op) INSTRUCTION(op, PopScriptContext, 0)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 0)
 #define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
-#define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 1, value)
+#define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 2, value, done)
 #define INSTR_IteratorClose(op) INSTRUCTION(op, IteratorClose, 1, done)
 #define INSTR_DestructureRestElement(op) INSTRUCTION(op, DestructureRestElement, 0)
 #define INSTR_DeleteProperty(op) INSTRUCTION(op, DeleteProperty, 2, base, index)
