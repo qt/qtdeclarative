@@ -748,20 +748,34 @@ void QQuickTableViewPrivate::releaseLoadedItems(QQmlTableInstanceModel::Reusable
 
 void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInstanceModel::ReusableFlag reusableFlag)
 {
-    Q_TABLEVIEW_ASSERT(fxTableItem->item, fxTableItem->index);
+    Q_Q(QQuickTableView);
+    auto item = fxTableItem->item;
+    Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
 
     if (fxTableItem->ownItem) {
-        delete fxTableItem->item;
+        delete item;
     } else {
         // Only QQmlTableInstanceModel supports reusing items
         auto releaseFlag = tableModel ?
-                    tableModel->release(fxTableItem->item, reusableFlag) :
-                    model->release(fxTableItem->item);
+                    tableModel->release(item, reusableFlag) :
+                    model->release(item);
 
         if (releaseFlag != QQmlInstanceModel::Destroyed) {
-            // When items are not released, it typically means that the item is reused, or
-            // that the model is an ObjectModel. If so, we just hide the item instead.
+            // When items are not destroyed, it typically means that the
+            // item is reused, or that the model is an ObjectModel. If
+            // so, we just hide the item instead.
             fxTableItem->setVisible(false);
+
+            if (QQuickWindow *window = item->window()) {
+                // If the item (or a descendant) has focus, remove it, so
+                // that the item doesn't enter with focus when it's reused.
+                const auto focusItem = static_cast<QQuickItem *>(window->focusObject());
+                const bool hasFocus = item->isAncestorOf(focusItem);
+                if (hasFocus) {
+                    const auto focusChild = QQuickItemPrivate::get(q)->subFocusItem;
+                    QQuickWindowPrivate::get(window)->clearFocusInScope(q, focusChild, Qt::OtherFocusReason);
+                }
+            }
         }
     }
 
@@ -1717,6 +1731,7 @@ bool QQuickTableViewPrivate::updatePolishIfPossible() const
 QQuickTableView::QQuickTableView(QQuickItem *parent)
     : QQuickFlickable(*(new QQuickTableViewPrivate), parent)
 {
+    setFlag(QQuickItem::ItemIsFocusScope);
     connect(this, &QQuickFlickable::contentWidthChanged, this, &QQuickTableView::contentWidthOverrideChanged);
     connect(this, &QQuickFlickable::contentHeightChanged, this, &QQuickTableView::contentHeightOverrideChanged);
 }

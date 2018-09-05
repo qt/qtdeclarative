@@ -110,6 +110,7 @@ private slots:
     void checkLayoutOfEqualSizedDelegateItems_data();
     void checkLayoutOfEqualSizedDelegateItems();
     void checkTableMargins_data();
+    void checkFocusRemoved();
     void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
@@ -734,6 +735,40 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         QCOMPARE(item->z(), 1);
         QCOMPARE(item->width(), expectedItemWidth);
         QCOMPARE(item->height(), expectedItemHeight);
+    }
+}
+
+void tst_QQuickTableView::checkFocusRemoved()
+{
+    // Check that we clear the focus of a delegate item when
+    // it's flicked out of view, and then reused.
+    LOAD_TABLEVIEW("tableviewfocus.qml");
+
+    const char *textInputProp = "textInput";
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto const item = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
+    auto const textInput = qvariant_cast<QQuickItem *>(item->property(textInputProp));
+    QVERIFY(textInput);
+    QCOMPARE(tableView->hasActiveFocus(), false);
+    QCOMPARE(textInput->hasActiveFocus(), false);
+
+    textInput->forceActiveFocus();
+    QCOMPARE(tableView->hasActiveFocus(), true);
+    QCOMPARE(textInput->hasActiveFocus(), true);
+
+    // Flick the focused cell out, and check that none of the
+    // items in the table has focus (which means that the reused
+    // item lost focus when it was flicked out). But the tableview
+    // itself will maintain active focus.
+    tableView->setContentX(500);
+    QCOMPARE(tableView->hasActiveFocus(), true);
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        auto const textInput2 = qvariant_cast<QQuickItem *>(fxItem->item->property(textInputProp));
+        QCOMPARE(textInput2->hasActiveFocus(), false);
     }
 }
 
