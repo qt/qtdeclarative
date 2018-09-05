@@ -1134,7 +1134,14 @@ bool Codegen::visit(ArrayPattern *ast)
             BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
             {
-                ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+                auto unwind = [this, iterator]() {
+                    Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+                    iterator.loadInAccumulator();
+                    Instruction::IteratorClose close;
+                    close.done = iteratorDone.stackSlot();
+                    bytecodeGenerator->addInstruction(close);
+                };
+                ControlFlowLoop flow(this, &end, &in, unwind);
                 bytecodeGenerator->jump().link(in);
 
                 BytecodeGenerator::Label body = bytecodeGenerator->label();
@@ -1149,15 +1156,9 @@ bool Codegen::visit(ArrayPattern *ast)
                 bytecodeGenerator->addInstruction(next);
                 bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
                 bytecodeGenerator->jump().link(done);
+
+                end.link();
             }
-
-            end.link();
-
-            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
-            iterator.loadInAccumulator();
-            Instruction::IteratorClose close;
-            close.done = iteratorDone.stackSlot();
-            bytecodeGenerator->addInstruction(close);
 
             done.link();
         } else {
@@ -3177,7 +3178,16 @@ bool Codegen::visit(ForEachStatement *ast)
     BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
     {
-        ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+        auto unwind = [ast, this, iterator]() {
+            if (ast->type == ForEachType::Of) {
+                Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
+                iterator.loadInAccumulator();
+                Instruction::IteratorClose close;
+                close.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(close);
+            }
+        };
+        ControlFlowLoop flow(this, &end, &in, unwind);
         bytecodeGenerator->jump().link(in);
 
         BytecodeGenerator::Label body = bytecodeGenerator->label();
@@ -3220,16 +3230,8 @@ bool Codegen::visit(ForEachStatement *ast)
         bytecodeGenerator->addInstruction(next);
         bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
         bytecodeGenerator->jump().link(done);
-    }
 
-    end.link();
-
-    if (ast->type == ForEachType::Of) {
-        Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
-        iterator.loadInAccumulator();
-        Instruction::IteratorClose close;
-        close.done = iteratorDone.stackSlot();
-        bytecodeGenerator->addInstruction(close);
+        end.link();
     }
 
     done.link();

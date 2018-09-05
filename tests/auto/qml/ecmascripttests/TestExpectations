@@ -1001,8 +1001,6 @@ language/statements/do-while/tco-body.js strictFails
 language/statements/for-in/head-lhs-let.js sloppyFails
 language/statements/for-in/head-var-bound-names-let.js sloppyFails
 language/statements/for-in/identifier-let-allowed-as-lefthandside-expression-not-strict.js sloppyFails
-language/statements/for-of/body-dstr-assign-error.js fails
-language/statements/for-of/body-put-error.js fails
 language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js fails
 language/statements/for-of/dstr-array-elem-iter-rtrn-close-null.js fails
 language/statements/for-of/dstr-array-elem-iter-rtrn-close.js fails
@@ -1030,14 +1028,10 @@ language/statements/for-of/dstr-obj-empty-null.js fails
 language/statements/for-of/dstr-obj-empty-undef.js fails
 language/statements/for-of/dstr-obj-id-put-let.js fails
 language/statements/for-of/dstr-obj-prop-put-let.js fails
-language/statements/for-of/generator-close-via-continue.js fails
-language/statements/for-of/generator-close-via-return.js fails
-language/statements/for-of/generator-close-via-throw.js fails
 language/statements/for-of/head-var-bound-names-let.js sloppyFails
-language/statements/for-of/iterator-close-via-continue.js fails
-language/statements/for-of/iterator-close-via-return.js fails
-language/statements/for-of/iterator-close-via-throw.js fails
+language/statements/for-of/iterator-next-error.js fails
 language/statements/for-of/iterator-next-reference.js fails
+language/statements/for-of/iterator-next-result-value-attr-error.js fails
 language/statements/for-of/yield-star-from-catch.js fails
 language/statements/for-of/yield-star-from-finally.js fails
 language/statements/for-of/yield-star-from-try.js fails

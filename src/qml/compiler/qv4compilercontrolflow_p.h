@@ -193,27 +193,28 @@ struct ControlFlowLoop : public ControlFlowUnwind
     QString loopLabel;
     BytecodeGenerator::Label *breakLabel = nullptr;
     BytecodeGenerator::Label *continueLabel = nullptr;
-    bool _requiresUnwind;
+    std::function<void()> unwind = nullptr;
 
-    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, bool requiresUnwind = false)
-        : ControlFlowUnwind(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel), _requiresUnwind(requiresUnwind)
+    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, std::function<void()> unwind = nullptr)
+        : ControlFlowUnwind(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel), unwind(unwind)
     {
-        if (_requiresUnwind) {
+        if (unwind != nullptr) {
             setupUnwindHandler();
             generator()->setUnwindHandler(&unwindLabel);
         }
     }
 
     ~ControlFlowLoop() {
-        if (_requiresUnwind) {
+        if (unwind != nullptr) {
             unwindLabel.link();
             generator()->setUnwindHandler(parentUnwindHandler());
+            unwind();
             emitUnwindHandler();
         }
     }
 
     bool requiresUnwind() override {
-        return _requiresUnwind;
+        return unwind != nullptr;
     }
 
     BytecodeGenerator::Label getUnwindTarget(UnwindType type, const QString &label) override {
