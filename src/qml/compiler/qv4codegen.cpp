@@ -3996,7 +3996,7 @@ Codegen::Reference Codegen::Reference::baseObject() const
         if (rval.isAccumulator())
             return Reference::fromAccumulator(codegen);
         if (rval.isStackSlot())
-            Reference::fromStackSlot(codegen, rval.stackSlot());
+            return Reference::fromStackSlot(codegen, rval.stackSlot());
         if (rval.isConst())
             return Reference::fromConst(codegen, rval.constantValue());
         Q_UNREACHABLE();
