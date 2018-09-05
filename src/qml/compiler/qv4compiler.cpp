@@ -92,7 +92,7 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
     quint32_le *stringTable = reinterpret_cast<quint32_le *>(dataStart + unit->offsetToStringTable);
-    char *stringData = dataStart + unit->offsetToStringTable + unit->stringTableSize * sizeof(uint);
+    char *stringData = reinterpret_cast<char *>(stringTable) + unit->stringTableSize * sizeof(uint);
     for (int i = backingUnitTableSize ; i < strings.size(); ++i) {
         const int index = i - backingUnitTableSize;
         stringTable[index] = stringData - dataStart;
@@ -105,10 +105,10 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
         s->offsetOn32Bit = sizeof(QV4::CompiledData::String);
         s->offsetOn64Bit = sizeof(QV4::CompiledData::String);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-        memcpy(s + 1, qstr.constData(), qstr.length()*sizeof(ushort));
+        memcpy(s + 1, qstr.constData(), s->size * sizeof(ushort));
 #else
         ushort *uc = reinterpret_cast<ushort *>(s + 1);
-        for (int i = 0; i < qstr.length(); ++i)
+        for (int i = 0; i < s->size; ++i)
             uc[i] = qToLittleEndian<ushort>(qstr.at(i).unicode());
 #endif
         reinterpret_cast<ushort *>(s + 1)[s->size] = 0;
