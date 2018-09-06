@@ -195,6 +195,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
+#define INSTR_ThrowOnNullOrUndefined(op) INSTRUCTION(op, ThrowOnNullOrUndefined, 0)
 
 #define FOR_EACH_MOTH_INSTR_ALL(F) \
     F(Nop) \
@@ -332,6 +333,7 @@ QT_BEGIN_NAMESPACE
     F(PushScriptContext) \
     F(PopScriptContext) \
     F(InitializeBlockDeadTemporalZone) \
+    F(ThrowOnNullOrUndefined) \
     F(Debug) \
 
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)

@@ -619,6 +619,10 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
 {
     RegisterScope scope(this);
 
+    object.loadInAccumulator();
+    Instruction::ThrowOnNullOrUndefined t;
+    bytecodeGenerator->addInstruction(t);
+
     for (PatternPropertyList *it = bindingList; it; it = it->next) {
         PatternProperty *p = it->property;
         RegisterScope scope(this);

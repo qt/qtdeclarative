@@ -1344,6 +1344,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             STACK_VALUE(i) = acc;
     MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
 
+    MOTH_BEGIN_INSTR(ThrowOnNullOrUndefined)
+        if (Primitive::fromReturnedValue(acc).isNullOrUndefined()) {
+            engine->throwTypeError();
+            goto handleUnwind;
+        }
+    MOTH_END_INSTR(ThrowOnNullOrUndefined)
+
     MOTH_BEGIN_INSTR(Debug)
 #if QT_CONFIG(qml_debug)
         STORE_IP();

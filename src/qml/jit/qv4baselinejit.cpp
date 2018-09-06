@@ -956,6 +956,17 @@ void BaselineJIT::generate_InitializeBlockDeadTemporalZone(int firstReg, int cou
         as->storeReg(i);
 }
 
+void BaselineJIT::generate_ThrowOnNullOrUndefined()
+{
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::throwOnNullOrUndefined, CallResultDestination::Ignore);
+    as->checkException();
+}
+
+
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
     if (hasLabel())

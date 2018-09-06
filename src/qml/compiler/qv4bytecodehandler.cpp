@@ -528,6 +528,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
         COLLECTOR_END_INSTR(InitializeBlockDeadTemporalZone)
 
+        COLLECTOR_BEGIN_INSTR(ThrowOnNullOrUndefined)
+        COLLECTOR_END_INSTR(ThrowOnNullOrUndefined)
+
         COLLECTOR_BEGIN_INSTR(LoadQmlContext)
         COLLECTOR_END_INSTR(LoadQmlContext)
 

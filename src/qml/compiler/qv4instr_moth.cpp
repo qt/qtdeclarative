@@ -702,6 +702,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(firstReg, nFormals) << ", " << count;
         MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
 
+        MOTH_BEGIN_INSTR(ThrowOnNullOrUndefined)
+        MOTH_END_INSTR(ThrowOnNullOrUndefined)
+
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);
         MOTH_END_INSTR(LoadQmlContext)

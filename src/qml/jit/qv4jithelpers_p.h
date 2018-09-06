@@ -76,6 +76,7 @@ void pushScriptContext(Value *stack, ExecutionEngine *engine, int index);
 void popScriptContext(Value *stack, ExecutionEngine *engine);
 ReturnedValue deleteProperty(QV4::Function *function, const QV4::Value &base, const QV4::Value &index);
 ReturnedValue deleteName(Function *function, int name);
+void throwOnNullOrUndefined(ExecutionEngine *engine, const Value &v);
 
 } // Helpers namespace
 } // JIT namespace

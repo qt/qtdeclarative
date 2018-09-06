@@ -656,8 +656,6 @@ language/expressions/assignment/dstr-array-rest-iter-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-rest-iter-thrw-close.js fails
 language/expressions/assignment/dstr-array-rest-lref-err.js fails
 language/expressions/assignment/dstr-array-rest-put-let.js fails
-language/expressions/assignment/dstr-obj-empty-null.js fails
-language/expressions/assignment/dstr-obj-empty-undef.js fails
 language/expressions/assignment/dstr-obj-id-put-let.js fails
 language/expressions/assignment/dstr-obj-prop-put-let.js fails
 language/expressions/assignment/fn-name-lhs-cover.js fails
@@ -1014,8 +1012,6 @@ language/statements/for-of/dstr-array-rest-iter-thrw-close-err.js fails
 language/statements/for-of/dstr-array-rest-iter-thrw-close.js fails
 language/statements/for-of/dstr-array-rest-lref-err.js fails
 language/statements/for-of/dstr-array-rest-put-let.js fails
-language/statements/for-of/dstr-obj-empty-null.js fails
-language/statements/for-of/dstr-obj-empty-undef.js fails
 language/statements/for-of/dstr-obj-id-put-let.js fails
 language/statements/for-of/dstr-obj-prop-put-let.js fails
 language/statements/for-of/head-var-bound-names-let.js sloppyFails
