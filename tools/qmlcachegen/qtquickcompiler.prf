@@ -6,6 +6,7 @@ isEmpty(QMLCACHE_DIR): QMLCACHE_DIR = .
 
 defineReplace(qmlCacheResourceFileOutputName) {
     name = $$relative_path($$1, $$_PRO_FILE_PWD_)
+    contains(name, ^\\.\\..*): name = $$relative_path($$1, $$OUT_PWD)
     name = $$replace(name,/,_)
     name = $$replace(name, \\.qrc$, _qmlcache.qrc)
     name = $$replace(name,\.\.,)
