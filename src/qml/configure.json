@@ -32,10 +32,8 @@
             "section": "QML",
             "condition": [
                 "features.commandlineparser",
-                "features.localserver",
-                "features.process",
                 "features.qml-debug",
-                "features.qml-network",
+                "features.qml-network && features.localserver",
                 "features.xmlstreamwriter"
             ],
             "output": [ "privateFeature" ]
@@ -46,7 +44,7 @@
             "section": "QML",
             "condition": [
                 "features.commandlineparser",
-                "features.localserver",
+                "features.qml-network && features.localserver",
                 "features.process",
                 "features.qml-debug"
             ],

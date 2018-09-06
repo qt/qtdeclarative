@@ -325,7 +325,8 @@ bool QSGDefaultRenderContext::separateIndexBuffer() const
     // lifetime. An attempt to bind a buffer object to the other
     // target will generate an INVALID_OPERATION error, and the
     // current binding will remain untouched.
-    static const bool isWebGL = qGuiApp->platformName().compare(QLatin1String("webgl")) == 0;
+    static const bool isWebGL = (qGuiApp->platformName().compare(QLatin1String("webgl")) == 0
+                                  || qGuiApp->platformName().compare(QLatin1String("wasm")) == 0);
     return isWebGL;
 }
 

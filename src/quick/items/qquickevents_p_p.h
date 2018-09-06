@@ -134,7 +134,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMouseEvent : public QObject
     Q_PROPERTY(bool wasHeld READ wasHeld CONSTANT)
     Q_PROPERTY(bool isClick READ isClick CONSTANT)
     Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
-    Q_REVISION(11) Q_PROPERTY(int flags READ flags CONSTANT)
+    Q_PROPERTY(int flags READ flags CONSTANT REVISION 11)
 
 public:
     QQuickMouseEvent()

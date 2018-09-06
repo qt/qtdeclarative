@@ -96,7 +96,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
         f->setName(name);
 
     if (createProto)
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
+        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 
@@ -130,8 +130,6 @@ void Heap::FunctionObject::init()
 
     Object::init();
     this->scope.set(internalClass->engine, internalClass->engine->rootContext()->d());
-    Q_ASSERT(internalClass && internalClass->find(internalClass->engine->id_prototype()->propertyKey()) == Index_Prototype);
-    setProperty(internalClass->engine, Index_Prototype, Primitive::undefinedValue());
 }
 
 void Heap::FunctionObject::setFunction(Function *f)
@@ -148,16 +146,15 @@ void Heap::FunctionObject::destroy()
     Object::destroy();
 }
 
-void FunctionObject::createDefaultPrototypeProperty(uint protoSlot, uint protoConstructorSlot)
+void FunctionObject::createDefaultPrototypeProperty(uint protoConstructorSlot)
 {
     Scope s(this);
 
-    Q_ASSERT(internalClass() && internalClass()->find(s.engine->id_prototype()->propertyKey()) == protoSlot);
     Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->propertyKey()) == protoConstructorSlot);
 
     ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
     proto->setProperty(protoConstructorSlot, d());
-    setProperty(protoSlot, proto);
+    defineDefaultProperty(s.engine->id_prototype(), proto, Attr_NotEnumerable|Attr_NotConfigurable);
 }
 
 ReturnedValue FunctionObject::name() const
@@ -510,7 +507,7 @@ ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value 
     return result;
 }
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n, bool makeConstructor)
 {
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
@@ -524,7 +521,8 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
-    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_Prototype, Heap::FunctionObject::Index_ProtoConstructor);
+    if (makeConstructor && !function->isArrowFunction())
+        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
     setProperty(s.engine, Index_Length, Primitive::fromInt32(int(function->compiledFunction->length)));
@@ -566,6 +564,7 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
     v4->jsStackTop += frame.requiredJSStackFrameSize();
 
     ReturnedValue result = Moth::VME::exec(&frame, v4);
+    ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
     frame.pop();
 
@@ -573,9 +572,14 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
         return Encode::undefined();
     else if (Value::fromReturnedValue(result).isObject())
         return result;
-    else if (!Value::fromReturnedValue(result).isUndefined() || frame.jsFrame->thisObject.isEmpty())
+    else if (!Value::fromReturnedValue(result).isUndefined())
         return v4->throwTypeError();
-    return frame.jsFrame->thisObject.asReturnedValue();
+    else if (Primitive::fromReturnedValue(thisObject).isEmpty()) {
+        Scope scope(v4);
+        ScopedString s(scope, v4->newString(QStringLiteral("this")));
+        return v4->throwReferenceError(s);
+    }
+    return thisObject;
 }
 
 ReturnedValue ConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)
@@ -615,6 +619,7 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
 
     // Do a super call
     ReturnedValue result = super->callAsConstructor(argv, argc, newTarget);
+    ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
     frame.pop();
 
@@ -624,7 +629,13 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
         return result;
     else if (!Value::fromReturnedValue(result).isUndefined())
         return v4->throwTypeError();
-    return frame.jsFrame->thisObject.asReturnedValue();
+    else if (Primitive::fromReturnedValue(thisObject).isEmpty()) {
+        Scope scope(v4);
+        ScopedString s(scope, v4->newString(QStringLiteral("this")));
+        return v4->throwReferenceError(s);
+    }
+
+    return thisObject;
 }
 
 ReturnedValue DefaultClassConstructorFunction::virtualCall(const FunctionObject *f, const Value *, const Value *, int)

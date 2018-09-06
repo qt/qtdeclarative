@@ -9,7 +9,7 @@ qtConfig(qml-devtools) {
     qtConfig(commandlineparser):qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 }
 
-!android|android_app {
+qtConfig(thread):!android|android_app {
     SUBDIRS += \
         qml
 

@@ -674,6 +674,7 @@ bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl, const QQml
 {
     Q_ASSERT(resolvedUrl.endsWith(Slash));
     url = resolvedUrl;
+    localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
 
     qmlDirComponents = qmldir.components();
 
@@ -811,21 +812,20 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 *type_return = returnType;
             return returnType.isValid();
         }
-    } else if (!isLibrary) {
+    } else if (!isLibrary && !localDirectoryPath.isEmpty()) {
         QString qmlUrl;
         bool exists = false;
 
         const QString urlsToTry[2] = {
-            url + QString::fromRawData(type.constData(), type.length()) + dotqml_string, // Type -> Type.qml
-            url + QString::fromRawData(type.constData(), type.length()) + dotuidotqml_string // Type -> Type.ui.qml
+            typeStr + dotqml_string, // Type -> Type.qml
+            typeStr + dotuidotqml_string // Type -> Type.ui.qml
         };
         for (uint i = 0; i < sizeof(urlsToTry) / sizeof(urlsToTry[0]); ++i) {
-            const QString url = urlsToTry[i];
-            const QString localPath = QQmlFile::urlToLocalFileOrQrc(url);
-            exists = !typeLoader->absoluteFilePath(localPath).isEmpty();
+            exists = typeLoader->fileExists(localDirectoryPath, urlsToTry[i]);
             if (exists) {
+#if defined(Q_OS_MACOS) || defined(Q_OS_WIN)
                 // don't let function.qml confuse the use of "new Function(...)" for example.
-                if (!QQml_isFileCaseCorrect(localPath)) {
+                if (!QQml_isFileCaseCorrect(localDirectoryPath + urlsToTry[i])) {
                     exists = false;
                     if (errors) {
                         QQmlError caseError;
@@ -834,7 +834,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                     }
                     break;
                 }
-                qmlUrl = url;
+#else
+                Q_UNUSED(errors);
+#endif
+                qmlUrl = url + urlsToTry[i];
                 break;
             }
         }
@@ -1433,6 +1436,7 @@ QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace
     QQmlImportInstance *import = new QQmlImportInstance;
     import->uri = uri;
     import->url = url;
+    import->localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
     import->majversion = vmaj;
     import->minversion = vmin;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
@@ -1770,8 +1774,14 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 {
     filePluginPath << QLatin1String(".");
     // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
+#ifndef Q_OS_WASM
+    QString installImportsPath = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+#else
+    // Hardcode the qml imports to "qml/" relative to the app exe.
+    // This should perhaps be set via Qml2Imports in qt.conf.
+   QString installImportsPath = QStringLiteral("qml/");
+#endif
 
-    QString installImportsPath =  QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     addImportPath(installImportsPath);
 
     // env import paths

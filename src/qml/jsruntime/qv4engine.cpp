@@ -342,12 +342,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     uint index;
     ic = newInternalClass(QV4::FunctionPrototype::staticVTable(), objectPrototype());
-    ic = ic->addMember(id_prototype()->propertyKey(), Attr_NotEnumerable, &index);
-    Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(ic->d());
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
-    ic = ic->addMember(id_prototype()->propertyKey(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
-    Q_ASSERT(index == Heap::FunctionObject::Index_Prototype);
     classes[Class_FunctionObject] = ic->d();
     ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, &index);
     Q_ASSERT(index == Heap::ScriptFunction::Index_Name);

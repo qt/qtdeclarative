@@ -280,10 +280,19 @@ void Heap::TypedArrayCtor::init(QV4::ExecutionContext *scope, TypedArray::Type t
     type = t;
 }
 
-ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f->engine());
     const TypedArrayCtor *that = static_cast<const TypedArrayCtor *>(f);
+
+    auto updateProto = [=](Scope &scope, Scoped<TypedArray> &a) {
+        if (newTarget->heapObject() != f->heapObject() && newTarget->isFunctionObject()) {
+            const FunctionObject *nt = static_cast<const FunctionObject *>(newTarget);
+            ScopedObject o(scope, nt->protoProperty());
+            if (o)
+                a->setPrototypeOf(o);
+        }
+    };
 
     if (!argc || !argv[0].isObject()) {
         // ECMA 6 22.2.1.1
@@ -306,6 +315,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = 0;
 
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
     Scoped<TypedArray> typedArray(scope, argc ? argv[0] : Primitive::undefinedValue());
@@ -346,6 +356,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
             }
         }
 
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
     Scoped<ArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
@@ -383,6 +394,8 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         array->d()->buffer.set(scope.engine, buffer->d());
         array->d()->byteLength = byteLength;
         array->d()->byteOffset = byteOffset;
+
+        updateProto(scope, array);
         return array.asReturnedValue();
     }
 
@@ -421,7 +434,7 @@ ReturnedValue TypedArrayCtor::virtualCallAsConstructor(const FunctionObject *f, 
         b += elementSize;
     }
 
-
+    updateProto(scope, array);
     return array.asReturnedValue();
 }
 
@@ -446,22 +459,26 @@ Heap::TypedArray *TypedArray::create(ExecutionEngine *e, Heap::TypedArray::Type 
 
 ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (!id.isArrayIndex())
-        return Object::virtualGet(m, id, receiver, hasProperty);
-
     uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualGet(m, id, receiver, hasProperty);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     Scope scope(static_cast<const Object *>(m)->engine());
     Scoped<TypedArray> a(scope, static_cast<const TypedArray *>(m));
     if (a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
-    uint bytesPerElement = a->d()->type->bytesPerElement;
-    uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-    if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength()) {
+    if (index >= a->length()) {
         if (hasProperty)
             *hasProperty = false;
         return Encode::undefined();
     }
+
+    uint bytesPerElement = a->d()->type->bytesPerElement;
+    uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
+    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+
     if (hasProperty)
         *hasProperty = true;
     return a->d()->type->read(a->d()->buffer->data->data() + byteOffset);
@@ -469,17 +486,42 @@ ReturnedValue TypedArray::virtualGet(const Managed *m, PropertyKey id, const Val
 
 bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
 {
+    uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualHasProperty(m, id);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
+    const TypedArray *a = static_cast<const TypedArray *>(m);
+    if (a->d()->buffer->isDetachedBuffer()) {
+        a->engine()->throwTypeError();
+        return false;
+    }
+    if (index >= a->length())
+        return false;
+    return true;
+}
+
+PropertyAttributes TypedArray::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+{
+    uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualGetOwnProperty(m, id, p);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     bool hasProperty = false;
-    virtualGet(m, id, nullptr, &hasProperty);
-    return hasProperty;
+    ReturnedValue v = virtualGet(m, id, m, &hasProperty);
+    if (p)
+        p->value = v;
+    return hasProperty ? Attr_NotConfigurable : PropertyAttributes();
 }
 
 bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
 {
-    if (!id.isArrayIndex())
-        return Object::virtualPut(m, id, value, receiver);
-
     uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualPut(m, id, value, receiver);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
     ExecutionEngine *v4 = static_cast<Object *>(m)->engine();
     if (v4->hasException)
         return false;
@@ -489,15 +531,48 @@ bool TypedArray::virtualPut(Managed *m, PropertyKey id, const Value &value, Valu
     if (a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
 
+    if (index >= a->length())
+        return false;
+
     uint bytesPerElement = a->d()->type->bytesPerElement;
     uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
-    if (byteOffset + bytesPerElement > (uint)a->d()->buffer->byteLength())
-        return false;
+    Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
 
     Value v = Primitive::fromReturnedValue(value.convertedToNumber());
     if (scope.hasException() || a->d()->buffer->isDetachedBuffer())
         return scope.engine->throwTypeError();
     a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
+    return true;
+}
+
+bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs)
+{
+    uint index = id.asArrayIndex();
+    if (index == UINT_MAX && !id.isCanonicalNumericIndexString())
+        return Object::virtualDefineOwnProperty(m, id, p, attrs);
+    // fall through, with index == UINT_MAX it'll do the right thing.
+
+    TypedArray *a = static_cast<TypedArray *>(m);
+    if (index >= a->length() || attrs.isAccessor())
+        return false;
+
+    if (attrs.hasConfigurable() && attrs.isConfigurable())
+        return false;
+    if (attrs.hasEnumerable() && !attrs.isEnumerable())
+        return false;
+    if (attrs.hasWritable() && !attrs.isWritable())
+        return false;
+    if (!p->value.isEmpty()) {
+        ExecutionEngine *engine = a->engine();
+
+        Value v = Primitive::fromReturnedValue(p->value.convertedToNumber());
+        if (engine->hasException || a->d()->buffer->isDetachedBuffer())
+            return engine->throwTypeError();
+        uint bytesPerElement = a->d()->type->bytesPerElement;
+        uint byteOffset = a->d()->byteOffset + index * bytesPerElement;
+        Q_ASSERT(byteOffset + bytesPerElement <= (uint)a->d()->buffer->byteLength());
+        a->d()->type->write(a->d()->buffer->data->data() + byteOffset, v);
+    }
     return true;
 }
 

@@ -9,7 +9,9 @@ SUBDIRS += \
 qtHaveModule(gui):qtConfig(qml-animation) {
     SUBDIRS += \
         quick \
-        quickshapes
+
+    qtConfig(thread): \
+        SUBDIRS += quickshapes
 
     qtConfig(testlib): \
         SUBDIRS += qmltest

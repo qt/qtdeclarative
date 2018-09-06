@@ -201,6 +201,7 @@ struct Context {
     bool isArrowFunction = false;
     bool isGenerator = false;
     bool usesThis = false;
+    bool innerFunctionAccessesThis = false;
     bool hasTry = false;
     bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;

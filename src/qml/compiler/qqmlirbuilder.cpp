@@ -2279,42 +2279,38 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
 
     if (_scopeObject) {
         QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
-        if (!data)
-            return Reference::fromName(this, name);
-
-        Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
-        Reference::PropertyCapturePolicy capturePolicy;
-        if (!data->isConstant() && !data->isQmlBinding())
-            capturePolicy = Reference::CaptureAtRuntime;
-        else
-            capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
-        return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
+        if (data) {
+            Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
+            Reference::PropertyCapturePolicy capturePolicy;
+            if (!data->isConstant() && !data->isQmlBinding())
+                capturePolicy = Reference::CaptureAtRuntime;
+            else
+                capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
+            return Reference::fromQmlScopeObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
+        }
     }
 
     if (_contextObject) {
         QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
-        if (!data)
-            return Reference::fromName(this, name);
-
-        Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
-        Reference::PropertyCapturePolicy capturePolicy;
-        if (!data->isConstant() && !data->isQmlBinding())
-            capturePolicy = Reference::CaptureAtRuntime;
-        else
-            capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
-        return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
+        if (data) {
+            Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
+            Reference::PropertyCapturePolicy capturePolicy;
+            if (!data->isConstant() && !data->isQmlBinding())
+                capturePolicy = Reference::CaptureAtRuntime;
+            else
+                capturePolicy = data->isConstant() ? Reference::DontCapture : Reference::CaptureAheadOfTime;
+            return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
+        }
     }
 
-    if (m_globalNames.contains(name)) {
-        Reference r = Reference::fromName(this, name);
+    Reference r = Reference::fromName(this, name);
+    if (m_globalNames.contains(name))
         r.global = true;
-        return r;
-    }
+    return r;
 #else
     Q_UNUSED(name)
-#endif // V4_BOOTSTRAP
-    // fall back to name lookup at run-time.
     return Reference();
+#endif // V4_BOOTSTRAP
 }
 
 #ifndef V4_BOOTSTRAP

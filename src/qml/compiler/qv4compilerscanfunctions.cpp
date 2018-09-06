@@ -414,6 +414,17 @@ bool ScanFunctions::visit(TemplateLiteral *ast)
 
 }
 
+bool ScanFunctions::visit(SuperLiteral *)
+{
+    Context *c = _context;
+    while (c && (c->contextType != ContextType::Function || c->isArrowFunction))
+        c = c->parent;
+
+    if (c)
+        c->requiresExecutionContext = true;
+
+    return false;
+}
 bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
@@ -656,13 +667,16 @@ void ScanFunctions::calcEscapingVariables()
     Module *m = _cg->_module;
 
     for (Context *inner : qAsConst(m->contextMap)) {
-        if (inner->contextType == ContextType::Block && inner->usesArgumentsObject == Context::ArgumentsObjectUsed) {
-            Context *c = inner->parent;
-            while (c->contextType == ContextType::Block)
-                c = c->parent;
+        if (inner->usesArgumentsObject != Context::ArgumentsObjectUsed)
+            continue;
+        if (inner->contextType != ContextType::Block && !inner->isArrowFunction)
+            continue;
+        Context *c = inner->parent;
+        while (c && (c->contextType == ContextType::Block || c->isArrowFunction))
+            c = c->parent;
+        if (c)
             c->usesArgumentsObject = Context::ArgumentsObjectUsed;
-            inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
-        }
+        inner->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
     }
     for (Context *inner : qAsConst(m->contextMap)) {
         if (!inner->parent || inner->usesArgumentsObject == Context::ArgumentsObjectUnknown)
@@ -728,6 +742,8 @@ void ScanFunctions::calcEscapingVariables()
                 }
                 Q_ASSERT(c);
                 c->hasDirectEval = true;
+                if (!c->isStrict)
+                    c->innerFunctionAccessesThis = true;
             }
             Context *c = inner;
             while (c) {
@@ -737,17 +753,26 @@ void ScanFunctions::calcEscapingVariables()
         }
         if (inner->usesThis) {
             inner->usesThis = false;
-            if (!inner->isStrict) {
-                Context *c = inner;
-                while (c->contextType == ContextType::Block) {
-                    c = c->parent;
-                }
-                Q_ASSERT(c);
-                c->usesThis = true;
+            bool innerFunctionAccessesThis = false;
+            Context *c = inner;
+            while (c->contextType == ContextType::Block || c->isArrowFunction) {
+                innerFunctionAccessesThis |= c->isArrowFunction;
+                c = c->parent;
             }
+            Q_ASSERT(c);
+            if (!inner->isStrict)
+                c->usesThis = true;
+            c->innerFunctionAccessesThis |= innerFunctionAccessesThis;
         }
     }
     for (Context *c : qAsConst(m->contextMap)) {
+        if (c->innerFunctionAccessesThis) {
+            // add an escaping 'this' variable
+            c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
+            c->requiresExecutionContext = true;
+            auto m = c->members.find(QStringLiteral("this"));
+            m->canEscape = true;
+        }
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             c->allVarsEscape = false;
         if (c->contextType == ContextType::Global || (!c->isStrict && c->contextType == ContextType::Eval) || m->debugMode)
@@ -787,6 +812,7 @@ void ScanFunctions::calcEscapingVariables()
         qDebug() << "==== escaping variables ====";
         for (Context *c : qAsConst(m->contextMap)) {
             qDebug() << "Context" << c << c->name << "requiresExecutionContext" << c->requiresExecutionContext << "isStrict" << c->isStrict;
+            qDebug() << "    isArrowFunction" << c->isArrowFunction << "innerFunctionAccessesThis" << c->innerFunctionAccessesThis;
             qDebug() << "    parent:" << c->parent;
             if (c->argumentsCanEscape)
                 qDebug() << "    Arguments escape";

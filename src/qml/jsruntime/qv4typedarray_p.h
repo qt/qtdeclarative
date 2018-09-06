@@ -167,7 +167,10 @@ struct Q_QML_PRIVATE_EXPORT TypedArray : Object
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualHasProperty(const Managed *m, PropertyKey id);
+    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
+    static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
+
 };
 
 struct IntrinsicTypedArrayCtor: FunctionObject

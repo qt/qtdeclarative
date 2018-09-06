@@ -3,10 +3,10 @@ TEMPLATE = subdirs
 SUBDIRS += \
     builtins \
     qtqml \
-    folderlistmodel \
     models \
     labsmodels
 
+qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
 qtConfig(statemachine): SUBDIRS += statemachine
@@ -24,7 +24,7 @@ qtHaveModule(quick) {
     qtConfig(quick-particles): \
         SUBDIRS += particles
 
-    qtConfig(quick-path): SUBDIRS += shapes
+    qtConfig(quick-path):qtConfig(thread): SUBDIRS += shapes
 }
 
 qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel

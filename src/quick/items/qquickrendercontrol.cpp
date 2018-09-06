@@ -391,6 +391,7 @@ QImage QQuickRenderControl::grab()
             grabContent.setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
         }
 #endif
+#if QT_CONFIG(thread)
     } else if (d->window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
         cd->polishItems();
@@ -408,6 +409,7 @@ QImage QQuickRenderControl::grab()
             render();
             softwareRenderer->setCurrentPaintDevice(prevDev);
         }
+#endif
     } else {
         qWarning("QQuickRenderControl: grabs are not supported with the current Qt Quick backend");
     }

@@ -717,16 +717,28 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
 void tst_QQuickTableView::checkTableMargins_data()
 {
     QTest::addColumn<QVariant>("model");
-    QTest::addColumn<QSize>("tableSize");
     QTest::addColumn<QSizeF>("spacing");
     QTest::addColumn<QMarginsF>("margins");
 
-    QTest::newRow("QAIM 1x1 1,1 0000") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM 4x4 1,1 0000") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM 1x1 1,1 5555") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
-    QTest::newRow("QAIM 4x4 0,0 3333") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
-    QTest::newRow("QAIM 4x4 2,2 1234") << TestModelAsVariant(4, 4) << QSize(4, 4) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
-    QTest::newRow("QAIM 1x1 0,0 3210") << TestModelAsVariant(1, 1) << QSize(1, 1) << QSizeF(0, 0) << QMarginsF(3, 2, 1, 0);
+    QTest::newRow("QAIM single") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM single, 1,1, no margins") << TestModelAsVariant(1, 1) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM single, no spacing, 1111") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(1, 1, 1, 1);
+
+    QTest::newRow("QAIM 4x4") << TestModelAsVariant(4, 4) << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 4x4, 1,1, no margins") << TestModelAsVariant(4, 4) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 4x4, no spacing, 1111") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(1, 1, 1, 1);
+
+    QTest::newRow("QAIM 1,1 0000") << TestModelAsVariant(20, 20) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
+    QTest::newRow("QAIM 1,1 5555") << TestModelAsVariant(20, 20) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
+    QTest::newRow("QAIM 0,0 3333") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
+    QTest::newRow("QAIM 2,2 1234") << TestModelAsVariant(20, 20) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
+    QTest::newRow("QAIM 0,0 3210") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(3, 2, 1, 0);
+
+    QTest::newRow("QAIM 0,0 negative left margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(-10, 0, 0, 0);
+    QTest::newRow("QAIM 0,0 negative top margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, -10, 0, 0);
+    QTest::newRow("QAIM 0,0 negative right margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, 0, -10, 0);
+    QTest::newRow("QAIM 0,0 negative bottom margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, 0, 0, -10);
+    QTest::newRow("QAIM 0,0 all margins negative") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(-10, -10, -10, -10);
 }
 
 void tst_QQuickTableView::checkTableMargins()
@@ -734,7 +746,6 @@ void tst_QQuickTableView::checkTableMargins()
     // Check that the space between the content view and
     // the items matches the margins we set on the tableview.
     QFETCH(QVariant, model);
-    QFETCH(QSize, tableSize);
     QFETCH(QSizeF, spacing);
     QFETCH(QMarginsF, margins);
     LOAD_TABLEVIEW("plaintableview.qml");
@@ -749,19 +760,22 @@ void tst_QQuickTableView::checkTableMargins()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.size(), tableSize);
-
-    auto const topLeftFxItem = tableViewPrivate->loadedTableItem(QPoint(0, 0));
-    auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
-    auto const topLeftItem = topLeftFxItem->item;
-    auto const bottomRightItem = bottomRightFxItem->item;
-
+    // Check left-, and top margins
+    auto const topLeftItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
     qreal leftSpace = topLeftItem->x();
     qreal topSpace = topLeftItem->y();
-    qreal rightSpace = tableView->contentWidth() - (bottomRightItem->x() + bottomRightItem->width());
-    qreal bottomSpace = tableView->contentHeight() - (bottomRightItem->y() + bottomRightItem->height());
     QCOMPARE(leftSpace, margins.left());
     QCOMPARE(topSpace, margins.top());
+
+    // Flick the table to the end...
+    tableView->setContentX(tableView->contentWidth() - tableView->width());
+    tableView->setContentY(tableView->contentHeight() - tableView->height());
+    const QPoint bottomRightCell = tableViewPrivate->loadedTable.bottomRight();
+    auto const bottomRightItem = tableViewPrivate->loadedTableItem(bottomRightCell)->item;
+
+    // ...and check the right-, and bottom margins
+    qreal rightSpace = tableView->contentWidth() - (bottomRightItem->x() + bottomRightItem->width());
+    qreal bottomSpace = tableView->contentHeight() - (bottomRightItem->y() + bottomRightItem->height());
     QCOMPARE(rightSpace, margins.right());
     QCOMPARE(bottomSpace, margins.bottom());
 }

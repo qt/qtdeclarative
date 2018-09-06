@@ -42,6 +42,7 @@
 #include <QtCore/qstring.h>
 #include <qv4string_p.h>
 #include <qv4engine_p.h>
+#include <qv4scopedvalue_p.h>
 
 QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngine *e)
 {
@@ -58,6 +59,24 @@ bool QV4::PropertyKey::isString() const {
 bool QV4::PropertyKey::isSymbol() const {
     Heap::Base *s = asStringOrSymbol();
     return s && !s->internalClass->vtable->isString && s->internalClass->vtable->isStringOrSymbol;
+}
+
+bool QV4::PropertyKey::isCanonicalNumericIndexString() const
+{
+    if (isArrayIndex())
+        return true;
+    if (isSymbol())
+        return false;
+    Heap::String *s = static_cast<Heap::String *>(asStringOrSymbol());
+    Scope scope(s->internalClass->engine);
+    ScopedString str(scope, s);
+    double d = str->toNumber();
+    if (d == 0. && std::signbit(d))
+        return true;
+    ScopedString converted(scope, Primitive::fromDouble(d).toString(scope.engine));
+    if (converted->equals(str))
+        return true;
+    return false;
 }
 
 QString QV4::PropertyKey::toQString() const

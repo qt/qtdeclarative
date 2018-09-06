@@ -5,7 +5,6 @@ SOURCES += \
     $$PWD/qqmlmodelindexvaluetype.cpp \
     $$PWD/qqmlobjectmodel.cpp \
     $$PWD/qquickpackage.cpp \
-    $$PWD/qquickworkerscript.cpp \
     $$PWD/qqmlinstantiator.cpp \
     $$PWD/qqmltableinstancemodel.cpp
 
@@ -16,10 +15,16 @@ HEADERS += \
     $$PWD/qqmlmodelindexvaluetype_p.h \
     $$PWD/qqmlobjectmodel_p.h \
     $$PWD/qquickpackage_p.h \
-    $$PWD/qquickworkerscript_p.h \
     $$PWD/qqmlinstantiator_p.h \
     $$PWD/qqmlinstantiator_p_p.h \
     $$PWD/qqmltableinstancemodel_p.h
+
+qtConfig(thread) {
+    SOURCES += \
+        $$PWD/qquickworkerscript.cpp
+    HEADERS += \
+        $$PWD/qquickworkerscript_p.h
+}
 
 qtConfig(qml-list-model) {
     SOURCES += \
