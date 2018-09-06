@@ -56,10 +56,9 @@ static const char *kModelDataBindingProp = "modelDataBinding";
 Q_DECLARE_METATYPE(QMarginsF);
 
 #define LOAD_TABLEVIEW(fileName) \
-    QScopedPointer<QQuickView> view(createView()); \
     view->setSource(testFileUrl(fileName)); \
     view->show(); \
-    QVERIFY(QTest::qWaitForWindowActive(view.data())); \
+    QVERIFY(QTest::qWaitForWindowActive(view)); \
     auto tableView = view->rootObject()->property(kTableViewPropName).value<QQuickTableView *>(); \
     QVERIFY(tableView); \
     auto tableViewPrivate = QQuickTableViewPrivate::get(tableView); \
@@ -78,8 +77,12 @@ public:
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
     QPoint getContextRowAndColumn(const QQuickItem *item) const;
 
+private:
+    QQuickView *view = nullptr;
+
 private slots:
     void initTestCase() override;
+    void cleanupTestCase();
 
     void setAndGetModel_data();
     void setAndGetModel();
@@ -90,6 +93,7 @@ private slots:
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
     void checkColumnWidthWithoutProvider();
+    void checkDelegateWithAnchors();
     void checkColumnWidthProvider();
     void checkColumnWidthProviderInvalidReturnValues();
     void checkColumnWidthProviderNotCallable();
@@ -106,6 +110,7 @@ private slots:
     void checkLayoutOfEqualSizedDelegateItems_data();
     void checkLayoutOfEqualSizedDelegateItems();
     void checkTableMargins_data();
+    void checkFocusRemoved();
     void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
@@ -131,6 +136,7 @@ private slots:
     void checkRowAndColumnChangedButNotIndex();
     void checkChangingModelFromDelegate();
     void checkRebuildViewportOnly();
+    void useDelegateChooserWithoutDefault();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -141,6 +147,12 @@ void tst_QQuickTableView::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<TestModel>("TestModel", 0, 1, "TestModel");
+    view = createView();
+}
+
+void tst_QQuickTableView::cleanupTestCase()
+{
+    delete view;
 }
 
 QQuickTableViewAttached *tst_QQuickTableView::getAttachedObject(const QObject *object) const
@@ -297,6 +309,18 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
             QCOMPARE(item->width(), expectedColumnWidth);
         }
     }
+}
+
+void tst_QQuickTableView::checkDelegateWithAnchors()
+{
+    // Checks that we issue a warning if the delegate has anchors
+    LOAD_TABLEVIEW("delegatewithanchors.qml");
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*anchors"));
+
+    auto model = TestModelAsVariant(1, 1);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
 }
 
 void tst_QQuickTableView::checkColumnWidthProvider()
@@ -711,6 +735,40 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         QCOMPARE(item->z(), 1);
         QCOMPARE(item->width(), expectedItemWidth);
         QCOMPARE(item->height(), expectedItemHeight);
+    }
+}
+
+void tst_QQuickTableView::checkFocusRemoved()
+{
+    // Check that we clear the focus of a delegate item when
+    // it's flicked out of view, and then reused.
+    LOAD_TABLEVIEW("tableviewfocus.qml");
+
+    const char *textInputProp = "textInput";
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    auto const item = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
+    auto const textInput = qvariant_cast<QQuickItem *>(item->property(textInputProp));
+    QVERIFY(textInput);
+    QCOMPARE(tableView->hasActiveFocus(), false);
+    QCOMPARE(textInput->hasActiveFocus(), false);
+
+    textInput->forceActiveFocus();
+    QCOMPARE(tableView->hasActiveFocus(), true);
+    QCOMPARE(textInput->hasActiveFocus(), true);
+
+    // Flick the focused cell out, and check that none of the
+    // items in the table has focus (which means that the reused
+    // item lost focus when it was flicked out). But the tableview
+    // itself will maintain active focus.
+    tableView->setContentX(500);
+    QCOMPARE(tableView->hasActiveFocus(), true);
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        auto const textInput2 = qvariant_cast<QQuickItem *>(fxItem->item->property(textInputProp));
+        QCOMPARE(textInput2->hasActiveFocus(), false);
     }
 }
 
@@ -1733,6 +1791,17 @@ void tst_QQuickTableView::checkRebuildViewportOnly()
     countAfterRebuild = view->rootObject()->property(propName).toInt();
     QCOMPARE(countAfterRebuild, itemCountBeforeRebuild);
 }
+
+void tst_QQuickTableView::useDelegateChooserWithoutDefault()
+{
+    // Check that the application issues a warning (but doesn't e.g
+    // crash) if the delegate chooser doesn't cover all cells
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*failed"));
+    LOAD_TABLEVIEW("usechooserwithoutdefault.qml");
+    auto model = TestModelAsVariant(2, 1);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+};
 
 QTEST_MAIN(tst_QQuickTableView)
 

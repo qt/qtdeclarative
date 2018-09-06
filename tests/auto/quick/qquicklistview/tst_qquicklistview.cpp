@@ -267,6 +267,8 @@ private slots:
     void QTBUG_34576_velocityZero();
     void QTBUG_61537_modelChangesAsync();
 
+    void useDelegateChooserWithoutDefault();
+
     void addOnCompleted();
 
 private:
@@ -8857,6 +8859,15 @@ void tst_QQuickListView::addOnCompleted()
         }
     }
 }
+
+void tst_QQuickListView::useDelegateChooserWithoutDefault()
+{
+    // Check that the application doesn't crash
+    // if the delegate chooser doesn't cover all cells
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("usechooserwithoutdefault.qml"));
+    window->show();
+};
 
 QTEST_MAIN(tst_QQuickListView)
 

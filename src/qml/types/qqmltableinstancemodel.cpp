@@ -109,19 +109,19 @@ QQmlTableInstanceModel::~QQmlTableInstanceModel()
 
 QQmlComponent *QQmlTableInstanceModel::resolveDelegate(int index)
 {
-    QQmlComponent *delegate = nullptr;
     if (m_delegateChooser) {
         const int row = m_adaptorModel.rowAt(index);
         const int column = m_adaptorModel.columnAt(index);
+        QQmlComponent *delegate = nullptr;
         QQmlAbstractDelegateComponent *chooser = m_delegateChooser;
         do {
             delegate = chooser->delegate(&m_adaptorModel, row, column);
             chooser = qobject_cast<QQmlAbstractDelegateComponent *>(delegate);
         } while (chooser);
+        return delegate;
     }
-    if (!delegate)
-        delegate = m_delegate;
-    return delegate;
+
+    return m_delegate;
 }
 
 QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
@@ -132,6 +132,8 @@ QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
         return modelItem;
 
     QQmlComponent *delegate = resolveDelegate(index);
+    if (!delegate)
+        return nullptr;
 
     // Check if the pool contains an item that can be reused
     modelItem = takeFromReusableItemsPool(delegate);

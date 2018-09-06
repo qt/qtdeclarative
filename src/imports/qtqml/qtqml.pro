@@ -7,6 +7,6 @@ load(qml_module)
 !cross_compile:if(build_pass|!debug_and_release) {
     qtPrepareTool(QMLPLUGINDUMP, qmlplugindump)
 
-    qmltypes.commands = $$QMLPLUGINDUMP -nonrelocatable QtQml 2.$$QT_MINOR_VERSION > $$PWD/plugins.qmltypes
+    qmltypes.commands = $$QMLPLUGINDUMP -nonrelocatable -noforceqtquick QtQml 2.$$QT_MINOR_VERSION > $$PWD/plugins.qmltypes
     QMAKE_EXTRA_TARGETS += qmltypes
 }

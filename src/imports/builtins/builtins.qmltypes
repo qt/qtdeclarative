@@ -428,7 +428,8 @@ Module {
                 "WA_AlwaysStackOnTop": 128,
                 "WA_TabletTracking": 129,
                 "WA_ContentsMarginsRespectsSafeArea": 130,
-                "WA_AttributeCount": 131
+                "WA_StyleSheetTarget": 131,
+                "WA_AttributeCount": 132
             }
         }
         Enum {
@@ -1648,7 +1649,8 @@ Module {
                 "NoScrollPhase": 0,
                 "ScrollBegin": 1,
                 "ScrollUpdate": 2,
-                "ScrollEnd": 3
+                "ScrollEnd": 3,
+                "ScrollMomentum": 4
             }
         }
         Enum {
