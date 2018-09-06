@@ -109,8 +109,9 @@ private slots:
     void countDelegateItems();
     void checkLayoutOfEqualSizedDelegateItems_data();
     void checkLayoutOfEqualSizedDelegateItems();
-    void checkTableMargins_data();
+    void checkFocusRemoved_data();
     void checkFocusRemoved();
+    void checkTableMargins_data();
     void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
@@ -738,27 +739,36 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
     }
 }
 
+void tst_QQuickTableView::checkFocusRemoved_data()
+{
+    QTest::addColumn<QString>("focusedItemProp");
+
+    QTest::newRow("delegate root") << QStringLiteral("delegateRoot");
+    QTest::newRow("delegate child") << QStringLiteral("delegateChild");
+}
+
 void tst_QQuickTableView::checkFocusRemoved()
 {
     // Check that we clear the focus of a delegate item when
-    // it's flicked out of view, and then reused.
+    // a child of the delegate item has focus, and the cell is
+    // flicked out of view.
+    QFETCH(QString, focusedItemProp);
     LOAD_TABLEVIEW("tableviewfocus.qml");
 
-    const char *textInputProp = "textInput";
     auto model = TestModelAsVariant(100, 100);
     tableView->setModel(model);
 
     WAIT_UNTIL_POLISHED;
 
     auto const item = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
-    auto const textInput = qvariant_cast<QQuickItem *>(item->property(textInputProp));
-    QVERIFY(textInput);
+    auto const focusedItem = qvariant_cast<QQuickItem *>(item->property(focusedItemProp.toUtf8().data()));
+    QVERIFY(focusedItem);
     QCOMPARE(tableView->hasActiveFocus(), false);
-    QCOMPARE(textInput->hasActiveFocus(), false);
+    QCOMPARE(focusedItem->hasActiveFocus(), false);
 
-    textInput->forceActiveFocus();
+    focusedItem->forceActiveFocus();
     QCOMPARE(tableView->hasActiveFocus(), true);
-    QCOMPARE(textInput->hasActiveFocus(), true);
+    QCOMPARE(focusedItem->hasActiveFocus(), true);
 
     // Flick the focused cell out, and check that none of the
     // items in the table has focus (which means that the reused
@@ -767,8 +777,8 @@ void tst_QQuickTableView::checkFocusRemoved()
     tableView->setContentX(500);
     QCOMPARE(tableView->hasActiveFocus(), true);
     for (auto fxItem : tableViewPrivate->loadedItems) {
-        auto const textInput2 = qvariant_cast<QQuickItem *>(fxItem->item->property(textInputProp));
-        QCOMPARE(textInput2->hasActiveFocus(), false);
+        auto const focusedItem2 = qvariant_cast<QQuickItem *>(fxItem->item->property(focusedItemProp.toUtf8().data()));
+        QCOMPARE(focusedItem2->hasActiveFocus(), false);
     }
 }
 
