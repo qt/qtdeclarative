@@ -92,13 +92,14 @@ void QV4::Compiler::StringTableGenerator::serialize(CompiledData::Unit *unit)
 {
     char *dataStart = reinterpret_cast<char *>(unit);
     quint32_le *stringTable = reinterpret_cast<quint32_le *>(dataStart + unit->offsetToStringTable);
-    char *stringData = reinterpret_cast<char *>(stringTable) + unit->stringTableSize * sizeof(uint);
+    char *stringData = reinterpret_cast<char *>(stringTable) + WTF::roundUpToMultipleOf(8, unit->stringTableSize * sizeof(uint));
     for (int i = backingUnitTableSize ; i < strings.size(); ++i) {
         const int index = i - backingUnitTableSize;
         stringTable[index] = stringData - dataStart;
         const QString &qstr = strings.at(i);
 
         QV4::CompiledData::String *s = reinterpret_cast<QV4::CompiledData::String *>(stringData);
+        Q_ASSERT(reinterpret_cast<uintptr_t>(s) % alignof(QV4::CompiledData::String) == 0);
         s->refcount = -1;
         s->size = qstr.length();
         s->allocAndCapacityReservedFlag = 0;
@@ -664,6 +665,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
 
     if (option == GenerateWithStringTable) {
         unit.stringTableSize = stringTable.stringCount();
+        nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
         unit.offsetToStringTable = nextOffset;
         nextOffset += stringTable.sizeOfTableAndData();
     } else {
