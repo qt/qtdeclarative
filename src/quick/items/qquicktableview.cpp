@@ -1259,8 +1259,6 @@ bool QQuickTableViewPrivate::moveToNextRebuildState()
 
 void QQuickTableViewPrivate::beginRebuildTable()
 {
-    Q_Q(QQuickTableView);
-
     rebuildScheduled = false;
     rebuildOptions = scheduledRebuildOptions;
     scheduledRebuildOptions = RebuildOption::None;
@@ -1276,8 +1274,6 @@ void QQuickTableViewPrivate::beginRebuildTable()
         releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
         topLeft = QPoint(0, 0);
         topLeftPos = QPoint(0, 0);
-        q->setContentX(0);
-        q->setContentY(0);
     } else if (rebuildOptions & RebuildOption::ViewportOnly) {
         // Rebuild the table without flicking the content view back to origin, and
         // start building from the same top left item that is currently showing

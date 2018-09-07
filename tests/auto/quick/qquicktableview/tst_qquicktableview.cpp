@@ -104,6 +104,7 @@ private slots:
     void checkForceLayoutFunction();
     void checkContentWidthAndHeight();
     void checkExplicitContentWidthAndHeight();
+    void checkContentXY();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -584,6 +585,25 @@ void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
     tableView->setContentY(500);
     QCOMPARE(tableView->contentWidth(), 1000);
     QCOMPARE(tableView->contentHeight(), 1000);
+}
+
+void tst_QQuickTableView::checkContentXY()
+{
+    // Check that you can set contentX and contentY on
+    // startup, and that this is respected by TableView
+    LOAD_TABLEVIEW("setcontentpos.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentX(), 250);
+    QCOMPARE(tableView->contentY(), 250);
+
+    // Since we flick the content item, we expect the
+    // loaded table to end up at row/column 2,2
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 2);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 2);
 }
 
 void tst_QQuickTableView::noDelegate()
