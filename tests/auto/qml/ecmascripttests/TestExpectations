@@ -194,7 +194,6 @@ built-ins/JSON/stringify/replacer-proxy.js fails
 built-ins/JSON/stringify/value-proxy.js fails
 built-ins/Map/proto-from-ctor-realm.js fails
 built-ins/Map/prototype/forEach/iterates-values-deleted-then-readded.js fails
-built-ins/Math/max/zeros.js fails
 built-ins/Math/round/S15.8.2.15_A7.js fails
 built-ins/Number/isFinite/arg-is-not-number.js fails
 built-ins/Number/isNaN/arg-is-not-number.js fails

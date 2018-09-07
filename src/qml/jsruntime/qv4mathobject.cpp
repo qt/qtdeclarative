@@ -396,8 +396,10 @@ ReturnedValue MathObject::method_max(const FunctionObject *, const Value *, cons
     double mx = -qt_inf();
     for (int i = 0, ei = argc; i < ei; ++i) {
         double x = argv[i].toNumber();
-        if (x > mx || std::isnan(x))
+        if ((x == 0 && mx == x && copySign(1.0, x) == 1.0)
+                || (x > mx) || std::isnan(x)) {
             mx = x;
+        }
     }
     RETURN_RESULT(Encode::smallestNumber(mx));
 }
