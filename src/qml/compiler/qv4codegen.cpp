@@ -3435,14 +3435,14 @@ bool Codegen::visit(SwitchStatement *ast)
     RegisterScope scope(this);
 
     if (ast->block) {
-        ControlFlowBlock controlFlow(this, ast->block);
-
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
         Reference lhs = expression(ast->expression);
         if (hasError)
             return false;
         lhs = lhs.storeOnStack();
+
+        ControlFlowBlock controlFlow(this, ast->block);
 
         // set up labels for all clauses
         QHash<Node *, BytecodeGenerator::Label> blockMap;

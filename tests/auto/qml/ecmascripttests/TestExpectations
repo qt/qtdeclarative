@@ -1017,8 +1017,6 @@ language/statements/let/block-local-closure-set-before-initialization.js fails
 language/statements/let/function-local-closure-set-before-initialization.js fails
 language/statements/let/global-closure-set-before-initialization.js fails
 language/statements/return/tco.js strictFails
-language/statements/switch/scope-lex-open-case.js fails
-language/statements/switch/scope-lex-open-dflt.js fails
 language/statements/switch/tco-case-body-dflt.js strictFails
 language/statements/switch/tco-case-body.js strictFails
 language/statements/switch/tco-dftl-body.js strictFails
