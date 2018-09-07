@@ -74,6 +74,7 @@ QSGContextFactoryInterface::Flags QSGSoftwareAdaptation::flags(const QString &) 
 
 QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
 {
+#if QT_CONFIG(thread)
     static bool threaded = false;
     static bool envChecked = false;
     if (!envChecked) {
@@ -83,6 +84,7 @@ QSGRenderLoop *QSGSoftwareAdaptation::createWindowManager()
 
     if (threaded)
         return new QSGSoftwareThreadedRenderLoop;
+#endif
 
     return new QSGSoftwareRenderLoop();
 }
