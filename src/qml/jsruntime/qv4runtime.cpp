@@ -862,29 +862,36 @@ ReturnedValue Runtime::method_iteratorClose(ExecutionEngine *engine, const Value
         return Encode::undefined();
 
     Scope scope(engine);
-    bool hadException = engine->hasException;
     ScopedValue e(scope);
+    bool hadException = engine->hasException;
     if (hadException) {
         e = *engine->exceptionValue;
         engine->hasException = false;
     }
-    ScopedFunctionObject f(scope, static_cast<const Object &>(iterator).get(engine->id_return()));
+
+    auto originalCompletion = [=]() {
+        if (hadException) {
+            *engine->exceptionValue = e;
+            engine->hasException = hadException;
+        }
+        return Encode::undefined();
+    };
+
+    ScopedValue ret(scope, static_cast<const Object &>(iterator).get(engine->id_return()));
     ScopedObject o(scope);
-    if (f) {
-        JSCallData cData(scope, 0, nullptr, &iterator);
-        o = f->call(cData);
+    if (!ret->isUndefined()) {
+        FunctionObject *f = ret->as<FunctionObject>();
+        o = f->call(&iterator, nullptr, 0);
+        if (engine->hasException && !hadException)
+            return Encode::undefined();
     }
-    if (hadException || !f) {
-        *engine->exceptionValue = e;
-        engine->hasException = hadException;
-        return Encode::undefined();
-    }
-    if (engine->hasException)
-        return Encode::undefined();
+    if (hadException || ret->isUndefined())
+        return originalCompletion();
 
     if (!o)
         return engine->throwTypeError();
-    return Encode::undefined();
+
+    return originalCompletion();
 }
 
 ReturnedValue Runtime::method_destructureRestElement(ExecutionEngine *engine, const Value &iterator)

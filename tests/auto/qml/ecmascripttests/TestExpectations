@@ -895,7 +895,6 @@ language/expressions/template-literal/tv-template-middle.js fails
 language/expressions/template-literal/tv-template-tail.js fails
 language/expressions/template-literal/tv-utf16-escape-sequence.js fails
 language/expressions/template-literal/tv-zwnbsp.js fails
-language/expressions/yield/star-rhs-iter-thrw-violation-rtrn-get-err.js fails
 language/function-code/each-param-has-own-non-shared-eval-scope.js sloppyFails
 language/function-code/each-param-has-own-scope.js sloppyFails
 language/function-code/eval-param-env-with-computed-key.js sloppyFails
