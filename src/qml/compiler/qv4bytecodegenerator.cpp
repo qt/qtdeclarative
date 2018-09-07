@@ -120,8 +120,8 @@ void BytecodeGenerator::adjustJumpOffsets()
         int jumpOffset = linkedInstruction.position - (i.position + i.size);
 //        qDebug() << "adjusting jump offset for instruction" << index << i.position << i.size << "offsetForJump" << i.offsetForJump << "target"
 //                 << labels.at(i.linkedLabel) << linkedInstruction.position << "jumpOffset" << jumpOffset;
-        uchar type = *reinterpret_cast<const uchar *>(i.packed);
-        if (Instr::isWide(Instr::Type(type))) {
+        Instr::Type type = Instr::unpack(i.packed);
+        if (Instr::isWide(type)) {
             Q_ASSERT(i.offsetForJump == i.size - 4);
             qToLittleEndian<qint32>(jumpOffset, c);
         } else {
