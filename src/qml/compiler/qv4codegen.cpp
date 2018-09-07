@@ -646,7 +646,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
 
     array.loadInAccumulator();
     Instruction::GetIterator iteratorObjInstr;
-    iteratorObjInstr.iterator = 1; // ForEachType::Of
+    iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
@@ -1128,7 +1128,7 @@ bool Codegen::visit(ArrayPattern *ast)
 
                 expr.loadInAccumulator();
                 Instruction::GetIterator iteratorObjInstr;
-                iteratorObjInstr.iterator = /*ForEachType::Of*/ 1;
+                iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
                 bytecodeGenerator->addInstruction(iteratorObjInstr);
                 iterator.storeConsumeAccumulator();
             }
@@ -2844,7 +2844,7 @@ bool Codegen::visit(YieldExpression *ast)
 
         expr.loadInAccumulator();
         Instruction::GetIterator getIterator;
-        getIterator.iterator = /*ForEachType::Of*/ 1;
+        getIterator.iterator = static_cast<int>(AST::ForEachType::Of);
         bytecodeGenerator->addInstruction(getIterator);
         iterator.storeConsumeAccumulator();
         Instruction::LoadUndefined load;
@@ -3212,7 +3212,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
         expr.loadInAccumulator();
         Instruction::GetIterator iteratorObjInstr;
-        iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
+        iteratorObjInstr.iterator = static_cast<int>(ast->type);
         bytecodeGenerator->addInstruction(iteratorObjInstr);
         iterator.storeConsumeAccumulator();
     }

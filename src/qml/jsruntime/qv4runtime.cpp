@@ -731,7 +731,7 @@ ReturnedValue Runtime::method_getIterator(ExecutionEngine *engine, const Value &
         o = in.toObject(engine);
     if (engine->hasException)
         return Encode::undefined();
-    if (iterator) {
+    if (iterator == static_cast<int>(QQmlJS::AST::ForEachType::Of)) {
         if (!o)
             return engine->throwTypeError();
         ScopedFunctionObject f(scope, o->get(engine->symbol_iterator()));
