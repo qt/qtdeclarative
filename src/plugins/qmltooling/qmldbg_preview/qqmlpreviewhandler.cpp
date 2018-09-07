@@ -100,7 +100,7 @@ bool QQmlPreviewHandler::eventFilter(QObject *obj, QEvent *event)
             m_lastPosition.initLastSavedWindowPosition(window);
         }
     }
-    if ((event->type() == QEvent::Move || event->type() == QEvent::Resize) &&
+    if (m_currentWindow && (event->type() == QEvent::Move || event->type() == QEvent::Resize) &&
             qobject_cast<QQuickWindow*>(obj) == m_currentWindow) {
         // we always start with factor 1 so calculate and save the origin as it would be not scaled
         m_lastPosition.setPosition(m_currentWindow->framePosition() *
