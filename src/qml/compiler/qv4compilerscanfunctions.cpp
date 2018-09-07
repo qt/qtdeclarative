@@ -417,14 +417,42 @@ bool ScanFunctions::visit(TemplateLiteral *ast)
 bool ScanFunctions::visit(SuperLiteral *)
 {
     Context *c = _context;
-    while (c && (c->contextType != ContextType::Function || c->isArrowFunction))
+    bool needContext = false;
+    while (c && (c->contextType == ContextType::Block || c->isArrowFunction)) {
+        needContext |= c->isArrowFunction;
         c = c->parent;
+    }
 
-    if (c)
-        c->requiresExecutionContext = true;
+    c->requiresExecutionContext |= needContext;
 
     return false;
 }
+
+bool ScanFunctions::visit(FieldMemberExpression *ast)
+{
+    if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
+        if (id->name == QLatin1String("new")) {
+            // new.target
+            if (ast->name != QLatin1String("target")) {
+                _cg->throwSyntaxError(ast->identifierToken, QLatin1String("Expected 'target' after 'new.'."));
+                return false;
+            }
+            Context *c = _context;
+            bool needContext = false;
+            while (c->contextType == ContextType::Block || c->isArrowFunction) {
+                needContext |= c->isArrowFunction;
+                c = c->parent;
+            }
+            c->requiresExecutionContext |= needContext;
+            c->innerFunctionAccessesNewTarget |= needContext;
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
@@ -735,6 +763,7 @@ void ScanFunctions::calcEscapingVariables()
         }
         if (inner->hasDirectEval) {
             inner->hasDirectEval = false;
+            inner->innerFunctionAccessesNewTarget = true;
             if (!inner->isStrict) {
                 Context *c = inner;
                 while (c->contextType == ContextType::Block) {
@@ -742,8 +771,7 @@ void ScanFunctions::calcEscapingVariables()
                 }
                 Q_ASSERT(c);
                 c->hasDirectEval = true;
-                if (!c->isStrict)
-                    c->innerFunctionAccessesThis = true;
+                c->innerFunctionAccessesThis = true;
             }
             Context *c = inner;
             while (c) {
@@ -771,6 +799,13 @@ void ScanFunctions::calcEscapingVariables()
             c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
             c->requiresExecutionContext = true;
             auto m = c->members.find(QStringLiteral("this"));
+            m->canEscape = true;
+        }
+        if (c->innerFunctionAccessesNewTarget) {
+            // add an escaping 'new.target' variable
+            c->addLocalVar(QStringLiteral("new.target"), Context::VariableDefinition, VariableScope::Let);
+            c->requiresExecutionContext = true;
+            auto m = c->members.find(QStringLiteral("new.target"));
             m->canEscape = true;
         }
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())

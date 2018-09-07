@@ -619,6 +619,10 @@ void Codegen::destructurePropertyList(const Codegen::Reference &object, PatternP
 {
     RegisterScope scope(this);
 
+    object.loadInAccumulator();
+    Instruction::ThrowOnNullOrUndefined t;
+    bytecodeGenerator->addInstruction(t);
+
     for (PatternPropertyList *it = bindingList; it; it = it->next) {
         PatternProperty *p = it->property;
         RegisterScope scope(this);
@@ -638,67 +642,66 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     Reference iterator = Reference::fromStackSlot(this);
     Reference iteratorValue = Reference::fromStackSlot(this);
     Reference iteratorDone = Reference::fromStackSlot(this);
+    Reference::storeConstOnStack(this, Encode(false), iteratorDone.stackSlot());
 
     array.loadInAccumulator();
     Instruction::GetIterator iteratorObjInstr;
-    iteratorObjInstr.iterator = 1; // ForEachType::Of
+    iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
-    bool hadNext = false;
     bool hasRest = false;
 
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-
-    for (PatternElementList *p = bindingList; p; p = p->next) {
-        PatternElement *e = p->element;
-        for (Elision *elision = p->elision; elision; elision = elision->next) {
+    {
+        auto cleanup = [this, iterator, iteratorDone]() {
             iterator.loadInAccumulator();
-            Instruction::IteratorNext next;
-            next.value = iteratorValue.stackSlot();
-            bytecodeGenerator->addInstruction(next);
-            hadNext = true;
-            bool last = !elision->next && !e && !p->next;
-            if (last)
-                iteratorDone.storeConsumeAccumulator();
-        }
+            Instruction::IteratorClose close;
+            close.done = iteratorDone.stackSlot();
+            bytecodeGenerator->addInstruction(close);
+        };
 
-        if (!e)
-            continue;
+        ControlFlowUnwindCleanup flow(this, cleanup);
 
-        hadNext = true;
-        RegisterScope scope(this);
-        iterator.loadInAccumulator();
+        for (PatternElementList *p = bindingList; p; p = p->next) {
+            PatternElement *e = p->element;
+            for (Elision *elision = p->elision; elision; elision = elision->next) {
+                iterator.loadInAccumulator();
+                Instruction::IteratorNext next;
+                next.value = iteratorValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+            }
 
-        if (e->type == PatternElement::RestElement) {
-            bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
-            initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
-            hasRest = true;
-        } else {
-            Instruction::IteratorNext next;
-            next.value = iteratorValue.stackSlot();
-            bytecodeGenerator->addInstruction(next);
-            bool last = !p->next || (!p->next->elision && !p->next->element);
-            if (last)
-                iteratorDone.storeConsumeAccumulator();
-            initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
-            if (hasError) {
-                end.link();
-                return;
+            if (!e)
+                continue;
+
+            RegisterScope scope(this);
+            iterator.loadInAccumulator();
+
+            if (e->type == PatternElement::RestElement) {
+                Reference::fromConst(this, Encode(true)).storeOnStack(iteratorDone.stackSlot());
+                bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
+                initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
+                hasRest = true;
+            } else {
+                Instruction::IteratorNext next;
+                next.value = iteratorValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(next);
+                initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
+                if (hasError) {
+                    end.link();
+                    return;
+                }
             }
         }
+
+        if (hasRest)
+            // no need to close the iterator
+            bytecodeGenerator->jump().link(end);
     }
 
-    if (!hadNext) {
-        Reference::storeConstOnStack(this, Encode(false), iteratorDone.stackSlot());
-    }
-
-    if (!hasRest) {
-        iterator.loadInAccumulator();
-        Instruction::IteratorClose close;
-        close.done = iteratorDone.stackSlot();
-        bytecodeGenerator->addInstruction(close);
-    }
 
     end.link();
 }
@@ -1112,6 +1115,7 @@ bool Codegen::visit(ArrayPattern *ast)
             RegisterScope scope(this);
 
             Reference iterator = Reference::fromStackSlot(this);
+            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
             Reference lhsValue = Reference::fromStackSlot(this);
 
             // There should be a temporal block, so that variables declared in lhs shadow outside vars.
@@ -1124,7 +1128,7 @@ bool Codegen::visit(ArrayPattern *ast)
 
                 expr.loadInAccumulator();
                 Instruction::GetIterator iteratorObjInstr;
-                iteratorObjInstr.iterator = /*ForEachType::Of*/ 1;
+                iteratorObjInstr.iterator = static_cast<int>(AST::ForEachType::Of);
                 bytecodeGenerator->addInstruction(iteratorObjInstr);
                 iterator.storeConsumeAccumulator();
             }
@@ -1134,7 +1138,13 @@ bool Codegen::visit(ArrayPattern *ast)
             BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
             {
-                ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+                auto cleanup = [this, iterator, iteratorDone]() {
+                    iterator.loadInAccumulator();
+                    Instruction::IteratorClose close;
+                    close.done = iteratorDone.stackSlot();
+                    bytecodeGenerator->addInstruction(close);
+                };
+                ControlFlowLoop flow(this, &end, &in, cleanup);
                 bytecodeGenerator->jump().link(in);
 
                 BytecodeGenerator::Label body = bytecodeGenerator->label();
@@ -1146,18 +1156,13 @@ bool Codegen::visit(ArrayPattern *ast)
                 iterator.loadInAccumulator();
                 Instruction::IteratorNext next;
                 next.value = lhsValue.stackSlot();
+                next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
                 bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
                 bytecodeGenerator->jump().link(done);
+
+                end.link();
             }
-
-            end.link();
-
-            Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
-            iterator.loadInAccumulator();
-            Instruction::IteratorClose close;
-            close.done = iteratorDone.stackSlot();
-            bytecodeGenerator->addInstruction(close);
 
             done.link();
         } else {
@@ -2143,10 +2148,15 @@ bool Codegen::visit(FieldMemberExpression *ast)
     if (AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(ast->base)) {
         if (id->name == QLatin1String("new")) {
             // new.target
-            if (ast->name != QLatin1String("target")) {
-                throwSyntaxError(ast->identifierToken, QLatin1String("Expected 'target' after 'new.'."));
+            Q_ASSERT(ast->name == QLatin1String("target"));
+
+            if (_context->isArrowFunction || _context->contextType == ContextType::Eval) {
+                Reference r = referenceForName(QStringLiteral("new.target"), false);
+                r.isReadonly = true;
+                _expr.setResult(r);
                 return false;
             }
+
             Reference r = Reference::fromStackSlot(this, CallData::NewTarget);
             _expr.setResult(r);
             return false;
@@ -2816,25 +2826,64 @@ bool Codegen::visit(FunctionDeclaration * ast)
 
 bool Codegen::visit(YieldExpression *ast)
 {
-    if (ast->isYieldStar) {
-        throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield* is not currently supported"));
-        return false;
-    }
     if (inFormalParameterList) {
         throwSyntaxError(ast->firstSourceLocation(), QLatin1String("yield is not allowed inside parameter lists"));
         return false;
     }
 
-
-    Reference result = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
+    RegisterScope scope(this);
+    Reference expr = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
     if (hasError)
         return false;
-    result.loadInAccumulator();
+
+    Reference acc = Reference::fromAccumulator(this);
+
+    if (ast->isYieldStar) {
+        Reference iterator = Reference::fromStackSlot(this);
+        Reference lhsValue = Reference::fromConst(this, Encode::undefined()).storeOnStack();
+
+        expr.loadInAccumulator();
+        Instruction::GetIterator getIterator;
+        getIterator.iterator = static_cast<int>(AST::ForEachType::Of);
+        bytecodeGenerator->addInstruction(getIterator);
+        iterator.storeConsumeAccumulator();
+        Instruction::LoadUndefined load;
+        bytecodeGenerator->addInstruction(load);
+
+        BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
+        bytecodeGenerator->jump().link(in);
+
+        BytecodeGenerator::Label loop = bytecodeGenerator->label();
+
+        lhsValue.loadInAccumulator();
+        Instruction::YieldStar yield;
+        bytecodeGenerator->addInstruction(yield);
+
+        in.link();
+
+        Instruction::IteratorNextForYieldStar next;
+        next.object = lhsValue.stackSlot();
+        next.iterator = iterator.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+
+        BytecodeGenerator::Jump done = bytecodeGenerator->jumpTrue();
+        bytecodeGenerator->jumpNotUndefined().link(loop);
+        lhsValue.loadInAccumulator();
+        emitReturn(acc);
+
+
+        done.link();
+
+        lhsValue.loadInAccumulator();
+        _expr.setResult(acc);
+        return false;
+    }
+
+    expr.loadInAccumulator();
     Instruction::Yield yield;
     bytecodeGenerator->addInstruction(yield);
     Instruction::Resume resume;
     BytecodeGenerator::Jump jump = bytecodeGenerator->addJumpInstruction(resume);
-    Reference acc = Reference::fromAccumulator(this);
     emitReturn(acc);
     jump.link();
     _expr.setResult(acc);
@@ -3149,6 +3198,7 @@ bool Codegen::visit(ForEachStatement *ast)
     RegisterScope scope(this);
 
     Reference iterator = Reference::fromStackSlot(this);
+    Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
     Reference lhsValue = Reference::fromStackSlot(this);
 
     // There should be a temporal block, so that variables declared in lhs shadow outside vars.
@@ -3162,7 +3212,7 @@ bool Codegen::visit(ForEachStatement *ast)
 
         expr.loadInAccumulator();
         Instruction::GetIterator iteratorObjInstr;
-        iteratorObjInstr.iterator = (ast->type == ForEachType::Of) ? 1 : 0;
+        iteratorObjInstr.iterator = static_cast<int>(ast->type);
         bytecodeGenerator->addInstruction(iteratorObjInstr);
         iterator.storeConsumeAccumulator();
     }
@@ -3172,7 +3222,15 @@ bool Codegen::visit(ForEachStatement *ast)
     BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
     {
-        ControlFlowLoop flow(this, &end, &in, /*requiresUnwind*/ true);
+        auto cleanup = [ast, iterator, iteratorDone, this]() {
+            if (ast->type == ForEachType::Of) {
+                iterator.loadInAccumulator();
+                Instruction::IteratorClose close;
+                close.done = iteratorDone.stackSlot();
+                bytecodeGenerator->addInstruction(close);
+            }
+        };
+        ControlFlowLoop flow(this, &end, &in, cleanup);
         bytecodeGenerator->jump().link(in);
 
         BytecodeGenerator::Label body = bytecodeGenerator->label();
@@ -3212,19 +3270,12 @@ bool Codegen::visit(ForEachStatement *ast)
         iterator.loadInAccumulator();
         Instruction::IteratorNext next;
         next.value = lhsValue.stackSlot();
+        next.done = iteratorDone.stackSlot();
         bytecodeGenerator->addInstruction(next);
         bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
         bytecodeGenerator->jump().link(done);
-    }
 
-    end.link();
-
-    if (ast->type == ForEachType::Of) {
-        Reference iteratorDone = Reference::fromConst(this, Encode(false)).storeOnStack();
-        iterator.loadInAccumulator();
-        Instruction::IteratorClose close;
-        close.done = iteratorDone.stackSlot();
-        bytecodeGenerator->addInstruction(close);
+        end.link();
     }
 
     done.link();
@@ -3384,14 +3435,14 @@ bool Codegen::visit(SwitchStatement *ast)
     RegisterScope scope(this);
 
     if (ast->block) {
-        ControlFlowBlock controlFlow(this, ast->block);
-
         BytecodeGenerator::Label switchEnd = bytecodeGenerator->newLabel();
 
         Reference lhs = expression(ast->expression);
         if (hasError)
             return false;
         lhs = lhs.storeOnStack();
+
+        ControlFlowBlock controlFlow(this, ast->block);
 
         // set up labels for all clauses
         QHash<Node *, BytecodeGenerator::Label> blockMap;

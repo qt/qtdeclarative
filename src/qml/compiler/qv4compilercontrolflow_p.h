@@ -188,32 +188,42 @@ struct ControlFlowUnwind : public ControlFlow
     }
 };
 
-struct ControlFlowLoop : public ControlFlowUnwind
+struct ControlFlowUnwindCleanup : public ControlFlowUnwind
 {
-    QString loopLabel;
-    BytecodeGenerator::Label *breakLabel = nullptr;
-    BytecodeGenerator::Label *continueLabel = nullptr;
-    bool _requiresUnwind;
+    std::function<void()> cleanup = nullptr;
 
-    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, bool requiresUnwind = false)
-        : ControlFlowUnwind(cg, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel), _requiresUnwind(requiresUnwind)
+    ControlFlowUnwindCleanup(Codegen *cg, std::function<void()> cleanup, Type type = Block)
+        : ControlFlowUnwind(cg, type), cleanup(cleanup)
     {
-        if (_requiresUnwind) {
+        if (cleanup) {
             setupUnwindHandler();
             generator()->setUnwindHandler(&unwindLabel);
         }
     }
 
-    ~ControlFlowLoop() {
-        if (_requiresUnwind) {
+    ~ControlFlowUnwindCleanup() {
+        if (cleanup) {
             unwindLabel.link();
             generator()->setUnwindHandler(parentUnwindHandler());
+            cleanup();
             emitUnwindHandler();
         }
     }
 
     bool requiresUnwind() override {
-        return _requiresUnwind;
+        return cleanup != nullptr;
+    }
+};
+
+struct ControlFlowLoop : public ControlFlowUnwindCleanup
+{
+    QString loopLabel;
+    BytecodeGenerator::Label *breakLabel = nullptr;
+    BytecodeGenerator::Label *continueLabel = nullptr;
+
+    ControlFlowLoop(Codegen *cg, BytecodeGenerator::Label *breakLabel, BytecodeGenerator::Label *continueLabel = nullptr, std::function<void()> cleanup = nullptr)
+        : ControlFlowUnwindCleanup(cg, cleanup, Loop), loopLabel(ControlFlow::loopLabel()), breakLabel(breakLabel), continueLabel(continueLabel)
+    {
     }
 
     BytecodeGenerator::Label getUnwindTarget(UnwindType type, const QString &label) override {
@@ -307,7 +317,6 @@ struct ControlFlowCatch : public ControlFlowUnwind
     AST::Catch *catchExpression;
     bool insideCatch = false;
     BytecodeGenerator::ExceptionHandler exceptionLabel;
-    bool oldLookupByName;
 
     ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
         : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression),

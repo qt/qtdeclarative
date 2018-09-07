@@ -240,6 +240,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(Yield)
         COLLECTOR_END_INSTR(Yield)
 
+        COLLECTOR_BEGIN_INSTR(YieldStar)
+        COLLECTOR_END_INSTR(YieldStar)
+
         COLLECTOR_BEGIN_INSTR(Resume)
         COLLECTOR_END_INSTR(Resume)
 
@@ -334,6 +337,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(IteratorNext)
         COLLECTOR_END_INSTR(IteratorNext)
+
+        COLLECTOR_BEGIN_INSTR(IteratorNextForYieldStar)
+        COLLECTOR_END_INSTR(IteratorNextForYieldStar)
 
         COLLECTOR_BEGIN_INSTR(IteratorClose)
         COLLECTOR_END_INSTR(IteratorClose)
@@ -527,6 +533,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
         COLLECTOR_END_INSTR(InitializeBlockDeadTemporalZone)
+
+        COLLECTOR_BEGIN_INSTR(ThrowOnNullOrUndefined)
+        COLLECTOR_END_INSTR(ThrowOnNullOrUndefined)
 
         COLLECTOR_BEGIN_INSTR(LoadQmlContext)
         COLLECTOR_END_INSTR(LoadQmlContext)

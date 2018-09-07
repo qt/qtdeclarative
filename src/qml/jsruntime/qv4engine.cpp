@@ -286,6 +286,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsStrings[String_next] = newIdentifier(QStringLiteral("next"));
     jsStrings[String_done] = newIdentifier(QStringLiteral("done"));
     jsStrings[String_return] = newIdentifier(QStringLiteral("return"));
+    jsStrings[String_throw] = newIdentifier(QStringLiteral("throw"));
     jsStrings[String_global] = newIdentifier(QStringLiteral("global"));
     jsStrings[String_ignoreCase] = newIdentifier(QStringLiteral("ignoreCase"));
     jsStrings[String_multiline] = newIdentifier(QStringLiteral("multiline"));

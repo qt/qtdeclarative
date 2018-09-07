@@ -349,6 +349,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(Yield)
         MOTH_END_INSTR(Yield)
 
+        MOTH_BEGIN_INSTR(YieldStar)
+        MOTH_END_INSTR(YieldStar)
+
         MOTH_BEGIN_INSTR(Resume)
             d << ABSOLUTE_OFFSET();
         MOTH_END_INSTR(Resume)
@@ -464,8 +467,12 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(GetIterator)
 
         MOTH_BEGIN_INSTR(IteratorNext)
-            d << dumpRegister(value, nFormals);
+            d << dumpRegister(value, nFormals) << ", " << dumpRegister(done, nFormals);
         MOTH_END_INSTR(IteratorNext)
+
+        MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
+            d << dumpRegister(iterator, nFormals) << ", " << dumpRegister(object, nFormals);
+        MOTH_END_INSTR(IteratorNextForYieldStar)
 
         MOTH_BEGIN_INSTR(IteratorClose)
             d << dumpRegister(done, nFormals);
@@ -701,6 +708,9 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
             d << dumpRegister(firstReg, nFormals) << ", " << count;
         MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
+
+        MOTH_BEGIN_INSTR(ThrowOnNullOrUndefined)
+        MOTH_END_INSTR(ThrowOnNullOrUndefined)
 
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);

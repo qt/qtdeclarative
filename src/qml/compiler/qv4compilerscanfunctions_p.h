@@ -116,6 +116,7 @@ protected:
     bool visit(AST::FunctionExpression *ast) override;
     bool visit(AST::TemplateLiteral *ast) override;
     bool visit(AST::SuperLiteral *) override;
+    bool visit(AST::FieldMemberExpression *) override;
 
     bool enterFunction(AST::FunctionExpression *ast, bool enterName);
 

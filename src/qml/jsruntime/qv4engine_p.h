@@ -337,6 +337,7 @@ public:
         String_next,
         String_done,
         String_return,
+        String_throw,
         String_global,
         String_ignoreCase,
         String_multiline,
@@ -408,6 +409,7 @@ public:
     String *id_next() const { return reinterpret_cast<String *>(jsStrings + String_next); }
     String *id_done() const { return reinterpret_cast<String *>(jsStrings + String_done); }
     String *id_return() const { return reinterpret_cast<String *>(jsStrings + String_return); }
+    String *id_throw() const { return reinterpret_cast<String *>(jsStrings + String_throw); }
     String *id_global() const { return reinterpret_cast<String *>(jsStrings + String_global); }
     String *id_ignoreCase() const { return reinterpret_cast<String *>(jsStrings + String_ignoreCase); }
     String *id_multiline() const { return reinterpret_cast<String *>(jsStrings + String_multiline); }

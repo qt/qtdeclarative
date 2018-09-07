@@ -94,7 +94,9 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadContextObjectProperty(op) INSTRUCTION(op, LoadContextObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
 #define INSTR_Yield(op) INSTRUCTION(op, Yield, 0)
+#define INSTR_YieldStar(op) INSTRUCTION(op, YieldStar, 0)
 #define INSTR_Resume(op) INSTRUCTION(op, Resume, 1, offset)
+#define INSTR_IteratorNextForYieldStar(op) INSTRUCTION(op, IteratorNextForYieldStar, 2, iterator, object)
 #define INSTR_StoreProperty(op) INSTRUCTION(op, StoreProperty, 2, name, base)
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
 #define INSTR_LoadSuperProperty(op) INSTRUCTION(op, LoadSuperProperty, 1, property)
@@ -132,7 +134,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_PopScriptContext(op) INSTRUCTION(op, PopScriptContext, 0)
 #define INSTR_PopContext(op) INSTRUCTION(op, PopContext, 0)
 #define INSTR_GetIterator(op) INSTRUCTION(op, GetIterator, 1, iterator)
-#define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 1, value)
+#define INSTR_IteratorNext(op) INSTRUCTION(op, IteratorNext, 2, value, done)
 #define INSTR_IteratorClose(op) INSTRUCTION(op, IteratorClose, 1, done)
 #define INSTR_DestructureRestElement(op) INSTRUCTION(op, DestructureRestElement, 0)
 #define INSTR_DeleteProperty(op) INSTRUCTION(op, DeleteProperty, 2, base, index)
@@ -195,6 +197,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
+#define INSTR_ThrowOnNullOrUndefined(op) INSTRUCTION(op, ThrowOnNullOrUndefined, 0)
 
 #define FOR_EACH_MOTH_INSTR_ALL(F) \
     F(Nop) \
@@ -326,12 +329,15 @@ QT_BEGIN_NAMESPACE
     F(LoadQmlContext) \
     F(LoadQmlImportedScripts) \
     F(Yield) \
+    F(YieldStar) \
     F(Resume) \
+    F(IteratorNextForYieldStar) \
     F(CreateClass) \
     F(LoadSuperConstructor) \
     F(PushScriptContext) \
     F(PopScriptContext) \
     F(InitializeBlockDeadTemporalZone) \
+    F(ThrowOnNullOrUndefined) \
     F(Debug) \
 
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)

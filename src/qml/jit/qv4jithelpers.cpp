@@ -146,6 +146,12 @@ ReturnedValue deleteName(Function *function, int name)
     }
 }
 
+void throwOnNullOrUndefined(ExecutionEngine *engine, const Value &v)
+{
+    if (v.isNullOrUndefined())
+        engine->throwTypeError();
+}
+
 } // Helpers namespace
 } // JIT namespace
 } // QV4 namespace

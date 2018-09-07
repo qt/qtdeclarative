@@ -202,6 +202,7 @@ struct Context {
     bool isGenerator = false;
     bool usesThis = false;
     bool innerFunctionAccessesThis = false;
+    bool innerFunctionAccessesNewTarget = false;
     bool hasTry = false;
     bool returnsClosure = false;
     mutable bool argumentsCanEscape = false;

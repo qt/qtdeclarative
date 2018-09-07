@@ -400,6 +400,12 @@ void BaselineJIT::generate_Yield()
     Q_UNREACHABLE();
 }
 
+void BaselineJIT::generate_YieldStar()
+{
+    // #####
+    Q_UNREACHABLE();
+}
+
 void BaselineJIT::generate_Resume(int)
 {
     // #####
@@ -682,7 +688,7 @@ void BaselineJIT::generate_GetIterator(int iterator)
     as->checkException();
 }
 
-void BaselineJIT::generate_IteratorNext(int value)
+void BaselineJIT::generate_IteratorNext(int value, int done)
 {
     as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(3);
@@ -690,6 +696,19 @@ void BaselineJIT::generate_IteratorNext(int value)
     as->passAccumulatorAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNext, CallResultDestination::InAccumulator);
+    as->storeReg(done);
+    as->checkException();
+}
+
+void BaselineJIT::generate_IteratorNextForYieldStar(int iterator, int object)
+{
+    as->saveAccumulatorInFrame();
+    as->prepareCallWithArgCount(4);
+    as->passJSSlotAsArg(object, 3);
+    as->passJSSlotAsArg(iterator, 2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_iteratorNextForYieldStar, CallResultDestination::InAccumulator);
     as->checkException();
 }
 
@@ -954,6 +973,17 @@ void BaselineJIT::generate_InitializeBlockDeadTemporalZone(int firstReg, int cou
     for (int i = firstReg, end = firstReg + count; i < end; ++i)
         as->storeReg(i);
 }
+
+void BaselineJIT::generate_ThrowOnNullOrUndefined()
+{
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passAccumulatorAsArg(1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::throwOnNullOrUndefined, CallResultDestination::Ignore);
+    as->checkException();
+}
+
 
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
