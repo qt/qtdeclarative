@@ -317,7 +317,6 @@ struct ControlFlowCatch : public ControlFlowUnwind
     AST::Catch *catchExpression;
     bool insideCatch = false;
     BytecodeGenerator::ExceptionHandler exceptionLabel;
-    bool oldLookupByName;
 
     ControlFlowCatch(Codegen *cg, AST::Catch *catchExpression)
         : ControlFlowUnwind(cg, Catch), catchExpression(catchExpression),
