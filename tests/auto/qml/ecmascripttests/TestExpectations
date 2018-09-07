@@ -148,12 +148,6 @@ built-ins/Atomics/wake/wake-zero.js fails
 built-ins/Boolean/proto-from-ctor-realm.js fails
 built-ins/DataView/custom-proto-if-object-is-used.js fails
 built-ins/DataView/proto-from-ctor-realm.js fails
-built-ins/Date/UTC/infinity-make-day.js fails
-built-ins/Date/UTC/nans.js fails
-built-ins/Date/UTC/no-arg.js fails
-built-ins/Date/UTC/non-integer-values.js fails
-built-ins/Date/UTC/return-value.js fails
-built-ins/Date/UTC/year-offset.js fails
 built-ins/Date/proto-from-ctor-realm-one.js fails
 built-ins/Date/proto-from-ctor-realm-two.js fails
 built-ins/Date/proto-from-ctor-realm-zero.js fails
