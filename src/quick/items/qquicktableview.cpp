@@ -210,42 +210,6 @@
 */
 
 /*!
-    \qmlproperty real QtQuick::TableView::topMargin
-
-    This property holds the margin between the top of the table and
-    the top of the content view.
-
-    The default value is 0.
-*/
-
-/*!
-    \qmlproperty real QtQuick::TableView::bottomMargin
-
-    This property holds the margin between the bottom of the table and
-    the bottom of the content view.
-
-    The default value is 0.
-*/
-
-/*!
-    \qmlproperty real QtQuick::TableView::leftMargin
-
-    This property holds the margin between the left side of the table and
-    the left side of the content view.
-
-    The default value is 0.
-*/
-
-/*!
-    \qmlproperty real QtQuick::TableView::rightMargin
-
-    This property holds the margin between the right side of the table and
-    the right side of the content view.
-
-    The default value is 0.
-*/
-
-/*!
     \qmlproperty var QtQuick::TableView::rowHeightProvider
 
     This property can hold a function that returns the row height for each row
@@ -531,13 +495,9 @@ void QQuickTableViewPrivate::updateContentWidth()
         contentSizeBenchMarkPoint.setX(currentRightColumn);
 
         const qreal spacing = currentRightColumn * cellSpacing.width();
-        const qreal margins = tableMargins.left() + tableMargins.right();
-        qreal currentWidth = loadedTableOuterRect.right() - tableMargins.left();
+        qreal currentWidth = loadedTableOuterRect.right();
         const qreal averageCellWidth = (currentWidth - spacing) / (currentRightColumn + 1);
         qreal estimatedWidth = (tableSize.width() * (averageCellWidth + cellSpacing.width())) - cellSpacing.width();
-
-        currentWidth += margins;
-        estimatedWidth += margins;
 
         if (currentRightColumn >= tableSize.width() - 1) {
             // We are at the last column, and can set the exact width
@@ -572,13 +532,9 @@ void QQuickTableViewPrivate::updateContentHeight()
         contentSizeBenchMarkPoint.setY(currentBottomRow);
 
         const qreal spacing = currentBottomRow * cellSpacing.height();
-        const qreal margins = tableMargins.top() + tableMargins.bottom();
-        qreal currentHeight = loadedTableOuterRect.bottom() - tableMargins.top();
+        qreal currentHeight = loadedTableOuterRect.bottom();
         const qreal averageCellHeight = (currentHeight - spacing) / (currentBottomRow + 1);
         qreal estimatedHeight = (tableSize.height() * (averageCellHeight + cellSpacing.height())) - cellSpacing.height();
-
-        currentHeight += margins;
-        estimatedHeight += margins;
 
         if (currentBottomRow >= tableSize.height() - 1) {
             // We are at the last row, and can set the exact height
@@ -605,23 +561,23 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
     bool layoutNeeded = false;
     const qreal flickMargin = 50;
 
-    if (loadedTable.x() == 0 && loadedTableOuterRect.x() > tableMargins.left()) {
+    if (loadedTable.x() == 0 && loadedTableOuterRect.x() > 0) {
         // The table is at the beginning, but not at the edge of the
-        // content view. So move the table to origo.
-        loadedTableOuterRect.moveLeft(tableMargins.left());
+        // content view. So move the table to origin.
+        loadedTableOuterRect.moveLeft(0);
         layoutNeeded = true;
-    } else if (loadedTableOuterRect.x() < tableMargins.left()) {
+    } else if (loadedTableOuterRect.x() < 0) {
         // The table is outside the beginning of the content view. Move
         // the whole table inside, and make some room for flicking.
-        loadedTableOuterRect.moveLeft(qFuzzyIsNull(tableMargins.left() + loadedTable.x()) ? 0 : flickMargin);
+        loadedTableOuterRect.moveLeft(loadedTable.x() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
-    if (loadedTable.y() == 0 && loadedTableOuterRect.y() > tableMargins.top()) {
-        loadedTableOuterRect.moveTop(tableMargins.top());
+    if (loadedTable.y() == 0 && loadedTableOuterRect.y() > 0) {
+        loadedTableOuterRect.moveTop(0);
         layoutNeeded = true;
-    } else if (loadedTableOuterRect.y() < tableMargins.top()) {
-        loadedTableOuterRect.moveTop(qFuzzyIsNull(tableMargins.top() + loadedTable.y()) ? 0 : flickMargin);
+    } else if (loadedTableOuterRect.y() < 0) {
+        loadedTableOuterRect.moveTop(loadedTable.y() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
@@ -1319,7 +1275,7 @@ void QQuickTableViewPrivate::beginRebuildTable()
     if (rebuildOptions & RebuildOption::All) {
         releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
         topLeft = QPoint(0, 0);
-        topLeftPos = QPointF(tableMargins.left(), tableMargins.top());
+        topLeftPos = QPoint(0, 0);
         q->setContentX(0);
         q->setContentY(0);
     } else if (rebuildOptions & RebuildOption::ViewportOnly) {
@@ -1781,78 +1737,6 @@ void QQuickTableView::setColumnSpacing(qreal spacing)
     d->cellSpacing.setWidth(spacing);
     d->invalidateColumnRowPositions();
     emit columnSpacingChanged();
-}
-
-qreal QQuickTableView::topMargin() const
-{
-    return d_func()->tableMargins.top();
-}
-
-void QQuickTableView::setTopMargin(qreal margin)
-{
-    Q_D(QQuickTableView);
-    if (qt_is_nan(margin))
-        return;
-    if (qFuzzyCompare(d->tableMargins.top(), margin))
-        return;
-
-    d->tableMargins.setTop(margin);
-    d->invalidateColumnRowPositions();
-    emit topMarginChanged();
-}
-
-qreal QQuickTableView::bottomMargin() const
-{
-    return d_func()->tableMargins.bottom();
-}
-
-void QQuickTableView::setBottomMargin(qreal margin)
-{
-    Q_D(QQuickTableView);
-    if (qt_is_nan(margin))
-        return;
-    if (qFuzzyCompare(d->tableMargins.bottom(), margin))
-        return;
-
-    d->tableMargins.setBottom(margin);
-    d->invalidateColumnRowPositions();
-    emit bottomMarginChanged();
-}
-
-qreal QQuickTableView::leftMargin() const
-{
-    return d_func()->tableMargins.left();
-}
-
-void QQuickTableView::setLeftMargin(qreal margin)
-{
-    Q_D(QQuickTableView);
-    if (qt_is_nan(margin))
-        return;
-    if (qFuzzyCompare(d->tableMargins.left(), margin))
-        return;
-
-    d->tableMargins.setLeft(margin);
-    d->invalidateColumnRowPositions();
-    emit leftMarginChanged();
-}
-
-qreal QQuickTableView::rightMargin() const
-{
-    return d_func()->tableMargins.right();
-}
-
-void QQuickTableView::setRightMargin(qreal margin)
-{
-    Q_D(QQuickTableView);
-    if (qt_is_nan(margin))
-        return;
-    if (qFuzzyCompare(d->tableMargins.right(), margin))
-        return;
-
-    d->tableMargins.setRight(margin);
-    d->invalidateColumnRowPositions();
-    emit rightMarginChanged();
 }
 
 QJSValue QQuickTableView::rowHeightProvider() const
