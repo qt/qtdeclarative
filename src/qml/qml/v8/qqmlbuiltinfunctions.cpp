@@ -219,13 +219,13 @@ ReturnedValue QtObject::virtualGet(const Managed *m, PropertyKey id, const Value
     return ret;
 }
 
-OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m)
+OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
     auto that = static_cast<const QtObject*>(m);
     if (!that->d()->isComplete())
         const_cast<QtObject *>(that)->addAll();
 
-    return Object::virtualOwnPropertyKeys(m);
+    return Object::virtualOwnPropertyKeys(m, target);
 }
 
 /*!

@@ -110,8 +110,7 @@ public:
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
     static bool virtualIsEqualTo(Managed *m, Managed *other);
     static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
-
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static ReturnedValue method_toString(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
     static void initProto(ExecutionEngine *v4);

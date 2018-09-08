@@ -106,7 +106,7 @@ struct ArgumentsObject: Object {
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
     static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
     static qint64 virtualGetLength(const Managed *m);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     void fullyCreate();
 

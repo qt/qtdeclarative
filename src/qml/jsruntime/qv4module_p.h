@@ -82,7 +82,7 @@ struct Q_QML_EXPORT Module : public Object {
     static bool virtualDefineOwnProperty(Managed *, PropertyKey, const Property *, PropertyAttributes);
     static bool virtualPut(Managed *, PropertyKey, const Value &, Value *);
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *proto);
     static bool virtualIsExtensible(const Managed *);

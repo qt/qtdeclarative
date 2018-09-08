@@ -289,8 +289,9 @@ PropertyKey QQmlValueTypeWrapperOwnPropertyKeyIterator::next(const Object *o, Pr
 }
 
 
-OwnPropertyKeyIterator *QQmlValueTypeWrapper::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *QQmlValueTypeWrapper::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    *target = *m;
     return new QQmlValueTypeWrapperOwnPropertyKeyIterator;
 }
 

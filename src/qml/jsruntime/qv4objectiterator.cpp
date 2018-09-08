@@ -164,6 +164,7 @@ PropertyKey ForInIteratorObject::nextProperty() const
 
     Scope scope(this);
     ScopedObject c(scope, d()->current);
+    ScopedObject t(scope, d()->target);
     ScopedObject o(scope);
     ScopedProperty p(scope);
     ScopedPropertyKey key(scope);
@@ -171,7 +172,7 @@ PropertyKey ForInIteratorObject::nextProperty() const
 
     while (1) {
         while (1) {
-            key = d()->iterator->next(c, p, &attrs);
+            key = d()->iterator->next(t, p, &attrs);
             if (!key->isValid())
                 break;
             if (!attrs.isEnumerable() || key->isSymbol())
@@ -198,7 +199,8 @@ PropertyKey ForInIteratorObject::nextProperty() const
         if (!c)
             break;
         delete d()->iterator;
-        d()->iterator = c->ownPropertyKeys();
+        d()->iterator = c->ownPropertyKeys(t.getRef());
+        d()->target.set(scope.engine, t->d());
         if (!d()->iterator) {
             scope.engine->throwTypeError();
             return PropertyKey::invalid();

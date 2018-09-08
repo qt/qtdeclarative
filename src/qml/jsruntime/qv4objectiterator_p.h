@@ -75,7 +75,8 @@ struct Q_QML_EXPORT ObjectIterator
         object = static_cast<Object *>(scope.alloc());
         this->flags = flags;
         object->setM(o ? o->m() : nullptr);
-        iterator = object->ownPropertyKeys();
+        if (o)
+            iterator = object->ownPropertyKeys(object);
     }
     ~ObjectIterator()
     {
@@ -93,6 +94,7 @@ namespace Heap {
 #define ForInIteratorObjectMembers(class, Member) \
     Member(class, Pointer, Object *, object) \
     Member(class, Pointer, Object *, current) \
+    Member(class, Pointer, Object *, target) \
     Member(class, NoMark, OwnPropertyKeyIterator *, iterator)
 
 DECLARE_HEAP_OBJECT(ForInIteratorObject, Object) {
@@ -130,7 +132,10 @@ void Heap::ForInIteratorObject::init(QV4::Object *o)
         return;
     object.set(o->engine(), o->d());
     current.set(o->engine(), o->d());
-    iterator = o->ownPropertyKeys();
+    Scope scope(o);
+    ScopedObject obj(scope);
+    iterator = o->ownPropertyKeys(obj.getRef());
+    target.set(o->engine(), obj->d());
 }
 
 

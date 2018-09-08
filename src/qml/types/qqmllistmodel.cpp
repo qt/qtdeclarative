@@ -1646,8 +1646,9 @@ PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *p
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *ModelObject::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *ModelObject::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    *target = *m;
     return new ModelObjectOwnPropertyKeyIterator;
 }
 

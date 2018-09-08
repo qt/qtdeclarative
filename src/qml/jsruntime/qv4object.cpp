@@ -390,8 +390,9 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
     return PropertyKey::invalid();
 }
 
-OwnPropertyKeyIterator *Object::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *Object::virtualOwnPropertyKeys(const Object *o, Value *target)
 {
+    *target = *o;
     return new ObjectOwnPropertyKeyIterator;
 }
 

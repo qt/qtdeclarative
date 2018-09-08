@@ -546,7 +546,7 @@ static bool removeAllOccurrences(ArrayObject *target, ReturnedValue val) {
     return  found;
 }
 
-OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m)
+OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Value *iteratorTarget)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
@@ -564,7 +564,7 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m)
     if (scope.hasException())
         return nullptr;
     if (trap->isUndefined())
-        return target->ownPropertyKeys();
+        return target->ownPropertyKeys(iteratorTarget);
     if (!trap->isFunctionObject()) {
         scope.engine->throwTypeError();
         return nullptr;
@@ -637,12 +637,13 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m)
 
     len = uncheckedResultKeys->getLength();
     for (uint i = 0; i < len; ++i) {
-        if (targetConfigurableKeys->get(i) != Encode::undefined()) {
+        if (uncheckedResultKeys->get(i) != Encode::undefined()) {
             scope.engine->throwTypeError();
             return nullptr;
         }
     }
 
+    *iteratorTarget = *m;
     return new ProxyObjectOwnPropertyKeyIterator(trapKeys);
 }
 

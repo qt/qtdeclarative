@@ -64,7 +64,7 @@ void QJSValueIteratorPrivate::init(const QJSValue &v)
 
     engine = e;
     object = o;
-    iterator.reset(o->ownPropertyKeys());
+    iterator.reset(o->ownPropertyKeys(object.valueRef()));
     next();
 }
 
