@@ -717,12 +717,13 @@ bool Object::virtualHasProperty(const Managed *m, PropertyKey id)
     Scope scope(m->engine());
     ScopedObject o(scope, m);
     ScopedProperty p(scope);
-    while (o) {
-        if (o->getOwnProperty(id, p) != Attr_Invalid)
-            return true;
 
-        o = o->getPrototypeOf();
-    }
+    if (o->getOwnProperty(id, p) != Attr_Invalid)
+        return true;
+
+    o = o->getPrototypeOf();
+    if (o)
+        return o->hasProperty(id);
 
     return false;
 }
