@@ -69,6 +69,11 @@ static const char *excludedFeatures[] = {
     nullptr
 };
 
+static const char *excludedFilePatterns[] = {
+    "realm",
+    nullptr
+};
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -233,6 +238,15 @@ bool Test262Runner::loadTests()
         if (!filter.isEmpty() && !file.contains(filter))
             continue;
         if (file.startsWith(annexB) || file.startsWith(harness) || file.startsWith(intl402))
+            continue;
+        const char **excluded = excludedFilePatterns;
+        bool skip = false;
+        while (*excluded) {
+            if (file.contains(QLatin1String(*excluded)))
+                skip = true;
+            ++excluded;
+        }
+        if (skip)
             continue;
 
         testCases.insert(file, TestCase{ file });
