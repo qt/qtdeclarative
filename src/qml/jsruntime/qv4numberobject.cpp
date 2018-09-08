@@ -150,7 +150,7 @@ inline double thisNumber(ExecutionEngine *engine, const Value *thisObject)
 
 ReturnedValue NumberPrototype::method_isFinite(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!argc)
+    if (!argc || !argv[0].isNumber())
         return Encode(false);
 
     double v = argv[0].toNumber();
@@ -193,7 +193,7 @@ ReturnedValue NumberPrototype::method_isSafeInteger(const FunctionObject *, cons
 
 ReturnedValue NumberPrototype::method_isNaN(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
-    if (!argc)
+    if (!argc || !argv[0].isNumber())
         return Encode(false);
 
     double v = argv[0].toNumber();
@@ -282,7 +282,7 @@ ReturnedValue NumberPrototype::method_toFixed(const FunctionObject *b, const Val
     if (std::isnan(fdigits))
         fdigits = 0;
 
-    if (fdigits < 0 || fdigits > 20)
+    if (fdigits < 0 || fdigits > 100)
         return v4->throwRangeError(*thisObject);
 
     QString str;
@@ -305,16 +305,21 @@ ReturnedValue NumberPrototype::method_toExponential(const FunctionObject *b, con
     if (v4->hasException)
         return QV4::Encode::undefined();
 
+    bool defaultDigits = !argc || argv[0].isUndefined();
+    int fdigits = !defaultDigits ? argv[0].toInteger() : NumberLocale::instance()->defaultDoublePrecision;
+    if (v4->hasException)
+        return QV4::Encode::undefined();
 
-    int fdigits = NumberLocale::instance()->defaultDoublePrecision;
+    if (std::isnan(d))
+        return Encode(v4->newString(QLatin1String("NaN")));
 
-    if (argc && !argv[0].isUndefined()) {
-        fdigits = argv[0].toInt32();
-        if (fdigits < 0 || fdigits > 20) {
-            Scope scope(v4);
-            ScopedString error(scope, v4->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
-            return v4->throwRangeError(error);
-        }
+    if (qIsInf(d))
+        return Encode(v4->newString(QLatin1String(d < 0 ? "-Infinity" : "Infinity")));
+
+    if (!defaultDigits && (fdigits < 0 || fdigits > 100)) {
+        Scope scope(v4);
+        ScopedString error(scope, v4->newString(QStringLiteral("Number.prototype.toExponential: fractionDigits out of range")));
+        return v4->throwRangeError(error);
     }
 
     QString result = NumberLocale::instance()->toString(d, 'e', fdigits);
@@ -327,17 +332,26 @@ ReturnedValue NumberPrototype::method_toPrecision(const FunctionObject *b, const
     ScopedValue v(scope, thisNumberValue(scope.engine, thisObject));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
-
+    double d = v->asDouble();
 
     if (!argc || argv[0].isUndefined())
         return Encode(v->toString(scope.engine));
 
     int precision = argv[0].toInt32();
-    if (precision < 1 || precision > 21) {
+    if (scope.engine->hasException)
+        return QV4::Encode::undefined();
+
+    if (std::isnan(d))
+        return Encode(scope.engine->newString(QLatin1String("NaN")));
+
+    if (qIsInf(d))
+        return Encode(scope.engine->newString(QLatin1String(d < 0 ? "-Infinity" : "Infinity")));
+
+    if (precision < 1 || precision > 100) {
         ScopedString error(scope, scope.engine->newString(QStringLiteral("Number.prototype.toPrecision: precision out of range")));
         return scope.engine->throwRangeError(error);
     }
 
-    QString result = NumberLocale::instance()->toString(v->asDouble(), 'g', precision);
+    QString result = NumberLocale::instance()->toString(d, 'g', precision);
     return Encode(scope.engine->newString(result));
 }

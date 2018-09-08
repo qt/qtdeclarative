@@ -275,14 +275,15 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id
     ScopedProperty resultDesc(scope);
     PropertyAttributes resultAttributes;
     ObjectPrototype::toPropertyDescriptor(scope.engine, trapResult, resultDesc, &resultAttributes);
-    resultDesc->fullyPopulated(&resultAttributes);
+    resultDesc->completed(&resultAttributes);
 
-    // ###
-    //Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
-    //If valid is false, throw a TypeError exception.
+    if (!targetDesc->isCompatible(targetAttributes, resultDesc, resultAttributes)) {
+        scope.engine->throwTypeError();
+        return Attr_Invalid;
+    }
 
     if (!resultAttributes.isConfigurable()) {
-        if (targetAttributes == Attr_Invalid || !targetAttributes.isConfigurable()) {
+        if (targetAttributes == Attr_Invalid || targetAttributes.isConfigurable()) {
             scope.engine->throwTypeError();
             return Attr_Invalid;
         }
@@ -336,8 +337,10 @@ bool ProxyObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
             return false;
         }
     } else {
-        // ###
-        // if IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false throw a type error.
+        if (!targetDesc->isCompatible(targetAttributes, p, attrs)) {
+            scope.engine->throwTypeError();
+            return false;
+        }
         if (settingConfigFalse && targetAttributes.isConfigurable()) {
             scope.engine->throwTypeError();
             return false;

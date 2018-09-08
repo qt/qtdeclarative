@@ -253,6 +253,12 @@ static inline double WeekDay(double t)
 
 static inline double MakeTime(double hour, double min, double sec, double ms)
 {
+    if (!qIsFinite(hour) || !qIsFinite(min) || !qIsFinite(sec) || !qIsFinite(ms))
+        return qQNaN();
+    hour = Primitive::toInteger(hour);
+    min = Primitive::toInteger(min);
+    sec = Primitive::toInteger(sec);
+    ms = Primitive::toInteger(ms);
     return ((hour * MinutesPerHour + min) * SecondsPerMinute + sec) * msPerSecond + ms;
 }
 
@@ -278,6 +284,12 @@ static inline double DayFromMonth(double month, double leap)
 
 static double MakeDay(double year, double month, double day)
 {
+    if (!qIsFinite(year) || !qIsFinite(month) || !qIsFinite(day))
+        return qQNaN();
+    year = Primitive::toInteger(year);
+    month = Primitive::toInteger(month);
+    day = Primitive::toInteger(day);
+
     year += ::floor(month / 12.0);
 
     month = ::fmod(month, 12.0);
@@ -879,24 +891,39 @@ ReturnedValue DatePrototype::method_parse(const FunctionObject *f, const Value *
         return Encode(ParseString(argv[0].toQString(), f->engine()->localTZA));
 }
 
-ReturnedValue DatePrototype::method_UTC(const FunctionObject *, const Value *, const Value *argv, int argc)
+ReturnedValue DatePrototype::method_UTC(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     const int numArgs = argc;
-    if (numArgs >= 2) {
-        double year  = argv[0].toNumber();
-        double month = argv[1].toNumber();
-        double day   = numArgs >= 3 ? argv[2].toNumber() : 1;
-        double hours = numArgs >= 4 ? argv[3].toNumber() : 0;
-        double mins  = numArgs >= 5 ? argv[4].toNumber() : 0;
-        double secs  = numArgs >= 6 ? argv[5].toNumber() : 0;
-        double ms    = numArgs >= 7 ? argv[6].toNumber() : 0;
-        if (year >= 0 && year <= 99)
-            year += 1900;
-        double t = MakeDate(MakeDay(year, month, day),
-                            MakeTime(hours, mins, secs, ms));
-        return Encode(TimeClip(t));
-    }
-    RETURN_UNDEFINED();
+    if (numArgs < 1)
+        return Encode(qQNaN());
+    ExecutionEngine *e = f->engine();
+    double year  = argv[0].toNumber();
+    if (e->hasException)
+        return Encode::undefined();
+    double month = numArgs >= 2 ? argv[1].toNumber() : 0;
+    if (e->hasException)
+        return Encode::undefined();
+    double day   = numArgs >= 3 ? argv[2].toNumber() : 1;
+    if (e->hasException)
+        return Encode::undefined();
+    double hours = numArgs >= 4 ? argv[3].toNumber() : 0;
+    if (e->hasException)
+        return Encode::undefined();
+    double mins  = numArgs >= 5 ? argv[4].toNumber() : 0;
+    if (e->hasException)
+        return Encode::undefined();
+    double secs  = numArgs >= 6 ? argv[5].toNumber() : 0;
+    if (e->hasException)
+        return Encode::undefined();
+    double ms    = numArgs >= 7 ? argv[6].toNumber() : 0;
+    if (e->hasException)
+        return Encode::undefined();
+    double iyear = Primitive::toInteger(year);
+    if (!qIsNaN(year) && iyear >= 0 && iyear <= 99)
+        year = 1900 + iyear;
+    double t = MakeDate(MakeDay(year, month, day),
+                        MakeTime(hours, mins, secs, ms));
+    return Encode(TimeClip(t));
 }
 
 ReturnedValue DatePrototype::method_now(const FunctionObject *, const Value *, const Value *, int)

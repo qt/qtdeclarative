@@ -380,8 +380,7 @@ protected:
 
 private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
-    ReturnedValue internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const;
-    ReturnedValue internalGetIndexed(uint index, const Value *receiver, bool *hasProperty) const;
+    ReturnedValue internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const;
     bool internalPut(PropertyKey id, const Value &value, Value *receiver);
     bool internalDeleteProperty(PropertyKey id);
 

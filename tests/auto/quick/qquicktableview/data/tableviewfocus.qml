@@ -57,9 +57,13 @@ Item {
     Component {
         id: tableViewDelegate
         Item {
+            id: delegate
             implicitWidth: 100
             implicitHeight: 50
-            property alias textInput: textInput
+            focus: true
+
+            property alias delegateRoot: delegate
+            property alias delegateChild: textInput
 
             TextInput {
                 id: textInput

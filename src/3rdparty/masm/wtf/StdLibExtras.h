@@ -30,6 +30,7 @@
 #include <wtf/CheckedArithmetic.h>
 #include <wtf/Platform.h>
 #include <memory>
+#include <qglobal.h>
 
 // Use these to declare and define a static local variable (static T;) so that
 //  it is leaked so that its destructors are not called at exit. Using this
@@ -73,7 +74,7 @@
 #define STRINGIZE(exp) #exp
 #define STRINGIZE_VALUE_OF(exp) STRINGIZE(exp)
 
-#define FALLTHROUGH
+#define FALLTHROUGH Q_FALLTHROUGH()
 
 /*
  * The reinterpret_cast<Type1*>([pointer to Type2]) expressions - where

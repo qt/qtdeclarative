@@ -310,11 +310,7 @@ PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs
 
 ReturnedValue Object::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (id.isArrayIndex())
-        return static_cast<const Object *>(m)->internalGetIndexed(id.asArrayIndex(), receiver, hasProperty);
-    Scope scope(m);
-    Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
-    return static_cast<const Object *>(m)->internalGet(name, receiver, hasProperty);
+    return static_cast<const Object *>(m)->internalGet(id, receiver, hasProperty);
 }
 
 bool Object::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
@@ -400,40 +396,18 @@ OwnPropertyKeyIterator *Object::virtualOwnPropertyKeys(const Object *)
 }
 
 // Section 8.12.3
-ReturnedValue Object::internalGet(StringOrSymbol *name, const Value *receiver, bool *hasProperty) const
+ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const
 {
-    PropertyKey id = name->toPropertyKey();
-
-    Q_ASSERT(!id.isArrayIndex());
-
-    Heap::Object *o = d();
-    while (o) {
-        uint idx = o->internalClass->find(id);
-        if (idx < UINT_MAX) {
+    uint index = id.asArrayIndex();
+    if (index != UINT_MAX) {
+        Scope scope(this);
+        PropertyAttributes attrs;
+        ScopedObject o(scope, this);
+        ScopedProperty pd(scope);
+        if (o->arrayData() && o->arrayData()->getProperty(index, pd, &attrs)) {
             if (hasProperty)
                 *hasProperty = true;
-            return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
-        }
-
-        o = o->prototype();
-    }
-
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
-}
-
-ReturnedValue Object::internalGetIndexed(uint index, const Value *receiver, bool *hasProperty) const
-{
-    PropertyAttributes attrs;
-    Scope scope(engine());
-    ScopedObject o(scope, this);
-    ScopedProperty pd(scope);
-    bool exists = false;
-    while (o) {
-        if (o->arrayData() && o->arrayData()->getProperty(index, pd, &attrs)) {
-            exists = true;
-            break;
+            return Object::getValue(*receiver, pd->value, attrs);
         }
         if (o->isStringObject()) {
             ScopedString str(scope, static_cast<StringObject *>(o.getPointer())->getIndex(index));
@@ -444,20 +418,29 @@ ReturnedValue Object::internalGetIndexed(uint index, const Value *receiver, bool
                 return str.asReturnedValue();
             }
         }
-        o = o->getPrototypeOf();
+    } else {
+        Heap::Object *o = d();
+        Q_ASSERT(!id.isArrayIndex());
+
+        uint idx = o->internalClass->find(id);
+        if (idx < UINT_MAX) {
+            if (hasProperty)
+                *hasProperty = true;
+            return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
+        }
     }
 
-    if (exists) {
-        if (hasProperty)
-            *hasProperty = true;
-        return Object::getValue(*receiver, pd->value, attrs);
+    Heap::Object *p = d()->prototype();
+    if (p) {
+        const Value v = Primitive::fromHeapObject(p);
+        const Object &obj = static_cast<const Object &>(v);
+        return obj.get(id, receiver, hasProperty);
     }
 
     if (hasProperty)
         *hasProperty = false;
     return Encode::undefined();
 }
-
 
 // Section 8.12.5
 bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
