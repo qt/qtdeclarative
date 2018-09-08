@@ -372,9 +372,7 @@ built-ins/Proxy/defineProperty/desc-realm.js fails
 built-ins/Proxy/defineProperty/null-handler-realm.js fails
 built-ins/Proxy/defineProperty/targetdesc-configurable-desc-not-configurable-realm.js fails
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target-realm.js fails
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-not-configurable-target.js fails
 built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor-realm.js fails
-built-ins/Proxy/defineProperty/targetdesc-not-compatible-descriptor.js fails
 built-ins/Proxy/defineProperty/targetdesc-undefined-not-configurable-descriptor-realm.js fails
 built-ins/Proxy/defineProperty/targetdesc-undefined-target-is-not-extensible-realm.js fails
 built-ins/Proxy/defineProperty/trap-is-not-callable-realm.js fails
@@ -385,7 +383,6 @@ built-ins/Proxy/get/trap-is-not-callable-realm.js fails
 built-ins/Proxy/get/trap-is-undefined-receiver.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined-realm.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js fails
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-invalid-descriptor.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-configurable.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-not-configurable.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-not-callable-realm.js fails

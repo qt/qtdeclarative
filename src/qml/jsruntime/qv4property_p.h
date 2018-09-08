@@ -92,6 +92,40 @@ struct Property {
             set = other->set;
     }
 
+    // ES8, section 9.1.6.2/9,.1.6.3
+    bool isCompatible(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const {
+        if (otherAttrs.isEmpty())
+            return true;
+        if (!attrs.isConfigurable()) {
+            if (otherAttrs.hasConfigurable() && otherAttrs.isConfigurable())
+                return false;
+            if (otherAttrs.hasEnumerable() && otherAttrs.isEnumerable() != attrs.isEnumerable())
+                return false;
+        }
+        if (otherAttrs.isGeneric())
+            return true;
+        if (attrs.isData() != otherAttrs.isData()) {
+            if (!attrs.isConfigurable())
+                return false;
+        } else if (attrs.isData() && otherAttrs.isData()) {
+            if (!attrs.isConfigurable() && !attrs.isWritable()) {
+                if (otherAttrs.hasWritable() && otherAttrs.isWritable())
+                    return false;
+                if (!other->value.isEmpty() && !value.sameValue(other->value))
+                    return false;
+            }
+        } else if (attrs.isAccessor() && otherAttrs.isAccessor()) {
+            if (!attrs.isConfigurable()) {
+                if (!other->value.isEmpty() && !value.sameValue(other->value))
+                    return false;
+                if (!other->set.isEmpty() && !set.sameValue(other->set))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+
     explicit Property()  { value = Encode::undefined(); set = Value::fromHeapObject(nullptr); }
     Property(Heap::FunctionObject *getter, Heap::FunctionObject *setter) {
         value.setM(reinterpret_cast<Heap::Base *>(getter));
