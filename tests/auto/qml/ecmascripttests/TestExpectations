@@ -333,7 +333,6 @@ built-ins/Proxy/has/call-object-create.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
 built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js fails
 built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js fails
-built-ins/Proxy/revocable/revocation-function-name.js fails
 built-ins/RegExp/S15.10.2.12_A2_T1.js fails
 built-ins/RegExp/prototype/Symbol.match/builtin-success-u-return-val-groups.js fails
 built-ins/RegExp/prototype/Symbol.split/species-ctor.js fails

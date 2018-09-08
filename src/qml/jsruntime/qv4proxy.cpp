@@ -758,7 +758,8 @@ ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, co
     Q_ASSERT(proxy);
 
     ScopedString revoke(scope, scope.engine->newString(QStringLiteral("revoke")));
-    ScopedFunctionObject revoker(scope, createBuiltinFunction(scope.engine, revoke, method_revoke, 0));
+    ScopedFunctionObject revoker(scope, scope.engine->memoryManager->allocate<FunctionObject>(scope.engine->rootContext(), nullptr, method_revoke));
+    revoker->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(0));
     revoker->defineDefaultProperty(scope.engine->symbol_revokableProxy(), proxy);
 
     ScopedObject o(scope, scope.engine->newObject());
