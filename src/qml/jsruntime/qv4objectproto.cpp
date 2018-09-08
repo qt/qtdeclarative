@@ -188,7 +188,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptors(const FunctionOb
 
     ScopedObject descriptors(scope, scope.engine->newObject());
 
-    ObjectIterator it(scope, o, ObjectIterator::NoFlags);
+    ObjectIterator it(scope, o, ObjectIterator::WithSymbols);
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     ScopedPropertyKey key(scope);
@@ -227,15 +227,19 @@ ReturnedValue ObjectPrototype::method_getOwnPropertySymbols(const FunctionObject
     ScopedObject O(scope, argv[0].toObject(scope.engine));
     if (!O)
         return Encode::undefined();
-    Heap::InternalClass *ic = O->d()->internalClass;
-    ScopedValue n(scope);
+
     ScopedArrayObject array(scope, scope.engine->newArrayObject());
-    for (uint i = 0; i < ic->size; ++i) {
-        PropertyKey id = ic->nameMap.at(i);
-        n = id.asStringOrSymbol();
-        if (!n || !n->isSymbol())
-            continue;
-        array->push_back(n);
+    if (O) {
+        ObjectIterator it(scope, O, ObjectIterator::WithSymbols);
+        ScopedValue name(scope);
+        while (1) {
+            name = it.nextPropertyNameAsString();
+            if (name->isNull())
+                break;
+            if (!name->isSymbol())
+                continue;
+            array->push_back(name);
+        }
     }
     return array->asReturnedValue();
 }
@@ -916,6 +920,8 @@ Heap::ArrayObject *ObjectPrototype::getOwnPropertyNames(ExecutionEngine *v4, con
             name = it.nextPropertyNameAsString();
             if (name->isNull())
                 break;
+            if (name->isSymbol())
+                continue;
             array->push_back(name);
         }
     }

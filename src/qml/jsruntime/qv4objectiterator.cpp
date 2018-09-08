@@ -66,7 +66,8 @@ PropertyKey ObjectIterator::next(Property *pd, PropertyAttributes *attrs)
             object = nullptr;
             return key;
         }
-        if (key->isSymbol() || ((flags & EnumerableOnly) && !attrs->isEnumerable()))
+        if ((!(flags & WithSymbols) && key->isSymbol()) ||
+            ((flags & EnumerableOnly) && !attrs->isEnumerable()))
             continue;
         return key;
     }

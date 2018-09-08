@@ -366,25 +366,39 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
         arrayIndex = UINT_MAX;
     }
 
-    while (memberIndex < o->internalClass()->size) {
-        PropertyKey n = o->internalClass()->nameMap.at(memberIndex);
-        if (!n.isStringOrSymbol()) {
-            // accessor properties have a dummy entry with n == 0
-            ++memberIndex;
-            continue;
-        }
+    while (true) {
+        while (memberIndex < o->internalClass()->size) {
+            PropertyKey n = o->internalClass()->nameMap.at(memberIndex);
+            if (!n.isStringOrSymbol()) {
+                // accessor properties have a dummy entry with n == 0
+                ++memberIndex;
+                continue;
+            }
+            if (!iterateOverSymbols && n.isSymbol()) {
+                ++memberIndex;
+                continue;
+            }
+            if (iterateOverSymbols && !n.isSymbol()) {
+                ++memberIndex;
+                continue;
+            }
 
-        uint index = memberIndex;
-        PropertyAttributes a = o->internalClass()->propertyData[memberIndex];
-        ++memberIndex;
-        if (pd) {
-            pd->value = *o->propertyData(index);
-            if (a.isAccessor())
-                pd->set = *o->propertyData(index + Object::SetterOffset);
+            uint index = memberIndex;
+            PropertyAttributes a = o->internalClass()->propertyData[memberIndex];
+            ++memberIndex;
+            if (pd) {
+                pd->value = *o->propertyData(index);
+                if (a.isAccessor())
+                    pd->set = *o->propertyData(index + Object::SetterOffset);
+            }
+            if (attrs)
+                *attrs = a;
+            return n;
         }
-        if (attrs)
-            *attrs = a;
-        return n;
+        if (iterateOverSymbols)
+            break;
+        iterateOverSymbols = true;
+        memberIndex = 0;
     }
 
     return PropertyKey::invalid();

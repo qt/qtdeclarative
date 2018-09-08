@@ -392,6 +392,7 @@ struct ObjectOwnPropertyKeyIterator : OwnPropertyKeyIterator
 {
     uint arrayIndex = 0;
     uint memberIndex = 0;
+    bool iterateOverSymbols = false;
     SparseArrayNode *arrayNode = nullptr;
     ~ObjectOwnPropertyKeyIterator() override = default;
     PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;

@@ -170,7 +170,6 @@ built-ins/Object/entries/getter-making-future-key-nonenumerable.js fails
 built-ins/Object/entries/getter-removing-future-key.js fails
 built-ins/Object/entries/observable-operations.js fails
 built-ins/Object/getOwnPropertyDescriptors/proxy-undefined-descriptor.js fails
-built-ins/Object/getOwnPropertyDescriptors/symbols-included.js fails
 built-ins/Object/keys/proxy-keys.js fails
 built-ins/Object/proto-from-ctor.js fails
 built-ins/Object/prototype/toLocaleString/primitive_this_value_getter.js strictFails
@@ -330,7 +329,6 @@ built-ins/Promise/resolve/prop-desc.js fails
 built-ins/Promise/resolve/resolve-from-promise-capability.js fails
 built-ins/Promise/resolve/resolve-prms-cstm-then.js fails
 built-ins/Proxy/has/call-object-create.js fails
-built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
 built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js fails
 built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js fails
 built-ins/RegExp/S15.10.2.12_A2_T1.js fails
