@@ -197,9 +197,6 @@ built-ins/Map/prototype/forEach/iterates-values-deleted-then-readded.js fails
 built-ins/Math/round/S15.8.2.15_A7.js fails
 built-ins/Number/proto-from-ctor-realm.js fails
 built-ins/Number/prototype/toPrecision/return-values.js fails
-built-ins/Number/string-binary-literal.js fails
-built-ins/Number/string-hex-literal-invalid.js fails
-built-ins/Number/string-octal-literal.js fails
 built-ins/Object/create/15.2.3.5-4-14.js strictFails
 built-ins/Object/create/15.2.3.5-4-37.js strictFails
 built-ins/Object/entries/getter-making-future-key-nonenumerable.js fails

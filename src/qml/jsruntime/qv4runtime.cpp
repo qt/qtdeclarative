@@ -377,9 +377,24 @@ QV4::ReturnedValue Runtime::method_in(ExecutionEngine *engine, const Value &left
 double RuntimeHelpers::stringToNumber(const QString &string)
 {
     const QStringRef s = QStringRef(&string).trimmed();
-    if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
-        return s.toLong(nullptr, 16);
-    bool ok;
+    if (s.startsWith(QLatin1Char('0'))) {
+        int base = -1;
+        if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))
+            base = 16;
+        else if (s.startsWith(QLatin1String("0o")) || s.startsWith(QLatin1String("0O")))
+            base = 8;
+        else if (s.startsWith(QLatin1String("0b")) || s.startsWith(QLatin1String("0B")))
+            base = 2;
+        if (base > 0) {
+            bool ok = true;
+            qlonglong num;
+            num = s.mid(2).toLongLong(&ok, base);
+            if (!ok)
+                return qQNaN();
+            return num;
+        }
+    }
+    bool ok = false;
     QByteArray ba = s.toLatin1();
     const char *begin = ba.constData();
     const char *end = nullptr;
