@@ -42,6 +42,7 @@
 #include "qv4runtimeapi_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4propertykey_p.h"
+#include "qv4objectiterator_p.h"
 
 using namespace QV4;
 
@@ -226,17 +227,19 @@ ReturnedValue Reflect::method_ownKeys(const FunctionObject *f, const Value *, co
     if (!O)
         return Encode::undefined();
 
-    ScopedArrayObject keys(scope, ObjectPrototype::getOwnPropertyNames(scope.engine, O));
+    ScopedArrayObject keys(scope, scope.engine->newArrayObject());
 
-    Heap::InternalClass *ic = O->d()->internalClass;
-    ScopedValue n(scope);
-    for (uint i = 0; i < ic->size; ++i) {
-        PropertyKey id = ic->nameMap.at(i);
-        n = id.asStringOrSymbol();
-        if (!n || !n->isSymbol())
-            continue;
-        keys->push_back(n);
+    ObjectIterator it(scope, O, ObjectIterator::WithSymbols);
+    ScopedPropertyKey key(scope);
+    ScopedValue v(scope);
+    while (1) {
+        key = it.next();
+        if (!key->isValid())
+            break;
+        v = key->toStringOrSymbol(scope.engine);
+        keys->push_back(v);
     }
+
     return keys->asReturnedValue();
 
 }
