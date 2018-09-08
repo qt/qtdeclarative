@@ -78,6 +78,24 @@ struct Property {
         attrs->resolve();
     }
 
+    // ES8: 6.2.5.6
+    void completed(PropertyAttributes *attrs) {
+        if (value.isEmpty())
+            value = Encode::undefined();
+        if (attrs->isGeneric() || attrs->isData()) {
+            attrs->setType(PropertyAttributes::Data);
+            if (!attrs->hasWritable())
+                attrs->setWritable(false);
+        } else {
+            if (set.isEmpty())
+                set = Encode::undefined();
+        }
+        if (!attrs->hasEnumerable())
+            attrs->setEnumerable(false);
+        if (!attrs->hasConfigurable())
+            attrs->setConfigurable(false);
+    }
+
     inline bool isSubset(const PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs) const;
     inline void merge(PropertyAttributes &attrs, const Property *other, PropertyAttributes otherAttrs);
 

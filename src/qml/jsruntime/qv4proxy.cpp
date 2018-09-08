@@ -275,7 +275,7 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id
     ScopedProperty resultDesc(scope);
     PropertyAttributes resultAttributes;
     ObjectPrototype::toPropertyDescriptor(scope.engine, trapResult, resultDesc, &resultAttributes);
-    resultDesc->fullyPopulated(&resultAttributes);
+    resultDesc->completed(&resultAttributes);
 
     if (!targetDesc->isCompatible(targetAttributes, resultDesc, resultAttributes)) {
         scope.engine->throwTypeError();
@@ -283,7 +283,7 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id
     }
 
     if (!resultAttributes.isConfigurable()) {
-        if (targetAttributes == Attr_Invalid || !targetAttributes.isConfigurable()) {
+        if (targetAttributes == Attr_Invalid || targetAttributes.isConfigurable()) {
             scope.engine->throwTypeError();
             return Attr_Invalid;
         }

@@ -330,9 +330,6 @@ built-ins/Promise/resolve/prop-desc.js fails
 built-ins/Promise/resolve/resolve-from-promise-capability.js fails
 built-ins/Promise/resolve/resolve-prms-cstm-then.js fails
 built-ins/Proxy/enumerate/removed-does-not-trigger.js fails
-built-ins/Proxy/getOwnPropertyDescriptor/result-type-is-not-object-nor-undefined.js fails
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-is-not-configurable-targetdesc-is-configurable.js fails
-built-ins/Proxy/getOwnPropertyDescriptor/resultdesc-return-not-configurable.js fails
 built-ins/Proxy/getOwnPropertyDescriptor/trap-is-undefined.js fails
 built-ins/Proxy/has/call-object-create.js fails
 built-ins/Proxy/ownKeys/call-parameters-object-getownpropertysymbols.js fails
