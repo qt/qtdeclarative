@@ -369,8 +369,9 @@ public:
         }
     };
 
-    static OwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *)
+    static OwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *m, Value *target)
     {
+        *target = *m;
         return new OwnPropertyKeyIterator;
     }
 
@@ -596,8 +597,8 @@ public:
     }
     static bool virtualIsEqualTo(Managed *that, Managed *other)
     { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
-    static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m)
-    { return static_cast<const QQmlSequence<Container> *>(m)->containerOwnPropertyKeys(m);}
+    static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target)
+    { return static_cast<const QQmlSequence<Container> *>(m)->containerOwnPropertyKeys(m, target);}
 
 };
 

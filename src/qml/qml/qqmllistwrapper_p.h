@@ -95,7 +95,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 };
 
 struct PropertyListPrototype : Object

@@ -214,9 +214,10 @@ PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, Propert
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *o)
+OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *o, Value *target)
 {
     const Module *module = static_cast<const Module *>(o);
+    *target = *o;
     return new ModuleNamespaceIterator(module->d()->unit->exportedNames());
 }
 

@@ -823,8 +823,9 @@ PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const Object *o, Property
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *QObjectWrapper::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *QObjectWrapper::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    *target = *m;
     return new QObjectWrapperOwnPropertyKeyIterator;
 }
 

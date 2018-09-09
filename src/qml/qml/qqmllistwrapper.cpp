@@ -165,8 +165,9 @@ PropertyKey QmlListWrapperOwnPropertyKeyIterator::next(const Object *o, Property
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *QmlListWrapper::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *QmlListWrapper::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    *target = *m;
     return new QmlListWrapperOwnPropertyKeyIterator;
 }
 

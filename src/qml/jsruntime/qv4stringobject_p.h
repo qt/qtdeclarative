@@ -101,7 +101,7 @@ struct StringObject: Object {
     using Object::getOwnProperty;
 protected:
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
 };
 

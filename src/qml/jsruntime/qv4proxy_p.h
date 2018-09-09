@@ -110,7 +110,7 @@ struct ProxyObject : FunctionObject {
     static bool virtualPreventExtensions(Managed *);
     static Heap::Object *virtualGetPrototypeOf(const Managed *);
     static bool virtualSetPrototypeOf(Managed *, const Object *);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m);
+    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *iteratorTarget);
 };
 
 struct ProxyFunctionObject : ProxyObject {

@@ -140,8 +140,9 @@ PropertyKey StringObjectOwnPropertyKeyIterator::next(const Object *o, Property *
     return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
 }
 
-OwnPropertyKeyIterator *StringObject::virtualOwnPropertyKeys(const Object *)
+OwnPropertyKeyIterator *StringObject::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    *target = *m;
     return new StringObjectOwnPropertyKeyIterator;
 }
 

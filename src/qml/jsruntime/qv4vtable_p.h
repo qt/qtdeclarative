@@ -78,7 +78,7 @@ struct VTable
     typedef Heap::Object *(*GetPrototypeOf)(const Managed *);
     typedef bool (*SetPrototypeOf)(Managed *, const Object *);
     typedef qint64 (*GetLength)(const Managed *m);
-    typedef OwnPropertyKeyIterator *(*OwnPropertyKeys)(const Object *m);
+    typedef OwnPropertyKeyIterator *(*OwnPropertyKeys)(const Object *m, Value *target);
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
