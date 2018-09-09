@@ -431,15 +431,9 @@ built-ins/TypedArrays/from/new-instance-with-mapfn.js fails
 built-ins/TypedArrays/from/new-instance-without-mapfn.js fails
 built-ins/TypedArrays/from/property-abrupt-completion.js fails
 built-ins/TypedArrays/from/set-value-abrupt-completion.js fails
-built-ins/TypedArrays/internals/DefineOwnProperty/key-is-numericindex.js fails
 built-ins/TypedArrays/internals/Get/key-is-not-integer.js fails
 built-ins/TypedArrays/internals/Get/key-is-not-minus-zero.js fails
 built-ins/TypedArrays/internals/Get/key-is-out-of-bounds.js fails
-built-ins/TypedArrays/internals/GetOwnProperty/enumerate-detached-buffer.js fails
-built-ins/TypedArrays/internals/GetOwnProperty/index-prop-desc.js fails
-built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes-and-string-and-symbol-keys-.js fails
-built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes-and-string-keys.js fails
-built-ins/TypedArrays/internals/OwnPropertyKeys/integer-indexes.js fails
 built-ins/TypedArrays/internals/Set/detached-buffer.js fails
 built-ins/TypedArrays/internals/Set/tonumber-value-throws.js strictFails
 built-ins/global/global-object.js fails
