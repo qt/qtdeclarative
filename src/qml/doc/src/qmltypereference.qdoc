@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQml 2.12
+\qmlmodule QtQml 2.\QtMinorVersion
 \title Qt QML QML Types
 \ingroup qmlmodules
 \brief List of QML types provided by the Qt QML module
@@ -43,19 +43,19 @@ The types provided by the \c QtQml module are only available in a QML document
 if that document imports the \c QtQml namespace (or if the document imports the
 \c QtQuick namespace, as noted below).
 
-The current version of the \c QtQml module is version 2.12, and thus it may be
-imported via the following statement:
+The current version of the \c QtQml module is version 2.\QtMinorVersion, and
+thus it may be imported via the following statement:
 
-\qml
-import QtQml 2.12
+\qml \QtMinorVersion
+import QtQml 2.\1
 \endqml
 
 Most clients will never need to use the \c QtQml import, as all of the types
 are also provided by the \c QtQuick namespace which may be imported as
 follows:
 
-\qml
-import QtQuick 2.12
+\qml \QtMinorVersion
+import QtQuick 2.\1
 \endqml
 
 See the \l{Qt Quick} module documentation for more information about the \c

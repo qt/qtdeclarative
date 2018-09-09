@@ -55,11 +55,12 @@ following directive:
 #include <QtQml>
 \endcode
 
-The QML types in Qt QML are available through the \c QtQML import. To use the
+The QML types in Qt QML are available through the \c QtQml import. To use the
 types, add the following import statement to your .qml file:
-\code
-import QtQml 2.12
-\endcode
+
+\qml \QtMinorVersion
+import QtQml 2.\1
+\endqml
 
 
 To link against the module, add this line to your \l qmake \c

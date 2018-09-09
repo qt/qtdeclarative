@@ -224,16 +224,16 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 }
 
 /*!
-    \qmlmodule Qt.labs.folderlistmodel 2.12
+    \qmlmodule Qt.labs.folderlistmodel 2.\QtMinorVersion
     \title Qt Labs FolderListModel QML Types
     \ingroup qmlmodules
     \brief The FolderListModel provides a model of the contents of a file system folder.
 
     To use this module, import the module with the following line:
 
-    \code
-    import Qt.labs.folderlistmodel 2.12
-    \endcode
+    \qml \QtMinorVersion
+    import Qt.labs.folderlistmodel 2.\1
+    \endqml
 */
 
 
@@ -251,7 +251,9 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
-    \b{import Qt.labs.folderlistmodel 2.12}
+    \qml \QtMinorVersion
+    import Qt.labs.folderlistmodel 2.\1
+    \endqml
 
     The \l folder property specifies the folder to access. Information about the
     files and directories in the folder is supplied via the model's interface.
@@ -295,9 +297,9 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     The following example shows a FolderListModel being used to provide a list
     of QML files in a \l ListView:
 
-    \qml
-    import QtQuick 2.0
-    import Qt.labs.folderlistmodel 2.12
+    \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import Qt.labs.folderlistmodel 2.\1
 
     ListView {
         width: 200; height: 400
