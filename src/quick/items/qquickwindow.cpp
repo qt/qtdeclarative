@@ -690,8 +690,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 touchMouseId = p.id();
                 if (!q->mouseGrabberItem())
                     item->grabMouse();
-                auto pointerEventPoint = pointerEvent->pointById(p.id());
-                pointerEventPoint->setGrabberItem(item);
+                if (auto pointerEventPoint = pointerEvent->pointById(p.id()))
+                    pointerEventPoint->setGrabberItem(item);
 
                 if (checkIfDoubleClicked(event->timestamp())) {
                     QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event.data(), item, false));
@@ -2607,19 +2607,22 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
         // update accepted new points.
         bool isPressOrRelease = pointerEvent->isPressEvent() || pointerEvent->isReleaseEvent();
         for (auto point: qAsConst(touchEvent->touchPoints())) {
-            auto pointerEventPoint = ptEvent->pointById(point.id());
-            pointerEventPoint->setAccepted();
-            if (isPressOrRelease)
-                pointerEventPoint->setGrabberItem(item);
+            if (auto pointerEventPoint = ptEvent->pointById(point.id())) {
+                pointerEventPoint->setAccepted();
+                if (isPressOrRelease)
+                    pointerEventPoint->setGrabberItem(item);
+            }
         }
     } else {
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
         for (auto point: qAsConst(touchEvent->touchPoints())) {
             if (point.state() == Qt::TouchPointPressed) {
-                if (ptEvent->pointById(point.id())->exclusiveGrabber() == item) {
-                    qCDebug(DBG_TOUCH_TARGET) << "TP" << hex << point.id() << "disassociated";
-                    ptEvent->pointById(point.id())->setGrabberItem(nullptr);
+                if (auto *tp = ptEvent->pointById(point.id())) {
+                    if (tp->exclusiveGrabber() == item) {
+                        qCDebug(DBG_TOUCH_TARGET) << "TP" << hex << point.id() << "disassociated";
+                        tp->setGrabberItem(nullptr);
+                    }
                 }
             }
         }
