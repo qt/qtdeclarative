@@ -1495,6 +1495,14 @@ void QQuickTableViewPrivate::updatePolish()
     loadAndUnloadVisibleEdges();
 }
 
+void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal minExtent, qreal maxExtent)
+{
+    if (rebuildScheduled || rebuildState != RebuildState::Done)
+        return;
+
+    QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
+}
+
 void QQuickTableViewPrivate::createWrapperModel()
 {
     Q_Q(QQuickTableView);

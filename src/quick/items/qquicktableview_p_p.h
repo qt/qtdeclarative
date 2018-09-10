@@ -193,6 +193,7 @@ public:
     static inline QQuickTableViewPrivate *get(QQuickTableView *q) { return q->d_func(); }
 
     void updatePolish() override;
+    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
 
 public:
     QHash<int, FxTableItem *> loadedItems;

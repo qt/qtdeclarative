@@ -594,21 +594,31 @@ void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
 
 void tst_QQuickTableView::checkContentXY()
 {
-    // Check that you can set contentX and contentY on
-    // startup, and that this is respected by TableView
+    // Check that you can bind contentX and contentY to
+    // e.g show the center of the table at start-up
     LOAD_TABLEVIEW("setcontentpos.qml");
 
     auto model = TestModelAsVariant(10, 10);
     tableView->setModel(model);
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableView->contentX(), 250);
-    QCOMPARE(tableView->contentY(), 250);
+    QCOMPARE(tableView->width(), 400);
+    QCOMPARE(tableView->height(), 400);
+    QCOMPARE(tableView->contentWidth(), 1000);
+    QCOMPARE(tableView->contentHeight(), 1000);
 
-    // Since we flick the content item, we expect the
-    // loaded table to end up at row/column 2,2
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 2);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 2);
+    // Check that the content item is positioned according
+    // to the binding in the QML file (which will set the
+    // viewport to be at the center of the table).
+    const qreal expectedXY = (tableView->contentWidth() - tableView->width()) / 2;
+    QCOMPARE(tableView->contentX(), expectedXY);
+    QCOMPARE(tableView->contentY(), expectedXY);
+
+    // Check that we end up at the correct top-left cell:
+    const qreal delegateWidth = tableViewPrivate->loadedItems.values().first()->item->width();
+    const int expectedCellXY = qCeil(expectedXY / delegateWidth);
+    QCOMPARE(tableViewPrivate->loadedTable.left(), expectedCellXY);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), expectedCellXY);
 }
 
 void tst_QQuickTableView::noDelegate()
