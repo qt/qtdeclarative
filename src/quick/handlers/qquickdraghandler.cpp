@@ -50,7 +50,7 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 /*!
     \qmltype DragHandler
     \instantiates QQuickDragHandler
-    \inherits SinglePointHandler
+    \inherits MultiPointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
     \brief Handler for dragging.
