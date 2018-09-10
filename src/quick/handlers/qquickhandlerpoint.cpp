@@ -269,7 +269,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty enum QtQuick::HandlerPoint::pressedButtons
+    \qmlproperty enumeration QtQuick::HandlerPoint::pressedButtons
     \brief Which mouse or stylus buttons are currently pressed
 
     \sa MouseArea::pressedButtons
@@ -277,7 +277,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty enum QtQuick::HandlerPoint::modifiers
+    \qmlproperty enumeration QtQuick::HandlerPoint::modifiers
     \brief Which modifier keys are currently pressed
 
     This property holds the keyboard modifiers that were pressed at the time
