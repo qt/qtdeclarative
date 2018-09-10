@@ -48,14 +48,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQ2
+import QtQuick 2.10
+import QtQuick.Controls 2.3 as QQC2
 import ".."
 import "../Style"
 import "fitness.js" as FitnessData
 
 Item {
-    QQ2.SwipeView {
+    QQC2.SwipeView {
         id: svFitnessContainer
 
         anchors.fill: parent
@@ -121,7 +121,7 @@ Item {
         }
     }
 
-    QQ2.PageIndicator {
+    QQC2.PageIndicator {
         count: svFitnessContainer.count
         currentIndex: svFitnessContainer.currentIndex
 

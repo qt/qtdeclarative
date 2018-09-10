@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.10
+import QtQuick.Templates 2.3 as T
 import "."
 
 T.Switch {
