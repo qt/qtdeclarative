@@ -351,11 +351,16 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 {
-    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (!cd->isRenderable() || !m_windows.contains(window))
+    if (!m_windows.contains(window))
         return;
 
     WindowData &data = const_cast<WindowData &>(m_windows[window]);
+    bool alsoSwap = data.updatePending;
+    data.updatePending = false;
+
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable())
+        return;
 
     bool current = false;
 
@@ -381,9 +386,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     } else {
         current = gl->makeCurrent(window);
     }
-
-    bool alsoSwap = data.updatePending;
-    data.updatePending = false;
 
     bool lastDirtyWindow = true;
     auto i = m_windows.constBegin();

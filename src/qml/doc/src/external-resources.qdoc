@@ -69,6 +69,10 @@
     \title Qt Creator Manual
 */
 /*!
+    \externalpage https://doc.qt.io/qtcreator/creator-project-creating.html#creating-resource-files
+    \title Creating Resource Files
+*/
+/*!
     \externalpage https://fontawesome.com/
     \title Font Awesome
 */
