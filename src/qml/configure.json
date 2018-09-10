@@ -96,6 +96,13 @@
             "purpose": "Provides the DelegateModel QML type.",
             "section": "QML",
             "output": [ "privateFeature" ]
+        },
+        "qml-worker-script": {
+            "label": "QML WorkerScript",
+            "purpose": "Enables the use of threads in QML.",
+            "section": "QML",
+            "condition": "features.thread",
+            "output": [ "privateFeature" ]
         }
     },
 

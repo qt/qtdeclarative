@@ -95,7 +95,7 @@
 #include <private/qqmldelegatemodel_p.h>
 #endif
 #include <private/qqmlobjectmodel_p.h>
-#if QT_CONFIG(thread)
+#if QT_CONFIG(qml_worker_script)
 #include <private/qquickworkerscript_p.h>
 #endif
 #include <private/qqmlinstantiator_p.h>
@@ -245,7 +245,7 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
     qmlRegisterType<QQmlListElement>(uri, versionMajor, versionMinor, "ListElement"); // Now in QtQml.Models, here for compatibility
     qmlRegisterCustomType<QQmlListModel>(uri, versionMajor, versionMinor, "ListModel", new QQmlListModelParser); // Now in QtQml.Models, here for compatibility
 #endif
-#if QT_CONFIG(thread)
+#if QT_CONFIG(qml_worker_script)
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
 #endif
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
@@ -691,7 +691,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
 #endif
   outputWarningsToMsgLog(true),
   cleanup(nullptr), erroredBindings(nullptr), inProgressCreations(0),
-#if QT_CONFIG(thread)
+#if QT_CONFIG(qml_worker_script)
   workerScriptEngine(nullptr),
 #endif
   activeObjectCreator(nullptr),
@@ -993,7 +993,7 @@ void QQmlEnginePrivate::init()
     rootContext = new QQmlContext(q,true);
 }
 
-#if QT_CONFIG(thread)
+#if QT_CONFIG(qml_worker_script)
 QQuickWorkerScriptEngine *QQmlEnginePrivate::getWorkerScriptEngine()
 {
     Q_Q(QQmlEngine);
