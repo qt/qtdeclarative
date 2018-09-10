@@ -722,14 +722,16 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
             // so, we just hide the item instead.
             fxTableItem->setVisible(false);
 
+            // If the item (or a descendant) has focus, remove it, so
+            // that the item doesn't enter with focus when it's reused.
             if (QQuickWindow *window = item->window()) {
-                // If the item (or a descendant) has focus, remove it, so
-                // that the item doesn't enter with focus when it's reused.
-                const auto focusItem = static_cast<QQuickItem *>(window->focusObject());
-                const bool hasFocus = item == focusItem || item->isAncestorOf(focusItem);
-                if (hasFocus) {
-                    const auto focusChild = QQuickItemPrivate::get(q)->subFocusItem;
-                    QQuickWindowPrivate::get(window)->clearFocusInScope(q, focusChild, Qt::OtherFocusReason);
+                const auto focusItem = qobject_cast<QQuickItem *>(window->focusObject());
+                if (focusItem) {
+                    const bool hasFocus = item == focusItem || item->isAncestorOf(focusItem);
+                    if (hasFocus) {
+                        const auto focusChild = QQuickItemPrivate::get(q)->subFocusItem;
+                        QQuickWindowPrivate::get(window)->clearFocusInScope(q, focusChild, Qt::OtherFocusReason);
+                    }
                 }
             }
         }
