@@ -331,7 +331,7 @@ void QQuickMultiPointHandler::moveTarget(QPointF pos)
 
 /*!
     \readonly
-    \qmlproperty QQuickHandlerPoint QtQuick::MultiPointHandler::centroid
+    \qmlproperty QtQuick::HandlerPoint QtQuick::MultiPointHandler::centroid
 
     A point exactly in the middle of the currently-pressed touch points.
     If only one point is pressed, it's the same as that point.

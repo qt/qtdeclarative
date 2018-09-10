@@ -496,7 +496,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
 /*!
     \readonly
-    \qmlproperty QQuickHandlerPoint QtQuick::PinchHandler::centroid
+    \qmlproperty QtQuick::HandlerPoint QtQuick::PinchHandler::centroid
 
     A point exactly in the middle of the currently-pressed touch points.
     The \l target will be rotated around this point.
