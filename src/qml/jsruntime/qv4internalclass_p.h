@@ -141,25 +141,71 @@ inline uint PropertyHash::lookup(PropertyKey identifier) const
     }
 }
 
+template<typename T>
+struct SharedInternalClassDataPrivate {
+    SharedInternalClassDataPrivate()
+        : refcount(1),
+          m_alloc(0),
+          m_size(0),
+          data(nullptr)
+    { }
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other)
+        : refcount(1),
+          m_alloc(other.m_alloc),
+          m_size(other.m_size)
+    {
+        if (m_alloc) {
+            data = new T[m_alloc];
+            memcpy(data, other.data, m_size*sizeof(T));
+        }
+    }
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, int pos, T value)
+        : refcount(1),
+          m_alloc(pos + 8),
+          m_size(pos + 1)
+    {
+        data = new T[m_alloc];
+        if (other.data)
+            memcpy(data, other.data, (m_size - 1)*sizeof(T));
+        data[pos] = value;
+    }
+    ~SharedInternalClassDataPrivate() { delete [] data; }
+
+
+    void grow() {
+        if (!m_alloc)
+            m_alloc = 4;
+        T *n = new T[m_alloc * 2];
+        if (data) {
+            memcpy(n, data, m_alloc*sizeof(T));
+            delete [] data;
+        }
+        data = n;
+        m_alloc *= 2;
+    }
+
+    uint alloc() const { return m_alloc; }
+    uint size() const { return m_size; }
+    void setSize(uint s) { m_size = s; }
+
+    T at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
+    void set(uint i, T t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
+
+    int refcount;
+private:
+    uint m_alloc;
+    uint m_size;
+    T *data;
+};
+
+
 template <typename T>
 struct SharedInternalClassData {
-    struct Private {
-        Private(int alloc)
-            : refcount(1),
-              alloc(alloc),
-              size(0)
-        { data = new T  [alloc]; }
-        ~Private() { delete [] data; }
-
-        int refcount;
-        uint alloc;
-        uint size;
-        T *data;
-    };
+    using Private = SharedInternalClassDataPrivate<T>;
     Private *d;
 
     inline SharedInternalClassData() {
-        d = new Private(8);
+        d = new Private;
     }
 
     inline SharedInternalClassData(const SharedInternalClassData &other)
@@ -180,54 +226,41 @@ struct SharedInternalClassData {
     }
 
     void add(uint pos, T value) {
-        if (pos < d->size) {
+        if (pos < d->size()) {
             Q_ASSERT(d->refcount > 1);
             // need to detach
-            Private *dd = new Private(pos + 8);
-            memcpy(dd->data, d->data, pos*sizeof(T));
-            dd->size = pos + 1;
-            dd->data[pos] = value;
+            Private *dd = new Private(*d, pos, value);
             if (!--d->refcount)
                 delete d;
             d = dd;
             return;
         }
-        Q_ASSERT(pos == d->size);
-        if (pos == d->alloc) {
-            T *n = new T[d->alloc * 2];
-            memcpy(n, d->data, d->alloc*sizeof(T));
-            delete [] d->data;
-            d->data = n;
-            d->alloc *= 2;
-        }
-        d->data[pos] = value;
-        ++d->size;
+        Q_ASSERT(pos == d->size());
+        if (pos == d->alloc())
+            d->grow();
+        d->set(pos, value);
+        d->setSize(d->size() + 1);
     }
 
     void set(uint pos, T value) {
-        Q_ASSERT(pos < d->size);
+        Q_ASSERT(pos < d->size());
         if (d->refcount > 1) {
             // need to detach
-            Private *dd = new Private(d->alloc);
-            memcpy(dd->data, d->data, d->size*sizeof(T));
-            dd->size = d->size;
+            Private *dd = new Private(*d);
             if (!--d->refcount)
                 delete d;
             d = dd;
         }
-        d->data[pos] = value;
+        d->set(pos, value);
     }
 
-    T *constData() const {
-        return d->data;
-    }
     T at(uint i) const {
-        Q_ASSERT(i < d->size);
-        return d->data[i];
+        Q_ASSERT(i < d->size());
+        return d->at(i);
     }
     T operator[] (uint i) {
-        Q_ASSERT(i < d->size);
-        return d->data[i];
+        Q_ASSERT(i < d->size());
+        return d->at(i);
     }
 };
 
