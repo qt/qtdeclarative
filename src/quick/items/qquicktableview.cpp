@@ -502,15 +502,15 @@ void QQuickTableViewPrivate::updateContentWidth()
         if (currentRightColumn >= tableSize.width() - 1) {
             // We are at the last column, and can set the exact width
             if (currentWidth != q->implicitWidth())
-                q->setContentWidth(currentWidth);
+                q->QQuickFlickable::setContentWidth(currentWidth);
         } else if (currentWidth >= q->implicitWidth()) {
             // We are at the estimated width, but there are still more columns
-            q->setContentWidth(estimatedWidth);
+            q->QQuickFlickable::setContentWidth(estimatedWidth);
         } else {
             // Only set a new width if the new estimate is substantially different
             qreal diff = 1 - (estimatedWidth / q->implicitWidth());
             if (qAbs(diff) > thresholdBeforeAdjust)
-                q->setContentWidth(estimatedWidth);
+                q->QQuickFlickable::setContentWidth(estimatedWidth);
         }
     }
 }
@@ -539,15 +539,15 @@ void QQuickTableViewPrivate::updateContentHeight()
         if (currentBottomRow >= tableSize.height() - 1) {
             // We are at the last row, and can set the exact height
             if (currentHeight != q->implicitHeight())
-                q->setContentHeight(currentHeight);
+                q->QQuickFlickable::setContentHeight(currentHeight);
         } else if (currentHeight >= q->implicitHeight()) {
             // We are at the estimated height, but there are still more rows
-            q->setContentHeight(estimatedHeight);
+            q->QQuickFlickable::setContentHeight(estimatedHeight);
         } else {
             // Only set a new height if the new estimate is substantially different
             qreal diff = 1 - (estimatedHeight / q->implicitHeight());
             if (qAbs(diff) > thresholdBeforeAdjust)
-                q->setContentHeight(estimatedHeight);
+                q->QQuickFlickable::setContentHeight(estimatedHeight);
         }
     }
 }
@@ -1687,8 +1687,6 @@ QQuickTableView::QQuickTableView(QQuickItem *parent)
     : QQuickFlickable(*(new QQuickTableViewPrivate), parent)
 {
     setFlag(QQuickItem::ItemIsFocusScope);
-    connect(this, &QQuickFlickable::contentWidthChanged, this, &QQuickTableView::contentWidthOverrideChanged);
-    connect(this, &QQuickFlickable::contentHeightChanged, this, &QQuickTableView::contentHeightOverrideChanged);
 }
 
 int QQuickTableView::rows() const
@@ -1851,52 +1849,18 @@ void QQuickTableView::setReuseItems(bool reuse)
     emit reuseItemsChanged();
 }
 
-qreal QQuickTableView::explicitContentWidth() const
-{
-    Q_D(const QQuickTableView);
-
-    if (d->rebuildScheduled && d->explicitContentWidth.isNull) {
-        // The table is pending to be rebuilt. Since we don't
-        // know the contentWidth before this is done, we do the
-        // rebuild now, instead of waiting for the polish event.
-       d->updatePolishIfPossible();
-    }
-
-    return contentWidth();
-}
-
-void QQuickTableView::setExplicitContentWidth(qreal width)
+void QQuickTableView::setContentWidth(qreal width)
 {
     Q_D(QQuickTableView);
     d->explicitContentWidth = width;
-    if (width == contentWidth())
-        return;
-
-    setContentWidth(width);
+    QQuickFlickable::setContentWidth(width);
 }
 
-qreal QQuickTableView::explicitContentHeight() const
-{
-    Q_D(const QQuickTableView);
-
-    if (d->rebuildScheduled && d->explicitContentHeight.isNull) {
-        // The table is pending to be rebuilt. Since we don't
-        // know the contentHeight before this is done, we do the
-        // rebuild now, instead of waiting for the polish event.
-       d->updatePolishIfPossible();
-    }
-
-    return contentHeight();
-}
-
-void QQuickTableView::setExplicitContentHeight(qreal height)
+void QQuickTableView::setContentHeight(qreal height)
 {
     Q_D(QQuickTableView);
     d->explicitContentHeight = height;
-    if (height == contentHeight())
-        return;
-
-    setContentHeight(height);
+    QQuickFlickable::setContentHeight(height);
 }
 
 void QQuickTableView::forceLayout()

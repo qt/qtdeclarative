@@ -538,13 +538,14 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     tableView->setContentY(flickTo);
 
     const int largeSizeCellCountInView = qCeil(tableView->width() / cellSizeLarge);
-    const int bottomRow = smallCellCount + largeSizeCellCountInView - 1;
-    QCOMPARE(tableViewPrivate->loadedTable.right(), bottomRow);
+    const int columnCount = smallCellCount + largeSizeCellCountInView;
+    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
 
     const qreal firstHalfLength = smallCellCount * cellSizeSmall;
     const qreal secondHalfOneScreenLength = largeSizeCellCountInView * cellSizeLarge;
     const qreal lengthAfterFlick = firstHalfLength + secondHalfOneScreenLength;
-    const qreal averageCellSize = lengthAfterFlick / (smallCellCount + largeSizeCellCountInView);
+
+    const qreal averageCellSize = lengthAfterFlick / columnCount;
     const qreal expectedSizeHalf = (tableSize * averageCellSize) + accumulatedSpacing;
 
     QCOMPARE(tableView->contentWidth(), expectedSizeHalf);
@@ -579,6 +580,10 @@ void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
     tableView->setContentHeight(1000);
     QCOMPARE(tableView->contentWidth(), 1000);
     QCOMPARE(tableView->contentHeight(), 1000);
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
 
     // Flick somewhere. It should not affect the contentWidth/Height
     tableView->setContentX(500);

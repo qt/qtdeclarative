@@ -98,6 +98,7 @@ ApplicationWindow {
 
         //! [scroll]
         Component.onCompleted: {
+            tableView.forceLayout()
             tableView.contentX = (tableView.contentWidth - tableView.width) / 2;
             tableView.contentY = (tableView.contentHeight - tableView.height) / 2;
         }
