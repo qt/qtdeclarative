@@ -342,8 +342,6 @@ public:
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void modelResetCallback();
 
-    bool updatePolishIfPossible() const;
-
     inline QString tableLayoutToString() const;
     void dumpTable() const;
 };

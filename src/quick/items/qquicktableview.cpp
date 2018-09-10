@@ -1671,18 +1671,6 @@ void QQuickTableViewPrivate::modelResetCallback()
     scheduleRebuildTable(RebuildOption::All);
 }
 
-bool QQuickTableViewPrivate::updatePolishIfPossible() const
-{
-    if (polishing || !q_func()->isComponentComplete()) {
-        // We shouldn't recurse into updatePolish(). And we shouldn't
-        // build the table before the component is complete.
-        return false;
-    }
-
-    const_cast<QQuickTableViewPrivate *>(this)->updatePolish();
-    return true;
-}
-
 QQuickTableView::QQuickTableView(QQuickItem *parent)
     : QQuickFlickable(*(new QQuickTableViewPrivate), parent)
 {
@@ -1867,8 +1855,14 @@ void QQuickTableView::forceLayout()
 {
     Q_D(QQuickTableView);
     d->columnRowPositionsInvalid = true;
-    if (!d->updatePolishIfPossible())
+
+    if (d->polishing) {
+        qWarning() << "TableView::forceLayout(): Cannot do an immediate re-layout during an ongoing layout!";
         polish();
+        return;
+    }
+
+    d->updatePolish();
 }
 
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
@@ -1892,6 +1886,7 @@ void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &o
 
 void QQuickTableView::viewportMoved(Qt::Orientations orientation)
 {
+    Q_D(QQuickTableView);
     QQuickFlickable::viewportMoved(orientation);
 
     // Calling polish() will schedule a polish event. But while the user is flicking, several
@@ -1901,8 +1896,19 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
     // has the pitfall that we open up for recursive callbacks. E.g while inside updatePolish(), we
     // load/unload items, and emit signals. The application can listen to those signals and set a
     // new contentX/Y on the flickable. So we need to guard for this, to avoid unexpected behavior.
-    if (!d_func()->updatePolishIfPossible())
+
+    if (d->rebuildScheduled) {
+        // No reason to do anything, since we're about to rebuild the whole table anyway.
+        // Besides, calling updatePolish, which will start the rebuild, can easily cause
+        // binding loops to happen since we usually end up modifying the geometry of the
+        // viewport (contentItem) as well.
+        return;
+    }
+
+    if (d->polishing)
         polish();
+    else
+        d->updatePolish();
 }
 
 void QQuickTableView::componentComplete()
