@@ -63,7 +63,7 @@ Item {
             width: parent.width
             height: titleRow.height
 
-            color: UIStyle.colorQtGray9
+            color: UIStyle.themeColorQtGray9
 
             Row {
                 id: titleRow
@@ -72,7 +72,7 @@ Item {
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    source: "images/navigation.png"
+                    source: UIStyle.themeImagePath("images/navigation")
                     fillMode: Image.PreserveAspectCrop
                 }
                 Text {
@@ -80,7 +80,7 @@ Item {
                     text: qsTr("Walking")
                     font.pixelSize: UIStyle.fontSizeM
                     font.letterSpacing: 2
-                    color: UIStyle.colorQtGray2
+                    color: UIStyle.themeColorQtGray2
                 }
             }
         }
@@ -94,12 +94,12 @@ Item {
 
             width: parent.width
             height: parent.height - titleRow.height - parent.spacing
-            property var imageList: ["straight.png",
-                                     "leftturn.png",
-                                     "rightturn.png",
-                                     "uturn.png",
-                                     "start.png",
-                                     "end.png"]
+            property var imageList: [UIStyle.themeImagePath("images/straight"),
+                                     UIStyle.themeImagePath("images/leftturn"),
+                                     UIStyle.themeImagePath("images/rightturn"),
+                                     "images/uturn.png",
+                                     "images/start.png",
+                                     "images/end.png"]
 
             clip: true
             focus: true

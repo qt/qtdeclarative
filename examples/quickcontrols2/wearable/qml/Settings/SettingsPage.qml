@@ -50,19 +50,10 @@
 
 import QtQuick 2.10
 import QtQuick.Controls 2.3 as QQC2
-import Qt.labs.settings 1.0
 import ".."
 import "../Style"
 
 Item {
-
-    Settings {
-        id: settings
-        property alias wireless: wirelessSwitch.checked
-        property alias bluetooth: bluetoothSwitch.checked
-        property alias contrast: contrastSlider.value
-        property alias brightness: brightnessSlider.value
-    }
 
     QQC2.SwipeView {
         id: svSettingsContainer
@@ -80,24 +71,26 @@ Item {
                     spacing: 50
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/bluetooth.png"
+                        source: UIStyle.themeImagePath("images/bluetooth")
                     }
                     QQC2.Switch {
                         id: bluetoothSwitch
                         anchors.verticalCenter: parent.verticalCenter
                         checked: settings.bluetooth
+                        onToggled: settings.bluetooth = checked
                     }
                 }
                 Row {
                     spacing: 50
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/wifi.png"
+                        source: UIStyle.themeImagePath("images/wifi")
                     }
                     QQC2.Switch {
                         id: wirelessSwitch
                         anchors.verticalCenter: parent.verticalCenter
                         checked: settings.wireless
+                        onToggled: settings.wireless = checked
                     }
                 }
             }
@@ -113,7 +106,7 @@ Item {
                 Column {
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: "images/brightness.png"
+                        source: UIStyle.themeImagePath("images/brightness")
                     }
                     QQC2.Slider {
                         id: brightnessSlider
@@ -122,13 +115,14 @@ Item {
                         to: 5
                         stepSize: 1
                         value: settings.brightness
+                        onMoved: settings.brightness = value
                     }
                 }
                 Column {
                     spacing: 2
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: "images/contrast.png"
+                        source: UIStyle.themeImagePath("images/contrast")
                     }
                     QQC2.Slider {
                         id: contrastSlider
@@ -137,6 +131,30 @@ Item {
                         to: 10
                         stepSize: 1
                         value: settings.contrast
+                        onMoved: settings.contrast = value
+                    }
+                }
+            }
+        }
+
+        SwipeViewPage {
+            id: settingsPage3
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 2
+
+                Row {
+                    spacing: 50
+                    Image {
+                        anchors.verticalCenter: parent.verticalCenter
+                        source: UIStyle.themeImagePath("images/theme")
+                    }
+                    QQC2.Switch {
+                        id: darkThemeSwitch
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: settings.darkTheme
+                        onToggled: settings.darkTheme = checked
                     }
                 }
             }

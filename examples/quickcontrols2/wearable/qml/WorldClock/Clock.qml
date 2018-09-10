@@ -180,7 +180,7 @@ SwipeViewPage {
             anchors.horizontalCenter: parent.horizontalCenter
 
             text: cityName
-            color: UIStyle.colorQtGray1
+            color: UIStyle.themeColorQtGray1
             font.pixelSize: UIStyle.fontSizeXS
             font.letterSpacing: 2
         }

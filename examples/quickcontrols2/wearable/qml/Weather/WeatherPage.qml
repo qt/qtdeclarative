@@ -69,7 +69,7 @@ Item {
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    source: "images/temperature.png"
+                    source: UIStyle.themeImagePath("images/temperature")
                 }
 
                 Column {
@@ -85,7 +85,7 @@ Item {
                                   + " °F" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
 
                     Text {
@@ -97,7 +97,7 @@ Item {
                                   + " °F" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
 
                     Text {
@@ -109,7 +109,7 @@ Item {
                                   + " °F " : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
             }
@@ -129,7 +129,7 @@ Item {
                     Image {
                         id: wImg
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/wind.png"
+                        source: UIStyle.themeImagePath("images/wind")
                     }
 
                     Text {
@@ -141,7 +141,7 @@ Item {
                                   + " mph" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
 
@@ -152,7 +152,7 @@ Item {
                     Image {
                         id: hImg
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/humidity.png"
+                        source: UIStyle.themeImagePath("images/humidity")
                     }
 
                     Text {
@@ -164,7 +164,7 @@ Item {
                                   + " %" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
             }
@@ -179,7 +179,7 @@ Item {
 
                 Image {
                     anchors.verticalCenter: parent.verticalCenter
-                    source: "images/pressure.png"
+                    source: UIStyle.themeImagePath("images/pressure")
                 }
 
                 Column {
@@ -195,7 +195,7 @@ Item {
                                   + " hPa" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
 
                     Text {
@@ -207,7 +207,7 @@ Item {
                                   + " hPa" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
 
                     Text {
@@ -219,7 +219,7 @@ Item {
                                   + " hPa" : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
             }
@@ -238,7 +238,7 @@ Item {
 
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/sunrise.png"
+                        source: UIStyle.themeImagePath("images/sunrise")
                     }
 
                     Text {
@@ -250,7 +250,7 @@ Item {
                                 : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
 
@@ -260,7 +260,7 @@ Item {
 
                     Image {
                         anchors.verticalCenter: parent.verticalCenter
-                        source: "images/sunset.png"
+                        source: UIStyle.themeImagePath("images/sunset")
                     }
 
                     Text {
@@ -272,7 +272,7 @@ Item {
                                 : "N/A"
                         font.pixelSize: UIStyle.fontSizeM
                         font.letterSpacing: 1
-                        color: UIStyle.colorQtGray1
+                        color: UIStyle.themeColorQtGray1
                     }
                 }
             }

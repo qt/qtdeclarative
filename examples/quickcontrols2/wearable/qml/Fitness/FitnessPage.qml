@@ -72,18 +72,18 @@ Item {
                     text: qsTr("Steps: ") + FitnessData.getSteps()
                     font.italic: true
                     font.pixelSize: UIStyle.fontSizeM
-                    color: UIStyle.colorQtGray1
+                    color: UIStyle.themeColorQtGray1
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    source: "images/man-walking.png"
+                    source: UIStyle.themeImagePath("images/man-walking")
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Calories: ") + FitnessData.getCalories()
                     font.pixelSize: UIStyle.fontSizeS
                     font.italic: true
-                    color: UIStyle.colorQtGray3
+                    color: UIStyle.themeColorQtGray3
                 }
             }
         }
@@ -102,11 +102,11 @@ Item {
                           + qsTr(" miles")
                     font.italic: true
                     font.pixelSize: UIStyle.fontSizeM
-                    color: UIStyle.colorQtGray1
+                    color: UIStyle.themeColorQtGray1
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    source: "images/man-running.png"
+                    source: UIStyle.themeImagePath("images/man-running")
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -115,7 +115,7 @@ Item {
                           + qsTr(" mins")
                     font.pixelSize: UIStyle.fontSizeS
                     font.italic: true
-                    color: UIStyle.colorQtGray3
+                    color: UIStyle.themeColorQtGray3
                 }
             }
         }

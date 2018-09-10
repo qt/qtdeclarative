@@ -65,7 +65,7 @@ T.Switch {
         height: 26
 
         radius: 13
-        color: control.down ? UIStyle.colorQtGray6 : UIStyle.colorQtGray10
+        color: control.down ? UIStyle.themeColorQtGray6 : UIStyle.themeColorQtGray10
         border.color: !control.checked ? "#999999"
                                        : (control.down ? UIStyle.colorQtAuxGreen2
                                                        : UIStyle.colorQtAuxGreen1)
@@ -80,7 +80,7 @@ T.Switch {
         radius: 13
         color: control.checked ? UIStyle.colorQtAuxGreen2 : "#E6173D"
         border.color: control.checked ? UIStyle.colorQtAuxGreen2
-                                      : UIStyle.colorQtGray6
+                                      : UIStyle.themeColorQtGray6
     }
 }
 

@@ -81,4 +81,24 @@ QtObject {
     readonly property color colorQtGray8: "#b5b7bf"
     readonly property color colorQtGray9: "#cecfd5"
     readonly property color colorQtGray10: "#f3f3f4"
+
+    // Light/dark versions of the colors above.
+    // Some UI elements always use a specific color regardless of theme,
+    // which is why we have both sets: so that those elements don't need to hard-code the hex string.
+    readonly property color themeColorQtGray1: darkTheme ? colorQtGray10 : colorQtGray1
+    readonly property color themeColorQtGray2: darkTheme ? colorQtGray9 : colorQtGray2
+    readonly property color themeColorQtGray3: darkTheme ? colorQtGray8 : colorQtGray3
+    readonly property color themeColorQtGray4: darkTheme ? colorQtGray7 : colorQtGray4
+    readonly property color themeColorQtGray5: darkTheme ? colorQtGray6 : colorQtGray5
+    readonly property color themeColorQtGray6: darkTheme ? colorQtGray5 : colorQtGray6
+    readonly property color themeColorQtGray7: darkTheme ? colorQtGray4 : colorQtGray7
+    readonly property color themeColorQtGray8: darkTheme ? colorQtGray3 : colorQtGray8
+    readonly property color themeColorQtGray9: darkTheme ? colorQtGray2 : colorQtGray9
+    readonly property color themeColorQtGray10: darkTheme ? colorQtGray1 : colorQtGray10
+
+    property bool darkTheme: false
+
+    function themeImagePath(baseImagePath) {
+        return baseImagePath + (darkTheme ? "-dark" : "-light") + ".png"
+    }
 }

@@ -50,21 +50,39 @@
 
 import QtQuick 2.10
 import QtQuick.Controls 2.3 as QQC2
+import Qt.labs.settings 1.0
 import "qml"
 import "qml/Style"
 
 QQC2.ApplicationWindow {
     id: window
-
     visible: true
-
     width: 320
     height: 320
-
     title: qsTr("Wearable")
 
+    Settings {
+        id: settings
+        property bool wireless
+        property bool bluetooth
+        property int contrast
+        property int brightness
+        property bool darkTheme
+    }
+
+    Binding {
+        target: UIStyle
+        property: "darkTheme"
+        value: settings.darkTheme
+    }
+
+    // We need the settings object both here and in SettingsPage,
+    // so for convenience, we declare it as a property of the root object so that
+    // it will be available to all of the QML files that we load.
+    property alias settings: settings
+
     background: Image {
-        source: "images/background.png"
+        source: "images/background-" + (settings.darkTheme ? "dark" : "light") + ".png"
     }
 
     header: NaviButton {

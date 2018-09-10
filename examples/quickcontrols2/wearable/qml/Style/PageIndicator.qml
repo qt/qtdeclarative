@@ -67,7 +67,7 @@ T.PageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: UIStyle.colorQtGray3
+        color: UIStyle.themeColorQtGray3
 
         opacity: index === control.currentIndex ? 1.0 : 0.35
 
