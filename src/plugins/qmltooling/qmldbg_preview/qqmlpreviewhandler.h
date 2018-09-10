@@ -46,6 +46,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qelapsedtimer.h>
 #include <QtQml/qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
@@ -73,9 +74,21 @@ public:
 
     void clear();
 
+    struct FpsInfo {
+        quint16 numSyncs;
+        quint16 minSync;
+        quint16 maxSync;
+        quint16 totalSync;
+
+        quint16 numRenders;
+        quint16 minRender;
+        quint16 maxRender;
+        quint16 totalRender;
+    };
+
 signals:
     void error(const QString &message);
-    void fps(quint16 frames);
+    void fps(const FpsInfo &info);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
@@ -83,7 +96,12 @@ private:
     void tryCreateObject();
     void showObject(QObject *object);
     void setCurrentWindow(QQuickWindow *window);
+
+    void beforeSynchronizing();
+    void afterSynchronizing();
+    void beforeRendering();
     void frameSwapped();
+
     void fpsTimerHit();
     void removeTranslators();
 
@@ -96,12 +114,30 @@ private:
     QQmlPreviewPosition m_lastPosition;
 
     QTimer m_fpsTimer;
-    quint16 m_frames = 0;
+
+    struct FrameTime {
+        void beginFrame();
+        void recordFrame();
+        void endFrame();
+        void reset();
+
+        QElapsedTimer timer;
+        qint64 elapsed = -1;
+        quint16 min = std::numeric_limits<quint16>::max();
+        quint16 max = 0;
+        quint16 total = 0;
+        quint16 number = 0;
+    };
+
+    FrameTime m_rendering;
+    FrameTime m_synchronizing;
 
     QScopedPointer<QTranslator> m_qtTranslator;
     QScopedPointer<QTranslator> m_qmlTranslator;
 };
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(QQmlPreviewHandler::FpsInfo)
 
 #endif // QQMLPREVIEWHANDLER_H

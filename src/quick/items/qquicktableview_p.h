@@ -72,10 +72,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(int columns READ columns NOTIFY columnsChanged)
     Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
     Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
-    Q_PROPERTY(qreal topMargin READ topMargin WRITE setTopMargin NOTIFY topMarginChanged)
-    Q_PROPERTY(qreal bottomMargin READ bottomMargin WRITE setBottomMargin NOTIFY bottomMarginChanged)
-    Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged)
-    Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged)
     Q_PROPERTY(QJSValue rowHeightProvider READ rowHeightProvider WRITE setRowHeightProvider NOTIFY rowHeightProviderChanged)
     Q_PROPERTY(QJSValue columnWidthProvider READ columnWidthProvider WRITE setColumnWidthProvider NOTIFY columnWidthProviderChanged)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
@@ -95,18 +91,6 @@ public:
 
     qreal columnSpacing() const;
     void setColumnSpacing(qreal spacing);
-
-    qreal topMargin() const;
-    void setTopMargin(qreal margin);
-
-    qreal bottomMargin() const;
-    void setBottomMargin(qreal margin);
-
-    qreal leftMargin() const;
-    void setLeftMargin(qreal margin);
-
-    qreal rightMargin() const;
-    void setRightMargin(qreal margin);
 
     QJSValue rowHeightProvider() const;
     void setRowHeightProvider(QJSValue provider);
@@ -137,10 +121,6 @@ Q_SIGNALS:
     void columnsChanged();
     void rowSpacingChanged();
     void columnSpacingChanged();
-    void topMarginChanged();
-    void bottomMarginChanged();
-    void leftMarginChanged();
-    void rightMarginChanged();
     void rowHeightProviderChanged();
     void columnWidthProviderChanged();
     void modelChanged();

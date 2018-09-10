@@ -104,6 +104,7 @@ private slots:
     void checkForceLayoutFunction();
     void checkContentWidthAndHeight();
     void checkExplicitContentWidthAndHeight();
+    void checkContentXY();
     void noDelegate();
     void countDelegateItems_data();
     void countDelegateItems();
@@ -111,8 +112,6 @@ private slots:
     void checkLayoutOfEqualSizedDelegateItems();
     void checkFocusRemoved_data();
     void checkFocusRemoved();
-    void checkTableMargins_data();
-    void checkTableMargins();
     void fillTableViewButNothingMore_data();
     void fillTableViewButNothingMore();
     void checkInitialAttachedProperties_data();
@@ -503,31 +502,28 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // to do the calculations once, and use them for both axis, below.
     QCOMPARE(tableView->width(), tableView->height());
     QCOMPARE(tableView->rowSpacing(), tableView->columnSpacing());
-    QCOMPARE(tableView->leftMargin(), tableView->rightMargin());
-    QCOMPARE(tableView->topMargin(), tableView->bottomMargin());
 
     const int tableSize = 100;
     const int cellSizeSmall = 100;
     const int cellSizeLarge = 200;
     const int spacing = 1;
-    const int margin = 10;
     const int smallCellCount = 20;
     const int largeCellCount = tableSize - smallCellCount;
-    const qreal spacingAndMargins = ((tableSize - 1) * spacing) + (margin * 2);
+    const qreal accumulatedSpacing = ((tableSize - 1) * spacing);
     auto model = TestModelAsVariant(tableSize, tableSize);
 
     tableView->setModel(model);
 
     WAIT_UNTIL_POLISHED;
 
-    const qreal expectedSizeInit = (tableSize * cellSizeSmall) + ((tableSize - 1) * spacing) + (margin * 2);
+    const qreal expectedSizeInit = (tableSize * cellSizeSmall) + ((tableSize - 1) * spacing);
     QCOMPARE(tableView->contentWidth(), expectedSizeInit);
     QCOMPARE(tableView->contentHeight(), expectedSizeInit);
 
     // Flick in 5 more rows and columns, but not so far that we start loading in
     // the ones that are bigger. Loading in more rows and columns of the same
     // size as the initial ones should not change the first prediction.
-    qreal flickTo = ((cellSizeSmall + spacing) * 5) + margin;
+    qreal flickTo = ((cellSizeSmall + spacing) * 5);
     tableView->setContentX(flickTo);
     tableView->setContentY(flickTo);
 
@@ -537,7 +533,7 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // Flick to row and column 20 (smallCellCount), since there the row and
     // column sizes increases with 100. Check that TableView then adjusts
     // contentWidth and contentHeight accordingly.
-    flickTo = ((cellSizeSmall + spacing) * smallCellCount) + margin - spacing;
+    flickTo = ((cellSizeSmall + spacing) * smallCellCount) - spacing;
     tableView->setContentX(flickTo);
     tableView->setContentY(flickTo);
 
@@ -549,7 +545,7 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     const qreal secondHalfOneScreenLength = largeSizeCellCountInView * cellSizeLarge;
     const qreal lengthAfterFlick = firstHalfLength + secondHalfOneScreenLength;
     const qreal averageCellSize = lengthAfterFlick / (smallCellCount + largeSizeCellCountInView);
-    const qreal expectedSizeHalf = (tableSize * averageCellSize) + spacingAndMargins;
+    const qreal expectedSizeHalf = (tableSize * averageCellSize) + accumulatedSpacing;
 
     QCOMPARE(tableView->contentWidth(), expectedSizeHalf);
     QCOMPARE(tableView->contentHeight(), expectedSizeHalf);
@@ -557,7 +553,7 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // Flick to the end (row/column 100, and overshoot a bit), and
     // check that we then end up with the exact content width/height.
     const qreal secondHalfLength = largeCellCount * cellSizeLarge;
-    const qreal expectedFullSize = (firstHalfLength + secondHalfLength) + spacingAndMargins;
+    const qreal expectedFullSize = (firstHalfLength + secondHalfLength) + accumulatedSpacing;
     tableView->setContentX(expectedFullSize);
     tableView->setContentY(expectedFullSize);
 
@@ -589,6 +585,25 @@ void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
     tableView->setContentY(500);
     QCOMPARE(tableView->contentWidth(), 1000);
     QCOMPARE(tableView->contentHeight(), 1000);
+}
+
+void tst_QQuickTableView::checkContentXY()
+{
+    // Check that you can set contentX and contentY on
+    // startup, and that this is respected by TableView
+    LOAD_TABLEVIEW("setcontentpos.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    tableView->setModel(model);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentX(), 250);
+    QCOMPARE(tableView->contentY(), 250);
+
+    // Since we flick the content item, we expect the
+    // loaded table to end up at row/column 2,2
+    QCOMPARE(tableViewPrivate->loadedTable.left(), 2);
+    QCOMPARE(tableViewPrivate->loadedTable.top(), 2);
 }
 
 void tst_QQuickTableView::noDelegate()
@@ -713,6 +728,9 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
     tableView->setModel(model);
     tableView->setRowSpacing(spacing.height());
     tableView->setColumnSpacing(spacing.width());
+
+    // Setting margins on Flickable should not affect the layout of the
+    // delegate items, since the margins is "transparent" to the TableView.
     tableView->setLeftMargin(margins.left());
     tableView->setTopMargin(margins.top());
     tableView->setRightMargin(margins.right());
@@ -729,8 +747,8 @@ void tst_QQuickTableView::checkLayoutOfEqualSizedDelegateItems()
         QCOMPARE(item->parentItem(), tableView->contentItem());
 
         const QPoint cell = getContextRowAndColumn(item);
-        qreal expectedX = margins.left() + (cell.x() * (expectedItemWidth + spacing.width()));
-        qreal expectedY = margins.top() + (cell.y() * (expectedItemHeight + spacing.height()));
+        qreal expectedX = cell.x() * (expectedItemWidth + spacing.width());
+        qreal expectedY = cell.y() * (expectedItemHeight + spacing.height());
         QCOMPARE(item->x(), expectedX);
         QCOMPARE(item->y(), expectedY);
         QCOMPARE(item->z(), 1);
@@ -782,83 +800,16 @@ void tst_QQuickTableView::checkFocusRemoved()
     }
 }
 
-void tst_QQuickTableView::checkTableMargins_data()
-{
-    QTest::addColumn<QVariant>("model");
-    QTest::addColumn<QSizeF>("spacing");
-    QTest::addColumn<QMarginsF>("margins");
-
-    QTest::newRow("QAIM single") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM single, 1,1, no margins") << TestModelAsVariant(1, 1) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM single, no spacing, 1111") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(1, 1, 1, 1);
-
-    QTest::newRow("QAIM 4x4") << TestModelAsVariant(4, 4) << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM 4x4, 1,1, no margins") << TestModelAsVariant(4, 4) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM 4x4, no spacing, 1111") << TestModelAsVariant(1, 1) << QSizeF(0, 0) << QMarginsF(1, 1, 1, 1);
-
-    QTest::newRow("QAIM 1,1 0000") << TestModelAsVariant(20, 20) << QSizeF(1, 1) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("QAIM 1,1 5555") << TestModelAsVariant(20, 20) << QSizeF(1, 1) << QMarginsF(5, 5, 5, 5);
-    QTest::newRow("QAIM 0,0 3333") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(3, 3, 3, 3);
-    QTest::newRow("QAIM 2,2 1234") << TestModelAsVariant(20, 20) << QSizeF(2, 2) << QMarginsF(1, 2, 3, 4);
-    QTest::newRow("QAIM 0,0 3210") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(3, 2, 1, 0);
-
-    QTest::newRow("QAIM 0,0 negative left margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(-10, 0, 0, 0);
-    QTest::newRow("QAIM 0,0 negative top margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, -10, 0, 0);
-    QTest::newRow("QAIM 0,0 negative right margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, 0, -10, 0);
-    QTest::newRow("QAIM 0,0 negative bottom margin") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(0, 0, 0, -10);
-    QTest::newRow("QAIM 0,0 all margins negative") << TestModelAsVariant(20, 20) << QSizeF(0, 0) << QMarginsF(-10, -10, -10, -10);
-}
-
-void tst_QQuickTableView::checkTableMargins()
-{
-    // Check that the space between the content view and
-    // the items matches the margins we set on the tableview.
-    QFETCH(QVariant, model);
-    QFETCH(QSizeF, spacing);
-    QFETCH(QMarginsF, margins);
-    LOAD_TABLEVIEW("plaintableview.qml");
-
-    tableView->setModel(model);
-    tableView->setRowSpacing(spacing.height());
-    tableView->setColumnSpacing(spacing.width());
-    tableView->setLeftMargin(margins.left());
-    tableView->setTopMargin(margins.top());
-    tableView->setRightMargin(margins.right());
-    tableView->setBottomMargin(margins.bottom());
-
-    WAIT_UNTIL_POLISHED;
-
-    // Check left-, and top margins
-    auto const topLeftItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
-    qreal leftSpace = topLeftItem->x();
-    qreal topSpace = topLeftItem->y();
-    QCOMPARE(leftSpace, margins.left());
-    QCOMPARE(topSpace, margins.top());
-
-    // Flick the table to the end...
-    tableView->setContentX(tableView->contentWidth() - tableView->width());
-    tableView->setContentY(tableView->contentHeight() - tableView->height());
-    const QPoint bottomRightCell = tableViewPrivate->loadedTable.bottomRight();
-    auto const bottomRightItem = tableViewPrivate->loadedTableItem(bottomRightCell)->item;
-
-    // ...and check the right-, and bottom margins
-    qreal rightSpace = tableView->contentWidth() - (bottomRightItem->x() + bottomRightItem->width());
-    qreal bottomSpace = tableView->contentHeight() - (bottomRightItem->y() + bottomRightItem->height());
-    QCOMPARE(rightSpace, margins.right());
-    QCOMPARE(bottomSpace, margins.bottom());
-}
-
 void tst_QQuickTableView::fillTableViewButNothingMore_data()
 {
     QTest::addColumn<QSizeF>("spacing");
-    QTest::addColumn<QMarginsF>("margins");
 
-    QTest::newRow("0 0,0 0") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("0 10,10 0") << QSizeF(10, 10) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("100 10,10 0") << QSizeF(10, 10) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("0 0,0 100") << QSizeF(0, 0) << QMarginsF(0, 0, 0, 0);
-    QTest::newRow("0 10,10 100") << QSizeF(10, 10) << QMarginsF(100, 100, 100, 100);
-    QTest::newRow("100 10,10 100") << QSizeF(10, 10) << QMarginsF(100, 100, 100, 100);
+    QTest::newRow("0 0,0 0") << QSizeF(0, 0);
+    QTest::newRow("0 10,10 0") << QSizeF(10, 10);
+    QTest::newRow("100 10,10 0") << QSizeF(10, 10);
+    QTest::newRow("0 0,0 100") << QSizeF(0, 0);
+    QTest::newRow("0 10,10 100") << QSizeF(10, 10);
+    QTest::newRow("100 10,10 100") << QSizeF(10, 10);
 }
 
 void tst_QQuickTableView::fillTableViewButNothingMore()
@@ -866,7 +817,6 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     // Check that we end up filling the whole visible part of
     // the tableview with cells, but nothing more.
     QFETCH(QSizeF, spacing);
-    QFETCH(QMarginsF, margins);
     LOAD_TABLEVIEW("plaintableview.qml");
 
     const int rows = 100;
@@ -876,19 +826,11 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     tableView->setModel(model);
     tableView->setRowSpacing(spacing.height());
     tableView->setColumnSpacing(spacing.width());
-    tableView->setLeftMargin(margins.left());
-    tableView->setTopMargin(margins.top());
-    tableView->setRightMargin(margins.right());
-    tableView->setBottomMargin(margins.bottom());
 
     WAIT_UNTIL_POLISHED;
 
     auto const topLeftFxItem = tableViewPrivate->loadedTableItem(QPoint(0, 0));
     auto const topLeftItem = topLeftFxItem->item;
-
-    // Check that the top-left item are at the corner of the view
-    QCOMPARE(topLeftItem->x(), margins.left());
-    QCOMPARE(topLeftItem->y(), margins.top());
 
     auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
     auto const bottomRightItem = bottomRightFxItem->item;
@@ -900,8 +842,7 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
 
     // Check that the actual number of columns matches what we expect
     qreal cellWidth = bottomRightItem->width() + spacing.width();
-    qreal availableWidth = tableView->width() - margins.left();
-    int expectedColumns = qCeil(availableWidth / cellWidth);
+    int expectedColumns = qCeil(tableView->width() / cellWidth);
     int actualColumns = bottomRightCell.x() + 1;
     QCOMPARE(actualColumns, expectedColumns);
 
@@ -911,8 +852,7 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
 
     // Check that the actual number of rows matches what we expect
     qreal cellHeight = bottomRightItem->height() + spacing.height();
-    qreal availableHeight = tableView->height() - margins.top();
-    int expectedRows = qCeil(availableHeight / cellHeight);
+    int expectedRows = qCeil(tableView->height() / cellHeight);
     int actualRows = bottomRightCell.y() + 1;
     QCOMPARE(actualRows, expectedRows);
 }

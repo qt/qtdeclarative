@@ -227,7 +227,6 @@ public:
 
     QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
     QSizeF cellSpacing = QSizeF(0, 0);
-    QMarginsF tableMargins;
 
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 

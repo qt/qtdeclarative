@@ -78,7 +78,7 @@ public:
 
     void forwardRequest(const QString &file);
     void forwardError(const QString &error);
-    void forwardFps(quint16 frames);
+    void forwardFps(const QQmlPreviewHandler::FpsInfo &frames);
 
 signals:
     void error(const QString &file);

@@ -347,30 +347,106 @@ void QQmlPreviewHandler::setCurrentWindow(QQuickWindow *window)
         return;
 
     if (m_currentWindow) {
+        disconnect(m_currentWindow.data(), &QQuickWindow::beforeSynchronizing,
+                   this, &QQmlPreviewHandler::beforeSynchronizing);
+        disconnect(m_currentWindow.data(), &QQuickWindow::afterSynchronizing,
+                   this, &QQmlPreviewHandler::afterSynchronizing);
+        disconnect(m_currentWindow.data(), &QQuickWindow::beforeRendering,
+                   this, &QQmlPreviewHandler::beforeRendering);
         disconnect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
                    this, &QQmlPreviewHandler::frameSwapped);
         m_fpsTimer.stop();
-        m_frames = 0;
+        m_rendering = FrameTime();
+        m_synchronizing = FrameTime();
     }
 
     m_currentWindow = window;
 
     if (m_currentWindow) {
+        connect(m_currentWindow.data(), &QQuickWindow::beforeSynchronizing,
+                this, &QQmlPreviewHandler::beforeSynchronizing, Qt::DirectConnection);
+        connect(m_currentWindow.data(), &QQuickWindow::afterSynchronizing,
+                this, &QQmlPreviewHandler::afterSynchronizing, Qt::DirectConnection);
+        connect(m_currentWindow.data(), &QQuickWindow::beforeRendering,
+                this, &QQmlPreviewHandler::beforeRendering, Qt::DirectConnection);
         connect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
-                this, &QQmlPreviewHandler::frameSwapped);
+                this, &QQmlPreviewHandler::frameSwapped, Qt::DirectConnection);
         m_fpsTimer.start();
     }
 }
 
+void QQmlPreviewHandler::beforeSynchronizing()
+{
+    m_synchronizing.beginFrame();
+}
+
+void QQmlPreviewHandler::afterSynchronizing()
+{
+
+    if (m_rendering.elapsed >= 0)
+        m_rendering.endFrame();
+    m_synchronizing.recordFrame();
+    m_synchronizing.endFrame();
+}
+
+void QQmlPreviewHandler::beforeRendering()
+{
+    m_rendering.beginFrame();
+}
+
 void QQmlPreviewHandler::frameSwapped()
 {
-    ++m_frames;
+    m_rendering.recordFrame();
+}
+
+void QQmlPreviewHandler::FrameTime::beginFrame()
+{
+    timer.start();
+}
+
+void QQmlPreviewHandler::FrameTime::recordFrame()
+{
+    elapsed = timer.elapsed();
+}
+
+void QQmlPreviewHandler::FrameTime::endFrame()
+{
+    if (elapsed < min)
+        min = static_cast<quint16>(qMax(0ll, elapsed));
+    if (elapsed > max)
+        max = static_cast<quint16>(qMin(qint64(std::numeric_limits<quint16>::max()), elapsed));
+    total = static_cast<quint16>(qBound(0ll, qint64(std::numeric_limits<quint16>::max()),
+                                        elapsed + total));
+    ++number;
+    elapsed = -1;
+}
+
+void QQmlPreviewHandler::FrameTime::reset()
+{
+    min = std::numeric_limits<quint16>::max();
+    max = 0;
+    total = 0;
+    number = 0;
 }
 
 void QQmlPreviewHandler::fpsTimerHit()
 {
-    emit fps(m_frames);
-    m_frames = 0;
+    const FpsInfo info = {
+        m_synchronizing.number,
+        m_synchronizing.min,
+        m_synchronizing.max,
+        m_synchronizing.total,
+
+        m_rendering.number,
+        m_rendering.min,
+        m_rendering.max,
+        m_rendering.total
+    };
+
+    emit fps(info);
+
+    m_rendering.reset();
+    m_synchronizing.reset();
 }
 
 void QQmlPreviewHandler::tryCreateObject()

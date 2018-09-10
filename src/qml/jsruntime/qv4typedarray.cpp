@@ -576,6 +576,38 @@ bool TypedArray::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Prop
     return true;
 }
 
+struct TypedArrayOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
+{
+    ~TypedArrayOwnPropertyKeyIterator() override = default;
+    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+
+};
+
+PropertyKey TypedArrayOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+{
+    const TypedArray *a = static_cast<const TypedArray *>(o);
+    if (arrayIndex < a->length()) {
+        if (attrs)
+            *attrs = Attr_NotConfigurable;
+        PropertyKey id = PropertyKey::fromArrayIndex(arrayIndex);
+        if (pd) {
+            bool hasProperty = false;
+            pd->value = TypedArray::virtualGet(a, id, a, &hasProperty);
+        }
+        ++arrayIndex;
+        return id;
+    }
+
+    arrayIndex = UINT_MAX;
+    return ObjectOwnPropertyKeyIterator::next(o, pd, attrs);
+}
+
+OwnPropertyKeyIterator *TypedArray::virtualOwnPropertyKeys(const Object *m, Value *target)
+{
+    *target = *m;
+    return new TypedArrayOwnPropertyKeyIterator();
+}
+
 void TypedArrayPrototype::init(ExecutionEngine *engine, TypedArrayCtor *ctor)
 {
     Scope scope(engine);

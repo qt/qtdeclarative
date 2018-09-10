@@ -297,7 +297,6 @@ void QQuickWidgetPrivate::render(bool needsSync)
         QOpenGLContextPrivate::get(context)->defaultFboRedirect = 0;
 #endif
     } else {
-#if QT_CONFIG(thread)
         //Software Renderer
         if (needsSync) {
             renderControl->polishItems();
@@ -316,7 +315,6 @@ void QQuickWidgetPrivate::render(bool needsSync)
 
             updateRegion += softwareRenderer->flushRegion();
         }
-#endif
     }
 }
 

@@ -1,1 +1,1 @@
-qtConfig(thread): include(software/software.pri)
+include(software/software.pri)
