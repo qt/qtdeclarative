@@ -143,7 +143,7 @@ inline uint PropertyHash::lookup(PropertyKey identifier) const
 
 template<typename T>
 struct SharedInternalClassDataPrivate {
-    SharedInternalClassDataPrivate()
+    SharedInternalClassDataPrivate(ExecutionEngine *)
         : refcount(1),
           m_alloc(0),
           m_size(0),
@@ -159,7 +159,7 @@ struct SharedInternalClassDataPrivate {
             memcpy(data, other.data, m_size*sizeof(T));
         }
     }
-    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, int pos, T value)
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, T value)
         : refcount(1),
           m_alloc(pos + 8),
           m_size(pos + 1)
@@ -191,21 +191,45 @@ struct SharedInternalClassDataPrivate {
     T at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
     void set(uint i, T t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
 
-    int refcount;
+    void mark(MarkStack *) {}
+
+    int refcount = 1;
 private:
     uint m_alloc;
     uint m_size;
     T *data;
 };
 
+template<>
+struct SharedInternalClassDataPrivate<PropertyKey> {
+    SharedInternalClassDataPrivate(ExecutionEngine *e) : refcount(1), engine(e), data(nullptr) {}
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other);
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, PropertyKey value);
+    ~SharedInternalClassDataPrivate() {}
+
+    void grow();
+    uint alloc() const;
+    uint size() const;
+    void setSize(uint s);
+
+    PropertyKey at(uint i);
+    void set(uint i, PropertyKey t);
+
+    void mark(MarkStack *s);
+
+    int refcount = 1;
+private:
+    ExecutionEngine *engine;
+    Heap::MemberData *data;
+};
 
 template <typename T>
 struct SharedInternalClassData {
     using Private = SharedInternalClassDataPrivate<T>;
     Private *d;
 
-    inline SharedInternalClassData() {
-        d = new Private;
+    inline SharedInternalClassData(ExecutionEngine *e) {
+        d = new Private(e);
     }
 
     inline SharedInternalClassData(const SharedInternalClassData &other)
@@ -238,8 +262,8 @@ struct SharedInternalClassData {
         Q_ASSERT(pos == d->size());
         if (pos == d->alloc())
             d->grow();
-        d->set(pos, value);
         d->setSize(d->size() + 1);
+        d->set(pos, value);
     }
 
     void set(uint pos, T value) {
@@ -262,6 +286,8 @@ struct SharedInternalClassData {
         Q_ASSERT(i < d->size());
         return d->at(i);
     }
+
+    void mark(MarkStack *s) { d->mark(s); }
 };
 
 struct InternalClassTransition
@@ -318,6 +344,7 @@ struct InternalClass : Base {
     void init(InternalClass *other);
     void destroy();
 
+    Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
 
     static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index);
