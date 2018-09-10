@@ -9,3 +9,5 @@ SOURCES += qqmlxmllistmodel.cpp plugin.cpp
 HEADERS += qqmlxmllistmodel_p.h
 
 load(qml_plugin)
+
+requires(qtConfig(qml-network))
