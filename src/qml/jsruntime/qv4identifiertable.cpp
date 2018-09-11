@@ -90,7 +90,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
         int newAlloc = primeForNumBits(numBits);
         Heap::StringOrSymbol **newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
         memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
-        for (int i = 0; i < alloc; ++i) {
+        for (uint i = 0; i < alloc; ++i) {
             Heap::StringOrSymbol *e = entriesByHash[i];
             if (!e)
                 continue;
@@ -106,7 +106,7 @@ void IdentifierTable::addEntry(Heap::StringOrSymbol *str)
 
         newEntries = (Heap::StringOrSymbol **)malloc(newAlloc*sizeof(Heap::String *));
         memset(newEntries, 0, newAlloc*sizeof(Heap::StringOrSymbol *));
-        for (int i = 0; i < alloc; ++i) {
+        for (uint i = 0; i < alloc; ++i) {
             Heap::StringOrSymbol *e = entriesById[i];
             if (!e)
                 continue;
@@ -252,39 +252,40 @@ void IdentifierTable::markObjects(MarkStack *markStack)
         h->markObjects(markStack);
 }
 
-template <typename Key>
-int sweepTable(Heap::StringOrSymbol **&table, int alloc, std::function<Key(Heap::StringOrSymbol *)> f) {
+void IdentifierTable::sweep()
+{
     int freed = 0;
 
     Heap::StringOrSymbol **newTable = (Heap::StringOrSymbol **)malloc(alloc*sizeof(Heap::String *));
     memset(newTable, 0, alloc*sizeof(Heap::StringOrSymbol *));
-    for (int i = 0; i < alloc; ++i) {
-        Heap::StringOrSymbol *e = table[i];
+    memset(entriesById, 0, alloc*sizeof(Heap::StringOrSymbol *));
+    for (uint i = 0; i < alloc; ++i) {
+        Heap::StringOrSymbol *e = entriesByHash[i];
         if (!e)
             continue;
         if (!e->isMarked()) {
             ++freed;
             continue;
         }
-        uint idx = f(e) % alloc;
+        uint idx = e->hashValue() % alloc;
         while (newTable[idx]) {
             ++idx;
-            idx %= alloc;
+            if (idx == alloc)
+                idx = 0;
         }
         newTable[idx] = e;
+
+        idx = e->identifier.id() % alloc;
+        while (entriesById[idx]) {
+            ++idx;
+            if (idx == alloc)
+                idx = 0;
+        }
+        entriesById[idx] = e;
     }
-    free(table);
-    table = newTable;
+    free(entriesByHash);
+    entriesByHash = newTable;
 
-    return freed;
-}
-
-void IdentifierTable::sweep()
-{
-    int f = sweepTable<uint>(entriesByHash, alloc, [](Heap::StringOrSymbol *entry) {return entry->hashValue(); });
-    int freed = sweepTable<quint64>(entriesById, alloc, [](Heap::StringOrSymbol *entry) {return entry->identifier.id(); });
-    Q_UNUSED(f);
-    Q_ASSERT(f == freed);
     size -= freed;
 }
 
