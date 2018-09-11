@@ -47,20 +47,20 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick 2.12
 
 //![0]
 Rectangle {
     id: rect
     width: 100; height: 100
-    color: "red"
+    color: "steelblue"
 
-    MouseArea { id: mouseArea; anchors.fill: parent }
+    TapHandler { id: tapHandler }
 
     states: State {
         name: "brighter"
-        when: mouseArea.pressed
-        PropertyChanges { target: rect; color: "yellow"; x: 50 }
+        when: tapHandler.pressed
+        PropertyChanges { target: rect; color: "lightsteelblue"; x: 50 }
     }
 
     //! [sequential animations]
