@@ -429,7 +429,7 @@ public: // helpers for C++ only (during event delivery)
     virtual bool allUpdatedPointsAccepted() const = 0;
     virtual bool allPointsGrabbed() const = 0;
     bool isAccepted() { return m_event->isAccepted(); }
-    void setAccepted(bool accepted) { m_event->setAccepted(accepted); }
+    void setAccepted(bool accepted) { if (m_event) m_event->setAccepted(accepted); }
     QVector<QPointF> unacceptedPressedPointScenePositions() const;
 
     virtual int pointCount() const = 0;
