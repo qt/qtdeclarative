@@ -72,10 +72,10 @@ QT_BEGIN_NAMESPACE
 
     It is generally not advisable to add excessive amounts of pages to a
     SwipeView. However, when the amount of pages grows larger, or individual
-    pages are relatively complex, it may be desired free up resources by
-    unloading pages that are outside the reach. The following example presents
-    how to use \l Loader to keep a maximum of three pages simultaneously
-    instantiated.
+    pages are relatively complex, it may be desirable to free up resources by
+    unloading pages that are outside the immediate reach of the user.
+    The following example presents how to use \l Loader to keep a maximum of
+    three pages simultaneously instantiated.
 
     \code
     SwipeView {

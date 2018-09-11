@@ -51,6 +51,7 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.0 as QQC2
 import Qt.labs.settings 1.0
+import ".."
 import "../Style"
 
 Item {
@@ -68,7 +69,7 @@ Item {
 
         anchors.fill: parent
 
-        Item {
+        SwipeViewPage {
             id: settingsPage1
 
             Column {
@@ -102,7 +103,7 @@ Item {
             }
         }
 
-        Item {
+        SwipeViewPage {
             id: settingsPage2
 
             Column {

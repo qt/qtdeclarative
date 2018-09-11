@@ -36,6 +36,8 @@
 
 #include <QtTest>
 #include <QtQml>
+#include <QtQuick/private/qquicklistview_p.h>
+#include "../shared/menuutil.h"
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 #include "../shared/qtest_quickcontrols.h"
@@ -146,6 +148,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(helpMenuBarMenu->isVisible());
     QTRY_VERIFY(!editMenuBarMenu->isVisible());
     QTRY_VERIFY(helpMenuBarMenu->isOpened());
+    waitForMenuListViewPolish(helpMenuBarMenu);
 
     // trigger a menu item to close the menu
     QQuickMenuItem *aboutMenuItem = qobject_cast<QQuickMenuItem *>(helpMenuBarMenu->itemAt(0));
@@ -167,6 +170,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(viewMenuBarItem->isHighlighted());
     QVERIFY(viewMenuBarMenu->isVisible());
     QTRY_VERIFY(viewMenuBarMenu->isOpened());
+    waitForMenuListViewPolish(viewMenuBarMenu);
 
     // trigger a menu item to open a sub-menu
     QQuickMenuItem *alignmentSubMenuItem = qobject_cast<QQuickMenuItem *>(viewMenuBarMenu->itemAt(0));
@@ -177,6 +181,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
     QTRY_VERIFY(alignmentSubMenu->isOpened());
+    waitForMenuListViewPolish(alignmentSubMenu);
 
     // trigger a menu item to open a sub-sub-menu
     QQuickMenuItem *verticalSubMenuItem = qobject_cast<QQuickMenuItem *>(alignmentSubMenu->itemAt(1));
@@ -188,6 +193,7 @@ void tst_qquickmenubar::mouse()
     QVERIFY(alignmentSubMenu->isVisible());
     QVERIFY(verticalSubMenu->isVisible());
     QTRY_VERIFY(verticalSubMenu->isOpened());
+    waitForMenuListViewPolish(verticalSubMenu);
 
     // trigger a menu item to close the whole chain of menus
     QQuickMenuItem *centerMenuItem = qobject_cast<QQuickMenuItem *>(verticalSubMenu->itemAt(1));
