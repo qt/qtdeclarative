@@ -66,8 +66,8 @@ QQuickHoverHandler::QQuickHoverHandler(QQuickItem *parent)
 
 QQuickHoverHandler::~QQuickHoverHandler()
 {
-    QQuickItemPrivate *parItemPrivate = QQuickItemPrivate::get(parentItem());
-    parItemPrivate->setHasHoverInChild(false);
+    if (auto parent = parentItem())
+        QQuickItemPrivate::get(parent)->setHasHoverInChild(false);
 }
 
 void QQuickHoverHandler::componentComplete()
