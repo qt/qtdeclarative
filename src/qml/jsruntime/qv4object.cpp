@@ -553,6 +553,18 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
         attrs = Attr_Data;
     }
 
+    if (r->internalClass()->vtable->defineOwnProperty == virtualDefineOwnProperty) {
+        // standard object, we can avoid some more checks
+        uint index = id.asArrayIndex();
+        if (index == UINT_MAX) {
+            ScopedStringOrSymbol s(scope, id.asStringOrSymbol());
+            r->insertMember(s, value);
+        } else {
+            r->arraySet(index, value);
+        }
+        return true;
+    }
+
     p->value = value;
     return r->defineOwnProperty(id, p, attrs);
 }
