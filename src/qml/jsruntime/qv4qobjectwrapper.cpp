@@ -2003,7 +2003,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     CallData *callData = cData.callData();
 
     if (method.isV4Function()) {
-        QV4::ScopedValue rv(scope, QV4::Primitive::undefinedValue());
+        QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
         QQmlV4Function func(callData, rv, v4);
         QQmlV4Function *funcptr = &func;
 
@@ -2074,7 +2074,7 @@ void QMetaObjectWrapper::init(ExecutionEngine *) {
         for (int k = 0; k < Enum.keyCount(); k++) {
             const char* key = Enum.key(k);
             const int value = Enum.value(k);
-            defineReadonlyProperty(QLatin1String(key), Primitive::fromInt32(value));
+            defineReadonlyProperty(QLatin1String(key), Value::fromInt32(value));
         }
     }
 }

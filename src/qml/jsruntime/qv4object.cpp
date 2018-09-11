@@ -456,7 +456,7 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
     }
 
     if (o) {
-        const Value v = Primitive::fromHeapObject(o);
+        const Value v = Value::fromHeapObject(o);
         const Object &obj = static_cast<const Object &>(v);
         return obj.get(id, receiver, hasProperty);
     }
@@ -658,7 +658,7 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
                 // need to convert the array and the slot
                 setArrayAttributes(index, cattrs);
             }
-            current->value = Primitive::undefinedValue();
+            current->value = Value::undefinedValue();
         }
     } else if (cattrs.isData() && attrs.isData()) { // clause 10
         if (!cattrs.isConfigurable() && !cattrs.isWritable()) {

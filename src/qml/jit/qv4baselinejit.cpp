@@ -970,7 +970,7 @@ void BaselineJIT::generate_LoadQmlImportedScripts(int result)
 
 void BaselineJIT::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
 {
-    as->loadValue(Primitive::emptyValue().rawValue());
+    as->loadValue(Value::emptyValue().rawValue());
     for (int i = firstReg, end = firstReg + count; i < end; ++i)
         as->storeReg(i);
 }

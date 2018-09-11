@@ -2542,7 +2542,7 @@ void QQmlListModel::append(QQmlV4Function *args)
 QQmlV4Handle QQmlListModel::get(int index) const
 {
     QV4::Scope scope(engine());
-    QV4::ScopedValue result(scope, QV4::Primitive::undefinedValue());
+    QV4::ScopedValue result(scope, QV4::Value::undefinedValue());
 
     if (index >= 0 && index < count()) {
 

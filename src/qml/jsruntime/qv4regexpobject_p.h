@@ -134,7 +134,7 @@ struct RegExpObject: Object {
             engine()->throwTypeError();
             return;
         }
-        return setProperty(Index_LastIndex, Primitive::fromInt32(index));
+        return setProperty(Index_LastIndex, Value::fromInt32(index));
     }
 
     QRegExp toQRegExp() const;

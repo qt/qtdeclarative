@@ -387,7 +387,7 @@ ReturnedValue QQmlValueTypeWrapper::virtualGet(const Managed *m, PropertyKey id,
     // Note: readReferenceValue() can change the reference->type.
     if (const QQmlValueTypeReference *reference = r->as<QQmlValueTypeReference>()) {
         if (!reference->readReferenceValue())
-            return Primitive::undefinedValue().asReturnedValue();
+            return Value::undefinedValue().asReturnedValue();
     }
 
     QQmlPropertyData *result = r->d()->propertyCache()->property(name.getPointer(), nullptr, nullptr);

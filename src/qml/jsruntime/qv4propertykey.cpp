@@ -47,7 +47,7 @@
 QV4::Heap::StringOrSymbol *QV4::PropertyKey::toStringOrSymbol(QV4::ExecutionEngine *e)
 {
     if (isArrayIndex())
-        return Primitive::fromUInt32(asArrayIndex()).toString(e);
+        return Value::fromUInt32(asArrayIndex()).toString(e);
     return static_cast<Heap::StringOrSymbol *>(asStringOrSymbol());
 }
 
@@ -73,7 +73,7 @@ bool QV4::PropertyKey::isCanonicalNumericIndexString() const
     double d = str->toNumber();
     if (d == 0. && std::signbit(d))
         return true;
-    ScopedString converted(scope, Primitive::fromDouble(d).toString(scope.engine));
+    ScopedString converted(scope, Value::fromDouble(d).toString(scope.engine));
     if (converted->equals(str))
         return true;
     return false;

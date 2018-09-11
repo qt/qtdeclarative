@@ -64,7 +64,7 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
 
     ScopedString s(scope, thisObject->d()->iteratedString);
     if (!s) {
-        QV4::Value undefined = Primitive::undefinedValue();
+        QV4::Value undefined = Value::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
@@ -75,7 +75,7 @@ ReturnedValue StringIteratorPrototype::method_next(const FunctionObject *b, cons
 
     if (index >= len) {
         thisObject->d()->iteratedString.set(scope.engine, nullptr);
-        QV4::Value undefined = Primitive::undefinedValue();
+        QV4::Value undefined = Value::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 

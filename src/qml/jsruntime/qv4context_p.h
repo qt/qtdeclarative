@@ -122,7 +122,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
     template <typename BlockOrFunction>
     void setupLocalTemporalDeadZone(BlockOrFunction *bof) {
         for (uint i = bof->nLocals - bof->sizeOfLocalTemporalDeadZone; i < bof->nLocals; ++i)
-            locals.values[i] = Primitive::emptyValue();
+            locals.values[i] = Value::emptyValue();
     }
 };
 Q_STATIC_ASSERT(std::is_trivial< CallContext >::value);

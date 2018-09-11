@@ -107,7 +107,7 @@ void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
             QV4::Scoped<QV4::MemberData> sp(scope, m_target->propertyAndMethodStorage.value());
             if (sp) {
                 QV4::PropertyIndex index{ sp->d(), sp->d()->values.values + m_index };
-                index.set(v4, QV4::Primitive::nullValue());
+                index.set(v4, QV4::Value::nullValue());
             }
         }
 
@@ -368,21 +368,21 @@ void QQmlVMEMetaObject::writeProperty(int id, int v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(engine, id, QV4::Primitive::fromInt32(v));
+        md->set(engine, id, QV4::Value::fromInt32(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, bool v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(engine, id, QV4::Primitive::fromBoolean(v));
+        md->set(engine, id, QV4::Value::fromBoolean(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, double v)
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
-        md->set(engine, id, QV4::Primitive::fromDouble(v));
+        md->set(engine, id, QV4::Value::fromDouble(v));
 }
 
 void QQmlVMEMetaObject::writeProperty(int id, const QString& v)
@@ -1005,7 +1005,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::readVarProperty(int id) const
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (md)
         return (md->data() + id)->asReturnedValue();
-    return QV4::Primitive::undefinedValue().asReturnedValue();
+    return QV4::Value::undefinedValue().asReturnedValue();
 }
 
 QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
@@ -1122,7 +1122,7 @@ QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index) const
         return parentVMEMetaObject()->vmeMethod(index);
     }
     if (!compiledObject)
-        return QV4::Primitive::undefinedValue().asReturnedValue();
+        return QV4::Value::undefinedValue().asReturnedValue();
     const int plainSignals = compiledObject->nSignals + compiledObject->nProperties + compiledObject->nAliases;
     Q_ASSERT(index >= (methodOffset() + plainSignals) && index < (methodOffset() + plainSignals + int(compiledObject->nFunctions)));
     return method(index - methodOffset() - plainSignals);

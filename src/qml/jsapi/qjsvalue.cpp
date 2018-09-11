@@ -569,7 +569,7 @@ qint32 QJSValue::toInt() const
     if (!val) {
         QVariant *variant = QJSValuePrivate::getVariant(this);
         if (variant->userType() == QMetaType::QString)
-            return QV4::Primitive::toInt32(RuntimeHelpers::stringToNumber(variant->toString()));
+            return QV4::Value::toInt32(RuntimeHelpers::stringToNumber(variant->toString()));
         else
             return variant->toInt();
     }
@@ -603,7 +603,7 @@ quint32 QJSValue::toUInt() const
     if (!val) {
         QVariant *variant = QJSValuePrivate::getVariant(this);
         if (variant->userType() == QMetaType::QString)
-            return QV4::Primitive::toUInt32(RuntimeHelpers::stringToNumber(variant->toString()));
+            return QV4::Value::toUInt32(RuntimeHelpers::stringToNumber(variant->toString()));
         else
             return variant->toUInt();
     }

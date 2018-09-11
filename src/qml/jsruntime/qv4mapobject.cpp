@@ -137,7 +137,7 @@ void WeakMapPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(0));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
 
@@ -155,7 +155,7 @@ void MapPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(0));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->addSymbolSpecies();
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
@@ -249,7 +249,7 @@ ReturnedValue WeakMapPrototype::method_set(const FunctionObject *b, const Value 
         (!argc || !argv[0].isObject()))
         return scope.engine->throwTypeError();
 
-    that->d()->esTable->set(argv[0], argc > 1 ? argv[1] : Primitive::undefinedValue());
+    that->d()->esTable->set(argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();
 }
 
@@ -272,7 +272,7 @@ ReturnedValue MapPrototype::method_delete(const FunctionObject *b, const Value *
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return Encode(that->d()->esTable->remove(argc ? argv[0] : Primitive::undefinedValue()));
+    return Encode(that->d()->esTable->remove(argc ? argv[0] : Value::undefinedValue()));
 }
 
 ReturnedValue MapPrototype::method_entries(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -298,7 +298,7 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
     if (!callbackfn)
         return scope.engine->throwTypeError();
 
-    ScopedValue thisArg(scope, Primitive::undefinedValue());
+    ScopedValue thisArg(scope, Value::undefinedValue());
     if (argc > 1)
         thisArg = ScopedValue(scope, argv[1]);
 
@@ -320,7 +320,7 @@ ReturnedValue MapPrototype::method_get(const FunctionObject *b, const Value *thi
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return that->d()->esTable->get(argc ? argv[0] : Primitive::undefinedValue());
+    return that->d()->esTable->get(argc ? argv[0] : Value::undefinedValue());
 }
 
 ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -330,7 +330,7 @@ ReturnedValue MapPrototype::method_has(const FunctionObject *b, const Value *thi
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    return Encode(that->d()->esTable->has(argc ? argv[0] : Primitive::undefinedValue()));
+    return Encode(that->d()->esTable->has(argc ? argv[0] : Value::undefinedValue()));
 }
 
 ReturnedValue MapPrototype::method_keys(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -352,7 +352,7 @@ ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thi
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
 
-    that->d()->esTable->set(argc ? argv[0] : Primitive::undefinedValue(), argc > 1 ? argv[1] : Primitive::undefinedValue());
+    that->d()->esTable->set(argc ? argv[0] : Value::undefinedValue(), argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();
 }
 

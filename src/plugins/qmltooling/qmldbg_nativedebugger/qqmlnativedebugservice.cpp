@@ -277,7 +277,7 @@ QV4::ReturnedValue NativeDebugger::evaluateExpression(const QString &expression)
 }
 
 NativeDebugger::NativeDebugger(QQmlNativeDebugServiceImpl *service, QV4::ExecutionEngine *engine)
-    : m_returnedValue(engine, QV4::Primitive::undefinedValue())
+    : m_returnedValue(engine, QV4::Value::undefinedValue())
 {
     m_stepping = NotStepping;
     m_pauseRequested = false;

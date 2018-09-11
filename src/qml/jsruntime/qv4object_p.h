@@ -440,7 +440,7 @@ struct ArrayObject : Object {
 
 private:
     void commonInit()
-    { setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0)); }
+    { setProperty(internalClass->engine, LengthPropertyIndex, Value::fromInt32(0)); }
 };
 
 }
@@ -481,7 +481,7 @@ protected:
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        setProperty(Heap::ArrayObject::LengthPropertyIndex, Primitive::fromUInt32(l));
+        setProperty(Heap::ArrayObject::LengthPropertyIndex, Value::fromUInt32(l));
 }
 
 inline void Object::push_back(const Value &v)

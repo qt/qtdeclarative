@@ -119,11 +119,11 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
 
         if (hasProperty)
             *hasProperty = false;
-        return Primitive::undefinedValue().asReturnedValue();
+        return Value::undefinedValue().asReturnedValue();
     } else if (id.isString()) {
         if (id == v4->id_length()->propertyKey() && !w->d()->object.isNull()) {
             quint32 count = w->d()->property().count ? w->d()->property().count(&w->d()->property()) : 0;
-            return Primitive::fromUInt32(count).asReturnedValue();
+            return Value::fromUInt32(count).asReturnedValue();
         }
     }
 

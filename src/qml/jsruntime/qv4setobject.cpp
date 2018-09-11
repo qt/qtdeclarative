@@ -118,7 +118,7 @@ void WeakSetPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(0));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
 
@@ -138,7 +138,7 @@ ReturnedValue WeakSetPrototype::method_add(const FunctionObject *b, const Value 
         (!argc || !argv[0].isObject()))
         return scope.engine->throwTypeError();
 
-    that->d()->esTable->set(argv[0], Primitive::undefinedValue());
+    that->d()->esTable->set(argv[0], Value::undefinedValue());
     return that.asReturnedValue();
 }
 
@@ -170,7 +170,7 @@ void SetPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(0));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->addSymbolSpecies();
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
@@ -226,7 +226,7 @@ ReturnedValue SetPrototype::method_add(const FunctionObject *b, const Value *thi
     if (!that || that->d()->isWeakSet)
         return scope.engine->throwTypeError();
 
-    that->d()->esTable->set(argv[0], Primitive::undefinedValue());
+    that->d()->esTable->set(argv[0], Value::undefinedValue());
     return that.asReturnedValue();
 }
 
@@ -274,7 +274,7 @@ ReturnedValue SetPrototype::method_forEach(const FunctionObject *b, const Value 
     if (!callbackfn)
         return scope.engine->throwTypeError();
 
-    ScopedValue thisArg(scope, Primitive::undefinedValue());
+    ScopedValue thisArg(scope, Value::undefinedValue());
     if (argc > 1)
         thisArg = ScopedValue(scope, argv[1]);
 

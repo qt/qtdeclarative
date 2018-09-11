@@ -1271,7 +1271,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QObject *parent = nullptr;
     QV4::ExecutionEngine *v4 = args->v4engine();
     QV4::Scope scope(v4);
-    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
+    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
 
     if (args->length() >= 1) {
         QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, (*args)[0]);
@@ -1386,7 +1386,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     QV4::Scope scope(v4);
 
     QObject *parent = nullptr;
-    QV4::ScopedValue valuemap(scope, QV4::Primitive::undefinedValue());
+    QV4::ScopedValue valuemap(scope, QV4::Value::undefinedValue());
     QQmlIncubator::IncubationMode mode = QQmlIncubator::Asynchronous;
 
     if (args->length() >= 1) {
@@ -1524,8 +1524,8 @@ QQmlComponentExtension::~QQmlComponentExtension()
 void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
 {
     Object::init();
-    valuemap.set(internalClass->engine, QV4::Primitive::undefinedValue());
-    statusChanged.set(internalClass->engine, QV4::Primitive::undefinedValue());
+    valuemap.set(internalClass->engine, QV4::Value::undefinedValue());
+    statusChanged.set(internalClass->engine, QV4::Value::undefinedValue());
     parent.init();
     qmlContext.set(internalClass->engine, nullptr);
     incubator = new QQmlComponentIncubator(this, m);
@@ -1566,7 +1566,7 @@ void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
     if (f) {
         QV4::JSCallData jsCallData(scope, 1);
         *jsCallData->thisObject = this;
-        jsCallData->args[0] = QV4::Primitive::fromUInt32(s);
+        jsCallData->args[0] = QV4::Value::fromUInt32(s);
         f->call(jsCallData);
         if (scope.hasException()) {
             QQmlError error = scope.engine->catchExceptionAsQmlError();

@@ -975,7 +975,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         if (QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>())
             qobjectWrapper->destroyObject(lastSweep);
 
-        (*it) = Primitive::undefinedValue();
+        (*it) = Value::undefinedValue();
     }
 
     // remove objects from weak maps and sets
@@ -1007,7 +1007,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         Managed *m = (*it).managed();
         if (!m || m->markBit())
             continue;
-        (*it) = Primitive::undefinedValue();
+        (*it) = Value::undefinedValue();
     }
 
     // Now it is time to free QV4::QObjectWrapper Value, we must check the Value's tag to make sure its object has been destroyed

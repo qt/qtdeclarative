@@ -90,7 +90,7 @@ ReturnedValue ArrayBufferCtor::virtualCallAsConstructor(const FunctionObject *f,
     ExecutionEngine *v4 = f->engine();
     Scope scope(v4);
 
-    ScopedValue l(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue l(scope, argc ? argv[0] : Value::undefinedValue());
     double dl = l->toInteger();
     if (v4->hasException)
         return Encode::undefined();
@@ -183,7 +183,7 @@ void SharedArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->addSymbolSpecies();
 
@@ -246,7 +246,7 @@ void ArrayBufferPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     ctor->defineDefaultProperty(QStringLiteral("isView"), ArrayBufferCtor::method_isView, 1);
     ctor->addSymbolSpecies();

@@ -294,9 +294,9 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
     int size = o->internalClass->size;
     for (int i = idx; i < size; ++i)
         o->setProperty(v4, i, *o->propertyData(i + (accessor ? 2 : 1)));
-    o->setProperty(v4, size, Primitive::undefinedValue());
+    o->setProperty(v4, size, Value::undefinedValue());
     if (accessor)
-        o->setProperty(v4, size + 1, Primitive::undefinedValue());
+        o->setProperty(v4, size + 1, Value::undefinedValue());
 }
 
 void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)

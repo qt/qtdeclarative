@@ -95,19 +95,19 @@ void NumberPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
 
-    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(qt_qnan()));
-    ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Primitive::fromDouble(-qInf()));
-    ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Primitive::fromDouble(qInf()));
-    ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Primitive::fromDouble(1.7976931348623158e+308));
-    ctor->defineReadonlyProperty(QStringLiteral("EPSILON"), Primitive::fromDouble(std::numeric_limits<double>::epsilon()));
-    ctor->defineReadonlyProperty(QStringLiteral("MAX_SAFE_INTEGER"), Primitive::fromDouble(9007199254740991));
-    ctor->defineReadonlyProperty(QStringLiteral("MIN_SAFE_INTEGER"), Primitive::fromDouble(-9007199254740991));
+    ctor->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(qt_qnan()));
+    ctor->defineReadonlyProperty(QStringLiteral("NEGATIVE_INFINITY"), Value::fromDouble(-qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("POSITIVE_INFINITY"), Value::fromDouble(qInf()));
+    ctor->defineReadonlyProperty(QStringLiteral("MAX_VALUE"), Value::fromDouble(1.7976931348623158e+308));
+    ctor->defineReadonlyProperty(QStringLiteral("EPSILON"), Value::fromDouble(std::numeric_limits<double>::epsilon()));
+    ctor->defineReadonlyProperty(QStringLiteral("MAX_SAFE_INTEGER"), Value::fromDouble(9007199254740991));
+    ctor->defineReadonlyProperty(QStringLiteral("MIN_SAFE_INTEGER"), Value::fromDouble(-9007199254740991));
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_INTEL(239)
-    ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Primitive::fromDouble(5e-324));
+    ctor->defineReadonlyProperty(QStringLiteral("MIN_VALUE"), Value::fromDouble(5e-324));
 QT_WARNING_POP
 
     ctor->defineDefaultProperty(QStringLiteral("isFinite"), method_isFinite, 1);
@@ -229,7 +229,7 @@ ReturnedValue NumberPrototype::method_toString(const FunctionObject *b, const Va
                 num = -num;
             }
             double frac = num - std::floor(num);
-            num = Primitive::toInteger(num);
+            num = Value::toInteger(num);
             do {
                 char c = (char)std::fmod(num, radix);
                 c = (c < 10) ? (c + '0') : (c - 10 + 'a');
@@ -252,7 +252,7 @@ ReturnedValue NumberPrototype::method_toString(const FunctionObject *b, const Va
         }
     }
 
-    return Encode(Primitive::fromDouble(num).toString(v4));
+    return Encode(Value::fromDouble(num).toString(v4));
 }
 
 ReturnedValue NumberPrototype::method_toLocaleString(const FunctionObject *b, const Value *thisObject, const Value *, int)

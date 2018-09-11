@@ -49,14 +49,14 @@ void qt_add_sqlexceptions(QV4::ExecutionEngine *engine)
 {
     Scope scope(engine);
     ScopedObject sqlexception(scope, engine->newObject());
-    sqlexception->defineReadonlyProperty(QStringLiteral("UNKNOWN_ERR"), Primitive::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("DATABASE_ERR"), Primitive::fromInt32(SQLEXCEPTION_DATABASE_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("VERSION_ERR"), Primitive::fromInt32(SQLEXCEPTION_VERSION_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("TOO_LARGE_ERR"), Primitive::fromInt32(SQLEXCEPTION_TOO_LARGE_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("QUOTA_ERR"), Primitive::fromInt32(SQLEXCEPTION_QUOTA_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("SYNTAX_ERR"), Primitive::fromInt32(SQLEXCEPTION_SYNTAX_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("CONSTRAINT_ERR"), Primitive::fromInt32(SQLEXCEPTION_CONSTRAINT_ERR));
-    sqlexception->defineReadonlyProperty(QStringLiteral("TIMEOUT_ERR"), Primitive::fromInt32(SQLEXCEPTION_TIMEOUT_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("UNKNOWN_ERR"), Value::fromInt32(SQLEXCEPTION_UNKNOWN_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("DATABASE_ERR"), Value::fromInt32(SQLEXCEPTION_DATABASE_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("VERSION_ERR"), Value::fromInt32(SQLEXCEPTION_VERSION_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("TOO_LARGE_ERR"), Value::fromInt32(SQLEXCEPTION_TOO_LARGE_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("QUOTA_ERR"), Value::fromInt32(SQLEXCEPTION_QUOTA_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("SYNTAX_ERR"), Value::fromInt32(SQLEXCEPTION_SYNTAX_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("CONSTRAINT_ERR"), Value::fromInt32(SQLEXCEPTION_CONSTRAINT_ERR));
+    sqlexception->defineReadonlyProperty(QStringLiteral("TIMEOUT_ERR"), Value::fromInt32(SQLEXCEPTION_TIMEOUT_ERR));
     engine->globalObject->defineDefaultProperty(QStringLiteral("SQLException"), sqlexception);
 }
 

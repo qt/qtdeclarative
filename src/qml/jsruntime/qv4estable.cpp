@@ -107,7 +107,7 @@ void ESTable::set(const Value &key, const Value &value)
     Value nk = key;
     if (nk.isDouble()) {
         if (nk.doubleValue() == 0 && std::signbit(nk.doubleValue()))
-            nk = Primitive::fromDouble(+0);
+            nk = Value::fromDouble(+0);
     }
 
     m_keys[m_size] = nk;

@@ -191,7 +191,7 @@ QV4::ReturnedValue QQuickWorkerScriptEnginePrivate::method_sendMessage(const QV4
     QV4::Scope scope(b);
     WorkerScript *script = static_cast<WorkerScript *>(scope.engine->v8Engine);
 
-    QV4::ScopedValue v(scope, argc > 0 ? argv[0] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue v(scope, argc > 0 ? argv[0] : QV4::Value::undefinedValue());
     QByteArray data = QV4::Serialize::serialize(v, scope.engine);
 
     QMutexLocker locker(&script->p->m_lock);
@@ -600,7 +600,7 @@ void QQuickWorkerScript::sendMessage(QQmlV4Function *args)
     }
 
     QV4::Scope scope(args->v4engine());
-    QV4::ScopedValue argument(scope, QV4::Primitive::undefinedValue());
+    QV4::ScopedValue argument(scope, QV4::Value::undefinedValue());
     if (args->length() != 0)
         argument = (*args)[0];
 

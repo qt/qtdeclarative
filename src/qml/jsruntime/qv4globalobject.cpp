@@ -335,7 +335,7 @@ void Heap::EvalFunction::init(QV4::ExecutionContext *scope)
     Scope s(scope);
     Heap::FunctionObject::init(scope, s.engine->id_eval());
     ScopedFunctionObject f(s, this);
-    f->defineReadonlyConfigurableProperty(s.engine->id_length(), Primitive::fromInt32(1));
+    f->defineReadonlyConfigurableProperty(s.engine->id_length(), Value::fromInt32(1));
 }
 
 ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc, bool directCall) const
@@ -412,8 +412,8 @@ static inline int toInt(const QChar &qc, int R)
 ReturnedValue GlobalFunctions::method_parseInt(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedValue inputString(scope, argc ? argv[0] : Primitive::undefinedValue());
-    ScopedValue radix(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedValue inputString(scope, argc ? argv[0] : Value::undefinedValue());
+    ScopedValue radix(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     int R = radix->isUndefined() ? 0 : radix->toInt32();
 
     // [15.1.2.2] step by step:
@@ -494,7 +494,7 @@ ReturnedValue GlobalFunctions::method_parseFloat(const FunctionObject *b, const 
 {
     Scope scope(b);
     // [15.1.2.3] step by step:
-    ScopedString inputString(scope, argc ? argv[0] : Primitive::undefinedValue(), ScopedString::Convert);
+    ScopedString inputString(scope, argc ? argv[0] : Value::undefinedValue(), ScopedString::Convert);
     CHECK_EXCEPTION();
 
     QString trimmed = inputString->toQString().trimmed(); // 2

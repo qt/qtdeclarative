@@ -170,12 +170,12 @@ public:
 
     Jump jumpEmpty()
     {
-        return branch64(Equal, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
+        return branch64(Equal, AccumulatorRegister, TrustedImm64(Value::emptyValue().asReturnedValue()));
     }
 
     Jump jumpNotEmpty()
     {
-        return branch64(NotEqual, AccumulatorRegister, TrustedImm64(Primitive::emptyValue().asReturnedValue()));
+        return branch64(NotEqual, AccumulatorRegister, TrustedImm64(Value::emptyValue().asReturnedValue()));
     }
 
     void toBoolean(std::function<void(RegisterID)> continuation)
@@ -637,12 +637,12 @@ public:
 
     Jump jumpEmpty()
     {
-        return branch32(Equal, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
+        return branch32(Equal, AccumulatorRegisterTag, TrustedImm32(Value::emptyValue().asReturnedValue() >> 32));
     }
 
     Jump jumpNotEmpty()
     {
-        return branch32(NotEqual, AccumulatorRegisterTag, TrustedImm32(Primitive::emptyValue().asReturnedValue() >> 32));
+        return branch32(NotEqual, AccumulatorRegisterTag, TrustedImm32(Value::emptyValue().asReturnedValue() >> 32));
     }
 
     void toBoolean(std::function<void(RegisterID)> continuation)
@@ -1476,7 +1476,7 @@ void BaselineAssembler::getException()
     pasm()->store8(TrustedImm32(0), hasExceptionAddr);
     auto done = pasm()->jump();
     nope.link(pasm());
-    pasm()->loadValue(Primitive::emptyValue().asReturnedValue());
+    pasm()->loadValue(Value::emptyValue().asReturnedValue());
 
     done.link(pasm());
 }

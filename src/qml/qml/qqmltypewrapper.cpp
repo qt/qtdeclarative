@@ -205,7 +205,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                     bool ok = false;
                     const int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
                     if (ok)
-                        return QV4::Primitive::fromInt32(value).asReturnedValue();
+                        return QV4::Value::fromInt32(value).asReturnedValue();
                 }
 
                 // check for property.
@@ -237,7 +237,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                 bool ok = false;
                 int value = type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
                 if (ok)
-                    return QV4::Primitive::fromInt32(value).asReturnedValue();
+                    return QV4::Value::fromInt32(value).asReturnedValue();
 
                 value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
                 if (ok) {
@@ -447,7 +447,7 @@ ReturnedValue QQmlScopedEnumWrapper::virtualGet(const Managed *m, PropertyKey id
     if (hasProperty)
         *hasProperty = ok;
     if (ok)
-        return QV4::Primitive::fromInt32(value).asReturnedValue();
+        return QV4::Value::fromInt32(value).asReturnedValue();
 
     return Encode::undefined();
 }

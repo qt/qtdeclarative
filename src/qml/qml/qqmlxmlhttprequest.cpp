@@ -910,7 +910,7 @@ ReturnedValue NamedNodeMap::virtualGet(const Managed *m, PropertyKey id, const V
         return Object::virtualGet(m, id, receiver, hasProperty);
 
     if (id == v4->id_length()->propertyKey())
-        return Primitive::fromInt32(r->d()->list().count()).asReturnedValue();
+        return Value::fromInt32(r->d()->list().count()).asReturnedValue();
 
     QString str = id.toQString();
     for (int ii = 0; ii < r->d()->list().count(); ++ii) {
@@ -950,7 +950,7 @@ ReturnedValue NodeList::virtualGet(const Managed *m, PropertyKey id, const Value
     }
 
     if (id == v4->id_length()->propertyKey())
-        return Primitive::fromInt32(r->d()->d->children.count()).asReturnedValue();
+        return Value::fromInt32(r->d()->d->children.count()).asReturnedValue();
     return Object::virtualGet(m, id, receiver, hasProperty);
 }
 
@@ -1690,11 +1690,11 @@ void Heap::QQmlXMLHttpRequestCtor::init(ExecutionEngine *engine)
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 
-    ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
-    ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
-    ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
-    ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
-    ctor->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
+    ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
+    ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
+    ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
+    ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
+    ctor->defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
     if (!ctor->d()->proto)
         ctor->setupProto();
     ScopedString s(scope, engine->id_prototype());
@@ -1730,11 +1730,11 @@ void QQmlXMLHttpRequestCtor::setupProto()
     p->defineAccessorProperty(QStringLiteral("responseType"), method_get_responseType, method_set_responseType);
 
     // State values
-    p->defineReadonlyProperty(QStringLiteral("UNSENT"), Primitive::fromInt32(0));
-    p->defineReadonlyProperty(QStringLiteral("OPENED"), Primitive::fromInt32(1));
-    p->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Primitive::fromInt32(2));
-    p->defineReadonlyProperty(QStringLiteral("LOADING"), Primitive::fromInt32(3));
-    p->defineReadonlyProperty(QStringLiteral("DONE"), Primitive::fromInt32(4));
+    p->defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
+    p->defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
+    p->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
+    p->defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
+    p->defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
 }
 
 

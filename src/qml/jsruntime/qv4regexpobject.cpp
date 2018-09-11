@@ -136,7 +136,7 @@ void Heap::RegExpObject::init(const QRegExp &re)
 
 void RegExpObject::initProperties()
 {
-    setProperty(Index_LastIndex, Primitive::fromInt32(0));
+    setProperty(Index_LastIndex, Value::fromInt32(0));
 
     Q_ASSERT(value());
 }
@@ -207,7 +207,7 @@ ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *s
         array->arrayPut(i, v);
     }
     array->setArrayLengthUnchecked(len);
-    array->setProperty(Index_ArrayIndex, Primitive::fromInt32(result));
+    array->setProperty(Index_ArrayIndex, Value::fromInt32(result));
     array->setProperty(Index_ArrayInput, *str);
 
     RegExpCtor::Data *dd = regExpCtor->d();
@@ -232,7 +232,7 @@ void Heap::RegExpCtor::init(QV4::ExecutionContext *scope)
 
 void Heap::RegExpCtor::clearLastMatch()
 {
-    lastMatch.set(internalClass->engine, Primitive::nullValue());
+    lastMatch.set(internalClass->engine, Value::nullValue());
     lastInput.set(internalClass->engine, internalClass->engine->id_empty()->d());
     lastMatchStart = 0;
     lastMatchEnd = 0;
@@ -244,7 +244,7 @@ static bool isRegExp(ExecutionEngine *e, const Value *arg)
     if (!o)
         return false;
 
-    Value isRegExp = Primitive::fromReturnedValue(o->get(e->symbol_match()));
+    Value isRegExp = Value::fromReturnedValue(o->get(e->symbol_match()));
     if (!isRegExp.isUndefined())
         return isRegExp.toBoolean();
     const RegExpObject *re = o->as<RegExpObject>();
@@ -294,8 +294,8 @@ ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, con
         }
     }
 
-    ScopedValue p(scope, argc ? argv[0] : Primitive::undefinedValue());
-    ScopedValue f(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedValue p(scope, argc ? argv[0] : Value::undefinedValue());
+    ScopedValue f(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     Scoped<RegExpObject> re(scope, p);
     QString pattern;
     uint flags = CompiledData::RegExp::RegExp_NoFlags;
@@ -347,7 +347,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
     ScopedObject ctor(scope, constructor);
 
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(2));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(2));
     ctor->addSymbolSpecies();
 
     // Properties deprecated in the spec but required by "the web" :(
@@ -398,7 +398,7 @@ ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Val
     Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
     Q_ASSERT(r && r->global());
 
-    ScopedString str(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedString str(scope, argc ? argv[0] : Value::undefinedValue());
     Q_ASSERT(str);
     QString s = str->toQString();
 
@@ -461,7 +461,7 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     if (!r)
         return scope.engine->throwTypeError();
 
-    ScopedValue arg(scope, argc ? argv[0]: Primitive::undefinedValue());
+    ScopedValue arg(scope, argc ? argv[0]: Value::undefinedValue());
     ScopedString str(scope, arg->toString(scope.engine));
     if (scope.hasException())
         RETURN_UNDEFINED();
@@ -552,7 +552,7 @@ static void advanceLastIndexOnEmptyMatch(ExecutionEngine *e, bool unicode, Objec
     if (matchString->d()->length() == 0) {
         ScopedValue v(scope, rx->get(scope.engine->id_lastIndex()));
         int lastIndex = advanceStringIndex(v->toLength(), str, unicode);
-        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(lastIndex)))
+        if (!rx->put(scope.engine->id_lastIndex(), Value::fromInt32(lastIndex)))
             scope.engine->throwTypeError();
     }
 }
@@ -563,7 +563,7 @@ ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value
     ScopedObject rx(scope, thisObject);
     if (!rx)
         return scope.engine->throwTypeError();
-    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    ScopedString s(scope, (argc ? argv[0] : Value::undefinedValue()).toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
     bool global = ScopedValue(scope, rx->get(scope.engine->id_global()))->toBoolean();
@@ -573,7 +573,7 @@ ReturnedValue RegExpPrototype::method_match(const FunctionObject *f, const Value
 
     bool unicode = ScopedValue(scope, rx->get(scope.engine->id_unicode()))->toBoolean();
 
-    rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0));
+    rx->put(scope.engine->id_lastIndex(), Value::fromInt32(0));
     ScopedArrayObject a(scope, scope.engine->newArrayObject());
     uint n = 0;
 
@@ -622,24 +622,24 @@ ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Val
     if (!rx)
         return scope.engine->throwTypeError();
 
-    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    ScopedString s(scope, (argc ? argv[0] : Value::undefinedValue()).toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
 
     int lengthS = s->toQString().length();
 
     ScopedString replaceValue(scope);
-    ScopedFunctionObject replaceFunction(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()));
+    ScopedFunctionObject replaceFunction(scope, (argc > 1 ? argv[1] : Value::undefinedValue()));
     bool functionalReplace = !!replaceFunction;
     if (!functionalReplace)
-        replaceValue = (argc > 1 ? argv[1] : Primitive::undefinedValue()).toString(scope.engine);
+        replaceValue = (argc > 1 ? argv[1] : Value::undefinedValue()).toString(scope.engine);
 
     ScopedValue v(scope);
     bool global = (v = rx->get(scope.engine->id_global()))->toBoolean();
     bool unicode = false;
     if (global) {
         unicode = (v = rx->get(scope.engine->id_unicode()))->toBoolean();
-        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0)))
+        if (!rx->put(scope.engine->id_lastIndex(), Value::fromInt32(0)))
             return scope.engine->throwTypeError();
     }
 
@@ -724,13 +724,13 @@ ReturnedValue RegExpPrototype::method_search(const FunctionObject *f, const Valu
     if (!rx)
         return scope.engine->throwTypeError();
 
-    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    ScopedString s(scope, (argc ? argv[0] : Value::undefinedValue()).toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
 
     ScopedValue previousLastIndex(scope, rx->get(scope.engine->id_lastIndex()));
     if (previousLastIndex->toNumber() != 0) {
-        if (!rx->put(scope.engine->id_lastIndex(), Primitive::fromInt32(0)))
+        if (!rx->put(scope.engine->id_lastIndex(), Value::fromInt32(0)))
             return scope.engine->throwTypeError();
     }
 
@@ -772,7 +772,7 @@ ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value
     if (!rx)
         return scope.engine->throwTypeError();
 
-    ScopedString s(scope, (argc ? argv[0] : Primitive::undefinedValue()).toString(scope.engine));
+    ScopedString s(scope, (argc ? argv[0] : Value::undefinedValue()).toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
 
@@ -818,7 +818,7 @@ ReturnedValue RegExpPrototype::method_split(const FunctionObject *f, const Value
     ScopedObject zz(scope);
     ScopedString t(scope);
     while (q < size) {
-        Value qq = Primitive::fromInt32(q);
+        Value qq = Value::fromInt32(q);
         if (!splitter->put(scope.engine->id_lastIndex(), qq))
             return scope.engine->throwTypeError();
         z = exec(scope.engine, splitter, s);

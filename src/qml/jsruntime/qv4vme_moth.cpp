@@ -377,7 +377,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
         if (lhs.m()->internalClass->vtable->isString)
             return RuntimeHelpers::stringToNumber(static_cast<String &>(lhs).toQString()) == rhs;
         accumulator = lhs;
-        lhs = Primitive::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
+        lhs = Value::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
         goto redo;
     case QV4::Value::QT_Empty:
         Q_UNREACHABLE();
@@ -393,7 +393,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 
 #define STORE_IP() frame->instructionPointer = int(code - function->codeData);
 #define STORE_ACC() accumulator = acc;
-#define ACC Primitive::fromReturnedValue(acc)
+#define ACC Value::fromReturnedValue(acc)
 #define VALUE_TO_INT(i, val) \
     int i; \
     do { \
@@ -675,10 +675,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         // check exception, in case the generator was called with throw() or return()
         if (engine->hasException) {
             // an empty value indicates that the generator was called with return()
-            if (engine->exceptionValue->asReturnedValue() != Primitive::emptyValue().asReturnedValue())
+            if (engine->exceptionValue->asReturnedValue() != Value::emptyValue().asReturnedValue())
                 goto handleUnwind;
             engine->hasException = false;
-            *engine->exceptionValue = Primitive::undefinedValue();
+            *engine->exceptionValue = Value::undefinedValue();
         } else {
             code += offset;
         }
@@ -697,7 +697,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
             goto handleUnwind;
         }
-        Value undef = Primitive::undefinedValue();
+        Value undef = Value::undefinedValue();
         acc = static_cast<const FunctionObject &>(func).call(&undef, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallValue)
@@ -826,12 +826,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(GetException)
         acc = engine->hasException ? engine->exceptionValue->asReturnedValue()
-                                   : Primitive::emptyValue().asReturnedValue();
+                                   : Value::emptyValue().asReturnedValue();
         engine->hasException = false;
     MOTH_END_INSTR(HasException)
 
     MOTH_BEGIN_INSTR(SetException)
-        if (acc != Primitive::emptyValue().asReturnedValue()) {
+        if (acc != Value::emptyValue().asReturnedValue()) {
             *engine->exceptionValue = acc;
             engine->hasException = true;
         }
@@ -1352,13 +1352,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(Ret)
 
     MOTH_BEGIN_INSTR(InitializeBlockDeadTemporalZone)
-        acc = Encode(Primitive::emptyValue());
+        acc = Encode(Value::emptyValue());
         for (int i = firstReg, end = firstReg + count; i < end; ++i)
             STACK_VALUE(i) = acc;
     MOTH_END_INSTR(InitializeBlockDeadTemporalZone)
 
     MOTH_BEGIN_INSTR(ThrowOnNullOrUndefined)
-        if (Primitive::fromReturnedValue(acc).isNullOrUndefined()) {
+        if (Value::fromReturnedValue(acc).isNullOrUndefined()) {
             engine->throwTypeError();
             goto handleUnwind;
         }

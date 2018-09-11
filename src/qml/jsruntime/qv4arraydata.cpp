@@ -221,7 +221,7 @@ ReturnedValue SimpleArrayData::get(const Heap::ArrayData *d, uint index)
 {
     const Heap::SimpleArrayData *dd = static_cast<const Heap::SimpleArrayData *>(d);
     if (index >= dd->values.size)
-        return Primitive::emptyValue().asReturnedValue();
+        return Value::emptyValue().asReturnedValue();
     return dd->data(index).asReturnedValue();
 }
 
@@ -246,7 +246,7 @@ bool SimpleArrayData::del(Object *o, uint index)
         return true;
 
     if (!dd->attrs || dd->attrs[index].isConfigurable()) {
-        dd->setData(o->engine(), index, Primitive::emptyValue());
+        dd->setData(o->engine(), index, Value::emptyValue());
         if (dd->attrs)
             dd->attrs[index] = Attr_Data;
         return true;
@@ -328,7 +328,7 @@ bool SimpleArrayData::putArray(Object *o, uint index, const Value *values, uint 
     }
     QV4::ExecutionEngine *e = o->engine();
     for (uint i = dd->values.size; i < index; ++i)
-        dd->setData(e, i, Primitive::emptyValue());
+        dd->setData(e, i, Value::emptyValue());
     for (uint i = 0; i < n; ++i)
         dd->setData(e, index + i, values[i]);
     dd->values.size = qMax(dd->values.size, index + n);
@@ -402,7 +402,7 @@ ReturnedValue SparseArrayData::get(const Heap::ArrayData *d, uint index)
     const Heap::SparseArrayData *s = static_cast<const Heap::SparseArrayData *>(d);
     index = s->mappedIndex(index);
     if (index == UINT_MAX)
-        return Primitive::emptyValue().asReturnedValue();
+        return Value::emptyValue().asReturnedValue();
     return s->values[index].asReturnedValue();
 }
 
@@ -606,7 +606,7 @@ void ArrayData::insert(Object *o, uint index, const Value *v, bool isAccessor)
             if (index >= d->values.size) {
                 // mark possible hole in the array
                 for (uint i = d->values.size; i < index; ++i)
-                    d->setData(o->engine(), i, Primitive::emptyValue());
+                    d->setData(o->engine(), i, Value::emptyValue());
                 d->values.size = index + 1;
             }
             d->setData(o->engine(), index, *v);
@@ -799,7 +799,7 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
                         break;
                 Q_ASSERT(!d->attrs || !d->attrs[len].isAccessor());
                 d->setData(engine, i, d->data(len));
-                d->setData(engine, len, Primitive::emptyValue());
+                d->setData(engine, len, Value::emptyValue());
             }
         }
 
