@@ -97,10 +97,8 @@ ApplicationWindow {
         //! [model]
 
         //! [scroll]
-        Component.onCompleted: {
-            tableView.contentX = (tableView.contentWidth - tableView.width) / 2;
-            tableView.contentY = (tableView.contentHeight - tableView.height) / 2;
-        }
+        contentX: (contentWidth - width) / 2;
+        contentY: (contentHeight - height) / 2;
         //! [scroll]
     }
 

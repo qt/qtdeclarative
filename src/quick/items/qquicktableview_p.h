@@ -77,8 +77,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged)
-    Q_PROPERTY(qreal contentWidth READ explicitContentWidth WRITE setExplicitContentWidth NOTIFY contentWidthOverrideChanged)
-    Q_PROPERTY(qreal contentHeight READ explicitContentHeight WRITE setExplicitContentWidth NOTIFY contentHeightOverrideChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentWidth NOTIFY contentHeightChanged)
 
 public:
     QQuickTableView(QQuickItem *parent = nullptr);
@@ -107,10 +107,8 @@ public:
     bool reuseItems() const;
     void setReuseItems(bool reuseItems);
 
-    qreal explicitContentWidth() const;
-    void setExplicitContentWidth(qreal width);
-    qreal explicitContentHeight() const;
-    void setExplicitContentHeight(qreal height);
+    void setContentWidth(qreal width);
+    void setContentHeight(qreal height);
 
     Q_INVOKABLE void forceLayout();
 
@@ -126,8 +124,6 @@ Q_SIGNALS:
     void modelChanged();
     void delegateChanged();
     void reuseItemsChanged();
-    void contentWidthOverrideChanged();
-    void contentHeightOverrideChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

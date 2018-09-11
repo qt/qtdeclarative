@@ -106,8 +106,6 @@ Rectangle {
                 anchors.fill: parent
             }
 
-            x: -width
-
             function show() {
                 showAnim.start()
             }

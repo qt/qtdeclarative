@@ -48,15 +48,13 @@ Item {
 
     TableView {
         id: tableView
-        width: 600
+        width: 400
         height: 400
         anchors.margins: 1
         clip: true
         delegate: tableViewDelegate
-        columnSpacing: 1
-        rowSpacing: 1
-        contentX: 250
-        contentY: 250
+        contentX: (contentWidth - width) / 2;
+        contentY: (contentHeight - height) / 2;
     }
 
     Component {

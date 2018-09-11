@@ -193,6 +193,7 @@ public:
     static inline QQuickTableViewPrivate *get(QQuickTableView *q) { return q->d_func(); }
 
     void updatePolish() override;
+    void fixup(AxisData &data, qreal minExtent, qreal maxExtent) override;
 
 public:
     QHash<int, FxTableItem *> loadedItems;
@@ -341,8 +342,6 @@ public:
     void columnsInsertedCallback(const QModelIndex &parent, int begin, int end);
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void modelResetCallback();
-
-    bool updatePolishIfPossible() const;
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;
