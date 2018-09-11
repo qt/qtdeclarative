@@ -670,17 +670,17 @@ static inline QString ToTimeString(double t)
 
 static inline QString ToLocaleString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).toString(Qt::LocaleDate);
+    return ToDateTime(t, Qt::LocalTime).toString(Qt::DefaultLocaleShortDate);
 }
 
 static inline QString ToLocaleDateString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).date().toString(Qt::LocaleDate);
+    return ToDateTime(t, Qt::LocalTime).date().toString(Qt::DefaultLocaleShortDate);
 }
 
 static inline QString ToLocaleTimeString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).time().toString(Qt::LocaleDate);
+    return ToDateTime(t, Qt::LocalTime).time().toString(Qt::DefaultLocaleShortDate);
 }
 
 static double getLocalTZA()
