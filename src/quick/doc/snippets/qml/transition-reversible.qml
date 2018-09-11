@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -65,6 +65,8 @@ Rectangle {
 
     //! [sequential animations]
     transitions: Transition {
+        to: "brighter"
+        reversible: true
         SequentialAnimation {
             PropertyAnimation { property: "x"; duration: 1000 }
             ColorAnimation { duration: 1000 }
