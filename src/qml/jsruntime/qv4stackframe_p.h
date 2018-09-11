@@ -180,9 +180,8 @@ struct Q_QML_EXPORT CppStackFrame {
         jsFrame->setArgc(argc);
 
         memcpy(jsFrame->args, originalArguments, argc*sizeof(Value));
-        const Value *end = jsFrame->args + nRegisters;
-        for (Value *v = jsFrame->args + argc; v < end; ++v)
-            *v = Encode::undefined();
+        Q_STATIC_ASSERT(Encode::undefined() == 0);
+        memset(jsFrame->args + argc, 0, (nRegisters - argc)*sizeof(Value));
 
         if (v4Function && v4Function->compiledFunction) {
             const int firstDeadZoneRegister = v4Function->compiledFunction->firstTemporalDeadZoneRegister;
