@@ -64,7 +64,7 @@ void convertThisToObject(ExecutionEngine *engine, Value *t)
     }
 }
 
-ReturnedValue loadGlobalLookup(ExecutionEngine *engine, Function *f, int index)
+ReturnedValue loadGlobalLookup(Function *f, ExecutionEngine *engine, int index)
 {
     Lookup *l = f->compilationUnit->runtimeLookups + index;
     return l->globalGetter(l, engine);
@@ -87,19 +87,27 @@ ReturnedValue exp(const Value &base, const Value &exp)
     return Encode(pow(b,e));
 }
 
-ReturnedValue getLookup(ExecutionEngine *engine, Function *f, int index, const Value &base)
+ReturnedValue getLookup(Function *f, ExecutionEngine *engine, const Value &base, int index)
 {
     Lookup *l = f->compilationUnit->runtimeLookups + index;
     return l->getter(l, engine, base);
 }
 
-void setLookup(Function *f, int index, Value &base, const Value &value)
+void setLookupSloppy(Function *f, int index, Value &base, const Value &value)
 {
     ExecutionEngine *engine = f->internalClass->engine;
     QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
-    if (!l->setter(l, engine, base, value) && f->isStrict())
+    l->setter(l, engine, base, value);
+}
+
+void setLookupStrict(Function *f, int index, Value &base, const Value &value)
+{
+    ExecutionEngine *engine = f->internalClass->engine;
+    QV4::Lookup *l = f->compilationUnit->runtimeLookups + index;
+    if (!l->setter(l, engine, base, value))
         engine->throwTypeError();
 }
+
 
 void pushBlockContext(Value *stack, int index)
 {

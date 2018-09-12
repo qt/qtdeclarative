@@ -205,8 +205,8 @@ void BaselineJIT::generate_LoadGlobalLookup(int index)
 {
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
-    as->passFunctionAsArg(1);
-    as->passEngineAsArg(0);
+    as->passEngineAsArg(1);
+    as->passFunctionAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadGlobalLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
@@ -277,10 +277,10 @@ void BaselineJIT::generate_GetLookup(int index)
     STORE_IP();
     STORE_ACC();
     as->prepareCallWithArgCount(4);
-    as->passAccumulatorAsArg(3);
-    as->passInt32AsArg(index, 2);
-    as->passFunctionAsArg(1);
-    as->passEngineAsArg(0);
+    as->passInt32AsArg(index, 3);
+    as->passAccumulatorAsArg(2);
+    as->passEngineAsArg(1);
+    as->passFunctionAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::getLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
@@ -307,7 +307,8 @@ void BaselineJIT::generate_SetLookup(int index, int base)
     as->passJSSlotAsArg(base, 2);
     as->passInt32AsArg(index, 1);
     as->passFunctionAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::setLookup, CallResultDestination::InAccumulator);
+    BASELINEJIT_GENERATE_RUNTIME_CALL((function->isStrict() ? Helpers::setLookupStrict : Helpers::setLookupSloppy),
+                                      CallResultDestination::InAccumulator);
     as->checkException();
 }
 
