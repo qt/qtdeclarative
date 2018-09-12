@@ -284,6 +284,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     qreal dist = 0;
 #if QT_CONFIG(gestures)
     if (const auto gesture = event->asPointerNativeGestureEvent()) {
+        m_centroid.reset(event->point(0));
         switch (gesture->type()) {
         case Qt::EndNativeGesture:
             m_activeScale = 1;
