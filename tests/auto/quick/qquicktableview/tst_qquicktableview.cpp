@@ -106,6 +106,8 @@ private slots:
     void checkExplicitContentWidthAndHeight();
     void checkContentXY();
     void noDelegate();
+    void changeDelegateDuringUpdate();
+    void changeModelDuringUpdate();
     void countDelegateItems_data();
     void countDelegateItems();
     void checkLayoutOfEqualSizedDelegateItems_data();
@@ -663,6 +665,51 @@ void tst_QQuickTableView::noDelegate()
     items = tableViewPrivate->loadedItems;
     QVERIFY(items.isEmpty());
 }
+
+void tst_QQuickTableView::changeDelegateDuringUpdate()
+{
+    // Check that you can change the delegate (set it to null)
+    // while the TableView is busy loading the table.
+    LOAD_TABLEVIEW("changemodelordelegateduringupdate.qml");
+
+    auto model = TestModelAsVariant(1, 1);
+    tableView->setModel(model);
+    view->rootObject()->setProperty("changeDelegate", true);
+
+    WAIT_UNTIL_POLISHED;
+
+    // We should no longer have a delegate, and no
+    // items should therefore be loaded.
+    QCOMPARE(tableView->delegate(), nullptr);
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 0);
+
+    // Even if the delegate is missing, we still report
+    // the correct size of the model
+    QCOMPARE(tableView->rows(), 1);
+    QCOMPARE(tableView->columns(), 1);
+};
+
+void tst_QQuickTableView::changeModelDuringUpdate()
+{
+    // Check that you can change the model (set it to null)
+    // while the TableView is buzy loading the table.
+    LOAD_TABLEVIEW("changemodelordelegateduringupdate.qml");
+
+    auto model = TestModelAsVariant(1, 1);
+    tableView->setModel(model);
+    view->rootObject()->setProperty("changeModel", true);
+
+    WAIT_UNTIL_POLISHED;
+
+    // We should no longer have a model, and the no
+    // items should therefore be loaded.
+    QVERIFY(tableView->model().isNull());
+    QCOMPARE(tableViewPrivate->loadedItems.size(), 0);
+
+    // The empty model has no rows or columns
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 0);
+};
 
 void tst_QQuickTableView::countDelegateItems_data()
 {

@@ -128,7 +128,6 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
-    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickTableView)

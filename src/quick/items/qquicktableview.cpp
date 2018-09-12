@@ -1261,10 +1261,6 @@ bool QQuickTableViewPrivate::moveToNextRebuildState()
 
 void QQuickTableViewPrivate::beginRebuildTable()
 {
-    rebuildScheduled = false;
-    rebuildOptions = scheduledRebuildOptions;
-    scheduledRebuildOptions = RebuildOption::None;
-
     if (loadRequest.isActive())
         cancelLoadRequest();
 
@@ -1455,7 +1451,6 @@ void QQuickTableViewPrivate::updatePolish()
     // Whenever something changes, e.g viewport moves, spacing is set to a
     // new value, model changes etc, this function will end up being called. Here
     // we check what needs to be done, and load/unload cells accordingly.
-    Q_Q(QQuickTableView);
 
     Q_TABLEVIEW_ASSERT(!polishing, "recursive updatePolish() calls are not allowed!");
     QBoolBlocker polishGuard(polishing, true);
@@ -1473,15 +1468,9 @@ void QQuickTableViewPrivate::updatePolish()
         return;
     }
 
-    // viewportRect describes the part of the content view that is actually visible. Since a
-    // negative width/height can happen (e.g during start-up), we check for this to avoid rebuilding
-    // the table (and e.g calculate initial row/column sizes) based on a premature viewport rect.
-    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
-    if (!viewportRect.isValid())
-        return;
+    syncWithPendingChanges();
 
-    if (rebuildScheduled) {
-        rebuildState = RebuildState::Begin;
+    if (rebuildState == RebuildState::Begin) {
         processRebuildTable();
         return;
     }
@@ -1560,6 +1549,71 @@ void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 
     if (auto attached = getAttachedObject(object))
         emit attached->reused();
+}
+
+void QQuickTableViewPrivate::syncWithPendingChanges()
+{
+    // The application can change properties like the model or the delegate while
+    // we're e.g in the middle of e.g loading a new row. Since this will lead to
+    // unpredicted behavior, and possibly a crash, we need to postpone taking
+    // such assignments into effect until we're in a state that allows it.
+    Q_Q(QQuickTableView);
+    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
+    syncRebuildOptions();
+    syncModel();
+    syncDelegate();
+}
+
+void QQuickTableViewPrivate::syncRebuildOptions()
+{
+    if (!rebuildScheduled)
+        return;
+
+    rebuildState = RebuildState::Begin;
+    rebuildOptions = scheduledRebuildOptions;
+    scheduledRebuildOptions = RebuildOption::None;
+    rebuildScheduled = false;
+}
+
+void QQuickTableViewPrivate::syncDelegate()
+{
+    if (tableModel && assignedDelegate == tableModel->delegate())
+        return;
+
+    if (!tableModel)
+        createWrapperModel();
+
+    tableModel->setDelegate(assignedDelegate);
+}
+
+void QQuickTableViewPrivate::syncModel()
+{
+    if (modelVariant == assignedModel)
+        return;
+
+    if (model)
+        disconnectFromModel();
+
+    modelVariant = assignedModel;
+    QVariant effectiveModelVariant = modelVariant;
+    if (effectiveModelVariant.userType() == qMetaTypeId<QJSValue>())
+        effectiveModelVariant = effectiveModelVariant.value<QJSValue>().toVariant();
+
+    const auto instanceModel = qobject_cast<QQmlInstanceModel *>(qvariant_cast<QObject*>(effectiveModelVariant));
+
+    if (instanceModel) {
+        if (tableModel) {
+            delete tableModel;
+            tableModel = nullptr;
+        }
+        model = instanceModel;
+    } else {
+        if (!tableModel)
+            createWrapperModel();
+        tableModel->setModel(effectiveModelVariant);
+    }
+
+    connectToModel();
 }
 
 void QQuickTableViewPrivate::connectToModel()
@@ -1765,59 +1819,32 @@ void QQuickTableView::setColumnWidthProvider(QJSValue provider)
 
 QVariant QQuickTableView::model() const
 {
-    return d_func()->modelVariant;
+    return d_func()->assignedModel;
 }
 
 void QQuickTableView::setModel(const QVariant &newModel)
 {
     Q_D(QQuickTableView);
+    if (newModel == d->assignedModel)
+        return;
 
-    if (d->model)
-        d->disconnectFromModel();
-
-    d->modelVariant = newModel;
-    QVariant effectiveModelVariant = d->modelVariant;
-    if (effectiveModelVariant.userType() == qMetaTypeId<QJSValue>())
-        effectiveModelVariant = effectiveModelVariant.value<QJSValue>().toVariant();
-
-    const auto instanceModel = qobject_cast<QQmlInstanceModel *>(qvariant_cast<QObject*>(effectiveModelVariant));
-
-    if (instanceModel) {
-        if (d->tableModel) {
-            delete d->tableModel;
-            d->tableModel = nullptr;
-        }
-        d->model = instanceModel;
-    } else {
-        if (!d->tableModel)
-            d->createWrapperModel();
-        d->tableModel->setModel(effectiveModelVariant);
-    }
-
-    d->connectToModel();
+    d->assignedModel = newModel;
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
     emit modelChanged();
 }
 
 QQmlComponent *QQuickTableView::delegate() const
 {
-    Q_D(const QQuickTableView);
-    if (d->tableModel)
-        return d->tableModel->delegate();
-
-    return nullptr;
+    return d_func()->assignedDelegate;
 }
 
 void QQuickTableView::setDelegate(QQmlComponent *newDelegate)
 {
     Q_D(QQuickTableView);
-    if (newDelegate == delegate())
+    if (newDelegate == d->assignedDelegate)
         return;
 
-    if (!d->tableModel)
-        d->createWrapperModel();
-
-    d->tableModel->setDelegate(newDelegate);
+    d->assignedDelegate = newDelegate;
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
 
     emit delegateChanged();
@@ -1917,16 +1944,6 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
         polish();
     else
         d->updatePolish();
-}
-
-void QQuickTableView::componentComplete()
-{
-    Q_D(QQuickTableView);
-
-    if (!d->model)
-        setModel(QVariant());
-
-    QQuickFlickable::componentComplete();
 }
 
 #include "moc_qquicktableview_p.cpp"
