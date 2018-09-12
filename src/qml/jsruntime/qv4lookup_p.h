@@ -150,7 +150,7 @@ struct Lookup {
 
     bool resolveSetter(ExecutionEngine *engine, Object *object, const Value &value);
     static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    Q_NEVER_INLINE static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
