@@ -41,6 +41,7 @@
 
 #include <QtCore/qglobal.h>
 
+#include <memory>
 #if __cplusplus > 201402L && QT_HAS_INCLUDE(<optional>)
 #include <optional>
 #else
@@ -78,6 +79,16 @@ private:
     bool _hasValue = false;
 };
 
+}
+
+#endif
+
+#if __cplusplus < 201402L && !defined(__cpp_lib_make_unique) && !defined(Q_CC_MSVC) && !defined(Q_CC_GHS)
+
+namespace std {
+    template<typename T, class ...Args>
+    unique_ptr<T> make_unique(Args &&...args)
+      { return unique_ptr<T>(new T(std::forward<Args>(args)...)); }
 }
 
 #endif
