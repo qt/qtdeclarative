@@ -94,7 +94,7 @@ void Heap::Object::setUsedAsProto()
     internalClass.set(internalClass->engine, internalClass->asProtoClass());
 }
 
-ReturnedValue Object::getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs)
+ReturnedValue Object::getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs)
 {
     if (!attrs.isAccessor())
         return v.asReturnedValue();
@@ -413,41 +413,50 @@ OwnPropertyKeyIterator *Object::virtualOwnPropertyKeys(const Object *o, Value *t
 // Section 8.12.3
 ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const
 {
+    Heap::Object *o = d();
+
     uint index = id.asArrayIndex();
     if (index != UINT_MAX) {
         Scope scope(this);
         PropertyAttributes attrs;
-        ScopedObject o(scope, this);
         ScopedProperty pd(scope);
-        if (o->arrayData() && o->arrayData()->getProperty(index, pd, &attrs)) {
-            if (hasProperty)
-                *hasProperty = true;
-            return Object::getValue(*receiver, pd->value, attrs);
-        }
-        if (o->isStringObject()) {
-            ScopedString str(scope, static_cast<StringObject *>(o.getPointer())->getIndex(index));
-            if (str) {
-                attrs = (Attr_NotWritable|Attr_NotConfigurable);
+        while (1) {
+            if (o->arrayData && o->arrayData->getProperty(index, pd, &attrs)) {
                 if (hasProperty)
                     *hasProperty = true;
-                return str.asReturnedValue();
+                return Object::getValue(*receiver, pd->value, attrs);
             }
+            if (o->internalClass->vtable->type == Type_StringObject) {
+                ScopedString str(scope, static_cast<Heap::StringObject *>(o)->getIndex(index));
+                if (str) {
+                    attrs = (Attr_NotWritable|Attr_NotConfigurable);
+                    if (hasProperty)
+                        *hasProperty = true;
+                    return str.asReturnedValue();
+                }
+            }
+            o = o->prototype();
+            if (!o || o->internalClass->vtable->get != Object::virtualGet)
+                break;
         }
     } else {
-        Heap::Object *o = d();
         Q_ASSERT(!id.isArrayIndex());
 
-        uint idx = o->internalClass->find(id);
-        if (idx < UINT_MAX) {
-            if (hasProperty)
-                *hasProperty = true;
-            return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
+        while (1) {
+            uint idx = o->internalClass->find(id);
+            if (idx < UINT_MAX) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
+            }
+            o = o->prototype();
+            if (!o || o->internalClass->vtable->get != Object::virtualGet)
+                break;
         }
     }
 
-    Heap::Object *p = d()->prototype();
-    if (p) {
-        const Value v = Primitive::fromHeapObject(p);
+    if (o) {
+        const Value v = Primitive::fromHeapObject(o);
         const Object &obj = static_cast<const Object &>(v);
         return obj.get(id, receiver, hasProperty);
     }
