@@ -97,14 +97,14 @@ QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQml
     for (int i = from; i < argc; ++i) {
         QV4::ScopedValue arg(scope, (*args)[i]);
         if (QV4::ArrayObject *array = arg->as<QV4::ArrayObject>()) {
-            int len = array->getLength();
-            for (int j = 0; j < len; ++j) {
+            const uint len = uint(array->getLength());
+            for (uint j = 0; j < len; ++j) {
                 QString error;
-                QV4::ScopedValue value(scope, array->getIndexed(j));
+                QV4::ScopedValue value(scope, array->get(j));
                 QQuickStackElement *element = createElement(value, context, &error);
                 if (element) {
                     if (j < len - 1) {
-                        QV4::ScopedValue props(scope, array->getIndexed(j + 1));
+                        QV4::ScopedValue props(scope, array->get(j + 1));
                         if (initProperties(element, props, args))
                             ++j;
                     }
