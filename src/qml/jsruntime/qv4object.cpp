@@ -464,6 +464,49 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
     if (scope.engine->hasException)
         return false;
 
+    Object *r = receiver->objectValue();
+    if (r && r->d() == d()) {
+        // receiver and this object are the same
+        if (d()->internalClass->vtable->getOwnProperty == Object::virtualGetOwnProperty) {
+            // This object standard methods in the vtable, so we can take a shortcut
+            // and avoid the calls to getOwnProperty and defineOwnProperty
+            uint index = id.asArrayIndex();
+
+            PropertyAttributes attrs;
+            PropertyIndex propertyIndex{nullptr, nullptr};
+
+            if (index != UINT_MAX) {
+                if (arrayData())
+                    propertyIndex = arrayData()->getValueOrSetter(index, &attrs);
+            } else {
+                uint member = internalClass()->find(id);
+                if (member < UINT_MAX) {
+                    attrs = internalClass()->propertyData[member];
+                    propertyIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
+                }
+            }
+
+            if (!propertyIndex.isNull() && !attrs.isAccessor()) {
+                if (!attrs.isWritable())
+                    return false;
+                else if (isArrayObject() && id == scope.engine->id_length()->propertyKey()) {
+                    bool ok;
+                    uint l = value.asArrayLength(&ok);
+                    if (!ok) {
+                        scope.engine->throwRangeError(value);
+                        return false;
+                    }
+                    ok = setArrayLength(l);
+                    if (!ok)
+                        return false;
+                } else {
+                    propertyIndex.set(scope.engine, value);
+                }
+                return true;
+            }
+        }
+    }
+
     ScopedProperty p(scope);
     PropertyAttributes attrs;
     attrs = getOwnProperty(id, p);
@@ -488,7 +531,6 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
     // Data property
     if (!attrs.isWritable())
         return false;
-    Object *r = receiver->objectValue();
     if (!r)
         return false;
     attrs = r->getOwnProperty(id, p);

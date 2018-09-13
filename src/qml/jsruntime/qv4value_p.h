@@ -710,8 +710,8 @@ inline unsigned int Primitive::toUInt32(double d)
 }
 
 struct Encode {
-    static ReturnedValue undefined() {
-        return Primitive::undefinedValue().rawValue();
+    static constexpr ReturnedValue undefined() {
+        return 0;
     }
     static ReturnedValue null() {
         return Primitive::nullValue().rawValue();

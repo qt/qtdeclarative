@@ -137,6 +137,15 @@ private:
     QStringList *typeRegistrationFailures = nullptr;
 };
 
+struct EnumInfo {
+    QStringList path;
+    QString metaObjectName;
+    QString enumName;
+    QString enumKey;
+    QString metaEnumScope;
+    bool scoped;
+};
+
 class QQmlTypeModulePrivate
 {
 public:
@@ -271,6 +280,9 @@ public:
     QVector<PropertyCacheByMinorVersion> propertyCaches;
     QQmlPropertyCache *propertyCacheForMinorVersion(int minorVersion) const;
     void setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache);
+private:
+    void createListOfPossibleConflictingItems(const QMetaObject *metaObject, QList<EnumInfo> &enumInfoList, QStringList path) const;
+    void createEnumConflictReport(const QMetaObject *metaObject, const QString &conflictingKey) const;
 };
 
 void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
@@ -845,8 +857,10 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
              if (!isScoped || (regType == QQmlType::CppType && extraData.cd->registerEnumClassesUnscoped)) {
-                if (enums.contains(key))
+                if (enums.contains(key)) {
                     qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
+                    createEnumConflictReport(metaObject, key);
+                }
                 enums.insert(key, value);
             }
             if (isScoped)
@@ -857,6 +871,51 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
             scopedEnums << scoped;
             scopedEnumIndex.insert(QString::fromUtf8(e.name()), scopedEnums.count()-1);
         }
+    }
+}
+
+void QQmlTypePrivate::createListOfPossibleConflictingItems(const QMetaObject *metaObject, QList<EnumInfo> &enumInfoList, QStringList path) const
+{
+    path.append(QString::fromUtf8(metaObject->className()));
+
+    if (metaObject->d.relatedMetaObjects) {
+        const auto *related = metaObject->d.relatedMetaObjects;
+        if (related) {
+            while (*related)
+                createListOfPossibleConflictingItems(*related++, enumInfoList, path);
+        }
+    }
+
+    for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
+        const auto e = metaObject->enumerator(ii);
+
+        for (int jj = 0; jj < e.keyCount(); ++jj) {
+            const QString key = QString::fromUtf8(e.key(jj));
+
+            EnumInfo enumInfo;
+            enumInfo.metaObjectName = QString::fromUtf8(metaObject->className());
+            enumInfo.enumName = QString::fromUtf8(e.name());
+            enumInfo.enumKey = key;
+            enumInfo.scoped = e.isScoped();
+            enumInfo.path = path;
+            enumInfo.metaEnumScope = QString::fromUtf8(e.scope());
+            enumInfoList.append(enumInfo);
+        }
+    }
+}
+
+void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, const QString &conflictingKey) const
+{
+    Q_UNUSED(metaObject);
+    QList<EnumInfo> enumInfoList;
+    createListOfPossibleConflictingItems(baseMetaObject, enumInfoList, QStringList()); //basePath);
+
+    qWarning().noquote() << QLatin1String("Possible conflicting items:");
+    // find items with conflicting key
+    for (const auto i : enumInfoList) {
+        if (i.enumKey == conflictingKey)
+            qWarning().noquote().nospace() << "    " << i.metaObjectName << "." << i.enumName << "." << i.enumKey << " from scope "
+                                           << i.metaEnumScope << " injected by " << i.path.join(QLatin1String("->"));
     }
 }
 

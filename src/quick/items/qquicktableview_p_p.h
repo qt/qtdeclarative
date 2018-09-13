@@ -206,6 +206,11 @@ public:
     QPointer<QQmlTableInstanceModel> tableModel = nullptr;
     QVariant modelVariant;
 
+    // When the applications assignes a new model or delegate to the view, we keep them
+    // around until we're ready to take them into use (syncWithPendingChanges).
+    QVariant assignedModel = QVariant(int(0));
+    QQmlComponent *assignedDelegate = nullptr;
+
     // loadedTable describes the table cells that are currently loaded (from top left
     // row/column to bottom right row/column). loadedTableOuterRect describes the actual
     // pixels that those cells cover, and is matched agains the viewport to determine when
@@ -331,6 +336,11 @@ public:
     void itemPooledCallback(int modelIndex, QObject *object);
     void itemReusedCallback(int modelIndex, QObject *object);
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
+
+    inline void syncWithPendingChanges();
+    inline void syncDelegate();
+    inline void syncModel();
+    inline void syncRebuildOptions();
 
     void connectToModel();
     void disconnectFromModel();

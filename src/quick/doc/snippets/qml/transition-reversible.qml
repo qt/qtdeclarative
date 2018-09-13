@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -47,24 +47,26 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick 2.12
 
 //![0]
 Rectangle {
     id: rect
     width: 100; height: 100
-    color: "red"
+    color: "steelblue"
 
-    MouseArea { id: mouseArea; anchors.fill: parent }
+    TapHandler { id: tapHandler }
 
     states: State {
         name: "brighter"
-        when: mouseArea.pressed
-        PropertyChanges { target: rect; color: "yellow"; x: 50 }
+        when: tapHandler.pressed
+        PropertyChanges { target: rect; color: "lightsteelblue"; x: 50 }
     }
 
     //! [sequential animations]
     transitions: Transition {
+        to: "brighter"
+        reversible: true
         SequentialAnimation {
             PropertyAnimation { property: "x"; duration: 1000 }
             ColorAnimation { duration: 1000 }

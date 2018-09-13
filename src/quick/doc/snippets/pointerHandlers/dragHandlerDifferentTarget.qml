@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -57,8 +57,8 @@ Item {
     Rectangle {
         id: feedback
         border.color: "red"
-        width: Math.max(10, handler.point.ellipseDiameters.width)
-        height: Math.max(10, handler.point.ellipseDiameters.height)
+        width: Math.max(10, handler.centroid.ellipseDiameters.width)
+        height: Math.max(10, handler.centroid.ellipseDiameters.height)
         radius: Math.max(width, height) / 2
         visible: handler.active
     }

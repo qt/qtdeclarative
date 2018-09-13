@@ -19,7 +19,7 @@ HEADERS += \
     $$PWD/qqmlinstantiator_p_p.h \
     $$PWD/qqmltableinstancemodel_p.h
 
-qtConfig(thread) {
+qtConfig(qml-worker-script) {
     SOURCES += \
         $$PWD/qquickworkerscript.cpp
     HEADERS += \

@@ -2013,21 +2013,21 @@ void tst_qquickflickable::nestedSliderUsingTouch_data()
 {
     QTest::addColumn<bool>("keepMouseGrab");
     QTest::addColumn<bool>("keepTouchGrab");
-    QTest::addColumn<int>("updates");
+    QTest::addColumn<int>("minUpdates");
     QTest::addColumn<int>("releases");
     QTest::addColumn<int>("ungrabs");
 
     QTest::newRow("keepBoth") << true << true << 8 << 1 << 0;
     QTest::newRow("keepMouse") << true << false << 8 << 1 << 0;
     QTest::newRow("keepTouch") << false << true << 8 << 1 << 0;
-    QTest::newRow("keepNeither") << false << false << 6 << 0 << 1;
+    QTest::newRow("keepNeither") << false << false << 5 << 0 << 1;
 }
 
 void tst_qquickflickable::nestedSliderUsingTouch()
 {
     QFETCH(bool, keepMouseGrab);
     QFETCH(bool, keepTouchGrab);
-    QFETCH(int, updates);
+    QFETCH(int, minUpdates);
     QFETCH(int, releases);
     QFETCH(int, ungrabs);
 
@@ -2063,7 +2063,7 @@ void tst_qquickflickable::nestedSliderUsingTouch()
     QTest::touchEvent(window, touchDevice).release(0, p0, window);
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(tda->touchPointStates.first(), Qt::TouchPointPressed);
-    QTRY_COMPARE(tda->touchUpdates, updates);
+    QTRY_VERIFY(tda->touchUpdates >= minUpdates);
     QTRY_COMPARE(tda->touchReleases, releases);
     QTRY_COMPARE(tda->ungrabs, ungrabs);
 }

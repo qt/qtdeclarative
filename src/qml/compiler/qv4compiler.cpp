@@ -380,8 +380,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 {
     QV4::CompiledData::Function *function = (QV4::CompiledData::Function *)f;
 
-    quint32 currentOffset = sizeof(QV4::CompiledData::Function);
-    currentOffset = (currentOffset + 7) & ~quint32(0x7);
+    quint32 currentOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, sizeof(*function)));
 
     function->nameIndex = getStringId(irFunction->name);
     function->flags = 0;
@@ -534,8 +533,7 @@ void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context 
 {
     QV4::CompiledData::Block *block = reinterpret_cast<QV4::CompiledData::Block *>(b);
 
-    quint32 currentOffset = sizeof(QV4::CompiledData::Block);
-    currentOffset = (currentOffset + 7) & ~quint32(0x7);
+    quint32 currentOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, sizeof(*block)));
 
     block->sizeOfLocalTemporalDeadZone = irBlock->sizeOfLocalTemporalDeadZone;
     block->nLocals = irBlock->locals.size();
@@ -605,19 +603,19 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     *jsClassDataOffset = nextOffset;
     nextOffset += jsClassData.size();
 
-    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
 
     unit.translationTableSize = translations.count();
     unit.offsetToTranslationTable = nextOffset;
     nextOffset += unit.translationTableSize * sizeof(CompiledData::TranslationData);
 
-    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
 
     const auto reserveExportTable = [&nextOffset](int count, quint32_le *tableSizePtr, quint32_le *offsetPtr) {
         *tableSizePtr = count;
         *offsetPtr = nextOffset;
         nextOffset += count * sizeof(CompiledData::ExportEntry);
-        nextOffset = (nextOffset + 7) & ~quint32(0x7);
+        nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
     };
 
     reserveExportTable(module->localExportEntries.count(), &unit.localExportEntryTableSize, &unit.offsetToLocalExportEntryTable);
@@ -627,13 +625,12 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.importEntryTableSize = module->importEntries.count();
     unit.offsetToImportEntryTable = nextOffset;
     nextOffset += unit.importEntryTableSize * sizeof(CompiledData::ImportEntry);
-    nextOffset = (nextOffset + 7) & ~quint32(0x7);
-
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
 
     unit.moduleRequestTableSize = module->moduleRequests.count();
     unit.offsetToModuleRequestTable = nextOffset;
     nextOffset += unit.moduleRequestTableSize * sizeof(uint);
-    nextOffset = (nextOffset + 7) & ~quint32(0x7);
+    nextOffset = static_cast<quint32>(WTF::roundUpToMultipleOf(8, nextOffset));
 
     quint32 functionSize = 0;
     for (int i = 0; i < module->functions.size(); ++i) {
