@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,72 +49,46 @@
 ****************************************************************************/
 
 import QtQuick 2.10
-import "../Style"
-import "navigation.js" as NavigationData
+import QtQuick.Controls 2.3 as QQC2
+import "Style"
 
 Item {
-    property alias routeListView: routeView
+    id: root
+    width: row.implicitWidth + margins * 2
 
-    Column {
-        anchors.fill: parent
-        anchors.margins: 2
-        spacing: 2
+    readonly property int topMargin: 24
+    readonly property int margins: 12
 
-        Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: parent.width
-            height: titleRow.height
-
-            color: UIStyle.themeColorQtGray9
-
-            Row {
-                id: titleRow
-                spacing: 10
-                anchors.centerIn: parent
-
-                Image {
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: UIStyle.themeImagePath("images/navigation")
-                    fillMode: Image.PreserveAspectCrop
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("Walking")
-                    font.pixelSize: UIStyle.fontSizeM
-                    font.letterSpacing: 2
-                    color: UIStyle.themeColorQtGray2
-                }
-            }
-        }
-
-        ListModel {
-            id: routeModel
-        }
-
-        ListView {
-            id: routeView
-
-            width: parent.width
-            height: parent.height - titleRow.height - parent.spacing
-            property var imageList: [UIStyle.themeImagePath("images/straight"),
-                                     UIStyle.themeImagePath("images/leftturn"),
-                                     UIStyle.themeImagePath("images/rightturn"),
-                                     "images/uturn.png",
-                                     "images/start.png",
-                                     "images/end.png"]
-
-            clip: true
-            focus: true
-            boundsBehavior: Flickable.StopAtBounds
-            snapMode: ListView.SnapToItem
-            model: routeModel
-            delegate: RouteElement {
-                width: routeView.width
-                height: routeView.height
-            }
-        }
+    Behavior on y {
+        NumberAnimation {}
     }
-    Component.onCompleted: {
-        NavigationData.requestNavigationRoute(routeModel)
+
+    Rectangle {
+        id: demoModeIndicatorBg
+        anchors.fill: parent
+        anchors.topMargin: -topMargin
+        radius: 20
+        color: UIStyle.colorRed
+    }
+
+    Row {
+        id: row
+        spacing: 8
+        anchors.fill: parent
+        anchors.leftMargin: margins
+        anchors.rightMargin: margins
+
+        Image {
+            source: "Settings/images/demo-mode-white.png"
+            width: height
+            height: instructionLabel.height * 2
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        QQC2.Label {
+            id: instructionLabel
+            text: "Tap screen to use"
+            color: UIStyle.colorQtGray10
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 }

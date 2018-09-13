@@ -70,6 +70,9 @@ QtObject {
     readonly property color colorQtAuxGreen1: "#21be2b"
     readonly property color colorQtAuxGreen2: "#17a81a"
 
+    // Red
+    readonly property color colorRed: "#e6173d"
+
     // Gray
     readonly property color colorQtGray1: "#09102b"
     readonly property color colorQtGray2: "#222840"

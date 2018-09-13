@@ -80,8 +80,12 @@
         <file>qml/Settings/images/bluetooth-light@2x.png</file>
         <file>qml/Settings/images/brightness-light.png</file>
         <file>qml/Settings/images/brightness-light@2x.png</file>
-        <file>qml/Settings/images/contrast-light.png</file>
-        <file>qml/Settings/images/contrast-light@2x.png</file>
+        <file>qml/Settings/images/demo-mode-light.png</file>
+        <file>qml/Settings/images/demo-mode-light@2x.png</file>
+        <file>qml/Settings/images/demo-mode-dark.png</file>
+        <file>qml/Settings/images/demo-mode-dark@2x.png</file>
+        <file>qml/Settings/images/demo-mode-white.png</file>
+        <file>qml/Settings/images/demo-mode-white@2x.png</file>
         <file>qml/Settings/images/theme-light.png</file>
         <file>qml/Settings/images/theme-light@2x.png</file>
         <file>qml/Settings/images/wifi-light.png</file>
@@ -90,8 +94,6 @@
         <file>qml/Settings/images/bluetooth-dark@2x.png</file>
         <file>qml/Settings/images/brightness-dark.png</file>
         <file>qml/Settings/images/brightness-dark@2x.png</file>
-        <file>qml/Settings/images/contrast-dark.png</file>
-        <file>qml/Settings/images/contrast-dark@2x.png</file>
         <file>qml/Settings/images/theme-dark.png</file>
         <file>qml/Settings/images/theme-dark@2x.png</file>
         <file>qml/Settings/images/wifi-dark.png</file>
@@ -147,5 +149,7 @@
         <file>qml/WorldClock/images/swissnightminute.png</file>
         <file>qml/WorldClock/images/swissnightminute@2x.png</file>
         <file>qml/SwipeViewPage.qml</file>
+        <file>qml/DemoMode.qml</file>
+        <file>qml/DemoModeIndicator.qml</file>
     </qresource>
 </RCC>

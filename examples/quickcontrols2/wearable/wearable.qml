@@ -65,9 +65,9 @@ QQC2.ApplicationWindow {
         id: settings
         property bool wireless
         property bool bluetooth
-        property int contrast
         property int brightness
         property bool darkTheme
+        property bool demoMode
     }
 
     Binding {
@@ -113,6 +113,28 @@ QQC2.ApplicationWindow {
 
         initialItem: LauncherPage {
             onLaunched: stackView.push(page)
+        }
+    }
+
+    DemoMode {
+        stackView: stackView
+    }
+
+    DemoModeIndicator {
+        id: demoModeIndicator
+        y: settings.demoMode ? -height : -height * 2
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: header.height
+        z: window.header.z + 1
+    }
+
+    MouseArea {
+        enabled: settings.demoMode
+        anchors.fill: parent
+        onClicked: {
+            // Stop demo mode and return to the launcher page.
+            settings.demoMode = false
+            stackView.pop(null)
         }
     }
 }

@@ -78,7 +78,7 @@ T.Switch {
 
     background: Rectangle {
         radius: 13
-        color: control.checked ? UIStyle.colorQtAuxGreen2 : "#E6173D"
+        color: control.checked ? UIStyle.colorQtAuxGreen2 : UIStyle.colorRed
         border.color: control.checked ? UIStyle.colorQtAuxGreen2
                                       : UIStyle.themeColorQtGray6
     }

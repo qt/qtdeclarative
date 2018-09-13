@@ -66,6 +66,8 @@ Item {
             }
 
             SwipeViewPage {
+                property alias stateSwitch: stateSwitch
+
                 Column {
                     spacing: 30
                     anchors.centerIn: parent

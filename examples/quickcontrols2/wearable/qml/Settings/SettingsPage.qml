@@ -63,6 +63,9 @@ Item {
         SwipeViewPage {
             id: settingsPage1
 
+            property alias bluetoothSwitch: bluetoothSwitch
+            property alias wirelessSwitch: wirelessSwitch
+
             Column {
                 anchors.centerIn: parent
                 spacing: 25
@@ -99,6 +102,9 @@ Item {
         SwipeViewPage {
             id: settingsPage2
 
+            property alias brightnessSlider: brightnessSlider
+            property alias darkThemeSwitch: darkThemeSwitch
+
             Column {
                 anchors.centerIn: parent
                 spacing: 2
@@ -119,19 +125,17 @@ Item {
                     }
                 }
                 Column {
-                    spacing: 2
+                    anchors.horizontalCenter: parent.horizontalCenter
+
                     Image {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        source: UIStyle.themeImagePath("images/contrast")
+                        source: UIStyle.themeImagePath("images/theme")
                     }
-                    QQC2.Slider {
-                        id: contrastSlider
+                    QQC2.Switch {
+                        id: darkThemeSwitch
                         anchors.horizontalCenter: parent.horizontalCenter
-                        from: 0
-                        to: 10
-                        stepSize: 1
-                        value: settings.contrast
-                        onMoved: settings.contrast = value
+                        checked: settings.darkTheme
+                        onToggled: settings.darkTheme = checked
                     }
                 }
             }
@@ -142,19 +146,20 @@ Item {
 
             Column {
                 anchors.centerIn: parent
-                spacing: 2
 
-                Row {
-                    spacing: 50
+                Column {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 6
+
                     Image {
-                        anchors.verticalCenter: parent.verticalCenter
-                        source: UIStyle.themeImagePath("images/theme")
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        source: UIStyle.themeImagePath("images/demo-mode")
                     }
                     QQC2.Switch {
-                        id: darkThemeSwitch
-                        anchors.verticalCenter: parent.verticalCenter
-                        checked: settings.darkTheme
-                        onToggled: settings.darkTheme = checked
+                        id: demoModeSwitch
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        checked: settings.demoMode
+                        onToggled: settings.demoMode = checked
                     }
                 }
             }
