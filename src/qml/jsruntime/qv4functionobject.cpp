@@ -357,7 +357,7 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
     uint len = arr->getLength();
 
     Scope scope(v4);
-    Value *arguments = scope.alloc(len);
+    Value *arguments = scope.alloc<Scope::Uninitialized>(len);
     if (len) {
         if (ArgumentsObject::isNonStrictArgumentsObject(arr) && !arr->cast<ArgumentsObject>()->fullyCreated()) {
             QV4::ArgumentsObject *a = arr->cast<ArgumentsObject>();
@@ -375,6 +375,8 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
             for (quint32 i = alen; i < len; ++i)
                 arguments[i] = Primitive::undefinedValue();
         } else {
+            // need to init the arguments array, as the get() calls below can have side effects
+            memset(arguments, 0, len*sizeof(Value));
             for (quint32 i = 0; i < len; ++i)
                 arguments[i] = arr->get(i);
         }

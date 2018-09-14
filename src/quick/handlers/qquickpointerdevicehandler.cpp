@@ -80,7 +80,7 @@ QQuickPointerDevice::PointerTypes QQuickPointerDeviceHandler::acceptedPointerTyp
 }
 
 /*!
-    \qmlproperty int QtQuick::PointerDeviceHandler::acceptedButtons
+    \qmlproperty flags QtQuick::PointerDeviceHandler::acceptedButtons
 
     The mouse buttons which can activate this Pointer Handler.
 
@@ -131,7 +131,7 @@ Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
 }
 
 /*!
-    \qmlproperty int PointerDeviceHandler::acceptedDevices
+    \qmlproperty flags PointerDeviceHandler::acceptedDevices
 
     The types of pointing devices that can activate this Pointer Handler.
 
@@ -167,7 +167,7 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceT
 }
 
 /*!
-    \qmlproperty int PointerDeviceHandler::acceptedPointerTypes
+    \qmlproperty flags PointerDeviceHandler::acceptedPointerTypes
 
     The types of pointing instruments (finger, stylus, eraser, etc.)
     that can activate this Pointer Handler.
@@ -206,7 +206,7 @@ void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::Po
 }
 
 /*!
-    \qmlproperty int PointerDeviceHandler::acceptedModifiers
+    \qmlproperty flags PointerDeviceHandler::acceptedModifiers
 
     If this property is set, it will require the given keyboard modifiers to
     be pressed in order to react to pointer events, and otherwise ignore them.

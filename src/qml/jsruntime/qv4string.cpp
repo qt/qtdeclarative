@@ -250,13 +250,6 @@ void Heap::StringOrSymbol::createHashValue() const
     stringHash = QV4::String::calculateHashValue(ch, end, &subtype);
 }
 
-PropertyKey StringOrSymbol::toPropertyKey() const {
-    if (d()->identifier.isValid())
-        return d()->identifier;
-    createPropertyKey();
-    return propertyKey();
-}
-
 qint64 String::virtualGetLength(const Managed *m)
 {
     return static_cast<const String *>(m)->d()->length();

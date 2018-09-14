@@ -1045,7 +1045,7 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
 
 bool MemoryManager::shouldRunGC() const
 {
-    size_t total = blockAllocator.totalSlots();
+    size_t total = blockAllocator.totalSlots() + icAllocator.totalSlots();
     if (total > MinSlotsGCLimit && usedSlotsAfterLastFullSweep * GCOverallocation < total * 100)
         return true;
     return false;
@@ -1181,7 +1181,7 @@ void MemoryManager::runGC()
                  == blockAllocator.usedMem() + dumpBins(&blockAllocator, false));
     }
 
-    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep;
+    usedSlotsAfterLastFullSweep = blockAllocator.usedSlotsAfterLastSweep + icAllocator.usedSlotsAfterLastSweep;
 
     // reset all black bits
     blockAllocator.resetBlackBits();

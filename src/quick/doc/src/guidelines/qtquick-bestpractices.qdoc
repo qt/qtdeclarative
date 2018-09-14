@@ -197,9 +197,9 @@ so. To explain why, let's take a look at a simplified example.
 
 Suppose we were writing the UI for a settings page:
 
-\qml
-    import QtQuick 2.12
-    import QtQuick.Controls 2.12
+\qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.Controls 2.\1
 
     Page {
         Button {
@@ -296,9 +296,9 @@ into QML:
 
 The QML then calls the C++ slot directly:
 
-\qml
-    import QtQuick 2.12
-    import QtQuick.Controls 2.12
+\qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.Controls 2.\1
 
     Page {
         Button {

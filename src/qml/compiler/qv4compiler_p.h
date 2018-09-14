@@ -82,7 +82,7 @@ struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     QString stringForIndex(int index) const { return strings.at(index); }
     uint stringCount() const { return strings.size() - backingUnitTableSize; }
 
-    uint sizeOfTableAndData() const { return stringDataSize + stringCount() * sizeof(uint); }
+    uint sizeOfTableAndData() const { return stringDataSize + ((stringCount() * sizeof(uint) + 7) & ~7); }
 
     void freeze() { frozen = true; }
 

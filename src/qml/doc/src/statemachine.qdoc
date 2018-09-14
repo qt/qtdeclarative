@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-  \qmlmodule QtQml.StateMachine 1.11
+  \qmlmodule QtQml.StateMachine 1.\QtMinorVersion
   \title Declarative State Machine QML Types
   \brief Provides QML types to create and execute state graphs.
 
@@ -68,9 +68,9 @@
     \e{QtQml.StateMachine} \e{last}. This way, the \e{State} type is provided
     by the Declarative State Machine Framework and not by \l{QtQuick}:
 
-  \qml
-    import QtQuick 2.0
-    import QtQml.StateMachine 1.0
+  \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQml.StateMachine 1.\1
 
     StateMachine {
         State {
@@ -82,9 +82,9 @@
   Alternatively, you can import \e{QtQml.StateMachine} into a separate
   namespace to avoid any ambiguity with QtQuick's \e{State} item:
 
-  \qml
-    import QtQuick 2.0
-    import QtQml.StateMachine 1.0 as DSM
+  \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQml.StateMachine 1.\1 as DSM
 
     DSM.StateMachine {
         DSM.State {

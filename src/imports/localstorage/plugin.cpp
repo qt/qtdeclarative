@@ -520,7 +520,7 @@ through the data.
 
 
 /*!
-    \qmlmodule QtQuick.LocalStorage 2.12
+    \qmlmodule QtQuick.LocalStorage 2.\QtMinorVersion
     \title Qt Quick Local Storage QML Types
     \ingroup qmlmodules
     \brief Provides a JavaScript object singleton type for accessing a local
@@ -541,16 +541,16 @@ through the data.
     To use the types in this module, import the module and call the
     relevant functions using the \c LocalStorage type:
 
-    \code
-    import QtQuick.LocalStorage 2.0
-    import QtQuick 2.0
+    \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.LocalStorage 2.\1
 
     Item {
         Component.onCompleted: {
             var db = LocalStorage.openDatabaseSync(...)
         }
     }
-    \endcode
+    \endqml
 
 
 These databases are user-specific and QML-specific, but accessible to all QML applications.
@@ -570,11 +570,13 @@ The \l{Qt Quick Examples - Local Storage}{SQL Local Storage example} demonstrate
 using the Offline Storage API.
 
 \section3 Open or Create a Database
-\code
-import QtQuick.LocalStorage 2.0 as Sql
+
+\qml \QtMinorVersion
+import QtQuick.LocalStorage 2.\1 as Sql
 
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
-\endcode
+\endqml
+
 The above code returns the database identified by \e identifier. If the database does not already exist, it
 is created, and the function \e callback is called with the database as a parameter. \e identifier is the
 name of the physical file (with or without full path) containing the database.  \e description and

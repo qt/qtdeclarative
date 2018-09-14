@@ -64,8 +64,8 @@ struct Q_QML_PRIVATE_EXPORT IdentifierTable
 {
     ExecutionEngine *engine;
 
-    int alloc;
-    int size;
+    uint alloc;
+    uint size;
     int numBits;
     Heap::StringOrSymbol **entriesByHash;
     Heap::StringOrSymbol **entriesById;

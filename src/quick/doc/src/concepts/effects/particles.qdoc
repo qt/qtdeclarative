@@ -26,15 +26,16 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Particles 2.12
+    \qmlmodule QtQuick.Particles 2.\QtMinorVersion
     \title Qt Quick Particles QML Types
     \ingroup qmlmodules
     \brief Provides QML types for particle effects
 
   This QML module contains a particle system for Qt Quick. To use these types, import the module with the following line:
-  \code
-  import QtQuick.Particles 2.12
-  \endcode
+
+  \qml \QtMinorVersion
+  import QtQuick.Particles 2.\1
+  \endqml
 
   For a simple overview of how the system can be used, see \l{Using the Qt Quick Particle System}.
 
@@ -48,10 +49,11 @@
 
     Documentation for all Particle System types can be found on the \l QtQuick.Particles module page.
 
-  Note that to use types from the particles module, you will need to import the types with the following line:
-  \code
-  import QtQuick.Particles 2.12
-  \endcode
+    To use the types from the particles module, import the module with the following line:
+
+    \qml \QtMinorVersion
+    import QtQuick.Particles 2.\1
+    \endqml
 
     \section1 The ParticleSystem
     This particle system contains four main types of QML types: ParticleSystem, Painters, Emitters and Affectors.

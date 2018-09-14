@@ -256,14 +256,33 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
 }
 
 /*!
-    \qmlproperty bool QtQuick::PointerHandler::grabPermission
+    \qmlproperty flags QtQuick::PointerHandler::grabPermissions
 
     This property specifies the permissions when this handler's logic decides
     to take over the exclusive grab, or when it is asked to approve grab
     takeover or cancellation by another handler.
 
+    \value PointerHandler.TakeOverForbidden
+           This handler neither takes from nor gives grab permission to any type of Item or Handler.
+    \value PointerHandler.CanTakeOverFromHandlersOfSameType
+           This handler can take the exclusive grab from another handler of the same class.
+    \value PointerHandler.CanTakeOverFromHandlersOfDifferentType
+           This handler can take the exclusive grab from any kind of handler.
+    \value PointerHandler.CanTakeOverFromAnything
+           This handler can take the exclusive grab from any type of Item or Handler.
+    \value PointerHandler.ApprovesTakeOverByHandlersOfSameType
+           This handler gives permission for another handler of the same class to take the grab.
+    \value PointerHandler.ApprovesTakeOverByHandlersOfDifferentType
+           This handler gives permission for any kind of handler to take the grab.
+    \value PointerHandler.ApprovesTakeOverByItems
+           This handler gives permission for any kind of Item to take the grab.
+    \value PointerHandler.ApprovesCancellation
+           This handler will allow its grab to be set to null.
+    \value PointerHandler.ApprovesTakeOverByAnything
+           This handler gives permission for any any type of Item or Handler to take the grab.
+
     The default is
-    \c {CanTakeOverFromItems | CanTakeOverFromHandlersOfDifferentType | ApprovesTakeOverByAnything}
+    \c {PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything}
     which allows most takeover scenarios but avoids e.g. two PinchHandlers fighting
     over the same touchpoints.
 */

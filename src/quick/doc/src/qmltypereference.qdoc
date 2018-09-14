@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQuick 2.12
+\qmlmodule QtQuick 2.\QtMinorVersion
 \title Qt Quick QML Types
 \ingroup qmlmodules
 \brief Provides graphical QML types.
@@ -34,11 +34,11 @@
 The \l{Qt Quick} module provides graphical primitive types. These types are only
 available in a QML document if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version 2.12, and thus it may be
-imported via the following statement:
+The current version of the \c QtQuick module is version \QtMinorVersion, and
+thus it may be imported via the following statement:
 
-\qml
-import QtQuick 2.12
+\qml \QtMinorVersion
+import QtQuick 2.\1
 \endqml
 
 Visit the \l {Qt Quick} module documentation for more
@@ -889,15 +889,16 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-\qmlmodule QtTest 1.11
+\qmlmodule QtTest 1.\QtMinorVersion
 \title Qt Quick Test QML Types
 \brief This module provides QML types to unit test your QML application
 \ingroup qmlmodules
 
 You can import this module using the following statement:
-\code
-import QtTest 1.11
-\endcode
+
+\qml \QtMinorVersion
+import QtTest 1.\1
+\endqml
 
 For more information about how to use these types, see
 \l{Qt Quick Test}.

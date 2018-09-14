@@ -65,11 +65,12 @@ namespace JIT {
 namespace Helpers {
 
 void convertThisToObject(ExecutionEngine *engine, Value *t);
-ReturnedValue loadGlobalLookup(ExecutionEngine *engine, Function *f, int index);
+ReturnedValue loadGlobalLookup(Function *f, ExecutionEngine *engine, int index);
 ReturnedValue toObject(ExecutionEngine *engine, const Value &obj);
 ReturnedValue exp(const Value &base, const Value &exp);
-ReturnedValue getLookup(ExecutionEngine *engine, Function *f, int index, const Value &base);
-void setLookup(Function *f, int index, Value &base, const Value &value);
+ReturnedValue getLookup(Function *f, ExecutionEngine *engine, const Value &base, int index);
+void setLookupStrict(Function *f, int index, Value &base, const Value &value);
+void setLookupSloppy(Function *f, int index, Value &base, const Value &value);
 void pushBlockContext(Value *stack, int index);
 void cloneBlockContext(Value *contextSlot);
 void pushScriptContext(Value *stack, ExecutionEngine *engine, int index);

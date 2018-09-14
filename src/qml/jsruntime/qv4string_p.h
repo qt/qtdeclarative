@@ -306,10 +306,15 @@ struct ComplexString : String {
 
 inline
 void StringOrSymbol::createPropertyKey() const {
-    if (d()->identifier.isValid())
-        return;
+    Q_ASSERT(!d()->identifier.isValid());
     Q_ASSERT(isString());
     static_cast<const String *>(this)->createPropertyKeyImpl();
+}
+
+inline PropertyKey StringOrSymbol::toPropertyKey() const {
+    if (!d()->identifier.isValid())
+        createPropertyKey();
+    return d()->identifier;
 }
 
 template<>
