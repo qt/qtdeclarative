@@ -353,6 +353,9 @@ public:
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void modelResetCallback();
 
+    void _q_componentFinalized();
+    void registerCallbackWhenBindingsAreEvaluated();
+
     inline QString tableLayoutToString() const;
     void dumpTable() const;
 };
