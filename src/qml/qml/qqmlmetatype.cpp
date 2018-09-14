@@ -906,9 +906,17 @@ void QQmlTypePrivate::createListOfPossibleConflictingItems(const QMetaObject *me
 
 void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, const QString &conflictingKey) const
 {
-    Q_UNUSED(metaObject);
     QList<EnumInfo> enumInfoList;
-    createListOfPossibleConflictingItems(baseMetaObject, enumInfoList, QStringList()); //basePath);
+
+    if (baseMetaObject) // prefer baseMetaObject if available
+        metaObject = baseMetaObject;
+
+    if (!metaObject) { // If there is no metaObject at all return early
+        qWarning() << "No meta object information available. Skipping conflict analysis.";
+        return;
+    }
+
+    createListOfPossibleConflictingItems(metaObject, enumInfoList, QStringList()); //basePath);
 
     qWarning().noquote() << QLatin1String("Possible conflicting items:");
     // find items with conflicting key
