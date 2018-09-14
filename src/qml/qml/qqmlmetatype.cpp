@@ -916,7 +916,7 @@ void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, co
         return;
     }
 
-    createListOfPossibleConflictingItems(metaObject, enumInfoList, QStringList()); //basePath);
+    createListOfPossibleConflictingItems(metaObject, enumInfoList, QStringList());
 
     qWarning().noquote() << QLatin1String("Possible conflicting items:");
     // find items with conflicting key
