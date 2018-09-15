@@ -251,6 +251,41 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
     }
 }
 
+void QQuickMenuPrivate::createAndAppendItem(QObject *object)
+{
+    Q_Q(QQuickMenu);
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!item) {
+        if (QQuickAction *action = qobject_cast<QQuickAction *>(object))
+            item = createItem(action);
+        else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(object))
+            item = createItem(menu);
+    }
+
+    if (item) {
+        if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
+            QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::SiblingOrder);
+            item->setParentItem(contentItem);
+        } else if (contentModel->indexOf(item, nullptr) == -1) {
+            q->addItem(item);
+        }
+    } else {
+        contentData.append(object);
+    }
+}
+
+void QQuickMenuPrivate::recreateItems()
+{
+    // removeItem() will remove stuff from contentData, so we have to make a copy of it.
+    const auto originalContentData = contentData;
+
+    while (contentModel->count() > 0)
+        removeItem(0, itemAt(0));
+
+    for (QObject *object : originalContentData)
+        createAndAppendItem(object);
+}
+
 QQuickItem *QQuickMenuPrivate::beginCreateItem()
 {
     Q_Q(QQuickMenu);
@@ -626,24 +661,14 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
     QQuickMenu *q = qobject_cast<QQuickMenu *>(prop->object);
     QQuickMenuPrivate *p = QQuickMenuPrivate::get(q);
 
-    QQuickItem *item = qobject_cast<QQuickItem *>(obj);
-    if (!item) {
-        if (QQuickAction *action = qobject_cast<QQuickAction *>(obj))
-            item = p->createItem(action);
-        else if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
-            item = p->createItem(menu);
+    if (!p->complete) {
+        // Don't add items until we're complete, as the delegate could change in the meantime.
+        // We'll add it to contentData and create it when we're complete.
+        p->contentData.append(obj);
+        return;
     }
 
-    if (item) {
-        if (QQuickItemPrivate::get(item)->isTransparentForPositioner()) {
-            QQuickItemPrivate::get(item)->addItemChangeListener(p, QQuickItemPrivate::SiblingOrder);
-            item->setParentItem(p->contentItem);
-        } else if (p->contentModel->indexOf(item, nullptr) == -1) {
-            q->addItem(item);
-        }
-    } else {
-        p->contentData.append(obj);
-    }
+    p->createAndAppendItem(obj);
 }
 
 int QQuickMenuPrivate::contentData_count(QQmlListProperty<QObject> *prop)
@@ -1356,7 +1381,7 @@ void QQuickMenu::componentComplete()
 {
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
-    d->resizeItems();
+    d->recreateItems();
 }
 
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)

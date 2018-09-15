@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,64 +49,12 @@
 ****************************************************************************/
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQC2
-import ".."
-import "../Style"
+import QtQuick.Controls 2.1
 
 Item {
-    QQC2.SwipeView {
-        id: svAlarmsContainer
-
-        anchors.fill: parent
-
-        Repeater {
-            model: ListModel {
-                ListElement { name: qsTr("Week Days"); state: true; time: "06:00 AM" }
-                ListElement { name: qsTr("Week Ends"); state: false; time: "07:30 AM" }
-            }
-
-            SwipeViewPage {
-                Column {
-                    spacing: 30
-                    anchors.centerIn: parent
-
-                    QQC2.Switch {
-                        id: stateSwitch
-                        checked: model.state
-                        anchors.left: nameLabel.right
-                    }
-
-                    Text {
-                        text: model.time
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        verticalAlignment: Text.AlignVCenter
-                        height: UIStyle.fontSizeXL
-                        font.bold: stateSwitch.checked
-                        font.pixelSize: stateSwitch.checked ? UIStyle.fontSizeXL : UIStyle.fontSizeL
-                        font.letterSpacing: 4
-                        color: UIStyle.colorQtGray1
-                    }
-
-                    Text {
-                        id: nameLabel
-                        text: model.name
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        font.pixelSize: UIStyle.fontSizeS
-                        font.italic: true
-                        font.bold: true
-                        font.letterSpacing: 1
-                        color: UIStyle.colorQtGray2
-                    }
-                }
-            }
-        }
-    }
-
-    QQC2.PageIndicator {
-        count: svAlarmsContainer.count
-        currentIndex: svAlarmsContainer.currentIndex
-
-        anchors.bottom: svAlarmsContainer.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-    }
+    // Don't show the item when the StackView that contains us
+    // is being popped off the stack, as we use an x animation
+    // and hence would show pages that we shouldn't since we
+    // also don't have our own background.
+    visible: SwipeView.isCurrentItem || (SwipeView.view.contentItem.moving && (SwipeView.isPreviousItem || SwipeView.isNextItem))
 }
