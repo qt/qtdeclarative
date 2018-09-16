@@ -205,16 +205,6 @@ Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *eng
     return function->d();
 }
 
-bool FunctionObject::isBinding() const
-{
-    return d()->vtable() == QQmlBindingFunction::staticVTable();
-}
-
-bool FunctionObject::isBoundFunction() const
-{
-    return d()->vtable() == BoundFunction::staticVTable();
-}
-
 ReturnedValue FunctionObject::getHomeObject() const
 {
     const MemberFunction *m = as<MemberFunction>();

@@ -191,9 +191,14 @@ struct Q_QML_EXPORT Object: Managed {
         return getValueAccessor(thisObject, v, attrs);
     }
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
-        Scope scope(this->engine());
-        ScopedValue t(scope, const_cast<Object *>(this));
-        return getValue(t, v, attrs);
+        return getValue(*this, v, attrs);
+    }
+    ReturnedValue getValueByIndex(uint propertyIndex) const {
+        PropertyAttributes attrs = internalClass()->propertyData.at(propertyIndex);
+        const Value *v = propertyData(propertyIndex);
+        if (!attrs.isAccessor())
+            return v->asReturnedValue();
+        return getValueAccessor(*this, *v, attrs);
     }
     static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
 
@@ -382,6 +387,9 @@ protected:
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static qint64 virtualGetLength(const Managed *m);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
+public:
+    // qv4runtime uses this directly
+    static ReturnedValue checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *typeObject, const Value &var);
 
 private:
     bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, const InternalClassEntry *memberEntry, const Property *p, PropertyAttributes attrs);

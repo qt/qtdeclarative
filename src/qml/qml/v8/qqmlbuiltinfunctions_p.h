@@ -188,6 +188,11 @@ struct QQmlBindingFunction : public QV4::FunctionObject
     QQmlSourceLocation currentLocation() const; // from caller stack trace
 };
 
+inline bool FunctionObject::isBinding() const
+{
+    return d()->vtable() == QQmlBindingFunction::staticVTable();
+}
+
 }
 
 QT_END_NAMESPACE

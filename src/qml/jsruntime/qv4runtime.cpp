@@ -349,15 +349,21 @@ QV4::ReturnedValue Runtime::method_instanceof(ExecutionEngine *engine, const Val
     if (!rhs)
        return engine->throwTypeError();
 
+    const FunctionObject *f = rhs->as<FunctionObject>();
+    // shortcut hasInstance evaluation. In this case we know that we are calling the regular hasInstance()
+    // method of the FunctionPrototype
+    if (f && f->d()->prototype() == engine->functionPrototype()->d() && !f->hasHasInstanceProperty())
+        return Object::checkedInstanceOf(engine, f, lval);
+
     Scope scope(engine);
     ScopedValue hasInstance(scope, rhs->get(engine->symbol_hasInstance()));
     if (hasInstance->isUndefined())
         return rhs->instanceOf(lval);
-    FunctionObject *f = hasInstance->as<FunctionObject>();
-    if (!f)
+    FunctionObject *fHasInstance = hasInstance->as<FunctionObject>();
+    if (!fHasInstance)
         return engine->throwTypeError();
 
-    ScopedValue result(scope, f->call(&rval, &lval, 1));
+    ScopedValue result(scope, fHasInstance->call(&rval, &lval, 1));
     return Encode(result->toBoolean());
 }
 

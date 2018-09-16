@@ -731,21 +731,27 @@ ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &v
     if (!function)
         return engine->throwTypeError();
 
-    Heap::FunctionObject *f = function->d();
-    if (function->isBoundFunction())
-        f = function->cast<BoundFunction>()->target();
+    return checkedInstanceOf(engine, function, var);
+}
+
+ReturnedValue Object::checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *f, const Value &var)
+{
+    Scope scope(engine);
+    if (f->isBoundFunction()) {
+        ScopedValue v(scope, static_cast<const BoundFunction *>(f)->target());
+        f = v->as<FunctionObject>();
+    }
 
     // 15.3.5.3, 1: HasInstance can only be used on an object
     const Object *lhs = var.as<Object>();
     if (!lhs)
         return Encode(false);
 
-    Scope scope(f->internalClass->engine);
     // 15.3.5.3, 2
-    ScopedFunctionObject ff(scope, f);
-    ScopedObject o(scope, ff->protoProperty());
+    Value p = Value::fromReturnedValue(f->protoProperty());
+    const Object *o = p.objectValue();
     if (!o) // 15.3.5.3, 3
-        return engine->throwTypeError();
+        return f->engine()->throwTypeError();
 
     Heap::Object *v = lhs->d();
 

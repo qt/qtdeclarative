@@ -348,14 +348,23 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     auto *index = &_index;
 #endif
     ic = newInternalClass(QV4::FunctionPrototype::staticVTable(), objectPrototype());
+    auto addProtoHasInstance = [&] {
+        // Add an invalid prototype slot, so that all function objects have the same layout
+        // This helps speed up instanceof operations and other things where we need to query
+        // prototype property (as we always know it's location)
+        ic = ic->addMember(id_prototype()->propertyKey(), Attr_Invalid, index);
+        Q_ASSERT(index->index == Heap::FunctionObject::Index_Prototype);
+        // add an invalid @hasInstance slot, so that we can quickly track whether the
+        // hasInstance method has been reimplemented. This is required for a fast
+        // instanceof implementation
+        ic = ic->addMember(symbol_hasInstance()->propertyKey(), Attr_Invalid, index);
+        Q_ASSERT(index->index == Heap::FunctionObject::Index_HasInstance);
+    };
+    addProtoHasInstance();
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(ic->d());
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
+    addProtoHasInstance();
     classes[Class_FunctionObject] = ic->d();
-    // Add an invalid prototype slot, so that all function objects have the same layout
-    // This helps speed up instanceof operations and other things where we need to query
-    // prototype property (as we always know it's location)
-    ic = ic->addMember(id_prototype()->propertyKey(), Attr_Invalid, index);
-    Q_ASSERT(index->index == Heap::FunctionObject::Index_Prototype);
     ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, index);
     Q_ASSERT(index->index == Heap::ArrowFunction::Index_Name);
     ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly_ButConfigurable, index);
