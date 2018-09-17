@@ -424,4 +424,33 @@ TestCase {
             1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
                 control.width + "), but it's " + (button.mapToItem(control, 0, 0).x + button.width))
     }
+
+
+    Component {
+        id: noRolesDialog
+
+        Dialog {
+            footer: DialogButtonBox {
+                Button { text: "A" }
+                Button { text: "B" }
+                Button { text: "C" }
+            }
+        }
+    }
+
+    function test_orderWithNoRoles() {
+        for (var i = 0; i < 10; ++i) {
+            var control = createTemporaryObject(noRolesDialog, testCase)
+            verify(control)
+
+            control.open()
+            tryCompare(control, "opened", true)
+            var footer = control.footer
+            verify(footer)
+            waitForRendering(footer)
+            compare(footer.itemAt(0).text, "A")
+            compare(footer.itemAt(1).text, "B")
+            compare(footer.itemAt(2).text, "C")
+        }
+    }
 }
