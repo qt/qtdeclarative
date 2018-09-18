@@ -114,7 +114,7 @@ struct Q_QML_EXPORT QQmlTypeWrapper : Object
 protected:
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
-    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
 };

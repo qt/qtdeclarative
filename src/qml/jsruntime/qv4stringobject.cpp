@@ -146,18 +146,18 @@ OwnPropertyKeyIterator *StringObject::virtualOwnPropertyKeys(const Object *m, Va
     return new StringObjectOwnPropertyKeyIterator;
 }
 
-PropertyAttributes StringObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes StringObject::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attributes = Object::virtualGetOwnProperty(m, id, p);
     if (attributes != Attr_Invalid)
         return attributes;
 
-    StringObject *s = static_cast<StringObject *>(m);
+    const StringObject *s = static_cast<const StringObject *>(m);
     uint slen = s->d()->string->toQString().length();
     uint index = id.asArrayIndex();
     if (index < slen) {
         if (p)
-            p->value = static_cast<StringObject *>(s)->getIndex(index);
+            p->value = s->getIndex(index);
         return Attr_NotConfigurable|Attr_NotWritable;
     }
     return Object::virtualGetOwnProperty(m, id, p);

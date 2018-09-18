@@ -735,10 +735,10 @@ bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     return true;
 }
 
-PropertyAttributes QObjectWrapper::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes QObjectWrapper::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
-        QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
+        const QObjectWrapper *that = static_cast<const QObjectWrapper*>(m);
         const QObject *thatObject = that->d()->object();
         if (!QQmlData::wasDeleted(thatObject)) {
             Scope scope(m);

@@ -71,7 +71,7 @@ struct VTable
     typedef bool (*Put)(Managed *, PropertyKey id, const Value &value, Value *receiver);
     typedef bool (*DeleteProperty)(Managed *m, PropertyKey id);
     typedef bool (*HasProperty)(const Managed *m, PropertyKey id);
-    typedef PropertyAttributes (*GetOwnProperty)(Managed *m, PropertyKey id, Property *p);
+    typedef PropertyAttributes (*GetOwnProperty)(const Managed *m, PropertyKey id, Property *p);
     typedef bool (*DefineOwnProperty)(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
     typedef bool (*IsExtensible)(const Managed *);
     typedef bool (*PreventExtensions)(Managed *);

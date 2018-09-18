@@ -104,7 +104,7 @@ struct ProxyObject : FunctionObject {
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
     static bool virtualHasProperty(const Managed *m, PropertyKey id);
-    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
     static bool virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property *p, PropertyAttributes attrs);
     static bool virtualIsExtensible(const Managed *m);
     static bool virtualPreventExtensions(Managed *);

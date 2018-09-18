@@ -241,7 +241,7 @@ bool QQmlValueTypeWrapper::virtualIsEqualTo(Managed *m, Managed *other)
     return false;
 }
 
-PropertyAttributes QQmlValueTypeWrapper::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes QQmlValueTypeWrapper::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         Scope scope(m);

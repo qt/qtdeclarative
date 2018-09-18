@@ -188,7 +188,7 @@ bool ArgumentsObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     return result;
 }
 
-PropertyAttributes ArgumentsObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes ArgumentsObject::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     const ArgumentsObject *args = static_cast<const ArgumentsObject *>(m);
     uint index = id.asArrayIndex();

@@ -102,7 +102,7 @@ struct StringObject: Object {
 protected:
     static bool virtualDeleteProperty(Managed *m, PropertyKey id);
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
-    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
 };
 
 struct StringCtor: FunctionObject

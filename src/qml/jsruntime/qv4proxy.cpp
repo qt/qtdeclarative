@@ -223,7 +223,7 @@ bool ProxyObject::virtualHasProperty(const Managed *m, PropertyKey id)
     return result;
 }
 
-PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes ProxyObject::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     Scope scope(m);
     const ProxyObject *o = static_cast<const ProxyObject *>(m);
