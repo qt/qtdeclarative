@@ -194,9 +194,10 @@ public:
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
         Reference() {}
-        Reference(const Reference &other);
-
-        Reference &operator =(const Reference &other);
+        Reference(const Reference &) = default;
+        Reference(Reference &&) = default;
+        Reference &operator =(const Reference &) = default;
+        Reference &operator =(Reference &&) = default;
 
         bool operator==(const Reference &other) const;
         bool operator!=(const Reference &other) const
