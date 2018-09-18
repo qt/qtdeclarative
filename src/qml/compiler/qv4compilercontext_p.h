@@ -277,7 +277,7 @@ struct Context {
             isStrict = true;
     }
 
-    int findArgument(const QString &name)
+    int findArgument(const QString &name) const
     {
         // search backwards to handle duplicate argument names correctly
         for (int i = arguments.size() - 1; i >= 0; --i) {
