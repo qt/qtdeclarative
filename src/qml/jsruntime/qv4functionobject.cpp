@@ -168,6 +168,8 @@ ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *,
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
+    if (function->isArrowFunction())
+        return scope->engine()->memoryManager->allocate<ArrowFunction>(scope, function);
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
@@ -211,6 +213,17 @@ bool FunctionObject::isBinding() const
 bool FunctionObject::isBoundFunction() const
 {
     return d()->vtable() == BoundFunction::staticVTable();
+}
+
+ReturnedValue FunctionObject::getHomeObject() const
+{
+    const MemberFunction *m = as<MemberFunction>();
+    if (m)
+        return m->d()->homeObject->asReturnedValue();
+    const ConstructorFunction *c = as<ConstructorFunction>();
+    if (c)
+        return c->d()->homeObject->asReturnedValue();
+    return Encode::undefined();
 }
 
 QQmlSourceLocation FunctionObject::sourceLocation() const
@@ -489,7 +502,9 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     return result;
 }
 
-ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+DEFINE_OBJECT_VTABLE(ArrowFunction);
+
+ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *engine = fo->engine();
     CppStackFrame frame;
@@ -508,7 +523,7 @@ ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value 
     return result;
 }
 
-void Heap::ScriptFunction::initNoConstructor(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
+void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
@@ -529,9 +544,8 @@ void Heap::ScriptFunction::initNoConstructor(QV4::ExecutionContext *scope, Funct
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
 {
-    initNoConstructor(scope, function, nullptr);
-    if (function->isArrowFunction())
-        return;
+    ArrowFunction::init(scope, function);
+    Q_ASSERT(!function->isArrowFunction());
 
     Scope s(scope);
     ScopedFunctionObject f(s, this);

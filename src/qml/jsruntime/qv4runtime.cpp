@@ -987,8 +987,8 @@ static Object *getSuperBase(Scope &scope)
     }
 
     ScopedFunctionObject f(scope, scope.engine->currentStackFrame->jsFrame->function);
-    MemberFunction *m = f->as<MemberFunction>();
-    if (!m) {
+    ScopedObject homeObject(scope, f->getHomeObject());
+    if (!homeObject) {
         ScopedContext ctx(scope, static_cast<ExecutionContext *>(&scope.engine->currentStackFrame->jsFrame->context));
         Q_ASSERT(ctx);
         while (ctx) {
@@ -1000,13 +1000,12 @@ static Object *getSuperBase(Scope &scope)
             }
             ctx = ctx->d()->outer;
         }
-        m = f->as<MemberFunction>();
+        homeObject = f->getHomeObject();
     }
-    if (!m) {
+    if (!homeObject) {
         scope.engine->throwTypeError();
         return nullptr;
     }
-    ScopedObject homeObject(scope, m->d()->homeObject);
     Q_ASSERT(homeObject);
     ScopedObject proto(scope, homeObject->getPrototypeOf());
     if (!proto) {
