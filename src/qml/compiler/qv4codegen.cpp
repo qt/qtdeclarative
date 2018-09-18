@@ -42,10 +42,6 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
-#include <QtCore/QSet>
-#include <QtCore/QBuffer>
-#include <QtCore/QBitArray>
-#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
@@ -55,6 +51,10 @@
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
+
+#ifndef V4_BOOTSTRAP
+#  include <qqmlerror.h>
+#endif
 
 #include <cmath>
 #include <iostream>

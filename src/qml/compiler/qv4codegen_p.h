@@ -53,17 +53,8 @@
 #include "private/qv4global_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
-#include <private/qqmljsengine_p.h>
-#include <private/qv4instr_moth_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
-#include <private/qqmlrefcount_p.h>
-#include <QtCore/QStringList>
-#include <QtCore/QDateTime>
-#include <QStack>
-#ifndef V4_BOOTSTRAP
-#include <qqmlerror.h>
-#endif
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4stackframe_p.h>
