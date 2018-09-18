@@ -84,9 +84,9 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     }
 
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
-    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
-    void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, const QString &name);
     void init();
     void destroy();
 

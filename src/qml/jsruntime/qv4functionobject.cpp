@@ -83,20 +83,19 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
         f->setName(name);
 }
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name)
 {
+    ExecutionEngine *e = scope->engine();
+
     jsCall = vtable()->call;
     jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
     this->scope.set(scope->engine(), scope->d());
-    Scope s(scope->engine());
+    Scope s(e);
     ScopedFunctionObject f(s, this);
     if (name)
         f->setName(name);
-
-    if (createProto)
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 
@@ -116,11 +115,11 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
         f->setName(name);
 }
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name)
 {
     Scope valueScope(scope);
     ScopedString s(valueScope, valueScope.engine->newString(name));
-    init(scope, s, createProto);
+    init(scope, s);
 }
 
 void Heap::FunctionObject::init()
