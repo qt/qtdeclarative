@@ -732,7 +732,7 @@ enum ExitCode {
 };
 
 #ifdef Q_OS_UNIX
-void sigSegvHandler(int) {
+Q_NORETURN void sigSegvHandler(int) {
     fprintf(stderr, "Error: SEGV\n");
     if (!currentProperty.isEmpty())
         fprintf(stderr, "While processing the property '%s', which probably has uninitialized data.\n", currentProperty.toLatin1().constData());
