@@ -307,6 +307,7 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endqml
 
+    \note The limit on the number of items in an integer model is 100,000,000.
 
     \section2 Object Instances as Models
 
