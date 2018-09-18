@@ -127,6 +127,8 @@ void tst_qmlplugindump::plugin_data()
     QTest::newRow("dumper.Dummy") << "dumper.Dummy" << "1.0" << testFile("dumper/Dummy/plugins.qmltypes");
     QTest::newRow("dumper.Imports") << "dumper.Imports" << "1.0" << testFile("dumper/Imports/plugins.qmltypes");
     QTest::newRow("dumper.Versions") << "dumper.Versions" << "1.1" << testFile("dumper/Versions/plugins.qmltypes");
+    QTest::newRow("dumper.ExtendedType") << "dumper.ExtendedType"
+                                         << "1.1" << testFile("dumper/ExtendedType/plugins.qmltypes");
 }
 
 void tst_qmlplugindump::plugin()

@@ -1080,6 +1080,13 @@ bool QQmlType::isCreatable() const
     return d && d->regType == CppType && d->extraData.cd->newFunc;
 }
 
+QQmlType::ExtensionFunc QQmlType::extensionFunction() const
+{
+    if (!d || d->regType != CppType)
+        return nullptr;
+    return d->extraData.cd->extFunc;
+}
+
 bool QQmlType::isExtendedType() const
 {
     if (!d)
