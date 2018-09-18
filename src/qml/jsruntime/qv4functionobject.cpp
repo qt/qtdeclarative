@@ -508,7 +508,7 @@ ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value 
     return result;
 }
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n, bool makeConstructor)
+void Heap::ScriptFunction::initNoConstructor(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
@@ -522,11 +522,20 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
-    if (makeConstructor && !function->isArrowFunction())
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
     setProperty(s.engine, Index_Length, Value::fromInt32(int(function->compiledFunction->length)));
+}
+
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
+{
+    initNoConstructor(scope, function, nullptr);
+    if (function->isArrowFunction())
+        return;
+
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 Heap::InternalClass *ScriptFunction::classForConstructor() const

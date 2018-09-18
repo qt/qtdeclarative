@@ -74,7 +74,7 @@ struct GeneratorFunctionCtor : FunctionObject {
 
 struct GeneratorFunction : ScriptFunction {
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr) {
-        ScriptFunction::init(scope, function, name, false);
+        ScriptFunction::initNoConstructor(scope, function, name);
     }
 };
 

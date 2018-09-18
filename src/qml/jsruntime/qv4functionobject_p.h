@@ -118,7 +118,8 @@ DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
         Index_Name,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr, bool makeConstructor = true);
+    void initNoConstructor(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
+    void init(QV4::ExecutionContext *scope, Function *function);
 };
 
 #define MemberFunctionMembers(class, Member) \
@@ -128,7 +129,7 @@ DECLARE_HEAP_OBJECT(MemberFunction, ScriptFunction) {
     DECLARE_MARKOBJECTS(MemberFunction)
 
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr) {
-        ScriptFunction::init(scope, function, name, false);
+        ScriptFunction::initNoConstructor(scope, function, name);
     }
 };
 
