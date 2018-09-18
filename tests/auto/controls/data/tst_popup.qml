@@ -1371,6 +1371,9 @@ TestCase {
         var window = createTemporaryObject(shortcutWindowComponent, testCase)
         var control = window.popup
 
+        window.requestActivate()
+        tryCompare(window, "active", true)
+
         var shortcutActivatedSpy = createTemporaryObject(signalSpy, testCase,
             { target: window.shortcut, signalName: "activated"} )
         verify(shortcutActivatedSpy.valid)
