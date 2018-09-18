@@ -95,6 +95,7 @@ public:
     };
 
     Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
+    Q_FLAG(CreateTextureOptions)
 
     enum SceneGraphError {
         ContextNotAvailable = 1
