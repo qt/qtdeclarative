@@ -351,23 +351,29 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(ic->d());
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
     classes[Class_FunctionObject] = ic->d();
+    // Add an invalid prototype slot, so that all function objects have the same layout
+    // This helps speed up instanceof operations and other things where we need to query
+    // prototype property (as we always know it's location)
+    ic = ic->addMember(id_prototype()->propertyKey(), Attr_Invalid, index);
+    Q_ASSERT(index->index == Heap::FunctionObject::Index_Prototype);
     ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, index);
     Q_ASSERT(index->index == Heap::ArrowFunction::Index_Name);
     ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly_ButConfigurable, index);
     Q_ASSERT(index->index == Heap::ArrowFunction::Index_Length);
     classes[Class_ArrowFunction] = ic->changeVTable(ArrowFunction::staticVTable());
-    ic = ic->changeVTable(ScriptFunction::staticVTable());
-    classes[Class_ScriptFunction] = ic->d();
-    ic = ic->changeVTable(ConstructorFunction::staticVTable());
-    classes[Class_ConstructorFunction] = ic->d();
     ic = ic->changeVTable(MemberFunction::staticVTable());
-    classes[Class_MemberFunction] = ic->d();
-    ic = ic->changeVTable(GeneratorFunction::staticVTable());
     classes[Class_MemberFunction] = ic->d();
     ic = ic->changeVTable(GeneratorFunction::staticVTable());
     classes[Class_GeneratorFunction] = ic->d();
     ic = ic->changeVTable(MemberGeneratorFunction::staticVTable());
     classes[Class_MemberGeneratorFunction] = ic->d();
+
+    ic = ic->changeMember(id_prototype()->propertyKey(), Attr_NotConfigurable|Attr_NotEnumerable);
+    ic = ic->changeVTable(ScriptFunction::staticVTable());
+    classes[Class_ScriptFunction] = ic->d();
+    ic = ic->changeVTable(ConstructorFunction::staticVTable());
+    classes[Class_ConstructorFunction] = ic->d();
+
     classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->propertyKey(), Attr_NotEnumerable, index);
     Q_ASSERT(index->index == Heap::FunctionObject::Index_ProtoConstructor);
 

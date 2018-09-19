@@ -76,7 +76,8 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARKOBJECTS(FunctionObject);
     enum {
-        Index_ProtoConstructor = 0
+        Index_ProtoConstructor = 0,
+        Index_Prototype = 0
     };
 
     bool isConstructor() const {
@@ -111,7 +112,7 @@ struct IndexedBuiltinFunction : FunctionObject {
 
 struct ArrowFunction : FunctionObject {
     enum {
-        Index_Name,
+        Index_Name = Index_Prototype + 1,
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
@@ -122,10 +123,6 @@ struct ArrowFunction : FunctionObject {
 
 DECLARE_HEAP_OBJECT(ScriptFunction, ArrowFunction) {
     DECLARE_MARKOBJECTS(ScriptFunction)
-    enum {
-        Index_Name,
-        Index_Length
-    };
     void init(QV4::ExecutionContext *scope, Function *function);
 };
 

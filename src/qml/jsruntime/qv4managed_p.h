@@ -233,6 +233,10 @@ struct InternalClass : Managed
         return d()->addMember(identifier, data, entry);
     }
 
+    Q_REQUIRED_RESULT Heap::InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr) {
+        return d()->changeMember(identifier, data, entry);
+    }
+
     void operator =(Heap::InternalClass *ic) {
         Value::operator=(ic);
     }
