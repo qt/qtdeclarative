@@ -1982,7 +1982,7 @@ QQuickListView::~QQuickListView()
 
     The model provides the set of data that is used to create the items
     in the view. Models can be created directly in QML using \l ListModel, \l XmlListModel
-    or \l VisualItemModel, or provided by C++ model classes. If a C++ model class is
+    or \l ObjectModel, or provided by C++ model classes. If a C++ model class is
     used, it must be a subclass of \l QAbstractItemModel or a simple list.
 
     \sa {qml-data-models}{Data Models}

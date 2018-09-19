@@ -206,26 +206,9 @@ public:
     }
     \endcode
 
-    \image visualitemmodel.png
+    \image objectmodel.png
 
     \sa {Qt Quick Examples - Views}
-*/
-/*!
-    \qmltype VisualItemModel
-    \instantiates QQmlObjectModel
-    \inqmlmodule QtQuick
-    \brief Defines a set of objects to be used as a model.
-
-    The VisualItemModel type contains the objects to be used
-    as a model.
-
-    This element is now primarily available as ObjectModel in the QtQml.Models module.
-    VisualItemModel continues to be provided, with the same implementation, in \c QtQuick for
-    compatibility reasons.
-
-    For full details about the type, see the \l ObjectModel documentation.
-
-    \sa {QtQml.Models::ObjectModel}
 */
 
 QQmlObjectModel::QQmlObjectModel(QObject *parent)
