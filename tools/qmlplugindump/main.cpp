@@ -124,14 +124,14 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
     const QMetaObject *meta = object->metaObject();
     if (verbose)
-        std::cerr << "Processing object" << qPrintable( meta->className() ) << std::endl;
+        std::cerr << "Processing object " << qPrintable( meta->className() ) << std::endl;
     collectReachableMetaObjects(meta, metas);
 
     for (int index = 0; index < meta->propertyCount(); ++index) {
         QMetaProperty prop = meta->property(index);
         if (QQmlMetaType::isQObject(prop.userType())) {
             if (verbose)
-                std::cerr << "  Processing property" << qPrintable( prop.name() ) << std::endl;
+                std::cerr << "  Processing property " << qPrintable( prop.name() ) << std::endl;
             currentProperty = QString("%1::%2").arg(meta->className(), prop.name());
 
             // if the property was not initialized during construction,
@@ -337,7 +337,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                 collectReachableMetaObjects(object, &metas);
                 object->deleteLater();
             } else {
-                std::cerr << "Could not create" << qPrintable(tyName) << std::endl;
+                std::cerr << "Could not create " << qPrintable(tyName) << std::endl;
             }
         }
     }
