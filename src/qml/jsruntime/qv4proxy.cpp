@@ -208,7 +208,7 @@ bool ProxyObject::virtualHasProperty(const Managed *m, PropertyKey id)
 
     JSCallData cdata(scope, 2, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
+    cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     bool result = trapResult->toBoolean();
@@ -248,7 +248,7 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(Managed *m, PropertyKey id
 
     JSCallData cdata(scope, 2, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
+    cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     if (!trapResult->isObject() && !trapResult->isUndefined()) {
@@ -319,7 +319,7 @@ bool ProxyObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
 
     JSCallData cdata(scope, 3, nullptr, handler);
     cdata.args[0] = target;
-    cdata.args[1] = id.isArrayIndex() ? Primitive::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
+    cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
     cdata.args[2] = ObjectPrototype::fromPropertyDescriptor(scope.engine, p, attrs);
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
@@ -540,7 +540,7 @@ static bool removeAllOccurrences(ArrayObject *target, ReturnedValue val) {
         ReturnedValue v = target->get(i);
         if (v == val) {
             found = true;
-            target->put(i, Primitive::undefinedValue());
+            target->put(i, Value::undefinedValue());
         }
     }
     return  found;
@@ -589,7 +589,7 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Val
             scope.engine->throwTypeError();
             return nullptr;
         }
-        Value keyAsValue = Primitive::fromReturnedValue(key->toPropertyKey().id());
+        Value keyAsValue = Value::fromReturnedValue(key->toPropertyKey().id());
         trapKeys->push_back(keyAsValue);
     }
 
@@ -602,7 +602,7 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Val
         k = it.next(nullptr, &attrs);
         if (!k->isValid())
             break;
-        Value keyAsValue = Primitive::fromReturnedValue(k->id());
+        Value keyAsValue = Value::fromReturnedValue(k->id());
         if (attrs.isConfigurable())
             targetConfigurableKeys->push_back(keyAsValue);
         else
@@ -674,7 +674,7 @@ ReturnedValue ProxyFunctionObject::virtualCallAsConstructor(const FunctionObject
     Value *arguments = scope.alloc(3);
     arguments[0] = target;
     arguments[1] = scope.engine->newArrayObject(argv, argc);
-    arguments[2] = newTarget ? *newTarget : Primitive::undefinedValue();
+    arguments[2] = newTarget ? *newTarget : Value::undefinedValue();
     ScopedObject result(scope, trapFunction->call(handler, arguments, 3));
 
     if (!result)
@@ -706,7 +706,7 @@ ReturnedValue ProxyFunctionObject::virtualCall(const FunctionObject *f, const Va
     ScopedFunctionObject trapFunction(scope, trap);
     Value *arguments = scope.alloc(3);
     arguments[0] = target;
-    arguments[1] = thisObject ? *thisObject : Primitive::undefinedValue();
+    arguments[1] = thisObject ? *thisObject : Value::undefinedValue();
     arguments[2] = scope.engine->newArrayObject(argv, argc);
     return trapFunction->call(handler, arguments, 3);
 }
@@ -720,7 +720,7 @@ void Heap::Proxy::init(QV4::ExecutionContext *ctx)
     Scope scope(ctx);
     Scoped<QV4::Proxy> ctor(scope, this);
     ctor->defineDefaultProperty(QStringLiteral("revocable"), QV4::Proxy::method_revocable, 2);
-    ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(2));
+    ctor->defineReadonlyConfigurableProperty(scope.engine->id_length(), Value::fromInt32(2));
 }
 
 ReturnedValue Proxy::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
@@ -759,7 +759,7 @@ ReturnedValue Proxy::method_revocable(const FunctionObject *f, const Value *, co
 
     ScopedString revoke(scope, scope.engine->newString(QStringLiteral("revoke")));
     ScopedFunctionObject revoker(scope, scope.engine->memoryManager->allocate<FunctionObject>(scope.engine->rootContext(), nullptr, method_revoke));
-    revoker->defineReadonlyConfigurableProperty(scope.engine->id_length(), Primitive::fromInt32(0));
+    revoker->defineReadonlyConfigurableProperty(scope.engine->id_length(), Value::fromInt32(0));
     revoker->defineDefaultProperty(scope.engine->symbol_revokableProxy(), proxy);
 
     ScopedObject o(scope, scope.engine->newObject());

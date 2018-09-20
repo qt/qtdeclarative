@@ -65,7 +65,7 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
 
     ScopedObject a(scope, thisObject->d()->iteratedObject);
     if (!a) {
-        QV4::Value undefined = Primitive::undefinedValue();
+        QV4::Value undefined = Value::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
@@ -77,13 +77,13 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
 
     if (index >= len) {
         thisObject->d()->iteratedObject.set(scope.engine, nullptr);
-        QV4::Value undefined = Primitive::undefinedValue();
+        QV4::Value undefined = Value::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
     thisObject->d()->nextIndex = index + 1;
     if (itemKind == KeyIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Primitive::fromInt32(index), false);
+        return IteratorPrototype::createIterResultObject(scope.engine, Value::fromInt32(index), false);
     }
 
     ReturnedValue elementValue = a->get(index);
@@ -96,7 +96,7 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
 
         ScopedArrayObject resultArray(scope, scope.engine->newArrayObject());
         resultArray->arrayReserve(2);
-        resultArray->arrayPut(0, Primitive::fromInt32(index));
+        resultArray->arrayPut(0, Value::fromInt32(index));
         resultArray->arrayPut(1, Value::fromReturnedValue(elementValue));
         resultArray->setArrayLengthUnchecked(2);
 

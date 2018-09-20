@@ -92,7 +92,7 @@ struct CallData
     }
 
     inline ReturnedValue argument(int i) const {
-        return i < argc() ? args[i].asReturnedValue() : Primitive::undefinedValue().asReturnedValue();
+        return i < argc() ? args[i].asReturnedValue() : Value::undefinedValue().asReturnedValue();
     }
 
     Value args[1];
@@ -160,7 +160,7 @@ struct Q_QML_EXPORT CppStackFrame {
         return requiredJSStackFrameSize(v4Function);
     }
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
-                      const Value &thisObject, const Value &newTarget = Primitive::undefinedValue()) {
+                      const Value &thisObject, const Value &newTarget = Value::undefinedValue()) {
         setupJSFrame(stackSpace, function, scope, thisObject, newTarget,
                      v4Function->nFormals, v4Function->compiledFunction->nRegisters);
     }
@@ -189,7 +189,7 @@ struct Q_QML_EXPORT CppStackFrame {
 
             const Value * tdzEnd = stackSpace + firstDeadZoneRegister + registerDeadZoneSize;
             for (Value *v = stackSpace + firstDeadZoneRegister; v < tdzEnd; ++v)
-                *v = Primitive::emptyValue().asReturnedValue();
+                *v = Value::emptyValue().asReturnedValue();
         }
     }
 #endif

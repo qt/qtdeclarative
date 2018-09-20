@@ -512,7 +512,7 @@ ReturnedValue QQmlLocaleData::method_get_weekDays(const QV4::FunctionObject *b, 
         int day = days.at(i);
         if (day == 7) // JS Date days in range 0(Sunday) to 6(Saturday)
             day = 0;
-        result->arrayPut(i, QV4::Primitive::fromInt32(day));
+        result->arrayPut(i, QV4::Value::fromInt32(day));
     }
     result->setArrayLengthUnchecked(days.size());
 

@@ -62,8 +62,9 @@ static size_t nextPowerOfTwo(size_t s)
 
 Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberData *old)
 {
-    Q_ASSERT(!old || old->values.size < n);
-    Q_ASSERT(n);
+    Q_ASSERT(!old || old->values.size <= n);
+    if (!n)
+        n = 4;
 
     size_t alloc = MemoryManager::align(sizeof(Heap::MemberData) + (n - 1)*sizeof(Value));
     // round up to next power of two to avoid quadratic behaviour for very large objects

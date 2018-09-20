@@ -101,11 +101,11 @@ QV4::ReturnedValue QV4Include::resultValue(QV4::ExecutionEngine *v4, Status stat
     QV4::ScopedObject o(scope, v4->newObject());
     QV4::ScopedString s(scope);
     QV4::ScopedValue v(scope);
-    o->put((s = v4->newString(QStringLiteral("OK"))), (v = QV4::Primitive::fromInt32(Ok)));
-    o->put((s = v4->newString(QStringLiteral("LOADING"))), (v = QV4::Primitive::fromInt32(Loading)));
-    o->put((s = v4->newString(QStringLiteral("NETWORK_ERROR"))), (v = QV4::Primitive::fromInt32(NetworkError)));
-    o->put((s = v4->newString(QStringLiteral("EXCEPTION"))), (v = QV4::Primitive::fromInt32(Exception)));
-    o->put((s = v4->newString(QStringLiteral("status"))), (v = QV4::Primitive::fromInt32(status)));
+    o->put((s = v4->newString(QStringLiteral("OK"))), (v = QV4::Value::fromInt32(Ok)));
+    o->put((s = v4->newString(QStringLiteral("LOADING"))), (v = QV4::Value::fromInt32(Loading)));
+    o->put((s = v4->newString(QStringLiteral("NETWORK_ERROR"))), (v = QV4::Value::fromInt32(NetworkError)));
+    o->put((s = v4->newString(QStringLiteral("EXCEPTION"))), (v = QV4::Value::fromInt32(Exception)));
+    o->put((s = v4->newString(QStringLiteral("status"))), (v = QV4::Value::fromInt32(status)));
     if (!statusText.isEmpty())
         o->put((s = v4->newString(QStringLiteral("statusText"))), (v = v4->newString(statusText)));
 
@@ -173,20 +173,20 @@ void QV4Include::finished()
             script.run();
         if (scope.engine->hasException) {
             QV4::ScopedValue ex(scope, scope.engine->catchException());
-            resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Exception)));
+            resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Exception)));
             QV4::ScopedString exception(scope, v4->newString(QStringLiteral("exception")));
             resultObj->put(exception, ex);
         } else {
-            resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(Ok)));
+            resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(Ok)));
         }
     } else {
-        resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
+        resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(NetworkError)));
     }
 #else
     QV4::Scope scope(v4);
     QV4::ScopedObject resultObj(scope, m_resultObject.value());
     QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
-    resultObj->put(status, QV4::ScopedValue(scope, QV4::Primitive::fromInt32(NetworkError)));
+    resultObj->put(status, QV4::ScopedValue(scope, QV4::Value::fromInt32(NetworkError)));
 #endif // qml_network
 
     QV4::ScopedValue cb(scope, m_callbackFunction.value());
@@ -210,7 +210,7 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
     if ((!context || !context->isJSContext) && scope.engine->qmlEngine())
         RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
-    QV4::ScopedValue callbackFunction(scope, QV4::Primitive::undefinedValue());
+    QV4::ScopedValue callbackFunction(scope, QV4::Value::undefinedValue());
     if (argc >= 2 && argv[1].as<QV4::FunctionObject>())
         callbackFunction = argv[1];
 

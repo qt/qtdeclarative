@@ -48,6 +48,7 @@ class tst_qmldiskcache: public QObject
 
 private slots:
     void initTestCase();
+    void cleanupTestCase();
 
     void loadLocalAsFallback();
     void regenerateAfterChange();
@@ -62,6 +63,9 @@ private slots:
     void singletonDependency();
     void cppRegisteredSingletonDependency();
     void cacheModuleScripts();
+
+private:
+    QDir m_qmlCacheDirectory;
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -214,6 +218,17 @@ void tst_qmldiskcache::initTestCase()
 {
     qputenv("QML_FORCE_DISK_CACHE", "1");
     QStandardPaths::setTestModeEnabled(true);
+
+    const QString cacheDirectory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    m_qmlCacheDirectory.setPath(cacheDirectory + QLatin1String("/qmlcache"));
+    if (m_qmlCacheDirectory.exists())
+        QVERIFY(m_qmlCacheDirectory.removeRecursively());
+    QVERIFY(QDir::root().mkpath(m_qmlCacheDirectory.absolutePath()));
+}
+
+void tst_qmldiskcache::cleanupTestCase()
+{
+    m_qmlCacheDirectory.removeRecursively();
 }
 
 void tst_qmldiskcache::loadLocalAsFallback()
@@ -623,14 +638,8 @@ void tst_qmldiskcache::localAliases()
 
 void tst_qmldiskcache::cacheResources()
 {
-    const QString cacheDirectory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QVERIFY(QDir::root().mkpath(cacheDirectory));
-
-    const QString qmlCacheDirectory = cacheDirectory + QLatin1String("/qmlcache/");
-    QVERIFY(QDir(qmlCacheDirectory).removeRecursively());
-    QVERIFY(QDir::root().mkpath(qmlCacheDirectory));
-    QVERIFY(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot).isEmpty());
-
+    const QSet<QString> existingFiles =
+        m_qmlCacheDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).toSet();
 
     QQmlEngine engine;
 
@@ -641,13 +650,14 @@ void tst_qmldiskcache::cacheResources()
         QCOMPARE(obj->property("value").toInt(), 20);
     }
 
-    const QStringList entries = QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files);
+    const QSet<QString> entries =
+        m_qmlCacheDirectory.entryList(QDir::NoDotAndDotDot | QDir::Files).toSet().subtract(existingFiles);
     QCOMPARE(entries.count(), 1);
 
     QDateTime cacheFileTimeStamp;
 
     {
-        QFile cacheFile(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst());
+        QFile cacheFile(m_qmlCacheDirectory.absoluteFilePath(*entries.cbegin()));
         QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
         QV4::CompiledData::Unit unit;
         QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));
@@ -670,10 +680,12 @@ void tst_qmldiskcache::cacheResources()
     }
 
     {
-        const QStringList entries = QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot | QDir::Files);
+        const QSet<QString> entries =
+            m_qmlCacheDirectory.entryList(QDir::NoDotAndDotDot | QDir::Files).toSet().subtract(existingFiles);
         QCOMPARE(entries.count(), 1);
 
-        QCOMPARE(QFileInfo(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst()).lastModified().toMSecsSinceEpoch(), cacheFileTimeStamp.toMSecsSinceEpoch());
+        QCOMPARE(QFileInfo(m_qmlCacheDirectory.absoluteFilePath(*entries.cbegin())).lastModified().toMSecsSinceEpoch(),
+                           cacheFileTimeStamp.toMSecsSinceEpoch());
     }
 }
 
@@ -890,14 +902,8 @@ void tst_qmldiskcache::cppRegisteredSingletonDependency()
 
 void tst_qmldiskcache::cacheModuleScripts()
 {
-    const QString cacheDirectory = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    QVERIFY(QDir::root().mkpath(cacheDirectory));
-
-    const QString qmlCacheDirectory = cacheDirectory + QLatin1String("/qmlcache/");
-    QVERIFY(QDir(qmlCacheDirectory).removeRecursively());
-    QVERIFY(QDir::root().mkpath(qmlCacheDirectory));
-    QVERIFY(QDir(qmlCacheDirectory).entryList(QDir::NoDotAndDotDot).isEmpty());
-
+    const QSet<QString> existingFiles =
+        m_qmlCacheDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot).toSet();
 
     QQmlEngine engine;
 
@@ -918,13 +924,15 @@ void tst_qmldiskcache::cacheModuleScripts()
         QVERIFY(!compilationUnit->backingFile.isNull());
     }
 
-    const QStringList entries = QDir(qmlCacheDirectory).entryList(QStringList("*.mjsc"), QDir::NoDotAndDotDot | QDir::Files);
+    const QSet<QString> entries =
+         m_qmlCacheDirectory.entryList(QStringList("*.mjsc")).toSet().subtract(existingFiles);
+
     QCOMPARE(entries.count(), 1);
 
     QDateTime cacheFileTimeStamp;
 
     {
-        QFile cacheFile(qmlCacheDirectory + QLatin1Char('/') + entries.constFirst());
+        QFile cacheFile(m_qmlCacheDirectory.absoluteFilePath(*entries.cbegin()));
         QVERIFY2(cacheFile.open(QIODevice::ReadOnly), qPrintable(cacheFile.errorString()));
         QV4::CompiledData::Unit unit;
         QVERIFY(cacheFile.read(reinterpret_cast<char *>(&unit), sizeof(unit)) == sizeof(unit));

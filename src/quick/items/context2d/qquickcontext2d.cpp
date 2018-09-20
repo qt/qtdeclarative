@@ -944,7 +944,7 @@ struct QQuickJSContext2DImageData : public QV4::Object
 void QV4::Heap::QQuickJSContext2DImageData::init()
 {
     Object::init();
-    pixelData = QV4::Primitive::undefinedValue();
+    pixelData = QV4::Value::undefinedValue();
 
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
@@ -1412,7 +1412,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(const QV4::FunctionOb
     QV4::Scoped<QQuickJSContext2D> r(scope, thisObject->as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
 
    if (value->as<Object>()) {
        QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
@@ -1467,7 +1467,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillRule(const QV4::FunctionObj
     QV4::Scoped<QQuickJSContext2D> r(scope, thisObject->as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
 
     if ((value->isString() && value->toQString() == QLatin1String("WindingFill"))
         || (value->isInt32() && value->integerValue() == Qt::WindingFill)) {
@@ -1521,7 +1521,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(const QV4::Function
     QV4::Scoped<QQuickJSContext2D> r(scope, thisObject->as<QQuickJSContext2D>());
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
 
     if (value->as<Object>()) {
         QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
@@ -1986,7 +1986,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
     QV4::ScopedArrayObject array(scope, scope.engine->newArrayObject(pattern.size()));
     array->arrayReserve(pattern.size());
     for (int i = 0; i < pattern.size(); i++)
-        array->put(i, QV4::Primitive::fromDouble(pattern[i]));
+        array->put(i, QV4::Value::fromDouble(pattern[i]));
 
     array->setArrayLengthUnchecked(pattern.size());
 
@@ -2218,7 +2218,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_path(const QV4::FunctionObject 
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Primitive::undefinedValue());
+    QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
     r->d()->context->beginPath();
     QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, value);
     if (!!qobjectWrapper) {
@@ -2715,7 +2715,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_isPointInPath(const QV4::F
     bool pointInPath = false;
     if (argc >= 2)
         pointInPath = r->d()->context->isPointInPath(argv[0].toNumber(), argv[1].toNumber());
-    RETURN_RESULT(QV4::Primitive::fromBoolean(pointInPath).asReturnedValue());
+    RETURN_RESULT(QV4::Value::fromBoolean(pointInPath).asReturnedValue());
 }
 
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_drawFocusRing(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *, int)
@@ -2774,7 +2774,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_font(const QV4::FunctionObject 
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Primitive::undefinedValue(), QV4::ScopedString::Convert);
+    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
     if (scope.engine->hasException)
         RETURN_UNDEFINED();
     QFont font = qt_font_from_string(s->toQString(), r->d()->context->state.font);
@@ -2826,7 +2826,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textAlign(const QV4::FunctionOb
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT_SETTER(r)
 
-    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Primitive::undefinedValue(), QV4::ScopedString::Convert);
+    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
     if (scope.engine->hasException)
         RETURN_UNDEFINED();
     QString textAlign = s->toQString();
@@ -2893,7 +2893,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_textBaseline(const QV4::Functio
     QV4::Scope scope(b);
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT_SETTER(r)
-    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Primitive::undefinedValue(), QV4::ScopedString::Convert);
+    QV4::ScopedString s(scope, argc ? argv[0] : QV4::Value::undefinedValue(), QV4::ScopedString::Convert);
     if (scope.engine->hasException)
         RETURN_UNDEFINED();
     QString textBaseline = s->toQString();
@@ -2980,7 +2980,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::Fun
         uint width = fm.width(argv[0].toQStringNoThrow());
         QV4::ScopedObject tm(scope, scope.engine->newObject());
         tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))).getPointer(),
-                QV4::ScopedValue(scope, QV4::Primitive::fromDouble(width)));
+                QV4::ScopedValue(scope, QV4::Value::fromDouble(width)));
         RETURN_RESULT(*tm);
     }
     RETURN_UNDEFINED();

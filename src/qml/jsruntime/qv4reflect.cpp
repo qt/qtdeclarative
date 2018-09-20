@@ -126,11 +126,11 @@ ReturnedValue Reflect::method_defineProperty(const FunctionObject *f, const Valu
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Value::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    ScopedValue attributes(scope, argc > 2 ? argv[2] : Primitive::undefinedValue());
+    ScopedValue attributes(scope, argc > 2 ? argv[2] : Value::undefinedValue());
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     ObjectPrototype::toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
@@ -148,7 +148,7 @@ ReturnedValue Reflect::method_deleteProperty(const FunctionObject *f, const Valu
     if (!argc || !argv[0].isObject())
         return e->throwTypeError();
 
-    bool result =  Runtime::method_deleteProperty(e, argv[0], argc > 1 ? argv[1] : Primitive::undefinedValue());
+    bool result =  Runtime::method_deleteProperty(e, argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
     return Encode(result);
 }
 
@@ -159,7 +159,7 @@ ReturnedValue Reflect::method_get(const FunctionObject *f, const Value *, const 
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, static_cast<const Object *>(argv));
-    Value undef = Primitive::undefinedValue();
+    Value undef = Value::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
     ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
     if (scope.hasException())
@@ -194,7 +194,7 @@ ReturnedValue Reflect::method_has(const FunctionObject *f, const Value *, const 
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, static_cast<const Object *>(argv));
-    Value undef = Primitive::undefinedValue();
+    Value undef = Value::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
 
     ScopedPropertyKey name(scope, index->toPropertyKey(scope.engine));
@@ -261,7 +261,7 @@ ReturnedValue Reflect::method_set(const FunctionObject *f, const Value *, const 
         return scope.engine->throwTypeError();
 
     ScopedObject o(scope, static_cast<const Object *>(argv));
-    Value undef = Primitive::undefinedValue();
+    Value undef = Value::undefinedValue();
     const Value *index = argc > 1 ? &argv[1] : &undef;
     const Value &val = argc > 2 ? argv[2] : undef;
     ScopedValue receiver(scope, argc >3 ? argv[3] : argv[0]);

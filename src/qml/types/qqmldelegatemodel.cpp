@@ -105,7 +105,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
         if (!o)
             return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
 
-        QV4::ScopedValue v(scope, argc ? argv[0] : Primitive::undefinedValue());
+        QV4::ScopedValue v(scope, argc ? argv[0] : Value::undefinedValue());
         return f->d()->code(o->d()->item, f->d()->flag, v);
     }
 };
@@ -3476,7 +3476,7 @@ public:
             if (index >= array->count()) {
                 if (hasProperty)
                     *hasProperty = false;
-                return QV4::Primitive::undefinedValue().asReturnedValue();
+                return QV4::Value::undefinedValue().asReturnedValue();
             }
 
             const QQmlChangeSet::Change &change = array->at(index);

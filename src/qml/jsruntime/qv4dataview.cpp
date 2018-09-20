@@ -75,11 +75,11 @@ static uint toIndex(ExecutionEngine *e, const Value &v)
 ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f->engine());
-    Scoped<SharedArrayBuffer> buffer(scope, argc ? argv[0] : Primitive::undefinedValue());
+    Scoped<SharedArrayBuffer> buffer(scope, argc ? argv[0] : Value::undefinedValue());
     if (!newTarget || !buffer)
         return scope.engine->throwTypeError();
 
-    uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1]: Primitive::undefinedValue());
+    uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1]: Value::undefinedValue());
     if (scope.hasException())
         return Encode::undefined();
     if (buffer->isDetachedBuffer())
@@ -111,7 +111,7 @@ void DataViewPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
     Scope scope(engine);
     ScopedObject o(scope);
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
     defineDefaultProperty(engine->id_constructor(), (o = ctor));
     defineAccessorProperty(QStringLiteral("buffer"), method_get_buffer, nullptr);
@@ -188,7 +188,7 @@ ReturnedValue DataViewPrototype::method_getChar(const FunctionObject *b, const V
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
     if (v->d()->buffer->isDetachedBuffer())
@@ -209,7 +209,7 @@ ReturnedValue DataViewPrototype::method_get(const FunctionObject *b, const Value
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
     if (v->d()->buffer->isDetachedBuffer())
@@ -234,7 +234,7 @@ ReturnedValue DataViewPrototype::method_getFloat(const FunctionObject *b, const 
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
     if (v->d()->buffer->isDetachedBuffer())
@@ -275,7 +275,7 @@ ReturnedValue DataViewPrototype::method_setChar(const FunctionObject *b, const V
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
 
@@ -300,7 +300,7 @@ ReturnedValue DataViewPrototype::method_set(const FunctionObject *b, const Value
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
 
@@ -330,7 +330,7 @@ ReturnedValue DataViewPrototype::method_setFloat(const FunctionObject *b, const 
     const DataView *v = thisObject->as<DataView>();
     if (!v)
         return e->throwTypeError();
-    uint idx = ::toIndex(e, argc ? argv[0] : Primitive::undefinedValue());
+    uint idx = ::toIndex(e, argc ? argv[0] : Value::undefinedValue());
     if (e->hasException)
         return Encode::undefined();
 

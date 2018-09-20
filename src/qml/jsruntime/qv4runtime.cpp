@@ -287,7 +287,7 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
     }
 
     double frac = num - ::floor(num);
-    num = Primitive::toInteger(num);
+    num = Value::toInteger(num);
 
     do {
         char c = (char)::fmod(num, radix);
@@ -538,7 +538,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, Value val
             engine->throwTypeError(QLatin1String("Cannot convert a symbol to a string."));
             return  nullptr;
         }
-        value = Primitive::fromReturnedValue(RuntimeHelpers::toPrimitive(value, hint));
+        value = Value::fromReturnedValue(RuntimeHelpers::toPrimitive(value, hint));
         Q_ASSERT(value.isPrimitive());
         if (value.isString())
             return static_cast<const String &>(value).d();
@@ -1044,7 +1044,7 @@ void Runtime::method_storeSuperProperty(ExecutionEngine *engine, const Value &pr
 
 ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, const Value &t)
 {
-    if (engine->currentStackFrame->thisObject() != Primitive::emptyValue().asReturnedValue()) {
+    if (engine->currentStackFrame->thisObject() != Value::emptyValue().asReturnedValue()) {
         return engine->throwReferenceError(QStringLiteral("super() already called."), QString(), 0, 0); // ### fix line number
     }
     const FunctionObject *f = t.as<FunctionObject>();
@@ -1077,9 +1077,9 @@ uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
         double dx = RuntimeHelpers::toNumber(x);
         return dx == y.asDouble();
     } else if (x.isBoolean()) {
-        return Runtime::method_compareEqual(Primitive::fromDouble((double) x.booleanValue()), y);
+        return Runtime::method_compareEqual(Value::fromDouble((double) x.booleanValue()), y);
     } else if (y.isBoolean()) {
-        return Runtime::method_compareEqual(x, Primitive::fromDouble((double) y.booleanValue()));
+        return Runtime::method_compareEqual(x, Value::fromDouble((double) y.booleanValue()));
     } else {
 #ifdef V4_BOOTSTRAP
         Q_UNIMPLEMENTED();
@@ -1291,7 +1291,7 @@ ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint ind
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
-    Value thisObject = Primitive::undefinedValue();
+    Value thisObject = Value::undefinedValue();
     return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
 }
 
@@ -1415,7 +1415,7 @@ ReturnedValue Runtime::method_callValue(ExecutionEngine *engine, const Value &fu
 {
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
-    Value undef = Primitive::undefinedValue();
+    Value undef = Value::undefinedValue();
     return static_cast<const FunctionObject &>(func).call(&undef, argv, argc);
 }
 
@@ -1705,9 +1705,9 @@ ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId
         Q_ASSERT(arg == ObjectLiteralArgument::Value || value->isFunctionObject());
         if (arg == ObjectLiteralArgument::Value || arg == ObjectLiteralArgument::Getter) {
             pd->value = value;
-            pd->set = Primitive::emptyValue();
+            pd->set = Value::emptyValue();
         } else {
-            pd->value = Primitive::emptyValue();
+            pd->value = Value::emptyValue();
             pd->set = value;
         }
         bool ok = o->defineOwnProperty(name, pd, (arg == ObjectLiteralArgument::Value ? Attr_Data : Attr_Accessor));
@@ -1752,7 +1752,7 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
     QV4::Function *f = cls->constructorFunction != UINT_MAX ? unit->runtimeFunctions[cls->constructorFunction] : nullptr;
     constructor = FunctionObject::createConstructorFunction(current, f, proto, !superClass.isEmpty())->asReturnedValue();
     constructor->setPrototypeUnchecked(constructorParent);
-    Value argCount = Primitive::fromInt32(f ? f->nFormals : 0);
+    Value argCount = Value::fromInt32(f ? f->nFormals : 0);
     constructor->defineReadonlyConfigurableProperty(scope.engine->id_length(), argCount);
     constructor->defineReadonlyConfigurableProperty(engine->id_prototype(), proto);
     proto->defineDefaultProperty(engine->id_constructor(), constructor);
@@ -1801,17 +1801,17 @@ ReturnedValue Runtime::method_createClass(ExecutionEngine *engine, int classInde
         switch (methods[i].type) {
         case CompiledData::Method::Getter:
             property->setGetter(function);
-            property->set = Primitive::emptyValue();
+            property->set = Value::emptyValue();
             attributes = Attr_Accessor|Attr_NotEnumerable;
             break;
         case CompiledData::Method::Setter:
-            property->value = Primitive::emptyValue();
+            property->value = Value::emptyValue();
             property->setSetter(function);
             attributes = Attr_Accessor|Attr_NotEnumerable;
             break;
         default: // Regular
             property->value = function;
-            property->set = Primitive::emptyValue();
+            property->set = Value::emptyValue();
             attributes = Attr_Data|Attr_NotEnumerable;
             break;
         }
@@ -1928,7 +1928,7 @@ ReturnedValue Runtime::method_add(ExecutionEngine *engine, const Value &left, co
     if (Q_LIKELY(left.integerCompatible() && right.integerCompatible()))
         return add_int32(left.integerValue(), right.integerValue());
     if (left.isNumber() && right.isNumber())
-        return Primitive::fromDouble(left.asDouble() + right.asDouble()).asReturnedValue();
+        return Value::fromDouble(left.asDouble() + right.asDouble()).asReturnedValue();
 
     return RuntimeHelpers::addHelper(engine, left, right);
 }
@@ -1943,7 +1943,7 @@ ReturnedValue Runtime::method_sub(const Value &left, const Value &right)
     double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
     double rval = right.isNumber() ? right.asDouble() : right.toNumberImpl();
 
-    return Primitive::fromDouble(lval - rval).asReturnedValue();
+    return Value::fromDouble(lval - rval).asReturnedValue();
 }
 
 ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
@@ -1956,7 +1956,7 @@ ReturnedValue Runtime::method_mul(const Value &left, const Value &right)
     double lval = left.isNumber() ? left.asDouble() : left.toNumberImpl();
     double rval = right.isNumber() ? right.asDouble() : right.toNumberImpl();
 
-    return Primitive::fromDouble(lval * rval).asReturnedValue();
+    return Value::fromDouble(lval * rval).asReturnedValue();
 }
 
 ReturnedValue Runtime::method_div(const Value &left, const Value &right)
@@ -1976,7 +1976,7 @@ ReturnedValue Runtime::method_div(const Value &left, const Value &right)
 
     double lval = left.toNumber();
     double rval = right.toNumber();
-    return Primitive::fromDouble(lval / rval).asReturnedValue();
+    return Value::fromDouble(lval / rval).asReturnedValue();
 }
 
 ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
@@ -1997,7 +1997,7 @@ ReturnedValue Runtime::method_mod(const Value &left, const Value &right)
 #ifdef fmod
 #  undef fmod
 #endif
-    return Primitive::fromDouble(std::fmod(lval, rval)).asReturnedValue();
+    return Value::fromDouble(std::fmod(lval, rval)).asReturnedValue();
 }
 
 ReturnedValue Runtime::method_shl(const Value &left, const Value &right)
@@ -2151,7 +2151,7 @@ Bool Runtime::method_compareEqual(const Value &left, const Value &right)
             return false;
         case QV4::Value::QT_Bool:
         case QV4::Value::QT_Int:
-            rhs = Primitive::fromDouble(rhs.int_32());
+            rhs = Value::fromDouble(rhs.int_32());
             // fall through
         default: // double
 #ifndef V4_BOOTSTRAP

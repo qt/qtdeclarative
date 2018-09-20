@@ -70,24 +70,24 @@ static inline QMLJS_READONLY ReturnedValue add_int32(int a, int b)
 {
     int result;
     if (Q_UNLIKELY(add_overflow(a, b, &result)))
-        return Primitive::fromDouble(static_cast<double>(a) + b).asReturnedValue();
-    return Primitive::fromInt32(result).asReturnedValue();
+        return Value::fromDouble(static_cast<double>(a) + b).asReturnedValue();
+    return Value::fromInt32(result).asReturnedValue();
 }
 
 static inline QMLJS_READONLY ReturnedValue sub_int32(int a, int b)
 {
     int result;
     if (Q_UNLIKELY(sub_overflow(a, b, &result)))
-        return Primitive::fromDouble(static_cast<double>(a) - b).asReturnedValue();
-    return Primitive::fromInt32(result).asReturnedValue();
+        return Value::fromDouble(static_cast<double>(a) - b).asReturnedValue();
+    return Value::fromInt32(result).asReturnedValue();
 }
 
 static inline QMLJS_READONLY ReturnedValue mul_int32(int a, int b)
 {
     int result;
     if (Q_UNLIKELY(mul_overflow(a, b, &result)))
-        return Primitive::fromDouble(static_cast<double>(a) * b).asReturnedValue();
-    return Primitive::fromInt32(result).asReturnedValue();
+        return Value::fromDouble(static_cast<double>(a) * b).asReturnedValue();
+    return Value::fromInt32(result).asReturnedValue();
 }
 
 }

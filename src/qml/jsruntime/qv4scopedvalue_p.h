@@ -131,11 +131,11 @@ struct Scope {
         switch (mode) {
         case Undefined:
             for (int i = 0; i < nValues; ++i)
-                ptr[i] = Primitive::undefinedValue();
+                ptr[i] = Value::undefinedValue();
             break;
         case Empty:
             for (int i = 0; i < nValues; ++i)
-                ptr[i] = Primitive::emptyValue();
+                ptr[i] = Value::emptyValue();
             break;
         case Uninitialized:
             break;
@@ -148,10 +148,10 @@ struct Scope {
         Value *ptr = engine->jsAlloca(1);
         switch (mode) {
         case Undefined:
-            *ptr = Primitive::undefinedValue();
+            *ptr = Value::undefinedValue();
             break;
         case Empty:
-            *ptr = Primitive::emptyValue();
+            *ptr = Value::emptyValue();
             break;
         case Uninitialized:
             break;

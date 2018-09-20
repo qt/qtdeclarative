@@ -116,7 +116,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
     inline PropertyAttributes attributes(uint i) const;
 
     bool isEmpty(uint i) const {
-        return get(i) == Primitive::emptyValue().asReturnedValue();
+        return get(i) == Value::emptyValue().asReturnedValue();
     }
 
     inline uint length() const {

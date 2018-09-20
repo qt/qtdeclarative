@@ -95,7 +95,7 @@ void ObjectPrototype::init(ExecutionEngine *v4, Object *ctor)
     ScopedObject o(scope, this);
 
     ctor->defineReadonlyProperty(v4->id_prototype(), o);
-    ctor->defineReadonlyConfigurableProperty(v4->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(v4->id_length(), Value::fromInt32(1));
     ctor->defineDefaultProperty(QStringLiteral("getPrototypeOf"), method_getPrototypeOf, 1);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptor"), method_getOwnPropertyDescriptor, 2);
     ctor->defineDefaultProperty(QStringLiteral("getOwnPropertyDescriptors"), method_getOwnPropertyDescriptors, 1);
@@ -166,7 +166,7 @@ ReturnedValue ObjectPrototype::method_getOwnPropertyDescriptor(const FunctionObj
     if (ArgumentsObject::isNonStrictArgumentsObject(O))
         static_cast<ArgumentsObject *>(O.getPointer())->fullyCreate();
 
-    ScopedValue v(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedValue v(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     ScopedPropertyKey name(scope, v->toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
@@ -321,11 +321,11 @@ ReturnedValue ObjectPrototype::method_defineProperty(const FunctionObject *b, co
         return scope.engine->throwTypeError();
 
     ScopedObject O(scope, argv[0]);
-    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey name(scope, (argc > 1 ? argv[1] : Value::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
-    ScopedValue attributes(scope, argc > 2 ? argv[2] : Primitive::undefinedValue());
+    ScopedValue attributes(scope, argc > 2 ? argv[2] : Value::undefinedValue());
     ScopedProperty pd(scope);
     PropertyAttributes attrs;
     toPropertyDescriptor(scope.engine, attributes, pd, &attrs);
@@ -415,7 +415,7 @@ ReturnedValue ObjectPrototype::method_entries(const FunctionObject *f, const Val
 
 ReturnedValue ObjectPrototype::method_seal(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    const Value a = argc ? argv[0] : Primitive::undefinedValue();
+    const Value a = argc ? argv[0] : Value::undefinedValue();
     if (!a.isObject())
         // 19.1.2.17, 1
         return a.asReturnedValue();
@@ -437,7 +437,7 @@ ReturnedValue ObjectPrototype::method_seal(const FunctionObject *b, const Value 
 
 ReturnedValue ObjectPrototype::method_freeze(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    const Value a = argc ? argv[0] : Primitive::undefinedValue();
+    const Value a = argc ? argv[0] : Value::undefinedValue();
     if (!a.isObject())
         // 19.1.2.5, 1
         return a.asReturnedValue();
@@ -677,7 +677,7 @@ ReturnedValue ObjectPrototype::method_valueOf(const FunctionObject *b, const Val
 ReturnedValue ObjectPrototype::method_hasOwnProperty(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedPropertyKey P(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey P(scope, (argc ? argv[0] : Value::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
     ScopedObject O(scope, thisObject->toObject(scope.engine));
@@ -709,7 +709,7 @@ ReturnedValue ObjectPrototype::method_isPrototypeOf(const FunctionObject *b, con
 ReturnedValue ObjectPrototype::method_propertyIsEnumerable(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
     Scope scope(b);
-    ScopedPropertyKey p(scope, (argc ? argv[0] : Primitive::undefinedValue()).toPropertyKey(scope.engine));
+    ScopedPropertyKey p(scope, (argc ? argv[0] : Value::undefinedValue()).toPropertyKey(scope.engine));
     if (scope.engine->hasException)
         return QV4::Encode::undefined();
 
@@ -743,7 +743,7 @@ ReturnedValue ObjectPrototype::method_defineGetter(const FunctionObject *b, cons
 
     ScopedProperty pd(scope);
     pd->value = f;
-    pd->set = Primitive::emptyValue();
+    pd->set = Value::emptyValue();
     bool ok = o->defineOwnProperty(prop->toPropertyKey(), pd, Attr_Accessor);
     if (!ok)
         THROW_TYPE_ERROR();
@@ -772,7 +772,7 @@ ReturnedValue ObjectPrototype::method_defineSetter(const FunctionObject *b, cons
     }
 
     ScopedProperty pd(scope);
-    pd->value = Primitive::emptyValue();
+    pd->value = Value::emptyValue();
     pd->set = f;
     bool ok = o->defineOwnProperty(prop->toPropertyKey(), pd, Attr_Accessor);
     if (!ok)
@@ -815,8 +815,8 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
     }
 
     attrs->clear();
-    desc->value = Primitive::emptyValue();
-    desc->set = Primitive::emptyValue();
+    desc->value = Value::emptyValue();
+    desc->set = Value::emptyValue();
     ScopedValue tmp(scope);
 
     if (o->hasProperty(engine->id_enumerable()->toPropertyKey()))
@@ -867,7 +867,7 @@ void ObjectPrototype::toPropertyDescriptor(ExecutionEngine *engine, const Value 
     }
 
     if (attrs->isGeneric())
-        desc->value = Primitive::emptyValue();
+        desc->value = Value::emptyValue();
 }
 
 
@@ -886,7 +886,7 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
     if (attrs.isData()) {
         s = engine->newString(QStringLiteral("value"));
         o->put(s, desc->value);
-        v = Primitive::fromBoolean(attrs.isWritable());
+        v = Value::fromBoolean(attrs.isWritable());
         s = engine->newString(QStringLiteral("writable"));
         o->put(s, v);
     } else {
@@ -897,10 +897,10 @@ ReturnedValue ObjectPrototype::fromPropertyDescriptor(ExecutionEngine *engine, c
         s = engine->newString(QStringLiteral("set"));
         o->put(s, v);
     }
-    v = Primitive::fromBoolean(attrs.isEnumerable());
+    v = Value::fromBoolean(attrs.isEnumerable());
     s = engine->newString(QStringLiteral("enumerable"));
     o->put(s, v);
-    v = Primitive::fromBoolean(attrs.isConfigurable());
+    v = Value::fromBoolean(attrs.isConfigurable());
     s = engine->newString(QStringLiteral("configurable"));
     o->put(s, v);
 

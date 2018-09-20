@@ -68,7 +68,7 @@ ReturnedValue SetIteratorPrototype::method_next(const FunctionObject *b, const V
     IteratorKind itemKind = thisObject->d()->iterationKind;
 
     if (!s) {
-        QV4::Value undefined = Primitive::undefinedValue();
+        QV4::Value undefined = Value::undefinedValue();
         return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
     }
 
@@ -92,7 +92,7 @@ ReturnedValue SetIteratorPrototype::method_next(const FunctionObject *b, const V
     }
 
     thisObject->d()->iteratedSet.set(scope.engine, nullptr);
-    QV4::Value undefined = Primitive::undefinedValue();
+    QV4::Value undefined = Value::undefinedValue();
     return IteratorPrototype::createIterResultObject(scope.engine, undefined, true);
 }
 

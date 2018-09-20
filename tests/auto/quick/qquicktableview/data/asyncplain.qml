@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,57 +37,60 @@
 **
 ****************************************************************************/
 
-#ifndef QV8DOMERRORS_P_H
-#define QV8DOMERRORS_P_H
+import QtQuick 2.12
+import QtQuick.Window 2.3
+import TestModel 0.1
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+Item {
+    id: root
+    width: 640
+    height: 450
 
-#include <QtCore/qglobal.h>
+    property alias tableView: tableView
+    property Loader loader: parent
 
-QT_BEGIN_NAMESPACE
-// From DOM-Level-3-Core spec
-// http://www.w3.org/TR/DOM-Level-3-Core/core.html
-#define DOMEXCEPTION_INDEX_SIZE_ERR 1
-#define DOMEXCEPTION_DOMSTRING_SIZE_ERR 2
-#define DOMEXCEPTION_HIERARCHY_REQUEST_ERR 3
-#define DOMEXCEPTION_WRONG_DOCUMENT_ERR 4
-#define DOMEXCEPTION_INVALID_CHARACTER_ERR 5
-#define DOMEXCEPTION_NO_DATA_ALLOWED_ERR 6
-#define DOMEXCEPTION_NO_MODIFICATION_ALLOWED_ERR 7
-#define DOMEXCEPTION_NOT_FOUND_ERR 8
-#define DOMEXCEPTION_NOT_SUPPORTED_ERR 9
-#define DOMEXCEPTION_INUSE_ATTRIBUTE_ERR 10
-#define DOMEXCEPTION_INVALID_STATE_ERR 11
-#define DOMEXCEPTION_SYNTAX_ERR 12
-#define DOMEXCEPTION_INVALID_MODIFICATION_ERR 13
-#define DOMEXCEPTION_NAMESPACE_ERR 14
-#define DOMEXCEPTION_INVALID_ACCESS_ERR 15
-#define DOMEXCEPTION_VALIDATION_ERR 16
-#define DOMEXCEPTION_TYPE_MISMATCH_ERR 17
+    property int statusWhenDelegate0_0Created: Loader.Null
+    property int statusWhenDelegate5_5Created: Loader.Null
 
-#define THROW_DOM(error, string) { \
-    QV4::ScopedValue v(scope, scope.engine->newString(QStringLiteral(string))); \
-    QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))), QV4::ScopedValue(scope, QV4::Value::fromInt32(error))); \
-    return scope.engine->throwError(ex); \
+    property real tableViewWidthWhileBuilding: -1
+    property real tableViewHeightWhileBuilding: -1
+
+    TableView {
+        id: tableView
+        anchors.fill: parent
+        clip: true
+        delegate: tableViewDelegate
+        columnSpacing: 1
+        rowSpacing: 1
+        model: TestModel {
+            rowCount: 100
+            columnCount: 100
+        }
+    }
+
+    Component {
+        id: tableViewDelegate
+        Rectangle {
+            implicitWidth: 100
+            implicitHeight: 50
+            color: "lightgray"
+            border.width: 1
+
+            Text {
+                anchors.centerIn: parent
+                text: modelData
+            }
+
+            Component.onCompleted: {
+                if (row === 0 && column === 0) {
+                    statusWhenDelegate0_0Created = loader.status
+                    tableViewWidthWhileBuilding = tableView.width
+                    tableViewHeightWhileBuilding = tableView.height
+                }
+                else if (row === 5 && column === 5)
+                    statusWhenDelegate5_5Created = loader.status
+            }
+        }
+    }
+
 }
-
-namespace QV4 {
-struct ExecutionEngine;
-}
-
-
-void qt_add_domexceptions(QV4::ExecutionEngine *e);
-
-QT_END_NAMESPACE
-
-#endif // QV8DOMERRORS_P_H

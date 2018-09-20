@@ -70,7 +70,6 @@ namespace Heap {
 
 struct Q_QML_PRIVATE_EXPORT Value
 {
-private:
     /*
         We use 8 bytes for a value and a different variant of NaN boxing. A Double
         NaN (actually -qNaN) is indicated by a number that has the top 13 bits set, and for a
@@ -126,10 +125,9 @@ private:
 
     quint64 _val;
 
-public:
-    QML_NEARLY_ALWAYS_INLINE quint64 &rawValueRef() { return _val; }
-    QML_NEARLY_ALWAYS_INLINE quint64 rawValue() const { return _val; }
-    QML_NEARLY_ALWAYS_INLINE void setRawValue(quint64 raw) { _val = raw; }
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 &rawValueRef() { return _val; }
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 rawValue() const { return _val; }
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setRawValue(quint64 raw) { _val = raw; }
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
@@ -138,10 +136,11 @@ public:
     static inline int valueOffset() { return 4; }
     static inline int tagOffset() { return 0; }
 #endif
-    QML_NEARLY_ALWAYS_INLINE void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
-    QML_NEARLY_ALWAYS_INLINE quint32 value() const { return _val & quint64(~quint32(0)); }
-    QML_NEARLY_ALWAYS_INLINE quint32 tag() const { return _val >> 32; }
-    QML_NEARLY_ALWAYS_INLINE void setTag(quint32 tag) { setTagValue(tag, value()); }
+    static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << 32 | value; }
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    QML_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
+    QML_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTag(quint32 tag) { setTagValue(tag, value()); }
 
 #if QT_POINTER_SIZE == 8
     QML_NEARLY_ALWAYS_INLINE Heap::Base *m() const
@@ -173,17 +172,17 @@ public:
 #  error "unsupported pointer size"
 #endif
 
-    QML_NEARLY_ALWAYS_INLINE int int_32() const
+    QML_NEARLY_ALWAYS_INLINE constexpr int int_32() const
     {
         return int(value());
     }
-    QML_NEARLY_ALWAYS_INLINE void setInt_32(int i)
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setInt_32(int i)
     {
         setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
     }
     QML_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
-    QML_NEARLY_ALWAYS_INLINE void setEmpty()
+    QML_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setEmpty()
     {
         setTagValue(quint32(ValueTypeInternal::Empty), 0);
     }
@@ -474,7 +473,7 @@ public:
 #endif
 
     ReturnedValue *data_ptr() { return &_val; }
-    ReturnedValue asReturnedValue() const { return _val; }
+    constexpr ReturnedValue asReturnedValue() const { return _val; }
     static Value fromReturnedValue(ReturnedValue val) { Value v; v._val = val; return v; }
 
     // As per ES specs
@@ -482,6 +481,18 @@ public:
     bool sameValueZero(Value other) const;
 
     inline void mark(MarkStack *markStack);
+
+    inline static constexpr Value emptyValue() { return { tagValue(quint32(ValueTypeInternal::Empty), 0) }; }
+    static inline constexpr Value fromBoolean(bool b) { return { tagValue(quint32(ValueTypeInternal::Boolean), b) }; }
+    static inline constexpr Value fromInt32(int i) { return { tagValue(quint32(ValueTypeInternal::Integer), quint32(i)) }; }
+    inline static constexpr Value undefinedValue() { return { 0 }; }
+    static inline constexpr Value nullValue() { return { tagValue(quint32(ValueTypeInternal::Null), 0) }; }
+    static inline Value fromDouble(double d);
+    static inline Value fromUInt32(uint i);
+
+    static double toInteger(double d);
+    static int toInt32(double d);
+    static unsigned int toUInt32(double d);
 
     Value &operator =(const ScopedValue &v);
     Value &operator=(ReturnedValue v) { _val = v; return *this; }
@@ -570,71 +581,16 @@ ReturnedValue Heap::Base::asReturnedValue() const
     return Value::fromHeapObject(const_cast<Heap::Base *>(this)).asReturnedValue();
 }
 
-
-
-struct Q_QML_PRIVATE_EXPORT Primitive : public Value
+inline Value Value::fromDouble(double d)
 {
-    inline static Primitive emptyValue();
-    static inline Primitive fromBoolean(bool b);
-    static inline Primitive fromInt32(int i);
-    inline static Primitive undefinedValue();
-    static inline Primitive nullValue();
-    static inline Primitive fromDouble(double d);
-    static inline Primitive fromUInt32(uint i);
-
-    using Value::toInt32;
-    using Value::toUInt32;
-
-    static double toInteger(double d);
-    static int toInt32(double d);
-    static unsigned int toUInt32(double d);
-};
-
-inline Primitive Primitive::undefinedValue()
-{
-    Primitive v;
-    v.setM(nullptr);
-    return v;
-}
-
-inline Primitive Primitive::emptyValue()
-{
-    Primitive v;
-    v.setEmpty();
-    return v;
-}
-
-inline Primitive Primitive::nullValue()
-{
-    Primitive v;
-    v.setTagValue(quint32(ValueTypeInternal::Null), 0);
-    return v;
-}
-
-inline Primitive Primitive::fromBoolean(bool b)
-{
-    Primitive v;
-    v.setTagValue(quint32(ValueTypeInternal::Boolean), b);
-    return v;
-}
-
-inline Primitive Primitive::fromDouble(double d)
-{
-    Primitive v;
+    Value v;
     v.setDouble(d);
     return v;
 }
 
-inline Primitive Primitive::fromInt32(int i)
+inline Value Value::fromUInt32(uint i)
 {
-    Primitive v;
-    v.setInt_32(i);
-    return v;
-}
-
-inline Primitive Primitive::fromUInt32(uint i)
-{
-    Primitive v;
+    Value v;
     if (i < INT_MAX) {
         v.setTagValue(quint32(ValueTypeInternal::Integer), i);
     } else {
@@ -690,7 +646,7 @@ struct Double {
     }
 };
 
-inline double Primitive::toInteger(double d)
+inline double Value::toInteger(double d)
 {
     if (std::isnan(d))
         return +0;
@@ -699,41 +655,48 @@ inline double Primitive::toInteger(double d)
     return d >= 0 ? std::floor(d) : std::ceil(d);
 }
 
-inline int Primitive::toInt32(double value)
+inline int Value::toInt32(double value)
 {
     return Double::toInt32(value);
 }
 
-inline unsigned int Primitive::toUInt32(double d)
+inline unsigned int Value::toUInt32(double d)
 {
     return static_cast<uint>(toInt32(d));
 }
 
+// For source compat with older code in other modules
+using Primitive = Value;
+
 struct Encode {
     static constexpr ReturnedValue undefined() {
-        return 0;
+        return Value::undefinedValue().asReturnedValue();
     }
-    static ReturnedValue null() {
-        return Primitive::nullValue().rawValue();
+    static constexpr ReturnedValue null() {
+        return Value::nullValue().asReturnedValue();
     }
 
-    explicit Encode(bool b) {
-        val = Primitive::fromBoolean(b).rawValue();
+    explicit constexpr Encode(bool b)
+        : val(Value::fromBoolean(b).asReturnedValue())
+    {
     }
     explicit Encode(double d) {
-        val = Primitive::fromDouble(d).rawValue();
+        val = Value::fromDouble(d).asReturnedValue();
     }
-    explicit Encode(int i) {
-        val = Primitive::fromInt32(i).rawValue();
+    explicit constexpr Encode(int i)
+        : val(Value::fromInt32(i).asReturnedValue())
+    {
     }
     explicit Encode(uint i) {
-        val = Primitive::fromUInt32(i).rawValue();
+        val = Value::fromUInt32(i).asReturnedValue();
     }
-    explicit Encode(ReturnedValue v) {
-        val = v;
+    explicit constexpr Encode(ReturnedValue v)
+        : val(v)
+    {
     }
-    Encode(Value v) {
-        val = v.rawValue();
+    constexpr Encode(Value v)
+        : val(v.asReturnedValue())
+    {
     }
 
     explicit Encode(Heap::Base *o) {
@@ -752,7 +715,7 @@ struct Encode {
             return Encode(d);
     }
 
-    operator ReturnedValue() const {
+    constexpr operator ReturnedValue() const {
         return val;
     }
     quint64 val;
@@ -783,7 +746,7 @@ inline qint64 Value::toLength() const
 {
     if (Q_LIKELY(integerCompatible()))
         return int_32() < 0 ? 0 : int_32();
-    double i = Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
+    double i = Value::toInteger(isDouble() ? doubleValue() : toNumberImpl());
     if (i <= 0)
         return 0;
     if (i > (static_cast<qint64>(1) << 53) - 1)
@@ -797,7 +760,7 @@ inline qint64 Value::toIndex() const
     if (Q_LIKELY(integerCompatible())) {
         idx = int_32();
     } else {
-        idx = static_cast<qint64>(Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl()));
+        idx = static_cast<qint64>(Value::toInteger(isDouble() ? doubleValue() : toNumberImpl()));
     }
     if (idx > (static_cast<qint64>(1) << 53) - 1)
         idx = -1;
@@ -809,7 +772,7 @@ inline double Value::toInteger() const
     if (integerCompatible())
         return int_32();
 
-    return Primitive::toInteger(isDouble() ? doubleValue() : toNumberImpl());
+    return Value::toInteger(isDouble() ? doubleValue() : toNumberImpl());
 }
 
 

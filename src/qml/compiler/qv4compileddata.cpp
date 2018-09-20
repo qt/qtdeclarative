@@ -572,8 +572,8 @@ void CompilationUnit::evaluate()
     QV4::Function *moduleFunction = runtimeFunctions[data->indexOfRootFunction];
     CppStackFrame frame;
     frame.init(engine, moduleFunction, nullptr, 0);
-    frame.setupJSFrame(engine->jsStackTop, Primitive::undefinedValue(), m_module->scope,
-                       Primitive::undefinedValue(), Primitive::undefinedValue());
+    frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), m_module->scope,
+                       Value::undefinedValue(), Value::undefinedValue());
 
     frame.push();
     engine->jsStackTop += frame.requiredJSStackFrameSize();

@@ -31,6 +31,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquicktableview_p.h>
 #include <QtQuick/private/qquicktableview_p_p.h>
+#include <QtQuick/private/qquickloader_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -55,14 +56,27 @@ static const char *kModelDataBindingProp = "modelDataBinding";
 
 Q_DECLARE_METATYPE(QMarginsF);
 
-#define LOAD_TABLEVIEW(fileName) \
-    view->setSource(testFileUrl(fileName)); \
-    view->show(); \
-    QVERIFY(QTest::qWaitForWindowActive(view)); \
+#define DECLARE_TABLEVIEW_VARIABLES \
     auto tableView = view->rootObject()->property(kTableViewPropName).value<QQuickTableView *>(); \
     QVERIFY(tableView); \
     auto tableViewPrivate = QQuickTableViewPrivate::get(tableView); \
     Q_UNUSED(tableViewPrivate)
+
+#define LOAD_TABLEVIEW(fileName) \
+    view->setSource(testFileUrl(fileName)); \
+    view->show(); \
+    QVERIFY(QTest::qWaitForWindowActive(view)); \
+    DECLARE_TABLEVIEW_VARIABLES
+
+#define LOAD_TABLEVIEW_ASYNC(fileName) \
+    view->setSource(testFileUrl("asyncloader.qml")); \
+    view->show(); \
+    QVERIFY(QTest::qWaitForWindowActive(view)); \
+    auto loader = view->rootObject()->property("loader").value<QQuickLoader *>(); \
+    loader->setSource(QUrl::fromLocalFile("data/" fileName)); \
+    QTRY_VERIFY(loader->item()); \
+    QCOMPARE(loader->status(), QQuickLoader::Status::Ready); \
+    DECLARE_TABLEVIEW_VARIABLES
 
 #define WAIT_UNTIL_POLISHED \
     QVERIFY(tableViewPrivate->polishScheduled); \
@@ -139,6 +153,7 @@ private slots:
     void checkChangingModelFromDelegate();
     void checkRebuildViewportOnly();
     void useDelegateChooserWithoutDefault();
+    void checkTableviewInsideAsyncLoader();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -1813,6 +1828,46 @@ void tst_QQuickTableView::useDelegateChooserWithoutDefault()
     auto model = TestModelAsVariant(2, 1);
     tableView->setModel(model);
     WAIT_UNTIL_POLISHED;
+};
+
+void tst_QQuickTableView::checkTableviewInsideAsyncLoader()
+{
+    // Check that you can put a TableView inside an async Loader, and
+    // that the delegate items are created before the loader is ready.
+    LOAD_TABLEVIEW_ASYNC("asyncplain.qml");
+
+    // At this point the Loader has finished
+    QCOMPARE(loader->status(), QQuickLoader::Ready);
+
+    // Check that TableView has finished building
+    QCOMPARE(tableViewPrivate->rebuildScheduled, false);
+    QCOMPARE(tableViewPrivate->rebuildState, QQuickTableViewPrivate::RebuildState::Done);
+
+    // Check that all expected delegate items have been loaded
+    const qreal delegateWidth = 100;
+    const qreal delegateHeight = 50;
+    int expectedColumns = qCeil(tableView->width() / delegateWidth);
+    int expectedRows = qCeil(tableView->height() / delegateHeight);
+    QCOMPARE(tableViewPrivate->loadedTable.width(), expectedColumns);
+    QCOMPARE(tableViewPrivate->loadedTable.height(), expectedRows);
+
+    // Check that the loader was still in a loading state while TableView was creating
+    // delegate items. If we delayed creating delegate items until we got the first
+    // updatePolish() callback in QQuickTableView, this would not be the case.
+    auto statusWhenDelegate0_0Completed = qvariant_cast<QQuickLoader::Status>(
+                loader->item()->property("statusWhenDelegate0_0Created"));
+    auto statusWhenDelegate5_5Completed = qvariant_cast<QQuickLoader::Status>(
+                loader->item()->property("statusWhenDelegate5_5Created"));
+    QCOMPARE(statusWhenDelegate0_0Completed, QQuickLoader::Loading);
+    QCOMPARE(statusWhenDelegate5_5Completed, QQuickLoader::Loading);
+
+    // Check that TableView had a valid geometry when we started to build. If the build
+    // was started too early (e.g upon QQuickTableView::componentComplete), width and
+    // height would still be 0 since the bindings would not have been evaluated yet.
+    qreal width = loader->item()->property("tableViewWidthWhileBuilding").toReal();
+    qreal height = loader->item()->property("tableViewHeightWhileBuilding").toReal();
+    QVERIFY(width > 0);
+    QVERIFY(height > 0);
 };
 
 QTEST_MAIN(tst_QQuickTableView)

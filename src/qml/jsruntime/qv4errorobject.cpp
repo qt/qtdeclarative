@@ -74,9 +74,9 @@ void Heap::ErrorObject::init()
         return;
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
-    setProperty(scope.engine, QV4::ErrorObject::Index_FileName, Primitive::undefinedValue());
-    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_FileName, Value::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::undefinedValue());
 }
 
 void Heap::ErrorObject::init(const Value &message, ErrorType t)
@@ -88,12 +88,12 @@ void Heap::ErrorObject::init(const Value &message, ErrorType t)
     Scoped<QV4::ErrorObject> e(scope, this);
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     if (!e->d()->stackTrace->isEmpty()) {
         setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
-        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
+        setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(e->d()->stackTrace->at(0).line));
     }
 
     if (!message.isUndefined())
@@ -110,7 +110,7 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
     Scoped<QV4::ErrorObject> e(scope, this);
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Primitive::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     StackFrame frame;
@@ -121,7 +121,7 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
 
     Q_ASSERT(!e->d()->stackTrace->isEmpty());
     setProperty(scope.engine, QV4::ErrorObject::Index_FileName, scope.engine->newString(e->d()->stackTrace->at(0).source));
-    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Primitive::fromInt32(e->d()->stackTrace->at(0).line));
+    setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::fromInt32(e->d()->stackTrace->at(0).line));
 
     if (!message.isUndefined())
         setProperty(scope.engine, QV4::ErrorObject::Index_Message, message);
@@ -231,7 +231,7 @@ void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
 
 ReturnedValue ErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<ErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -247,7 +247,7 @@ void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<EvalErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -258,7 +258,7 @@ void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<RangeErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -269,7 +269,7 @@ void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<ReferenceErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -280,7 +280,7 @@ void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<SyntaxErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -291,7 +291,7 @@ void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<TypeErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -302,7 +302,7 @@ void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
 
 ReturnedValue URIErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
-    Value v = argc ? *argv : Primitive::undefinedValue();
+    Value v = argc ? *argv : Value::undefinedValue();
     return ErrorObject::create<URIErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
@@ -312,7 +312,7 @@ void ErrorPrototype::init(ExecutionEngine *engine, Object *ctor, Object *obj, He
     ScopedString s(scope);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = obj));
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     obj->setProperty(Index_Constructor, ctor->d());
     obj->setProperty(Index_Message, engine->id_empty()->d());
     obj->setProperty(Index_Name, engine->newString(QString::fromLatin1(ErrorObject::className(t))));

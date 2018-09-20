@@ -262,7 +262,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             }
             reserve(data, sizeof(quint32) + length * sizeof(quint32));
             push(data, valueheader(WorkerSequence, length));
-            serialize(data, QV4::Primitive::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
+            serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
             ScopedValue val(scope);
             for (uint ii = 0; ii < seqLength; ++ii)
                 serialize(data, (val = o->get(ii)), engine); // sequence elements
@@ -358,7 +358,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
     case WorkerNumber:
         return QV4::Encode(popDouble(data));
     case WorkerDate:
-        return QV4::Encode(engine->newDateObject(QV4::Primitive::fromDouble(popDouble(data))));
+        return QV4::Encode(engine->newDateObject(QV4::Value::fromDouble(popDouble(data))));
     case WorkerRegexp:
     {
         quint32 flags = headersize(header);

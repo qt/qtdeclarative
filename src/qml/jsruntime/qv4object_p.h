@@ -185,12 +185,17 @@ struct Q_QML_EXPORT Object: Managed {
     //
     // helpers
     //
-    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs);
+    static ReturnedValue getValue(const Value &thisObject, const Value &v, PropertyAttributes attrs) {
+        if (attrs.isData())
+            return v.asReturnedValue();
+        return getValueAccessor(thisObject, v, attrs);
+    }
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
         Scope scope(this->engine());
         ScopedValue t(scope, const_cast<Object *>(this));
         return getValue(t, v, attrs);
     }
+    static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
 
     bool putValue(uint memberIndex, const Value &value);
 
@@ -435,7 +440,7 @@ struct ArrayObject : Object {
 
 private:
     void commonInit()
-    { setProperty(internalClass->engine, LengthPropertyIndex, Primitive::fromInt32(0)); }
+    { setProperty(internalClass->engine, LengthPropertyIndex, Value::fromInt32(0)); }
 };
 
 }
@@ -476,7 +481,7 @@ protected:
 inline void Object::setArrayLengthUnchecked(uint l)
 {
     if (isArrayObject())
-        setProperty(Heap::ArrayObject::LengthPropertyIndex, Primitive::fromUInt32(l));
+        setProperty(Heap::ArrayObject::LengthPropertyIndex, Value::fromUInt32(l));
 }
 
 inline void Object::push_back(const Value &v)

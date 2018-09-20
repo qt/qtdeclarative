@@ -48,23 +48,23 @@ void qt_add_domexceptions(ExecutionEngine *e)
 {
     Scope scope(e);
     ScopedObject domexception(scope, e->newObject());
-    domexception->defineReadonlyProperty(QStringLiteral("INDEX_SIZE_ERR"), Primitive::fromInt32(DOMEXCEPTION_INDEX_SIZE_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("DOMSTRING_SIZE_ERR"), Primitive::fromInt32(DOMEXCEPTION_DOMSTRING_SIZE_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("HIERARCHY_REQUEST_ERR"), Primitive::fromInt32(DOMEXCEPTION_HIERARCHY_REQUEST_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("WRONG_DOCUMENT_ERR"), Primitive::fromInt32(DOMEXCEPTION_WRONG_DOCUMENT_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("INVALID_CHARACTER_ERR"), Primitive::fromInt32(DOMEXCEPTION_INVALID_CHARACTER_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("NO_DATA_ALLOWED_ERR"), Primitive::fromInt32(DOMEXCEPTION_NO_DATA_ALLOWED_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("NO_MODIFICATION_ALLOWED_ERR"), Primitive::fromInt32(DOMEXCEPTION_NO_MODIFICATION_ALLOWED_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("NOT_FOUND_ERR"), Primitive::fromInt32(DOMEXCEPTION_NOT_FOUND_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("NOT_SUPPORTED_ERR"), Primitive::fromInt32(DOMEXCEPTION_NOT_SUPPORTED_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("INUSE_ATTRIBUTE_ERR"), Primitive::fromInt32(DOMEXCEPTION_INUSE_ATTRIBUTE_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("INVALID_STATE_ERR"), Primitive::fromInt32(DOMEXCEPTION_INVALID_STATE_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("SYNTAX_ERR"), Primitive::fromInt32(DOMEXCEPTION_SYNTAX_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("INVALID_MODIFICATION_ERR"), Primitive::fromInt32(DOMEXCEPTION_INVALID_MODIFICATION_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("NAMESPACE_ERR"), Primitive::fromInt32(DOMEXCEPTION_NAMESPACE_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("INVALID_ACCESS_ERR"), Primitive::fromInt32(DOMEXCEPTION_INVALID_ACCESS_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("VALIDATION_ERR"), Primitive::fromInt32(DOMEXCEPTION_VALIDATION_ERR));
-    domexception->defineReadonlyProperty(QStringLiteral("TYPE_MISMATCH_ERR"), Primitive::fromInt32(DOMEXCEPTION_TYPE_MISMATCH_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INDEX_SIZE_ERR"), Value::fromInt32(DOMEXCEPTION_INDEX_SIZE_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("DOMSTRING_SIZE_ERR"), Value::fromInt32(DOMEXCEPTION_DOMSTRING_SIZE_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("HIERARCHY_REQUEST_ERR"), Value::fromInt32(DOMEXCEPTION_HIERARCHY_REQUEST_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("WRONG_DOCUMENT_ERR"), Value::fromInt32(DOMEXCEPTION_WRONG_DOCUMENT_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INVALID_CHARACTER_ERR"), Value::fromInt32(DOMEXCEPTION_INVALID_CHARACTER_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("NO_DATA_ALLOWED_ERR"), Value::fromInt32(DOMEXCEPTION_NO_DATA_ALLOWED_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("NO_MODIFICATION_ALLOWED_ERR"), Value::fromInt32(DOMEXCEPTION_NO_MODIFICATION_ALLOWED_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("NOT_FOUND_ERR"), Value::fromInt32(DOMEXCEPTION_NOT_FOUND_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("NOT_SUPPORTED_ERR"), Value::fromInt32(DOMEXCEPTION_NOT_SUPPORTED_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INUSE_ATTRIBUTE_ERR"), Value::fromInt32(DOMEXCEPTION_INUSE_ATTRIBUTE_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INVALID_STATE_ERR"), Value::fromInt32(DOMEXCEPTION_INVALID_STATE_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("SYNTAX_ERR"), Value::fromInt32(DOMEXCEPTION_SYNTAX_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INVALID_MODIFICATION_ERR"), Value::fromInt32(DOMEXCEPTION_INVALID_MODIFICATION_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("NAMESPACE_ERR"), Value::fromInt32(DOMEXCEPTION_NAMESPACE_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("INVALID_ACCESS_ERR"), Value::fromInt32(DOMEXCEPTION_INVALID_ACCESS_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("VALIDATION_ERR"), Value::fromInt32(DOMEXCEPTION_VALIDATION_ERR));
+    domexception->defineReadonlyProperty(QStringLiteral("TYPE_MISMATCH_ERR"), Value::fromInt32(DOMEXCEPTION_TYPE_MISMATCH_ERR));
     e->globalObject->defineDefaultProperty(QStringLiteral("DOMException"), domexception);
 }
 

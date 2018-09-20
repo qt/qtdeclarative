@@ -128,7 +128,6 @@ QPacketProtocol::QPacketProtocol(QIODevice *dev, QObject *parent)
     Q_ASSERT(dev);
 
     QObject::connect(dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
-    QObject::connect(dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
     QObject::connect(dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
 }
 
@@ -209,17 +208,6 @@ bool QPacketProtocol::waitForReadyRead(int msecs)
     } while (true);
 }
 
-/*!
-  Return the QIODevice passed to the QPacketProtocol constructor.
-*/
-void QPacketProtocol::aboutToClose()
-{
-    Q_D(QPacketProtocol);
-    d->inProgress.clear();
-    d->sendingPackets.clear();
-    d->inProgressSize = -1;
-}
-
 void QPacketProtocol::bytesWritten(qint64 bytes)
 {
     Q_D(QPacketProtocol);
@@ -257,7 +245,6 @@ void QPacketProtocol::readyToRead()
             // Check sizing constraints
             if (d->inProgressSize < qint32(sizeof(qint32))) {
                 disconnect(d->dev, &QIODevice::readyRead, this, &QPacketProtocol::readyToRead);
-                disconnect(d->dev, &QIODevice::aboutToClose, this, &QPacketProtocol::aboutToClose);
                 disconnect(d->dev, &QIODevice::bytesWritten, this, &QPacketProtocol::bytesWritten);
                 d->dev = nullptr;
                 emit error();

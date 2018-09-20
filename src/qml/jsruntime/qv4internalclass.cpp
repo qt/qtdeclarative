@@ -137,14 +137,83 @@ void PropertyHash::detach(bool grow, int classSize)
     d = dd;
 }
 
+
+SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyKey> &other)
+    : refcount(1),
+      engine(other.engine),
+      data(nullptr)
+{
+    if (other.alloc()) {
+        int s = other.size();
+        data = MemberData::allocate(engine, other.alloc(), other.data);
+        setSize(s);
+    }
+}
+
+SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyKey> &other,
+                                                                            uint pos, PropertyKey value)
+    : refcount(1),
+      engine(other.engine)
+{
+    data = MemberData::allocate(engine, other.alloc(), nullptr);
+    memcpy(data, other.data, sizeof(Heap::MemberData) - sizeof(Value) + pos*sizeof(Value));
+    data->values.size = pos + 1;
+    data->values.set(engine, pos, Value::fromReturnedValue(value.id()));
+}
+
+void SharedInternalClassDataPrivate<PropertyKey>::grow()
+{
+    uint a = alloc() * 2;
+    int s = size();
+    data = MemberData::allocate(engine, a, data);
+    setSize(s);
+    Q_ASSERT(alloc() >= a);
+}
+
+uint SharedInternalClassDataPrivate<PropertyKey>::alloc() const
+{
+    return data ? data->values.alloc : 0;
+}
+
+uint SharedInternalClassDataPrivate<PropertyKey>::size() const
+{
+    return data ? data->values.size : 0;
+}
+
+void SharedInternalClassDataPrivate<PropertyKey>::setSize(uint s)
+{
+    Q_ASSERT(data && s <= alloc());
+    data->values.size = s;
+}
+
+PropertyKey SharedInternalClassDataPrivate<PropertyKey>::at(uint i)
+{
+    Q_ASSERT(data && i < size());
+    return PropertyKey::fromId(data->values.values[i].rawValue());
+}
+
+void SharedInternalClassDataPrivate<PropertyKey>::set(uint i, PropertyKey t)
+{
+    Q_ASSERT(data && i < size());
+    data->values.values[i].rawValueRef() = t.id();
+}
+
+void SharedInternalClassDataPrivate<PropertyKey>::mark(MarkStack *s)
+{
+    if (data)
+        data->mark(s);
+}
+
+
+
 namespace Heap {
 
 void InternalClass::init(ExecutionEngine *engine)
 {
     Base::init();
     new (&propertyTable) PropertyHash();
-    new (&nameMap) SharedInternalClassData<PropertyKey>();
-    new (&propertyData) SharedInternalClassData<PropertyAttributes>();
+    new (&nameMap) SharedInternalClassData<PropertyKey>(engine);
+    new (&propertyData) SharedInternalClassData<PropertyAttributes>(engine);
     new (&transitions) std::vector<Transition>();
 
     this->engine = engine;
@@ -204,6 +273,11 @@ void InternalClass::destroy()
     Base::destroy();
 }
 
+QString InternalClass::keyAt(uint index) const
+{
+    return nameMap.at(index).toQString();
+}
+
 static void insertHoleIntoPropertyData(QV4::Object *object, int idx)
 {
     Heap::Object *o = object->d();
@@ -220,9 +294,9 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
     int size = o->internalClass->size;
     for (int i = idx; i < size; ++i)
         o->setProperty(v4, i, *o->propertyData(i + (accessor ? 2 : 1)));
-    o->setProperty(v4, size, Primitive::undefinedValue());
+    o->setProperty(v4, size, Value::undefinedValue());
     if (accessor)
-        o->setProperty(v4, size + 1, Primitive::undefinedValue());
+        o->setProperty(v4, size + 1, Value::undefinedValue());
 }
 
 void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)
@@ -288,8 +362,8 @@ Heap::InternalClass *InternalClass::changeMember(PropertyKey identifier, Propert
     if (data.isAccessor() != propertyData.at(idx).isAccessor()) {
         // this changes the layout of the class, so we need to rebuild the data
         newClass->propertyTable = PropertyHash();
-        newClass->nameMap = SharedInternalClassData<PropertyKey>();
-        newClass->propertyData = SharedInternalClassData<PropertyAttributes>();
+        newClass->nameMap = SharedInternalClassData<PropertyKey>(engine);
+        newClass->propertyData = SharedInternalClassData<PropertyAttributes>(engine);
         newClass->size = 0;
         for (uint i = 0; i < size; ++i) {
             PropertyKey identifier = nameMap.at(i);
@@ -423,7 +497,9 @@ Heap::InternalClass *InternalClass::addMemberImpl(PropertyKey identifier, Proper
         return t.lookup;
 
     // create a new class and add it to the tree
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> ic(scope, engine->newClass(this));
+    InternalClass *newClass = ic->d();
     PropertyHash::Entry e = { identifier, newClass->size };
     newClass->propertyTable.addEntry(e, newClass->size);
 
@@ -504,7 +580,9 @@ Heap::InternalClass *InternalClass::sealed()
         return t.lookup;
     }
 
-    Heap::InternalClass *s = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> ic(scope, engine->newClass(this));
+    Heap::InternalClass *s = ic->d();
 
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
@@ -550,7 +628,9 @@ Heap::InternalClass *InternalClass::frozen()
         return t.lookup;
     }
 
-    Heap::InternalClass *f = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> ic(scope, engine->newClass(this));
+    Heap::InternalClass *f = ic->d();
 
     for (uint i = 0; i < size; ++i) {
         PropertyAttributes attrs = propertyData.at(i);
@@ -631,11 +711,7 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
     if (ic->parent)
         ic->parent->mark(stack);
 
-    for (uint i = 0; i < ic->size; ++i) {
-        PropertyKey id = ic->nameMap.at(i);
-        if (Heap::Base *b = id.asStringOrSymbol())
-            b->mark(stack);
-    }
+    ic->nameMap.mark(stack);
 }
 
 }

@@ -209,12 +209,12 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             jsCall->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
         } else if (type == QMetaType::Int) {
             //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-            jsCall->args[ii] = QV4::Primitive::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
+            jsCall->args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
         } else if (type == qMetaTypeId<QQmlV4Handle>()) {
             jsCall->args[ii] = *reinterpret_cast<QQmlV4Handle *>(a[ii + 1]);
         } else if (ep->isQObject(type)) {
             if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                jsCall->args[ii] = QV4::Primitive::nullValue();
+                jsCall->args[ii] = QV4::Value::nullValue();
             else
                 jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {

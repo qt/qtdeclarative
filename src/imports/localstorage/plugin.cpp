@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 #define V4THROW_SQL(error, desc) { \
     QV4::ScopedString v(scope, scope.engine->newString(desc)); \
     QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Value::fromInt32(error))); \
     scope.engine->throwError(ex); \
     RETURN_UNDEFINED(); \
 }
@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
 #define V4THROW_SQL2(error, desc) { \
     QV4::ScopedString v(scope, scope.engine->newString(desc)); \
     QV4::ScopedObject ex(scope, scope.engine->newErrorObject(v)); \
-    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Primitive::fromInt32(error))); \
+    ex->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("code"))).getPointer(), QV4::ScopedValue(scope, Value::fromInt32(error))); \
     args->setReturnValue(scope.engine->throwError(ex)); \
     return; \
 }
@@ -291,7 +291,7 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
     QSqlQuery query(db);
     bool err = false;
 
-    ScopedValue result(scope, Primitive::undefinedValue());
+    ScopedValue result(scope, Value::undefinedValue());
 
     if (query.prepare(sql)) {
         if (argc > 1) {
@@ -337,7 +337,7 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
-            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")).getPointer(), (v = Primitive::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")).getPointer(), (v = Value::fromInt32(query.numRowsAffected())));
             resultObject->put((s = scope.engine->newIdentifier("insertId")).getPointer(), (v = scope.engine->newString(query.lastInsertId().toString())));
             resultObject->put((s = scope.engine->newIdentifier("rows")).getPointer(), rows);
         } else {
@@ -394,7 +394,7 @@ static ReturnedValue qmlsqldatabase_changeVersion(const FunctionObject *b, const
     QSqlDatabase db = *r->d()->database;
     QString from_version = argv[0].toQString();
     QString to_version = argv[1].toQString();
-    ScopedFunctionObject callback(scope, argc > 2 ? argv[2] : Primitive::undefinedValue());
+    ScopedFunctionObject callback(scope, argc > 2 ? argv[2] : Value::undefinedValue());
 
     if (from_version != *r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(*r->d()->version));

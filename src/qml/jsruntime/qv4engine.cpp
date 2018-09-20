@@ -566,9 +566,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("Reflect"), (o = memoryManager->allocate<Reflect>()));
     globalObject->defineDefaultProperty(QStringLiteral("Proxy"), (o = memoryManager->allocate<Proxy>(rootContext())));
 
-    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Primitive::undefinedValue());
-    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Primitive::fromDouble(std::numeric_limits<double>::quiet_NaN()));
-    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Primitive::fromDouble(Q_INFINITY));
+    globalObject->defineReadonlyProperty(QStringLiteral("undefined"), Value::undefinedValue());
+    globalObject->defineReadonlyProperty(QStringLiteral("NaN"), Value::fromDouble(std::numeric_limits<double>::quiet_NaN()));
+    globalObject->defineReadonlyProperty(QStringLiteral("Infinity"), Value::fromDouble(Q_INFINITY));
 
 
     jsObjects[Eval_Function] = memoryManager->allocate<EvalFunction>(global);
@@ -601,7 +601,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("unescape"), GlobalFunctions::method_unescape, 1);
 
     ScopedFunctionObject t(scope, memoryManager->allocate<FunctionObject>(rootContext(), nullptr, ::throwTypeError));
-    t->defineReadonlyProperty(id_length(), Primitive::fromInt32(0));
+    t->defineReadonlyProperty(id_length(), Value::fromInt32(0));
     t->setInternalClass(t->internalClass()->frozen());
     jsObjects[ThrowerObject] = t;
 
@@ -1044,7 +1044,7 @@ ReturnedValue ExecutionEngine::catchException(StackTrace *trace)
     exceptionStackTrace.clear();
     hasException = false;
     ReturnedValue res = exceptionValue->asReturnedValue();
-    *exceptionValue = Primitive::emptyValue();
+    *exceptionValue = Value::emptyValue();
     return res;
 }
 

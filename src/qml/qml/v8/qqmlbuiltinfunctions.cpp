@@ -110,8 +110,8 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
     {
         ScopedString str(scope);
         ScopedValue v(scope);
-        o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Primitive::fromInt32(0)));
-        o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Primitive::fromInt32(1)));
+        o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Value::fromInt32(0)));
+        o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Value::fromInt32(1)));
     }
 
     o->defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
@@ -183,7 +183,7 @@ ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) con
         QMetaEnum enumerator = qtMetaObject->enumerator(d()->enumeratorIterator);
         for (int keyCount = enumerator.keyCount(); d()->keyIterator < keyCount; ++d()->keyIterator) {
             key = scope.engine->newString(QString::fromUtf8(enumerator.key(d()->keyIterator)));
-            value = QV4::Primitive::fromInt32(enumerator.value(d()->keyIterator));
+            value = QV4::Value::fromInt32(enumerator.value(d()->keyIterator));
             o->put(key, value);
             if (name && key->toQString() == *name) {
                 ++d()->keyIterator;
@@ -1106,8 +1106,8 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
                 const QQmlError &error = errors.at(ii);
                 errorstr += QLatin1String("\n    ") + error.toString();
                 qmlerror = v4->newObject();
-                qmlerror->put((s = v4->newString(QStringLiteral("lineNumber"))), (v = QV4::Primitive::fromInt32(error.line())));
-                qmlerror->put((s = v4->newString(QStringLiteral("columnNumber"))), (v = QV4::Primitive::fromInt32(error.column())));
+                qmlerror->put((s = v4->newString(QStringLiteral("lineNumber"))), (v = QV4::Value::fromInt32(error.line())));
+                qmlerror->put((s = v4->newString(QStringLiteral("columnNumber"))), (v = QV4::Value::fromInt32(error.column())));
                 qmlerror->put((s = v4->newString(QStringLiteral("fileName"))), (v = v4->newString(error.url().toString())));
                 qmlerror->put((s = v4->newString(QStringLiteral("message"))), (v = v4->newString(error.description())));
                 qmlerrors->put(ii, qmlerror);

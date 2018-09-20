@@ -70,7 +70,7 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
 
     Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()->propertyKey()));
-    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(frame->originalArgumentsCount));
+    setProperty(v4, LengthPropertyIndex, Value::fromInt32(frame->originalArgumentsCount));
 }
 
 void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
@@ -86,7 +86,7 @@ void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
     Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->propertyKey()));
     setProperty(v4, CalleePropertyIndex, context->d()->function);
     Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->propertyKey()));
-    setProperty(v4, LengthPropertyIndex, Primitive::fromInt32(context->argc()));
+    setProperty(v4, LengthPropertyIndex, Value::fromInt32(context->argc()));
     Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->propertyKey()));
     setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
 

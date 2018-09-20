@@ -387,7 +387,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             double n = binding->valueAsNumber(compilationUnit->constants);
             if (double(int(n)) == n) {
                 if (property->isVarProperty()) {
-                    _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Primitive::fromInt32(int(n)));
+                    _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromInt32(int(n)));
                 } else {
                     int i = int(n);
                     QVariant value(i);
@@ -395,7 +395,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                 }
             } else {
                 if (property->isVarProperty()) {
-                    _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Primitive::fromDouble(n));
+                    _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromDouble(n));
                 } else {
                     QVariant value(n);
                     property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -403,7 +403,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             }
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             if (property->isVarProperty()) {
-                _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Primitive::fromBoolean(binding->valueAsBoolean()));
+                _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromBoolean(binding->valueAsBoolean()));
             } else {
                 QVariant value(binding->valueAsBoolean());
                 property->writeProperty(_qobject, &value, propertyWriteFlags);

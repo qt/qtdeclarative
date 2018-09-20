@@ -726,16 +726,16 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
             double d = QV4::RuntimeHelpers::stringToNumber(string);
             switch (type) {
             case QMetaType::Int:
-                *reinterpret_cast<int*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UInt:
-                *reinterpret_cast<uint*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::LongLong:
-                *reinterpret_cast<qlonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
                 return true;
             case QMetaType::ULongLong:
-                *reinterpret_cast<qulonglong*>(ptr) = QV4::Primitive::toInteger(d);
+                *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
                 return true;
             case QMetaType::Double:
                 *reinterpret_cast<double*>(ptr) = d;
@@ -744,19 +744,19 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
                 *reinterpret_cast<float*>(ptr) = d;
                 return true;
             case QMetaType::Short:
-                *reinterpret_cast<short*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UShort:
-                *reinterpret_cast<unsigned short*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::Char:
-                *reinterpret_cast<char*>(ptr) = QV4::Primitive::toInt32(d);
+                *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
                 return true;
             case QMetaType::UChar:
-                *reinterpret_cast<unsigned char*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             case QMetaType::QChar:
-                *reinterpret_cast<QChar*>(ptr) = QV4::Primitive::toUInt32(d);
+                *reinterpret_cast<QChar*>(ptr) = QV4::Value::toUInt32(d);
                 return true;
             default:
                 return false;

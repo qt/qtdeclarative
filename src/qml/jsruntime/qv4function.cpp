@@ -58,9 +58,9 @@ ReturnedValue Function::call(const Value *thisObject, const Value *argv, int arg
     ExecutionEngine *engine = context->engine();
     CppStackFrame frame;
     frame.init(engine, this, argv, argc);
-    frame.setupJSFrame(engine->jsStackTop, Primitive::undefinedValue(), context->d(),
-                       thisObject ? *thisObject : Primitive::undefinedValue(),
-                       Primitive::undefinedValue());
+    frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), context->d(),
+                       thisObject ? *thisObject : Value::undefinedValue(),
+                       Value::undefinedValue());
 
     frame.push();
     engine->jsStackTop += frame.requiredJSStackFrameSize();

@@ -66,14 +66,14 @@ struct Property {
     // Section 8.10
     inline void fullyPopulated(PropertyAttributes *attrs) {
         if (!attrs->hasType()) {
-            value = Primitive::undefinedValue();
+            value = Value::undefinedValue();
         }
         if (attrs->type() == PropertyAttributes::Accessor) {
             attrs->clearWritable();
             if (value.isEmpty())
-                value = Primitive::undefinedValue();
+                value = Value::undefinedValue();
             if (set.isEmpty())
-                set = Primitive::undefinedValue();
+                set = Value::undefinedValue();
         }
         attrs->resolve();
     }

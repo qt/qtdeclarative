@@ -340,7 +340,7 @@ bool JsonParser::parseValue(Value *val)
         if (*json++ == 'u' &&
             *json++ == 'l' &&
             *json++ == 'l') {
-            *val = Primitive::nullValue();
+            *val = Value::nullValue();
             DEBUG << "value: null";
             END;
             return true;
@@ -355,7 +355,7 @@ bool JsonParser::parseValue(Value *val)
         if (*json++ == 'r' &&
             *json++ == 'u' &&
             *json++ == 'e') {
-            *val = Primitive::fromBoolean(true);
+            *val = Value::fromBoolean(true);
             DEBUG << "value: true";
             END;
             return true;
@@ -371,7 +371,7 @@ bool JsonParser::parseValue(Value *val)
             *json++ == 'l' &&
             *json++ == 's' &&
             *json++ == 'e') {
-            *val = Primitive::fromBoolean(false);
+            *val = Value::fromBoolean(false);
             DEBUG << "value: false";
             END;
             return true;
@@ -479,7 +479,7 @@ bool JsonParser::parseNumber(Value *val)
         bool ok;
         int n = number.toInt(&ok);
         if (ok && n < (1<<25) && n > -(1<<25)) {
-            *val = Primitive::fromInt32(n);
+            *val = Value::fromInt32(n);
             END;
             return true;
         }
@@ -494,7 +494,7 @@ bool JsonParser::parseNumber(Value *val)
         return false;
     }
 
-    * val = Primitive::fromDouble(d);
+    * val = Value::fromDouble(d);
 
     END;
     return true;
@@ -912,7 +912,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
     Scope scope(b);
     Stringify stringify(scope.engine);
 
-    ScopedObject o(scope, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    ScopedObject o(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     if (o) {
         stringify.replacerFunction = o->as<FunctionObject>();
         if (o->isArrayObject()) {
@@ -937,7 +937,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
         }
     }
 
-    ScopedValue s(scope, argc > 2 ? argv[2] : Primitive::undefinedValue());
+    ScopedValue s(scope, argc > 2 ? argv[2] : Value::undefinedValue());
     if (NumberObject *n = s->as<NumberObject>())
         s = Encode(n->value());
     else if (StringObject *so = s->as<StringObject>())
@@ -950,7 +950,7 @@ ReturnedValue JsonObject::method_stringify(const FunctionObject *b, const Value 
     }
 
 
-    ScopedValue arg0(scope, argc ? argv[0] : Primitive::undefinedValue());
+    ScopedValue arg0(scope, argc ? argv[0] : Value::undefinedValue());
     QString result = stringify.Str(QString(), arg0);
     if (result.isEmpty() || scope.engine->hasException)
         RETURN_UNDEFINED();

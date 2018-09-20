@@ -128,10 +128,13 @@ Q_SIGNALS:
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
+    void componentComplete() override;
 
 private:
     Q_DISABLE_COPY(QQuickTableView)
     Q_DECLARE_PRIVATE(QQuickTableView)
+
+    Q_PRIVATE_SLOT(d_func(), void _q_componentFinalized())
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject

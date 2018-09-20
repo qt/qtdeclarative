@@ -88,7 +88,7 @@ ReturnedValue SymbolCtor::virtualCallAsConstructor(const FunctionObject *f, cons
 ReturnedValue SymbolCtor::method_for(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedValue k(scope, argc ? argv[0]: Primitive::undefinedValue());
+    ScopedValue k(scope, argc ? argv[0]: Value::undefinedValue());
     ScopedString key(scope, k->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();
@@ -114,7 +114,7 @@ void SymbolPrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedValue v(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (v = this));
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(0));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(0));
 
     ctor->defineDefaultProperty(QStringLiteral("for"), SymbolCtor::method_for, 1);
     ctor->defineDefaultProperty(QStringLiteral("keyFor"), SymbolCtor::method_keyFor, 1);

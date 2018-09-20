@@ -222,7 +222,7 @@ static inline double MonthFromTime(double t)
 
 static inline double DateFromTime(double t)
 {
-    int m = (int) Primitive::toInteger(MonthFromTime(t));
+    int m = (int) QV4::Value::toInteger(MonthFromTime(t));
     double d = DayWithinYear(t);
     double l = InLeapYear(t);
 
@@ -255,10 +255,10 @@ static inline double MakeTime(double hour, double min, double sec, double ms)
 {
     if (!qIsFinite(hour) || !qIsFinite(min) || !qIsFinite(sec) || !qIsFinite(ms))
         return qQNaN();
-    hour = Primitive::toInteger(hour);
-    min = Primitive::toInteger(min);
-    sec = Primitive::toInteger(sec);
-    ms = Primitive::toInteger(ms);
+    hour = QV4::Value::toInteger(hour);
+    min = QV4::Value::toInteger(min);
+    sec = QV4::Value::toInteger(sec);
+    ms = QV4::Value::toInteger(ms);
     return ((hour * MinutesPerHour + min) * SecondsPerMinute + sec) * msPerSecond + ms;
 }
 
@@ -286,9 +286,9 @@ static double MakeDay(double year, double month, double day)
 {
     if (!qIsFinite(year) || !qIsFinite(month) || !qIsFinite(day))
         return qQNaN();
-    year = Primitive::toInteger(year);
-    month = Primitive::toInteger(month);
-    day = Primitive::toInteger(day);
+    year = QV4::Value::toInteger(year);
+    month = QV4::Value::toInteger(month);
+    day = QV4::Value::toInteger(day);
 
     year += ::floor(month / 12.0);
 
@@ -384,7 +384,7 @@ static inline double TimeClip(double t)
         return qt_qnan();
 
     // +0 looks weird, but is correct. See ES6 20.3.1.15. We must not return -0.
-    return Primitive::toInteger(t) + 0;
+    return QV4::Value::toInteger(t) + 0;
 }
 
 static inline double ParseString(const QString &s, double localTZA)
@@ -792,7 +792,7 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
         t = TimeClip(UTC(t, e->localTZA));
     }
 
-    return Encode(e->newDateObject(Primitive::fromDouble(t)));
+    return Encode(e->newDateObject(Value::fromDouble(t)));
 }
 
 ReturnedValue DateCtor::virtualCall(const FunctionObject *m, const Value *, const Value *, int)
@@ -807,7 +807,7 @@ void DatePrototype::init(ExecutionEngine *engine, Object *ctor)
     Scope scope(engine);
     ScopedObject o(scope);
     ctor->defineReadonlyProperty(engine->id_prototype(), (o = this));
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(7));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(7));
     engine->localTZA = getLocalTZA();
 
     ctor->defineDefaultProperty(QStringLiteral("parse"), method_parse, 1);
@@ -918,7 +918,7 @@ ReturnedValue DatePrototype::method_UTC(const FunctionObject *f, const Value *, 
     double ms    = numArgs >= 7 ? argv[6].toNumber() : 0;
     if (e->hasException)
         return Encode::undefined();
-    double iyear = Primitive::toInteger(year);
+    double iyear = QV4::Value::toInteger(year);
     if (!qIsNaN(year) && iyear >= 0 && iyear <= 99)
         year = 1900 + iyear;
     double t = MakeDate(MakeDay(year, month, day),
@@ -1406,7 +1406,7 @@ ReturnedValue DatePrototype::method_setYear(const FunctionObject *b, const Value
     if (std::isnan(year)) {
         r = qt_qnan();
     } else {
-        if ((Primitive::toInteger(year) >= 0) && (Primitive::toInteger(year) <= 99))
+        if ((QV4::Value::toInteger(year) >= 0) && (QV4::Value::toInteger(year) <= 99))
             year += 1900;
         r = MakeDay(year, MonthFromTime(t), DateFromTime(t));
         r = UTC(MakeDate(r, TimeWithinDay(t)), v4->localTZA);

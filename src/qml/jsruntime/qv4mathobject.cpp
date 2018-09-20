@@ -60,14 +60,14 @@ void Heap::MathObject::init()
     Scope scope(internalClass->engine);
     ScopedObject m(scope, this);
 
-    m->defineReadonlyProperty(QStringLiteral("E"), Primitive::fromDouble(M_E));
-    m->defineReadonlyProperty(QStringLiteral("LN2"), Primitive::fromDouble(M_LN2));
-    m->defineReadonlyProperty(QStringLiteral("LN10"), Primitive::fromDouble(M_LN10));
-    m->defineReadonlyProperty(QStringLiteral("LOG2E"), Primitive::fromDouble(M_LOG2E));
-    m->defineReadonlyProperty(QStringLiteral("LOG10E"), Primitive::fromDouble(M_LOG10E));
-    m->defineReadonlyProperty(QStringLiteral("PI"), Primitive::fromDouble(M_PI));
-    m->defineReadonlyProperty(QStringLiteral("SQRT1_2"), Primitive::fromDouble(M_SQRT1_2));
-    m->defineReadonlyProperty(QStringLiteral("SQRT2"), Primitive::fromDouble(M_SQRT2));
+    m->defineReadonlyProperty(QStringLiteral("E"), Value::fromDouble(M_E));
+    m->defineReadonlyProperty(QStringLiteral("LN2"), Value::fromDouble(M_LN2));
+    m->defineReadonlyProperty(QStringLiteral("LN10"), Value::fromDouble(M_LN10));
+    m->defineReadonlyProperty(QStringLiteral("LOG2E"), Value::fromDouble(M_LOG2E));
+    m->defineReadonlyProperty(QStringLiteral("LOG10E"), Value::fromDouble(M_LOG10E));
+    m->defineReadonlyProperty(QStringLiteral("PI"), Value::fromDouble(M_PI));
+    m->defineReadonlyProperty(QStringLiteral("SQRT1_2"), Value::fromDouble(M_SQRT1_2));
+    m->defineReadonlyProperty(QStringLiteral("SQRT2"), Value::fromDouble(M_SQRT2));
 
     m->defineDefaultProperty(QStringLiteral("abs"), QV4::MathObject::method_abs, 1);
     m->defineDefaultProperty(QStringLiteral("acos"), QV4::MathObject::method_acos, 1);
@@ -293,7 +293,7 @@ ReturnedValue MathObject::method_expm1(const FunctionObject *, const Value *, co
 ReturnedValue MathObject::method_floor(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     double v = argc ? argv[0].toNumber() : qt_qnan();
-    Value result = Primitive::fromDouble(std::floor(v));
+    Value result = Value::fromDouble(std::floor(v));
     result.isInt32();
     RETURN_RESULT(result);
 }
@@ -329,12 +329,12 @@ ReturnedValue MathObject::method_hypot(const FunctionObject *, const Value *, co
     if (bad)
         RETURN_RESULT(Encode(qt_qnan()));
     // Should actually check for {und,ov}erflow, but too fiddly !
-    RETURN_RESULT(Primitive::fromDouble(sqrt(v)));
+    RETURN_RESULT(Value::fromDouble(sqrt(v)));
 #else
     for (int i = 1; i < argc; i++)
         v = std::hypot(v, argv[i].toNumber());
 #endif
-    RETURN_RESULT(Primitive::fromDouble(v));
+    RETURN_RESULT(Value::fromDouble(v));
 }
 
 ReturnedValue MathObject::method_imul(const FunctionObject *, const Value *, const Value *argv, int argc)

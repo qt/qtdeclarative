@@ -114,11 +114,11 @@ ReturnedValue atomicReadModifyWrite(const FunctionObject *f, const Value *argv, 
     if (!buffer)
         return Encode::undefined();
     const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
-    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Value::undefinedValue());
     if (index < 0)
         return Encode::undefined();
 
-    Value v = Primitive::fromReturnedValue((argc > 2 ? argv[2] : Primitive::undefinedValue()).convertedToNumber());
+    Value v = Value::fromReturnedValue((argc > 2 ? argv[2] : Value::undefinedValue()).convertedToNumber());
     if (scope.hasException())
         return Encode::undefined();
 
@@ -148,14 +148,14 @@ ReturnedValue Atomics::method_compareExchange(const FunctionObject *f, const Val
     if (!buffer)
         return Encode::undefined();
     const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
-    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Value::undefinedValue());
     if (index < 0)
         return Encode::undefined();
 
-    Value expected = Primitive::fromReturnedValue((argc > 2 ? argv[2] : Primitive::undefinedValue()).convertedToNumber());
+    Value expected = Value::fromReturnedValue((argc > 2 ? argv[2] : Value::undefinedValue()).convertedToNumber());
     if (scope.hasException())
         return Encode::undefined();
-    Value v = Primitive::fromReturnedValue((argc > 3 ? argv[3] : Primitive::undefinedValue()).convertedToNumber());
+    Value v = Value::fromReturnedValue((argc > 3 ? argv[3] : Value::undefinedValue()).convertedToNumber());
     if (scope.hasException())
         return Encode::undefined();
 
@@ -196,7 +196,7 @@ ReturnedValue Atomics::method_load(const FunctionObject *f, const Value *, const
     if (!buffer)
         return Encode::undefined();
     const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
-    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Value::undefinedValue());
     if (index < 0)
         return Encode::undefined();
 
@@ -221,11 +221,11 @@ ReturnedValue Atomics::method_store(const FunctionObject *f, const Value *, cons
     if (!buffer)
         return Encode::undefined();
     const TypedArray &a = static_cast<const TypedArray &>(argv[0]);
-    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Primitive::undefinedValue());
+    int index = validateAtomicAccess(scope, a, argc > 1 ? argv[1] : Value::undefinedValue());
     if (index < 0)
         return Encode::undefined();
 
-    Value v = Primitive::fromReturnedValue((argc > 2 ? argv[2] : Primitive::undefinedValue()).convertedToNumber());
+    Value v = Value::fromReturnedValue((argc > 2 ? argv[2] : Value::undefinedValue()).convertedToNumber());
     if (scope.hasException())
         return Encode::undefined();
 

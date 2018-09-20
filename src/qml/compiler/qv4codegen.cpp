@@ -968,7 +968,7 @@ bool Codegen::visit(ClassExpression *ast)
             return false;
         r.storeOnStack(heritage.stackSlot());
     } else {
-        Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).loadInAccumulator();
+        Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
         heritage.storeConsumeAccumulator();
     }
 
@@ -1040,7 +1040,7 @@ bool Codegen::visit(ArrayPattern *ast)
             if (args == -1)
                 args = temp;
             if (!arg) {
-                auto c = Reference::fromConst(this, Primitive::emptyValue().asReturnedValue());
+                auto c = Reference::fromConst(this, Value::emptyValue().asReturnedValue());
                 (void) c.storeOnStack(temp);
             } else {
                 RegisterScope scope(this);
@@ -1101,7 +1101,7 @@ bool Codegen::visit(ArrayPattern *ast)
 
     while (it) {
         for (Elision *elision = it->elision; elision; elision = elision->next) {
-            Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).loadInAccumulator();
+            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).loadInAccumulator();
             pushAccumulator();
         }
 
@@ -1485,9 +1485,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
     }
     case QSOperator::BitAnd:
         if (right.isConstant()) {
-            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Primitive::fromReturnedValue(left.constant).toInt32() & rightAsInt;
+                int result = Value::fromReturnedValue(left.constant).toInt32() & rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1503,9 +1503,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitOr:
         if (right.isConstant()) {
-            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Primitive::fromReturnedValue(left.constant).toInt32() | rightAsInt;
+                int result = Value::fromReturnedValue(left.constant).toInt32() | rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1521,9 +1521,9 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         break;
     case QSOperator::BitXor:
         if (right.isConstant()) {
-            int rightAsInt = Primitive::fromReturnedValue(right.constant).toInt32();
+            int rightAsInt = Value::fromReturnedValue(right.constant).toInt32();
             if (left.isConstant()) {
-                int result = Primitive::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
+                int result = Value::fromReturnedValue(left.constant).toInt32() ^ rightAsInt;
                 return Reference::fromConst(this, Encode(result));
             }
             left.loadInAccumulator();
@@ -1541,7 +1541,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::UShrConst ushr;
-            ushr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            ushr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(ushr);
         } else {
             right.loadInAccumulator();
@@ -1554,7 +1554,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShrConst shr;
-            shr.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shr.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(shr);
         } else {
             right.loadInAccumulator();
@@ -1567,7 +1567,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         if (right.isConstant()) {
             left.loadInAccumulator();
             Instruction::ShlConst shl;
-            shl.rhs = Primitive::fromReturnedValue(right.constant).toInt32() & 0x1f;
+            shl.rhs = Value::fromReturnedValue(right.constant).toInt32() & 0x1f;
             bytecodeGenerator->addInstruction(shl);
         } else {
             right.loadInAccumulator();
@@ -1709,7 +1709,7 @@ Codegen::Reference Codegen::jumpBinop(QSOperator::Op oper, Reference &left, Refe
     }
 
     if (right.isConstant() && (oper == QSOperator::Equal || oper == QSOperator::NotEqual)) {
-        Value c = Primitive::fromReturnedValue(right.constant);
+        Value c = Value::fromReturnedValue(right.constant);
         if (c.isNull() || c.isUndefined()) {
             left.loadInAccumulator();
             if (oper == QSOperator::Equal) {
@@ -1979,7 +1979,7 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
         if (it->isSpreadElement) {
-            Reference::fromConst(this, Primitive::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
+            Reference::fromConst(this, Value::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
             ++argc;
         }
         RegisterScope scope(this);
@@ -4279,7 +4279,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
             Instruction::LoadUndefined load;
             codegen->bytecodeGenerator->addInstruction(load);
         } else {
-            Value p = Primitive::fromReturnedValue(constant);
+            Value p = Value::fromReturnedValue(constant);
             if (p.isNumber()) {
                 double d = p.asDouble();
                 int i = static_cast<int>(d);
@@ -4290,7 +4290,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
                         return;
                     }
                     Instruction::LoadInt load;
-                    load.value = Primitive::fromReturnedValue(constant).toInt32();
+                    load.value = Value::fromReturnedValue(constant).toInt32();
                     codegen->bytecodeGenerator->addInstruction(load);
                     return;
                 }

@@ -108,8 +108,8 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     memcpy(gp->stack.values, argv, argc*sizeof(Value));
     gp->cppFrame.init(engine, function, gp->stack.values, argc);
     gp->cppFrame.setupJSFrame(&gp->stack.values[argc], *gf, gf->scope(),
-                              thisObject ? *thisObject : Primitive::undefinedValue(),
-                              Primitive::undefinedValue());
+                              thisObject ? *thisObject : Value::undefinedValue(),
+                              Value::undefinedValue());
 
     gp->cppFrame.push();
 
@@ -134,7 +134,7 @@ void GeneratorPrototype::init(ExecutionEngine *engine, Object *ctor)
 
     ScopedObject ctorProto(scope, engine->newObject(engine->newInternalClass(Object::staticVTable(), engine->functionPrototype())));
 
-    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Primitive::fromInt32(1));
+    ctor->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(1));
     ctor->defineReadonlyProperty(engine->id_prototype(), ctorProto);
 
     ctorProto->defineDefaultProperty(QStringLiteral("constructor"), (v = ctor), Attr_ReadOnly_ButConfigurable);
@@ -158,9 +158,9 @@ ReturnedValue GeneratorPrototype::method_next(const FunctionObject *f, const Val
     Heap::GeneratorObject *gp = g->d();
 
     if (gp->state == GeneratorState::Completed)
-        return IteratorPrototype::createIterResultObject(engine, Primitive::undefinedValue(), true);
+        return IteratorPrototype::createIterResultObject(engine, Value::undefinedValue(), true);
 
-    return g->resume(engine, argc ? argv[0] : Primitive::undefinedValue());
+    return g->resume(engine, argc ? argv[0] : Value::undefinedValue());
 }
 
 ReturnedValue GeneratorPrototype::method_return(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -176,13 +176,13 @@ ReturnedValue GeneratorPrototype::method_return(const FunctionObject *f, const V
         gp->state = GeneratorState::Completed;
 
     if (gp->state == GeneratorState::Completed)
-        return IteratorPrototype::createIterResultObject(engine, argc ? argv[0] : Primitive::undefinedValue(), true);
+        return IteratorPrototype::createIterResultObject(engine, argc ? argv[0] : Value::undefinedValue(), true);
 
     // the bytecode interpreter interprets an exception with empty value as
     // a yield called with return()
-    engine->throwError(Primitive::emptyValue());
+    engine->throwError(Value::emptyValue());
 
-    return g->resume(engine, argc ? argv[0]: Primitive::undefinedValue());
+    return g->resume(engine, argc ? argv[0]: Value::undefinedValue());
 }
 
 ReturnedValue GeneratorPrototype::method_throw(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -194,14 +194,14 @@ ReturnedValue GeneratorPrototype::method_throw(const FunctionObject *f, const Va
 
     Heap::GeneratorObject *gp = g->d();
 
-    engine->throwError(argc ? argv[0]: Primitive::undefinedValue());
+    engine->throwError(argc ? argv[0]: Value::undefinedValue());
 
     if (gp->state == GeneratorState::SuspendedStart || gp->state == GeneratorState::Completed) {
         gp->state = GeneratorState::Completed;
         return Encode::undefined();
     }
 
-    return g->resume(engine, Primitive::undefinedValue());
+    return g->resume(engine, Value::undefinedValue());
 }
 
 ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg) const
