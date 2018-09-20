@@ -226,6 +226,7 @@ private slots:
 
     void importModule();
     void importModuleRelative();
+    void importModuleWithLexicallyScopedVars();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod();
@@ -4392,6 +4393,14 @@ void tst_QJSEngine::importModuleRelative()
         QVERIFY2(!sameModule.isError(), qPrintable(sameModule.toString()));
         QCOMPARE(sameModule.property("value").toInt(), 101);
     }
+}
+
+void tst_QJSEngine::importModuleWithLexicallyScopedVars()
+{
+    QJSEngine engine;
+    QJSValue ns = engine.importModule(QStringLiteral(":/modulewithlexicals.mjs"));
+    QVERIFY2(!ns.isError(), qPrintable(ns.toString()));
+    QCOMPARE(ns.property("main").call().toInt(), 10);
 }
 
 QTEST_MAIN(tst_QJSEngine)
