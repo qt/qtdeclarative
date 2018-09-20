@@ -64,6 +64,11 @@ QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObject *parent)
 {
 }
 
+QQuickShaderEffectMesh::QQuickShaderEffectMesh(QObjectPrivate &dd, QObject *parent)
+    : QObject(dd, parent)
+{
+}
+
 /*!
     \qmltype GridMesh
     \instantiates QQuickGridMesh

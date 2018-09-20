@@ -72,7 +72,7 @@ const char *qtTexCoordAttributeName();
 class QSGGeometry;
 class QRectF;
 
-class QQuickShaderEffectMesh : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffectMesh : public QObject
 {
     Q_OBJECT
 public:
@@ -87,9 +87,12 @@ public:
 Q_SIGNALS:
     // Emitted when the geometry needs to be updated.
     void geometryChanged();
+
+protected:
+    QQuickShaderEffectMesh(QObjectPrivate &dd, QObject *parent = nullptr);
 };
 
-class QQuickGridMesh : public QQuickShaderEffectMesh
+class Q_QUICK_PRIVATE_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
     Q_PROPERTY(QSize resolution READ resolution WRITE setResolution NOTIFY resolutionChanged)
