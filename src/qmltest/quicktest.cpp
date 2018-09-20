@@ -588,6 +588,11 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         }
     }
 
+    if (setup) {
+        // Don't check the return value; it's OK if it doesn't exist.
+        QMetaObject::invokeMethod(setup, "cleanupTestCase");
+    }
+
     // Flush the current logging stream.
     QuickTestResult::setProgramName(nullptr);
     delete app;
