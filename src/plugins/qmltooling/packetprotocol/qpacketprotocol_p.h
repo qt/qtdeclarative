@@ -75,7 +75,6 @@ Q_SIGNALS:
     void error();
 
 private:
-    void aboutToClose();
     void bytesWritten(qint64 bytes);
     void readyToRead();
 };
