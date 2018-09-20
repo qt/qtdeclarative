@@ -85,6 +85,8 @@ static QFont testFont()
 
 void tst_font::systemFont()
 {
+    QSKIP("QTBUG-70063: qmlClearTypeRegistrations() call causes crash");
+
     const QFont *originalSystemFont = QGuiApplicationPrivate::platformTheme()->font(QPlatformTheme::SystemFont);
     if (!originalSystemFont)
         QSKIP("Cannot test the system font on a minimal platform");
