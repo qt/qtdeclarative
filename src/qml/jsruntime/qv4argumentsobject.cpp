@@ -106,6 +106,8 @@ void ArgumentsObject::fullyCreate()
 
     arrayReserve(d()->argCount);
     arrayPut(0, context()->args(), d()->argCount);
+    // Use a sparse array, so that method_getElement() doesn't shortcut
+    initSparseArray();
 
     d()->fullyCreated = true;
 }

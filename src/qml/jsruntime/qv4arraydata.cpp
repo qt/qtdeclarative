@@ -118,8 +118,6 @@ void ArrayData::realloc(Object *o, Type newType, uint requested, bool enforceAtt
         if (d->type() > newType)
             newType = d->type();
     }
-    if (enforceAttributes && newType == Heap::ArrayData::Simple)
-        newType = Heap::ArrayData::Complex;
 
     while (alloc < requested)
         alloc *= 2;
