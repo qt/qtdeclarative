@@ -79,7 +79,7 @@ struct PropertyHash
     PropertyHash &operator=(const PropertyHash &other);
 
     void addEntry(const Entry &entry, int classSize);
-    uint lookup(PropertyKey identifier) const;
+    Entry *lookup(PropertyKey identifier) const;
     int removeIdentifier(PropertyKey identifier, int classSize);
     void detach(bool grow, int classSize);
 };
@@ -126,16 +126,16 @@ inline PropertyHash &PropertyHash::operator=(const PropertyHash &other)
 
 
 
-inline uint PropertyHash::lookup(PropertyKey identifier) const
+inline PropertyHash::Entry *PropertyHash::lookup(PropertyKey identifier) const
 {
     Q_ASSERT(d->entries);
 
     uint idx = identifier.id() % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
-            return d->entries[idx].index;
+            return d->entries + idx;
         if (!d->entries[idx].identifier.isValid())
-            return UINT_MAX;
+            return nullptr;
         ++idx;
         idx %= d->alloc;
     }
@@ -352,13 +352,14 @@ struct InternalClass : Base {
     Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
     static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index = nullptr);
     static void removeMember(QV4::Object *object, PropertyKey identifier);
+
     uint find(const PropertyKey id)
     {
         Q_ASSERT(id.isStringOrSymbol());
 
-        uint index = propertyTable.lookup(id);
-        if (index < size)
-            return index;
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return e->index;
 
         return UINT_MAX;
     }

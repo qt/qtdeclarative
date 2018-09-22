@@ -461,7 +461,8 @@ void InternalClass::addMember(QV4::Object *object, PropertyKey id, PropertyAttri
 {
     Q_ASSERT(id.isStringOrSymbol());
     data.resolve();
-    if (object->internalClass()->propertyTable.lookup(id) < object->internalClass()->size) {
+    PropertyHash::Entry *e = object->internalClass()->propertyTable.lookup(id);
+    if (e && e->index < object->internalClass()->size) {
         changeMember(object, id, data, index);
         return;
     }
@@ -479,7 +480,8 @@ Heap::InternalClass *InternalClass::addMember(PropertyKey identifier, PropertyAt
     Q_ASSERT(identifier.isStringOrSymbol());
     data.resolve();
 
-    if (propertyTable.lookup(identifier) < size)
+    PropertyHash::Entry *e = propertyTable.lookup(identifier);
+    if (e && e->index < size)
         return changeMember(identifier, data, index);
 
     return addMemberImpl(identifier, data, index);
@@ -530,7 +532,7 @@ void InternalClass::removeChildEntry(InternalClass *child)
 void InternalClass::removeMember(QV4::Object *object, PropertyKey identifier)
 {
     Heap::InternalClass *oldClass = object->internalClass();
-    Q_ASSERT(oldClass->propertyTable.lookup(identifier) < oldClass->size);
+    Q_ASSERT(oldClass->propertyTable.lookup(identifier) && oldClass->propertyTable.lookup(identifier)->index < oldClass->size);
 
     Transition temp = { { identifier }, nullptr, Transition::RemoveMember };
     Transition &t = object->internalClass()->lookupOrInsertTransition(temp);
