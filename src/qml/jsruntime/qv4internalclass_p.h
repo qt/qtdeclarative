@@ -314,8 +314,7 @@ struct InternalClassTransition
         PrototypeChange = 0x201,
         ProtoClass = 0x202,
         Sealed = 0x203,
-        Frozen = 0x204,
-        RemoveMember = -1
+        Frozen = 0x204
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -378,7 +377,8 @@ struct InternalClass : Base {
         PropertyHash::Entry *e = propertyTable.lookup(id);
         if (e && e->index < size) {
             PropertyAttributes a = propertyData.at(e->index);
-            return { e->index, e->setterIndex, a };
+            if (!a.isEmpty())
+                return { e->index, e->setterIndex, a };
         }
 
         return { UINT_MAX, UINT_MAX, Attr_Invalid };
@@ -395,8 +395,11 @@ struct InternalClass : Base {
         Q_ASSERT(id.isStringOrSymbol());
 
         PropertyHash::Entry *e = propertyTable.lookup(id);
-        if (e && e->index < size)
-            return { e->index, propertyData.at(e->index) };
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty())
+                return { e->index, a };
+        }
 
         return { UINT_MAX, Attr_Invalid };
     }
@@ -408,11 +411,13 @@ struct InternalClass : Base {
         PropertyHash::Entry *e = propertyTable.lookup(id);
         if (e && e->index < size) {
             PropertyAttributes a = propertyData.at(e->index);
-            if (a.isAccessor()) {
-                Q_ASSERT(e->setterIndex != UINT_MAX);
-                return { e->setterIndex, a };
+            if (!a.isEmpty()) {
+                if (a.isAccessor()) {
+                    Q_ASSERT(e->setterIndex != UINT_MAX);
+                    return { e->setterIndex, a };
+                }
+                return { e->index, a };
             }
-            return { e->index, a };
         }
 
         return { UINT_MAX, Attr_Invalid };
@@ -423,8 +428,10 @@ struct InternalClass : Base {
         Q_ASSERT(id.isStringOrSymbol());
 
         PropertyHash::Entry *e = propertyTable.lookup(id);
-        if (e && e->index < size)
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
             return e->index;
+        }
 
         return UINT_MAX;
     }
@@ -434,8 +441,10 @@ struct InternalClass : Base {
         Q_ASSERT(id.isStringOrSymbol());
 
         PropertyHash::Entry *e = propertyTable.lookup(id);
-        if (e && e->index < size)
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
             return e->index == index;
+        }
 
         return false;
     }

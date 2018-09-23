@@ -364,18 +364,17 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
         while (memberIndex < o->internalClass()->size) {
             PropertyKey n = o->internalClass()->nameMap.at(memberIndex);
             ++memberIndex;
-            if (!n.isStringOrSymbol()) {
+            if (!n.isStringOrSymbol())
                 // accessor properties have a dummy entry with n == 0
                 continue;
-            }
-            if (!iterateOverSymbols && n.isSymbol()) {
+            if (!iterateOverSymbols && n.isSymbol())
                 continue;
-            }
-            if (iterateOverSymbols && !n.isSymbol()) {
+            if (iterateOverSymbols && !n.isSymbol())
                 continue;
-            }
 
             InternalClassEntry e = o->internalClass()->find(n);
+            if (!e.isValid())
+                continue;
             if (pd) {
                 pd->value = *o->propertyData(e.index);
                 if (e.attributes.isAccessor())

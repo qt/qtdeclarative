@@ -364,6 +364,7 @@ struct PropertyAttributes
     bool isEmpty() const { return !m_all; }
 
     uint flags() const { return m_flags; }
+    uint all() const { return m_all; }
 
     bool operator==(PropertyAttributes other) {
         return m_all == other.m_all;
