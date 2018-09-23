@@ -265,9 +265,9 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
         return false;
     QV4::Scoped<QQmlContextWrapper> wrapper(scope, resource);
 
-    uint member = wrapper->internalClass()->find(id);
-    if (member < UINT_MAX)
-        return wrapper->putValue(member, value);
+    auto member = wrapper->internalClass()->find(id);
+    if (member.index < UINT_MAX)
+        return wrapper->putValue(member.index, value);
 
     // It's possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definitely needed.

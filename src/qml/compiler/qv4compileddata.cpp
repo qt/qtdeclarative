@@ -469,8 +469,8 @@ const Value *CompilationUnit::resolveExportRecursively(QV4::String *exportName, 
 
     if (auto localExport = lookupNameInExportTable(data->localExportEntryTable(), data->localExportEntryTableSize, exportName)) {
         ScopedString localName(scope, runtimeStrings[localExport->localName]);
-        uint index = m_module->scope->internalClass->find(localName->toPropertyKey());
-        if (index >= UINT_MAX)
+        uint index = m_module->scope->internalClass->indexOfValueOrGetter(localName->toPropertyKey());
+        if (index == UINT_MAX)
             return nullptr;
         if (index >= m_module->scope->locals.size)
             return imports[index - m_module->scope->locals.size];

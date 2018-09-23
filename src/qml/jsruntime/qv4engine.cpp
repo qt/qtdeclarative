@@ -333,7 +333,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(QV4::StringObject::staticVTable(), objectPrototype());
     ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly);
     classes[Class_StringObject] = ic->changePrototype(stringPrototype()->d());
-    Q_ASSERT(classes[Class_StringObject]->find(id_length()->propertyKey()) == Heap::StringObject::LengthPropertyIndex);
+    Q_ASSERT(classes[Class_StringObject]->verifyIndex(id_length()->propertyKey(), Heap::StringObject::LengthPropertyIndex));
 
     classes[Class_SymbolObject] = newInternalClass(QV4::SymbolObject::staticVTable(), symbolPrototype());
 

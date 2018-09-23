@@ -343,8 +343,9 @@ static void addDummyEntry(InternalClass *newClass, PropertyHash::Entry e)
 Heap::InternalClass *InternalClass::changeMember(PropertyKey identifier, PropertyAttributes data, uint *index)
 {
     data.resolve();
-    uint idx = find(identifier);
-    Q_ASSERT(idx != UINT_MAX);
+    PropertyHash::Entry *e = findEntry(identifier);
+    Q_ASSERT(e && e->index != UINT_MAX);
+    uint idx = e->index;
 
     if (index)
         *index = idx;

@@ -352,8 +352,35 @@ struct InternalClass : Base {
     Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
     static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index = nullptr);
     static void removeMember(QV4::Object *object, PropertyKey identifier);
+    PropertyHash::Entry *findEntry(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
 
-    uint find(const PropertyKey id)
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return e;
+
+        return nullptr;
+    }
+
+    struct IndexAndAttribute {
+        uint index;
+        PropertyAttributes attrs;
+        bool isValid() const { return index != UINT_MAX; }
+    };
+
+    IndexAndAttribute find(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return { e->index, propertyData.at(e->index) };
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    uint indexOfValueOrGetter(const PropertyKey id)
     {
         Q_ASSERT(id.isStringOrSymbol());
 
@@ -362,6 +389,17 @@ struct InternalClass : Base {
             return e->index;
 
         return UINT_MAX;
+    }
+
+    bool verifyIndex(const PropertyKey id, uint index)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return e->index == index;
+
+        return false;
     }
 
     Q_REQUIRED_RESULT InternalClass *sealed();

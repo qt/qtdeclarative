@@ -58,8 +58,8 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
 
     Object::init();
 
-    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->propertyKey()));
-    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->propertyKey()));
+    Q_ASSERT(internalClass->verifyIndex(v4->id_callee()->propertyKey(), CalleePropertyIndex));
+    Q_ASSERT(internalClass->verifyIndex(v4->symbol_iterator()->propertyKey(), SymbolIteratorPropertyIndex));
     setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
     setProperty(v4, CalleePropertyIndex + QV4::Object::GetterOffset, *v4->thrower());
     setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
@@ -69,7 +69,7 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     args->arrayReserve(frame->originalArgumentsCount);
     args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
 
-    Q_ASSERT(LengthPropertyIndex == args->internalClass()->find(v4->id_length()->propertyKey()));
+    Q_ASSERT(args->internalClass()->verifyIndex(v4->id_length()->propertyKey(), LengthPropertyIndex));
     setProperty(v4, LengthPropertyIndex, Value::fromInt32(frame->originalArgumentsCount));
 }
 
@@ -83,11 +83,11 @@ void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
     this->context.set(v4, context->d());
     Q_ASSERT(vtable() == QV4::ArgumentsObject::staticVTable());
 
-    Q_ASSERT(CalleePropertyIndex == internalClass->find(v4->id_callee()->propertyKey()));
+    Q_ASSERT(internalClass->verifyIndex(v4->id_callee()->propertyKey(), CalleePropertyIndex));
     setProperty(v4, CalleePropertyIndex, context->d()->function);
-    Q_ASSERT(LengthPropertyIndex == internalClass->find(v4->id_length()->propertyKey()));
+    Q_ASSERT(internalClass->verifyIndex(v4->id_length()->propertyKey(), LengthPropertyIndex));
     setProperty(v4, LengthPropertyIndex, Value::fromInt32(context->argc()));
-    Q_ASSERT(SymbolIteratorPropertyIndex == internalClass->find(v4->symbol_iterator()->propertyKey()));
+    Q_ASSERT(internalClass->verifyIndex(v4->symbol_iterator()->propertyKey(), SymbolIteratorPropertyIndex));
     setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
 
     fullyCreated = false;

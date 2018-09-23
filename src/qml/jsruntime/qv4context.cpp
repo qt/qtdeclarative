@@ -220,7 +220,7 @@ bool ExecutionContext::deleteProperty(String *name)
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            uint index = c->internalClass->find(id);
+            uint index = c->internalClass->indexOfValueOrGetter(id);
             if (index < UINT_MAX)
                 // ### throw in strict mode?
                 return false;
@@ -286,7 +286,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
         case Heap::ExecutionContext::Type_BlockContext:
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
-            uint index = c->internalClass->find(id);
+            uint index = c->internalClass->indexOfValueOrGetter(id);
             if (index < UINT_MAX) {
                 static_cast<Heap::CallContext *>(c)->locals.set(engine, index, value);
                 return NoError;
@@ -295,7 +295,7 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             Q_FALLTHROUGH();
         case Heap::ExecutionContext::Type_GlobalContext:
             if (ctx->activation) {
-                uint member = ctx->activation->internalClass->find(id);
+                uint member = ctx->activation->internalClass->indexOfValueOrGetter(id);
                 if (member < UINT_MAX) {
                     Scope scope(engine);
                     ScopedObject a(scope, ctx->activation);
@@ -332,7 +332,7 @@ ReturnedValue ExecutionContext::getProperty(String *name)
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
 
-            uint index = c->internalClass->find(id);
+            uint index = c->internalClass->indexOfValueOrGetter(id);
             if (index < UINT_MAX)
                 return c->locals[index].asReturnedValue();
             Q_FALLTHROUGH();
@@ -382,7 +382,7 @@ ReturnedValue ExecutionContext::getPropertyAndBase(String *name, Value *base)
         case Heap::ExecutionContext::Type_CallContext: {
             Heap::CallContext *c = static_cast<Heap::CallContext *>(ctx);
 
-            uint index = c->internalClass->find(id);
+            uint index = c->internalClass->indexOfValueOrGetter(id);
             if (index < UINT_MAX)
                 return c->locals[index].asReturnedValue();
             Q_FALLTHROUGH();
