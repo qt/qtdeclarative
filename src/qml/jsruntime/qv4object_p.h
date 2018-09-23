@@ -159,8 +159,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
-    void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
-    void setProperty(uint index, const Property *p);
+    void getProperty(const InternalClassEntry &entry, Property *p) const;
+    void setProperty(const InternalClassEntry &entry, const Property *p);
     void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
     void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
     void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
@@ -384,7 +384,7 @@ protected:
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
 
 private:
-    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
+    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, const InternalClassEntry *memberEntry, const Property *p, PropertyAttributes attrs);
     ReturnedValue internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const;
     bool internalPut(PropertyKey id, const Value &value, Value *receiver);
     bool internalDeleteProperty(PropertyKey id);

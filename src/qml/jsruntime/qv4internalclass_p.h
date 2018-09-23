@@ -63,6 +63,13 @@ namespace QV4 {
 struct VTable;
 struct MarkStack;
 
+struct InternalClassEntry {
+    uint index;
+    uint setterIndex;
+    PropertyAttributes attributes;
+    bool isValid() const { return !attributes.isEmpty(); }
+};
+
 struct PropertyHashData;
 struct PropertyHash
 {
@@ -347,10 +354,10 @@ struct InternalClass : Base {
     Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
 
-    static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
-    Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
-    static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index = nullptr);
+    static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry);
+    Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry = nullptr);
     static void removeMember(QV4::Object *object, PropertyKey identifier);
     PropertyHash::Entry *findEntry(const PropertyKey id)
     {
@@ -361,6 +368,19 @@ struct InternalClass : Base {
             return e;
 
         return nullptr;
+    }
+
+    InternalClassEntry find(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            return { e->index, (a.isAccessor() ? e->index + 1 : UINT_MAX), a };
+        }
+
+        return { UINT_MAX, UINT_MAX, Attr_Invalid };
     }
 
     struct IndexAndAttribute {
@@ -439,7 +459,7 @@ struct InternalClass : Base {
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
-    InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, uint *index);
+    InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry);
 
     void removeChildEntry(InternalClass *child);
     friend struct ExecutionEngine;

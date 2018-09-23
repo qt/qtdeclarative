@@ -341,15 +341,20 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[BooleanProto] = memoryManager->allocate<BooleanPrototype>();
     jsObjects[DateProto] = memoryManager->allocate<DatePrototype>();
 
-    uint index;
+#ifdef QT_NO_DEBUG
+    InternalClassEntry *index = nullptr;
+#else
+    InternalClassEntry _index;
+    auto *index = &_index;
+#endif
     ic = newInternalClass(QV4::FunctionPrototype::staticVTable(), objectPrototype());
     jsObjects[FunctionProto] = memoryManager->allocObject<FunctionPrototype>(ic->d());
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
     classes[Class_FunctionObject] = ic->d();
-    ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::ArrowFunction::Index_Name);
-    ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly_ButConfigurable, &index);
-    Q_ASSERT(index == Heap::ArrowFunction::Index_Length);
+    ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, index);
+    Q_ASSERT(index->index == Heap::ArrowFunction::Index_Name);
+    ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly_ButConfigurable, index);
+    Q_ASSERT(index->index == Heap::ArrowFunction::Index_Length);
     classes[Class_ArrowFunction] = ic->changeVTable(ArrowFunction::staticVTable());
     ic = ic->changeVTable(ScriptFunction::staticVTable());
     classes[Class_ScriptFunction] = ic->d();
@@ -363,8 +368,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     classes[Class_GeneratorFunction] = ic->d();
     ic = ic->changeVTable(MemberGeneratorFunction::staticVTable());
     classes[Class_MemberGeneratorFunction] = ic->d();
-    classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->propertyKey(), Attr_NotEnumerable, &index);
-    Q_ASSERT(index == Heap::FunctionObject::Index_ProtoConstructor);
+    classes[Class_ObjectProto] = classes[Class_Object]->addMember(id_constructor()->propertyKey(), Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == Heap::FunctionObject::Index_ProtoConstructor);
 
     jsObjects[GeneratorProto] = memoryManager->allocObject<GeneratorPrototype>(classes[Class_Object]);
     classes[Class_GeneratorObject] = newInternalClass(QV4::GeneratorObject::staticVTable(), generatorPrototype());
@@ -372,33 +377,34 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ScopedString str(scope);
     classes[Class_RegExp] = classes[Class_Empty]->changeVTable(QV4::RegExp::staticVTable());
     ic = newInternalClass(QV4::RegExpObject::staticVTable(), objectPrototype());
-    ic = ic->addMember(id_lastIndex()->propertyKey(), Attr_NotEnumerable|Attr_NotConfigurable, &index);
-    Q_ASSERT(index == RegExpObject::Index_LastIndex);
+    ic = ic->addMember(id_lastIndex()->propertyKey(), Attr_NotEnumerable|Attr_NotConfigurable, index);
+    Q_ASSERT(index->index == RegExpObject::Index_LastIndex);
     jsObjects[RegExpProto] = memoryManager->allocObject<RegExpPrototype>(classes[Class_Object]);
     classes[Class_RegExpObject] = ic->changePrototype(regExpPrototype()->d());
 
-    ic = classes[Class_ArrayObject]->addMember(id_index()->propertyKey(), Attr_Data, &index);
-    Q_ASSERT(index == RegExpObject::Index_ArrayIndex);
-    classes[Class_RegExpExecArray] = ic->addMember(id_input()->propertyKey(), Attr_Data, &index);
-    Q_ASSERT(index == RegExpObject::Index_ArrayInput);
+    ic = classes[Class_ArrayObject]->addMember(id_index()->propertyKey(), Attr_Data, index);
+    Q_ASSERT(index->index == RegExpObject::Index_ArrayIndex);
+    classes[Class_RegExpExecArray] = ic->addMember(id_input()->propertyKey(), Attr_Data, index);
+    Q_ASSERT(index->index == RegExpObject::Index_ArrayInput);
 
     ic = newInternalClass(ErrorObject::staticVTable(), nullptr);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("stack")))->propertyKey(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorObject::Index_Stack);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("fileName")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorObject::Index_FileName);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("lineNumber")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
+    ic = ic->addMember((str = newIdentifier(QStringLiteral("stack")))->propertyKey(), Attr_Accessor|Attr_NotConfigurable|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorObject::Index_Stack);
+    Q_ASSERT(index->setterIndex == ErrorObject::Index_StackSetter);
+    ic = ic->addMember((str = newIdentifier(QStringLiteral("fileName")))->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorObject::Index_FileName);
+    ic = ic->addMember((str = newIdentifier(QStringLiteral("lineNumber")))->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
     classes[Class_ErrorObject] = ic->d();
-    Q_ASSERT(index == ErrorObject::Index_LineNumber);
-    classes[Class_ErrorObjectWithMessage] = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorObject::Index_Message);
+    Q_ASSERT(index->index == ErrorObject::Index_LineNumber);
+    classes[Class_ErrorObjectWithMessage] = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorObject::Index_Message);
     ic = newInternalClass(Object::staticVTable(), objectPrototype());
-    ic = ic->addMember(id_constructor()->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorPrototype::Index_Constructor);
-    ic = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorPrototype::Index_Message);
-    classes[Class_ErrorProto] = ic->addMember(id_name()->propertyKey(), Attr_Data|Attr_NotEnumerable, &index);
-    Q_ASSERT(index == ErrorPrototype::Index_Name);
+    ic = ic->addMember(id_constructor()->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorPrototype::Index_Constructor);
+    ic = ic->addMember((str = newIdentifier(QStringLiteral("message")))->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorPrototype::Index_Message);
+    classes[Class_ErrorProto] = ic->addMember(id_name()->propertyKey(), Attr_Data|Attr_NotEnumerable, index);
+    Q_ASSERT(index->index == ErrorPrototype::Index_Name);
 
     classes[Class_ProxyObject] = classes[Class_Empty]->changeVTable(ProxyObject::staticVTable());
     classes[Class_ProxyFunctionObject] = classes[Class_Empty]->changeVTable(ProxyFunctionObject::staticVTable());

@@ -299,24 +299,24 @@ static void removeFromPropertyData(QV4::Object *object, int idx, bool accessor =
         o->setProperty(v4, size + 1, Value::undefinedValue());
 }
 
-void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)
+void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry)
 {
     Q_ASSERT(id.isStringOrSymbol());
-    uint idx;
+    InternalClassEntry idx;
     Heap::InternalClass *oldClass = object->internalClass();
     Heap::InternalClass *newClass = oldClass->changeMember(id, data, &idx);
-    if (index)
-        *index = idx;
+    if (entry)
+        *entry = idx;
 
     uint oldSize = oldClass->size;
     object->setInternalClass(newClass);
     // don't use oldClass anymore, it could be GC'ed
     if (newClass->size > oldSize) {
         Q_ASSERT(newClass->size == oldSize + 1);
-        insertHoleIntoPropertyData(object, idx);
+        insertHoleIntoPropertyData(object, idx.setterIndex - 1);
     } else if (newClass->size < oldSize) {
         Q_ASSERT(newClass->size == oldSize - 1);
-        removeFromPropertyData(object, idx + 1);
+        removeFromPropertyData(object, idx.index + 1);
     }
 }
 
@@ -340,15 +340,18 @@ static void addDummyEntry(InternalClass *newClass, PropertyHash::Entry e)
     ++newClass->size;
 }
 
-Heap::InternalClass *InternalClass::changeMember(PropertyKey identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::changeMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry)
 {
     data.resolve();
     PropertyHash::Entry *e = findEntry(identifier);
     Q_ASSERT(e && e->index != UINT_MAX);
     uint idx = e->index;
 
-    if (index)
-        *index = idx;
+    if (entry) {
+        entry->index = idx;
+        entry->setterIndex = data.isAccessor() ? idx + 1 : UINT_MAX;
+        entry->attributes = data;
+    }
 
     if (data == propertyData.at(idx))
         return static_cast<Heap::InternalClass *>(this);
@@ -458,43 +461,42 @@ Heap::InternalClass *InternalClass::nonExtensible()
     return newClass;
 }
 
-void InternalClass::addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index)
+void InternalClass::addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry)
 {
     Q_ASSERT(id.isStringOrSymbol());
     data.resolve();
     PropertyHash::Entry *e = object->internalClass()->propertyTable.lookup(id);
     if (e && e->index < object->internalClass()->size) {
-        changeMember(object, id, data, index);
+        changeMember(object, id, data, entry);
         return;
     }
 
-    uint idx;
-    Heap::InternalClass *newClass = object->internalClass()->addMemberImpl(id, data, &idx);
-    if (index)
-        *index = idx;
-
+    Heap::InternalClass *newClass = object->internalClass()->addMemberImpl(id, data, entry);
     object->setInternalClass(newClass);
 }
 
-Heap::InternalClass *InternalClass::addMember(PropertyKey identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::addMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry)
 {
     Q_ASSERT(identifier.isStringOrSymbol());
     data.resolve();
 
     PropertyHash::Entry *e = propertyTable.lookup(identifier);
     if (e && e->index < size)
-        return changeMember(identifier, data, index);
+        return changeMember(identifier, data, entry);
 
-    return addMemberImpl(identifier, data, index);
+    return addMemberImpl(identifier, data, entry);
 }
 
-Heap::InternalClass *InternalClass::addMemberImpl(PropertyKey identifier, PropertyAttributes data, uint *index)
+Heap::InternalClass *InternalClass::addMemberImpl(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry)
 {
     Transition temp = { { identifier }, nullptr, (int)data.flags() };
     Transition &t = lookupOrInsertTransition(temp);
 
-    if (index)
-        *index = size;
+    if (entry) {
+        entry->index = size;
+        entry->setterIndex = data.isAccessor() ? size + 1 : UINT_MAX;
+        entry->attributes = data;
+    }
 
     if (t.lookup)
         return t.lookup;

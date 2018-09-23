@@ -59,10 +59,11 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
     Object::init();
 
     Q_ASSERT(internalClass->verifyIndex(v4->id_callee()->propertyKey(), CalleePropertyIndex));
+    Q_ASSERT(internalClass->findValueOrSetter(v4->id_callee()->propertyKey()).index == CalleeSetterPropertyIndex);
     Q_ASSERT(internalClass->verifyIndex(v4->symbol_iterator()->propertyKey(), SymbolIteratorPropertyIndex));
     setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
     setProperty(v4, CalleePropertyIndex, *v4->thrower());
-    setProperty(v4, CalleePropertyIndex + QV4::Object::SetterOffset, *v4->thrower());
+    setProperty(v4, CalleeSetterPropertyIndex, *v4->thrower());
 
     Scope scope(v4);
     Scoped<QV4::StrictArgumentsObject> args(scope, this);
