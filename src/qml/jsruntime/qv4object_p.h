@@ -197,7 +197,7 @@ struct Q_QML_EXPORT Object: Managed {
     }
     static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
 
-    bool putValue(uint memberIndex, const Value &value);
+    bool putValue(uint memberIndex, PropertyAttributes attrs, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(StringOrSymbol *name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable) {

@@ -50,7 +50,7 @@ using namespace QV4;
 void Lookup::resolveProtoGetter(PropertyKey name, const Heap::Object *proto)
 {
     while (proto) {
-        auto index = proto->internalClass->find(name);
+        auto index = proto->internalClass->findValueOrGetter(name);
         if (index.isValid()) {
             PropertyAttributes attrs = index.attrs;
             protoLookup.data = proto->propertyData(index.index);
@@ -77,7 +77,7 @@ ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *objec
         return getter(this, engine, *object);
     }
 
-    auto index = obj->internalClass->find(name);
+    auto index = obj->internalClass->findValueOrGetter(name);
     if (index.isValid()) {
         PropertyAttributes attrs = index.attrs;
         uint nInline = obj->vtable()->nInlineProperties;
@@ -478,9 +478,10 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
 
     Heap::InternalClass *c = object->internalClass();
     PropertyKey key = name->toPropertyKey();
-    auto idx = c->find(key);
+    auto idx = c->findValueOrSetter(key);
     if (idx.isValid()) {
         if (object->isArrayObject() && idx.index == Heap::ArrayObject::LengthPropertyIndex) {
+            Q_ASSERT(!idx.attrs.isAccessor());
             setter = arrayLengthSetter;
             return setter(this, engine, *object, value);
         } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
@@ -506,8 +507,8 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
         setter = setterFallback;
         return true;
     }
-    idx = object->internalClass()->find(key);
-    if (!idx.isValid()) { // ### can this even happen?
+    idx = object->internalClass()->findValueOrSetter(key);
+    if (!idx.isValid() || idx.attrs.isAccessor()) { // ### can this even happen?
         setter = setterFallback;
         return false;
     }

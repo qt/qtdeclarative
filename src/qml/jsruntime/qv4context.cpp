@@ -295,11 +295,11 @@ ExecutionContext::Error ExecutionContext::setProperty(String *name, const Value 
             Q_FALLTHROUGH();
         case Heap::ExecutionContext::Type_GlobalContext:
             if (ctx->activation) {
-                uint member = ctx->activation->internalClass->indexOfValueOrGetter(id);
-                if (member < UINT_MAX) {
+                auto member = ctx->activation->internalClass->findValueOrSetter(id);
+                if (member.index < UINT_MAX) {
                     Scope scope(engine);
                     ScopedObject a(scope, ctx->activation);
-                    if (!a->putValue(member, value))
+                    if (!a->putValue(member.index, member.attrs, value))
                         return TypeError;
                     return NoError;
                 }

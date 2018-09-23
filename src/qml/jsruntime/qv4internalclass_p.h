@@ -369,13 +369,26 @@ struct InternalClass : Base {
         bool isValid() const { return index != UINT_MAX; }
     };
 
-    IndexAndAttribute find(const PropertyKey id)
+    IndexAndAttribute findValueOrGetter(const PropertyKey id)
     {
         Q_ASSERT(id.isStringOrSymbol());
 
         PropertyHash::Entry *e = propertyTable.lookup(id);
         if (e && e->index < size)
             return { e->index, propertyData.at(e->index) };
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    IndexAndAttribute findValueOrSetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            return { a.isAccessor() ? e->index + 1 : e->index, a };
+        }
 
         return { UINT_MAX, Attr_Invalid };
     }
