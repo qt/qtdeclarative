@@ -76,6 +76,7 @@ struct PropertyHash
     struct Entry {
         PropertyKey identifier;
         uint index;
+        uint setterIndex;
     };
 
     PropertyHashData *d;
@@ -377,7 +378,7 @@ struct InternalClass : Base {
         PropertyHash::Entry *e = propertyTable.lookup(id);
         if (e && e->index < size) {
             PropertyAttributes a = propertyData.at(e->index);
-            return { e->index, (a.isAccessor() ? e->index + 1 : UINT_MAX), a };
+            return { e->index, e->setterIndex, a };
         }
 
         return { UINT_MAX, UINT_MAX, Attr_Invalid };
@@ -407,7 +408,11 @@ struct InternalClass : Base {
         PropertyHash::Entry *e = propertyTable.lookup(id);
         if (e && e->index < size) {
             PropertyAttributes a = propertyData.at(e->index);
-            return { a.isAccessor() ? e->index + 1 : e->index, a };
+            if (a.isAccessor()) {
+                Q_ASSERT(e->setterIndex != UINT_MAX);
+                return { e->setterIndex, a };
+            }
+            return { e->index, a };
         }
 
         return { UINT_MAX, Attr_Invalid };
