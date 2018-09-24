@@ -61,7 +61,6 @@ namespace Heap {
 
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
-    Member(class, Pointer, MemberData *, mappedArguments) \
     Member(class, NoMark, bool, fullyCreated) \
     Member(class, NoMark, uint, argCount) \
     Member(class, NoMark, quint64, mapped)
