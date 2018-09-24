@@ -191,7 +191,6 @@ void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor,
 
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
     : gadgetPtr(QMetaType::create(typeId))
-    , typeId(typeId)
     , metaType(typeId)
 {
     QObjectPrivate *op = QObjectPrivate::get(this);
@@ -230,12 +229,12 @@ void QQmlValueType::write(QObject *obj, int idx, QQmlPropertyData::WriteFlags fl
 QVariant QQmlValueType::value()
 {
     Q_ASSERT(gadgetPtr);
-    return QVariant(typeId, gadgetPtr);
+    return QVariant(metaType.id(), gadgetPtr);
 }
 
 void QQmlValueType::setValue(const QVariant &value)
 {
-    Q_ASSERT(typeId == value.userType());
+    Q_ASSERT(metaType.id() == value.userType());
     metaType.destruct(gadgetPtr);
     metaType.construct(gadgetPtr, value.constData());
 }

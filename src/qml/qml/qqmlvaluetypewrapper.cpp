@@ -105,7 +105,7 @@ void Heap::QQmlValueTypeWrapper::destroy()
 
 void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
 {
-    Q_ASSERT(valueType->typeId == value.userType());
+    Q_ASSERT(valueType->metaType.id() == value.userType());
     if (gadgetPtr)
         valueType->metaType.destruct(gadgetPtr);
     if (!gadgetPtr)
@@ -116,7 +116,7 @@ void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 {
     Q_ASSERT(gadgetPtr);
-    return QVariant(valueType->typeId, gadgetPtr);
+    return QVariant(valueType->metaType.id(), gadgetPtr);
 }
 
 
@@ -221,7 +221,7 @@ bool QQmlValueTypeWrapper::toGadget(void *data) const
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             return false;
-    const int typeId = d()->valueType->typeId;
+    const int typeId = d()->valueType->metaType.id();
     QMetaType::destruct(typeId, data);
     QMetaType::construct(typeId, data, d()->gadgetPtr);
     return true;
@@ -305,7 +305,7 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 
 int QQmlValueTypeWrapper::typeId() const
 {
-    return d()->valueType->typeId;
+    return d()->valueType->metaType.id();
 }
 
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
@@ -352,10 +352,10 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
     // Prepare a buffer to pass to QMetaType::convert()
     QString convertResult;
     convertResult.~QString();
-    if (QMetaType::convert(w->d()->gadgetPtr, w->d()->valueType->typeId, &convertResult, QMetaType::QString)) {
+    if (QMetaType::convert(w->d()->gadgetPtr, w->d()->valueType->metaType.id(), &convertResult, QMetaType::QString)) {
         result = convertResult;
     } else {
-        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType->typeId))
+        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType->metaType.id()))
                 + QLatin1Char('(');
         const QMetaObject *mo = w->d()->propertyCache()->metaObject();
         const int propCount = mo->propertyCount();

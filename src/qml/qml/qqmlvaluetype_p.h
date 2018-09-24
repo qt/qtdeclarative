@@ -84,7 +84,6 @@ private:
     void *gadgetPtr;
 
 public:
-    int typeId;
     QMetaType metaType;
 };
 
