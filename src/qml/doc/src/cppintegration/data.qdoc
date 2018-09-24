@@ -284,6 +284,9 @@ In particular, QML currently supports:
   \li \c {std::vector<bool>}
 \endlist
 
+and all registered QList, QVector, QQueue, QStack, QSet, QLinkedList, std::list,
+std::vector that contain a type marked with \l Q_DECLARE_METATYPE.
+
 These sequence types are implemented directly in terms of the underlying C++
 sequence. There are two ways in which such sequences can be exposed to QML:
 as a Q_PROPERTY of the given sequence type; or as the return type of a

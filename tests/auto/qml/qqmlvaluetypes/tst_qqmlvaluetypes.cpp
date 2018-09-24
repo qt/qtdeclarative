@@ -90,6 +90,7 @@ private slots:
     void customValueTypeInQml();
     void gadgetInheritance();
     void gadgetTemplateInheritance();
+    void sequences();
     void toStringConversion();
     void enumerableProperties();
     void enumProperties();
@@ -1590,6 +1591,7 @@ struct BaseGadget
     Q_PROPERTY(int baseProperty READ baseProperty WRITE setBaseProperty)
 public:
     BaseGadget() : m_baseProperty(0) {}
+    BaseGadget(int initValue) : m_baseProperty(initValue) {}
 
     int baseProperty() const { return m_baseProperty; }
     void setBaseProperty(int value) { m_baseProperty = value; }
@@ -1686,6 +1688,39 @@ void tst_qqmlvaluetypes::gadgetTemplateInheritance()
     QCOMPARE(value.property("baseProperty").toInt(), 42);
 }
 
+void tst_qqmlvaluetypes::sequences()
+{
+    QJSEngine engine;
+    {
+        QList<BaseGadget> gadgetList{1, 4, 7, 8, 15};
+        QJSValue value = engine.toScriptValue(gadgetList);
+        QCOMPARE(value.property("length").toInt(), gadgetList.length());
+        for (int i = 0; i < gadgetList.length(); ++i)
+            QCOMPARE(value.property(i).property("baseProperty").toInt(), gadgetList.at(i).baseProperty());
+    }
+    {
+        std::vector<BaseGadget> container{1, 4, 7, 8, 15};
+        QJSValue value = engine.toScriptValue(container);
+        QCOMPARE(value.property("length").toInt(), int(container.size()));
+        for (size_t i = 0; i < container.size(); ++i)
+            QCOMPARE(value.property(i).property("baseProperty").toInt(), container.at(i).baseProperty());
+    }
+    {
+        QVector<QChar> qcharVector{1, 4, 42, 8, 15};
+        QJSValue value = engine.toScriptValue(qcharVector);
+        QCOMPARE(value.property("length").toInt(), qcharVector.length());
+        for (int i = 0; i < qcharVector.length(); ++i)
+            QCOMPARE(value.property(i).toInt(), qcharVector.at(i));
+    }
+    {
+        MyTypeObject a, b, c;
+        QSet<QObject*> objSet{&a, &b, &c};
+        QJSValue value = engine.toScriptValue(objSet);
+        QCOMPARE(value.property("length").toInt(), objSet.size());
+        for (int i = 0; i < objSet.size(); ++i)
+            QCOMPARE(value.property(i).property("point").property("x").toInt(), a.point().x());
+    }
+}
 struct StringLessGadget {
     Q_GADGET
 };

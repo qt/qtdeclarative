@@ -1540,6 +1540,22 @@ static QV4::ReturnedValue variantListToJS(QV4::ExecutionEngine *v4, const QVaria
     return a.asReturnedValue();
 }
 
+// Converts a QSequentialIterable to JS.
+// The result is a new Array object with length equal to the length
+// of the QSequentialIterable, and the elements being the QSequentialIterable's
+// elements converted to JS, recursively.
+static QV4::ReturnedValue sequentialIterableToJS(QV4::ExecutionEngine *v4, const QSequentialIterable &lst)
+{
+    QV4::Scope scope(v4);
+    QV4::ScopedArrayObject a(scope, v4->newArrayObject());
+    a->arrayReserve(lst.size());
+    QV4::ScopedValue v(scope);
+    for (int i = 0; i < lst.size(); i++)
+        a->arrayPut(i, (v = variantToJS(v4, lst.at(i))));
+    a->setArrayLengthUnchecked(lst.size());
+    return a.asReturnedValue();
+}
+
 // Converts a QVariantMap to JS.
 // The result is a new Object object with property names being
 // the keys of the QVariantMap, and values being the values of
@@ -1647,6 +1663,11 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
             if (mt.flags() & QMetaType::IsGadget) {
                 Q_ASSERT(mt.metaObject());
                 return QV4::QQmlValueTypeWrapper::create(this, QVariant(type, data), mt.metaObject(), type);
+            }
+            if (QMetaType::hasRegisteredConverterFunction(type, qMetaTypeId<QtMetaTypePrivate::QSequentialIterableImpl>())) {
+                auto v = QVariant(type, data);
+                QSequentialIterable lst = v.value<QSequentialIterable>();
+                return sequentialIterableToJS(this, lst);
             }
             // Fall back to wrapping in a QVariant.
             return QV4::Encode(newVariantObject(QVariant(type, data)));
