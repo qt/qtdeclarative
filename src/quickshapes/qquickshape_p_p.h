@@ -182,7 +182,7 @@ public:
     QQuickShape::ContainsMode containsMode = QQuickShape::BoundingRectContains;
     bool spChanged = false;
     bool async = false;
-    bool enableVendorExts = true;
+    bool enableVendorExts = false;
     bool syncTimingActive = false;
 };
 

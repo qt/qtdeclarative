@@ -577,10 +577,10 @@ void QQuickShapePath::resetFillGradient()
 
     \li When running with the default, OpenGL backend of Qt Quick, both the
     generic, triangulation-based and the NVIDIA-specific
-    \c{GL_NV_path_rendering} methods are available. The choice is made at
-    runtime, depending on the graphics driver's capabilities. When this is not
-    desired, applications can force using the generic method by setting the
-    Shape.vendorExtensionsEnabled property to \c false.
+    \c{GL_NV_path_rendering} methods are available. By default only the generic
+    approach is used. Setting Shape.vendorExtensionsEnabled property to \c true
+    leads to using NV_path_rendering on NVIDIA systems, and the generic method
+    on others.
 
     \li The \c software backend is fully supported. The path is rendered via
     QPainter::strokePath() and QPainter::fillPath() in this case.
@@ -624,9 +624,8 @@ void QQuickShapePath::resetFillGradient()
 
     \li As a general rule, scenes should avoid using separate Shape items when
     it is not absolutely necessary. Prefer using one Shape item with multiple
-    ShapePath elements over multiple Shape items. Scenes that cannot avoid
-    using a large number of individual Shape items should consider setting
-    Shape.vendorExtensionsEnabled to \c false.
+    ShapePath elements over multiple Shape items.
+
     \endlist
 
     \sa {Qt Quick Examples - Shapes}, Path, PathMove, PathLine, PathQuad, PathCubic, PathArc, PathSvg
@@ -750,11 +749,18 @@ void QQuickShape::setAsynchronous(bool async)
     \qmlproperty bool QtQuick.Shapes::Shape::vendorExtensionsEnabled
 
     This property controls the usage of non-standard OpenGL extensions like
-    \c GL_NV_path_rendering. To disable Shape.NvprRenderer and force a uniform
-    behavior regardless of the graphics card and drivers, set this property to
-    \c false.
+    \c GL_NV_path_rendering.
 
-    The default value is \c true.
+    The default value is \c false.
+
+    As of Qt 5.12 Shape.NvprRenderer is disabled by default and a uniform
+    behavior, based on triangulating the path and generating QSGGeometryNode
+    instances, is used regardless of the graphics card and drivers. To enable
+    using vendor-specific path rendering approaches set the value to \c true.
+    Depending on the platform and content, this can lead to improved
+    performance. Setting the value to \c true is safe in any case since
+    rendering falls back to the default method when the vendor-specific
+    approach, such as \c GL_NV_path_rendering, is not supported at run time.
  */
 
 bool QQuickShape::vendorExtensionsEnabled() const
