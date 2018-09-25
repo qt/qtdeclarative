@@ -118,7 +118,7 @@ ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *
     return v->asReturnedValue();
 }
 
-PropertyAttributes Module::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes Module::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     if (id.isSymbol())
         return Object::virtualGetOwnProperty(m, id, p);

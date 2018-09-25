@@ -161,22 +161,6 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 //---------------------------------------------------------------------------
 
 /*!
-    \qmltype VisualDataModel
-    \instantiates QQmlDelegateModel
-    \inqmlmodule QtQuick
-    \ingroup qtquick-models
-    \brief Encapsulates a model and delegate.
-
-    The VisualDataModel type encapsulates a model and the delegate that will
-    be instantiated for items in a model.
-
-    This type is provided by the \l{Qt QML} module due to compatibility reasons.
-    The same implementation is now primarily available as DelegateModel in the
-    \l{Qt QML Models QML Types}{Qt QML Models} module.
-
-    \sa {QtQml.Models::DelegateModel}
-*/
-/*!
     \qmltype DelegateModel
     \instantiates QQmlDelegateModel
     \inqmlmodule QtQml.Models
@@ -194,10 +178,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
     The example below illustrates using a DelegateModel with a ListView.
 
-    \snippet delegatemodel/visualdatamodel.qml 0
-
-    \note This type is also available as \l VisualDataModel in the \l{Qt QML}
-    module due to compatibility reasons.
+    \snippet delegatemodel/delegatemodel.qml 0
 */
 
 QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
@@ -509,10 +490,10 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     the new directory's contents.
 
     \c main.cpp:
-    \snippet delegatemodel/visualdatamodel_rootindex/main.cpp 0
+    \snippet delegatemodel/delegatemodel_rootindex/main.cpp 0
 
     \c view.qml:
-    \snippet delegatemodel/visualdatamodel_rootindex/view.qml 0
+    \snippet delegatemodel/delegatemodel_rootindex/view.qml 0
 
     If the \l model is a QAbstractItemModel subclass, the delegate can also
     reference a \c hasModelChildren property (optionally qualified by a
@@ -719,7 +700,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     The following example illustrates using groups to select items in a model.
 
-    \snippet delegatemodel/visualdatagroup.qml 0
+    \snippet delegatemodel/delegatemodelgroup.qml 0
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
@@ -737,7 +718,7 @@ QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
 /*!
     \qmlproperty DelegateModelGroup QtQml.Models::DelegateModel::items
 
-    This property holds visual data model's default group to which all new items are added.
+    This property holds default group to which all new items are added.
 */
 
 QQmlDelegateModelGroup *QQmlDelegateModel::items()
@@ -749,7 +730,7 @@ QQmlDelegateModelGroup *QQmlDelegateModel::items()
 /*!
     \qmlproperty DelegateModelGroup QtQml.Models::DelegateModel::persistedItems
 
-    This property holds visual data model's persisted items group.
+    This property holds delegate model's persisted items group.
 
     Items in this group are not destroyed when released by a view, instead they are persisted
     until removed from the group.
@@ -772,9 +753,9 @@ QQmlDelegateModelGroup *QQmlDelegateModel::persistedItems()
 /*!
     \qmlproperty string QtQml.Models::DelegateModel::filterOnGroup
 
-    This property holds the name of the group used to filter the visual data model.
+    This property holds name of the group that is used to filter the delegate model.
 
-    Only items which belong to this group are visible to a view.
+    Only items that belong to this group are visible to a view.
 
     By default this is the \l items group.
 */
@@ -2265,7 +2246,7 @@ void QQmlDelegateModelAttached::resetCurrentIndex()
 /*!
     \qmlattachedproperty int QtQml.Models::DelegateModel::model
 
-    This attached property holds the visual data model this delegate instance belongs to.
+    This attached property holds the data model this delegate instance belongs to.
 
     It is attached to each instance of the delegate.
 */
@@ -2312,7 +2293,7 @@ void QQmlDelegateModelAttached::setGroups(const QStringList &groups)
 /*!
     \qmlattachedproperty bool QtQml.Models::DelegateModel::isUnresolved
 
-    This attached property holds whether the visual item is bound to a data model index.
+    This attached property indicates whether the visual item is bound to a data model index.
     Returns true if the item is not bound to the model, and false if it is.
 
     An unresolved item can be bound to the data model using the DelegateModelGroup::resolve()
@@ -2451,22 +2432,6 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
 }
 
 /*!
-    \qmltype VisualDataGroup
-    \instantiates QQmlDelegateModelGroup
-    \inqmlmodule QtQuick
-    \ingroup qtquick-models
-    \brief Encapsulates a filtered set of visual data items.
-
-    The VisualDataGroup type provides a means to address the model data of a
-    model's delegate items, as well as sort and filter these delegate items.
-
-    This type is provided by the \l{Qt QML} module due to compatibility reasons.
-    The same implementation is now primarily available as \l DelegateModelGroup
-    in the \l{Qt QML Models QML Types}{Qt QML Models} module.
-
-    \sa {QtQml.Models::DelegateModelGroup}
-*/
-/*!
     \qmltype DelegateModelGroup
     \instantiates QQmlDelegateModelGroup
     \inqmlmodule QtQml.Models
@@ -2498,9 +2463,6 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     create() function, making it possible to use DelegateModel without an accompanying view
     type or to cherry-pick specific items that should be instantiated irregardless of whether
     they're currently within a view's visible area.
-
-    \note This type is also available as \l VisualDataGroup in the \l{Qt QML}
-    module due to compatibility reasons.
 
     \sa {QML Dynamic View Ordering Tutorial}
 */

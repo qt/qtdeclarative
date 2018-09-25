@@ -99,6 +99,7 @@ struct Q_QML_EXPORT EngineBase {
         Class_Object,
         Class_ArrayObject,
         Class_FunctionObject,
+        Class_ArrowFunction,
         Class_GeneratorFunction,
         Class_GeneratorObject,
         Class_StringObject,

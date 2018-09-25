@@ -501,7 +501,7 @@ void QQuickTableViewPrivate::updateContentWidth()
 
         if (currentRightColumn >= tableSize.width() - 1) {
             // We are at the last column, and can set the exact width
-            if (currentWidth != q->implicitWidth())
+            if (!qFuzzyCompare(currentWidth, q->implicitWidth()))
                 q->QQuickFlickable::setContentWidth(currentWidth);
         } else if (currentWidth >= q->implicitWidth()) {
             // We are at the estimated width, but there are still more columns
@@ -538,7 +538,7 @@ void QQuickTableViewPrivate::updateContentHeight()
 
         if (currentBottomRow >= tableSize.height() - 1) {
             // We are at the last row, and can set the exact height
-            if (currentHeight != q->implicitHeight())
+            if (!qFuzzyCompare(currentHeight, q->implicitHeight()))
                 q->QQuickFlickable::setContentHeight(currentHeight);
         } else if (currentHeight >= q->implicitHeight()) {
             // We are at the estimated height, but there are still more rows
@@ -597,6 +597,12 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 
 void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 {
+    if (loadRequest.edge() == Qt::Edge(0)) {
+        // No edge means we're loading the top-left item
+        loadedTable = QRect(loadRequest.firstCell(), loadRequest.lastCell());
+        return;
+    }
+
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
     case Qt::TopEdge:
@@ -606,8 +612,6 @@ void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
     case Qt::BottomEdge:
         loadedTable.setBottomRight(loadRequest.lastCell());
         break;
-    default:
-        loadedTable = QRect(loadRequest.firstCell(), loadRequest.lastCell());
     }
 }
 
@@ -1042,7 +1046,6 @@ void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
     int column = (tableEdge == Qt::LeftEdge) ? loadedTable.left() : loadedTable.right();
     QPoint neighbourDirection = (tableEdge == Qt::LeftEdge) ? kRight : kLeft;
     qreal width = resolveColumnWidth(column);
-    qreal left = -1;
 
     for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
         auto fxTableItem = loadedTableItem(QPoint(column, row));
@@ -1051,14 +1054,9 @@ void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
         QRectF geometry = fxTableItem->geometry();
         geometry.setWidth(width);
         geometry.setHeight(neighbourItem->geometry().height());
-
-        if (left == -1) {
-            // left will be the same for all items in the
-            // column, so do the calculation once.
-            left = tableEdge == Qt::LeftEdge ?
-                        neighbourItem->geometry().left() - cellSpacing.width() - geometry.width() :
-                        neighbourItem->geometry().right() + cellSpacing.width();
-        }
+        qreal left = tableEdge == Qt::LeftEdge ?
+                    neighbourItem->geometry().left() - cellSpacing.width() - geometry.width() :
+                    neighbourItem->geometry().right() + cellSpacing.width();
 
         geometry.moveLeft(left);
         geometry.moveTop(neighbourItem->geometry().top());
@@ -1075,7 +1073,6 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
     int row = (tableEdge == Qt::TopEdge) ? loadedTable.top() : loadedTable.bottom();
     QPoint neighbourDirection = (tableEdge == Qt::TopEdge) ? kDown : kUp;
     qreal height = resolveRowHeight(row);
-    qreal top = -1;
 
     for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
         auto fxTableItem = loadedTableItem(QPoint(column, row));
@@ -1084,14 +1081,9 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
         QRectF geometry = fxTableItem->geometry();
         geometry.setWidth(neighbourItem->geometry().width());
         geometry.setHeight(height);
-
-        if (top == -1) {
-            // top will be the same for all items in the
-            // row, so do the calculation once.
-            top = tableEdge == Qt::TopEdge ?
-                neighbourItem->geometry().top() - cellSpacing.height() - geometry.height() :
-                neighbourItem->geometry().bottom() + cellSpacing.height();
-        }
+        qreal top = tableEdge == Qt::TopEdge ?
+                    neighbourItem->geometry().top() - cellSpacing.height() - geometry.height() :
+                    neighbourItem->geometry().bottom() + cellSpacing.height();
 
         geometry.moveTop(top);
         geometry.moveLeft(neighbourItem->geometry().left());
@@ -1117,6 +1109,12 @@ void QQuickTableViewPrivate::layoutTopLeftItem()
 
 void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
 {
+    if (loadRequest.edge() == Qt::Edge(0)) {
+        // No edge means we're loading the top-left item
+        layoutTopLeftItem();
+        return;
+    }
+
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
     case Qt::RightEdge:
@@ -1125,9 +1123,6 @@ void QQuickTableViewPrivate::layoutTableEdgeFromLoadRequest()
     case Qt::TopEdge:
     case Qt::BottomEdge:
         layoutHorizontalEdge(loadRequest.edge());
-        break;
-    default:
-        layoutTopLeftItem();
         break;
     }
 }
@@ -1393,7 +1388,7 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
     if (reusableFlag == QQmlTableInstanceModel::NotReusable || !tableModel)
         return;
 
-    if (q->verticalOvershoot() || q->horizontalOvershoot()) {
+    if (!qFuzzyIsNull(q->verticalOvershoot()) || !qFuzzyIsNull(q->horizontalOvershoot())) {
         // Don't drain while we're overshooting, since this will fill up the
         // pool, but we expect to reuse them all once the content item moves back.
         return;
@@ -1425,7 +1420,7 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
     // visible columns will fluctuate between +1/-1 while flicking.
     const int w = loadedTable.width();
     const int h = loadedTable.height();
-    const int minTime = std::ceil(w > h ? qreal(w + 1) / h : qreal(h + 1) / w);
+    const int minTime = int(std::ceil(w > h ? qreal(w + 1) / h : qreal(h + 1) / w));
     const int maxTime = minTime * 2;
     tableModel->drainReusableItemsPool(maxTime);
 }

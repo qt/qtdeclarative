@@ -278,11 +278,6 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endcode
 
-    \note VisualItemModel can also be used, but it is only provided for compatibility
-    reasons.  VisualItemModel allows a QML item to be provided as a model. This model
-    contains both the data and delegate; the child items of a VisualItemModel
-    provide the contents of the delegate. The model does not provide any roles.
-
     \section2 Integers as Models
 
     An integer can be used as a model that contains a certain number
@@ -307,6 +302,7 @@ To visualize data, bind the view's \c model property to a model and the
     }
     \endqml
 
+    \note The limit on the number of items in an integer model is 100,000,000.
 
     \section2 Object Instances as Models
 

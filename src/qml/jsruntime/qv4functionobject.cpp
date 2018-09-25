@@ -83,20 +83,19 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
         f->setName(name);
 }
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, bool createProto)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name)
 {
+    ExecutionEngine *e = scope->engine();
+
     jsCall = vtable()->call;
     jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
     this->scope.set(scope->engine(), scope->d());
-    Scope s(scope->engine());
+    Scope s(e);
     ScopedFunctionObject f(s, this);
     if (name)
         f->setName(name);
-
-    if (createProto)
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 
@@ -116,11 +115,11 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function
         f->setName(name);
 }
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name, bool createProto)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &name)
 {
     Scope valueScope(scope);
     ScopedString s(valueScope, valueScope.engine->newString(name));
-    init(scope, s, createProto);
+    init(scope, s);
 }
 
 void Heap::FunctionObject::init()
@@ -169,6 +168,8 @@ ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *,
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
 {
+    if (function->isArrowFunction())
+        return scope->engine()->memoryManager->allocate<ArrowFunction>(scope, function);
     return scope->engine()->memoryManager->allocate<ScriptFunction>(scope, function);
 }
 
@@ -212,6 +213,17 @@ bool FunctionObject::isBinding() const
 bool FunctionObject::isBoundFunction() const
 {
     return d()->vtable() == BoundFunction::staticVTable();
+}
+
+ReturnedValue FunctionObject::getHomeObject() const
+{
+    const MemberFunction *m = as<MemberFunction>();
+    if (m)
+        return m->d()->homeObject->asReturnedValue();
+    const ConstructorFunction *c = as<ConstructorFunction>();
+    if (c)
+        return c->d()->homeObject->asReturnedValue();
+    return Encode::undefined();
 }
 
 QQmlSourceLocation FunctionObject::sourceLocation() const
@@ -490,7 +502,9 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     return result;
 }
 
-ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
+DEFINE_OBJECT_VTABLE(ArrowFunction);
+
+ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
     ExecutionEngine *engine = fo->engine();
     CppStackFrame frame;
@@ -509,7 +523,7 @@ ReturnedValue ScriptFunction::virtualCall(const FunctionObject *fo, const Value 
     return result;
 }
 
-void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n, bool makeConstructor)
+void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     FunctionObject::init();
     this->scope.set(scope->engine(), scope->d());
@@ -523,11 +537,19 @@ void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function
     ScopedString name(s, n ? n->d() : function->name());
     if (name)
         f->setName(name);
-    if (makeConstructor && !function->isArrowFunction())
-        f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 
     Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
     setProperty(s.engine, Index_Length, Value::fromInt32(int(function->compiledFunction->length)));
+}
+
+void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)
+{
+    ArrowFunction::init(scope, function);
+    Q_ASSERT(!function->isArrowFunction());
+
+    Scope s(scope);
+    ScopedFunctionObject f(s, this);
+    f->createDefaultPrototypeProperty(Heap::FunctionObject::Index_ProtoConstructor);
 }
 
 Heap::InternalClass *ScriptFunction::classForConstructor() const

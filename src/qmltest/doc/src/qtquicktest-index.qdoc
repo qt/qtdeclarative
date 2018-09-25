@@ -157,6 +157,9 @@
                 \l {QQmlEngine::addPluginPath}{plugin paths},
                 and \l {QQmlFileSelector::setExtraSelectors}{extra file selectors}
                 will have been set on the engine by this point.
+            \li void cleanupTestCase()
+            \li Called right after the test execution has finished.
+                Use this function to clean up before everything will start to be destructed.
     \endtable
 
     Each function will be called once for each \c tst_*.qml file, so any

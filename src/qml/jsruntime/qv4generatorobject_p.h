@@ -72,9 +72,9 @@ struct GeneratorFunctionCtor : FunctionObject {
     void init(QV4::ExecutionContext *scope);
 };
 
-struct GeneratorFunction : ScriptFunction {
+struct GeneratorFunction : ArrowFunction {
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr) {
-        ScriptFunction::init(scope, function, name, false);
+        ArrowFunction::init(scope, function, name);
     }
 };
 
@@ -106,13 +106,12 @@ struct GeneratorFunctionCtor : FunctionCtor
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct GeneratorFunction : ScriptFunction
+struct GeneratorFunction : ArrowFunction
 {
-    V4_OBJECT2(GeneratorFunction, ScriptFunction)
+    V4_OBJECT2(GeneratorFunction, ArrowFunction)
     V4_INTERNALCLASS(GeneratorFunction)
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
-    static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
@@ -122,7 +121,6 @@ struct MemberGeneratorFunction : MemberFunction
     V4_INTERNALCLASS(MemberGeneratorFunction)
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function, Object *homeObject, String *name);
-    static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

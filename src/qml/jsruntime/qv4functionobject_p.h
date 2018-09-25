@@ -84,9 +84,9 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     }
 
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
-    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
     void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
-    void init(QV4::ExecutionContext *scope, const QString &name, bool createProto = false);
+    void init(QV4::ExecutionContext *scope, const QString &name);
     void init();
     void destroy();
 
@@ -109,31 +109,42 @@ struct IndexedBuiltinFunction : FunctionObject {
     uint index;
 };
 
+struct ArrowFunction : FunctionObject {
+    enum {
+        Index_Name,
+        Index_Length
+    };
+    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
+};
+
 #define ScriptFunctionMembers(class, Member) \
     Member(class, Pointer, InternalClass *, cachedClassForConstructor)
 
-DECLARE_HEAP_OBJECT(ScriptFunction, FunctionObject) {
+DECLARE_HEAP_OBJECT(ScriptFunction, ArrowFunction) {
     DECLARE_MARKOBJECTS(ScriptFunction)
     enum {
         Index_Name,
         Index_Length
     };
-    void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr, bool makeConstructor = true);
+    void init(QV4::ExecutionContext *scope, Function *function);
 };
 
 #define MemberFunctionMembers(class, Member) \
     Member(class, Pointer, Object *, homeObject)
 
-DECLARE_HEAP_OBJECT(MemberFunction, ScriptFunction) {
+DECLARE_HEAP_OBJECT(MemberFunction, ArrowFunction) {
     DECLARE_MARKOBJECTS(MemberFunction)
 
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr) {
-        ScriptFunction::init(scope, function, name, false);
+        ArrowFunction::init(scope, function, name);
     }
 };
 
-struct ConstructorFunction : MemberFunction
-{
+#define ConstructorFunctionMembers(class, Member) \
+    Member(class, Pointer, Object *, homeObject)
+
+DECLARE_HEAP_OBJECT(ConstructorFunction, ScriptFunction) {
+    DECLARE_MARKOBJECTS(ConstructorFunction)
     bool isDerivedConstructor;
 };
 
@@ -204,6 +215,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return d()->isConstructor();
     }
 
+    ReturnedValue getHomeObject() const;
+
     ReturnedValue protoProperty() const { return get(engine()->id_prototype()); }
 
 
@@ -255,25 +268,30 @@ void Heap::IndexedBuiltinFunction::init(QV4::ExecutionContext *scope, uint index
     this->index = index;
 }
 
-
-struct ScriptFunction : FunctionObject {
-    V4_OBJECT2(ScriptFunction, FunctionObject)
-    V4_INTERNALCLASS(ScriptFunction)
+struct ArrowFunction : FunctionObject {
+    V4_OBJECT2(ArrowFunction, FunctionObject)
+    V4_INTERNALCLASS(ArrowFunction)
     enum { NInlineProperties = 3 };
 
-    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+};
+
+struct ScriptFunction : ArrowFunction {
+    V4_OBJECT2(ScriptFunction, ArrowFunction)
+    V4_INTERNALCLASS(ScriptFunction)
+
+    static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
 
     Heap::InternalClass *classForConstructor() const;
 };
 
-struct MemberFunction : ScriptFunction {
-    V4_OBJECT2(MemberFunction, ScriptFunction)
+struct MemberFunction : ArrowFunction {
+    V4_OBJECT2(MemberFunction, ArrowFunction)
     V4_INTERNALCLASS(MemberFunction)
 };
 
-struct ConstructorFunction : MemberFunction {
-    V4_OBJECT2(ConstructorFunction, MemberFunction)
+struct ConstructorFunction : ScriptFunction {
+    V4_OBJECT2(ConstructorFunction, ScriptFunction)
     V4_INTERNALCLASS(ConstructorFunction)
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);

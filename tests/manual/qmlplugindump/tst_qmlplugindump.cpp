@@ -273,7 +273,7 @@ tst_qmlplugindump::tst_qmlplugindump()
 
 QString tst_qmlplugindump::samplePath(const QString &name)
 {
-    return QCoreApplication::applicationDirPath()
+    return QT_TEST_DIR
         + QLatin1Char('/')
         + QString(QLatin1String(prefix)).replace(QRegularExpression(QLatin1String("\\.")),
                 QLatin1String("/")).append(name);
@@ -282,7 +282,7 @@ QString tst_qmlplugindump::samplePath(const QString &name)
 bool tst_qmlplugindump::compileSample(const QString &name)
 {
     const QString path = samplePath(name);
-    return run(path, QLatin1String("qmake"))
+    return run(path, QLibraryInfo::location(QLibraryInfo::BinariesPath) + QLatin1String("/qmake"))
         && run(path, QLatin1String(systemMakeProgram));
 }
 
@@ -305,8 +305,7 @@ bool tst_qmlplugindump::cleanUpSample(const QString &name)
 void tst_qmlplugindump::initTestCase()
 {
     dumper = QLibraryInfo::location(QLibraryInfo::BinariesPath);
-    tests = readAllTestDefinitions(QCoreApplication::applicationDirPath()
-                                   + QLatin1String("/definitions"));
+    tests = readAllTestDefinitions(QT_TEST_DIR "/definitions");
 
     dumper += QLatin1Char('/') + QLatin1String(systemQmlplugindumpProgram);
 
@@ -322,7 +321,7 @@ void tst_qmlplugindump::builtins()
     QStringList args;
     args += QLatin1String("-builtins");
     RegexpsChecker check(QStringList(QLatin1String("Module {")));
-    QString cwd = QCoreApplication::applicationDirPath();
+    QString cwd = QT_TEST_DIR;
     QVERIFY(run(cwd, dumper, args, &check));
 }
 
@@ -349,7 +348,7 @@ void tst_qmlplugindump::plugin()
 
     QStringList args;
     QString url = QLatin1String("tests.dumper.") + project;
-    QString cwd = QCoreApplication::applicationDirPath();
+    QString cwd = QT_TEST_DIR;
     args << QLatin1String("-nonrelocatable") << url << version << cwd;
     RegexpsChecker check(expected);
     QVERIFY(run(cwd, dumper, args, &check));

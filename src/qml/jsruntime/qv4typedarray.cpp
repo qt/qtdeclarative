@@ -501,7 +501,7 @@ bool TypedArray::virtualHasProperty(const Managed *m, PropertyKey id)
     return true;
 }
 
-PropertyAttributes TypedArray::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes TypedArray::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     uint index = id.asArrayIndex();
     if (index == UINT_MAX && !id.isCanonicalNumericIndexString())

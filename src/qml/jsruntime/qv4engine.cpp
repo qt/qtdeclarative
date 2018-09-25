@@ -347,10 +347,11 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(FunctionObject::staticVTable(), functionPrototype());
     classes[Class_FunctionObject] = ic->d();
     ic = ic->addMember(id_name()->propertyKey(), Attr_ReadOnly, &index);
-    Q_ASSERT(index == Heap::ScriptFunction::Index_Name);
-    ic = ic->changeVTable(ScriptFunction::staticVTable());
+    Q_ASSERT(index == Heap::ArrowFunction::Index_Name);
     ic = ic->addMember(id_length()->propertyKey(), Attr_ReadOnly_ButConfigurable, &index);
-    Q_ASSERT(index == Heap::ScriptFunction::Index_Length);
+    Q_ASSERT(index == Heap::ArrowFunction::Index_Length);
+    classes[Class_ArrowFunction] = ic->changeVTable(ArrowFunction::staticVTable());
+    ic = ic->changeVTable(ScriptFunction::staticVTable());
     classes[Class_ScriptFunction] = ic->d();
     ic = ic->changeVTable(ConstructorFunction::staticVTable());
     classes[Class_ConstructorFunction] = ic->d();

@@ -76,7 +76,7 @@ struct Q_QML_EXPORT Module : public Object {
     V4_OBJECT2(Module, Object)
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static PropertyAttributes virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p);
+    static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);
     static bool virtualHasProperty(const Managed *m, PropertyKey id);
     static bool virtualPreventExtensions(Managed *);
     static bool virtualDefineOwnProperty(Managed *, PropertyKey, const Property *, PropertyAttributes);

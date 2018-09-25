@@ -791,10 +791,10 @@ bool Object::virtualHasProperty(const Managed *m, PropertyKey id)
     return false;
 }
 
-PropertyAttributes Object::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes Object::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     PropertyAttributes attrs;
-    Object *o = static_cast<Object *>(m);
+    const Object *o = static_cast<const Object *>(m);
     if (id.isArrayIndex()) {
         uint index = id.asArrayIndex();
         if (o->arrayData()) {

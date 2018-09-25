@@ -222,7 +222,7 @@ void Context::emitBlockHeader(Codegen *codegen)
                 blockContext.index = blockIndex;
                 bytecodeGenerator->addInstruction(blockContext);
             }
-        } else {
+        } else if (contextType != ContextType::ESModule) {
             Instruction::CreateCallContext createContext;
             bytecodeGenerator->addInstruction(createContext);
         }
@@ -318,7 +318,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
     if (contextType == ContextType::Global)
         bytecodeGenerator->addInstruction(Instruction::PopScriptContext());
-    else
+    else if (contextType != ContextType::ESModule)
         bytecodeGenerator->addInstruction(Instruction::PopContext());
 QT_WARNING_POP
 }

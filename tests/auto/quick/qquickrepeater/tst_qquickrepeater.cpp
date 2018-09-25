@@ -133,6 +133,12 @@ void tst_QQuickRepeater::numberModel()
     QMetaObject::invokeMethod(window->rootObject(), "checkProperties");
     QVERIFY(!testObject->error());
 
+    ctxt->setContextProperty("testData", std::numeric_limits<int>::max());
+    QCOMPARE(repeater->parentItem()->childItems().count(), 1);
+
+    ctxt->setContextProperty("testData", -1234);
+    QCOMPARE(repeater->parentItem()->childItems().count(), 1);
+
     delete testObject;
     delete window;
 }

@@ -490,7 +490,6 @@ language/expressions/arrow-function/scope-param-elem-var-open.js sloppyFails
 language/expressions/arrow-function/scope-param-rest-elem-var-close.js sloppyFails
 language/expressions/arrow-function/scope-param-rest-elem-var-open.js sloppyFails
 language/expressions/arrow-function/scope-paramsbody-var-open.js fails
-language/expressions/arrow-function/throw-new.js fails
 language/expressions/assignment/S11.13.1_A5_T1.js sloppyFails
 language/expressions/assignment/S11.13.1_A5_T2.js sloppyFails
 language/expressions/assignment/S11.13.1_A5_T3.js sloppyFails
@@ -682,7 +681,6 @@ language/expressions/object/method-definition/gen-meth-dflt-params-ref-self.js f
 language/expressions/object/method-definition/gen-yield-identifier-non-strict.js sloppyFails
 language/expressions/object/method-definition/meth-dflt-params-ref-later.js fails
 language/expressions/object/method-definition/meth-dflt-params-ref-self.js fails
-language/expressions/object/method-definition/name-invoke-ctor.js fails
 language/expressions/object/method-definition/object-method-returns-promise.js fails
 language/expressions/object/method-definition/yield-as-function-expression-binding-identifier.js sloppyFails
 language/expressions/object/method-definition/yield-as-identifier-in-nested-function.js sloppyFails

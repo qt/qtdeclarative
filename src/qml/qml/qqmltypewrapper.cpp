@@ -350,14 +350,14 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
     return false;
 }
 
-PropertyAttributes QQmlTypeWrapper::virtualGetOwnProperty(Managed *m, PropertyKey id, Property *p)
+PropertyAttributes QQmlTypeWrapper::virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p)
 {
     if (id.isString()) {
         Scope scope(m);
         ScopedString n(scope, id.asStringOrSymbol());
         // ### Implement more efficiently.
         bool hasProperty = false;
-        static_cast<Object *>(m)->get(n, &hasProperty);
+        static_cast<const Object *>(m)->get(n, &hasProperty);
         return hasProperty ? Attr_Data : Attr_Invalid;
     }
 
