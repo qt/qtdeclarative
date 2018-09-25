@@ -282,8 +282,9 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
 
     if (!vmeGuard.isOK()) {
         QQmlError error;
+        error.setMessageType(QtInfoMsg);
         error.setUrl(compilationUnit->url());
-        error.setDescription(QQmlComponent::tr("Object destroyed during incubation"));
+        error.setDescription(QQmlComponent::tr("Object or context destroyed during incubation"));
         errors << error;
         progress = QQmlIncubatorPrivate::Completed;
 
