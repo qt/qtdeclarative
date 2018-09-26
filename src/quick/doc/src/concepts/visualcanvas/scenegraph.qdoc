@@ -796,6 +796,14 @@ with multiple windows.
   \li Mipmapped Image items are not placed in the global atlas and will
   not be batched.
 
+  \li A bug in the OpenGL driver related to framebuffer object (FBO) readbacks
+  may corrupt rendered glyphs. If you set the \c QML_USE_GLYPHCACHE_WORKAROUND
+  environment variable, Qt keeps an additional copy of the glyph in RAM. This
+  means that performance is slightly lower when drawing glyphs that have not
+  been drawn before, as Qt accesses the extra copy via the CPU. It also means
+  that the glyph cache will use twice as much memory. The quality is not
+  affected by this.
+
   \endlist
 
   If an application performs poorly, make sure that rendering is
