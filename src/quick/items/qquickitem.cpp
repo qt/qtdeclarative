@@ -3908,6 +3908,16 @@ void QQuickItemPrivate::addItemChangeListener(QQuickItemChangeListener *listener
     changeListeners.append(ChangeListener(listener, types));
 }
 
+void QQuickItemPrivate::updateOrAddItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
+{
+    const ChangeListener changeListener(listener, types);
+    const int index = changeListeners.indexOf(changeListener);
+    if (index > -1)
+        changeListeners[index].types = changeListener.types;
+    else
+        changeListeners.append(changeListener);
+}
+
 void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     ChangeListener change(listener, types);
