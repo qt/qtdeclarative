@@ -4607,6 +4607,62 @@ void QQuickWindow::resetOpenGLState()
  */
 
 /*!
+    \qmlproperty QWindow Window::transientParent
+    \since 5.13
+
+    The window for which this window is a transient pop-up.
+
+    This is a hint to the window manager that this window is a dialog or pop-up
+    on behalf of the transient parent. It usually means that the transient
+    window will be centered over its transient parent when it is initially
+    shown, that minimizing the parent window will also minimize the transient
+    window, and so on; however results vary somewhat from platform to platform.
+
+    Normally if you declare a Window inside an Item or inside another Window,
+    this relationship is deduced automatically. In that case, if you declare
+    this window's \l visible property \c true, it will not actually be shown
+    until the \c transientParent window is shown.
+
+    However if you set this property, then Qt Quick will no longer wait until
+    the \c transientParent window is shown before showing this window. If you
+    want to to be able to show a transient window independently of the "parent"
+    Item or Window within which it was declared, you can remove that
+    relationship by setting \c transientParent to \c null:
+
+    \l qml
+    import QtQuick.Window 2.13
+
+    Window {
+        // visible is false by default
+        Window {
+            transientParent: null
+            visible: true
+        }
+    }
+    \qml
+
+    In order to cause the window to be centered above its transient parent by
+    default, depending on the window manager, it may also be necessary to set
+    the \l Window::flags property with a suitable \l Qt::WindowType (such as
+    \c Qt::Dialog).
+*/
+
+/*!
+    \property QQuickWindow::transientParent
+    \brief The window for which this window is a transient pop-up.
+    \since 5.13
+
+    This is a hint to the window manager that this window is a dialog or pop-up
+    on behalf of the transient parent, which may be any kind of \l QWindow.
+
+    In order to cause the window to be centered above its transient parent by
+    default, depending on the window manager, it may also be necessary to set
+    the \l flags property with a suitable \l Qt::WindowType (such as \c Qt::Dialog).
+
+    \sa parent()
+ */
+
+/*!
     \qmlproperty Item Window::activeFocusItem
     \since 5.1
 
