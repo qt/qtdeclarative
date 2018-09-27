@@ -182,7 +182,9 @@ public:
     enum class RebuildOption {
         None = 0,
         ViewportOnly = 0x1,
-        All = 0x2,
+        CalculateNewTopLeftRow = 0x2,
+        CalculateNewTopLeftColumn = 0x4,
+        All = 0x8,
     };
     Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
 
@@ -257,6 +259,8 @@ public:
     QQmlNullableValue<qreal> explicitContentWidth;
     QQmlNullableValue<qreal> explicitContentHeight;
 
+    QSizeF averageEdgeSize;
+
     const static QPoint kLeft;
     const static QPoint kRight;
     const static QPoint kUp;
@@ -289,6 +293,7 @@ public:
 
     void updateContentWidth();
     void updateContentHeight();
+    void updateAverageEdgeSize();
 
     void enforceTableAtOrigin();
     void syncLoadedTableRectFromLoadedTable();
