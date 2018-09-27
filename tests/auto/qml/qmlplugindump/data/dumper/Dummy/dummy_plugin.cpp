@@ -26,19 +26,15 @@
 **
 ****************************************************************************/
 
-#ifndef DUMMY_H
-#define DUMMY_H
+#include "dummy_plugin.h"
+#include "dummy.h"
 
-#include <QQuickItem>
+#include <qqml.h>
 
-class Dummy : public QQuickItem
+void DummyPlugin::registerTypes(const char *uri)
 {
-    Q_OBJECT
+    // @uri dumper.dummy
+    qmlRegisterType<Dummy>(uri, 1, 0, "Dummy");
+}
 
-public:
-    Dummy(QQuickItem *parent = 0);
-    ~Dummy();
-};
-
-#endif // DUMMY_H
 

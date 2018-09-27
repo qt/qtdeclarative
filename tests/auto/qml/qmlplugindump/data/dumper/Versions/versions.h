@@ -26,19 +26,36 @@
 **
 ****************************************************************************/
 
-#include "versions.h"
+#ifndef VERSIONS_H
+#define VERSIONS_H
 
-Versions::Versions(QQuickItem *parent):
-    QQuickItem(parent)
+#include <QObject>
+
+class Versions : public QObject
 {
-    // By default, QQuickItem does not draw anything. If you subclass
-    // QQuickItem to create a visual item, you will need to uncomment the
-    // following line and re-implement updatePaintNode()
+    Q_OBJECT
+    Q_PROPERTY(int foo READ foo WRITE setFoo NOTIFY fooChanged)
+    Q_PROPERTY(int bar READ bar WRITE setBar NOTIFY barChanged REVISION 1)
+    Q_PROPERTY(int baz READ baz WRITE setBaz NOTIFY bazChanged REVISION 2)
 
-    // setFlag(ItemHasContents, true);
-}
+public:
+    Versions(QObject *parent = nullptr);
+    ~Versions();
+    int foo() const { return m_foo; }
+    void setFoo(int value) { m_foo = value; }
+    int bar() const { return m_bar; }
+    void setBar(int value) { m_bar = value; }
+    int baz() const { return m_baz; }
+    void setBaz(int value) { m_baz = value; }
+signals:
+    void fooChanged();
+    void barChanged();
+    void bazChanged();
+private:
+    int m_foo;
+    int m_bar;
+    int m_baz;
+};
 
-Versions::~Versions()
-{
-}
+#endif // VERSIONS_H
 

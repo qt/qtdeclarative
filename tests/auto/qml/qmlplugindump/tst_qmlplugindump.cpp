@@ -45,6 +45,8 @@ private slots:
     void initTestCase();
     void builtins();
     void singleton();
+    void plugin_data();
+    void plugin();
 
 private:
     QString qmlplugindumpPath;
@@ -105,8 +107,8 @@ void tst_qmlplugindump::singleton()
 {
     QProcess dumper;
     QStringList args;
-    args << QLatin1String("data.dumper.CompositeSingleton") << QLatin1String("1.0")
-         << QLatin1String(QT_QMLTEST_DIR);
+    args << QLatin1String("dumper.CompositeSingleton") << QLatin1String("1.0")
+         << QLatin1String(QT_QMLTEST_DIR "/data");
     dumper.start(qmlplugindumpPath, args);
     QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
     QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
@@ -114,6 +116,37 @@ void tst_qmlplugindump::singleton()
     const QString &result = dumper.readAllStandardOutput();
     QVERIFY2(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")), qPrintable(result));
     QVERIFY2(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")), qPrintable(result));
+}
+
+void tst_qmlplugindump::plugin_data()
+{
+    QTest::addColumn<QString>("import");
+    QTest::addColumn<QString>("version");
+    QTest::addColumn<QString>("expectedPath");
+
+    QTest::newRow("dumper.Dummy") << "dumper.Dummy" << "1.0" << testFile("dumper/Dummy/plugins.qmltypes");
+    QTest::newRow("dumper.Imports") << "dumper.Imports" << "1.0" << testFile("dumper/Imports/plugins.qmltypes");
+    QTest::newRow("dumper.Versions") << "dumper.Versions" << "1.1" << testFile("dumper/Versions/plugins.qmltypes");
+}
+
+void tst_qmlplugindump::plugin()
+{
+    QFETCH(QString, import);
+    QFETCH(QString, version);
+    QFETCH(QString, expectedPath);
+
+    QProcess dumper;
+    dumper.setWorkingDirectory(dataDirectory());
+    QStringList args = { QLatin1String("-nonrelocatable"), QLatin1String("-noforceqtquick"), import, version, QLatin1String(".") };
+    dumper.start(qmlplugindumpPath, args);
+    QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
+    QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
+
+    const QString &result = dumper.readAllStandardOutput();
+    QFile expectedFile(expectedPath);
+    QVERIFY2(expectedFile.open(QIODevice::ReadOnly), qPrintable(expectedFile.errorString()));
+    const QString expected = expectedFile.readAll();
+    QCOMPARE(result, expected);
 }
 
 QTEST_MAIN(tst_qmlplugindump)

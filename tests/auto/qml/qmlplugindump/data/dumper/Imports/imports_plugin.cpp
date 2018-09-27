@@ -26,19 +26,15 @@
 **
 ****************************************************************************/
 
-#include "dummy.h"
+#include "imports_plugin.h"
+#include "imports.h"
 
-Dummy::Dummy(QQuickItem *parent):
-    QQuickItem(parent)
+#include <qqml.h>
+
+void ImportsPlugin::registerTypes(const char *uri)
 {
-    // By default, QQuickItem does not draw anything. If you subclass
-    // QQuickItem to create a visual item, you will need to uncomment the
-    // following line and re-implement updatePaintNode()
-
-    // setFlag(ItemHasContents, true);
+    // @uri dumper.imports
+    qmlRegisterType<Imports>(uri, 1, 0, "Imports");
 }
 
-Dummy::~Dummy()
-{
-}
 

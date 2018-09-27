@@ -26,15 +26,19 @@
 **
 ****************************************************************************/
 
-#include "imports_plugin.h"
-#include "imports.h"
+#ifndef IMPORTS_H
+#define IMPORTS_H
 
-#include <qqml.h>
+#include <QObject>
 
-void ImportsPlugin::registerTypes(const char *uri)
+class Imports : public QObject
 {
-    // @uri tests.dumper.imports
-    qmlRegisterType<Imports>(uri, 1, 0, "Imports");
-}
+    Q_OBJECT
 
+public:
+    Imports(QObject *parent = nullptr);
+    ~Imports();
+};
+
+#endif // IMPORTS_H
 

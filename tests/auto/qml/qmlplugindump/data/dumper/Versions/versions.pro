@@ -1,12 +1,13 @@
 TEMPLATE = lib
 TARGET = Versions
-QT += qml quick
+QT += qml
 CONFIG += qt plugin
 
-TARGET = $$qtLibraryTarget($$TARGET)
-uri = tests.dumper.Versions
+CONFIG -= debug_and_release_target
+!build_pass:qtConfig(debug_and_release): CONFIG += release
 
-# Input
+TARGET = $$qtLibraryTarget($$TARGET)
+
 SOURCES += \
     versions_plugin.cpp \
     versions.cpp
@@ -15,19 +16,8 @@ HEADERS += \
     versions_plugin.h \
     versions.h
 
-DISTFILES = qmldir
-
 !equals(_PRO_FILE_PWD_, $$OUT_PWD) {
-    cpqmldir.files = qmldir
+    cpqmldir.files = qmldir plugins.qmltypes
     cpqmldir.path = $$OUT_PWD
     COPIES += cpqmldir
 }
-
-qmldir.files = qmldir
-unix {
-    installPath = $$[QT_INSTALL_QML]/$$replace(uri, \\., /)
-    qmldir.path = $$installPath
-    target.path = $$installPath
-    INSTALLS += target qmldir
-}
-

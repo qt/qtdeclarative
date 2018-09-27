@@ -26,19 +26,14 @@
 **
 ****************************************************************************/
 
-#ifndef IMPORTS_H
-#define IMPORTS_H
+#include "versions.h"
 
-#include <QQuickItem>
-
-class Imports : public QQuickItem
+Versions::Versions(QObject *parent):
+    QObject(parent)
 {
-    Q_OBJECT
+}
 
-public:
-    Imports(QQuickItem *parent = 0);
-    ~Imports();
-};
-
-#endif // IMPORTS_H
+Versions::~Versions()
+{
+}
 

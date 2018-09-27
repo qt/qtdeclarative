@@ -26,16 +26,14 @@
 **
 ****************************************************************************/
 
-#include "versions_plugin.h"
-#include "versions.h"
+#include "dummy.h"
 
-#include <qqml.h>
-
-void VersionsPlugin::registerTypes(const char *uri)
+Dummy::Dummy(QObject *parent):
+    QObject(parent)
 {
-    // @uri tests.dumper.versions
-    qmlRegisterType<Versions>(uri, 1, 0, "Versions");
-    qmlRegisterType<Versions, 1>(uri, 1, 1, "Versions");
 }
 
+Dummy::~Dummy()
+{
+}
 
