@@ -361,7 +361,7 @@ List properties should have no setter.  In the example above, the Q_PROPERTY()
 declarative will look like this:
 
 \code
-Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit);
+Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
 \endcode
 
 QML list properties are type-safe - in this case \c {Fruit} is a QObject type that
