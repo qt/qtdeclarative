@@ -66,7 +66,6 @@ namespace JIT {
 #define callHelper(x) PlatformAssemblerCommon::callRuntimeUnchecked(#x, reinterpret_cast<void *>(&x))
 
 const QV4::Value::ValueTypeInternal IntegerTag = QV4::Value::ValueTypeInternal::Integer;
-const QV4::Value::ValueTypeInternal EmptyTag = QV4::Value::ValueTypeInternal::Empty;
 
 static ReturnedValue toNumberHelper(ReturnedValue v)
 {
