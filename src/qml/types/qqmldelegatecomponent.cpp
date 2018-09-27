@@ -75,7 +75,7 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
     \qmltype DelegateChoice
     \instantiates QQmlDelegateChoice
     \inqmlmodule Qt.labs.qmlmodels
-    \brief Encapsulates a delegate and when to use it
+    \brief Encapsulates a delegate and when to use it.
 
     The DelegateChoice type wraps a delegate and defines the circumstances
     in which it should be chosen.

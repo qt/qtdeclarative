@@ -90,7 +90,7 @@ Rectangle {
         Rectangle {
             width: 100; height: 100
 
-        //! [mouse handlers]
+        //! [signal handlers]
             MouseArea {
                 anchors.fill: parent
                 onClicked: console.log("area clicked")
@@ -98,7 +98,7 @@ Rectangle {
                 onEntered: console.log("mouse entered the area")
                 onExited: console.log("mouse left the area")
             }
-        //! [mouse handlers]
+        //! [signal handlers]
         }
 
     } //end of column
