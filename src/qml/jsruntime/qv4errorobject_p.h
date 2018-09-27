@@ -153,6 +153,7 @@ struct ErrorObject: Object {
 
     enum {
         Index_Stack = 0, // Accessor Property
+        Index_StackSetter = 1, // Accessor Property
         Index_FileName = 2,
         Index_LineNumber = 3,
         Index_Message = 4

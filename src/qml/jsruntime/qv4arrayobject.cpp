@@ -1106,7 +1106,7 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
     } else if (!instance->arrayData()) {
         return Encode(-1);
     } else {
-        Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple || instance->arrayType() == Heap::ArrayData::Complex);
+        Q_ASSERT(instance->arrayType() == Heap::ArrayData::Simple);
         Heap::SimpleArrayData *sa = instance->d()->arrayData.cast<Heap::SimpleArrayData>();
         if (len > sa->values.size)
             len = sa->values.size;

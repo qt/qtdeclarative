@@ -63,12 +63,20 @@ namespace QV4 {
 struct VTable;
 struct MarkStack;
 
+struct InternalClassEntry {
+    uint index;
+    uint setterIndex;
+    PropertyAttributes attributes;
+    bool isValid() const { return !attributes.isEmpty(); }
+};
+
 struct PropertyHashData;
 struct PropertyHash
 {
     struct Entry {
         PropertyKey identifier;
         uint index;
+        uint setterIndex;
     };
 
     PropertyHashData *d;
@@ -79,7 +87,7 @@ struct PropertyHash
     PropertyHash &operator=(const PropertyHash &other);
 
     void addEntry(const Entry &entry, int classSize);
-    uint lookup(PropertyKey identifier) const;
+    Entry *lookup(PropertyKey identifier) const;
     int removeIdentifier(PropertyKey identifier, int classSize);
     void detach(bool grow, int classSize);
 };
@@ -126,16 +134,16 @@ inline PropertyHash &PropertyHash::operator=(const PropertyHash &other)
 
 
 
-inline uint PropertyHash::lookup(PropertyKey identifier) const
+inline PropertyHash::Entry *PropertyHash::lookup(PropertyKey identifier) const
 {
     Q_ASSERT(d->entries);
 
     uint idx = identifier.id() % d->alloc;
     while (1) {
         if (d->entries[idx].identifier == identifier)
-            return d->entries[idx].index;
+            return d->entries + idx;
         if (!d->entries[idx].identifier.isValid())
-            return UINT_MAX;
+            return nullptr;
         ++idx;
         idx %= d->alloc;
     }
@@ -306,8 +314,7 @@ struct InternalClassTransition
         PrototypeChange = 0x201,
         ProtoClass = 0x202,
         Sealed = 0x203,
-        Frozen = 0x204,
-        RemoveMember = -1
+        Frozen = 0x204
     };
 
     bool operator==(const InternalClassTransition &other) const
@@ -347,20 +354,99 @@ struct InternalClass : Base {
     Q_QML_PRIVATE_EXPORT QString keyAt(uint index) const;
     Q_REQUIRED_RESULT InternalClass *nonExtensible();
 
-    static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index);
-    Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
-    Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, uint *index = nullptr);
-    static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, uint *index = nullptr);
+    static void addMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry);
+    Q_REQUIRED_RESULT InternalClass *addMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    Q_REQUIRED_RESULT InternalClass *changeMember(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry = nullptr);
+    static void changeMember(QV4::Object *object, PropertyKey id, PropertyAttributes data, InternalClassEntry *entry = nullptr);
     static void removeMember(QV4::Object *object, PropertyKey identifier);
-    uint find(const PropertyKey id)
+    PropertyHash::Entry *findEntry(const PropertyKey id)
     {
         Q_ASSERT(id.isStringOrSymbol());
 
-        uint index = propertyTable.lookup(id);
-        if (index < size)
-            return index;
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size)
+            return e;
+
+        return nullptr;
+    }
+
+    InternalClassEntry find(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty())
+                return { e->index, e->setterIndex, a };
+        }
+
+        return { UINT_MAX, UINT_MAX, Attr_Invalid };
+    }
+
+    struct IndexAndAttribute {
+        uint index;
+        PropertyAttributes attrs;
+        bool isValid() const { return index != UINT_MAX; }
+    };
+
+    IndexAndAttribute findValueOrGetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty())
+                return { e->index, a };
+        }
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    IndexAndAttribute findValueOrSetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            PropertyAttributes a = propertyData.at(e->index);
+            if (!a.isEmpty()) {
+                if (a.isAccessor()) {
+                    Q_ASSERT(e->setterIndex != UINT_MAX);
+                    return { e->setterIndex, a };
+                }
+                return { e->index, a };
+            }
+        }
+
+        return { UINT_MAX, Attr_Invalid };
+    }
+
+    uint indexOfValueOrGetter(const PropertyKey id)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
+            return e->index;
+        }
 
         return UINT_MAX;
+    }
+
+    bool verifyIndex(const PropertyKey id, uint index)
+    {
+        Q_ASSERT(id.isStringOrSymbol());
+
+        PropertyHash::Entry *e = propertyTable.lookup(id);
+        if (e && e->index < size) {
+            Q_ASSERT(!propertyData.at(e->index).isEmpty());
+            return e->index == index;
+        }
+
+        return false;
     }
 
     Q_REQUIRED_RESULT InternalClass *sealed();
@@ -387,7 +473,7 @@ struct InternalClass : Base {
 private:
     Q_QML_EXPORT InternalClass *changeVTableImpl(const VTable *vt);
     Q_QML_EXPORT InternalClass *changePrototypeImpl(Heap::Object *proto);
-    InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, uint *index);
+    InternalClass *addMemberImpl(PropertyKey identifier, PropertyAttributes data, InternalClassEntry *entry);
 
     void removeChildEntry(InternalClass *child);
     friend struct ExecutionEngine;

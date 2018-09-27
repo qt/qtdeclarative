@@ -82,7 +82,7 @@ void tst_QQuickShape::initValues()
     QVERIFY(obj != nullptr);
     QVERIFY(obj->rendererType() == QQuickShape::UnknownRenderer);
     QVERIFY(!obj->asynchronous());
-    QVERIFY(obj->vendorExtensionsEnabled());
+    QVERIFY(!obj->vendorExtensionsEnabled());
     QVERIFY(obj->status() == QQuickShape::Null);
     auto vps = obj->data();
     QVERIFY(vps.count(&vps) == 0);
@@ -99,7 +99,7 @@ void tst_QQuickShape::vpInitValues()
     QVERIFY(obj != nullptr);
     QVERIFY(obj->rendererType() == QQuickShape::UnknownRenderer);
     QVERIFY(!obj->asynchronous());
-    QVERIFY(obj->vendorExtensionsEnabled());
+    QVERIFY(!obj->vendorExtensionsEnabled());
     QVERIFY(obj->status() == QQuickShape::Null);
     auto vps = obj->data();
     QVERIFY(vps.count(&vps) == 2);

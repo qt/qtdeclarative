@@ -61,7 +61,6 @@ namespace Heap {
 
 #define ArgumentsObjectMembers(class, Member) \
     Member(class, Pointer, CallContext *, context) \
-    Member(class, Pointer, MemberData *, mappedArguments) \
     Member(class, NoMark, bool, fullyCreated) \
     Member(class, NoMark, uint, argCount) \
     Member(class, NoMark, quint64, mapped)
@@ -82,7 +81,8 @@ DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
     enum {
         LengthPropertyIndex = 0,
         SymbolIteratorPropertyIndex = 1,
-        CalleePropertyIndex = 2
+        CalleePropertyIndex = 2,
+        CalleeSetterPropertyIndex = 3
     };
     void init(CppStackFrame *frame);
 };

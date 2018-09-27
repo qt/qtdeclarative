@@ -1227,6 +1227,12 @@ void QQuickItemView::trackedPositionChanged()
     Q_D(QQuickItemView);
     if (!d->trackedItem || !d->currentItem)
         return;
+
+    if (d->inLayout) {
+        polish();
+        return;
+    }
+
     if (d->moveReason == QQuickItemViewPrivate::SetIndex) {
         qreal trackedPos = d->trackedItem->position();
         qreal trackedSize = d->trackedItem->size();

@@ -74,19 +74,18 @@ void Object::setInternalClass(Heap::InternalClass *ic)
         d()->memberData.set(ic->engine, MemberData::allocate(ic->engine, requiredSize, d()->memberData));
 }
 
-void Object::getProperty(uint index, Property *p, PropertyAttributes *attrs) const
+void Object::getProperty(const InternalClassEntry &entry, Property *p) const
 {
-    p->value = *propertyData(index);
-    *attrs = internalClass()->propertyData.at(index);
-    if (attrs->isAccessor())
-        p->set = *propertyData(index + SetterOffset);
+    p->value = *propertyData(entry.index);
+    if (entry.attributes.isAccessor())
+        p->set = *propertyData(entry.setterIndex);
 }
 
-void Object::setProperty(uint index, const Property *p)
+void Object::setProperty(const InternalClassEntry &entry, const Property *p)
 {
-    setProperty(index, p->value);
-    if (internalClass()->propertyData.at(index).isAccessor())
-        setProperty(index + SetterOffset, p->set);
+    setProperty(entry.index, p->value);
+    if (entry.attributes.isAccessor())
+        setProperty(entry.setterIndex, p->set);
 }
 
 void Heap::Object::setUsedAsProto()
@@ -108,16 +107,14 @@ ReturnedValue Object::getValueAccessor(const Value &thisObject, const Value &v, 
     return f->call(jsCallData);
 }
 
-bool Object::putValue(uint memberIndex, const Value &value)
+bool Object::putValue(uint memberIndex, PropertyAttributes attrs, const Value &value)
 {
     Heap::InternalClass *ic = internalClass();
     if (ic->engine->hasException)
         return false;
 
-    PropertyAttributes attrs = ic->propertyData[memberIndex];
-
     if (attrs.isAccessor()) {
-        const FunctionObject *set = propertyData(memberIndex + SetterOffset)->as<FunctionObject>();
+        const FunctionObject *set = propertyData(memberIndex)->as<FunctionObject>();
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
@@ -251,16 +248,13 @@ void Heap::Object::markObjects(Heap::Base *b, MarkStack *stack)
 
 void Object::insertMember(StringOrSymbol *s, const Property *p, PropertyAttributes attributes)
 {
-    uint idx;
+    InternalClassEntry idx;
     PropertyKey key = s->toPropertyKey();
     Heap::InternalClass::addMember(this, key, attributes, &idx);
 
-    if (attributes.isAccessor()) {
-        setProperty(idx + GetterOffset, p->value);
-        setProperty(idx + SetterOffset, p->set);
-    } else {
-        setProperty(idx, p->value);
-    }
+    setProperty(idx.index, p->value);
+    if (attributes.isAccessor())
+        setProperty(idx.setterIndex, p->set);
 }
 
 void Object::setPrototypeUnchecked(const Object *p)
@@ -295,10 +289,10 @@ PropertyIndex Object::getValueOrSetter(PropertyKey id, PropertyAttributes *attrs
     } else {
         Heap::Object *o = d();
         while (o) {
-            uint idx = o->internalClass->find(id);
-            if (idx < UINT_MAX) {
-                *attrs = o->internalClass->propertyData[idx];
-                return o->writablePropertyData(attrs->isAccessor() ? idx + SetterOffset : idx );
+            auto idx = o->internalClass->findValueOrSetter(id);
+            if (idx.isValid()) {
+                *attrs = idx.attrs;
+                return o->writablePropertyData(idx.index);
             }
 
             o = o->prototype();
@@ -369,30 +363,25 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
     while (true) {
         while (memberIndex < o->internalClass()->size) {
             PropertyKey n = o->internalClass()->nameMap.at(memberIndex);
-            if (!n.isStringOrSymbol()) {
-                // accessor properties have a dummy entry with n == 0
-                ++memberIndex;
-                continue;
-            }
-            if (!iterateOverSymbols && n.isSymbol()) {
-                ++memberIndex;
-                continue;
-            }
-            if (iterateOverSymbols && !n.isSymbol()) {
-                ++memberIndex;
-                continue;
-            }
-
-            uint index = memberIndex;
-            PropertyAttributes a = o->internalClass()->propertyData[memberIndex];
             ++memberIndex;
+            if (!n.isStringOrSymbol())
+                // accessor properties have a dummy entry with n == 0
+                continue;
+            if (!iterateOverSymbols && n.isSymbol())
+                continue;
+            if (iterateOverSymbols && !n.isSymbol())
+                continue;
+
+            InternalClassEntry e = o->internalClass()->find(n);
+            if (!e.isValid())
+                continue;
             if (pd) {
-                pd->value = *o->propertyData(index);
-                if (a.isAccessor())
-                    pd->set = *o->propertyData(index + Object::SetterOffset);
+                pd->value = *o->propertyData(e.index);
+                if (e.attributes.isAccessor())
+                    pd->set = *o->propertyData(e.setterIndex);
             }
             if (attrs)
-                *attrs = a;
+                *attrs = e.attributes;
             return n;
         }
         if (iterateOverSymbols)
@@ -443,11 +432,11 @@ ReturnedValue Object::internalGet(PropertyKey id, const Value *receiver, bool *h
         Q_ASSERT(!id.isArrayIndex());
 
         while (1) {
-            uint idx = o->internalClass->find(id);
-            if (idx < UINT_MAX) {
+            auto idx = o->internalClass->findValueOrGetter(id);
+            if (idx.isValid()) {
                 if (hasProperty)
                     *hasProperty = true;
-                return Object::getValue(*receiver, *o->propertyData(idx), o->internalClass->propertyData.at(idx));
+                return Object::getValue(*receiver, *o->propertyData(idx.index), idx.attrs);
             }
             o = o->prototype();
             if (!o || o->internalClass->vtable->get != Object::virtualGet)
@@ -488,10 +477,10 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
                 if (arrayData())
                     propertyIndex = arrayData()->getValueOrSetter(index, &attrs);
             } else {
-                uint member = internalClass()->find(id);
-                if (member < UINT_MAX) {
-                    attrs = internalClass()->propertyData[member];
-                    propertyIndex = d()->writablePropertyData(attrs.isAccessor() ? member + SetterOffset : member);
+                auto member = internalClass()->findValueOrSetter(id);
+                if (member.isValid()) {
+                    attrs = member.attrs;
+                    propertyIndex = d()->writablePropertyData(member.index);
                 }
             }
 
@@ -588,9 +577,9 @@ bool Object::internalDeleteProperty(PropertyKey id)
         return false;
     }
 
-    uint memberIdx = internalClass()->find(id);
-    if (memberIdx != UINT_MAX) {
-        if (internalClass()->propertyData[memberIdx].isConfigurable()) {
+    auto memberIdx = internalClass()->findValueOrGetter(id);
+    if (memberIdx.isValid()) {
+        if (memberIdx.attrs.isConfigurable()) {
             Heap::InternalClass::removeMember(this, id);
             return true;
         }
@@ -600,7 +589,7 @@ bool Object::internalDeleteProperty(PropertyKey id)
     return true;
 }
 
-bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs)
+bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, const InternalClassEntry *memberEntry, const Property *p, PropertyAttributes attrs)
 {
     // clause 5
     if (attrs.isEmpty())
@@ -609,9 +598,9 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
     Scope scope(engine);
     ScopedProperty current(scope);
     PropertyAttributes cattrs;
-    if (member) {
-        getProperty(index, current, &cattrs);
-        cattrs = internalClass()->propertyData[index];
+    if (memberEntry) {
+        getProperty(*memberEntry, current);
+        cattrs = memberEntry->attributes;
     } else if (arrayData()) {
         arrayData()->getProperty(index, current, &cattrs);
         cattrs = arrayData()->attributes(index);
@@ -642,7 +631,7 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
             // 9b
             cattrs.setType(PropertyAttributes::Accessor);
             cattrs.clearWritable();
-            if (!member) {
+            if (!memberEntry) {
                 // need to convert the array and the slot
                 initSparseArray();
                 Q_ASSERT(arrayData());
@@ -654,7 +643,7 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
             // 9c
             cattrs.setType(PropertyAttributes::Data);
             cattrs.setWritable(false);
-            if (!member) {
+            if (!memberEntry) {
                 // need to convert the array and the slot
                 setArrayAttributes(index, cattrs);
             }
@@ -678,9 +667,11 @@ bool Object::internalDefineOwnProperty(ExecutionEngine *engine, uint index, Stri
   accept:
 
     current->merge(cattrs, p, attrs);
-    if (member) {
-        Heap::InternalClass::changeMember(this, member->propertyKey(), cattrs);
-        setProperty(index, current);
+    if (memberEntry) {
+        PropertyKey key = internalClass()->nameMap.at(memberEntry->index);
+        InternalClassEntry e;
+        Heap::InternalClass::changeMember(this, key, cattrs, &e);
+        setProperty(e, current);
     } else {
         setArrayAttributes(index, cattrs);
         arrayData()->setProperty(scope.engine, index, current);
@@ -740,21 +731,27 @@ ReturnedValue Object::virtualInstanceOf(const Object *typeObject, const Value &v
     if (!function)
         return engine->throwTypeError();
 
-    Heap::FunctionObject *f = function->d();
-    if (function->isBoundFunction())
-        f = function->cast<BoundFunction>()->target();
+    return checkedInstanceOf(engine, function, var);
+}
+
+ReturnedValue Object::checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *f, const Value &var)
+{
+    Scope scope(engine);
+    if (f->isBoundFunction()) {
+        ScopedValue v(scope, static_cast<const BoundFunction *>(f)->target());
+        f = v->as<FunctionObject>();
+    }
 
     // 15.3.5.3, 1: HasInstance can only be used on an object
     const Object *lhs = var.as<Object>();
     if (!lhs)
         return Encode(false);
 
-    Scope scope(f->internalClass->engine);
     // 15.3.5.3, 2
-    ScopedFunctionObject ff(scope, f);
-    ScopedObject o(scope, ff->protoProperty());
+    Value p = Value::fromReturnedValue(f->protoProperty());
+    const Object *o = p.objectValue();
     if (!o) // 15.3.5.3, 3
-        return engine->throwTypeError();
+        return f->engine()->throwTypeError();
 
     Heap::Object *v = lhs->d();
 
@@ -804,13 +801,13 @@ PropertyAttributes Object::virtualGetOwnProperty(const Managed *m, PropertyKey i
     } else {
         Q_ASSERT(id.asStringOrSymbol());
 
-        uint member = o->internalClass()->find(id);
-        if (member < UINT_MAX) {
-            attrs = o->internalClass()->propertyData[member];
+        auto member = o->internalClass()->find(id);
+        if (member.isValid()) {
+            attrs = member.attributes;
             if (p) {
-                p->value = *o->propertyData(member);
+                p->value = *o->propertyData(member.index);
                 if (attrs.isAccessor())
-                    p->set = *o->propertyData(member + SetterOffset);
+                    p->set = *o->propertyData(member.setterIndex);
             }
             return attrs;
         }
@@ -854,13 +851,13 @@ bool Object::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property
         return o->internalDefineOwnProperty(scope.engine, index, nullptr, p, attrs);
     }
 
-    uint memberIndex = o->internalClass()->find(id);
-    Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
+    auto memberIndex = o->internalClass()->find(id);
 
-    if (memberIndex == UINT_MAX) {
+    if (!memberIndex.isValid()) {
         if (!o->isExtensible())
             return false;
 
+        Scoped<StringOrSymbol> name(scope, id.asStringOrSymbol());
         ScopedProperty pd(scope);
         pd->copy(p, attrs);
         pd->fullyPopulated(&attrs);
@@ -868,7 +865,7 @@ bool Object::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Property
         return true;
     }
 
-    return o->internalDefineOwnProperty(scope.engine, memberIndex, name, p, attrs);
+    return o->internalDefineOwnProperty(scope.engine, UINT_MAX, &memberIndex, p, attrs);
 }
 
 bool Object::virtualIsExtensible(const Managed *m)
@@ -1057,13 +1054,13 @@ bool ArrayObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
     ExecutionEngine *engine = m->engine();
     if (id == engine->id_length()->propertyKey()) {
         Scope scope(engine);
-        Q_ASSERT(Heap::ArrayObject::LengthPropertyIndex == a->internalClass()->find(engine->id_length()->propertyKey()));
+        Q_ASSERT(a->internalClass()->verifyIndex(engine->id_length()->propertyKey(), Heap::ArrayObject::LengthPropertyIndex));
         ScopedProperty lp(scope);
-        PropertyAttributes cattrs;
-        a->getProperty(Heap::ArrayObject::LengthPropertyIndex, lp, &cattrs);
-        if (attrs.isEmpty() || p->isSubset(attrs, lp, cattrs))
+        InternalClassEntry e = a->internalClass()->find(scope.engine->id_length()->propertyKey());
+        a->getProperty(e, lp);
+        if (attrs.isEmpty() || p->isSubset(attrs, lp, e.attributes))
             return true;
-        if (!cattrs.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
+        if (!e.attributes.isWritable() || attrs.type() == PropertyAttributes::Accessor || attrs.isConfigurable() || attrs.isEnumerable())
             return false;
         bool succeeded = true;
         if (attrs.type() == PropertyAttributes::Data) {
@@ -1077,8 +1074,8 @@ bool ArrayObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
             succeeded = a->setArrayLength(l);
         }
         if (attrs.hasWritable() && !attrs.isWritable()) {
-            cattrs.setWritable(false);
-            Heap::InternalClass::changeMember(a, engine->id_length()->propertyKey(), cattrs);
+            e.attributes.setWritable(false);
+            Heap::InternalClass::changeMember(a, engine->id_length()->propertyKey(), e.attributes);
         }
         if (!succeeded)
             return false;

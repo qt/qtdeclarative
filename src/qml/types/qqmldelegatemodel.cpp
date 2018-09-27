@@ -956,7 +956,7 @@ void QQmlDelegateModelPrivate::incubatorStatusChanged(QQDMIncubationTask *incuba
             emitCreatedItem(incubationTask, cacheItem->object);
         cacheItem->releaseObject();
     } else if (status == QQmlIncubator::Error) {
-        qmlWarning(m_delegate, incubationTaskErrors + m_delegate->errors()) << "Error creating delegate";
+        qmlInfo(m_delegate, incubationTaskErrors + m_delegate->errors()) << "Cannot create delegate";
     }
 
     if (!cacheItem->isObjectReferenced()) {

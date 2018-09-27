@@ -74,7 +74,7 @@ void Heap::ErrorObject::init()
         return;
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_StackSetter, Value::undefinedValue());
     setProperty(scope.engine, QV4::ErrorObject::Index_FileName, Value::undefinedValue());
     setProperty(scope.engine, QV4::ErrorObject::Index_LineNumber, Value::undefinedValue());
 }
@@ -88,7 +88,7 @@ void Heap::ErrorObject::init(const Value &message, ErrorType t)
     Scoped<QV4::ErrorObject> e(scope, this);
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_StackSetter, Value::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     if (!e->d()->stackTrace->isEmpty()) {
@@ -110,7 +110,7 @@ void Heap::ErrorObject::init(const Value &message, const QString &fileName, int 
     Scoped<QV4::ErrorObject> e(scope, this);
 
     setProperty(scope.engine, QV4::ErrorObject::Index_Stack, scope.engine->getStackFunction()->d());
-    setProperty(scope.engine, QV4::ErrorObject::Index_Stack + QV4::Object::SetterOffset, Value::undefinedValue());
+    setProperty(scope.engine, QV4::ErrorObject::Index_StackSetter, Value::undefinedValue());
 
     e->d()->stackTrace = new StackTrace(scope.engine->stackTrace());
     StackFrame frame;

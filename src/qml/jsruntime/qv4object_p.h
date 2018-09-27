@@ -159,8 +159,8 @@ struct Q_QML_EXPORT Object: Managed {
     Heap::ArrayData *arrayData() const { return d()->arrayData; }
     void setArrayData(ArrayData *a) { d()->arrayData.set(engine(), a->d()); }
 
-    void getProperty(uint index, Property *p, PropertyAttributes *attrs) const;
-    void setProperty(uint index, const Property *p);
+    void getProperty(const InternalClassEntry &entry, Property *p) const;
+    void setProperty(const InternalClassEntry &entry, const Property *p);
     void setProperty(uint index, Value v) const { d()->setProperty(engine(), index, v); }
     void setProperty(uint index, Heap::Base *b) const { d()->setProperty(engine(), index, b); }
     void setProperty(ExecutionEngine *engine, uint index, Value v) const { d()->setProperty(engine, index, v); }
@@ -191,13 +191,18 @@ struct Q_QML_EXPORT Object: Managed {
         return getValueAccessor(thisObject, v, attrs);
     }
     ReturnedValue getValue(const Value &v, PropertyAttributes attrs) const {
-        Scope scope(this->engine());
-        ScopedValue t(scope, const_cast<Object *>(this));
-        return getValue(t, v, attrs);
+        return getValue(*this, v, attrs);
+    }
+    ReturnedValue getValueByIndex(uint propertyIndex) const {
+        PropertyAttributes attrs = internalClass()->propertyData.at(propertyIndex);
+        const Value *v = propertyData(propertyIndex);
+        if (!attrs.isAccessor())
+            return v->asReturnedValue();
+        return getValueAccessor(*this, *v, attrs);
     }
     static ReturnedValue getValueAccessor(const Value &thisObject, const Value &v, PropertyAttributes attrs);
 
-    bool putValue(uint memberIndex, const Value &value);
+    bool putValue(uint memberIndex, PropertyAttributes attrs, const Value &value);
 
     /* The spec default: Writable: true, Enumerable: false, Configurable: true */
     void defineDefaultProperty(StringOrSymbol *name, const Value &value, PropertyAttributes attributes = Attr_Data|Attr_NotEnumerable) {
@@ -382,9 +387,12 @@ protected:
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static qint64 virtualGetLength(const Managed *m);
     static ReturnedValue virtualInstanceOf(const Object *typeObject, const Value &var);
+public:
+    // qv4runtime uses this directly
+    static ReturnedValue checkedInstanceOf(ExecutionEngine *engine, const FunctionObject *typeObject, const Value &var);
 
 private:
-    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, StringOrSymbol *member, const Property *p, PropertyAttributes attrs);
+    bool internalDefineOwnProperty(ExecutionEngine *engine, uint index, const InternalClassEntry *memberEntry, const Property *p, PropertyAttributes attrs);
     ReturnedValue internalGet(PropertyKey id, const Value *receiver, bool *hasProperty) const;
     bool internalPut(PropertyKey id, const Value &value, Value *receiver);
     bool internalDeleteProperty(PropertyKey id);

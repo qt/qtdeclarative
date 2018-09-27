@@ -50,10 +50,10 @@ using namespace QV4;
 void Lookup::resolveProtoGetter(PropertyKey name, const Heap::Object *proto)
 {
     while (proto) {
-        uint index = proto->internalClass->find(name);
-        if (index != UINT_MAX) {
-            PropertyAttributes attrs = proto->internalClass->propertyData.at(index);
-            protoLookup.data = proto->propertyData(index);
+        auto index = proto->internalClass->findValueOrGetter(name);
+        if (index.isValid()) {
+            PropertyAttributes attrs = index.attrs;
+            protoLookup.data = proto->propertyData(index.index);
             if (attrs.isData()) {
                 getter = getterProto;
             } else {
@@ -77,23 +77,23 @@ ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *objec
         return getter(this, engine, *object);
     }
 
-    uint index = obj->internalClass->find(name);
-    if (index != UINT_MAX) {
-        PropertyAttributes attrs = obj->internalClass->propertyData.at(index);
+    auto index = obj->internalClass->findValueOrGetter(name);
+    if (index.isValid()) {
+        PropertyAttributes attrs = index.attrs;
         uint nInline = obj->vtable()->nInlineProperties;
         if (attrs.isData()) {
-            if (index < obj->vtable()->nInlineProperties) {
-                index += obj->vtable()->inlinePropertyOffset;
+            if (index.index < obj->vtable()->nInlineProperties) {
+                index.index += obj->vtable()->inlinePropertyOffset;
                 getter = getter0Inline;
             } else {
-                index -= nInline;
+                index.index -= nInline;
                 getter = getter0MemberData;
             }
         } else {
             getter = getterAccessor;
         }
         objectLookup.ic = obj->internalClass;
-        objectLookup.offset = index;
+        objectLookup.offset = index.index;
         return getter(this, engine, *object);
     }
 
@@ -478,15 +478,16 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
 
     Heap::InternalClass *c = object->internalClass();
     PropertyKey key = name->toPropertyKey();
-    uint idx = c->find(key);
-    if (idx != UINT_MAX) {
-        if (object->isArrayObject() && idx == Heap::ArrayObject::LengthPropertyIndex) {
+    auto idx = c->findValueOrSetter(key);
+    if (idx.isValid()) {
+        if (object->isArrayObject() && idx.index == Heap::ArrayObject::LengthPropertyIndex) {
+            Q_ASSERT(!idx.attrs.isAccessor());
             setter = arrayLengthSetter;
             return setter(this, engine, *object, value);
-        } else if (object->internalClass()->propertyData[idx].isData() && object->internalClass()->propertyData[idx].isWritable()) {
+        } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
             objectLookup.ic = object->internalClass();
-            objectLookup.offset = idx;
-            setter = idx < object->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
+            objectLookup.offset = idx.index;
+            setter = idx.index < object->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
             return setter(this, engine, *object, value);
         } else {
             // ### handle setter
@@ -506,13 +507,13 @@ bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value 
         setter = setterFallback;
         return true;
     }
-    idx = object->internalClass()->find(key);
-    if (idx == UINT_MAX) { // ### can this even happen?
+    idx = object->internalClass()->findValueOrSetter(key);
+    if (!idx.isValid() || idx.attrs.isAccessor()) { // ### can this even happen?
         setter = setterFallback;
         return false;
     }
     insertionLookup.newClass = object->internalClass();
-    insertionLookup.offset = idx;
+    insertionLookup.offset = idx.index;
     setter = setterInsert;
     return true;
 }

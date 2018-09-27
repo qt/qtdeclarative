@@ -270,6 +270,7 @@ private slots:
     void useDelegateChooserWithoutDefault();
 
     void addOnCompleted();
+    void setPositionOnLayout();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -8857,6 +8858,22 @@ void tst_QQuickListView::addOnCompleted()
                 y = newY;
             }
         }
+    }
+}
+
+void tst_QQuickListView::setPositionOnLayout()
+{
+    // Make sure we don't trigger a crash by removing items during layout from setPosition().
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("setpositiononlayout.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    for (int i = 0; i < 1000; ++i) {
+        QTest::keyPress(window.data(), Qt::Key_Down);
+        QTest::qWait(1);
+        QTest::keyRelease(window.data(), Qt::Key_Down);
     }
 }
 

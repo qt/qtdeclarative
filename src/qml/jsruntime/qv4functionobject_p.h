@@ -76,7 +76,9 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARKOBJECTS(FunctionObject);
     enum {
-        Index_ProtoConstructor = 0
+        Index_ProtoConstructor = 0,
+        Index_Prototype = 0,
+        Index_HasInstance = 1,
     };
 
     bool isConstructor() const {
@@ -111,7 +113,7 @@ struct IndexedBuiltinFunction : FunctionObject {
 
 struct ArrowFunction : FunctionObject {
     enum {
-        Index_Name,
+        Index_Name = Index_HasInstance + 1,
         Index_Length
     };
     void init(QV4::ExecutionContext *scope, Function *function, QV4::String *name = nullptr);
@@ -122,10 +124,6 @@ struct ArrowFunction : FunctionObject {
 
 DECLARE_HEAP_OBJECT(ScriptFunction, ArrowFunction) {
     DECLARE_MARKOBJECTS(ScriptFunction)
-    enum {
-        Index_Name,
-        Index_Length
-    };
     void init(QV4::ExecutionContext *scope, Function *function);
 };
 
@@ -217,8 +215,12 @@ struct Q_QML_EXPORT FunctionObject: Object {
 
     ReturnedValue getHomeObject() const;
 
-    ReturnedValue protoProperty() const { return get(engine()->id_prototype()); }
-
+    ReturnedValue protoProperty() const {
+        return getValueByIndex(Heap::FunctionObject::Index_Prototype);
+    }
+    bool hasHasInstanceProperty() const {
+        return !internalClass()->propertyData.at(Heap::FunctionObject::Index_HasInstance).isEmpty();
+    }
 
     QQmlSourceLocation sourceLocation() const;
 };
@@ -318,6 +320,12 @@ struct BoundFunction: FunctionObject {
     static ReturnedValue virtualCallAsConstructor(const FunctionObject *, const Value *argv, int argc, const Value *);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
+
+inline bool FunctionObject::isBoundFunction() const
+{
+    return d()->vtable() == BoundFunction::staticVTable();
+}
+
 
 }
 

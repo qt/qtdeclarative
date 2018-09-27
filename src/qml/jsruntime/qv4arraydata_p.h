@@ -101,7 +101,7 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(ArrayData, Base) {
     static void markObjects(Heap::Base *base, MarkStack *stack);
 
-    enum Type { Simple = 0, Complex = 1, Sparse = 2, Custom = 3 };
+    enum Type { Simple = 0, Sparse = 1, Custom = 2 };
 
     bool isSparse() const { return type == Sparse; }
 

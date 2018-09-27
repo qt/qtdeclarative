@@ -149,7 +149,7 @@ void FunctionObject::createDefaultPrototypeProperty(uint protoConstructorSlot)
 {
     Scope s(this);
 
-    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->find(s.engine->id_constructor()->propertyKey()) == protoConstructorSlot);
+    Q_ASSERT(s.engine->internalClasses(EngineBase::Class_ObjectProto)->verifyIndex(s.engine->id_constructor()->propertyKey(), protoConstructorSlot));
 
     ScopedObject proto(s, s.engine->newObject(s.engine->internalClasses(EngineBase::Class_ObjectProto)));
     proto->setProperty(protoConstructorSlot, d());
@@ -203,16 +203,6 @@ Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *eng
     ScopedFunctionObject function(scope, engine->memoryManager->allocate<FunctionObject>(engine->rootContext(), name, code));
     function->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(argumentCount));
     return function->d();
-}
-
-bool FunctionObject::isBinding() const
-{
-    return d()->vtable() == QQmlBindingFunction::staticVTable();
-}
-
-bool FunctionObject::isBoundFunction() const
-{
-    return d()->vtable() == BoundFunction::staticVTable();
 }
 
 ReturnedValue FunctionObject::getHomeObject() const
@@ -538,7 +528,7 @@ void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function,
     if (name)
         f->setName(name);
 
-    Q_ASSERT(internalClass && internalClass->find(s.engine->id_length()->propertyKey()) == Index_Length);
+    Q_ASSERT(internalClass && internalClass->verifyIndex(s.engine->id_length()->propertyKey(), Index_Length));
     setProperty(s.engine, Index_Length, Value::fromInt32(int(function->compiledFunction->length)));
 }
 

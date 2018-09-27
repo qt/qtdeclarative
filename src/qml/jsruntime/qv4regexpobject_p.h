@@ -125,11 +125,11 @@ struct RegExpObject: Object {
     void initProperties();
 
     int lastIndex() const {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->propertyKey()));
+        Q_ASSERT(internalClass()->verifyIndex(engine()->id_lastIndex()->propertyKey(), Index_LastIndex));
         return propertyData(Index_LastIndex)->toInt32();
     }
     void setLastIndex(int index) {
-        Q_ASSERT(Index_LastIndex == internalClass()->find(engine()->id_lastIndex()->propertyKey()));
+        Q_ASSERT(internalClass()->verifyIndex(engine()->id_lastIndex()->propertyKey(), Index_LastIndex));
         if (!internalClass()->propertyData[Index_LastIndex].isWritable()) {
             engine()->throwTypeError();
             return;

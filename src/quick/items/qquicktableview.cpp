@@ -1216,7 +1216,8 @@ void QQuickTableViewPrivate::processRebuildTable()
             return;
     }
 
-    const bool preload = (reusableFlag == QQmlTableInstanceModel::Reusable);
+    const bool preload = (rebuildOptions & RebuildOption::All
+                          && reusableFlag == QQmlTableInstanceModel::Reusable);
 
     if (rebuildState == RebuildState::PreloadColumns) {
         if (preload && loadedTable.right() < tableSize.width() - 1)
