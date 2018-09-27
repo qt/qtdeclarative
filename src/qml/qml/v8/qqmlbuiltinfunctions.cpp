@@ -1407,10 +1407,6 @@ DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 
     \snippet qml/qtBinding.4.qml 0
 
-    \note In \l {Qt Quick 1}, all function assignments were treated as
-    binding assignments. The Qt.binding() function is new to
-    \l {Qt Quick}{Qt Quick 2}.
-
     \since 5.0
 */
 ReturnedValue QtObject::method_binding(const FunctionObject *b, const Value *, const Value *argv, int argc)

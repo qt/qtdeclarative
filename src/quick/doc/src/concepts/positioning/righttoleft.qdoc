@@ -73,7 +73,7 @@ the effective alignment of the text element that takes the mirroring into accoun
 
 (This applies to the \l Row, \l Grid, \l Flow, \l ListView and \l GridView types.)
 
-From Qt Quick 1.1 onwards, types used for horizontal positioning and model views have gained a \c layoutDirection
+Types used for horizontal positioning and model views have the \c layoutDirection
 property for controlling the horizontal direction of the layouts. Setting \c layoutDirection to
 \c Qt.RightToLeft causes items to be laid out from the right to left. By default Qt Quick follows
 the left-to-right layout direction.
@@ -132,7 +132,7 @@ aligned and just make sure that text is translated and aligned properly.
 (This applies to \l Image, \l BorderImage and \l AnimatedImage types.)
 
 Most images do not need to be mirrored, but some directional icons, such as arrows, may need to be mirrored.
-The painting of these icons can be mirrored with a dedicated \c mirror property introduced in Qt Quick 1.1:
+The painting of these icons can be mirrored with a dedicated \c mirror property:
 
 \snippet qml/righttoleft.qml 5
 

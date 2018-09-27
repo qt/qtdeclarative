@@ -334,8 +334,6 @@ void QQuickImageResponse::cancel()
     \c cache property to \c false for the relevant \l Image, \l BorderImage or
     \l AnimatedImage object.
 
-    The \l {Qt Quick 1} version of this class is named QDeclarativeImageProvider.
-
     \sa QQmlEngine::addImageProvider()
 */
 
