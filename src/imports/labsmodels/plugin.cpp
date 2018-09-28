@@ -70,7 +70,6 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.qmlmodels"));
-        Q_UNUSED(uri);
         QQmlModelsModule::defineLabsModule();
 
         qmlRegisterModule(uri, 1, 0);

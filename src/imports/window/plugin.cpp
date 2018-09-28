@@ -69,7 +69,6 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Window"));
-        Q_UNUSED(uri);
         QQuickWindowModule::defineModule();
 
         // Auto-increment the import to stay in sync with ALL future QtQuick minor versions from 5.11 onward
