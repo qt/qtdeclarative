@@ -1660,9 +1660,13 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
                 return QV4::Encode::null();
             }
             QMetaType mt(type);
-            if (mt.flags() & QMetaType::IsGadget) {
-                Q_ASSERT(mt.metaObject());
-                return QV4::QQmlValueTypeWrapper::create(this, QVariant(type, data), mt.metaObject(), type);
+            if (auto metaObject = mt.metaObject()) {
+                auto flags = mt.flags();
+                if (flags & QMetaType::IsGadget) {
+                    return QV4::QQmlValueTypeWrapper::create(this, QVariant(type, data), metaObject, type);
+                } else if (flags & QMetaType::PointerToQObject) {
+                    return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(data));
+                }
             }
             if (QMetaType::hasRegisteredConverterFunction(type, qMetaTypeId<QtMetaTypePrivate::QSequentialIterableImpl>())) {
                 auto v = QVariant(type, data);

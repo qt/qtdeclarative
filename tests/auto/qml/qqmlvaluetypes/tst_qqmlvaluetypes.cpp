@@ -1720,6 +1720,14 @@ void tst_qqmlvaluetypes::sequences()
         for (int i = 0; i < objSet.size(); ++i)
             QCOMPARE(value.property(i).property("point").property("x").toInt(), a.point().x());
     }
+    {
+        MyTypeObject a, b, c;
+        QSet<MyTypeObject*> container{&a, &b, &c};
+        QJSValue value = engine.toScriptValue(container);
+        QCOMPARE(value.property("length").toInt(), container.size());
+        for (int i = 0; i < container.size(); ++i)
+            QCOMPARE(value.property(i).property("point").property("x").toInt(), a.point().x());
+    }
 }
 struct StringLessGadget {
     Q_GADGET
