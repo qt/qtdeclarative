@@ -123,7 +123,7 @@ struct ExecutableAllocator {
         }
 #    endif
 #  elif OS(INTEGRITY)
-         OSAllocator::setMemoryAttributes(addr, /*writable*/ true, /*executable*/ false);
+         OSAllocator::setMemoryAttributes(addr, size, /*writable*/ true, /*executable*/ false);
 #  else
         int mode = PROT_READ | PROT_WRITE;
         if (mprotect(addr, size, mode) != 0) {
@@ -159,7 +159,7 @@ struct ExecutableAllocator {
         }
 #    endif
 #  elif OS(INTEGRITY)
-        OSAllocator::setMemoryAttributes(addr, /*writable*/ false, /*executable*/ true);
+        OSAllocator::setMemoryAttributes(addr, size, /*writable*/ false, /*executable*/ true);
 #  else
         int mode = PROT_READ | PROT_EXEC;
         if (mprotect(addr, size, mode) != 0) {

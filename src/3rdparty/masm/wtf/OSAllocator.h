@@ -75,7 +75,7 @@ public:
     static bool canAllocateExecutableMemory();
 
 #if defined(Q_OS_INTEGRITY)
-    static void setMemoryAttributes(void* addr, bool writable, bool executable);
+    static void setMemoryAttributes(void* addr, size_t size, bool writable, bool executable);
 #endif
 };
 
