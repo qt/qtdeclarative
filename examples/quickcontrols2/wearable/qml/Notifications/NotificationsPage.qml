@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQC2
+import QtQuick 2.10
+import QtQuick.Controls 2.3 as QQC2
 import "../Style"
 import "notifications.js" as NotificationData
 
@@ -70,7 +70,7 @@ ListView {
         width: parent.width / 2
         anchors.right: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
-        source: "images/missedcall.png"
+        source: UIStyle.themeImagePath("images/missedcall")
         fillMode: Image.Pad
     }
 
@@ -85,7 +85,7 @@ ListView {
 
             Image {
                 anchors.horizontalCenter: parent.horizontalCenter
-                source: qsTr("images/avatar%1.png").arg(model.gender)
+                source: qsTr("images/avatar%1-%2.png").arg(model.gender).arg(UIStyle.darkTheme ? "dark" : "light")
             }
 
             Text {
@@ -93,7 +93,7 @@ ListView {
                 anchors.horizontalCenter: parent.horizontalCenter
                 font.bold: true
                 font.pixelSize: UIStyle.fontSizeS
-                color: UIStyle.colorQtGray1
+                color: UIStyle.themeColorQtGray1
             }
 
             Text {
@@ -101,7 +101,7 @@ ListView {
                 text: date + " " + time
                 font.pixelSize: UIStyle.fontSizeXS
                 font.italic: true
-                color: UIStyle.colorQtGray2
+                color: UIStyle.themeColorQtGray2
             }
         }
     }

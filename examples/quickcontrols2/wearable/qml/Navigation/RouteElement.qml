@@ -48,11 +48,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
+import QtQuick 2.10
 import "../Style"
 
 Rectangle {
-    color: UIStyle.colorQtGray8
+    color: UIStyle.themeColorQtGray8
 
     Row {
         spacing: 5
@@ -62,7 +62,7 @@ Rectangle {
         Image {
             id: img
             anchors.verticalCenter: parent.verticalCenter
-            source: "images/" + navImage
+            source: navImage
             fillMode: Image.PreserveAspectFit
         }
 
@@ -78,7 +78,7 @@ Rectangle {
                 font.pixelSize: UIStyle.fontSizeS
                 verticalAlignment: Text.AlignVCenter
                 padding: 1
-                color: UIStyle.colorQtGray1
+                color: UIStyle.themeColorQtGray1
             }
 
             Text {
@@ -88,7 +88,7 @@ Rectangle {
                 font.pixelSize: UIStyle.fontSizeXS
                 verticalAlignment: Text.AlignVCenter
                 padding: 1
-                color: UIStyle.colorQtGray2
+                color: UIStyle.themeColorQtGray2
             }
         }
     }

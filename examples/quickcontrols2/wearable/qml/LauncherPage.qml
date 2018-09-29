@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Controls 2.1 as QQC2
+import QtQuick 2.10
+import QtQuick.Controls 2.3 as QQC2
 import "Style"
 
 PathView {
@@ -118,7 +118,7 @@ PathView {
         background: Rectangle {
             radius: width / 2
             border.width: 3
-            border.color: parent.PathView.isCurrentItem ? UIStyle.colorQtPrimGreen : UIStyle.colorQtGray4
+            border.color: parent.PathView.isCurrentItem ? UIStyle.colorQtPrimGreen : UIStyle.themeColorQtGray4
         }
 
         onClicked: {
@@ -184,6 +184,6 @@ PathView {
         font.bold: true
         font.pixelSize: circularView.itemSize / 3
         font.letterSpacing: 1
-        color: UIStyle.colorQtGray1
+        color: UIStyle.themeColorQtGray1
     }
 }

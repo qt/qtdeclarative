@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.10
+import QtQuick.Templates 2.3 as T
 import "."
 
 T.Slider {
@@ -66,14 +66,14 @@ T.Slider {
 
         radius: 5
         color: control.pressed ? "#f0f0f0" : "#f6f6f6"
-        border.color: UIStyle.colorQtGray7
+        border.color: UIStyle.themeColorQtGray7
     }
 
     background: Rectangle {
         y: (control.height - height) / 2
         height: 4
         radius: 2
-        color: UIStyle.colorQtGray3
+        color: UIStyle.themeColorQtGray3
 
         Rectangle {
             width: control.visualPosition * parent.width

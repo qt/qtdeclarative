@@ -48,14 +48,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQ2
+import QtQuick 2.10
+import QtQuick.Controls 2.3 as QQC2
 import ".."
 import "../Style"
 import "fitness.js" as FitnessData
 
 Item {
-    QQ2.SwipeView {
+    QQC2.SwipeView {
         id: svFitnessContainer
 
         anchors.fill: parent
@@ -72,18 +72,18 @@ Item {
                     text: qsTr("Steps: ") + FitnessData.getSteps()
                     font.italic: true
                     font.pixelSize: UIStyle.fontSizeM
-                    color: UIStyle.colorQtGray1
+                    color: UIStyle.themeColorQtGray1
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    source: "images/man-walking.png"
+                    source: UIStyle.themeImagePath("images/man-walking")
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: qsTr("Calories: ") + FitnessData.getCalories()
                     font.pixelSize: UIStyle.fontSizeS
                     font.italic: true
-                    color: UIStyle.colorQtGray3
+                    color: UIStyle.themeColorQtGray3
                 }
             }
         }
@@ -102,11 +102,11 @@ Item {
                           + qsTr(" miles")
                     font.italic: true
                     font.pixelSize: UIStyle.fontSizeM
-                    color: UIStyle.colorQtGray1
+                    color: UIStyle.themeColorQtGray1
                 }
                 Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    source: "images/man-running.png"
+                    source: UIStyle.themeImagePath("images/man-running")
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -115,13 +115,13 @@ Item {
                           + qsTr(" mins")
                     font.pixelSize: UIStyle.fontSizeS
                     font.italic: true
-                    color: UIStyle.colorQtGray3
+                    color: UIStyle.themeColorQtGray3
                 }
             }
         }
     }
 
-    QQ2.PageIndicator {
+    QQC2.PageIndicator {
         count: svFitnessContainer.count
         currentIndex: svFitnessContainer.currentIndex
 

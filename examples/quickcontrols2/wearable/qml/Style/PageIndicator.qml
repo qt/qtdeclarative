@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.10
+import QtQuick.Templates 2.3 as T
 import "."
 
 T.PageIndicator {
@@ -67,7 +67,7 @@ T.PageIndicator {
         implicitHeight: 8
 
         radius: width / 2
-        color: UIStyle.colorQtGray3
+        color: UIStyle.themeColorQtGray3
 
         opacity: index === control.currentIndex ? 1.0 : 0.35
 

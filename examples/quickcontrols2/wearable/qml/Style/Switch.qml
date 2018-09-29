@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.10
+import QtQuick.Templates 2.3 as T
 import "."
 
 T.Switch {
@@ -65,7 +65,7 @@ T.Switch {
         height: 26
 
         radius: 13
-        color: control.down ? UIStyle.colorQtGray6 : UIStyle.colorQtGray10
+        color: control.down ? UIStyle.themeColorQtGray6 : UIStyle.themeColorQtGray10
         border.color: !control.checked ? "#999999"
                                        : (control.down ? UIStyle.colorQtAuxGreen2
                                                        : UIStyle.colorQtAuxGreen1)
@@ -78,9 +78,9 @@ T.Switch {
 
     background: Rectangle {
         radius: 13
-        color: control.checked ? UIStyle.colorQtAuxGreen2 : "#E6173D"
+        color: control.checked ? UIStyle.colorQtAuxGreen2 : UIStyle.colorRed
         border.color: control.checked ? UIStyle.colorQtAuxGreen2
-                                      : UIStyle.colorQtGray6
+                                      : UIStyle.themeColorQtGray6
     }
 }
 

@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Controls 2.0 as QQC2
+import QtQuick 2.10
+import QtQuick.Controls 2.3 as QQC2
 import ".."
 import "../Style"
 
@@ -180,7 +180,7 @@ SwipeViewPage {
             anchors.horizontalCenter: parent.horizontalCenter
 
             text: cityName
-            color: UIStyle.colorQtGray1
+            color: UIStyle.themeColorQtGray1
             font.pixelSize: UIStyle.fontSizeXS
             font.letterSpacing: 2
         }

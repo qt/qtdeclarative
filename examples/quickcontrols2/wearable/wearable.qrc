@@ -18,7 +18,8 @@
         <file>icons/wearable/36x36@2/settings.png</file>
         <file>icons/wearable/36x36@2/weather.png</file>
         <file>icons/wearable/36x36@2/worldclock.png</file>
-        <file>images/background.png</file>
+        <file>images/background-light.png</file>
+        <file>images/background-dark.png</file>
         <file>images/back.png</file>
         <file>images/back@2x.png</file>
         <file>images/home.png</file>
@@ -26,45 +27,77 @@
         <file>qml/Alarms/AlarmsPage.qml</file>
         <file>qml/Fitness/fitness.js</file>
         <file>qml/Fitness/FitnessPage.qml</file>
-        <file>qml/Fitness/images/man-running.png</file>
-        <file>qml/Fitness/images/man-running@2x.png</file>
-        <file>qml/Fitness/images/man-walking.png</file>
-        <file>qml/Fitness/images/man-walking@2x.png</file>
+        <file>qml/Fitness/images/man-running-light.png</file>
+        <file>qml/Fitness/images/man-running-light@2x.png</file>
+        <file>qml/Fitness/images/man-walking-light.png</file>
+        <file>qml/Fitness/images/man-walking-light@2x.png</file>
+        <file>qml/Fitness/images/man-running-dark.png</file>
+        <file>qml/Fitness/images/man-running-dark@2x.png</file>
+        <file>qml/Fitness/images/man-walking-dark.png</file>
+        <file>qml/Fitness/images/man-walking-dark@2x.png</file>
         <file>qml/Navigation/navigation.js</file>
         <file>qml/Navigation/NavigationPage.qml</file>
         <file>qml/Navigation/RouteElement.qml</file>
         <file>qml/Navigation/walk_route.json</file>
         <file>qml/Navigation/images/end.png</file>
         <file>qml/Navigation/images/end@2x.png</file>
-        <file>qml/Navigation/images/leftturn.png</file>
-        <file>qml/Navigation/images/leftturn@2x.png</file>
-        <file>qml/Navigation/images/navigation.png</file>
-        <file>qml/Navigation/images/navigation@2x.png</file>
-        <file>qml/Navigation/images/rightturn.png</file>
-        <file>qml/Navigation/images/rightturn@2x.png</file>
+        <file>qml/Navigation/images/leftturn-light.png</file>
+        <file>qml/Navigation/images/leftturn-light@2x.png</file>
+        <file>qml/Navigation/images/leftturn-dark.png</file>
+        <file>qml/Navigation/images/leftturn-dark@2x.png</file>
+        <file>qml/Navigation/images/navigation-light.png</file>
+        <file>qml/Navigation/images/navigation-light@2x.png</file>
+        <file>qml/Navigation/images/navigation-dark.png</file>
+        <file>qml/Navigation/images/navigation-dark@2x.png</file>
+        <file>qml/Navigation/images/rightturn-light.png</file>
+        <file>qml/Navigation/images/rightturn-light@2x.png</file>
+        <file>qml/Navigation/images/rightturn-dark.png</file>
+        <file>qml/Navigation/images/rightturn-dark@2x.png</file>
         <file>qml/Navigation/images/start.png</file>
         <file>qml/Navigation/images/start@2x.png</file>
-        <file>qml/Navigation/images/straight.png</file>
-        <file>qml/Navigation/images/straight@2x.png</file>
+        <file>qml/Navigation/images/straight-light.png</file>
+        <file>qml/Navigation/images/straight-light@2x.png</file>
+        <file>qml/Navigation/images/straight-dark.png</file>
+        <file>qml/Navigation/images/straight-dark@2x.png</file>
         <file>qml/Navigation/images/uturn.png</file>
         <file>qml/Navigation/images/uturn@2x.png</file>
         <file>qml/Notifications/notifications.js</file>
         <file>qml/Notifications/NotificationsPage.qml</file>
-        <file>qml/Notifications/images/avatarf.png</file>
-        <file>qml/Notifications/images/avatarf@2x.png</file>
-        <file>qml/Notifications/images/avatarm.png</file>
-        <file>qml/Notifications/images/avatarm@2x.png</file>
-        <file>qml/Notifications/images/missedcall.png</file>
-        <file>qml/Notifications/images/missedcall@2x.png</file>
+        <file>qml/Notifications/images/avatarf-light.png</file>
+        <file>qml/Notifications/images/avatarf-light@2x.png</file>
+        <file>qml/Notifications/images/avatarm-light.png</file>
+        <file>qml/Notifications/images/avatarm-light@2x.png</file>
+        <file>qml/Notifications/images/missedcall-light.png</file>
+        <file>qml/Notifications/images/missedcall-light@2x.png</file>
+        <file>qml/Notifications/images/avatarf-dark.png</file>
+        <file>qml/Notifications/images/avatarf-dark@2x.png</file>
+        <file>qml/Notifications/images/avatarm-dark.png</file>
+        <file>qml/Notifications/images/avatarm-dark@2x.png</file>
+        <file>qml/Notifications/images/missedcall-dark.png</file>
+        <file>qml/Notifications/images/missedcall-dark@2x.png</file>
         <file>qml/Settings/SettingsPage.qml</file>
-        <file>qml/Settings/images/bluetooth.png</file>
-        <file>qml/Settings/images/bluetooth@2x.png</file>
-        <file>qml/Settings/images/brightness.png</file>
-        <file>qml/Settings/images/brightness@2x.png</file>
-        <file>qml/Settings/images/contrast.png</file>
-        <file>qml/Settings/images/contrast@2x.png</file>
-        <file>qml/Settings/images/wifi.png</file>
-        <file>qml/Settings/images/wifi@2x.png</file>
+        <file>qml/Settings/images/bluetooth-light.png</file>
+        <file>qml/Settings/images/bluetooth-light@2x.png</file>
+        <file>qml/Settings/images/brightness-light.png</file>
+        <file>qml/Settings/images/brightness-light@2x.png</file>
+        <file>qml/Settings/images/demo-mode-light.png</file>
+        <file>qml/Settings/images/demo-mode-light@2x.png</file>
+        <file>qml/Settings/images/demo-mode-dark.png</file>
+        <file>qml/Settings/images/demo-mode-dark@2x.png</file>
+        <file>qml/Settings/images/demo-mode-white.png</file>
+        <file>qml/Settings/images/demo-mode-white@2x.png</file>
+        <file>qml/Settings/images/theme-light.png</file>
+        <file>qml/Settings/images/theme-light@2x.png</file>
+        <file>qml/Settings/images/wifi-light.png</file>
+        <file>qml/Settings/images/wifi-light@2x.png</file>
+        <file>qml/Settings/images/bluetooth-dark.png</file>
+        <file>qml/Settings/images/bluetooth-dark@2x.png</file>
+        <file>qml/Settings/images/brightness-dark.png</file>
+        <file>qml/Settings/images/brightness-dark@2x.png</file>
+        <file>qml/Settings/images/theme-dark.png</file>
+        <file>qml/Settings/images/theme-dark@2x.png</file>
+        <file>qml/Settings/images/wifi-dark.png</file>
+        <file>qml/Settings/images/wifi-dark@2x.png</file>
         <file>qml/Style/qmldir</file>
         <file>qml/Style/PageIndicator.qml</file>
         <file>qml/Style/Slider.qml</file>
@@ -73,18 +106,30 @@
         <file>qml/Weather/weather.js</file>
         <file>qml/Weather/weather.json</file>
         <file>qml/Weather/WeatherPage.qml</file>
-        <file>qml/Weather/images/humidity.png</file>
-        <file>qml/Weather/images/humidity@2x.png</file>
-        <file>qml/Weather/images/pressure.png</file>
-        <file>qml/Weather/images/pressure@2x.png</file>
-        <file>qml/Weather/images/sunrise.png</file>
-        <file>qml/Weather/images/sunrise@2x.png</file>
-        <file>qml/Weather/images/sunset.png</file>
-        <file>qml/Weather/images/sunset@2x.png</file>
-        <file>qml/Weather/images/temperature.png</file>
-        <file>qml/Weather/images/temperature@2x.png</file>
-        <file>qml/Weather/images/wind.png</file>
-        <file>qml/Weather/images/wind@2x.png</file>
+        <file>qml/Weather/images/humidity-light.png</file>
+        <file>qml/Weather/images/humidity-light@2x.png</file>
+        <file>qml/Weather/images/pressure-light.png</file>
+        <file>qml/Weather/images/pressure-light@2x.png</file>
+        <file>qml/Weather/images/sunrise-light.png</file>
+        <file>qml/Weather/images/sunrise-light@2x.png</file>
+        <file>qml/Weather/images/sunset-light.png</file>
+        <file>qml/Weather/images/sunset-light@2x.png</file>
+        <file>qml/Weather/images/temperature-light.png</file>
+        <file>qml/Weather/images/temperature-light@2x.png</file>
+        <file>qml/Weather/images/wind-light.png</file>
+        <file>qml/Weather/images/wind-light@2x.png</file>
+        <file>qml/Weather/images/humidity-dark.png</file>
+        <file>qml/Weather/images/humidity-dark@2x.png</file>
+        <file>qml/Weather/images/pressure-dark.png</file>
+        <file>qml/Weather/images/pressure-dark@2x.png</file>
+        <file>qml/Weather/images/sunrise-dark.png</file>
+        <file>qml/Weather/images/sunrise-dark@2x.png</file>
+        <file>qml/Weather/images/sunset-dark.png</file>
+        <file>qml/Weather/images/sunset-dark@2x.png</file>
+        <file>qml/Weather/images/temperature-dark.png</file>
+        <file>qml/Weather/images/temperature-dark@2x.png</file>
+        <file>qml/Weather/images/wind-dark.png</file>
+        <file>qml/Weather/images/wind-dark@2x.png</file>
         <file>qml/WorldClock/Clock.qml</file>
         <file>qml/WorldClock/WorldClockPage.qml</file>
         <file>qml/WorldClock/images/center.png</file>
@@ -104,5 +149,7 @@
         <file>qml/WorldClock/images/swissnightminute.png</file>
         <file>qml/WorldClock/images/swissnightminute@2x.png</file>
         <file>qml/SwipeViewPage.qml</file>
+        <file>qml/DemoMode.qml</file>
+        <file>qml/DemoModeIndicator.qml</file>
     </qresource>
 </RCC>
