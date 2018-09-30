@@ -54,7 +54,9 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#if QT_CONFIG(filesystemwatcher)
 #include <QFileSystemWatcher>
+#endif
 #include <QFileInfo>
 #include <QDir>
 
