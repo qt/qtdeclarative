@@ -28,7 +28,7 @@
 /*!
 \page qtquick-bestpractices.html
 \title Best Practices for QML and Qt Quick
-\brief Lists best practices for working with QML and Qt Quick
+\brief Lists best practices for working with QML and Qt Quick.
 \ingroup best-practices
 
 Despite all of the benefits that QML and Qt Quick offer, they can be
@@ -121,7 +121,7 @@ of resources. However, whenever a new file is added to \c RESOURCES using this
 approach, it causes \e all of the other files in \c RESOURCES to be recompiled
 as well. This can be inefficient, especially for large sets of files.
 In this case, a better approach is to separate each type of resource into its
-own \l {Resource Collection Files (.qrc)}{.qrc} file. For example, the snippet
+own \l [Qt Core] {Resource Collection Files}{.qrc} file. For example, the snippet
 above could be changed to the following:
 
 \badcode

@@ -163,6 +163,7 @@ public:
         // Remember to increment the size of QQuickItemPrivate::flags
     };
     Q_DECLARE_FLAGS(Flags, Flag)
+    Q_FLAG(Flags)
 
     enum ItemChange {
         ItemChildAddedChange,      // value.item

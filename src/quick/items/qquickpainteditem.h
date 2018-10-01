@@ -71,6 +71,7 @@ public:
         FastFBOResizing = 0x1
     };
     Q_DECLARE_FLAGS(PerformanceHints, PerformanceHint)
+    Q_FLAG(PerformanceHints)
 
     void update(const QRect &rect = QRect());
 

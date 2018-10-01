@@ -110,8 +110,6 @@ void QQmlExpressionPrivate::init(QQmlContextData *ctxt, QV4::Function *runtimeFu
     QQmlExpression *expr = new QQmlExpression(engine->rootContext(), myObject, "width * 2");
     int result = expr->evaluate().toInt();  // result = 400
     \endcode
-
-    Note that the \l {Qt Quick 1} version is called QDeclarativeExpression.
 */
 
 /*!

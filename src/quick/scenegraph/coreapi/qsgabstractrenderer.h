@@ -61,6 +61,7 @@ public:
         ClearStencilBuffer  = 0x0004
     };
     Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
+    Q_FLAG(ClearMode)
 
     ~QSGAbstractRenderer() override;
 

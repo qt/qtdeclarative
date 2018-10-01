@@ -545,7 +545,7 @@ static QUrl moduleUrlForFileName(const QString &fileName)
     Subsequent imports of the same module will return the previously imported instance. Modules
     are singletons and remain around until the engine is destroyed.
 
-    The specified \a fileName will internally be normalized using \a QFileInfo::canonicalFilePath().
+    The specified \a fileName will internally be normalized using \l QFileInfo::canonicalFilePath().
     That means that multiple imports of the same file on disk using different relative paths will
     load the file only once.
 

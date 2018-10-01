@@ -108,6 +108,7 @@ public:
         Vertical_Mask = TopAnchor | BottomAnchor | VCenterAnchor | BaselineAnchor
     };
     Q_DECLARE_FLAGS(Anchors, Anchor)
+    Q_FLAG(Anchors)
 
     QQuickAnchorLine left() const;
     void setLeft(const QQuickAnchorLine &edge);

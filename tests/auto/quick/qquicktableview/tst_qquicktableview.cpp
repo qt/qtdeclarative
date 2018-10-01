@@ -117,6 +117,7 @@ private slots:
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
     void checkContentWidthAndHeight();
+    void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
     void checkContentXY();
     void noDelegate();
@@ -554,8 +555,15 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     tableView->setContentX(flickTo);
     tableView->setContentY(flickTo);
 
+    // Since we move the viewport more than a page, tableview
+    // will jump to the new position and do a rebuild.
+    QVERIFY(tableViewPrivate->polishScheduled);
+    QVERIFY(tableViewPrivate->rebuildScheduled);
+    WAIT_UNTIL_POLISHED;
+
     const int largeSizeCellCountInView = qCeil(tableView->width() / cellSizeLarge);
     const int columnCount = smallCellCount + largeSizeCellCountInView;
+    QCOMPARE(tableViewPrivate->loadedTable.left(), smallCellCount);
     QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
 
     const qreal firstHalfLength = smallCellCount * cellSizeSmall;
@@ -572,8 +580,20 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // check that we then end up with the exact content width/height.
     const qreal secondHalfLength = largeCellCount * cellSizeLarge;
     const qreal expectedFullSize = (firstHalfLength + secondHalfLength) + accumulatedSpacing;
-    tableView->setContentX(expectedFullSize);
-    tableView->setContentY(expectedFullSize);
+
+    // If we flick more than one page at a time, tableview will jump to the new
+    // position and rebuild the table without loading the edges in-between. Which
+    // row and column that ends up as new top-left is then based on a prediction, and
+    // therefore unreliable. To avoid this to happen (which will also affect the
+    // reported size of the table), we flick to the end position in smaller chuncks.
+    QVERIFY(!tableViewPrivate->polishScheduled);
+    QVERIFY(!tableViewPrivate->rebuildScheduled);
+    int pages = qCeil((expectedFullSize - tableView->contentX()) / tableView->width());
+    for (int i = 0; i < pages; i++) {
+        tableView->setContentX(tableView->contentX() + tableView->width() - 1);
+        tableView->setContentY(tableView->contentY() + tableView->height() - 1);
+        QVERIFY(!tableViewPrivate->rebuildScheduled);
+    }
 
     QCOMPARE(tableView->contentWidth(), expectedFullSize);
     QCOMPARE(tableView->contentHeight(), expectedFullSize);
@@ -585,6 +605,79 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
 
     QCOMPARE(tableView->contentWidth(), expectedFullSize);
     QCOMPARE(tableView->contentHeight(), expectedFullSize);
+}
+
+void tst_QQuickTableView::checkPageFlicking()
+{
+    // Check that we rebuild the table instead of refilling edges, if the viewport moves
+    // more than a page (the size of TableView).
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    const int cellWidth = 100;
+    const int cellHeight = 50;
+    auto model = TestModelAsVariant(10000, 10000);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Sanity check startup table
+    QRect tableRect = tableViewPrivate->loadedTable;
+    QCOMPARE(tableRect.x(), 0);
+    QCOMPARE(tableRect.y(), 0);
+    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
+    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
+
+    // Since all cells have the same size, the average row/column
+    // size found by TableView should be exactly equal to this.
+    QCOMPARE(tableViewPrivate->averageEdgeSize.width(), cellWidth);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.height(), cellHeight);
+
+    QVERIFY(!tableViewPrivate->rebuildScheduled);
+    QCOMPARE(tableViewPrivate->scheduledRebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
+
+    // Flick 5000 columns to the right, and check that this triggers a
+    // rebuild, and that we end up at the expected top-left.
+    const int flickToColumn = 5000;
+    const qreal columnSpacing = tableView->columnSpacing();
+    const qreal flickToColumnInPixels = ((cellWidth + columnSpacing) * flickToColumn) - columnSpacing;
+    tableView->setContentX(flickToColumnInPixels);
+
+    QVERIFY(tableViewPrivate->rebuildScheduled);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn);
+    QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow));
+
+    WAIT_UNTIL_POLISHED;
+
+    tableRect = tableViewPrivate->loadedTable;
+    QCOMPARE(tableRect.x(), flickToColumn);
+    QCOMPARE(tableRect.y(), 0);
+    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
+    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
+
+    // Flick 5000 rows down as well. Since flicking down should only calculate a new row (but
+    // keep the current column), we deliberatly change the average width to check that it's
+    // actually ignored by the rebuild, and that the column stays the same.
+    tableViewPrivate->averageEdgeSize.rwidth() /= 2;
+
+    const int flickToRow = 5000;
+    const qreal rowSpacing = tableView->rowSpacing();
+    const qreal flickToRowInPixels = ((cellHeight + rowSpacing) * flickToRow) - rowSpacing;
+    tableView->setContentY(flickToRowInPixels);
+
+    QVERIFY(tableViewPrivate->rebuildScheduled);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn));
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableRect = tableViewPrivate->loadedTable;
+    QCOMPARE(tableRect.x(), flickToRow);
+    QCOMPARE(tableRect.y(), flickToColumn);
+    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
+    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
 }
 
 void tst_QQuickTableView::checkExplicitContentWidthAndHeight()

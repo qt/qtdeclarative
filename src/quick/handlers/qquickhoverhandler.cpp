@@ -48,7 +48,7 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     \instantiates QQuickHoverHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
-    \brief Handler for mouse and tablet hover
+    \brief Handler for mouse and tablet hover.
 
     HoverHandler detects a hovering cursor.  Since touchscreens don't generally
     offer hover events, in practice it detects a hovering mouse or tablet stylus.

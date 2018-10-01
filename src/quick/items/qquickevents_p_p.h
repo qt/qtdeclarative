@@ -632,7 +632,6 @@ public:
         AllDevices = 0x7FFF
     };
     Q_DECLARE_FLAGS(DeviceTypes, DeviceType)
-    Q_ENUM(DeviceType)
     Q_FLAG(DeviceTypes)
 
     enum PointerType : qint16 {
@@ -644,7 +643,6 @@ public:
         AllPointerTypes = 0x7FFF
     };
     Q_DECLARE_FLAGS(PointerTypes, PointerType)
-    Q_ENUM(PointerType)
     Q_FLAG(PointerTypes)
 
     enum CapabilityFlag : qint16 {
@@ -661,7 +659,6 @@ public:
         YTilt       = 0x1000
     };
     Q_DECLARE_FLAGS(Capabilities, CapabilityFlag)
-    Q_ENUM(CapabilityFlag)
     Q_FLAG(Capabilities)
 
     DeviceType type() const { return m_deviceType; }

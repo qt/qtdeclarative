@@ -111,8 +111,6 @@ qWarning() << "Current pixel size:" << property.read().toInt();
 property.write(24);
 qWarning() << "Pixel size should now be 24:" << property.read().toInt();
 \endcode
-
-The \l {Qt Quick 1} version of this class was named QDeclarativeProperty.
 */
 
 /*!

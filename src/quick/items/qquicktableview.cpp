@@ -587,6 +587,16 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
     }
 }
 
+void QQuickTableViewPrivate::updateAverageEdgeSize()
+{
+    int bottomCell = loadedTable.bottom();
+    int rightCell = loadedTable.right();
+    qreal accRowSpacing = bottomCell * cellSpacing.height();
+    qreal accColumnSpacing = rightCell * cellSpacing.width();
+    averageEdgeSize.setHeight((loadedTableOuterRect.bottom() - accRowSpacing) / (bottomCell + 1));
+    averageEdgeSize.setWidth((loadedTableOuterRect.right() - accColumnSpacing) / (rightCell + 1));
+}
+
 void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 {
     QRectF topLeftRect = loadedTableItem(loadedTable.topLeft())->geometry();
@@ -1172,14 +1182,16 @@ void QQuickTableViewPrivate::processLoadRequest()
 
     syncLoadedTableFromLoadRequest();
     layoutTableEdgeFromLoadRequest();
-
     syncLoadedTableRectFromLoadedTable();
-    enforceTableAtOrigin();
-    updateContentWidth();
-    updateContentHeight();
+
+    if (rebuildState == RebuildState::Done) {
+        enforceTableAtOrigin();
+        updateContentWidth();
+        updateContentHeight();
+        drainReusePoolAfterLoadRequest();
+    }
 
     loadRequest.markAsDone();
-    drainReusePoolAfterLoadRequest();
 
     qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
 }
@@ -1260,23 +1272,34 @@ void QQuickTableViewPrivate::beginRebuildTable()
     if (loadRequest.isActive())
         cancelLoadRequest();
 
-    QPoint topLeft;
-    QPointF topLeftPos;
     calculateTableSize();
 
+    QPoint topLeft;
+    QPointF topLeftPos;
+
     if (rebuildOptions & RebuildOption::All) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::All";
         releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
-        topLeft = QPoint(0, 0);
-        topLeftPos = QPoint(0, 0);
     } else if (rebuildOptions & RebuildOption::ViewportOnly) {
-        // Rebuild the table without flicking the content view back to origin, and
-        // start building from the same top left item that is currently showing
-        // (unless it has been removed from the model).
+        qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::ViewportOnly";
         releaseLoadedItems(reusableFlag);
-        topLeft = loadedTable.topLeft();
-        topLeftPos = loadedTableOuterRect.topLeft();
-        topLeft.setX(qMin(topLeft.x(), tableSize.width() - 1));
-        topLeft.setY(qMin(topLeft.y(), tableSize.height() - 1));
+
+        if (rebuildOptions & RebuildOption::CalculateNewTopLeftRow) {
+            const int newRow = int(viewportRect.y() / (averageEdgeSize.height() + cellSpacing.height()));
+            topLeft.ry() = qBound(0, newRow, tableSize.height() - 1);
+            topLeftPos.ry() = topLeft.y() * (averageEdgeSize.height() + cellSpacing.height());
+        } else {
+            topLeft.ry() = qBound(0, loadedTable.topLeft().y(), tableSize.height() - 1);
+            topLeftPos.ry() = loadedTableOuterRect.topLeft().y();
+        }
+        if (rebuildOptions & RebuildOption::CalculateNewTopLeftColumn) {
+            const int newColumn = int(viewportRect.x() / (averageEdgeSize.width() + cellSpacing.width()));
+            topLeft.rx() = qBound(0, newColumn, tableSize.width() - 1);
+            topLeftPos.rx() = topLeft.x() * (averageEdgeSize.width() + cellSpacing.width());
+        } else {
+            topLeft.rx() = qBound(0, loadedTable.topLeft().x(), tableSize.width() - 1);
+            topLeftPos.rx() = loadedTableOuterRect.topLeft().x();
+        }
     } else {
         Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
     }
@@ -1301,6 +1324,10 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
         // available yet for the calculation. So we do it now.
         relayoutTable();
     }
+
+    updateAverageEdgeSize();
+    updateContentWidth();
+    updateContentHeight();
 }
 
 void QQuickTableViewPrivate::loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos)
@@ -1920,13 +1947,23 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
     Q_D(QQuickTableView);
     QQuickFlickable::viewportMoved(orientation);
 
-    // Calling polish() will schedule a polish event. But while the user is flicking, several
-    // mouse events will be handled before we get an updatePolish() call. And the updatePolish()
-    // call will only see the last mouse position. This results in a stuttering flick experience
-    // (especially on windows). We improve on this by calling updatePolish() directly. But this
-    // has the pitfall that we open up for recursive callbacks. E.g while inside updatePolish(), we
-    // load/unload items, and emit signals. The application can listen to those signals and set a
-    // new contentX/Y on the flickable. So we need to guard for this, to avoid unexpected behavior.
+    QQuickTableViewPrivate::RebuildOptions options = QQuickTableViewPrivate::RebuildOption::None;
+
+    // Check the viewport moved more than one page vertically
+    if (!d->viewportRect.intersects(QRectF(d->viewportRect.x(), contentY(), 1, height())))
+        options |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
+    // Check the viewport moved more than one page horizontally
+    if (!d->viewportRect.intersects(QRectF(contentX(), d->viewportRect.y(), width(), 1)))
+        options |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
+
+    if (options) {
+        // When the viewport has moved more than one page vertically or horizontally, we switch
+        // strategy from refilling edges around the current table to instead rebuild the table
+        // from scratch inside the new viewport. This will greatly improve performance when flicking
+        // a long distance in one go, which can easily happen when dragging on scrollbars.
+        options |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
+        d->scheduleRebuildTable(options);
+    }
 
     if (d->rebuildScheduled) {
         // No reason to do anything, since we're about to rebuild the whole table anyway.
@@ -1936,6 +1973,13 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
         return;
     }
 
+    // Calling polish() will schedule a polish event. But while the user is flicking, several
+    // mouse events will be handled before we get an updatePolish() call. And the updatePolish()
+    // call will only see the last mouse position. This results in a stuttering flick experience
+    // (especially on windows). We improve on this by calling updatePolish() directly. But this
+    // has the pitfall that we open up for recursive callbacks. E.g while inside updatePolish(), we
+    // load/unload items, and emit signals. The application can listen to those signals and set a
+    // new contentX/Y on the flickable. So we need to guard for this, to avoid unexpected behavior.
     if (d->polishing)
         polish();
     else

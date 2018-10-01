@@ -55,8 +55,6 @@ QT_BEGIN_NAMESPACE
     The \l {Writing QML Extensions with C++} tutorial also contains a chapter
     on creating QML plugins.
 
-    Note that the \l {Qt Quick 1} version is called QDeclarativeExtensionPlugin.
-
     \sa QQmlEngine::importPlugin(), {How to Create Qt Plugins}
 */
 

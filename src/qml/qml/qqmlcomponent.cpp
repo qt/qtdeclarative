@@ -174,8 +174,6 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
         }
     }
     \endcode
-
-    Note that the \l {Qt Quick 1} version is named QDeclarativeComponent.
 */
 
 /*!
