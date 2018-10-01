@@ -123,10 +123,14 @@ Error setAttributes(MemoryRegion mr, bool writable, bool executable)
     return SetMemoryRegionAttributes(mr, attributes);
 }
 
-void OSAllocator::setMemoryAttributes(void* addr, bool writable, bool executable)
+void OSAllocator::setMemoryAttributes(void* addr, size_t size, bool writable, bool executable)
 {
-     const MRPair* pair = memoryRegionsContainer.getMRPair((Address)addr);
-     CheckSuccess(setAttributes(pair->vmr, writable, executable));
+    Address addressIterator = Address(addr);
+    for(int i=0; i<(size + ASP_PAGESIZE -1)/ASP_PAGESIZE; i++) {
+        const MRPair* pair = memoryRegionsContainer.getMRPair(addressIterator);
+        CheckSuccess(setAttributes(pair->vmr, writable, executable));
+        addressIterator += ASP_PAGESIZE;
+    }
 }
 
 void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, bool executable)
@@ -140,9 +144,9 @@ void* OSAllocator::reserveUncommitted(size_t bytes, Usage usage, bool writable, 
     Address addressIterator = virtualStart;
     for(int i=0; i<(bytes + ASP_PAGESIZE -1)/ASP_PAGESIZE; i++) {
         MRPair pair;
+        pair.start = addressIterator;
         CheckSuccess(SplitMemoryRegion(VMR, ASP_PAGESIZE, &pair.vmr));
         CheckSuccess(setAttributes(pair.vmr, writable, executable));
-        pair.start = addressIterator;
 
         memoryRegionsContainer.insertMRPair(&pair);
         addressIterator += ASP_PAGESIZE;
