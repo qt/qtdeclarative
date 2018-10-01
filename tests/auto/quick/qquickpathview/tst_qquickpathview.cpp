@@ -50,6 +50,8 @@
 
 #include <math.h>
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
@@ -2263,6 +2265,59 @@ void tst_QQuickPathView::nestedinFlickable()
     QCOMPARE(fflickingSpy.count(), 0);
     QCOMPARE(fflickStartedSpy.count(), 0);
     QCOMPARE(fflickEndedSpy.count(), 0);
+
+    // now test that two quick flicks are both handled by the pathview
+    movingSpy.clear();
+    moveStartedSpy.clear();
+    moveEndedSpy.clear();
+    fflickingSpy.clear();
+    fflickStartedSpy.clear();
+    fflickEndedSpy.clear();
+    int shortInterval = 2;
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(23,216));
+    QTest::mouseMove(window.data(), QPoint(48,216), shortInterval);
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(73,217));
+    QVERIFY(pathview->isMoving());
+    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(21,216));
+    QTest::mouseMove(window.data(), QPoint(46,216), shortInterval);
+    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(71,217));
+    QVERIFY(pathview->isMoving());
+    // moveEndedSpy.count() and moveStartedSpy.count() should be exactly 1
+    // but in CI we sometimes see a scheduling issue being hit which
+    // causes the main thread to be stalled while the animation thread
+    // continues, allowing the animation timer to finish after the first
+    // call to QVERIFY(pathview->isMoving()) in the code above, prior to
+    // the detected beginning of the second flick, which can cause both of
+    // those signal counts to be 2 rather than 1.
+    // Note that this is not a true problem (this scheduling quirk just
+    // means that the unit test is not testing the enforced behavior
+    // as strictly as it would otherwise); it is only a bug if it results
+    // in the Flickable handling one or more of the flicks, and that
+    // is unconditionally tested below.
+    // To avoid false positive test failure in the scheduling quirk case
+    // we allow the multiple signal count case, rather than simply:
+    // QTRY_COMPARE(moveEndedSpy.count(), 1);
+    // QCOMPARE(moveStartedSpy.count(), 1);
+    QTRY_VERIFY(moveEndedSpy.count() > 0);
+    qCDebug(lcTests) << "After receiving moveEnded signal:"
+                     << "moveEndedSpy.count():" << moveEndedSpy.count()
+                     << "moveStartedSpy.count():" << moveStartedSpy.count()
+                     << "fflickingSpy.count():" << fflickingSpy.count()
+                     << "fflickStartedSpy.count():" << fflickStartedSpy.count()
+                     << "fflickEndedSpy.count():" << fflickEndedSpy.count();
+    QTRY_COMPARE(moveStartedSpy.count(), moveEndedSpy.count());
+    qCDebug(lcTests) << "After receiving matched moveEnded signal(s):"
+                     << "moveEndedSpy.count():" << moveEndedSpy.count()
+                     << "moveStartedSpy.count():" << moveStartedSpy.count()
+                     << "fflickingSpy.count():" << fflickingSpy.count()
+                     << "fflickStartedSpy.count():" << fflickStartedSpy.count()
+                     << "fflickEndedSpy.count():" << fflickEndedSpy.count();
+    QVERIFY(moveStartedSpy.count() <= 2);
+    // Flickable should not handle this
+    QCOMPARE(fflickingSpy.count(), 0);
+    QCOMPARE(fflickStartedSpy.count(), 0);
+    QCOMPARE(fflickEndedSpy.count(), 0);
+
 }
 
 void tst_QQuickPathView::flickableDelegate()
