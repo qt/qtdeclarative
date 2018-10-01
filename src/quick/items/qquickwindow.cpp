@@ -1713,46 +1713,46 @@ void QQuickWindowPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QQuic
 
 void QQuickWindowPrivate::deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent)
 {
+    Q_Q(QQuickWindow);
     auto point = pointerEvent->point(0);
     lastMousePosition = point->scenePosition();
     const bool mouseIsReleased = (point->state() == QQuickEventPoint::Released && pointerEvent->buttons() == Qt::NoButton);
+    QQuickItem *grabberItem = point->grabberItem();
+    if (!grabberItem && isDeliveringTouchAsMouse())
+        grabberItem = q->mouseGrabberItem();
 
-    if (point->exclusiveGrabber()) {
-        if (auto grabber = point->grabberItem()) {
-            bool handled = false;
-            if (sendFilteredPointerEvent(pointerEvent, grabber))
-                handled = true;
-            // if the grabber is an Item:
-            // if the update consists of changing button state, don't accept it unless
-            // the button is one in which the grabber is interested
-            Qt::MouseButtons acceptedButtons = grabber->acceptedMouseButtons();
-            if (!handled && pointerEvent->button() != Qt::NoButton && acceptedButtons
-                    && !(acceptedButtons & pointerEvent->button())) {
-                pointerEvent->setAccepted(false);
-                handled = true;
-            }
-
-            // send update
-            if (!handled) {
-                QPointF localPos = grabber->mapFromScene(lastMousePosition);
-                auto me = pointerEvent->asMouseEvent(localPos);
-                me->accept();
-                QCoreApplication::sendEvent(grabber, me);
-                point->setAccepted(me->isAccepted());
-            }
-
-            // release event: ungrab if no buttons are pressed anymore
-            if (mouseIsReleased)
-                removeGrabber(grabber, true, isDeliveringTouchAsMouse());
-        } else {
-            // if the grabber is not an Item, it must be a PointerHandler
-            auto handler = point->grabberPointerHandler();
-            pointerEvent->localize(handler->parentItem());
-            if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
-                handler->handlePointerEvent(pointerEvent);
-            if (mouseIsReleased)
-                point->setGrabberPointerHandler(nullptr, true);
+    if (grabberItem) {
+        bool handled = false;
+        if (sendFilteredPointerEvent(pointerEvent, grabberItem))
+            handled = true;
+        // if the grabber is an Item:
+        // if the update consists of changing button state, don't accept it unless
+        // the button is one in which the grabber is interested
+        Qt::MouseButtons acceptedButtons = grabberItem->acceptedMouseButtons();
+        if (!handled && pointerEvent->button() != Qt::NoButton && acceptedButtons
+                && !(acceptedButtons & pointerEvent->button())) {
+            pointerEvent->setAccepted(false);
+            handled = true;
         }
+
+        // send update
+        if (!handled) {
+            QPointF localPos = grabberItem->mapFromScene(lastMousePosition);
+            auto me = pointerEvent->asMouseEvent(localPos);
+            me->accept();
+            QCoreApplication::sendEvent(grabberItem, me);
+            point->setAccepted(me->isAccepted());
+        }
+
+        // release event: ungrab if no buttons are pressed anymore
+        if (mouseIsReleased)
+            removeGrabber(grabberItem, true, isDeliveringTouchAsMouse());
+    }  else if (auto handler = point->grabberPointerHandler()) {
+        pointerEvent->localize(handler->parentItem());
+        if (!sendFilteredPointerEvent(pointerEvent, handler->parentItem()))
+            handler->handlePointerEvent(pointerEvent);
+        if (mouseIsReleased)
+            point->setGrabberPointerHandler(nullptr, true);
         deliverToPassiveGrabbers(point->passiveGrabbers(), pointerEvent);
     } else {
         bool delivered = false;
