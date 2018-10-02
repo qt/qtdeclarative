@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qsgsoftwarepublicnodes_p.h"
+#include "qsgsoftwarelayer_p.h"
 #include "qsgsoftwarepixmaptexture_p.h"
 #include "qsgsoftwareinternalimagenode_p.h"
 
@@ -104,6 +105,9 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
     } else if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
         const QPixmap &pm = pt->pixmap();
         painter->drawPixmap(m_rect, pm, m_sourceRect);
+    } else if (QSGSoftwareLayer *pt = qobject_cast<QSGSoftwareLayer *>(m_texture)) {
+        const QPixmap &pm = pt->pixmap();
+        painter->drawPixmap(m_rect, pm, m_sourceRect);
     } else if (QSGPlainTexture *pt = qobject_cast<QSGPlainTexture *>(m_texture)) {
         const QImage &im = pt->image();
         painter->drawImage(m_rect, im, m_sourceRect);
@@ -115,8 +119,14 @@ void QSGSoftwareImageNode::updateCachedMirroredPixmap()
     if (m_transformMode == NoTransform) {
         m_cachedPixmap = QPixmap();
     } else {
-
         if (QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture *>(m_texture)) {
+            QTransform mirrorTransform;
+            if (m_transformMode.testFlag(MirrorVertically))
+                mirrorTransform = mirrorTransform.scale(1, -1);
+            if (m_transformMode.testFlag(MirrorHorizontally))
+                mirrorTransform = mirrorTransform.scale(-1, 1);
+            m_cachedPixmap = pt->pixmap().transformed(mirrorTransform);
+        } else if (QSGSoftwareLayer *pt = qobject_cast<QSGSoftwareLayer *>(m_texture)) {
             QTransform mirrorTransform;
             if (m_transformMode.testFlag(MirrorVertically))
                 mirrorTransform = mirrorTransform.scale(1, -1);
