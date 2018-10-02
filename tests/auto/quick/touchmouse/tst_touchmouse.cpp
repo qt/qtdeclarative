@@ -28,6 +28,7 @@
 
 
 #include <QtTest/QtTest>
+#include <QDebug>
 
 #include <QtGui/qstylehints.h>
 #include <private/qdebug_p.h>
@@ -46,6 +47,8 @@
 
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 struct Event
 {
@@ -683,14 +686,18 @@ void tst_TouchMouse::touchButtonOnFlickable()
 void tst_TouchMouse::buttonOnDelayedPressFlickable_data()
 {
     QTest::addColumn<bool>("scrollBeforeDelayIsOver");
+    QTest::addColumn<bool>("releaseBeforeDelayIsOver");
 
     // the item should never see the event,
     // due to the pressDelay which never delivers if we start moving
-    QTest::newRow("scroll before press delay is over") << true;
+    QTest::newRow("scroll before press delay is over") << true << false;
+
+    // after release, the item should see the press and release via event replay (QTBUG-61144)
+    QTest::newRow("release before press delay is over") << false << true;
 
     // wait until the "button" sees the press but then
     // start moving: the button gets a press and cancel event
-    QTest::newRow("scroll after press delay is over") << false;
+    QTest::newRow("scroll after press delay is over") << false << false;
 }
 
 void tst_TouchMouse::buttonOnDelayedPressFlickable()
@@ -699,6 +706,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     //   - eventItem1 y: 100, height 100
     //   - eventItem2 y: 300, height 100
     QFETCH(bool, scrollBeforeDelayIsOver);
+    QFETCH(bool, releaseBeforeDelayIsOver);
 
     qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, true);
     filteredEventList.clear();
@@ -737,11 +745,12 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
 
     // touch press
     QPoint p1 = QPoint(10, 110);
+    QPoint pEnd = p1;
     QTest::touchEvent(window.data(), device).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
 
-    if (scrollBeforeDelayIsOver) {
-        // no events, the flickable got scrolled, the button sees nothing
+    if (scrollBeforeDelayIsOver || releaseBeforeDelayIsOver) {
+        // no events yet: press is delayed
         QCOMPARE(eventItem1->eventList.size(), 0);
     } else {
         // wait until the button sees the press
@@ -750,45 +759,64 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         QCOMPARE(filteredEventList.count(), 1);
     }
 
-    p1 += QPoint(0, -10);
-    QPoint p2 = p1 + QPoint(0, -10);
-    QPoint p3 = p2 + QPoint(0, -10);
-    QQuickTouchUtils::flush(window.data());
-    QTest::touchEvent(window.data(), device).move(0, p1, window.data());
-    QQuickTouchUtils::flush(window.data());
-    QTest::touchEvent(window.data(), device).move(0, p2, window.data());
-    QQuickTouchUtils::flush(window.data());
-    QTest::touchEvent(window.data(), device).move(0, p3, window.data());
-    QQuickTouchUtils::flush(window.data());
-    QTRY_VERIFY(flickable->isMovingVertically());
+    if (!releaseBeforeDelayIsOver) {
+        // move the touchpoint: try to flick
+        p1 += QPoint(0, -10);
+        QPoint p2 = p1 + QPoint(0, -10);
+        pEnd = p2 + QPoint(0, -10);
+        QQuickTouchUtils::flush(window.data());
+        QTest::touchEvent(window.data(), device).move(0, p1, window.data());
+        QQuickTouchUtils::flush(window.data());
+        QTest::touchEvent(window.data(), device).move(0, p2, window.data());
+        QQuickTouchUtils::flush(window.data());
+        QTest::touchEvent(window.data(), device).move(0, pEnd, window.data());
+        QQuickTouchUtils::flush(window.data());
+        QTRY_VERIFY(flickable->isMovingVertically());
 
-    if (scrollBeforeDelayIsOver) {
-        QCOMPARE(eventItem1->eventList.size(), 0);
-        QCOMPARE(filteredEventList.count(), 0);
-    } else {
-        // see at least press, move and ungrab
-        QTRY_VERIFY(eventItem1->eventList.size() > 2);
-        QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
-        QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
-        QCOMPARE(filteredEventList.count(), 1);
+        if (scrollBeforeDelayIsOver) {
+            QCOMPARE(eventItem1->eventList.size(), 0);
+            QCOMPARE(filteredEventList.count(), 0);
+        } else {
+            // see at least press, move and ungrab
+            QTRY_VERIFY(eventItem1->eventList.size() > 2);
+            QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
+            QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
+            QCOMPARE(filteredEventList.count(), 1);
+        }
+
+        // flickable should have the mouse grab, and have moved the itemForTouchPointId
+        // for the touchMouseId to the new grabber.
+        QCOMPARE(window->mouseGrabberItem(), flickable);
+        QVERIFY(windowPriv->touchMouseId != -1);
+        auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
+        QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
     }
 
-    // flickable should have the mouse grab, and have moved the itemForTouchPointId
-    // for the touchMouseId to the new grabber.
-    QCOMPARE(window->mouseGrabberItem(), flickable);
-    QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
-    QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
-
-    QTest::touchEvent(window.data(), device).release(0, p3, window.data());
+    QTest::touchEvent(window.data(), device).release(0, pEnd, window.data());
     QQuickTouchUtils::flush(window.data());
 
-    // We should not have received any synthesised mouse events from Qt gui,
-    // just the delayed press.
-    if (scrollBeforeDelayIsOver)
-        QCOMPARE(filteredEventList.count(), 0);
-    else
-        QCOMPARE(filteredEventList.count(), 1);
+    if (releaseBeforeDelayIsOver) {
+        // when the touchpoint was released, the child saw the delayed press and the release in sequence
+        qCDebug(lcTests) << "expected delivered events: press, release, ungrab" << eventItem1->eventList;
+        qCDebug(lcTests) << "expected filtered events: delayed press, release" << filteredEventList;
+        QTRY_COMPARE(eventItem1->eventList.size(), 3);
+        QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
+        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
+        QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
+        // QQuickWindow filters the delayed press and release
+        QCOMPARE(filteredEventList.count(), 2);
+        QCOMPARE(filteredEventList.at(0).type, QEvent::MouseButtonPress);
+        QCOMPARE(filteredEventList.at(1).type, QEvent::MouseButtonRelease);
+    } else {
+        // QQuickWindow filters the delayed press if there was one; otherwise nothing
+        if (scrollBeforeDelayIsOver) {
+            QCOMPARE(filteredEventList.count(), 0);
+        } else {
+            qCDebug(lcTests) << "expected filtered event: delayed press" << filteredEventList;
+            QCOMPARE(filteredEventList.count(), 1);
+            QCOMPARE(filteredEventList.at(0).type, QEvent::MouseButtonPress);
+        }
+    }
 }
 
 void tst_TouchMouse::buttonOnTouch()
