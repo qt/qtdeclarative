@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick 2.12
 import QtQuick.Window 2.1
 
 Item {
@@ -57,8 +57,8 @@ Item {
     property alias text: buttonLabel.text
     property alias label: buttonLabel
     signal clicked
-    property alias containsMouse: mouseArea.containsMouse
-    property alias pressed: mouseArea.pressed
+    property alias containsMouse: hoverHandler.hovered
+    property alias pressed: tapHandler.pressed
     implicitHeight: Math.max(Screen.pixelDensity * 7, buttonLabel.implicitHeight * 1.2)
     implicitWidth: Math.max(Screen.pixelDensity * 11, buttonLabel.implicitWidth * 1.3)
     height: implicitHeight
@@ -71,7 +71,7 @@ Item {
         anchors.fill: parent
         color: palette.button
         gradient: Gradient {
-            GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+            GradientStop { position: 0.0; color: tapHandler.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
             GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
         }
         antialiasing: true
@@ -80,11 +80,12 @@ Item {
         border.width: 1
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: container.clicked()
-        hoverEnabled: true
+    TapHandler {
+        id: tapHandler
+        onTapped: container.clicked();
+    }
+    HoverHandler {
+        id: hoverHandler
     }
 
     Text {

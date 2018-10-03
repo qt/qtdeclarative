@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 
 Item {
     id: slider
@@ -57,18 +57,26 @@ Item {
 
     property real min: 0
     property real max: 1
-    property real value: min + (max - min) * mousearea.value
+    property real value: min + (max - min) * dragHandler.value
     property real init: min+(max-min)/2
     property string name: "Slider"
     property color color: "#0066cc"
     property real minLabelWidth: 44
 
+    DragHandler {
+        id: dragHandler
+        target: handle
+        xAxis.minimum: Math.round(-handle.width / 2 + 3)
+        xAxis.maximum: Math.round(foo.width - handle.width/2 - 3)
+        property real value: (handle.x - xAxis.minimum) / (xAxis.maximum - xAxis.minimum)
+    }
+
     Component.onCompleted: setValue(init)
     function setValue(v) {
        if (min < max)
           handle.x = Math.round( v / (max - min) *
-                                (mousearea.drag.maximumX - mousearea.drag.minimumX)
-                                + mousearea.drag.minimumX);
+                                (dragHandler.xAxis.maximum - dragHandler.xAxis.minimum)
+                                + dragHandler.xAxis.minimum);
     }
     Rectangle {
         id:sliderName
@@ -112,16 +120,6 @@ Item {
             id: handle
             source: "images/slider_handle.png"
             anchors.verticalCenter: parent.verticalCenter
-            MouseArea {
-                id: mousearea
-                anchors.fill: parent
-                anchors.margins: -4
-                drag.target: parent
-                drag.axis: Drag.XAxis
-                drag.minimumX: Math.round(-handle.width / 2 + 3)
-                drag.maximumX: Math.round(foo.width - handle.width/2 - 3)
-                property real value: (handle.x - drag.minimumX) / (drag.maximumX - drag.minimumX)
-            }
         }
     }
 }
