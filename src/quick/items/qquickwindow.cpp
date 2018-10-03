@@ -2508,6 +2508,10 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
     }
 
     for (QQuickItem *item : targetItems) {
+        if (!event->m_event) {
+            qWarning("event went missing during delivery! (nested sendEvent() is not allowed)");
+            break;
+        }
         if (!handlersOnly && sendFilteredPointerEvent(event, item)) {
             if (event->isAccepted()) {
                 for (int i = 0; i < event->pointCount(); ++i)
@@ -2521,6 +2525,10 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
         // nor to any item which already had a chance to filter.
         if (skipDelivery.contains(item))
             continue;
+        if (!event->m_event) {
+            qWarning("event went missing during delivery! (nested sendEvent() is not allowed)");
+            break;
+        }
         deliverMatchingPointsToItem(item, event, handlersOnly);
         if (event->allPointsAccepted())
             handlersOnly = true;

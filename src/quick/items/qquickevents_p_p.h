@@ -447,6 +447,8 @@ protected:
     Qt::MouseButton m_button = Qt::NoButton;
     Qt::MouseButtons m_pressedButtons;
 
+    friend class QQuickWindowPrivate;
+
     Q_DISABLE_COPY(QQuickPointerEvent)
 };
 
