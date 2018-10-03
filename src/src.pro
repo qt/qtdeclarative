@@ -29,7 +29,7 @@ qmldevtools.depends = qml
 
 qtConfig(qml-network) {
     QT_FOR_CONFIG += network
-    qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug
+    qtConfig(thread):qtConfig(localserver):qtConfig(qml-debug): SUBDIRS += qmldebug
 }
 
 DISTFILES += sync.profile configure.json

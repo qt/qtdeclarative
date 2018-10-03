@@ -181,7 +181,7 @@ Item {
         model: 35
         delegate: packageDelegate
 
-        groups: VisualDataGroup { id: selectedItems; name: "selected" }
+        groups: DelegateModelGroup { id: selectedItems; name: "selected" }
 
         Component.onCompleted:  parts.selection.filterOnGroup = "selected"
     }

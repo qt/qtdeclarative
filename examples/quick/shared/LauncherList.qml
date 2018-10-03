@@ -48,7 +48,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick 2.12
 
 Rectangle {
     property int activePageCount: 0
@@ -96,9 +96,8 @@ Rectangle {
             width: parent.width
             height: parent.height - bar.height
             color: "white"
-            MouseArea{
+            TapHandler {
                 //Eats mouse events
-                anchors.fill: parent
             }
             Loader{
                 focus: true
@@ -221,29 +220,27 @@ Rectangle {
             anchors.left: parent.left
             anchors.leftMargin: 16
 
-            MouseArea {
-                id: mouse
-                hoverEnabled: true
-                anchors.centerIn: parent
+            TapHandler {
+                id: tapHandler
+                enabled: activePageCount > 0
+                onTapped: {
+                    pageContainer.children[pageContainer.children.length - 1].exit()
+                }
+            }
+            Rectangle {
+                anchors.centerIn: back
                 width: 38
                 height: 31
                 anchors.verticalCenterOffset: -1
-                enabled: activePageCount > 0
-                onClicked: {
-                    pageContainer.children[pageContainer.children.length - 1].exit()
+                opacity: tapHandler.pressed ? 1 : 0
+                Behavior on opacity { NumberAnimation{ duration: 100 }}
+                gradient: Gradient {
+                    GradientStop { position: 0 ; color: "#22000000" }
+                    GradientStop { position: 0.2 ; color: "#11000000" }
                 }
-                Rectangle {
-                    anchors.fill: parent
-                    opacity: mouse.pressed ? 1 : 0
-                    Behavior on opacity { NumberAnimation{ duration: 100 }}
-                    gradient: Gradient {
-                        GradientStop { position: 0 ; color: "#22000000" }
-                        GradientStop { position: 0.2 ; color: "#11000000" }
-                    }
-                    border.color: "darkgray"
-                    antialiasing: true
-                    radius: 4
-                }
+                border.color: "darkgray"
+                antialiasing: true
+                radius: 4
             }
         }
     }

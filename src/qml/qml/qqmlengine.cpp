@@ -249,11 +249,13 @@ void QQmlEnginePrivate::registerQtQuick2Types(const char *uri, int versionMajor,
     qmlRegisterType<QQuickWorkerScript>(uri, versionMajor, versionMinor, "WorkerScript");
 #endif
     qmlRegisterType<QQuickPackage>(uri, versionMajor, versionMinor, "Package");
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #if QT_CONFIG(qml_delegate_model)
     qmlRegisterType<QQmlDelegateModel>(uri, versionMajor, versionMinor, "VisualDataModel");
     qmlRegisterType<QQmlDelegateModelGroup>(uri, versionMajor, versionMinor, "VisualDataGroup");
 #endif
     qmlRegisterType<QQmlObjectModel>(uri, versionMajor, versionMinor, "VisualItemModel");
+#endif // < Qt 6
 }
 
 void QQmlEnginePrivate::defineQtQuick2Module()

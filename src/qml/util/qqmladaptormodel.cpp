@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -66,7 +66,7 @@ static QV4::ReturnedValue get_index(const QV4::FunctionObject *f, const QV4::Val
     QV4::Scope scope(f);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
+        RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object")));
 
     RETURN_RESULT(QV4::Encode(o->d()->item->index));
 }
@@ -200,7 +200,7 @@ public:
         QV4::Scope scope(b);
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
         if (!o)
-            RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object")));
+            RETURN_RESULT(scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object")));
 
         const QQmlAdaptorModel *const model = static_cast<QQmlDMCachedModelData *>(o->d()->item)->type->model;
         if (o->d()->item->index >= 0 && *model) {
@@ -346,7 +346,7 @@ QV4::ReturnedValue QQmlDMCachedModelData::get_property(const QV4::FunctionObject
     QV4::Scope scope(b);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
     uint propertyId = static_cast<const QV4::IndexedBuiltinFunction *>(b)->d()->index;
 
@@ -368,7 +368,7 @@ QV4::ReturnedValue QQmlDMCachedModelData::set_property(const QV4::FunctionObject
     QV4::Scope scope(b);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
     if (!argc)
         return scope.engine->throwTypeError();
 
@@ -578,7 +578,7 @@ public:
         QV4::ExecutionEngine *v4 = b->engine();
         const QQmlDelegateModelItemObject *o = thisObject->as<QQmlDelegateModelItemObject>();
         if (!o)
-            return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return v4->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
         return v4->fromVariant(static_cast<QQmlDMListAccessorData *>(o->d()->item)->cachedData);
     }
@@ -588,7 +588,7 @@ public:
         QV4::ExecutionEngine *v4 = b->engine();
         const QQmlDelegateModelItemObject *o = thisObject->as<QQmlDelegateModelItemObject>();
         if (!o)
-            return v4->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return v4->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
         if (!argc)
             return v4->throwTypeError();
 

@@ -56,7 +56,6 @@
 #include <private/qquickanimation_p_p.h>
 QT_BEGIN_NAMESPACE
 
-class QQuickVisualDataModel;
 class QQuickItemParticleAttached;
 
 class QQuickItemParticle : public QQuickParticlePainter

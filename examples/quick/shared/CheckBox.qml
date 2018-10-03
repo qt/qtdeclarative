@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 
 Item {
     id: root
@@ -58,7 +58,7 @@ Item {
     height: implicitHeight
     property alias text: label.text
     property bool checked
-    property alias pressed: mouseArea.pressed
+    property alias pressed: tapHandler.pressed
     property alias row: row
     signal clicked
 
@@ -71,7 +71,7 @@ Item {
         Rectangle {
             id: frame
             gradient: Gradient {
-                GradientStop { position: 0.0; color: mouseArea.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
+                GradientStop { position: 0.0; color: tapHandler.pressed ? Qt.darker(palette.button, 1.3) : palette.button }
                 GradientStop { position: 1.0; color: Qt.darker(palette.button, 1.3) }
             }
             height: label.implicitHeight * 1.5
@@ -96,10 +96,9 @@ Item {
             anchors.verticalCenter: frame.verticalCenter
         }
     }
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        onClicked: {
+    TapHandler {
+        id: tapHandler
+        onTapped: {
             parent.checked = !parent.checked
             parent.clicked()
         }

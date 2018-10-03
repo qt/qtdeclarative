@@ -2454,19 +2454,18 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
         return true;
 
 #if QT_CONFIG(accessibility)
-    if (QObject *acc = qmlAttachedPropertiesObject<QQuickAccessibleAttached>(item, false)) {
-        int role = acc->property("role").toInt();
-        if (role == QAccessible::EditableText
-                || role == QAccessible::Table
-                || role == QAccessible::List
-                || role == QAccessible::SpinBox) {
-            return true;
-        } else if (role == QAccessible::ComboBox) {
-            QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item);
+    QAccessible::Role role = QQuickItemPrivate::get(item)->accessibleRole();
+    if (role == QAccessible::EditableText || role == QAccessible::Table || role == QAccessible::List) {
+        return true;
+    } else if (role == QAccessible::ComboBox || role == QAccessible::SpinBox) {
+        if (QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item))
             return iface->state().editable;
-        }
     }
 #endif
+
+    QVariant editable = item->property("editable");
+    if (editable.isValid())
+        return editable.toBool();
 
     QVariant readonly = item->property("readOnly");
     if (readonly.isValid() && !readonly.toBool() && item->property("text").isValid())

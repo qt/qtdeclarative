@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import QtQuick.Window 2.1
 
 Item {
@@ -100,9 +100,8 @@ Item {
                     elide: Text.ElideRight
                     font.bold: tabWidget.current == index
                 }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: tabWidget.current = index
+                TapHandler {
+                    onTapped: tabWidget.current = index
                 }
             }
         }

@@ -103,7 +103,7 @@ struct DelegateModelGroupFunction : QV4::FunctionObject
         QV4::Scoped<DelegateModelGroupFunction> f(scope, static_cast<const DelegateModelGroupFunction *>(that));
         QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject);
         if (!o)
-            return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+            return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
         QV4::ScopedValue v(scope, argc ? argv[0] : Value::undefinedValue());
         return f->d()->code(o->d()->item, f->d()->flag, v);
@@ -1936,7 +1936,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_model(const QV4::FunctionObject *b
     QV4::Scope scope(b);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        return b->engine()->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return b->engine()->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
     if (!o->d()->item->metaType->model)
         RETURN_UNDEFINED();
 
@@ -1948,7 +1948,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::get_groups(const QV4::FunctionObject *
     QV4::Scope scope(b);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
     QStringList groups;
     for (int i = 1; i < o->d()->item->metaType->groupCount; ++i) {
@@ -1964,7 +1964,7 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_groups(const QV4::FunctionObject *
     QV4::Scope scope(b);
     QV4::Scoped<QQmlDelegateModelItemObject> o(scope, thisObject->as<QQmlDelegateModelItemObject>());
     if (!o)
-        return scope.engine->throwTypeError(QStringLiteral("Not a valid VisualData object"));
+        return scope.engine->throwTypeError(QStringLiteral("Not a valid DelegateModel object"));
 
     if (!argc)
         THROW_TYPE_ERROR();

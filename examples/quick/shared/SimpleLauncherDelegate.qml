@@ -47,7 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick 2.12
 
 Rectangle {
     id: container
@@ -89,12 +89,14 @@ Rectangle {
         implicitHeight: col.height
         height: implicitHeight
         width: buttonLabel.width + 20
+        property alias containsMouse: hoverHandler.hovered
 
-        MouseArea {
-            id: mouseArea
-            anchors.fill: parent
-            onClicked: container.clicked()
-            hoverEnabled: true
+        TapHandler {
+            id: tapHandler
+            onTapped: container.clicked()
+        }
+        HoverHandler {
+            id: hoverHandler
         }
 
         Column {
