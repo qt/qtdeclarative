@@ -185,7 +185,7 @@ Rectangle {
 //![1]
         items.includeByDefault: false
 //![5]
-        groups: VisualDataGroup {
+        groups: DelegateModelGroup {
             id: unsortedItems
             name: "unsorted"
 

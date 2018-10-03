@@ -241,7 +241,7 @@
 
     The model provides the set of data that is used to create the items
     in the view. Models can be created directly in QML using \l ListModel,
-    \l XmlListModel or \l VisualItemModel, or provided by a custom C++ model
+    \l XmlListModel or \l ObjectModel, or provided by a custom C++ model
     class. If it is a C++ model, it must be a subclass of \l QAbstractItemModel
     or a simple list.
 
