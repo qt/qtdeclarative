@@ -3,11 +3,11 @@ SUBDIRS += affectors \
     customparticle \
     emitters \
     imageparticle \
+    itemparticle \
     system
 
 EXAMPLE_FILES = \
-    images.qrc \
-    itemparticle
+    images.qrc
 
 #Install shared images too
 qml.files = images
