@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Item {
     id: root
@@ -6,7 +7,7 @@ Item {
     property bool enforceRange: false
     width: 320; height: 480
 
-    VisualItemModel {
+    ObjectModel {
         id: itemModel
 
         Rectangle {
