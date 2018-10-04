@@ -57,7 +57,7 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
     // Target specific configuration should not replaced with files from the host.
     m_blacklist.blacklist("/etc");
 
-    for (int loc = QLibraryInfo::PrefixPath; loc <= QLibraryInfo::TestsPath; ++loc) {
+    for (int loc = QLibraryInfo::PrefixPath; loc < QLibraryInfo::TestsPath; ++loc) {
         m_blacklist.blacklist(QLibraryInfo::location(
                                   static_cast<QLibraryInfo::LibraryLocation>(loc)));
     }
@@ -79,6 +79,8 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
         for (const QString &location : locations)
             m_blacklist.blacklist(location);
     }
+
+    m_blacklist.whitelist(QLibraryInfo::location(QLibraryInfo::TestsPath));
 
     connect(this, &QQmlPreviewFileLoader::request, service, &QQmlPreviewServiceImpl::forwardRequest,
             Qt::DirectConnection);
