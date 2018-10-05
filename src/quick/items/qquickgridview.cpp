@@ -417,11 +417,11 @@ qreal QQuickGridViewPrivate::contentXForPosition(qreal pos) const
     if (flow == QQuickGridView::FlowLeftToRight) {
         // vertical scroll
         if (q->effectiveLayoutDirection() == Qt::LeftToRight) {
-            return 0;
+            return -q->leftMargin();
         } else {
             qreal colSize = cellWidth;
-            int columns = q->width()/colSize;
-            return -q->width() + (cellWidth * columns);
+            int columns = (q->width() - q->leftMargin() - q->rightMargin()) / colSize;
+            return -q->width() + q->rightMargin() + (cellWidth * columns);
         }
     } else {
         // horizontal scroll
@@ -444,16 +444,18 @@ qreal QQuickGridViewPrivate::contentYForPosition(qreal pos) const
     } else {
         // horizontal scroll
         if (verticalLayoutDirection == QQuickItemView::TopToBottom)
-            return 0;
+            return -q->topMargin();
         else
-            return -q->height();
+            return -q->height() + q->bottomMargin();
     }
 }
 
 void QQuickGridViewPrivate::resetColumns()
 {
     Q_Q(QQuickGridView);
-    qreal length = flow == QQuickGridView::FlowLeftToRight ? q->width() : q->height();
+    qreal length = flow == QQuickGridView::FlowLeftToRight
+            ? q->width() - q->leftMargin() - q->rightMargin()
+            : q->height() - q->topMargin() - q->bottomMargin();
     columns = qMax(1, qFloor(length / colSize()));
 }
 

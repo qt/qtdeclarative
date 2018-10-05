@@ -21,4 +21,5 @@ TESTDATA = \
     data/window2.qml \
     data/window1.qml \
     data/broken.qml \
-    data/zoom.qml
+    data/zoom.qml \
+    data/i18n/qml_fr_FR.qm

@@ -733,11 +733,37 @@ protected:
     bool insideSwitch = false;
     bool inFormalParameterList = false;
     bool functionEndsWithReturn = false;
+    bool _tailCallsAreAllowed = true;
+
     ControlFlow *controlFlow = nullptr;
 
     bool _fileNameIsUrl;
     bool hasError;
     QList<QQmlJS::DiagnosticMessage> _errors;
+
+    class TailCallBlocker
+    {
+    public:
+        TailCallBlocker(Codegen *cg, bool onoff = false)
+            : _cg(cg)
+            , _saved(_cg->_tailCallsAreAllowed)
+            , _onoff(onoff)
+        { _cg->_tailCallsAreAllowed = onoff; }
+
+        ~TailCallBlocker()
+        { _cg->_tailCallsAreAllowed = _saved; }
+
+        void unblock() const
+        { _cg->_tailCallsAreAllowed = _saved; }
+
+        void reblock() const
+        { _cg->_tailCallsAreAllowed = _onoff; }
+
+    private:
+        Codegen *_cg;
+        bool _saved;
+        bool _onoff;
+    };
 
 private:
     VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;

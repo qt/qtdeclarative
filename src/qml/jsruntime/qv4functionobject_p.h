@@ -71,7 +71,8 @@ namespace Heap {
     Member(class, Pointer, ExecutionContext *, scope) \
     Member(class, NoMark, Function *, function) \
     Member(class, NoMark, VTable::Call, jsCall) \
-    Member(class, NoMark, VTable::CallAsConstructor, jsConstruct)
+    Member(class, NoMark, VTable::CallAsConstructor, jsConstruct) \
+    Member(class, NoMark, bool, canBeTailCalled)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
     DECLARE_MARKOBJECTS(FunctionObject);
@@ -175,6 +176,7 @@ struct Q_QML_EXPORT FunctionObject: Object {
     V4_NEEDS_DESTROY
     enum { NInlineProperties = 1 };
 
+    bool canBeTailCalled() const { return d()->canBeTailCalled; }
     Heap::ExecutionContext *scope() const { return d()->scope; }
     Function *function() const { return d()->function; }
 

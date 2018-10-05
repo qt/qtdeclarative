@@ -116,20 +116,27 @@ public:
         move(Arg1Reg, EngineRegister);
     }
 
-    void generatePlatformFunctionExit()
+    void generatePlatformFunctionExit(bool tailCall = false)
     {
         pop(EngineRegister);
         pop(CppStackFrameRegister);
         pop(JSStackFrameRegister);
         pop(); // exceptionHandler
         pop(FramePointerRegister);
-        ret();
+        if (!tailCall)
+            ret();
     }
 
     void callAbsolute(const void *funcPtr)
     {
         move(TrustedImmPtr(funcPtr), ScratchRegister);
         call(ScratchRegister);
+    }
+
+    void jumpAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        jump(ScratchRegister);
     }
 
     void pushAligned(RegisterID reg)
@@ -195,14 +202,15 @@ public:
         move(Arg1Reg, EngineRegister);
     }
 
-    void generatePlatformFunctionExit()
+    void generatePlatformFunctionExit(bool tailCall = false)
     {
         pop(EngineRegister);
         pop(CppStackFrameRegister);
         pop(JSStackFrameRegister);
         pop(); // exceptionHandler
         pop(FramePointerRegister);
-        ret();
+        if (!tailCall)
+            ret();
     }
 
     void callAbsolute(const void *funcPtr)
@@ -211,6 +219,12 @@ public:
         subPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
         call(ScratchRegister);
         addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
+    }
+
+    void jumpAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        jump(ScratchRegister);
     }
 
     void pushAligned(RegisterID reg)
@@ -280,7 +294,7 @@ public:
         loadPtr(Address(FramePointerRegister, 3 * PointerSize), EngineRegister);
     }
 
-    void generatePlatformFunctionExit()
+    void generatePlatformFunctionExit(bool tailCall = false)
     {
         addPtr(TrustedImm32(8), StackPointerRegister);
         pop(EngineRegister);
@@ -288,13 +302,20 @@ public:
         pop(JSStackFrameRegister);
         pop(); // exceptionHandler
         pop(RegisterID::ebp);
-        ret();
+        if (!tailCall)
+            ret();
     }
 
     void callAbsolute(const void *funcPtr)
     {
         move(TrustedImmPtr(funcPtr), ScratchRegister);
         call(ScratchRegister);
+    }
+
+    void jumpAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        jump(ScratchRegister);
     }
 
     void pushAligned(RegisterID reg)
@@ -375,19 +396,26 @@ public:
         move(Arg1Reg, EngineRegister);
     }
 
-    void generatePlatformFunctionExit()
+    void generatePlatformFunctionExit(bool tailCall = false)
     {
         move(AccumulatorRegister, ReturnValueRegister);
         popPair(EngineRegister, CppStackFrameRegister);
         popPair(JSStackFrameRegister, AccumulatorRegister);
         popPair(JSC::ARM64Registers::fp, JSC::ARM64Registers::lr);
-        ret();
+        if (!tailCall)
+            ret();
     }
 
     void callAbsolute(const void *funcPtr)
     {
         move(TrustedImmPtr(funcPtr), ScratchRegister);
         call(ScratchRegister);
+    }
+
+    void jumpAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), ScratchRegister);
+        jump(ScratchRegister);
     }
 
     void pushAligned(RegisterID reg)
@@ -462,7 +490,7 @@ public:
         move(Arg1Reg, EngineRegister);
     }
 
-    void generatePlatformFunctionExit()
+    void generatePlatformFunctionExit(bool tailCall = false)
     {
         move(AccumulatorRegisterValue, ReturnValueRegisterValue);
         move(AccumulatorRegisterTag, ReturnValueRegisterTag);
@@ -476,13 +504,20 @@ public:
         pop(); // exceptionHandler
         pop(FramePointerRegister);
         pop(JSC::ARMRegisters::lr);
-        ret();
+        if (!tailCall)
+            ret();
     }
 
     void callAbsolute(const void *funcPtr)
     {
         move(TrustedImmPtr(funcPtr), dataTempRegister);
         call(dataTempRegister);
+    }
+
+    void jumpAbsolute(const void *funcPtr)
+    {
+        move(TrustedImmPtr(funcPtr), dataTempRegister);
+        jump(dataTempRegister);
     }
 
     void pushAligned(RegisterID reg)
@@ -663,11 +698,15 @@ public:
     void passInt32AsArg(int value, int arg);
     void callRuntime(const char *functionName, const void *funcPtr);
     void callRuntimeUnchecked(const char *functionName, const void *funcPtr);
-
+    void tailCallRuntime(const char *functionName, const void *funcPtr);
+    void setTailCallArg(RegisterID src, int arg);
+    Address jsAlloca(int slotCount);
+    void storeInt32AsValue(int srcInt, Address destAddr);
 
 private:
     void passAccumulatorAsArg_internal(int arg, bool doPush);
     static Address argStackAddress(int arg);
+    static Address inArgStackAddress(int arg);
 
 private:
     const Value* constantTable;

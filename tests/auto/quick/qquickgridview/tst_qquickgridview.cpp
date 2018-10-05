@@ -4248,6 +4248,23 @@ void tst_QQuickGridView::margins()
 
         delete window;
     }
+    {
+        QQuickView *window = createView();
+
+        window->setSource(testFileUrl("margins2.qml"));
+        window->show();
+        qApp->processEvents();
+
+        QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
+        QVERIFY(gridview != nullptr);
+        QQuickItem *contentItem = gridview->contentItem();
+        QVERIFY(contentItem != nullptr);
+        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QCOMPARE(contentItem->x(), 200);
+        QCOMPARE(contentItem->y(), 20);
+
+        delete window;
+    }
 }
 
 void tst_QQuickGridView::creationContext()

@@ -77,6 +77,8 @@ void BaselineJIT::generate()
 #define STORE_ACC() as->saveAccumulatorInFrame()
 #define BASELINEJIT_GENERATE_RUNTIME_CALL(function, destination) \
     as->GENERATE_RUNTIME_CALL(function, destination)
+#define BASELINEJIT_GENERATE_TAIL_CALL(function) \
+    as->GENERATE_TAIL_CALL(function)
 
 void BaselineJIT::generate_Ret()
 {
@@ -552,6 +554,11 @@ void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, in
     as->checkException();
 }
 
+void BaselineJIT::generate_TailCall(int func, int thisObject, int argc, int argv)
+{
+    STORE_IP();
+    as->jsTailCall(func, thisObject, argc, argv);
+}
 
 void BaselineJIT::generate_Construct(int func, int argc, int argv)
 {

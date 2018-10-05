@@ -498,7 +498,7 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
 {
     ExecutionEngine *engine = fo->engine();
     CppStackFrame frame;
-    frame.init(engine, fo->function(), argv, argc);
+    frame.init(engine, fo->function(), argv, argc, true);
     frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
                        thisObject ? *thisObject : Value::undefinedValue(),
                        Value::undefinedValue());
@@ -506,7 +506,12 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
     frame.push();
     engine->jsStackTop += frame.requiredJSStackFrameSize();
 
-    ReturnedValue result = Moth::VME::exec(&frame, engine);
+    ReturnedValue result;
+
+    do {
+        frame.pendingTailCall = false;
+        result = Moth::VME::exec(&frame, engine);
+    } while (frame.pendingTailCall);
 
     frame.pop();
 
@@ -530,6 +535,7 @@ void Heap::ArrowFunction::init(QV4::ExecutionContext *scope, Function *function,
 
     Q_ASSERT(internalClass && internalClass->verifyIndex(s.engine->id_length()->propertyKey(), Index_Length));
     setProperty(s.engine, Index_Length, Value::fromInt32(int(function->compiledFunction->length)));
+    canBeTailCalled = true;
 }
 
 void Heap::ScriptFunction::init(QV4::ExecutionContext *scope, Function *function)

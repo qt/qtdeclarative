@@ -123,8 +123,10 @@ struct Q_QML_EXPORT CppStackFrame {
     const char *unwindLabel;
     int unwindLevel;
     bool yieldIsIterator;
+    bool callerCanHandleTailCall;
+    bool pendingTailCall;
 
-    void init(EngineBase *engine, Function *v4Function, const Value *argv, int argc) {
+    void init(EngineBase *engine, Function *v4Function, const Value *argv, int argc, bool callerCanHandleTailCall = false) {
         this->engine = engine;
 
         this->v4Function = v4Function;
@@ -136,6 +138,8 @@ struct Q_QML_EXPORT CppStackFrame {
         unwindLabel = nullptr;
         unwindLevel = 0;
         yieldIsIterator = false;
+        this->callerCanHandleTailCall = callerCanHandleTailCall;
+        pendingTailCall = false;
     }
 
     void push() {

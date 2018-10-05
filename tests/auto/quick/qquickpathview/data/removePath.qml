@@ -6,7 +6,7 @@ PathView {
 
     path: myPath
 
-    delegate: Text { text: value }
+    delegate: Text { text: modelData }
     model: 10
 
     Path {

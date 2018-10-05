@@ -1061,8 +1061,6 @@ ReturnedValue Runtime::method_loadSuperConstructor(ExecutionEngine *engine, cons
     return c->asReturnedValue();
 }
 
-
-
 #endif // V4_BOOTSTRAP
 
 uint RuntimeHelpers::equalHelper(const Value &x, const Value &y)
@@ -1536,6 +1534,34 @@ ReturnedValue Runtime::method_constructWithSpread(ExecutionEngine *engine, const
         return Encode::undefined();
 
     return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc, &newTarget);
+}
+
+ReturnedValue Runtime::method_tailCall(CppStackFrame *frame, ExecutionEngine *engine)
+{
+    // IMPORTANT! The JIT assumes that this method has the same amount (or less) arguments than
+    // the jitted function, so it can safely do a tail call.
+
+    Value *tos = engine->jsStackTop;
+    const Value &function = tos[StackOffsets::tailCall_function];
+    const Value &thisObject = tos[StackOffsets::tailCall_thisObject];
+    Value *argv = reinterpret_cast<Value *>(frame->jsFrame) + tos[StackOffsets::tailCall_argv].int_32();
+    int argc = tos[StackOffsets::tailCall_argc].int_32();
+
+    if (!function.isFunctionObject())
+        return engine->throwTypeError();
+
+    const FunctionObject &fo = static_cast<const FunctionObject &>(function);
+    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()) {
+        // Cannot tailcall, do a normal call:
+        return fo.call(&thisObject, argv, argc);
+    }
+
+    memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));
+    frame->init(engine, fo.function(), frame->jsFrame->args, argc, frame->callerCanHandleTailCall);
+    frame->setupJSFrame(frame->savedStackTop, fo, fo.scope(), thisObject, Primitive::undefinedValue());
+    engine->jsStackTop = frame->savedStackTop + frame->requiredJSStackFrameSize();
+    frame->pendingTailCall = true;
+    return Encode::undefined();
 }
 
 void Runtime::method_throwException(ExecutionEngine *engine, const Value &value)

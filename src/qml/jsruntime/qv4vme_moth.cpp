@@ -776,6 +776,16 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallWithSpread)
 
+    MOTH_BEGIN_INSTR(TailCall)
+        STORE_IP();
+        *engine->jsAlloca(1) = Primitive::fromInt32(argc);
+        *engine->jsAlloca(1) = Primitive::fromInt32(argv);
+        *engine->jsAlloca(1) = STACK_VALUE(thisObject);
+        *engine->jsAlloca(1) = STACK_VALUE(func);
+        return Runtime::method_tailCall(frame, engine);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(TailCall)
+
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
         acc = Runtime::method_construct(engine, STACK_VALUE(func), ACC, stack + argv, argc);

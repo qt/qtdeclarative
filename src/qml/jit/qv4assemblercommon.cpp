@@ -212,6 +212,13 @@ PlatformAssemblerCommon::Address PlatformAssemblerCommon::argStackAddress(int ar
     return Address(StackPointerRegister, offset * PointerSize);
 }
 
+JSC::MacroAssemblerBase::Address PlatformAssemblerCommon::inArgStackAddress(int arg)
+{
+    int offset = arg - ArgInRegCount;
+    Q_ASSERT(offset >= 0);
+    return Address(FramePointerRegister, -(offset + 1) * PointerSize);
+}
+
 void PlatformAssemblerCommon::passAccumulatorAsArg(int arg)
 {
 #ifndef QT_NO_DEBUG
@@ -329,10 +336,46 @@ void PlatformAssemblerCommon::callRuntime(const char *functionName, const void *
     }
 }
 
-void JIT::PlatformAssemblerCommon::callRuntimeUnchecked(const char *functionName, const void *funcPtr)
+void PlatformAssemblerCommon::callRuntimeUnchecked(const char *functionName, const void *funcPtr)
 {
     functions.insert(funcPtr, functionName);
     callAbsolute(funcPtr);
+}
+
+void PlatformAssemblerCommon::tailCallRuntime(const char *functionName, const void *funcPtr)
+{
+    functions.insert(funcPtr, functionName);
+    setTailCallArg(EngineRegister, 1);
+    setTailCallArg(CppStackFrameRegister, 0);
+    freeStackSpace();
+    generatePlatformFunctionExit(/*tailCall =*/ true);
+    jumpAbsolute(funcPtr);
+}
+
+void PlatformAssemblerCommon::setTailCallArg(RegisterID src, int arg)
+{
+    if (arg < ArgInRegCount)
+        move(src, registerForArg(arg));
+    else
+        storePtr(src, inArgStackAddress(arg));
+}
+
+JSC::MacroAssemblerBase::Address PlatformAssemblerCommon::jsAlloca(int slotCount)
+{
+    Address jsStackTopAddr(EngineRegister, offsetof(EngineBase, jsStackTop));
+    RegisterID jsStackTop = AccumulatorRegisterValue;
+    loadPtr(jsStackTopAddr, jsStackTop);
+    addPtr(TrustedImm32(sizeof(Value) * slotCount), jsStackTop);
+    storePtr(jsStackTop, jsStackTopAddr);
+    return Address(jsStackTop, 0);
+}
+
+void PlatformAssemblerCommon::storeInt32AsValue(int srcInt, Address destAddr)
+{
+    store32(TrustedImm32(srcInt),
+            Address(destAddr.base, destAddr.offset + QV4::Value::valueOffset()));
+    store32(TrustedImm32(int(QV4::Value::ValueTypeInternal::Integer)),
+            Address(destAddr.base, destAddr.offset + QV4::Value::tagOffset()));
 }
 
 } // JIT namespace
