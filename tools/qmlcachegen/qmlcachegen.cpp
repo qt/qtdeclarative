@@ -319,7 +319,7 @@ static bool compileJSFile(const QString &inputFileName, const QString &inputFile
                                        &irDocument.jsGenerator.stringTable, illegalNames);
             v4CodeGen.setUseFastLookups(false); // Disable lookups in non-standalone (aka QML) mode
             v4CodeGen.generateFromProgram(inputFileName, inputFileUrl, sourceCode, program,
-                                          &irDocument.jsModule, QV4::Compiler::ContextType::Global);
+                                          &irDocument.jsModule, QV4::Compiler::ContextType::ScriptImportedByQML);
             QList<QQmlJS::DiagnosticMessage> jsErrors = v4CodeGen.errors();
             if (!jsErrors.isEmpty()) {
                 error->appendDiagnostics(inputFileName, jsErrors);
