@@ -381,6 +381,16 @@ QStringList QuickTestResult::functionsToRun() const
 }
 
 /*!
+    \qmlproperty list<string> TestResult::tagsToRun
+
+    This property returns the list of test function's data tags to be run
+*/
+QStringList QuickTestResult::tagsToRun() const
+{
+    return QTest::testTags;
+}
+
+/*!
     \qmlmethod TestResult::reset()
 
     Resets all pass/fail/skip counters and prepare for testing.

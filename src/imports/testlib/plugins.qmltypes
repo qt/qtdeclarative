@@ -195,6 +195,7 @@ Module {
         Property { name: "failCount"; type: "int"; isReadonly: true }
         Property { name: "skipCount"; type: "int"; isReadonly: true }
         Property { name: "functionsToRun"; type: "QStringList"; isReadonly: true }
+        Property { name: "tagsToRun"; type: "QStringList"; isReadonly: true }
         Signal { name: "programNameChanged" }
         Method { name: "reset" }
         Method { name: "startLogging" }
