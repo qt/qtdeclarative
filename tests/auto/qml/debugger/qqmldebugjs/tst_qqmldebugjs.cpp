@@ -1638,7 +1638,7 @@ void tst_QQmlDebugJS::breakOnAnchor()
     QTRY_COMPARE(m_process->state(), QProcess::NotRunning);
     QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 
-    QCOMPARE(breaks, 19);
+    QCOMPARE(breaks, 2);
 }
 
 QList<QQmlDebugClient *> tst_QQmlDebugJS::createClients()

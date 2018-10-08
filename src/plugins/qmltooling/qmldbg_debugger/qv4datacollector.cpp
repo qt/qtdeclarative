@@ -339,8 +339,36 @@ QV4::ReturnedValue QV4DataCollector::getValue(Ref ref)
     return array->get(ref, nullptr);
 }
 
+class CapturePreventer
+{
+public:
+    CapturePreventer(QV4::ExecutionEngine *engine)
+    {
+        if (QQmlEngine *e = engine->qmlEngine()) {
+            m_engine = QQmlEnginePrivate::get(e);
+            m_capture = m_engine->propertyCapture;
+            m_engine->propertyCapture = nullptr;
+        }
+    }
+
+    ~CapturePreventer()
+    {
+        if (m_engine && m_capture) {
+            Q_ASSERT(!m_engine->propertyCapture);
+            m_engine->propertyCapture = m_capture;
+        }
+    }
+
+private:
+    QQmlEnginePrivate *m_engine = nullptr;
+    QQmlPropertyCapture *m_capture = nullptr;
+};
+
 QJsonArray QV4DataCollector::collectProperties(const QV4::Object *object)
 {
+    CapturePreventer capturePreventer(engine());
+    Q_UNUSED(capturePreventer);
+
     QJsonArray res;
 
     QV4::Scope scope(engine());
