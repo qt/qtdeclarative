@@ -127,6 +127,7 @@ const char *CHANGEBREAKPOINT_QMLFILE = "changeBreakpoint.qml";
 const char *STEPACTION_QMLFILE = "stepAction.qml";
 const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
 const char *ENCODEQMLSCOPE_QMLFILE = "encodeQmlScope.qml";
+const char *BREAKONANCHOR_QMLFILE = "breakOnAnchor.qml";
 
 #define VARIANTMAPINIT \
     QString obj("{}"); \
@@ -224,6 +225,7 @@ private slots:
     void getScripts();
 
     void encodeQmlScope();
+    void breakOnAnchor();
 
 private:
     ConnectResult init(bool qmlscene, const QString &qmlFile = QString(TEST_QMLFILE),
@@ -1600,6 +1602,43 @@ void tst_QQmlDebugJS::encodeQmlScope()
     QVERIFY(!scopesFailed);
     QTRY_VERIFY(!isStopped);
     QCOMPARE(numReceivedScopes, numExpectedScopes);
+}
+
+void tst_QQmlDebugJS::breakOnAnchor()
+{
+    QString file(BREAKONANCHOR_QMLFILE);
+    QCOMPARE(init(true, file), ConnectSuccess);
+
+    int breaks = 0;
+    bool stopped = false;
+    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() {
+        stopped = true;
+        ++breaks;
+        m_client->evaluate("this", 0, -1);
+    });
+
+    QObject::connect(m_client, &QJSDebugClient::result, this, [&]() {
+        if (stopped) {
+            m_client->continueDebugging(QJSDebugClient::Continue);
+            stopped = false;
+        }
+    });
+
+    QObject::connect(m_client, &QJSDebugClient::failure, this, [&]() {
+        qWarning() << "received failure" << m_client->response;
+    });
+
+    m_client->setBreakpoint(file, 34);
+    m_client->setBreakpoint(file, 37);
+
+    QTRY_COMPARE(m_process->state(), QProcess::Running);
+
+    m_client->connect();
+
+    QTRY_COMPARE(m_process->state(), QProcess::NotRunning);
+    QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
+
+    QCOMPARE(breaks, 19);
 }
 
 QList<QQmlDebugClient *> tst_QQmlDebugJS::createClients()

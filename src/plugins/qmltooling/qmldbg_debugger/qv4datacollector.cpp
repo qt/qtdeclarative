@@ -154,10 +154,9 @@ const QV4::Object *collectProperty(const QV4::ScopedValue &value, QV4::Execution
             int numProperties = 0;
             QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
             QV4::PropertyAttributes attrs;
-            QV4::ScopedProperty p(scope);
             QV4::ScopedPropertyKey name(scope);
             while (true) {
-                name = it.next(p, &attrs);
+                name = it.next(nullptr, &attrs);
                 if (!name->isValid())
                     break;
                 ++numProperties;
