@@ -217,8 +217,10 @@ void QQuickAnimatorProxyJob::setWindow(QQuickWindow *window)
 
 void QQuickAnimatorProxyJob::sceneGraphInitialized()
 {
-    disconnect(m_controller->window(), &QQuickWindow::sceneGraphInitialized, this, &QQuickAnimatorProxyJob::sceneGraphInitialized);
-    readyToAnimate();
+    if (m_controller) {
+        disconnect(m_controller->window(), &QQuickWindow::sceneGraphInitialized, this, &QQuickAnimatorProxyJob::sceneGraphInitialized);
+        readyToAnimate();
+    }
 }
 
 void QQuickAnimatorProxyJob::readyToAnimate()

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Item {
     id: repeaterelementtest
@@ -48,7 +49,7 @@ Item {
 
     }
 
-    VisualItemModel {
+    ObjectModel {
         id: repeatermodel
         Rectangle { color: "blue"; height: 40; width: 150; border.color: "black"; border.width: 3; opacity: .9; radius: 5; clip: true
             Text { text: "I am Thing 1"; anchors.centerIn: parent } }

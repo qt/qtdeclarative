@@ -40,7 +40,6 @@
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilercontext_p.h>
 #include <private/qqmljsastfwd_p.h>
-#include <private/qv4compileddata_p.h>
 
 QT_USE_NAMESPACE
 using namespace QV4;

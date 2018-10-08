@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -465,7 +465,7 @@ void tst_QQuickListView::items(const QUrl &source)
     T model2;
     ctxt->setContextProperty("testModel", &model2);
 
-    // Force a layout, necessary if ListView is completed before VisualDataModel.
+    // Force a layout, necessary if ListView is completed before DelegateModel.
     listview->forceLayout();
 
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -504,7 +504,7 @@ void tst_QQuickListView::changed(const QUrl &source)
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
 
-    // Force a layout, necessary if ListView is completed before VisualDataModel.
+    // Force a layout, necessary if ListView is completed before DelegateModel.
     listview->forceLayout();
 
     model.modifyItem(1, "Will", "9876");

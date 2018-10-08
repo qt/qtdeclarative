@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 ListView {
     width: 200
@@ -6,7 +7,7 @@ ListView {
 
     property var persistentHandle
 
-    model: VisualDataModel {
+    model: DelegateModel {
         id: visualModel
 
         persistedItems.includeByDefault: true

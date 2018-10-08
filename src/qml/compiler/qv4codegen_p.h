@@ -53,17 +53,8 @@
 #include "private/qv4global_p.h"
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
-#include <private/qqmljsengine_p.h>
-#include <private/qv4instr_moth_p.h>
 #include <private/qv4compiler_p.h>
 #include <private/qv4compilercontext_p.h>
-#include <private/qqmlrefcount_p.h>
-#include <QtCore/QStringList>
-#include <QtCore/QDateTime>
-#include <QStack>
-#ifndef V4_BOOTSTRAP
-#include <qqmlerror.h>
-#endif
 #include <private/qv4util_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4stackframe_p.h>
@@ -203,9 +194,10 @@ public:
 
         Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
         Reference() {}
-        Reference(const Reference &other);
-
-        Reference &operator =(const Reference &other);
+        Reference(const Reference &) = default;
+        Reference(Reference &&) = default;
+        Reference &operator =(const Reference &) = default;
+        Reference &operator =(Reference &&) = default;
 
         bool operator==(const Reference &other) const;
         bool operator!=(const Reference &other) const
@@ -214,6 +206,10 @@ public:
         bool isValid() const { return type != Invalid; }
         bool loadTriggersSideEffect() const {
             switch (type) {
+            case QmlScopeObject:
+                return capturePolicy != DontCapture;
+            case QmlContextObject:
+                return capturePolicy != DontCapture;
             case Name:
             case Member:
             case Subscript:

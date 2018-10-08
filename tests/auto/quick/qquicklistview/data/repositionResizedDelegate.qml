@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 ListView {
     id: root
@@ -9,7 +10,7 @@ ListView {
     layoutDirection: (testRightToLeft == true) ? Qt.RightToLeft : Qt.LeftToRight
     verticalLayoutDirection: (testBottomToTop == true) ? ListView.BottomToTop : ListView.TopToBottom
 
-    model: VisualItemModel {
+    model: ObjectModel {
         Rectangle {
             objectName: "red"
             width: 200; height: 200; color: "red"

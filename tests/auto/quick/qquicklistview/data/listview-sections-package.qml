@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Rectangle {
     width: 240
@@ -54,7 +55,7 @@ Rectangle {
                 }
             }
         },
-        VisualDataModel {
+        DelegateModel {
             id: visualModel
             model: testModel
             delegate: myDelegate

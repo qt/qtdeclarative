@@ -42,10 +42,6 @@
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
-#include <QtCore/QSet>
-#include <QtCore/QBuffer>
-#include <QtCore/QBitArray>
-#include <QtCore/QLinkedList>
 #include <QtCore/QStack>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
@@ -55,6 +51,10 @@
 #include <private/qv4compilercontrolflow_p.h>
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
+
+#ifndef V4_BOOTSTRAP
+#  include <qqmlerror.h>
+#endif
 
 #include <cmath>
 #include <iostream>
@@ -3963,70 +3963,6 @@ void Codegen::RValue::loadInAccumulator() const
         Q_UNREACHABLE();
     }
 
-}
-
-Codegen::Reference::Reference(const Codegen::Reference &other)
-{
-    *this = other;
-}
-
-Codegen::Reference &Codegen::Reference::operator =(const Reference &other)
-{
-    type = other.type;
-
-    switch (type) {
-    case Invalid:
-    case Accumulator:
-        break;
-    case Super:
-        break;
-    case SuperProperty:
-        property = other.property;
-        break;
-    case StackSlot:
-        theStackSlot = other.theStackSlot;
-        break;
-    case ScopedLocal:
-        index = other.index;
-        scope = other.scope;
-        break;
-    case Name:
-        // name is always copied
-        break;
-    case Member:
-        propertyBase = other.propertyBase;
-        propertyNameIndex = other.propertyNameIndex;
-        break;
-    case Subscript:
-        elementBase = other.elementBase;
-        elementSubscript = other.elementSubscript;
-        break;
-    case Import:
-        index = other.index;
-        break;
-    case Const:
-        constant = other.constant;
-        break;
-    case QmlScopeObject:
-    case QmlContextObject:
-        qmlBase = other.qmlBase;
-        qmlCoreIndex = other.qmlCoreIndex;
-        qmlNotifyIndex = other.qmlNotifyIndex;
-        capturePolicy = other.capturePolicy;
-        break;
-    }
-
-    // keep loaded reference
-    isArgOrEval = other.isArgOrEval;
-    codegen = other.codegen;
-    isReadonly = other.isReadonly;
-    isReferenceToConst = other.isReferenceToConst;
-    name = other.name;
-    requiresTDZCheck = other.requiresTDZCheck;
-    stackSlotIsLocalOrArgument = other.stackSlotIsLocalOrArgument;
-    isVolatile = other.isVolatile;
-    global = other.global;
-    return *this;
 }
 
 bool Codegen::Reference::operator==(const Codegen::Reference &other) const

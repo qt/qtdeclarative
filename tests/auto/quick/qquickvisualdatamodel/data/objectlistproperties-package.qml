@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 import tst_qquickvisualdatamodel 1.0
 
 ListView {
@@ -6,7 +7,7 @@ ListView {
     height: 100
     model: visualModel.parts.package
 
-    VisualDataModel {
+    DelegateModel {
         id: visualModel
         objectName: "visualModel"
 
@@ -18,8 +19,8 @@ ListView {
         ]
 
         groups: [
-            VisualDataGroup { id: visibleItems; objectName: "visibleItems"; name: "visible"; includeByDefault: true },
-            VisualDataGroup { id: selectedItems; objectName: "selectedItems"; name: "selected" }
+            DelegateModelGroup { id: visibleItems; objectName: "visibleItems"; name: "visible"; includeByDefault: true },
+            DelegateModelGroup { id: selectedItems; objectName: "selectedItems"; name: "selected" }
         ]
 
         model: objects

@@ -1,7 +1,8 @@
 // This example demonstrates placing items in a view using
-// a VisualItemModel
+// an ObjectModel
 
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Rectangle {
     id: root
@@ -22,38 +23,38 @@ Rectangle {
         root.itemModel = itemModel2
     }
 
-    VisualItemModel {
+    ObjectModel {
         id: itemModel1
         objectName: "itemModel1"
         Rectangle {
             objectName: "item1"
             height: 50; width: 100; color: "#FFFEF0"
-            Text { objectName: "text1"; text: "index: " + parent.VisualItemModel.index; font.bold: true; anchors.centerIn: parent }
+            Text { objectName: "text1"; text: "index: " + parent.ObjectModel.index; font.bold: true; anchors.centerIn: parent }
         }
         Rectangle {
             objectName: "item2"
             height: 50; width: 100; color: "#F0FFF7"
-            Text { objectName: "text2"; text: "index: " + parent.VisualItemModel.index; font.bold: true; anchors.centerIn: parent }
+            Text { objectName: "text2"; text: "index: " + parent.ObjectModel.index; font.bold: true; anchors.centerIn: parent }
         }
         Rectangle {
             objectName: "item3"
             height: 50; width: 100; color: "#F4F0FF"
-            Text { objectName: "text3"; text: "index: " + parent.VisualItemModel.index; font.bold: true; anchors.centerIn: parent }
+            Text { objectName: "text3"; text: "index: " + parent.ObjectModel.index; font.bold: true; anchors.centerIn: parent }
         }
     }
 
-    VisualItemModel {
+    ObjectModel {
         id: itemModel2
         objectName: "itemModel2"
         Rectangle {
             objectName: "item4"
             height: 50; width: 100; color: "#FFFEF0"
-            Text { objectName: "text4"; text: "index: " + parent.VisualItemModel.index; font.bold: true; anchors.centerIn: parent }
+            Text { objectName: "text4"; text: "index: " + parent.ObjectModel.index; font.bold: true; anchors.centerIn: parent }
         }
         Rectangle {
             objectName: "item5"
             height: 50; width: 100; color: "#F0FFF7"
-            Text { objectName: "text5"; text: "index: " + parent.VisualItemModel.index; font.bold: true; anchors.centerIn: parent }
+            Text { objectName: "text5"; text: "index: " + parent.ObjectModel.index; font.bold: true; anchors.centerIn: parent }
         }
     }
 

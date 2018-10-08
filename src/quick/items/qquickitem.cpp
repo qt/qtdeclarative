@@ -3919,6 +3919,16 @@ void QQuickItemPrivate::addItemChangeListener(QQuickItemChangeListener *listener
     changeListeners.append(ChangeListener(listener, types));
 }
 
+void QQuickItemPrivate::updateOrAddItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
+{
+    const ChangeListener changeListener(listener, types);
+    const int index = changeListeners.indexOf(changeListener);
+    if (index > -1)
+        changeListeners[index].types = changeListener.types;
+    else
+        changeListeners.append(changeListener);
+}
+
 void QQuickItemPrivate::removeItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types)
 {
     ChangeListener change(listener, types);
@@ -3953,6 +3963,8 @@ void QQuickItemPrivate::updateOrRemoveGeometryChangeListener(QQuickItemChangeLis
     This event handler can be reimplemented in a subclass to receive key
     press events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::keyPressEvent(QKeyEvent *event)
 {
@@ -3963,6 +3975,8 @@ void QQuickItem::keyPressEvent(QKeyEvent *event)
     This event handler can be reimplemented in a subclass to receive key
     release events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::keyReleaseEvent(QKeyEvent *event)
 {
@@ -3974,6 +3988,8 @@ void QQuickItem::keyReleaseEvent(QKeyEvent *event)
     This event handler can be reimplemented in a subclass to receive input
     method events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
 {
@@ -3985,6 +4001,11 @@ void QQuickItem::inputMethodEvent(QInputMethodEvent *event)
     This event handler can be reimplemented in a subclass to receive focus-in
     events for an item. The event information is provided by the \c event
     parameter.
+
+    \input item.qdocinc accepting-events
+
+    If you do reimplement this function, you should call the base class
+    implementation.
   */
 void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
 {
@@ -4002,6 +4023,8 @@ void QQuickItem::focusInEvent(QFocusEvent * /*event*/)
     This event handler can be reimplemented in a subclass to receive focus-out
     events for an item. The event information is provided by the \c event
     parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
 {
@@ -4011,6 +4034,8 @@ void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
     This event handler can be reimplemented in a subclass to receive mouse
     press events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::mousePressEvent(QMouseEvent *event)
 {
@@ -4021,6 +4046,8 @@ void QQuickItem::mousePressEvent(QMouseEvent *event)
     This event handler can be reimplemented in a subclass to receive mouse
     move events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseMoveEvent(QMouseEvent *event)
 {
@@ -4031,6 +4058,8 @@ void QQuickItem::mouseMoveEvent(QMouseEvent *event)
     This event handler can be reimplemented in a subclass to receive mouse
     release events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseReleaseEvent(QMouseEvent *event)
 {
@@ -4041,6 +4070,8 @@ void QQuickItem::mouseReleaseEvent(QMouseEvent *event)
     This event handler can be reimplemented in a subclass to receive mouse
     double-click events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
 {
@@ -4050,7 +4081,7 @@ void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
     This event handler can be reimplemented in a subclass to be notified
     when a mouse ungrab event has occurred on this item.
 
-    \sa ungrabMouse()
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseUngrabEvent()
 {
@@ -4060,6 +4091,8 @@ void QQuickItem::mouseUngrabEvent()
 /*!
     This event handler can be reimplemented in a subclass to be notified
     when a touch ungrab event has occurred on this item.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::touchUngrabEvent()
 {
@@ -4071,6 +4104,8 @@ void QQuickItem::touchUngrabEvent()
     This event handler can be reimplemented in a subclass to receive
     wheel events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::wheelEvent(QWheelEvent *event)
 {
@@ -4082,6 +4117,8 @@ void QQuickItem::wheelEvent(QWheelEvent *event)
     This event handler can be reimplemented in a subclass to receive touch
     events for an item. The event information is provided by the
     \a event parameter.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::touchEvent(QTouchEvent *event)
 {
@@ -4094,6 +4131,8 @@ void QQuickItem::touchEvent(QTouchEvent *event)
     \a event parameter.
 
     Hover events are only provided if acceptHoverEvents() is true.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::hoverEnterEvent(QHoverEvent *event)
 {
@@ -4106,6 +4145,8 @@ void QQuickItem::hoverEnterEvent(QHoverEvent *event)
     \a event parameter.
 
     Hover events are only provided if acceptHoverEvents() is true.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
@@ -4118,6 +4159,8 @@ void QQuickItem::hoverMoveEvent(QHoverEvent *event)
     \a event parameter.
 
     Hover events are only provided if acceptHoverEvents() is true.
+
+    \input item.qdocinc accepting-events
   */
 void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
 {
@@ -4132,6 +4175,8 @@ void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
 
     Drag and drop events are only provided if the ItemAcceptsDrops flag
     has been set for this item.
+
+    \input item.qdocinc accepting-events
 
     \sa Drag, {Drag and Drop}
   */
@@ -4148,6 +4193,8 @@ void QQuickItem::dragEnterEvent(QDragEnterEvent *event)
     Drag and drop events are only provided if the ItemAcceptsDrops flag
     has been set for this item.
 
+    \input item.qdocinc accepting-events
+
     \sa Drag, {Drag and Drop}
   */
 void QQuickItem::dragMoveEvent(QDragMoveEvent *event)
@@ -4163,6 +4210,8 @@ void QQuickItem::dragMoveEvent(QDragMoveEvent *event)
     Drag and drop events are only provided if the ItemAcceptsDrops flag
     has been set for this item.
 
+    \input item.qdocinc accepting-events
+
     \sa Drag, {Drag and Drop}
   */
 void QQuickItem::dragLeaveEvent(QDragLeaveEvent *event)
@@ -4177,6 +4226,8 @@ void QQuickItem::dragLeaveEvent(QDragLeaveEvent *event)
 
     Drag and drop events are only provided if the ItemAcceptsDrops flag
     has been set for this item.
+
+    \input item.qdocinc accepting-events
 
     \sa Drag, {Drag and Drop}
   */

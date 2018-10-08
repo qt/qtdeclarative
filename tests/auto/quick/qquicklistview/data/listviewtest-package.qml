@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.Models 2.12
 
 Rectangle {
     id: root
@@ -120,7 +121,7 @@ Rectangle {
             id: headerFooter
             Rectangle { height: 30; width: 240; color: "blue" }
         },
-        VisualDataModel {
+        DelegateModel {
            id: visualModel
 
            model: testModel
