@@ -206,6 +206,10 @@ public:
         bool isValid() const { return type != Invalid; }
         bool loadTriggersSideEffect() const {
             switch (type) {
+            case QmlScopeObject:
+                return capturePolicy != DontCapture;
+            case QmlContextObject:
+                return capturePolicy != DontCapture;
             case Name:
             case Member:
             case Subscript:
