@@ -469,6 +469,17 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
     QV4::GlobalExtensions::init(obj, extensions);
 }
 
+static QUrl urlForFileName(const QString &fileName)
+{
+    if (!fileName.startsWith(QLatin1Char(':')))
+        return QUrl::fromLocalFile(fileName);
+
+    QUrl url;
+    url.setPath(fileName.mid(1));
+    url.setScheme(QLatin1String("qrc"));
+    return url;
+}
+
 /*!
     Evaluates \a program, using \a lineNumber as the base line number,
     and returns the result of the evaluation.
@@ -503,7 +514,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QV4::Scope scope(v4);
     QV4::ScopedValue result(scope);
 
-    QV4::Script script(v4->rootContext(), QV4::Compiler::ContextType::Global, program, fileName, lineNumber);
+    QV4::Script script(v4->rootContext(), QV4::Compiler::ContextType::Global, program, urlForFileName(fileName).toString(), lineNumber);
     script.strictMode = false;
     if (v4->currentStackFrame)
         script.strictMode = v4->currentStackFrame->v4Function->isStrict();
@@ -519,19 +530,6 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     QJSValue retval(v4, result->asReturnedValue());
 
     return retval;
-}
-
-static QUrl moduleUrlForFileName(const QString &fileName)
-{
-    QString absolutePath = QFileInfo(fileName).canonicalFilePath();
-    if (!absolutePath.startsWith(QLatin1Char(':')))
-        return QUrl::fromLocalFile(absolutePath);
-
-    absolutePath.remove(0, 1);
-    QUrl url;
-    url.setPath(absolutePath);
-    url.setScheme(QLatin1String("qrc"));
-    return url;
 }
 
 /*!
@@ -556,7 +554,7 @@ static QUrl moduleUrlForFileName(const QString &fileName)
  */
 QJSValue QJSEngine::importModule(const QString &fileName)
 {
-    const QUrl url = moduleUrlForFileName(fileName);
+    const QUrl url = urlForFileName(QFileInfo(fileName).canonicalFilePath());
     auto moduleUnit = m_v4Engine->loadModule(url);
     if (m_v4Engine->hasException)
         return QJSValue(m_v4Engine, m_v4Engine->catchException());

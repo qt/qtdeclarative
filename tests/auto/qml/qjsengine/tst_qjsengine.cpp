@@ -177,6 +177,8 @@ private slots:
     void translateScriptUnicodeIdBased_data();
     void translateScriptUnicodeIdBased();
     void translateFromBuiltinCallback();
+    void translationFilePath_data();
+    void translationFilePath();
 
     void installConsoleFunctions();
     void logging();
@@ -3913,6 +3915,73 @@ void tst_QJSEngine::translateFromBuiltinCallback()
     // qsTr() needs to walk to the outer-most (global) frame before it finds
     // a translation context, and this should not crash.
     eng.evaluate("[10,20].forEach(foo)", "script.js");
+}
+
+void tst_QJSEngine::translationFilePath_data()
+{
+    QTest::addColumn<QString>("filename");
+
+    QTest::newRow("relative") << QStringLiteral("script.js");
+    QTest::newRow("absolute unix") << QStringLiteral("/script.js");
+    QTest::newRow("absolute /windows/") << QStringLiteral("c:/script.js");
+#ifdef Q_OS_WIN
+    QTest::newRow("absolute \\windows\\") << QStringLiteral("c:\\script.js");
+#endif
+    QTest::newRow("relative url") << QStringLiteral("file://script.js");
+    QTest::newRow("absolute url unix") << QStringLiteral("file:///script.js");
+    QTest::newRow("absolute url windows") << QStringLiteral("file://c:/script.js");
+}
+
+class DummyTranslator : public QTranslator
+{
+    Q_OBJECT
+
+public:
+    DummyTranslator(const char *sourceText)
+        : srcTxt(sourceText)
+    {}
+
+    QString translate(const char *context, const char *sourceText, const char *disambiguation, int n) const override
+    {
+        Q_UNUSED(disambiguation);
+        Q_UNUSED(n);
+
+        if (srcTxt == sourceText)
+            ctxt = QByteArray(context);
+
+        return QString(sourceText);
+    }
+
+    bool isEmpty() const override
+    {
+        return false;
+    }
+
+    const char *sourceText() const
+    { return srcTxt.constData(); }
+
+    QByteArray context() const
+    { return ctxt; }
+
+private:
+    QByteArray srcTxt;
+    mutable QByteArray ctxt;
+};
+
+void tst_QJSEngine::translationFilePath()
+{
+    QFETCH(QString, filename);
+
+    DummyTranslator translator("some text");
+    QCoreApplication::installTranslator(&translator);
+    QByteArray scriptContent = QByteArray("qsTr('%1')").replace("%1", translator.sourceText());
+
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::TranslationExtension);
+    QJSValue result = engine.evaluate(scriptContent, filename);
+    QCOMPARE(translator.context(), QByteArray("script"));
+
+    QCoreApplication::removeTranslator(&translator);
 }
 
 void tst_QJSEngine::installConsoleFunctions()
