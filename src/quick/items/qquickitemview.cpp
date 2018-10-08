@@ -829,6 +829,8 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
     if (mode < QQuickItemView::Beginning || mode > QQuickItemView::SnapPosition)
         return;
 
+    Q_Q(QQuickItemView);
+    q->cancelFlick();
     applyPendingChanges();
     const int modelCount = model->count();
     int idx = qMax(qMin(index, modelCount - 1), 0);
