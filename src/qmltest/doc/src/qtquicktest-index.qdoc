@@ -57,6 +57,11 @@
     to be executed. See the documentation for the \l [QML] TestCase and
     \l [QML] SignalSpy types for more information on writing test cases.
 
+    \note There is no binary compatibility guarantee for the Qt Quick Test
+          module. This means that an application that uses Qt Quick Test is
+          only guaranteed to work with the Qt version it was developed against.
+          However, source compatibility is guaranteed.
+
     \section1 Running Tests
 
     Test cases are launched by a C++ harness that consists of
