@@ -148,7 +148,7 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
         QByteArray name = functionName(function);
-        codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, "%s", name.constData());
+        codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, "function %s", name.constData());
 
         WTF::setDataFile(stderr);
         printDisassembledOutputWithCalls(buf.data(), functions);
