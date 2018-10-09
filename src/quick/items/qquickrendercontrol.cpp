@@ -312,15 +312,15 @@ bool QQuickRenderControl::sync()
 void QQuickRenderControl::invalidate()
 {
     Q_D(QQuickRenderControl);
-    if (!d->initialized)
-        return;
-
     if (!d->window)
         return;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(d->window);
     cd->fireAboutToStop();
     cd->cleanupNodesOnShutdown();
+
+    if (!d->initialized)
+        return;
 
     // We must invalidate since the context can potentially be destroyed by the
     // application right after returning from this function. Invalidating is
