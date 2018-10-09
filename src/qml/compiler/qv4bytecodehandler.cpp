@@ -95,6 +95,12 @@ void ByteCodeHandler::decode(const char *code, uint len)
     Q_UNUSED(arg2); \
     Q_UNUSED(arg3); \
     Q_UNUSED(arg4);
+#define MOTH_UNUSED_ARGS5(arg1, arg2, arg3, arg4, arg5) \
+    Q_UNUSED(arg1); \
+    Q_UNUSED(arg2); \
+    Q_UNUSED(arg3); \
+    Q_UNUSED(arg4); \
+    Q_UNUSED(arg5);
 
 #define MOTH_MARK_ARGS_UNUSED_PLEASE(nargs, ...) \
     MOTH_EXPAND_FOR_MSVC(MOTH_UNUSED_ARGS##nargs(__VA_ARGS__))

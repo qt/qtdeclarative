@@ -188,7 +188,7 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
     runtimeFunctions.resize(data->functionTableSize);
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
-        runtimeFunctions[i] = new QV4::Function(engine, this, compiledFunction);
+        runtimeFunctions[i] = QV4::Function::create(engine, this, compiledFunction);
     }
 
     Scope scope(engine);
@@ -287,7 +287,8 @@ void CompilationUnit::unlink()
     runtimeRegularExpressions = nullptr;
     free(runtimeClasses);
     runtimeClasses = nullptr;
-    qDeleteAll(runtimeFunctions);
+    for (QV4::Function *f : qAsConst(runtimeFunctions))
+        f->destroy();
     runtimeFunctions.clear();
 }
 

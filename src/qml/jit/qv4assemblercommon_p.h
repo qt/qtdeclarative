@@ -587,7 +587,7 @@ public:
     Address loadCompilationUnitPtr(RegisterID target)
     {
         Address addr = loadFunctionPtr(target);
-        addr.offset = offsetof(QV4::Function, compilationUnit);
+        addr.offset = offsetof(QV4::FunctionData, compilationUnit);
         loadPtr(addr, target);
         return Address(target);
     }
@@ -699,6 +699,7 @@ public:
     void passAddressAsArg(Address addr, int arg);
     void passCppFrameAsArg(int arg);
     void passInt32AsArg(int value, int arg);
+    void passPointerAsArg(void *ptr, int arg);
     void callRuntime(const char *functionName, const void *funcPtr);
     void callRuntimeUnchecked(const char *functionName, const void *funcPtr);
     void tailCallRuntime(const char *functionName, const void *funcPtr);

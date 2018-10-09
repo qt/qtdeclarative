@@ -51,6 +51,7 @@
 // We mean it.
 //
 #include <private/qv4instr_moth_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,6 +66,8 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
+    typedef CompiledData::Function::TraceInfoCount TraceInfoCount;
+
     BytecodeGenerator(int line, bool debug)
         : startLine(line), debugMode(debug) {}
 
@@ -161,6 +164,15 @@ public:
         addInstructionHelper(Moth::Instr::Type(InstrT), genericInstr);
     }
 
+    // Same as addInstruction, but also add a trace slot. Move only, because the instruction cannot
+    // be reused afterwards.
+    template<int InstrT>
+    void addTracingInstruction(InstrData<InstrT> data)
+    {
+        data.traceSlot = nextTraceInfo();
+        addInstruction(data);
+    }
+
     Q_REQUIRED_RESULT Jump jump()
     {
 QT_WARNING_PUSH
@@ -172,14 +184,12 @@ QT_WARNING_POP
 
     Q_REQUIRED_RESULT Jump jumpTrue()
     {
-        Instruction::JumpTrue data;
-        return addJumpInstruction(data);
+        return addTracingJumpInstruction(Instruction::JumpTrue());
     }
 
     Q_REQUIRED_RESULT Jump jumpFalse()
     {
-        Instruction::JumpFalse data;
-        return addJumpInstruction(data);
+        return addTracingJumpInstruction(Instruction::JumpFalse());
     }
 
     Q_REQUIRED_RESULT Jump jumpNotUndefined()
@@ -198,16 +208,16 @@ QT_WARNING_POP
     {
         Instruction::CmpStrictEqual cmp;
         cmp.lhs = lhs;
-        addInstruction(cmp);
-        addJumpInstruction(Instruction::JumpTrue()).link(target);
+        addInstruction(std::move(cmp));
+        addTracingJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
     void jumpStrictNotEqual(const StackSlot &lhs, const Label &target)
     {
         Instruction::CmpStrictNotEqual cmp;
         cmp.lhs = lhs;
-        addInstruction(cmp);
-        addJumpInstruction(Instruction::JumpTrue()).link(target);
+        addInstruction(std::move(cmp));
+        addTracingJumpInstruction(Instruction::JumpTrue()).link(target);
     }
 
     void setUnwindHandler(ExceptionHandler *handler)
@@ -248,6 +258,13 @@ QT_WARNING_POP
     void finalize(Compiler::Context *context);
 
     template<int InstrT>
+    Jump addTracingJumpInstruction(InstrData<InstrT> &&data)
+    {
+        data.traceSlot = nextTraceInfo();
+        return addJumpInstruction(data);
+    }
+
+    template<int InstrT>
     Jump addJumpInstruction(const InstrData<InstrT> &data)
     {
         Instr genericInstr;
@@ -258,14 +275,35 @@ QT_WARNING_POP
     void addCJumpInstruction(bool jumpOnFalse, const Label *trueLabel, const Label *falseLabel)
     {
         if (jumpOnFalse)
-            addJumpInstruction(Instruction::JumpFalse()).link(*falseLabel);
+            addTracingJumpInstruction(Instruction::JumpFalse()).link(*falseLabel);
         else
-            addJumpInstruction(Instruction::JumpTrue()).link(*trueLabel);
+            addTracingJumpInstruction(Instruction::JumpTrue()).link(*trueLabel);
     }
 
     void clearLastInstruction()
     {
         lastInstrType = -1;
+    }
+
+    TraceInfoCount nextTraceInfo()
+    {
+        // If tracing is disabled, use slot 0 to unconditionally store all trace info
+        if (nTraceInfos == CompiledData::Function::NoTracing())
+            return TraceInfoCount(0);
+        return nTraceInfos++;
+    }
+
+    void setTracing(bool onoff, int argumentCount)
+    {
+        if (onoff)
+            nTraceInfos = argumentCount;
+        else
+            nTraceInfos = CompiledData::Function::NoTracing();
+    }
+
+    TraceInfoCount traceInfoCount() const
+    {
+        return nTraceInfos;
     }
 
 private:
@@ -302,6 +340,8 @@ private:
 
     int lastInstrType = -1;
     Moth::Instr lastInstr;
+
+    TraceInfoCount nTraceInfos = TraceInfoCount(0);
 };
 
 }

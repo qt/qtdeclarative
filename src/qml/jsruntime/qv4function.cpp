@@ -73,13 +73,30 @@ ReturnedValue Function::call(const Value *thisObject, const Value *argv, int arg
     return result;
 }
 
+Function *Function::create(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
+{
+    quint16 traceSlotCount = 0;
+#if QT_CONFIG(qml_tracing)
+        traceSlotCount = function->nTraceInfos == CompiledData::Function::NoTracing()
+                ? 1
+                : function->nTraceInfos;
+#endif
+    quint8 *storage = new quint8[sizeof(Function) + traceSlotCount];
+    return new(storage) Function(engine, unit, function);
+}
+
+void Function::destroy()
+{
+    delete[] reinterpret_cast<quint8 *>(this);
+}
+
 Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function)
-    : compiledFunction(function)
-    , compilationUnit(unit)
+    : FunctionData(unit)
+    , compiledFunction(function)
     , codeData(function->code())
-        , jittedCode(nullptr)
-        , codeRef(nullptr)
-        , hasQmlDependencies(function->hasQmlDependencies())
+    , jittedCode(nullptr)
+    , codeRef(nullptr)
+    , hasQmlDependencies(function->hasQmlDependencies())
 {
     Scope scope(engine);
     Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
@@ -95,6 +112,13 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     internalClass = ic->d();
 
     nFormals = compiledFunction->nFormals;
+
+#if QT_CONFIG(qml_tracing)
+    if (tracingEnabled()) {
+        for (uint i = 0; i < function->nTraceInfos; ++i)
+            *traceInfo(i) = 0;
+    }
+#endif
 }
 
 Function::~Function()
@@ -163,6 +187,24 @@ QString Function::prettyName(const Function *function, const void *code)
 QQmlSourceLocation Function::sourceLocation() const
 {
     return QQmlSourceLocation(sourceFile(), compiledFunction->location.line, compiledFunction->location.column);
+}
+
+QString Function::traceInfoToString()
+{
+    QString info = QLatin1String("=== Trace information for ") + name()->toQString() + QLatin1Char(':');
+    if (!tracingEnabled())
+        return info + QStringLiteral(" disabled. Interpreter call count: %1\n").arg(interpreterCallCount);
+    if (compiledFunction->nTraceInfos == 0)
+        return info + QLatin1String(" none.\n");
+
+    info += QLatin1Char('\n');
+    for (uint i = 0, ei = compiledFunction->nTraceInfos; i < ei; ++i) {
+        auto bits = QString::number(*traceInfo(i), 2);
+        if (bits.size() < 8)
+            bits.prepend(QString(8 - bits.size(), '0'));
+        info += QStringLiteral("    %1: %2\n").arg(QString::number(i), bits);
+    }
+    return info;
 }
 
 QT_END_NAMESPACE

@@ -112,9 +112,11 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(void, storeNameSloppy, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
     F(void, storeProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)) \
     F(void, storeElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)) \
+    F(void, storeElement_traced, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value, quint8 *traceSlot)) \
     F(ReturnedValue, loadProperty, (ExecutionEngine *engine, const Value &object, int nameIndex)) \
     F(ReturnedValue, loadName, (ExecutionEngine *engine, int nameIndex)) \
     F(ReturnedValue, loadElement, (ExecutionEngine *engine, const Value &object, const Value &index)) \
+    F(ReturnedValue, loadElement_traced, (ExecutionEngine *engine, const Value &object, const Value &index, quint8 *traceSlot)) \
     F(ReturnedValue, loadSuperProperty, (ExecutionEngine *engine, const Value &property)) \
     F(void, storeSuperProperty, (ExecutionEngine *engine, const Value &property, const Value &value)) \
     F(ReturnedValue, loadSuperConstructor, (ExecutionEngine *engine, const Value &t)) \

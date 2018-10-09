@@ -407,4 +407,28 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     nRegisters = bytecodeGenerator->currentRegister() - registerOffset;
 }
 
+bool Context::canUseTracingJit() const
+{
+#if QT_CONFIG(qml_tracing)
+    static bool forceTracing = !qEnvironmentVariableIsEmpty("QV4_FORCE_TRACING");
+    if (forceTracing) //### we can probably remove this when tracing is turned on by default
+        return true; // to be used by unittests
+
+    static bool disableTracing = !qEnvironmentVariableIsEmpty("QV4_DISABLE_TRACING");
+    if (disableTracing)
+        return false;
+
+    static QStringList onlyTrace =
+            qEnvironmentVariable("QV4_ONLY_TRACE").split(QLatin1Char(','), QString::SkipEmptyParts);
+    if (!onlyTrace.isEmpty())
+        return onlyTrace.contains(name);
+
+    //### the next condition should be refined and have the IR distinguish between escaping and
+    //    non-escaping locals
+    return !hasTry && !requiresExecutionContext && !hasNestedFunctions;
+#else
+    return false;
+#endif
+}
+
 QT_END_NAMESPACE

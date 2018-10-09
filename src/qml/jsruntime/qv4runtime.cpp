@@ -695,6 +695,30 @@ ReturnedValue Runtime::method_loadElement(ExecutionEngine *engine, const Value &
     return getElementFallback(engine, object, index);
 }
 
+ReturnedValue Runtime::method_loadElement_traced(ExecutionEngine *engine, const Value &object, const Value &index, quint8 *traceSlot)
+{
+    *traceSlot |= quint8(ObservedTraceValues::ArrayWasAccessed);
+    if (index.isPositiveInt()) {
+        uint idx = static_cast<uint>(index.int_32());
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->internalClass->vtable->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->values.size)
+                        if (!s->data(idx).isEmpty())
+                            return s->data(idx).asReturnedValue();
+                }
+            }
+        }
+        *traceSlot |= quint8(ObservedTraceValues::ArrayAccessNeededFallback);
+        return getElementIntFallback(engine, object, idx);
+    }
+
+    *traceSlot |= quint8(ObservedTraceValues::ArrayAccessNeededFallback);
+    return getElementFallback(engine, object, index);
+}
+
 static Q_NEVER_INLINE bool setElementFallback(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)
 {
     Scope scope(engine);
@@ -746,6 +770,30 @@ void Runtime::method_storeElement(ExecutionEngine *engine, const Value &object, 
         }
     }
 
+    if (!setElementFallback(engine, object, index, value) && engine->currentStackFrame->v4Function->isStrict())
+        engine->throwTypeError();
+}
+
+void Runtime::method_storeElement_traced(ExecutionEngine *engine, const Value &object, const Value &index, const Value &value, quint8 *traceSlot)
+{
+    *traceSlot |= quint8(ObservedTraceValues::ArrayWasAccessed);
+    if (index.isPositiveInt()) {
+        uint idx = static_cast<uint>(index.int_32());
+        if (Heap::Base *b = object.heapObject()) {
+            if (b->internalClass->vtable->isObject) {
+                Heap::Object *o = static_cast<Heap::Object *>(b);
+                if (o->arrayData && o->arrayData->type == Heap::ArrayData::Simple) {
+                    Heap::SimpleArrayData *s = o->arrayData.cast<Heap::SimpleArrayData>();
+                    if (idx < s->values.size) {
+                        s->setData(engine, idx, value);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    *traceSlot |= quint8(ObservedTraceValues::ArrayAccessNeededFallback);
     if (!setElementFallback(engine, object, index, value) && engine->currentStackFrame->v4Function->isStrict())
         engine->throwTypeError();
 }

@@ -287,8 +287,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     switch (op) {
     case UMinus: {
         expr.loadInAccumulator();
-        Instruction::UMinus uminus;
-        bytecodeGenerator->addInstruction(uminus);
+        Instruction::UMinus uminus = {};
+        bytecodeGenerator->addTracingInstruction(uminus);
         return Reference::fromAccumulator(this);
     }
     case UPlus: {
@@ -316,8 +316,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
             Instruction::UPlus uplus;
             bytecodeGenerator->addInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
-            Instruction::Increment inc;
-            bytecodeGenerator->addInstruction(inc);
+            Instruction::Increment inc = {};
+            bytecodeGenerator->addTracingInstruction(inc);
             e.storeConsumeAccumulator();
             return originalValue;
         } else {
@@ -328,8 +328,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     case PreIncrement: {
         Reference e = expr.asLValue();
         e.loadInAccumulator();
-        Instruction::Increment inc;
-        bytecodeGenerator->addInstruction(inc);
+        Instruction::Increment inc = {};
+        bytecodeGenerator->addTracingInstruction(inc);
         if (_expr.accept(nx))
             return e.storeConsumeAccumulator();
         else
@@ -342,8 +342,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
             Instruction::UPlus uplus;
             bytecodeGenerator->addInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
-            Instruction::Decrement dec;
-            bytecodeGenerator->addInstruction(dec);
+            Instruction::Decrement dec = {};
+            bytecodeGenerator->addTracingInstruction(dec);
             e.storeConsumeAccumulator();
             return originalValue;
         } else {
@@ -354,8 +354,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     case PreDecrement: {
         Reference e = expr.asLValue();
         e.loadInAccumulator();
-        Instruction::Decrement dec;
-        bytecodeGenerator->addInstruction(dec);
+        Instruction::Decrement dec = {};
+        bytecodeGenerator->addTracingInstruction(dec);
         if (_expr.accept(nx))
             return e.storeConsumeAccumulator();
         else
@@ -1179,8 +1179,8 @@ bool Codegen::visit(ArrayPattern *ast)
         slot.storeConsumeAccumulator();
 
         index.loadInAccumulator();
-        Instruction::Increment inc;
-        bytecodeGenerator->addInstruction(inc);
+        Instruction::Increment inc = {};
+        bytecodeGenerator->addTracingInstruction(inc);
         index.storeConsumeAccumulator();
     };
 
@@ -1243,7 +1243,7 @@ bool Codegen::visit(ArrayPattern *ast)
                 next.value = lhsValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
-                bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
+                bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpFalse()).link(body);
                 bytecodeGenerator->jump().link(done);
 
                 end.link();
@@ -1527,24 +1527,24 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
 {
     switch (oper) {
     case QSOperator::Add: {
-        //### Todo: when we add type hints, we can generate an Increment when both the lhs is a number and the rhs == 1
         left = left.storeOnStack();
         right.loadInAccumulator();
         Instruction::Add add;
         add.lhs = left.stackSlot();
-        bytecodeGenerator->addInstruction(add);
+        bytecodeGenerator->addTracingInstruction(add);
         break;
     }
     case QSOperator::Sub: {
         if (right.isConstant() && right.constant == Encode(int(1))) {
             left.loadInAccumulator();
-            bytecodeGenerator->addInstruction(Instruction::Decrement());
+            Instruction::Decrement dec = {};
+            bytecodeGenerator->addTracingInstruction(dec);
         } else {
             left = left.storeOnStack();
             right.loadInAccumulator();
             Instruction::Sub sub;
             sub.lhs = left.stackSlot();
-            bytecodeGenerator->addInstruction(sub);
+            bytecodeGenerator->addTracingInstruction(sub);
         }
         break;
     }
@@ -1561,7 +1561,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         right.loadInAccumulator();
         Instruction::Mul mul;
         mul.lhs = left.stackSlot();
-        bytecodeGenerator->addInstruction(mul);
+        bytecodeGenerator->addTracingInstruction(mul);
         break;
     }
     case QSOperator::Div: {
@@ -1577,7 +1577,7 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         right.loadInAccumulator();
         Instruction::Mod mod;
         mod.lhs = left.stackSlot();
-        bytecodeGenerator->addInstruction(mod);
+        bytecodeGenerator->addTracingInstruction(mod);
         break;
     }
     case QSOperator::BitAnd:
@@ -1961,7 +1961,7 @@ bool Codegen::visit(CallExpression *ast)
             call.thisObject = baseObject.stackSlot();
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         } else {
             Instruction::TailCall call;
             call.func = base.stackSlot();
@@ -1989,14 +1989,14 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         call.name = base.qmlCoreIndex;
         call.argc = calldata.argc;
         call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        bytecodeGenerator->addTracingInstruction(call);
     } else if (base.type == Reference::QmlContextObject) {
         Instruction::CallContextObjectProperty call;
         call.base = base.qmlBase.stackSlot();
         call.name = base.qmlCoreIndex;
         call.argc = calldata.argc;
         call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        bytecodeGenerator->addTracingInstruction(call);
     } else if (base.type == Reference::Member) {
         if (!disable_lookups && useFastLookups) {
             Instruction::CallPropertyLookup call;
@@ -2004,14 +2004,14 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
             call.lookupIndex = registerGetterLookup(base.propertyNameIndex);
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         } else {
             Instruction::CallProperty call;
             call.base = base.propertyBase.stackSlot();
             call.name = base.propertyNameIndex;
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         }
     } else if (base.type == Reference::Subscript) {
         Instruction::CallElement call;
@@ -2019,25 +2019,25 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         call.index = base.elementSubscript.stackSlot();
         call.argc = calldata.argc;
         call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        bytecodeGenerator->addTracingInstruction(call);
     } else if (base.type == Reference::Name) {
         if (base.name == QStringLiteral("eval")) {
             Instruction::CallPossiblyDirectEval call;
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         } else if (!disable_lookups && useFastLookups && base.global) {
             Instruction::CallGlobalLookup call;
             call.index = registerGlobalGetterLookup(base.nameAsIndex());
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         } else {
             Instruction::CallName call;
             call.name = base.nameAsIndex();
             call.argc = calldata.argc;
             call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            bytecodeGenerator->addTracingInstruction(call);
         }
     } else if (base.type == Reference::SuperProperty) {
         Reference receiver = base.baseObject();
@@ -2054,14 +2054,14 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
         call.thisObject = receiver.stackSlot();
         call.argc = calldata.argc;
         call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        bytecodeGenerator->addTracingInstruction(call);
     } else {
         Q_ASSERT(base.isStackSlot());
         Instruction::CallValue call;
         call.name = base.stackSlot();
         call.argc = calldata.argc;
         call.argv = calldata.argv;
-        bytecodeGenerator->addInstruction(call);
+        bytecodeGenerator->addTracingInstruction(call);
     }
 
     _expr.setResult(Reference::fromAccumulator(this));
@@ -2805,14 +2805,14 @@ bool Codegen::visit(TemplateLiteral *ast)
 
             Instruction::Add instr;
             instr.lhs = temp2;
-            bytecodeGenerator->addInstruction(instr);
+            bytecodeGenerator->addTracingInstruction(instr);
         } else {
             expr.loadInAccumulator();
         }
 
         Instruction::Add instr;
         instr.lhs = temp;
-        bytecodeGenerator->addInstruction(instr);
+        bytecodeGenerator->addTracingInstruction(instr);
     }
 
     auto r = Reference::fromAccumulator(this);
@@ -3070,6 +3070,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     bool savedFunctionEndsWithReturn = functionEndsWithReturn;
     functionEndsWithReturn = endsWithReturn(_module, body);
+    bytecodeGenerator->setTracing(_functionContext->canUseTracingJit(), _context->arguments.size());
 
     // reserve the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(sizeof(CallData)/sizeof(Value) - 1 + _context->arguments.size());
@@ -3158,6 +3159,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         Q_ASSERT(_context == _functionContext);
         bytecodeGenerator->finalize(_context);
         _context->registerCountInFunction = bytecodeGenerator->registerCount();
+        _context->nTraceInfos = bytecodeGenerator->traceInfoCount();
         static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
         if (showCode) {
             qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
@@ -3393,7 +3395,7 @@ bool Codegen::visit(ForEachStatement *ast)
         next.value = lhsValue.stackSlot();
         next.done = iteratorDone.stackSlot();
         bytecodeGenerator->addInstruction(next);
-        bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
+        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpFalse()).link(body);
         bytecodeGenerator->jump().link(done);
 
         end.link();
@@ -4281,7 +4283,7 @@ void Codegen::Reference::storeAccumulator() const
         Instruction::StoreElement store;
         store.base = elementBase;
         store.index = elementSubscript.stackSlot();
-        codegen->bytecodeGenerator->addInstruction(store);
+        codegen->bytecodeGenerator->addTracingInstruction(store);
     } return;
     case QmlScopeObject: {
         Instruction::StoreScopeObjectProperty store;
@@ -4383,12 +4385,12 @@ QT_WARNING_POP
         if (!scope) {
             Instruction::LoadLocal load;
             load.index = index;
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         } else {
             Instruction::LoadScopedLocal load;
             load.index = index;
             load.scope = scope;
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         }
         tdzCheck(requiresTDZCheck);
         return;
@@ -4411,11 +4413,11 @@ QT_WARNING_POP
         if (!disable_lookups && global) {
             Instruction::LoadGlobalLookup load;
             load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         } else {
             Instruction::LoadName load;
             load.name = nameAsIndex();
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         }
         return;
     case Member:
@@ -4424,11 +4426,11 @@ QT_WARNING_POP
         if (!disable_lookups && codegen->useFastLookups) {
             Instruction::GetLookup load;
             load.index = codegen->registerGetterLookup(propertyNameIndex);
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         } else {
             Instruction::LoadProperty load;
             load.name = propertyNameIndex;
-            codegen->bytecodeGenerator->addInstruction(load);
+            codegen->bytecodeGenerator->addTracingInstruction(load);
         }
         return;
     case Import: {
@@ -4443,7 +4445,7 @@ QT_WARNING_POP
         tdzCheck(subscriptRequiresTDZCheck);
         Instruction::LoadElement load;
         load.base = elementBase;
-        codegen->bytecodeGenerator->addInstruction(load);
+        codegen->bytecodeGenerator->addTracingInstruction(load);
     } return;
     case QmlScopeObject: {
         Instruction::LoadScopeObjectProperty load;

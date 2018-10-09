@@ -1458,6 +1458,11 @@ void BaselineAssembler::passInt32AsArg(int value, int arg)
     pasm()->passInt32AsArg(value, arg);
 }
 
+void BaselineAssembler::passPointerAsArg(void *ptr, int arg)
+{
+    pasm()->passPointerAsArg(ptr, arg);
+}
+
 void BaselineAssembler::callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest)
 {
     pasm()->callRuntime(functionName, funcPtr, dest);

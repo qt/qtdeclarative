@@ -150,6 +150,7 @@ public:
     void passJSSlotAsArg(int reg, int arg);
     void passCppFrameAsArg(int arg);
     void passInt32AsArg(int value, int arg);
+    void passPointerAsArg(void *ptr, int arg);
     void callRuntime(const char *functionName, const void *funcPtr, CallResultDestination dest);
     void saveAccumulatorInFrame();
     void jsTailCall(int func, int thisObject, int argc, int argv);

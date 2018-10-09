@@ -75,6 +75,12 @@ namespace Moth {
     int arg2, \
     int arg3, \
     int arg4
+#define BYTECODE_HANDLER_DEFINE_ARGS5(arg1, arg2, arg3, arg4, arg5) \
+    int arg1, \
+    int arg2, \
+    int arg3, \
+    int arg4, \
+    int arg5
 
 #define BYTECODE_HANDLER_DEFINE_VIRTUAL_BYTECODE_HANDLER_INSTRUCTION(name, nargs, ...) \
     virtual void generate_##name( \

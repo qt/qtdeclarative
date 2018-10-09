@@ -298,6 +298,19 @@ void PlatformAssemblerCommon::passInt32AsArg(int value, int arg)
         store32(TrustedImm32(value), argStackAddress(arg));
 }
 
+void JIT::PlatformAssemblerCommon::passPointerAsArg(void *ptr, int arg)
+{
+#ifndef QT_NO_DEBUG
+    Q_ASSERT(arg < remainingArgcForCall);
+    --remainingArgcForCall;
+#endif
+
+    if (arg < ArgInRegCount)
+        move(TrustedImmPtr(ptr), registerForArg(arg));
+    else
+        storePtr(TrustedImmPtr(ptr), argStackAddress(arg));
+}
+
 void PlatformAssemblerCommon::callRuntime(const char *functionName, const void *funcPtr)
 {
 #ifndef QT_NO_DEBUG

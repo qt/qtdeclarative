@@ -149,7 +149,7 @@ void BaselineJIT::generate_LoadImport(int index)
     as->loadImport(index);
 }
 
-void BaselineJIT::generate_LoadLocal(int index)
+void BaselineJIT::generate_LoadLocal(int index, int /*traceSlot*/)
 {
     as->loadLocal(index);
 }
@@ -160,7 +160,7 @@ void BaselineJIT::generate_StoreLocal(int index)
     as->storeLocal(index);
 }
 
-void BaselineJIT::generate_LoadScopedLocal(int scope, int index)
+void BaselineJIT::generate_LoadScopedLocal(int scope, int index, int /*traceSlot*/)
 {
     as->loadLocal(index, scope);
 }
@@ -193,7 +193,7 @@ void BaselineJIT::generate_LoadClosure(int value)
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_closure, CallResultDestination::InAccumulator);
 }
 
-void BaselineJIT::generate_LoadName(int name)
+void BaselineJIT::generate_LoadName(int name, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(2);
@@ -203,7 +203,7 @@ void BaselineJIT::generate_LoadName(int name)
     as->checkException();
 }
 
-void BaselineJIT::generate_LoadGlobalLookup(int index)
+void BaselineJIT::generate_LoadGlobalLookup(int index, int /*traceSlot*/)
 {
     as->prepareCallWithArgCount(3);
     as->passInt32AsArg(index, 2);
@@ -237,7 +237,7 @@ void BaselineJIT::generate_StoreNameStrict(int name)
     as->checkException();
 }
 
-void BaselineJIT::generate_LoadElement(int base)
+void BaselineJIT::generate_LoadElement(int base, int /*traceSlot*/)
 {
     STORE_IP();
     STORE_ACC();
@@ -249,7 +249,7 @@ void BaselineJIT::generate_LoadElement(int base)
     as->checkException();
 }
 
-void BaselineJIT::generate_StoreElement(int base, int index)
+void BaselineJIT::generate_StoreElement(int base, int index, int /*traceSlot*/)
 {
     STORE_IP();
     STORE_ACC();
@@ -262,7 +262,7 @@ void BaselineJIT::generate_StoreElement(int base, int index)
     as->checkException();
 }
 
-void BaselineJIT::generate_LoadProperty(int name)
+void BaselineJIT::generate_LoadProperty(int name, int /*traceSlot*/)
 {
     STORE_IP();
     STORE_ACC();
@@ -274,7 +274,7 @@ void BaselineJIT::generate_LoadProperty(int name)
     as->checkException();
 }
 
-void BaselineJIT::generate_GetLookup(int index)
+void BaselineJIT::generate_GetLookup(int index, int /*traceSlot*/)
 {
     STORE_IP();
     STORE_ACC();
@@ -415,7 +415,7 @@ void BaselineJIT::generate_Resume(int)
     Q_UNREACHABLE();
 }
 
-void BaselineJIT::generate_CallValue(int name, int argc, int argv)
+void BaselineJIT::generate_CallValue(int name, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(4);
@@ -427,7 +427,7 @@ void BaselineJIT::generate_CallValue(int name, int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallWithReceiver(int name, int thisObject, int argc, int argv)
+void BaselineJIT::generate_CallWithReceiver(int name, int thisObject, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -440,7 +440,7 @@ void BaselineJIT::generate_CallWithReceiver(int name, int thisObject, int argc, 
     as->checkException();
 }
 
-void BaselineJIT::generate_CallProperty(int name, int base, int argc, int argv)
+void BaselineJIT::generate_CallProperty(int name, int base, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -453,7 +453,7 @@ void BaselineJIT::generate_CallProperty(int name, int base, int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallPropertyLookup(int lookupIndex, int base, int argc, int argv)
+void BaselineJIT::generate_CallPropertyLookup(int lookupIndex, int base, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -466,7 +466,7 @@ void BaselineJIT::generate_CallPropertyLookup(int lookupIndex, int base, int arg
     as->checkException();
 }
 
-void BaselineJIT::generate_CallElement(int base, int index, int argc, int argv)
+void BaselineJIT::generate_CallElement(int base, int index, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -479,7 +479,7 @@ void BaselineJIT::generate_CallElement(int base, int index, int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallName(int name, int argc, int argv)
+void BaselineJIT::generate_CallName(int name, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(4);
@@ -491,7 +491,7 @@ void BaselineJIT::generate_CallName(int name, int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallPossiblyDirectEval(int argc, int argv)
+void BaselineJIT::generate_CallPossiblyDirectEval(int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(3);
@@ -502,7 +502,7 @@ void BaselineJIT::generate_CallPossiblyDirectEval(int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
+void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(4);
@@ -514,7 +514,7 @@ void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
     as->checkException();
 }
 
-void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv)
+void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -527,7 +527,7 @@ void BaselineJIT::generate_CallScopeObjectProperty(int propIdx, int base, int ar
     as->checkException();
 }
 
-void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv)
+void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -541,7 +541,7 @@ void BaselineJIT::generate_CallContextObjectProperty(int propIdx, int base, int 
 }
 
 
-void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, int argv)
+void BaselineJIT::generate_CallWithSpread(int func, int thisObject, int argc, int argv, int /*traceSlot*/)
 {
     STORE_IP();
     as->prepareCallWithArgCount(5);
@@ -871,8 +871,8 @@ void BaselineJIT::generate_ToObject()
 }
 
 void BaselineJIT::generate_Jump(int offset) { as->jump(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpTrue(int offset) { as->jumpTrue(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpFalse(int offset) { as->jumpFalse(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpTrue(int /*traceSlot*/, int offset) { as->jumpTrue(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_JumpFalse(int /*traceSlot*/, int offset) { as->jumpFalse(absoluteOffsetForJump(offset)); }
 void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(absoluteOffsetForJump(offset)); }
 void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(absoluteOffsetForJump(offset)); }
 
@@ -913,11 +913,11 @@ void BaselineJIT::generate_CmpInstanceOf(int lhs)
 
 void BaselineJIT::generate_UNot() { as->unot(); }
 void BaselineJIT::generate_UPlus() { as->toNumber(); }
-void BaselineJIT::generate_UMinus() { as->uminus(); }
+void BaselineJIT::generate_UMinus(int /*traceSlot*/) { as->uminus(); }
 void BaselineJIT::generate_UCompl() { as->ucompl(); }
-void BaselineJIT::generate_Increment() { as->inc(); }
-void BaselineJIT::generate_Decrement() { as->dec(); }
-void BaselineJIT::generate_Add(int lhs) { as->add(lhs); }
+void BaselineJIT::generate_Increment(int /*traceSlot*/) { as->inc(); }
+void BaselineJIT::generate_Decrement(int /*traceSlot*/) { as->dec(); }
+void BaselineJIT::generate_Add(int lhs, int /*traceSlot*/) { as->add(lhs); }
 
 void BaselineJIT::generate_BitAnd(int lhs) { as->bitAnd(lhs); }
 void BaselineJIT::generate_BitOr(int lhs) { as->bitOr(lhs); }
@@ -942,10 +942,10 @@ void BaselineJIT::generate_Exp(int lhs) {
     BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::exp, CallResultDestination::InAccumulator);
     as->checkException();
 }
-void BaselineJIT::generate_Mul(int lhs) { as->mul(lhs); }
+void BaselineJIT::generate_Mul(int lhs, int /*traceSlot*/) { as->mul(lhs); }
 void BaselineJIT::generate_Div(int lhs) { as->div(lhs); }
-void BaselineJIT::generate_Mod(int lhs) { as->mod(lhs); }
-void BaselineJIT::generate_Sub(int lhs) { as->sub(lhs); }
+void BaselineJIT::generate_Mod(int lhs, int /*traceSlot*/) { as->mod(lhs); }
+void BaselineJIT::generate_Sub(int lhs, int /*traceSlot*/) { as->sub(lhs); }
 
 //void BaselineJIT::generate_BinopContext(int alu, int lhs)
 //{
