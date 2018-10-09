@@ -836,9 +836,11 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
                             const QString &pluginImportVersion, QStringList *dependencies,
                             bool forceQtQuickDependency)
 {
+    QString importScannerExe = QLatin1String("qmlimportscanner");
     QFileInfo selfExe(QCoreApplication::applicationFilePath());
-    QString command = selfExe.absoluteDir().filePath(QLatin1String("qmlimportscanner")
-                                                     + selfExe.suffix());
+    if (!selfExe.suffix().isEmpty())
+        importScannerExe += QLatin1String(".") + selfExe.suffix();
+    QString command = selfExe.absoluteDir().filePath(importScannerExe);
 
     QStringList commandArgs = QStringList()
             << QLatin1String("-qmlFiles")
