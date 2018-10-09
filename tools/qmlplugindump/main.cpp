@@ -79,9 +79,9 @@
 namespace {
 
 const uint qtQmlMajorVersion = 2;
-const uint qtQmlMinorVersion = QT_VERSION_MINOR;
+const uint qtQmlMinorVersion = 0;
 const uint qtQuickMajorVersion = 2;
-const uint qtQuickMinorVersion = QT_VERSION_MINOR;
+const uint qtQuickMinorVersion = 0;
 
 const QString qtQuickQualifiedName = QString::fromLatin1("QtQuick %1.%2")
         .arg(qtQuickMajorVersion)
