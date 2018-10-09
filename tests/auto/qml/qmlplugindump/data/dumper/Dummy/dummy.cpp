@@ -26,15 +26,14 @@
 **
 ****************************************************************************/
 
-#include "dummy_plugin.h"
 #include "dummy.h"
 
-#include <qqml.h>
-
-void DummyPlugin::registerTypes(const char *uri)
+Dummy::Dummy(QObject *parent):
+    QObject(parent)
 {
-    // @uri tests.dumper.dummy
-    qmlRegisterType<Dummy>(uri, 1, 0, "Dummy");
 }
 
+Dummy::~Dummy()
+{
+}
 

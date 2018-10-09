@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,15 +26,18 @@
 **
 ****************************************************************************/
 
-#include "imports_plugin.h"
-#include "imports.h"
+#ifndef PLUGIN_H
+#define PLUGIN_H
 
-#include <qqml.h>
+#include <QQmlExtensionPlugin>
 
-void ImportsPlugin::registerTypes(const char *uri)
+class Plugin : public QQmlExtensionPlugin
 {
-    // @uri tests.dumper.imports
-    qmlRegisterType<Imports>(uri, 1, 0, "Imports");
-}
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
+public:
+    void registerTypes(const char *uri);
+};
 
+#endif // PLUGIN_H

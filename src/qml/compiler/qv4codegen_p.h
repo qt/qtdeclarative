@@ -192,8 +192,8 @@ public:
 
         bool isLValue() const { return !isReadonly && type > Accumulator; }
 
-        Reference(Codegen *cg, Type type = Invalid) : type(type), codegen(cg) {}
-        Reference() {}
+        Reference(Codegen *cg, Type type = Invalid) : type(type), constant(0), codegen(cg) {}
+        Reference(): constant(0) {}
         Reference(const Reference &) = default;
         Reference(Reference &&) = default;
         Reference &operator =(const Reference &) = default;

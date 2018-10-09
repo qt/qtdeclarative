@@ -29,14 +29,14 @@
 #ifndef DUMMY_H
 #define DUMMY_H
 
-#include <QQuickItem>
+#include <QObject>
 
-class Dummy : public QQuickItem
+class Dummy : public QObject
 {
     Q_OBJECT
 
 public:
-    Dummy(QQuickItem *parent = 0);
+    Dummy(QObject *parent = nullptr);
     ~Dummy();
 };
 

@@ -201,6 +201,8 @@ public:
     QQmlCustomParser *customParser() const;
 
     bool isCreatable() const;
+    typedef QObject *(*ExtensionFunc)(QObject *);
+    ExtensionFunc extensionFunction() const;
     bool isExtendedType() const;
     QString noCreationReason() const;
 

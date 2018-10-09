@@ -33,7 +33,7 @@
 
 void VersionsPlugin::registerTypes(const char *uri)
 {
-    // @uri tests.dumper.versions
+    // @uri dumper.versions
     qmlRegisterType<Versions>(uri, 1, 0, "Versions");
     qmlRegisterType<Versions, 1>(uri, 1, 1, "Versions");
 }

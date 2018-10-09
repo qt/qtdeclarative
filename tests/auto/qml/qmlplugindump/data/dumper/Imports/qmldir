@@ -1,3 +1,3 @@
-module tests.dumper.Imports
+module dumper.Imports
 plugin Imports
 CompositeImports 1.0 CompositeImports.qml

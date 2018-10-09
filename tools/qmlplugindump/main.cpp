@@ -146,7 +146,7 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
 void collectReachableMetaObjects(QQmlEnginePrivate *engine, const QQmlType &ty, QSet<const QMetaObject *> *metas)
 {
-    collectReachableMetaObjects(ty.metaObject(), metas, ty.isExtendedType());
+    collectReachableMetaObjects(ty.baseMetaObject(), metas, ty.isExtendedType());
     if (ty.attachedPropertiesType(engine))
         collectReachableMetaObjects(ty.attachedPropertiesType(engine), metas);
 }
@@ -214,7 +214,7 @@ QByteArray convertToId(const QMetaObject *mo)
 void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<const QMetaObject *>& metas ) {
     const auto qmlAllTypes = QQmlMetaType::qmlAllTypes();
     for (const QQmlType &ty : qmlAllTypes) {
-        if ( ! metas.contains(ty.metaObject()) ) {
+        if (!metas.contains(ty.baseMetaObject())) {
             if (!ty.isComposite()) {
                 collectReachableMetaObjects(engine, ty, &metas);
             } else {
@@ -232,53 +232,18 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
     QSet<const QMetaObject *> metas;
     metas.insert(FriendlyQObject::qtMeta());
 
-    QHash<QByteArray, QSet<QByteArray> > extensions;
     const auto qmlTypes = QQmlMetaType::qmlTypes();
     for (const QQmlType &ty : qmlTypes) {
         if (!ty.isCreatable())
-            noncreatables.insert(ty.metaObject());
+            noncreatables.insert(ty.baseMetaObject());
         if (ty.isSingleton())
-            singletons.insert(ty.metaObject());
+            singletons.insert(ty.baseMetaObject());
         if (!ty.isComposite()) {
-            qmlTypesByCppName[ty.metaObject()->className()].insert(ty);
-            if (ty.isExtendedType())
-                extensions[ty.typeName()].insert(ty.metaObject()->className());
+            qmlTypesByCppName[ty.baseMetaObject()->className()].insert(ty);
             collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas);
         } else {
             qmlTypesByCompositeName[ty.elementName()].insert(ty);
         }
-    }
-
-    // Adjust exports of the base object if there are extensions.
-    // For each export of a base object there can be a single extension object overriding it.
-    // Example: QDeclarativeGraphicsWidget overrides the QtQuick/QGraphicsWidget export
-    //          of QGraphicsWidget.
-    for (auto it = extensions.cbegin(), end = extensions.cend(); it != end; ++it) {
-        QSet<QQmlType> baseExports = qmlTypesByCppName.value(it.key());
-
-        const QSet<QByteArray> extensionCppNames = it.value();
-        for (const QByteArray &extensionCppName : extensionCppNames) {
-            const QSet<QQmlType> extensionExports = qmlTypesByCppName.value(extensionCppName);
-
-            // remove extension exports from base imports
-            // unfortunately the QQmlType pointers don't match, so can't use QSet::subtract
-            QSet<QQmlType> newBaseExports;
-            for (const QQmlType &baseExport : qAsConst(baseExports)) {
-                bool match = false;
-                for (const QQmlType &extensionExport : extensionExports) {
-                    if (baseExport.qmlTypeName() == extensionExport.qmlTypeName()
-                            && baseExport.majorVersion() == extensionExport.majorVersion()
-                            && baseExport.minorVersion() == extensionExport.minorVersion()) {
-                        match = true;
-                        break;
-                    }
-                }
-                if (!match)
-                    newBaseExports.insert(baseExport);
-            }
-            baseExports = newBaseExports;
-        }
-        qmlTypesByCppName[it.key()] = baseExports;
     }
 
     if (creatable) {
@@ -405,15 +370,7 @@ public:
 
     void writeMetaContent(const QMetaObject *meta, KnownAttributes *knownAttributes = nullptr)
     {
-        QSet<QString> implicitSignals;
-        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
-            const QMetaProperty &property = meta->property(index);
-            dump(property, knownAttributes);
-            if (knownAttributes)
-                knownAttributes->knownMethod(QByteArray(property.name()).append("Changed"),
-                                             0, property.revision());
-            implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
-        }
+        QSet<QString> implicitSignals = dumpMetaProperties(meta, 0, knownAttributes);
 
         if (meta == &QObject::staticMetaObject) {
             // for QObject, hide deleteLater() and onDestroyed
@@ -533,6 +490,27 @@ public:
         qml->writeEndObject();
     }
 
+    QString getDefaultProperty(const QMetaObject *meta)
+    {
+        for (int index = meta->classInfoCount() - 1; index >= 0; --index) {
+            QMetaClassInfo classInfo = meta->classInfo(index);
+            if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
+                return QLatin1String(classInfo.value());
+            }
+        }
+        return QString();
+    }
+
+    struct QmlTypeInfo {
+        QmlTypeInfo() {}
+        QmlTypeInfo(const QString &exportString, int revision, const QMetaObject *extendedObject, QByteArray attachedTypeId)
+            : exportString(exportString), revision(revision), extendedObject(extendedObject), attachedTypeId(attachedTypeId) {}
+        QString exportString;
+        int revision = 0;
+        const QMetaObject *extendedObject = nullptr;
+        QByteArray attachedTypeId;
+    };
+
     void dump(QQmlEnginePrivate *engine, const QMetaObject *meta, bool isUncreatable, bool isSingleton)
     {
         qml->writeStartObject("Component");
@@ -540,29 +518,58 @@ public:
         QByteArray id = convertToId(meta);
         qml->writeScriptBinding(QLatin1String("name"), enquote(id));
 
-        for (int index = meta->classInfoCount() - 1 ; index >= 0 ; --index) {
-            QMetaClassInfo classInfo = meta->classInfo(index);
-            if (QLatin1String(classInfo.name()) == QLatin1String("DefaultProperty")) {
-                qml->writeScriptBinding(QLatin1String("defaultProperty"), enquote(QLatin1String(classInfo.value())));
-                break;
+        // collect type information
+        QVector<QmlTypeInfo> typeInfo;
+        for (QQmlType type : qmlTypesByCppName.value(meta->className())) {
+            const QMetaObject *extendedObject = type.extensionFunction() ? type.metaObject() : nullptr;
+            QByteArray attachedTypeId;
+            if (const QMetaObject *attachedType = type.attachedPropertiesType(engine)) {
+                // Can happen when a type is registered that returns itself as attachedPropertiesType()
+                // because there is no creatable type to attach to.
+                if (attachedType != meta)
+                    attachedTypeId = convertToId(attachedType);
+            }
+            const QString exportString = getExportString(type.qmlTypeName(), type.majorVersion(), type.minorVersion());
+            int metaObjectRevision = type.metaObjectRevision();
+            if (extendedObject) {
+                // emulate custom metaobjectrevision out of import
+                metaObjectRevision = type.majorVersion() * 100 + type.minorVersion();
+            }
+
+            QmlTypeInfo info = { exportString, metaObjectRevision, extendedObject, attachedTypeId };
+            typeInfo.append(info);
+        }
+
+        // sort to ensure stable output
+        std::sort(typeInfo.begin(), typeInfo.end(), [](const QmlTypeInfo &i1, const QmlTypeInfo &i2) {
+            return i1.revision < i2.revision;
+        });
+
+        // determine default property
+        // TODO: support revisioning of default property
+        QString defaultProperty = getDefaultProperty(meta);
+        if (defaultProperty.isEmpty()) {
+            for (const QmlTypeInfo &iter : typeInfo) {
+                if (iter.extendedObject) {
+                    defaultProperty = getDefaultProperty(iter.extendedObject);
+                    if (!defaultProperty.isEmpty())
+                        break;
+                }
             }
         }
+        if (!defaultProperty.isEmpty())
+            qml->writeScriptBinding(QLatin1String("defaultProperty"), enquote(defaultProperty));
 
         if (meta->superClass())
             qml->writeScriptBinding(QLatin1String("prototype"), enquote(convertToId(meta->superClass())));
 
-        const QSet<QQmlType> qmlTypes = qmlTypesByCppName.value(meta->className());
-        if (!qmlTypes.isEmpty()) {
-            QHash<QString, QQmlType> exports;
+        if (!typeInfo.isEmpty()) {
+            QMap<QString, QString> exports; // sort exports
+            for (const QmlTypeInfo &iter : typeInfo)
+                exports.insert(iter.exportString, QString::number(iter.revision));
 
-            for (const QQmlType &qmlTy : qmlTypes) {
-                const QString exportString = getExportString(qmlTy.qmlTypeName(), qmlTy.majorVersion(), qmlTy.minorVersion());
-                exports.insert(exportString, qmlTy);
-            }
-
-            // ensure exports are sorted and don't change order when the plugin is dumped again
             QStringList exportStrings = exports.keys();
-            std::sort(exportStrings.begin(), exportStrings.end());
+            QStringList metaObjectRevisions = exports.values();
             qml->writeArrayBinding(QLatin1String("exports"), exportStrings);
 
             if (isUncreatable)
@@ -571,20 +578,12 @@ public:
             if (isSingleton)
                 qml->writeBooleanBinding(QLatin1String("isSingleton"), true);
 
-            // write meta object revisions
-            QStringList metaObjectRevisions;
-            for (const QString &exportString : qAsConst(exportStrings)) {
-                int metaObjectRevision = exports[exportString].metaObjectRevision();
-                metaObjectRevisions += QString::number(metaObjectRevision);
-            }
             qml->writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjectRevisions);
 
-            if (const QMetaObject *attachedType = (*qmlTypes.begin()).attachedPropertiesType(engine)) {
-                // Can happen when a type is registered that returns itself as attachedPropertiesType()
-                // because there is no creatable type to attach to.
-                if (attachedType != meta) {
-                    qml->writeScriptBinding(QLatin1String("attachedType"), enquote(
-                                                convertToId(attachedType)));
+            for (const QmlTypeInfo &iter : typeInfo) {
+                if (!iter.attachedTypeId.isEmpty()) {
+                    qml->writeScriptBinding(QLatin1String("attachedType"), enquote(iter.attachedTypeId));
+                    break;
                 }
             }
         }
@@ -593,6 +592,12 @@ public:
             dump(meta->enumerator(index));
 
         writeMetaContent(meta);
+
+        // dump properties from extended metaobjects last
+        for (auto iter : typeInfo) {
+            if (iter.extendedObject)
+                dumpMetaProperties(iter.extendedObject, iter.revision);
+        }
 
         qml->writeEndObject();
     }
@@ -642,9 +647,9 @@ private:
             qml->writeScriptBinding(QLatin1String("isPointer"), QLatin1String("true"));
     }
 
-    void dump(const QMetaProperty &prop, KnownAttributes *knownAttributes = nullptr)
+    void dump(const QMetaProperty &prop, int metaRevision = -1, KnownAttributes *knownAttributes = nullptr)
     {
-        int revision = prop.revision();
+        int revision = metaRevision ? metaRevision : prop.revision();
         QByteArray propName = prop.name();
         if (knownAttributes && knownAttributes->knownProperty(propName, revision))
             return;
@@ -655,6 +660,20 @@ private:
         writeTypeProperties(prop.typeName(), prop.isWritable());
 
         qml->writeEndObject();
+    }
+
+    QSet<QString> dumpMetaProperties(const QMetaObject *meta, int metaRevision = -1, KnownAttributes *knownAttributes = nullptr)
+    {
+        QSet<QString> implicitSignals;
+        for (int index = meta->propertyOffset(); index < meta->propertyCount(); ++index) {
+            const QMetaProperty &property = meta->property(index);
+            dump(property, metaRevision, knownAttributes);
+            if (knownAttributes)
+                knownAttributes->knownMethod(QByteArray(property.name()).append("Changed"),
+                                             0, property.revision());
+            implicitSignals.insert(QString("%1Changed").arg(QString::fromUtf8(property.name())));
+        }
+        return implicitSignals;
     }
 
     void dump(const QMetaMethod &meth, const QSet<QString> &implicitSignals,
@@ -836,9 +855,11 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
                             const QString &pluginImportVersion, QStringList *dependencies,
                             bool forceQtQuickDependency)
 {
+    QString importScannerExe = QLatin1String("qmlimportscanner");
     QFileInfo selfExe(QCoreApplication::applicationFilePath());
-    QString command = selfExe.absoluteDir().filePath(QLatin1String("qmlimportscanner")
-                                                     + selfExe.suffix());
+    if (!selfExe.suffix().isEmpty())
+        importScannerExe += QLatin1String(".") + selfExe.suffix();
+    QString command = selfExe.absoluteDir().filePath(importScannerExe);
 
     QStringList commandArgs = QStringList()
             << QLatin1String("-qmlFiles")
