@@ -1176,6 +1176,8 @@ public:
     FunctionIterator objectFunctionsEnd(const Object *object) const { return FunctionIterator(data, object, object->nFunctions); }
     // ---
 
+    bool isESModule() const { return data->flags & Unit::IsESModule; }
+    bool isSharedLibrary() const { return data->flags & Unit::IsSharedLibrary; }
     QStringList moduleRequests() const;
     Heap::Module *instantiate(ExecutionEngine *engine);
     const Value *resolveExport(QV4::String *exportName);
