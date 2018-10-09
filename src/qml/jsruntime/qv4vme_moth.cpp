@@ -890,12 +890,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(PopContext)
 
     MOTH_BEGIN_INSTR(GetIterator)
+        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_getIterator(engine, accumulator, iterator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetIterator)
 
     MOTH_BEGIN_INSTR(IteratorNext)
+        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_iteratorNext(engine, accumulator, &STACK_VALUE(value));
         STACK_VALUE(done) = acc;
@@ -903,12 +905,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(IteratorNext)
 
     MOTH_BEGIN_INSTR(IteratorClose)
+        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_iteratorClose(engine, accumulator, STACK_VALUE(done));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorClose)
 
     MOTH_BEGIN_INSTR(DestructureRestElement)
+        STORE_IP();
         STORE_ACC();
         acc = Runtime::method_destructureRestElement(engine, ACC);
         CHECK_EXCEPTION;
