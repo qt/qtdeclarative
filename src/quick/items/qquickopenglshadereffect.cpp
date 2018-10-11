@@ -245,7 +245,11 @@ void QQuickOpenGLShaderEffectCommon::connectPropertySignals(QQuickItem *item,
                                                             const QMetaObject *itemMetaObject,
                                                             Key::ShaderType shaderType)
 {
-    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(qmlEngine(item), item);
+    auto engine = qmlEngine(item);
+    if (!engine)
+        return;
+
+    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(engine, item);
     for (int i = 0; i < uniformData[shaderType].size(); ++i) {
         if (signalMappers[shaderType].at(i) == 0)
             continue;
@@ -317,7 +321,8 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
                                                            Key::ShaderType shaderType,
                                                            const QByteArray &code)
 {
-    QQmlPropertyCache *propCache = QQmlData::ensurePropertyCache(qmlEngine(item), item);
+    auto engine = qmlEngine(item);
+    QQmlPropertyCache *propCache = (engine) ? QQmlData::ensurePropertyCache(engine, item) : nullptr;
     int index = 0;
     int typeIndex = -1;
     int typeLength = 0;
@@ -350,9 +355,11 @@ void QQuickOpenGLShaderEffectCommon::lookThroughShaderCode(QQuickItem *item,
             } else if (nameLength > srLen && qstrncmp("qt_SubRect_", s + nameIndex, srLen) == 0) {
                 d.specialType = UniformData::SubRect;
             } else {
-                if (QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr)) {
-                    if (!pd->isFunction())
-                        d.propertyIndex = pd->coreIndex();
+                if (propCache) {
+                    if (QQmlPropertyData *pd = propCache->property(QString::fromUtf8(d.name), nullptr, nullptr)) {
+                        if (!pd->isFunction())
+                            d.propertyIndex = pd->coreIndex();
+                    }
                 }
                 const int mappedId = uniformData[shaderType].size() | (shaderType << 16);
                 mapper = new QtPrivate::MappedSlotObject([this, mappedId](){
