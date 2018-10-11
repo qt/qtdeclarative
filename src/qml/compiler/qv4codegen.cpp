@@ -1318,7 +1318,10 @@ bool Codegen::visit(BinaryExpression *ast)
     } else if (ast->op == QSOperator::Assign) {
         if (AST::Pattern *p = ast->left->patternCast()) {
             RegisterScope scope(this);
-            Reference right = expression(ast->right).storeOnStack();
+            Reference right = expression(ast->right);
+            if (hasError)
+                return false;
+            right = right.storeOnStack();
             destructurePattern(p, right);
             if (!_expr.accept(nx)) {
                 right.loadInAccumulator();

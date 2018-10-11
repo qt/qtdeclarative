@@ -113,6 +113,7 @@ void tst_v4misc::parserMisc_data()
     QTest::newRow("`a${1++}`") << QString("ReferenceError: Invalid left-hand side expression in postfix operation");
     QTest::newRow("for (var f in ++!binaryMathg) ;") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
     QTest::newRow("for (va() in obj) {}") << QString("ReferenceError: Invalid left-hand side expression for 'in' expression");
+    QTest::newRow("[1]=7[A=8=9]") << QString("ReferenceError: left-hand side of assignment operator is not an lvalue");
 }
 
 void tst_v4misc::parserMisc()
