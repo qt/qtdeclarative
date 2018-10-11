@@ -3307,6 +3307,10 @@ bool Codegen::visit(ForEachStatement *ast)
                     Reference lhs = expression(e);
                     if (hasError)
                         goto error;
+                    if (!lhs.isLValue()) {
+                        throwReferenceError(e->firstSourceLocation(), QStringLiteral("Invalid left-hand side expression for 'in' expression"));
+                        goto error;
+                    }
                     lhs = lhs.asLValue();
                     lhsValue.loadInAccumulator();
                     lhs.storeConsumeAccumulator();
