@@ -89,6 +89,8 @@ private slots:
     void scrollable_data();
     void scrollable();
     void delegateFromSeparateComponent();
+    void instantiator();
+    void instantiatorWithItemsBeforeAndAfter();
 };
 
 void tst_QQuickMenu::defaults()
@@ -1432,6 +1434,75 @@ void tst_QQuickMenu::delegateFromSeparateComponent()
     QQuickItem *actionItem2Bg = actionItem2->property("background").value<QQuickItem*>();
     QVERIFY(actionItem2Bg);
     QCOMPARE(actionItem2Bg->property("color").value<QColor>(), green);
+}
+
+void tst_QQuickMenu::instantiator()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This platform only allows tab focus for text controls");
+
+    QQuickApplicationHelper helper(this, QLatin1String("instantiator.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    menu->open();
+    QVERIFY(menu->isVisible());
+    waitForMenuListViewPolish(menu);
+    menu->setFocus(true);
+
+    // Highlight the first item.
+    QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(firstItem);
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QTRY_VERIFY(!QQuickItemPrivate::get(firstItem)->culled);
+
+    // Highlight the second item.
+    QQuickMenuItem *secondItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(secondItem);
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(secondItem->hasActiveFocus());
+    QVERIFY(secondItem->hasVisualFocus());
+    QVERIFY(secondItem->isHighlighted());
+    QVERIFY(!QQuickItemPrivate::get(secondItem)->culled);
+}
+
+void tst_QQuickMenu::instantiatorWithItemsBeforeAndAfter()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("instantiatorWithItemsBeforeAndAfter.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    menu->open();
+    QVERIFY(menu->isVisible());
+    waitForMenuListViewPolish(menu);
+
+    QStringList expectedItemTexts;
+    expectedItemTexts << QLatin1String("Before") << QLatin1String("Instantiated #1")
+        << QLatin1String("Instantiated #2") << QLatin1String("After");
+
+    for (int i = 0; i < expectedItemTexts.size(); ++i) {
+        const QString expectedText = expectedItemTexts.at(i);
+        QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(i));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), expectedText);
+    }
 }
 
 QTEST_MAIN(tst_QQuickMenu)

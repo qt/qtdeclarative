@@ -43,6 +43,7 @@
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickaction_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qcursor.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -54,6 +55,8 @@
 #include <QtQml/private/qv4variantobject_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQml/private/qqmlobjectmodel_p.h>
+#include <QtQml/private/qqmlinstantiator_p.h>
+#include <QtQml/private/qqmlinstantiator_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickitemview_p.h>
@@ -64,6 +67,8 @@ QT_BEGIN_NAMESPACE
 
 // copied from qfusionstyle.cpp
 static const int SUBMENU_DELAY = 225;
+
+Q_LOGGING_CATEGORY(qlcQQuickMenu, "qt.quick.controls.menu")
 
 /*!
     \qmltype Menu
@@ -279,11 +284,37 @@ void QQuickMenuPrivate::recreateItems()
     // removeItem() will remove stuff from contentData, so we have to make a copy of it.
     const auto originalContentData = contentData;
 
-    while (contentModel->count() > 0)
-        removeItem(0, itemAt(0));
+    qCDebug(qlcQQuickMenu) << "removing items so that we can recreate them:";
+    QSet<QObject*> instantiatedObjects;
+    for (int i = 0; i < contentModel->count(); ) {
+        QQuickItem *item = itemAt(i);
+        QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator*>(item->parent());
+        if (instantiator) {
+            // Don't try to recreate items owned by an instantiator.
+            qCDebug(qlcQQuickMenu) << "- item" << item << "at index" << i << "with parent"
+                << item->parent() << "was instantiated by Instantiator; ignoring";
+            instantiatedObjects.insert(item);
+            ++i;
+        } else {
+            qCDebug(qlcQQuickMenu) << "- removing item" << item << "at index" << i << "with parent" << item->parent();
+            removeItem(0, item);
+        }
+    }
 
-    for (QObject *object : originalContentData)
-        createAndAppendItem(object);
+    qCDebug(qlcQQuickMenu) << "recreating items:";
+    for (QObject *object : originalContentData) {
+        QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator*>(object);
+        // Instantiators are part of our contentData. If this particular object is an Instantiator,
+        // let it recreate its own items, otherwise strange things happen (the items are culled).
+        if (instantiator) {
+            qCDebug(qlcQQuickMenu) << "- contentData object" << object << "is an Instantiator;"
+                << "asking them to regenerate their own items";
+            QQmlInstantiatorPrivate::get(instantiator)->regenerate();
+        } else if (!instantiatedObjects.contains(object)) {
+            qCDebug(qlcQQuickMenu) << "- creating MenuItem for contentData object" << object;
+            createAndAppendItem(object);
+        }
+    }
 }
 
 QQuickItem *QQuickMenuPrivate::beginCreateItem()
@@ -358,6 +389,7 @@ void QQuickMenuPrivate::resizeItems()
 void QQuickMenuPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
 {
     // add dynamically reparented items (eg. by a Repeater)
+    qCDebug(qlcQQuickMenu) << "item child added" << child;
     if (!QQuickItemPrivate::get(child)->isTransparentForPositioner() && !contentData.contains(child))
         insertItem(contentModel->count(), child);
 }
@@ -365,6 +397,7 @@ void QQuickMenuPrivate::itemChildAdded(QQuickItem *, QQuickItem *child)
 void QQuickMenuPrivate::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
     // remove dynamically unparented items (eg. by a Repeater)
+    qCDebug(qlcQQuickMenu) << "parent of item" << item << "changed to" << parent;
     if (!parent)
         removeItem(contentModel->indexOf(item, nullptr), item);
 }
@@ -374,6 +407,8 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
     // reorder the restacked items (eg. by a Repeater)
     Q_Q(QQuickMenu);
     QList<QQuickItem *> siblings = contentItem->childItems();
+
+    qCDebug(qlcQQuickMenu) << "item sibling order changed";
 
     int to = 0;
     for (int i = 0; i < siblings.count(); ++i) {
@@ -387,6 +422,7 @@ void QQuickMenuPrivate::itemSiblingOrderChanged(QQuickItem *)
 
 void QQuickMenuPrivate::itemDestroyed(QQuickItem *item)
 {
+    qCDebug(qlcQQuickMenu) << "item child destroyed" << item;
     QQuickPopupPrivate::itemDestroyed(item);
     int index = contentModel->indexOf(item, nullptr);
     if (index != -1)
@@ -662,12 +698,16 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
     QQuickMenuPrivate *p = QQuickMenuPrivate::get(q);
 
     if (!p->complete) {
+        qCDebug(qlcQQuickMenu) << "appending object" << obj
+            << "to contentData, but delaying MenuItem creation (if necessary) until we're completed";
         // Don't add items until we're complete, as the delegate could change in the meantime.
         // We'll add it to contentData and create it when we're complete.
         p->contentData.append(obj);
         return;
     }
 
+    qCDebug(qlcQQuickMenu) << "appending object" << obj
+        << "to contentData and creating MenuItem for it if necessary";
     p->createAndAppendItem(obj);
 }
 
