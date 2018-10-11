@@ -2077,8 +2077,10 @@ bool Codegen::visit(ConditionalExpression *ast)
 
     iffalse.link();
     Reference ko = expression(ast->ko);
-    if (hasError)
+    if (hasError) {
+        jump_endif.link(); // dummy link, to prevent assert in Jump destructor from triggering
         return false;
+    }
     ko.loadInAccumulator();
 
     jump_endif.link();
