@@ -4240,7 +4240,6 @@ void Codegen::Reference::storeAccumulator() const
         break;
     }
 
-    Q_ASSERT(false);
     Q_UNREACHABLE();
 }
 
@@ -4405,6 +4404,5 @@ QT_WARNING_POP
     case Invalid:
         break;
     }
-    Q_ASSERT(false);
     Q_UNREACHABLE();
 }
