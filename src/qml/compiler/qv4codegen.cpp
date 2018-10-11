@@ -315,6 +315,7 @@ void Codegen::accept(Node *node)
 
 void Codegen::statement(Statement *ast)
 {
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     RegisterScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
@@ -327,11 +328,12 @@ void Codegen::statement(Statement *ast)
 
 void Codegen::statement(ExpressionNode *ast)
 {
-    RegisterScope scope(this);
-
     if (! ast) {
         return;
     } else {
+        RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
+        RegisterScope scope(this);
+
         Result r(nx);
         qSwap(_expr, r);
         VolatileMemoryLocations vLocs = scanVolatileMemoryLocations(ast);
@@ -358,6 +360,7 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
     if (!ast)
         return;
 
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     Result r(iftrue, iffalse, trueBlockFollowsCondition);
     qSwap(_expr, r);
     accept(ast);
@@ -381,6 +384,7 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
 
 Codegen::Reference Codegen::expression(ExpressionNode *ast)
 {
+    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     Result r;
     if (ast) {
         qSwap(_expr, r);

@@ -43,6 +43,8 @@ private slots:
 
     void subClassing_data();
     void subClassing();
+
+    void nestingDepth();
 };
 
 void tst_v4misc::tdzOptimizations_data()
@@ -171,6 +173,28 @@ void tst_v4misc::subClassing()
     QJSEngine engine;
     QJSValue result = engine.evaluate(script);
     QVERIFY(!result.isError());
+}
+
+void tst_v4misc::nestingDepth()
+{
+    { // left recursive
+        QString s(40000, '`');
+
+        QJSEngine engine;
+        QJSValue result = engine.evaluate(s);
+        QVERIFY(result.isError());
+        QCOMPARE(result.toString(), "SyntaxError: Maximum statement or expression depth exceeded");
+    }
+
+    { // right recursive
+        QString s(200000, '-');
+        s += "\nd";
+
+        QJSEngine engine;
+        QJSValue result = engine.evaluate(s);
+        QVERIFY(result.isError());
+        QCOMPARE(result.toString(), "SyntaxError: Maximum statement or expression depth exceeded");
+    }
 }
 
 QTEST_MAIN(tst_v4misc);

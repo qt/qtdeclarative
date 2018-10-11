@@ -761,6 +761,31 @@ protected:
         bool _onoff;
     };
 
+    class RecursionDepthCheck {
+    public:
+        RecursionDepthCheck(Codegen *cg, const AST::SourceLocation &loc)
+            : _cg(cg)
+        {
+#ifdef QT_NO_DEBUG
+            const int depthLimit = 4000; // limit to ~1000 deep
+#else
+            const int depthLimit = 1000; // limit to ~250 deep
+#endif // QT_NO_DEBUG
+
+            ++_cg->_recursionDepth;
+            if (_cg->_recursionDepth > depthLimit)
+                _cg->throwSyntaxError(loc, QStringLiteral("Maximum statement or expression depth exceeded"));
+        }
+
+        ~RecursionDepthCheck()
+        { --_cg->_recursionDepth; }
+
+    private:
+        Codegen *_cg;
+    };
+    int _recursionDepth = 0;
+    friend class RecursionDepthCheck;
+
 private:
     VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;
     void handleConstruct(const Reference &base, AST::ArgumentList *args);

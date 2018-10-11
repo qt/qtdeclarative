@@ -96,6 +96,9 @@ protected:
     using Visitor::visit;
     using Visitor::endVisit;
 
+    bool preVisit(AST::Node *ast) override;
+    void postVisit(AST::Node *) override;
+
     void checkDirectivePrologue(AST::StatementList *ast);
 
     void checkName(const QStringRef &name, const AST::SourceLocation &loc);
@@ -168,6 +171,8 @@ protected:
 
     bool _allowFuncDecls;
     ContextType defaultProgramType;
+
+    unsigned _recursionDepth = 0;
 
 private:
     static constexpr AST::Node *astNodeForGlobalEnvironment = nullptr;
