@@ -37,6 +37,9 @@ class tst_v4misc: public QObject
 private slots:
     void tdzOptimizations_data();
     void tdzOptimizations();
+
+    void parserMisc_data();
+    void parserMisc();
 };
 
 void tst_v4misc::tdzOptimizations_data()
@@ -100,6 +103,23 @@ void tst_v4misc::tdzOptimizations()
         QVERIFY(type != QV4::Moth::Instr::Type::DeadTemporalZoneCheck);
     }
 
+}
+
+void tst_v4misc::parserMisc_data()
+{
+    QTest::addColumn<QString>("error");
+
+    QTest::newRow("8[++i][+++i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+}
+
+void tst_v4misc::parserMisc()
+{
+    QFETCH(QString, error);
+
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(QString::fromUtf8(QTest::currentDataTag()));
+    QVERIFY(result.isError());
+    QCOMPARE(result.toString(), error);
 }
 
 QTEST_MAIN(tst_v4misc);

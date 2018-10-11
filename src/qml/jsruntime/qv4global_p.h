@@ -198,6 +198,9 @@ namespace Heap {
     struct MapObject;
     struct SetObject;
 
+    struct PromiseObject;
+    struct PromiseCapability;
+
     template <typename T, size_t> struct Pointer;
 }
 
@@ -247,6 +250,9 @@ struct TypedArray;
 
 struct MapObject;
 struct SetMapObject;
+
+struct PromiseObject;
+struct PromiseCapability;
 
 // ReturnedValue is used to return values from runtime methods
 // the type has to be a primitive type (no struct or union), so that the compiler

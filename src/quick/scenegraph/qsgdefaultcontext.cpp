@@ -290,3 +290,10 @@ QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() co
 }
 
 QT_END_NAMESPACE
+
+static void initResources()
+{
+    Q_INIT_RESOURCE(scenegraph);
+}
+
+Q_CONSTRUCTOR_FUNCTION(initResources)

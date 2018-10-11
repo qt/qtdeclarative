@@ -55,11 +55,6 @@
 #include <qqmlproperty.h>
 #include <QtCore/QPointer>
 
-static void initResources()
-{
-    Q_INIT_RESOURCE(scenegraph);
-}
-
 QT_BEGIN_NAMESPACE
 
 #if !QT_CONFIG(qml_debug)
@@ -185,8 +180,6 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
 
 void QQmlQtQuick2Module::defineModule()
 {
-    initResources();
-
     QQuick_initializeProviders();
 
     QQuickUtilModule::defineModule();

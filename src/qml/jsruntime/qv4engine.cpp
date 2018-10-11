@@ -101,6 +101,7 @@
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
 #include "qv4dataview_p.h"
+#include "qv4promiseobject_p.h"
 #include "qv4typedarray_p.h"
 #include <private/qv8engine_p.h>
 #include <private/qjsvalue_p.h>
@@ -520,6 +521,14 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[SetProto] = memoryManager->allocate<SetPrototype>();
     static_cast<SetPrototype *>(setPrototype())->init(this, setCtor());
 
+    //
+    // promises
+    //
+
+    jsObjects[Promise_Ctor] = memoryManager->allocate<PromiseCtor>(global);
+    jsObjects[PromiseProto] = memoryManager->allocate<PromisePrototype>();
+    static_cast<PromisePrototype *>(promisePrototype())->init(this, promiseCtor());
+
     // typed arrays
 
     jsObjects[SharedArrayBuffer_Ctor] = memoryManager->allocate<SharedArrayBufferCtor>(global);
@@ -570,6 +579,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("SyntaxError"), *syntaxErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), *typeErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("Promise"), *promiseCtor());
 
     globalObject->defineDefaultProperty(QStringLiteral("SharedArrayBuffer"), *sharedArrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
@@ -874,6 +884,38 @@ Heap::Object *ExecutionEngine::newRangeErrorObject(const QString &message)
 Heap::Object *ExecutionEngine::newURIErrorObject(const Value &message)
 {
     return ErrorObject::create<URIErrorObject>(this, message, uRIErrorCtor());
+}
+
+Heap::PromiseObject *ExecutionEngine::newPromiseObject()
+{
+    if (!m_reactionHandler) {
+        m_reactionHandler.reset(new Promise::ReactionHandler);
+    }
+
+    Scope scope(this);
+    Scoped<PromiseObject> object(scope, memoryManager->allocate<PromiseObject>(this));
+    return object->d();
+}
+
+Heap::Object *ExecutionEngine::newPromiseObject(const QV4::FunctionObject *thisObject, const QV4::PromiseCapability *capability)
+{
+    if (!m_reactionHandler) {
+        m_reactionHandler.reset(new Promise::ReactionHandler);
+    }
+
+    Scope scope(this);
+    Scoped<CapabilitiesExecutorWrapper> executor(scope,  memoryManager->allocate<CapabilitiesExecutorWrapper>());
+    executor->d()->capabilities.set(this, capability->d());
+    executor->insertMember(id_length(), Primitive::fromInt32(2), Attr_NotWritable|Attr_NotEnumerable);
+
+    ScopedObject object(scope, thisObject->callAsConstructor(executor, 1));
+    return object->d();
+}
+
+Promise::ReactionHandler *ExecutionEngine::getPromiseReactionHandler()
+{
+    Q_ASSERT(m_reactionHandler);
+    return m_reactionHandler.data();
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)
