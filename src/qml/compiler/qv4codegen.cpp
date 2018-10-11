@@ -530,6 +530,10 @@ Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
     Reference lhs = expression(p->bindingTarget);
     if (hasError)
         return lhs;
+    if (!lhs.isLValue()) {
+        throwReferenceError(p->bindingTarget->firstSourceLocation(), QStringLiteral("Binding target is not a reference."));
+        return lhs;
+    }
     lhs = lhs.asLValue();
     return lhs;
 }

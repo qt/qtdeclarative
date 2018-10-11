@@ -117,6 +117,7 @@ void tst_v4misc::parserMisc_data()
     QTest::newRow("var asmvalsLen = asmvals{{{{{ngth}}}}};") << QString("SyntaxError: Expected token `;'");
     QTest::newRow("T||9[---L6i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
     QTest::newRow("a?b:[---Hi]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("[``]=1") << QString("ReferenceError: Binding target is not a reference.");
 }
 
 void tst_v4misc::parserMisc()
