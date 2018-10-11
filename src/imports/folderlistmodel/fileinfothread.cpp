@@ -135,6 +135,7 @@ void FileInfoThread::setSortFlags(QDir::SortFlags flags)
     QMutexLocker locker(&mutex);
     sortFlags = flags;
     sortUpdate = true;
+    needUpdate = true;
     condition.wakeAll();
 }
 

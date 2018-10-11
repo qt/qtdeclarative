@@ -55,7 +55,9 @@ public:
         : q_ptr(q),
           sortField(QQuickFolderListModel::Name), sortReversed(false), showFiles(true),
           showDirs(true), showDirsFirst(false), showDotAndDotDot(false), showOnlyReadable(false),
-          showHidden(false), caseSensitive(true), status(QQuickFolderListModel::Null)
+          showHidden(false), caseSensitive(true), sortCaseSensitive(true),
+          status(QQuickFolderListModel::Null)
+
     {
         nameFilters << QLatin1String("*");
     }
@@ -77,6 +79,7 @@ public:
     bool showOnlyReadable;
     bool showHidden;
     bool caseSensitive;
+    bool sortCaseSensitive;
     QQuickFolderListModel::Status status;
 
     ~QQuickFolderListModelPrivate() {}
@@ -140,6 +143,8 @@ void QQuickFolderListModelPrivate::updateSorting()
 
     if (sortReversed)
         flags |= QDir::Reversed;
+    if (!sortCaseSensitive)
+        flags |= QDir::IgnoreCase;
 
     fileInfoThread.setSortFlags(flags);
 }
@@ -853,6 +858,29 @@ QQuickFolderListModel::Status QQuickFolderListModel::status() const
 {
     Q_D(const QQuickFolderListModel);
     return d->status;
+}
+
+/*!
+    \qmlproperty bool FolderListModel::sortCaseSensitive
+    \since 5.12
+
+    If set to true, the sort is case sensitive. This property is true by default.
+*/
+
+bool QQuickFolderListModel::sortCaseSensitive() const
+{
+    Q_D(const QQuickFolderListModel);
+    return d->sortCaseSensitive;
+}
+
+void QQuickFolderListModel::setSortCaseSensitive(bool on)
+{
+    Q_D(QQuickFolderListModel);
+
+    if (on != d->sortCaseSensitive) {
+        d->sortCaseSensitive = on;
+        d->updateSorting();
+    }
 }
 
 /*!
