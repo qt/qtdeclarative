@@ -53,11 +53,12 @@
 
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQml/private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlInstantiatorPrivate;
-class Q_AUTOTEST_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
+class Q_QML_PRIVATE_EXPORT QQmlInstantiator : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
