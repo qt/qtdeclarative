@@ -110,6 +110,7 @@ void tst_v4misc::parserMisc_data()
     QTest::addColumn<QString>("error");
 
     QTest::newRow("8[++i][+++i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("`a${1++}`") << QString("ReferenceError: Invalid left-hand side expression in postfix operation");
 }
 
 void tst_v4misc::parserMisc()

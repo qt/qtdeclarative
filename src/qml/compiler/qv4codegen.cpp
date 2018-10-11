@@ -2739,6 +2739,8 @@ bool Codegen::visit(TemplateLiteral *ast)
         bytecodeGenerator->addInstruction(store);
 
         Reference expr = expression(ast->expression);
+        if (hasError)
+            return false;
 
         if (ast->next) {
             int temp2 = bytecodeGenerator->newRegister();
@@ -4084,6 +4086,8 @@ void Codegen::Reference::storeOnStack(int slotIndex) const
 
 Codegen::Reference Codegen::Reference::doStoreOnStack(int slotIndex) const
 {
+    Q_ASSERT(isValid());
+
     if (isStackSlot() && slotIndex == -1 && !(stackSlotIsLocalOrArgument && isVolatile) && !requiresTDZCheck)
         return *this;
 
