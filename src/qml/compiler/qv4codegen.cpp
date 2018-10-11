@@ -679,6 +679,8 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         return false;
     }
     Reference index = expression(ast->expression);
+    if (hasError)
+        return false;
     _expr.setResult(Reference::fromSubscript(base, index));
     return false;
 }

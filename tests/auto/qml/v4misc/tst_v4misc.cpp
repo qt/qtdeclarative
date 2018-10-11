@@ -45,6 +45,9 @@ private slots:
 
     void moveMapping_1();
     void moveMapping_2();
+
+    void parserMisc_data();
+    void parserMisc();
 };
 
 using namespace QT_PREPEND_NAMESPACE(QV4::IR);
@@ -227,6 +230,23 @@ void tst_v4misc::moveMapping_2()
     QVERIFY(mapping._moves.at(9).needsSwap);
 }
 
-QTEST_MAIN(tst_v4misc)
+void tst_v4misc::parserMisc_data()
+{
+    QTest::addColumn<QString>("error");
+
+    QTest::newRow("8[++i][+++i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+}
+
+void tst_v4misc::parserMisc()
+{
+    QFETCH(QString, error);
+
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(QString::fromUtf8(QTest::currentDataTag()));
+    QVERIFY(result.isError());
+    QCOMPARE(result.toString(), error);
+}
+
+QTEST_MAIN(tst_v4misc);
 
 #include "tst_v4misc.moc"
