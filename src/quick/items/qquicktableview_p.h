@@ -130,6 +130,9 @@ protected:
     void viewportMoved(Qt::Orientations orientation) override;
     void componentComplete() override;
 
+protected:
+    QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent);
+
 private:
     Q_DISABLE_COPY(QQuickTableView)
     Q_DECLARE_PRIVATE(QQuickTableView)

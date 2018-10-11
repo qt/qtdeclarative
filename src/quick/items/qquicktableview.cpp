@@ -1762,6 +1762,12 @@ QQuickTableView::QQuickTableView(QQuickItem *parent)
     setFlag(QQuickItem::ItemIsFocusScope);
 }
 
+QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
+    : QQuickFlickable(dd, parent)
+{
+    setFlag(QQuickItem::ItemIsFocusScope);
+}
+
 int QQuickTableView::rows() const
 {
     return d_func()->tableSize.height();
