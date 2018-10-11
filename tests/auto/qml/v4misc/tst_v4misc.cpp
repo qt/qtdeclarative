@@ -235,6 +235,7 @@ void tst_v4misc::parserMisc_data()
     QTest::addColumn<QString>("error");
 
     QTest::newRow("8[++i][+++i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("T||9[---L6i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
 }
 
 void tst_v4misc::parserMisc()

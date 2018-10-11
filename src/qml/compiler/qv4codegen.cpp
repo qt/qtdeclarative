@@ -2206,15 +2206,17 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
         bytecodeGenerator->addInstruction(Instruction::Ret());
     }
 
-    bytecodeGenerator->finalize(_context);
-    _context->registerCount = bytecodeGenerator->registerCount();
-    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
-    if (showCode) {
-        qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
-                 << "register count" << _context->registerCount;
-        QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
-                                _context->line, _context->lineNumberMapping);
-        qDebug();
+    if (!hasError) {
+        bytecodeGenerator->finalize(_context);
+        _context->registerCount = bytecodeGenerator->registerCount();
+        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+        if (showCode) {
+            qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
+                     << "register count" << _context->registerCount;
+            QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
+                                    _context->line, _context->lineNumberMapping);
+            qDebug();
+        }
     }
 
     qSwap(_returnAddress, returnAddress);
