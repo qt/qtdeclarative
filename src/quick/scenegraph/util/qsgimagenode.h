@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_EXPORT QSGImageNode : public QSGGeometryNode
 {
 public:
-    ~QSGImageNode() override { }
+    ~QSGImageNode() override = default;
 
     virtual void setRect(const QRectF &rect) = 0;
     inline void setRect(qreal x, qreal y, qreal w, qreal h) { setRect(QRectF(x, y, w, h)); }

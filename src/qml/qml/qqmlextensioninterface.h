@@ -51,14 +51,14 @@ class QQmlEngine;
 class Q_QML_EXPORT QQmlTypesExtensionInterface
 {
 public:
-    virtual ~QQmlTypesExtensionInterface() {}
+    virtual ~QQmlTypesExtensionInterface() = default;
     virtual void registerTypes(const char *uri) = 0;
 };
 
 class Q_QML_EXPORT QQmlExtensionInterface : public QQmlTypesExtensionInterface
 {
 public:
-    ~QQmlExtensionInterface() override {}
+    ~QQmlExtensionInterface() override = default;
     virtual void initializeEngine(QQmlEngine *engine, const char *uri) = 0;
 };
 
