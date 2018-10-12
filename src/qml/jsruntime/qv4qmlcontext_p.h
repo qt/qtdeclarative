@@ -66,7 +66,12 @@ struct QQmlContextWrapper;
 
 namespace Heap {
 
-struct QQmlContextWrapper : Object {
+#define QQmlContextWrapperMembers(class, Member) \
+    Member(class, Pointer, Module *, module)
+
+DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
+    DECLARE_MARKOBJECTS(QQmlContextWrapper);
+
     void init(QQmlContextData *context, QObject *scopeObject);
     void destroy();
 

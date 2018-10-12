@@ -534,8 +534,6 @@ private:
     QQmlScriptData();
 
 public:
-    ~QQmlScriptData() override;
-
     QUrl url;
     QString urlString;
     QQmlTypeNameCache *typeNameCache;
@@ -556,7 +554,6 @@ private:
 
     bool m_loaded;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;
-    QV4::Script *m_program;
     QV4::PersistentValue m_value;
 };
 

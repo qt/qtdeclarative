@@ -1183,6 +1183,7 @@ public:
     const Value *resolveExport(QV4::String *exportName);
     QStringList exportedNames() const;
     void evaluate();
+    void evaluateModuleRequests();
 
     QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
     void unlink();
@@ -1225,7 +1226,6 @@ private:
     Q_NEVER_INLINE IdentifierHash createNamedObjectsPerComponent(int componentObjectIndex);
 
     Heap::Module *m_module = nullptr;
-    bool m_moduleEvaluated = false;
 
 public:
 #if defined(V4_BOOTSTRAP)

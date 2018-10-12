@@ -8822,10 +8822,10 @@ void tst_qqmlecmascript::importLexicalVariables_data()
 
     QTest::newRow("script")
         << testFileUrl("importLexicalVariables_script.qml")
-        << QStringLiteral("0?? 1?? 2??");
+        << QStringLiteral("000 100 210");
     QTest::newRow("pragmaLibrary")
         << testFileUrl("importLexicalVariables_pragmaLibrary.qml")
-        << QStringLiteral("0?? 1?? 2??");
+        << QStringLiteral("000 100 210");
     QTest::newRow("module")
         << testFileUrl("importLexicalVariables_module.qml")
         << QStringLiteral("000 000 110");
