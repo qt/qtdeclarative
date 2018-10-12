@@ -130,6 +130,7 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qjsengine/script/com/trolltech/syntaxerror/__init__.js";
     invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
     invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.2.qml";
+    invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.3.qml";
     // generatorFunction.qml is not invalid per se, but the minifier cannot handle yield statements
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/generatorFunction.qml";
 #endif
