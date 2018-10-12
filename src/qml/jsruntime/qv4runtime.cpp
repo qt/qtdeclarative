@@ -1677,7 +1677,7 @@ ReturnedValue Runtime::method_arrayLiteral(ExecutionEngine *engine, Value *value
     return engine->newArrayObject(values, length)->asReturnedValue();
 }
 
-ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId, int argc, const QV4::Value *args)
+ReturnedValue Runtime::method_objectLiteral(ExecutionEngine *engine, int classId, const QV4::Value *args, int argc)
 {
     Scope scope(engine);
     Scoped<InternalClass> klass(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeClasses[classId]);

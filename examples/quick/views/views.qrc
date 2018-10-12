@@ -41,8 +41,8 @@
         <file>pathview/pics/EMail_48.png</file>
         <file>pathview/pics/TodoList_48.png</file>
         <file>pathview/pics/VideoPlayer_48.png</file>
-        <file>visualdatamodel/slideshow.qml</file>
-        <file>visualdatamodel/dragselection.qml</file>
+        <file>delegatemodel/slideshow.qml</file>
+        <file>delegatemodel/dragselection.qml</file>
         <file>objectmodel/objectmodel.qml</file>
         <file>views.qml</file>
         <file>listview/displaymargin.qml</file>

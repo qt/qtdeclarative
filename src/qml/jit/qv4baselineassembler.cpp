@@ -1060,8 +1060,7 @@ void BaselineAssembler::ushr(int lhs)
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
     pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->urshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
-    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->urshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::AccumulatorRegisterValue);
     auto doubleEncode = pasm()->branch32(PlatformAssembler::LessThan,
                                          PlatformAssembler::AccumulatorRegisterValue,
                                          TrustedImm32(0));
@@ -1081,8 +1080,7 @@ void BaselineAssembler::shr(int lhs)
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
     pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->rshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
-    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->rshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 
@@ -1091,8 +1089,7 @@ void BaselineAssembler::shl(int lhs)
     PlatformAssembler::Address lhsAddr = regAddr(lhs);
     pasm()->toInt32LhsAcc(lhsAddr, PlatformAssembler::ScratchRegister);
     pasm()->and32(TrustedImm32(0x1f), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->lshift32(PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::ScratchRegister);
-    pasm()->move(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue);
+    pasm()->lshift32(PlatformAssembler::ScratchRegister, PlatformAssembler::AccumulatorRegisterValue, PlatformAssembler::AccumulatorRegisterValue);
     pasm()->setAccumulatorTag(IntegerTag);
 }
 

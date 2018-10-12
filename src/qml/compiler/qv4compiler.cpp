@@ -342,6 +342,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
                 entryToWrite->moduleRequest = getStringId(entry.moduleRequest);
                 entryToWrite->importName = getStringId(entry.importName);
                 entryToWrite->localName = getStringId(entry.localName);
+                entryToWrite->location = entry.location;
                 entryToWrite++;
             }
         };
@@ -356,6 +357,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             entryToWrite->moduleRequest = getStringId(entry.moduleRequest);
             entryToWrite->importName = getStringId(entry.importName);
             entryToWrite->localName = getStringId(entry.localName);
+            entryToWrite->location = entry.location;
             entryToWrite++;
         }
     }

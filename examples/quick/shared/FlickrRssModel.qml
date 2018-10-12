@@ -48,19 +48,39 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.XmlListModel 2.0
+import QtQuick 2.12
 
-XmlListModel {
+ListModel {
+    id: flickrImages
     property string tags : ""
+    readonly property string queryUrl : "http://api.flickr.com/services/feeds/photos_public.gne?"
 
-    function encodeTags(x) { return encodeURIComponent(x.replace(' ',',')); }
-
-    source: "http://api.flickr.com/services/feeds/photos_public.gne?"+(tags ? "tags="+encodeTags(tags)+"&" : "")
-    query: "/feed/entry"
-    namespaceDeclarations: "declare default element namespace 'http://www.w3.org/2005/Atom';"
-
-    XmlRole { name: "title"; query: "title/string()" }
-    XmlRole { name: "content"; query: "content/string()" }
-    XmlRole { name: "hq"; query: "link[@rel='enclosure']/@href/string()" }
+    function encodeParams(x) {
+        return encodeURIComponent(x.replace(" ",","));
+    }
+    function fetchImages(format) {
+        var requestURL = queryUrl + (tags ? "tags="+encodeParams(tags)+"&" : "") + "format=" + format + "&nojsoncallback=1";
+        var xhr = new XMLHttpRequest;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                var jsonText = xhr.responseText;
+                var objArray = JSON.parse(jsonText.replace(/\'/g,"'"))
+                if (objArray.errors !== undefined)
+                    console.log(lCategory, "Error fetching tweets: " + imageItems.errors[0].message)
+                else {
+                    for (var key in objArray.items) {
+                        var rssItem = objArray.items[key];
+                        var jsonObject = "{ \"title\": \"" + rssItem.title +"\",\"media\": \"" + rssItem.media.m + "\", \"thumbnail\": \"" + rssItem.media.m.replace(/\_m\.jpg/,"_s.jpg") +"\"}"
+                        flickrImages.append(JSON.parse(jsonObject));
+                    }
+                }
+            }
+        }
+        xhr.open("GET", requestURL, true);
+        xhr.send();
+    }
+    Component.onCompleted: {
+        fetchImages("json");
+    }
 }
+

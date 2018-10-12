@@ -4080,8 +4080,6 @@ void QQuickItem::mouseDoubleClickEvent(QMouseEvent *)
 /*!
     This event handler can be reimplemented in a subclass to be notified
     when a mouse ungrab event has occurred on this item.
-
-    \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseUngrabEvent()
 {
@@ -4091,8 +4089,6 @@ void QQuickItem::mouseUngrabEvent()
 /*!
     This event handler can be reimplemented in a subclass to be notified
     when a touch ungrab event has occurred on this item.
-
-    \input item.qdocinc accepting-events
   */
 void QQuickItem::touchUngrabEvent()
 {

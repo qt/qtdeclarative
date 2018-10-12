@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.XmlListModel 2.0
-import QtQml.Models 2.1
+import QtQuick 2.12
+import QtQml.Models 2.12
+import "../../shared" as Shared
 
 Rectangle {
     id: root
@@ -61,18 +61,14 @@ Rectangle {
 
     color: "black"
 
+    Shared.FlickrRssModel {
+        id: flickrModel
+        tags: "fjords,mountains"
+    }
     DelegateModel {
         id: visualModel
 
-        model: XmlListModel {
-            source: "http://api.flickr.com/services/feeds/photos_public.gne?format=rss2"
-            query: "/rss/channel/item"
-            namespaceDeclarations: "declare namespace media=\"http://search.yahoo.com/mrss/\";"
-
-            XmlRole { name: "imagePath"; query: "media:thumbnail/@url/string()" }
-            XmlRole { name: "url"; query: "media:content/@url/string()" }
-        }
-
+        model: flickrModel
         delegate: Item {
             id: delegateItem
 
@@ -90,9 +86,8 @@ Rectangle {
                     anchors.leftMargin: 1
                     anchors.topMargin: 1
 
-                    source: imagePath
+                    source: thumbnail
                     fillMode: Image.PreserveAspectFit
-
                 }
 
                 MouseArea {

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Particles 2.0
+import QtQuick 2.12
+import QtQuick.Particles 2.12
+import "shared" as Shared
 import "content/script.js" as Script
 import "content"
 
@@ -96,7 +97,7 @@ Item {
     ImageParticle {
         system: sys
         groups: ["fireworks"]
-        source: "qrc:particleresources/star.png"
+        source: "qrc:///particleresources/star.png"
         color: "lightsteelblue"
         alpha: 0
         colorVariation: 0
@@ -112,8 +113,13 @@ Item {
     Component {
         id: alertDelegate
         Rectangle {
-            width: 132
+            color: "DarkSlateGray"
+            border.width: 1
+            border.color: "LightSteelBlue"
+            width: 144
             height: 132
+            antialiasing: true
+            radius: 3
             NumberAnimation on scale {
                 running: true
                 loops: 1
@@ -121,13 +127,14 @@ Item {
                 to: 1
             }
             Image {
-                source: "../asteroid/../images/rocket.png"
+                source: "qrc:///particles/images/rocket.png"
                 anchors.centerIn: parent
             }
             Text {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "A new ship has arrived!"
+                color: "LightSteelBlue"
             }
         }
     }
@@ -198,84 +205,97 @@ Item {
     }
     Item { x: -1000; y: -1000 //offscreen
         Repeater {//Load them here, add to system on completed
-            model: theModel
+            model: flickrModel
             delegate: theDelegate
         }
     }
-    RssModel {id: theModel; tags:"particle,particles"}
+    Shared.FlickrRssModel {
+        id: flickrModel
+        tags: "particle,particles"
+    }
     Component {
         id: theDelegate
-        Rectangle {
-            id: container
-            border.width: 2
-            antialiasing: true
-            property real myRand: Math.random();//'depth'
-            z: Math.floor(myRand * 100)
-            scale: (myRand + 1.0)/2;
-            //TODO: Darken based on 'depth'
+        Image {
+            id: image
+            antialiasing: true;
+            source: thumbnail
+            cache: true
+            property real depth: Math.random()
+            property real darken: 0.75
+            z: Math.floor(depth * 100)
+            scale: (depth + 1) / 2
+            sourceSize {
+                width: root.width
+                height: root.height
+            }
             width: 132
             height: 132
-            //ItemParticle.onAttached: console.log("I'm in"  + x + "," + y + ":" + opacity);
-            ItemParticle.onDetached: mp.take(container);//respawns
-            function manage()
-            {
-                if (state == "selected") {
-                    console.log("Taking " + index);
-                    mp.freeze(container);
-                } else {
-                    console.log("Returning " +index);
-                    mp.unfreeze(container);
-                }
-            }
-            Image {
-                id: img
+            fillMode: Image.PreserveAspectFit
+            Rectangle {
+                // Darken based on depth
                 anchors.centerIn: parent
+                width: parent.paintedWidth + 1
+                height: parent.paintedHeight + 1
+                color: "black"
+                opacity: darken * (1 - depth)
                 antialiasing: true;
-                source: "http://" + Script.getImagePath(content); cache: true
-                fillMode: Image.PreserveAspectFit;
-                width: parent.width-4; height: parent.height-4
-                onStatusChanged: if (img.status == Image.Ready) {
-                    loading.opacity = 0;
-                    mp.take(container);
-                }
             }
             Text {
                 anchors.bottom: parent.bottom
-                width: parent.width
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottomMargin: Math.max(parent.paintedWidth, parent.paintedHeight) - Math.min(parent.width, parent.height)
+                width: parent.paintedWidth - 4
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
                 text: title
                 color: "black"
             }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: container.state == "selected" ? container.state = "" : container.state = "selected"
+            ItemParticle.onDetached: mp.take(image); // respawns
+            onStatusChanged: if (image.status == Image.Ready) {
+                loading.opacity = 0;
+                mp.take(image);
+            }
+            function manage()
+            {
+                if (state == "selected") {
+                    console.log("Taking " + index);
+                    mp.freeze(image);
+                } else {
+                    console.log("Returning " +index);
+                    mp.unfreeze(image);
+                }
+            }
+            TapHandler {
+                gesturePolicy: TapHandler.ReleaseWithinBounds
+                onTapped: image.state = (image.state == "" ? "selected" : "")
             }
             states: State {
                 name: "selected"
                 ParentChange {
-                    target: container
+                    target: image
                     parent: root
-                    x: 0
-                    y: 0
                 }
                 PropertyChanges {
-                    target: container
+                    target: image
+                    source: media
+                    x: 0
+                    y: 0
                     width: root.width
                     height: root.height
                     z: 101
                     opacity: 1
                     rotation: 0
+                    darken: 0
                 }
             }
             transitions: Transition {
                 to: "selected"
                 reversible: true
                 SequentialAnimation {
-                    ScriptAction {script: container.manage();}
+                    ScriptAction { script: image.manage() }
                     ParallelAnimation {
-                        ParentAnimation {NumberAnimation { properties: "x,y" }}//Doesn't work, particles takes control of x,y instantly
-                        NumberAnimation { properties: "width, height, z, rotation" }
+                        ParentAnimation {NumberAnimation { properties: "x,y" }}
+                        PropertyAnimation { properties: "width, height, z, rotation, darken"; easing.type: Easing.InOutQuad }
                     }
                 }
             }
