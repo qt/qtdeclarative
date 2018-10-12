@@ -897,6 +897,8 @@ bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engi
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;
     }
+    if (!compilationUnit)
+        return false;
     hash->addData(compilationUnit->unitData()->md5Checksum, sizeof(compilationUnit->unitData()->md5Checksum));
     return true;
 }
