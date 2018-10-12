@@ -361,7 +361,7 @@ private:
             } \
             file.close(); \
         } else { \
-            QCOMPARE(expected, actual); \
+            QCOMPARE(actual, expected); \
         } \
     }
 
@@ -615,6 +615,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("cyclicAlias") << "cyclicAlias.qml" << "cyclicAlias.errors.txt" << false;
 
     QTest::newRow("fuzzed.1") << "fuzzed.1.qml" << "fuzzed.1.errors.txt" << false;
+    QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
 }
 
 
@@ -625,6 +626,7 @@ void tst_qqmllanguage::errors()
     QFETCH(bool, create);
 
     QQmlComponent component(&engine, testFileUrl(file));
+    QTRY_VERIFY(!component.isLoading());
 
     QScopedPointer<QObject> object;
 
