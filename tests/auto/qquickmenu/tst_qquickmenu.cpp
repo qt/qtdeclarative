@@ -124,7 +124,7 @@ void tst_QQuickMenu::count()
     QCOMPARE(menu->count(), 1);
     QCOMPARE(countSpy.count(), 3);
 
-    QQuickItem *item = menu->takeItem(0);
+    QScopedPointer<QQuickItem> item(menu->takeItem(0));
     QVERIFY(item);
     QCOMPARE(menu->count(), 0);
     QCOMPARE(countSpy.count(), 4);
