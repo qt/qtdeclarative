@@ -141,6 +141,7 @@ private slots:
     void flickOvershoot();
     void checkRowColumnCount();
     void modelSignals();
+    void checkModelSignalsUpdateLayout();
     void dataChangedSignal();
     void checkThatPoolIsDrainedWhenReuseIsFalse();
     void checkIfDelegatesAreReused_data();
@@ -1470,6 +1471,44 @@ void tst_QQuickTableView::modelSignals()
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 1);
+}
+
+void tst_QQuickTableView::checkModelSignalsUpdateLayout()
+{
+    // Check that if the model rearranges rows and emit the
+    // 'layoutChanged' signal, TableView will be updated correctly.
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    TestModel model(0, 1);
+    tableView->setModel(QVariant::fromValue(&model));
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 1);
+
+    QString modelRow1Text = QStringLiteral("firstRow");
+    QString modelRow2Text = QStringLiteral("secondRow");
+    model.insertRow(0);
+    model.insertRow(0);
+    model.setModelData(QPoint(0, 0), QSize(1, 1), modelRow1Text);
+    model.setModelData(QPoint(0, 1), QSize(1, 1), modelRow2Text);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->rows(), 2);
+    QCOMPARE(tableView->columns(), 1);
+
+    QString delegate1text = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item->property("modelDataBinding").toString();
+    QString delegate2text = tableViewPrivate->loadedTableItem(QPoint(0, 1))->item->property("modelDataBinding").toString();
+    QCOMPARE(delegate1text, modelRow1Text);
+    QCOMPARE(delegate2text, modelRow2Text);
+
+    model.swapRows(0, 1);
+    WAIT_UNTIL_POLISHED;
+
+    delegate1text = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item->property("modelDataBinding").toString();
+    delegate2text = tableViewPrivate->loadedTableItem(QPoint(0, 1))->item->property("modelDataBinding").toString();
+    QCOMPARE(delegate1text, modelRow2Text);
+    QCOMPARE(delegate2text, modelRow1Text);
 }
 
 void tst_QQuickTableView::dataChangedSignal()
