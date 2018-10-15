@@ -682,7 +682,7 @@ public:
     void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
 
     Arguments pushTemplateArgs(AST::TemplateLiteral *args);
-    int createTemplateArray(AST::TemplateLiteral *t);
+    void createTemplateObject(AST::TemplateLiteral *t);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
 

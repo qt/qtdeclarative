@@ -712,6 +712,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(ThrowOnNullOrUndefined)
         MOTH_END_INSTR(ThrowOnNullOrUndefined)
 
+        MOTH_BEGIN_INSTR(GetTemplateObject)
+            d << index;
+        MOTH_END_INSTR(GetTemplateObject)
+
         MOTH_BEGIN_INSTR(LoadQmlContext)
             d << dumpRegister(result, nFormals);
         MOTH_END_INSTR(LoadQmlContext)

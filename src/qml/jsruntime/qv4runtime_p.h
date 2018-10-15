@@ -114,6 +114,8 @@ struct Q_QML_PRIVATE_EXPORT RuntimeHelpers {
     static Bool strictEqual(const Value &x, const Value &y);
 
     static ReturnedValue addHelper(ExecutionEngine *engine, const Value &left, const Value &right);
+
+    static ReturnedValue getTemplateObject(Function *function, int index);
 };
 
 

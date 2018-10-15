@@ -99,6 +99,14 @@ struct Class {
     QVector<Method> methods;
 };
 
+struct TemplateObject {
+    QVector<uint> strings;
+    QVector<uint> rawStrings;
+    bool operator==(const TemplateObject &other) {
+        return strings == other.strings && rawStrings == other.rawStrings;
+    }
+};
+
 struct ExportEntry
 {
     QString exportName;
@@ -133,6 +141,7 @@ struct Module {
     QList<Context *> functions;
     QList<Context *> blocks;
     QVector<Class> classes;
+    QVector<TemplateObject> templateObjects;
     Context *rootContext;
     QString fileName;
     QString finalUrl;

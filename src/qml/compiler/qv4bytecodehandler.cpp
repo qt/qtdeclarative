@@ -537,6 +537,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(ThrowOnNullOrUndefined)
         COLLECTOR_END_INSTR(ThrowOnNullOrUndefined)
 
+        COLLECTOR_BEGIN_INSTR(GetTemplateObject)
+        COLLECTOR_END_INSTR(GetTemplateObject)
+
         COLLECTOR_BEGIN_INSTR(LoadQmlContext)
         COLLECTOR_END_INSTR(LoadQmlContext)
 

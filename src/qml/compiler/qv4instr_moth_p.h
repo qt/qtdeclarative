@@ -198,6 +198,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
 #define INSTR_ThrowOnNullOrUndefined(op) INSTRUCTION(op, ThrowOnNullOrUndefined, 0)
+#define INSTR_GetTemplateObject(op) INSTRUCTION(op, GetTemplateObject, 1, index)
 #define INSTR_TailCall(op) INSTRUCTION(op, TailCall, 4, func, thisObject, argc, argv)
 
 #define FOR_EACH_MOTH_INSTR_ALL(F) \
@@ -339,6 +340,7 @@ QT_BEGIN_NAMESPACE
     F(PopScriptContext) \
     F(InitializeBlockDeadTemporalZone) \
     F(ThrowOnNullOrUndefined) \
+    F(GetTemplateObject) \
     F(TailCall) \
     F(Debug) \
 

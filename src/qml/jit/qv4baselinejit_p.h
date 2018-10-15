@@ -215,6 +215,7 @@ public:
     void generate_LoadQmlImportedScripts(int result) override;
     void generate_InitializeBlockDeadTemporalZone(int firstReg, int count) override;
     void generate_ThrowOnNullOrUndefined() override;
+    void generate_GetTemplateObject(int index) override;
 
     void startInstruction(Moth::Instr::Type instr) override;
     void endInstruction(Moth::Instr::Type instr) override;

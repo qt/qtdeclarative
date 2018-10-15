@@ -225,6 +225,36 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
         return nullptr;
 }
 
+Heap::Object *CompilationUnit::templateObjectAt(int index) const
+{
+    Q_ASSERT(index < int(data->templateObjectTableSize));
+    if (!templateObjects.size())
+        templateObjects.resize(data->templateObjectTableSize);
+    Heap::Object *o = templateObjects.at(index);
+    if (o)
+        return o;
+
+    // create the template object
+    Scope scope(engine);
+    const CompiledData::TemplateObject *t = data->templateObjectAt(index);
+    Scoped<ArrayObject> a(scope, engine->newArrayObject(t->size));
+    Scoped<ArrayObject> raw(scope, engine->newArrayObject(t->size));
+    ScopedValue s(scope);
+    for (uint i = 0; i < t->size; ++i) {
+        s = runtimeStrings[t->stringIndexAt(i)];
+        a->arraySet(i, s);
+        s = runtimeStrings[t->rawStringIndexAt(i)];
+        raw->arraySet(i, s);
+    }
+
+    ObjectPrototype::method_freeze(engine->functionCtor(), nullptr, raw, 1);
+    a->defineReadonlyProperty(QStringLiteral("raw"), raw);
+    ObjectPrototype::method_freeze(engine->functionCtor(), nullptr, a, 1);
+
+    templateObjects[index] = a->objectValue()->d();
+    return templateObjects.at(index);
+}
+
 void CompilationUnit::unlink()
 {
     if (engine)
@@ -283,6 +313,10 @@ void CompilationUnit::markObjects(QV4::MarkStack *markStack)
     for (QV4::Heap::InternalClass *c : qAsConst(runtimeBlocks))
         if (c)
             c->mark(markStack);
+
+    for (QV4::Heap::Object *o : qAsConst(templateObjects))
+        if (o)
+            o->mark(markStack);
 
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i)

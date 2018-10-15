@@ -73,6 +73,7 @@ struct JSClassMember;
 namespace Compiler {
 
 struct Class;
+struct TemplateObject;
 
 struct Q_QML_PRIVATE_EXPORT StringTableGenerator {
     StringTableGenerator();
@@ -137,6 +138,7 @@ struct Q_QML_PRIVATE_EXPORT JSUnitGenerator {
     QV4::CompiledData::Unit *generateUnit(GeneratorOption option = GenerateWithStringTable);
     void writeFunction(char *f, Context *irFunction) const;
     void writeClass(char *f, const Class &c);
+    void writeTemplateObject(char *f, const TemplateObject &o);
     void writeBlock(char *f, Context *irBlock) const;
 
     StringTableGenerator stringTable;
