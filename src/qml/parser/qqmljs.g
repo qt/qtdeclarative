@@ -550,6 +550,8 @@ AST::UiQualifiedId *Parser::reparseAsQualifiedId(AST::ExpressionNode *expr)
 
 void Parser::pushToken(int token)
 {
+    Q_ASSERT(last_token);
+    Q_ASSERT(last_token < &token_buffer[TOKEN_BUFFER_SIZE]);
     last_token->token = yytoken;
     last_token->dval = yylval;
     last_token->spell = yytokenspell;
@@ -4386,6 +4388,9 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         token_buffer[1].loc   = yylloc        = location(lexer);
 
         if (t_action(errorState, yytoken)) {
+#ifdef PARSER_DEBUG
+            qDebug() << "Parse error, trying to recover.";
+#endif
             QString msg;
             int token = token_buffer[0].token;
             if (token < 0 || token >= TERMINAL_COUNT)
@@ -4419,18 +4424,13 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         for (int *tk = tokens; *tk != EOF_SYMBOL; ++tk) {
             int a = t_action(errorState, *tk);
             if (a > 0 && t_action(a, yytoken)) {
+#ifdef PARSER_DEBUG
+                qDebug() << "Parse error, trying to recover (2).";
+#endif
                 const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[*tk]));
                 diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
 
-                yytoken = *tk;
-                yylval = 0;
-                yylloc = token_buffer[0].loc;
-                yylloc.length = 0;
-
-                first_token = &token_buffer[0];
-                last_token = &token_buffer[2];
-
-                action = errorState;
+                pushToken(*tk);
                 goto _Lcheck_token;
             }
         }
@@ -4445,12 +4445,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
                 const QString msg = QCoreApplication::translate("QQmlParser", "Expected token `%1'").arg(QLatin1String(spell[tk]));
                 diagnostic_messages.append(DiagnosticMessage(DiagnosticMessage::Error, token_buffer[0].loc, msg));
 
-                yytoken = tk;
-                yylval = 0;
-                yylloc = token_buffer[0].loc;
-                yylloc.length = 0;
-
-                action = errorState;
+                pushToken(tk);
                 goto _Lcheck_token;
             }
         }
