@@ -63,6 +63,7 @@ private slots:
     void keys();
     void mnemonics();
     void addRemove();
+    void delegateFromSeparateComponent();
 };
 
 void tst_qquickmenubar::delegate()
@@ -576,6 +577,32 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(menu1.isNull());
     QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
     QVERIFY(menuBarItem1.isNull());
+}
+
+// QTBUG-67559
+// Test that Menus declared as children of a MenuBar have the
+// correct delegate when it is declared outside of the MenuBar as a Component.
+void tst_qquickmenubar::delegateFromSeparateComponent()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("delegateFromSeparateComponent.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    const QColor green = QColor::fromRgb(0x00ff00);
+
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar*>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *menu = qobject_cast<QQuickMenu*>(menuBar->menuAt(0));
+    QVERIFY(menu);
+
+    QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(menu->parentItem());
+    QVERIFY(menuBarItem);
+
+    QQuickItem *menuBarItemBg = menuBarItem->property("background").value<QQuickItem*>();
+    QVERIFY(menuBarItemBg);
+    QCOMPARE(menuBarItemBg->property("color").value<QColor>(), green);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
