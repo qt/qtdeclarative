@@ -666,11 +666,10 @@ HeapItem *HugeItemAllocator::allocate(size_t size) {
     Chunk *c = nullptr;
     if (size >= MemorySegment::SegmentSize/2) {
         // too large to handle through the ChunkAllocator, let's get our own memory segement
-        size_t segmentSize = size + Chunk::HeaderSize; // space required for the Chunk header
+        size += Chunk::HeaderSize; // space required for the Chunk header
         size_t pageSize = WTF::pageSize();
-        segmentSize = (segmentSize + pageSize - 1) & ~(pageSize - 1); // align to page sizes
-        m = new MemorySegment(segmentSize);
         size = (size + pageSize - 1) & ~(pageSize - 1); // align to page sizes
+        m = new MemorySegment(size);
         c = m->allocate(size);
     } else {
         c = chunkAllocator->allocate(size);
