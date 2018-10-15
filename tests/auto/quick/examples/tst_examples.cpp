@@ -79,7 +79,6 @@ tst_examples::tst_examples()
     excludedDirs << "shared"; //Not an example
     excludedDirs << "snippets/qml/path"; //No root QQuickItem
     excludedDirs << "examples/qml/qmlextensionplugins"; //Requires special import search path
-    excludedDirs << "examples/quick/tutorials/gettingStartedQml"; //C++ example, but no cpp files in root dir
 
     // These snippets are not expected to run on their own.
     excludedDirs << "snippets/qml/visualdatamodel_rootindex";
