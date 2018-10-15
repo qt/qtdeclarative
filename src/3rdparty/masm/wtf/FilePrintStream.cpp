@@ -25,6 +25,7 @@
 
 #include "config.h"
 #include "FilePrintStream.h"
+#include "Optional.h" // for make_unique polyfill if required
 
 namespace WTF {
 

@@ -157,7 +157,7 @@ void QV4Debugger::clearPauseRequest()
 QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 {
     ExecutionState state;
-    state.fileName = getFunction()->sourceFile();
+    state.fileName = QUrl(getFunction()->sourceFile()).fileName();
     state.lineNumber = engine()->currentStackFrame->lineNumber();
 
     return state;
@@ -288,7 +288,7 @@ void QV4Debugger::pauseAndWait(PauseReason reason)
 bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
 {
     QHash<BreakPoint, QString>::iterator it = m_breakPoints.find(
-                BreakPoint(filename.mid(filename.lastIndexOf('/') + 1), linenr));
+                BreakPoint(QUrl(filename).fileName(), linenr));
     if (it == m_breakPoints.end())
         return false;
     QString condition = it.value();
