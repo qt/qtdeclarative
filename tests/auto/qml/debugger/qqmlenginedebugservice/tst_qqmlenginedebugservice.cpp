@@ -26,7 +26,6 @@
 **
 ****************************************************************************/
 
-#include "qqmlenginedebugclient.h"
 #include "debugutil_p.h"
 #include "../../../shared/util.h"
 
@@ -36,6 +35,7 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmldebugconnection_p.h>
+#include <private/qqmlenginedebugclient_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -60,7 +60,7 @@
 #define QVERIFYOBJECT(statement) \
     do {\
     if (!QTest::qVerify((statement), #statement, "", __FILE__, __LINE__)) {\
-    return QmlDebugObjectReference();\
+    return QQmlEngineDebugObjectReference();\
     }\
     } while (0)
 
@@ -126,14 +126,14 @@ public:
     tst_QQmlEngineDebugService() : m_conn(nullptr), m_dbg(nullptr), m_engine(nullptr), m_rootItem(nullptr) {}
 
 private:
-    QmlDebugObjectReference findRootObject(int context = 0,
+    QQmlEngineDebugObjectReference findRootObject(int context = 0,
                                            bool recursive = false);
-    QmlDebugPropertyReference findProperty(
-            const QList<QmlDebugPropertyReference> &props,
+    QQmlEngineDebugPropertyReference findProperty(
+            const QList<QQmlEngineDebugPropertyReference> &props,
             const QString &name) const;
 
     void recursiveObjectTest(QObject *o,
-                             const QmlDebugObjectReference &oref,
+                             const QQmlEngineDebugObjectReference &oref,
                              bool recursive) const;
 
     void getContexts();
@@ -182,7 +182,7 @@ private slots:
     void createObjectOnDestruction();
 };
 
-QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
+QQmlEngineDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
         int context, bool recursive)
 {
     bool success = false;
@@ -191,7 +191,7 @@ QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
     QVERIFYOBJECT(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
     QVERIFYOBJECT(m_dbg->engines().count());
-    m_dbg->queryRootContexts(m_dbg->engines()[0].debugId, &success);
+    m_dbg->queryRootContexts(m_dbg->engines()[0], &success);
     QVERIFYOBJECT(success);
     QVERIFYOBJECT(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
@@ -207,18 +207,18 @@ QmlDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
     return m_dbg->object();
 }
 
-QmlDebugPropertyReference tst_QQmlEngineDebugService::findProperty(
-        const QList<QmlDebugPropertyReference> &props, const QString &name) const
+QQmlEngineDebugPropertyReference tst_QQmlEngineDebugService::findProperty(
+        const QList<QQmlEngineDebugPropertyReference> &props, const QString &name) const
 {
-    foreach (const QmlDebugPropertyReference &p, props) {
+    foreach (const QQmlEngineDebugPropertyReference &p, props) {
         if (p.name == name)
             return p;
     }
-    return QmlDebugPropertyReference();
+    return QQmlEngineDebugPropertyReference();
 }
 
 void tst_QQmlEngineDebugService::recursiveObjectTest(
-        QObject *o, const QmlDebugObjectReference &oref, bool recursive) const
+        QObject *o, const QQmlEngineDebugObjectReference &oref, bool recursive) const
 {
     const QMetaObject *meta = o->metaObject();
 
@@ -236,8 +236,8 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         int debugId = QQmlDebugService::idForObject(child);
         QVERIFY(debugId >= 0);
 
-        QmlDebugObjectReference cref;
-        foreach (const QmlDebugObjectReference &ref, oref.children) {
+        QQmlEngineDebugObjectReference cref;
+        foreach (const QQmlEngineDebugObjectReference &ref, oref.children) {
             QVERIFY(!ref.className.isEmpty());
             if (ref.debugId == debugId) {
                 cref = ref;
@@ -250,7 +250,7 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
             recursiveObjectTest(child, cref, true);
     }
 
-    foreach (const QmlDebugPropertyReference &p, oref.properties) {
+    foreach (const QQmlEngineDebugPropertyReference &p, oref.properties) {
         QCOMPARE(p.objectDebugId, QQmlDebugService::idForObject(o));
 
         // signal properties are fake - they are generated from QQmlAbstractBoundSignal children
@@ -269,7 +269,8 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
         QCOMPARE(p.name, QString::fromUtf8(pmeta.name()));
 
         if (pmeta.userType() == QMetaType::QObjectStar) {
-            const QmlDebugObjectReference ref = qvariant_cast<QmlDebugObjectReference>(p.value);
+            const QQmlEngineDebugObjectReference ref
+                    = qvariant_cast<QQmlEngineDebugObjectReference>(p.value);
             QObject *pobj = qvariant_cast<QObject *>(pmeta.read(o));
             if (pobj) {
                 if (pobj->objectName().isEmpty())
@@ -312,9 +313,9 @@ void tst_QQmlEngineDebugService::getContexts()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    QList<QmlDebugEngineReference> engines = m_dbg->engines();
+    QList<QQmlEngineDebugEngineReference> engines = m_dbg->engines();
     QCOMPARE(engines.count(), 1);
-    m_dbg->queryRootContexts(engines.first().debugId, &success);
+    m_dbg->queryRootContexts(engines.first(), &success);
 
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
@@ -441,7 +442,7 @@ void tst_QQmlEngineDebugService::cleanupTestCase()
 void tst_QQmlEngineDebugService::setMethodBody()
 {
     bool success;
-    QmlDebugObjectReference obj = findRootObject(2);
+    QQmlEngineDebugObjectReference obj = findRootObject(2);
     QVERIFY(!obj.className.isEmpty());
 
     QObject *root = m_components.at(2);
@@ -483,9 +484,9 @@ void tst_QQmlEngineDebugService::setMethodBody()
 
 void tst_QQmlEngineDebugService::watch_property()
 {
-    QmlDebugObjectReference obj = findRootObject();
+    QQmlEngineDebugObjectReference obj = findRootObject();
     QVERIFY(!obj.className.isEmpty());
-    QmlDebugPropertyReference prop = findProperty(obj.properties, "width");
+    QQmlEngineDebugPropertyReference prop = findProperty(obj.properties, "width");
 
     bool success;
 
@@ -494,7 +495,7 @@ void tst_QQmlEngineDebugService::watch_property()
     QVERIFY(!success);
     delete unconnected;
 
-    m_dbg->addWatch(QmlDebugPropertyReference(), &success);
+    m_dbg->addWatch(QQmlEngineDebugPropertyReference(), &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     QCOMPARE(m_dbg->valid(), false);
@@ -528,7 +529,7 @@ void tst_QQmlEngineDebugService::watch_property()
 
 void tst_QQmlEngineDebugService::watch_object()
 {
-    QmlDebugObjectReference obj = findRootObject();
+    QQmlEngineDebugObjectReference obj = findRootObject();
     QVERIFY(!obj.className.isEmpty());
 
     bool success;
@@ -538,7 +539,7 @@ void tst_QQmlEngineDebugService::watch_object()
     QVERIFY(!success);
     delete unconnected;
 
-    m_dbg->addWatch(QmlDebugObjectReference(), &success);
+    m_dbg->addWatch(QQmlEngineDebugObjectReference(), &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     QCOMPARE(m_dbg->valid(), false);
@@ -594,7 +595,7 @@ void tst_QQmlEngineDebugService::watch_expression()
 
     int origWidth = m_rootItem->property("width").toInt();
 
-    QmlDebugObjectReference obj = findRootObject();
+    QQmlEngineDebugObjectReference obj = findRootObject();
     QVERIFY(!obj.className.isEmpty());
 
     bool success;
@@ -604,7 +605,7 @@ void tst_QQmlEngineDebugService::watch_expression()
     QVERIFY(!success);
     delete unconnected;
 
-    m_dbg->addWatch(QmlDebugObjectReference(), expr, &success);
+    m_dbg->addWatch(QQmlEngineDebugObjectReference(), expr, &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     QCOMPARE(m_dbg->valid(), false);
@@ -654,7 +655,7 @@ void tst_QQmlEngineDebugService::watch_expression_data()
 
 void tst_QQmlEngineDebugService::watch_context()
 {
-    QmlDebugContextReference c;
+    QQmlEngineDebugContextReference c;
     QTest::ignoreMessage(QtWarningMsg, "QQmlEngineDebugClient::addWatch(): Not implemented");
     bool success;
     m_dbg->addWatch(c, QString(), &success);
@@ -663,7 +664,7 @@ void tst_QQmlEngineDebugService::watch_context()
 
 void tst_QQmlEngineDebugService::watch_file()
 {
-    QmlDebugFileReference f;
+    QQmlEngineDebugFileReference f;
     QTest::ignoreMessage(QtWarningMsg, "QQmlEngineDebugClient::addWatch(): Not implemented");
     bool success;
     m_dbg->addWatch(f, &success);
@@ -684,10 +685,10 @@ void tst_QQmlEngineDebugService::queryAvailableEngines()
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
     // TODO test multiple engines
-    QList<QmlDebugEngineReference> engines = m_dbg->engines();
+    QList<QQmlEngineDebugEngineReference> engines = m_dbg->engines();
     QCOMPARE(engines.count(), 1);
 
-    foreach (const QmlDebugEngineReference &e, engines) {
+    foreach (const QQmlEngineDebugEngineReference &e, engines) {
         QCOMPARE(e.debugId, QQmlDebugService::idForObject(m_engine));
         QCOMPARE(e.name, m_engine->objectName());
     }
@@ -700,19 +701,19 @@ void tst_QQmlEngineDebugService::queryRootContexts()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     QVERIFY(m_dbg->engines().count());
-    int engineId =  m_dbg->engines()[0].debugId;
+    const QQmlEngineDebugEngineReference engine =  m_dbg->engines()[0];
 
     QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
-    unconnected->queryRootContexts(engineId, &success);
+    unconnected->queryRootContexts(engine, &success);
     QVERIFY(!success);
     delete unconnected;
 
-    m_dbg->queryRootContexts(engineId, &success);
+    m_dbg->queryRootContexts(engine, &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
     QQmlContext *actualContext = m_engine->rootContext();
-    QmlDebugContextReference context = m_dbg->rootContext();
+    QQmlEngineDebugContextReference context = m_dbg->rootContext();
     QCOMPARE(context.debugId, QQmlDebugService::idForObject(actualContext));
     QCOMPARE(context.name, actualContext->objectName());
 
@@ -730,7 +731,7 @@ void tst_QQmlEngineDebugService::queryObject()
 
     bool success;
 
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
 
     QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
@@ -742,11 +743,11 @@ void tst_QQmlEngineDebugService::queryObject()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    QmlDebugObjectReference obj = m_dbg->object();
+    QQmlEngineDebugObjectReference obj = m_dbg->object();
     QVERIFY(!obj.className.isEmpty());
 
     // check source as defined in main()
-    QmlDebugFileReference source = obj.source;
+    QQmlEngineDebugFileReference source = obj.source;
     QCOMPARE(source.url, QUrl::fromLocalFile(""));
     QCOMPARE(source.lineNumber, 3);
     QCOMPARE(source.columnNumber, 1);
@@ -755,14 +756,14 @@ void tst_QQmlEngineDebugService::queryObject()
     recursiveObjectTest(m_rootItem, obj, recursive);
 
     if (recursive) {
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             QVERIFY(child.properties.count() > 0);
         }
 
-        QmlDebugObjectReference rect;
-        QmlDebugObjectReference text;
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        QQmlEngineDebugObjectReference rect;
+        QQmlEngineDebugObjectReference text;
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             if (child.className == "Rectangle")
                 rect = child;
@@ -777,7 +778,7 @@ void tst_QQmlEngineDebugService::queryObject()
 
         QCOMPARE(findProperty(text.properties, "color").value, qVariantFromValue(QColor("blue")));
     } else {
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             QCOMPARE(child.properties.count(), 0);
         }
@@ -798,7 +799,7 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
 
     bool success;
 
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
 
     const QString fileName = QFileInfo(rootObject.source.url.toString()).fileName();
@@ -821,11 +822,11 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
     QCOMPARE(m_dbg->objects().count(), 1);
-    QmlDebugObjectReference obj = m_dbg->objects().first();
+    QQmlEngineDebugObjectReference obj = m_dbg->objects().first();
     QVERIFY(!obj.className.isEmpty());
 
     // check source as defined in main()
-    QmlDebugFileReference source = obj.source;
+    QQmlEngineDebugFileReference source = obj.source;
     QCOMPARE(source.url, QUrl(fileName));
     QCOMPARE(source.lineNumber, lineNumber);
     QCOMPARE(source.columnNumber, columnNumber);
@@ -834,14 +835,14 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
     recursiveObjectTest(m_rootItem, obj, recursive);
 
     if (recursive) {
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             QVERIFY(child.properties.count() > 0);
         }
 
-        QmlDebugObjectReference rect;
-        QmlDebugObjectReference text;
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        QQmlEngineDebugObjectReference rect;
+        QQmlEngineDebugObjectReference text;
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             if (child.className == "Rectangle")
                 rect = child;
@@ -856,7 +857,7 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
 
         QCOMPARE(findProperty(text.properties, "color").value, qVariantFromValue(QColor("blue")));
     } else {
-        foreach (const QmlDebugObjectReference &child, obj.children) {
+        foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
             QCOMPARE(child.properties.count(), 0);
         }
@@ -873,7 +874,7 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation_data()
 
 void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
 {
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
     int contextId = rootObject.contextDebugId;
     QQmlContext *context = qobject_cast<QQmlContext *>(QQmlDebugService::objectForId(contextId));
@@ -900,7 +901,7 @@ void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    foreach (QmlDebugObjectReference child, rootObject.children) {
+    foreach (QQmlEngineDebugObjectReference child, rootObject.children) {
         QVERIFY(!child.className.isEmpty());
         success = false;
         lineNumber = child.source.lineNumber;
@@ -923,7 +924,7 @@ void tst_QQmlEngineDebugService::regression_QTCREATORBUG_7451()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    foreach (QmlDebugObjectReference child, rootObject.children) {
+    foreach (QQmlEngineDebugObjectReference child, rootObject.children) {
         QVERIFY(!child.className.isEmpty());
         success = false;
         lineNumber = child.source.lineNumber;
@@ -939,7 +940,7 @@ void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
 {
     bool success;
 
-    QmlDebugObjectReference rootObject = findRootObject(4, true);
+    QQmlEngineDebugObjectReference rootObject = findRootObject(4, true);
     QVERIFY(!rootObject.className.isEmpty());
 
     QQmlEngineDebugClient *unconnected = new QQmlEngineDebugClient(nullptr);
@@ -951,7 +952,7 @@ void tst_QQmlEngineDebugService::queryObjectWithNonStreamableTypes()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    QmlDebugObjectReference obj = m_dbg->object();
+    QQmlEngineDebugObjectReference obj = m_dbg->object();
     QVERIFY(!obj.className.isEmpty());
 
     QCOMPARE(findProperty(obj.properties, "modelIndex").value,
@@ -962,14 +963,14 @@ void tst_QQmlEngineDebugService::jsonData()
 {
     bool success;
 
-    QmlDebugObjectReference rootObject = findRootObject(5, true);
+    QQmlEngineDebugObjectReference rootObject = findRootObject(5, true);
     QVERIFY(!rootObject.className.isEmpty());
 
     m_dbg->queryObject(rootObject, &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
 
-    QmlDebugObjectReference obj = m_dbg->object();
+    QQmlEngineDebugObjectReference obj = m_dbg->object();
     QVERIFY(!obj.className.isEmpty());
 
     QCOMPARE(findProperty(obj.properties, "data").value,
@@ -1064,10 +1065,10 @@ void tst_QQmlEngineDebugService::queryExpressionResultBC_data()
 
 void tst_QQmlEngineDebugService::setBindingForObject()
 {
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
     QVERIFY(rootObject.debugId != -1);
-    QmlDebugPropertyReference widthPropertyRef = findProperty(rootObject.properties, "width");
+    QQmlEngineDebugPropertyReference widthPropertyRef = findProperty(rootObject.properties, "width");
 
     QCOMPARE(widthPropertyRef.value, QVariant(10));
     QCOMPARE(widthPropertyRef.binding, QString());
@@ -1112,7 +1113,7 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
     QCOMPARE(rootObject.children.size(), 5); // Rectangle, Text, MouseArea, Component.onCompleted, NonScriptPropertyElement
-    QmlDebugObjectReference mouseAreaObject = rootObject.children.at(2);
+    QQmlEngineDebugObjectReference mouseAreaObject = rootObject.children.at(2);
     QVERIFY(!mouseAreaObject.className.isEmpty());
     m_dbg->queryObjectRecursive(mouseAreaObject, &success);
     QVERIFY(success);
@@ -1120,7 +1121,7 @@ void tst_QQmlEngineDebugService::setBindingForObject()
     mouseAreaObject = m_dbg->object();
     QCOMPARE(mouseAreaObject.className, QString("MouseArea"));
 
-    QmlDebugPropertyReference onEnteredRef = findProperty(mouseAreaObject.properties, "onEntered");
+    QQmlEngineDebugPropertyReference onEnteredRef = findProperty(mouseAreaObject.properties, "onEntered");
 
     QCOMPARE(onEnteredRef.name, QString("onEntered"));
     // Sorry, can't do that anymore: QCOMPARE(onEnteredRef.value,  QVariant("{ console.log('hello') }"));
@@ -1149,10 +1150,10 @@ void tst_QQmlEngineDebugService::setBindingForObject()
 
 void tst_QQmlEngineDebugService::resetBindingForObject()
 {
-    QmlDebugObjectReference rootObject = findRootObject();
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
     QVERIFY(rootObject.debugId != -1);
-    QmlDebugPropertyReference widthPropertyRef = findProperty(rootObject.properties, "width");
+    QQmlEngineDebugPropertyReference widthPropertyRef = findProperty(rootObject.properties, "width");
 
     bool success = false;
 
@@ -1188,7 +1189,7 @@ void tst_QQmlEngineDebugService::resetBindingForObject()
 
     rootObject = findRootObject();
     QVERIFY(!rootObject.className.isEmpty());
-    QmlDebugPropertyReference boldPropertyRef =  findProperty(rootObject.properties, "font.bold");
+    QQmlEngineDebugPropertyReference boldPropertyRef =  findProperty(rootObject.properties, "font.bold");
 
     QCOMPARE(boldPropertyRef.value.toBool(), false);
     QCOMPARE(boldPropertyRef.binding, QString());
@@ -1200,7 +1201,7 @@ void tst_QQmlEngineDebugService::setBindingInStates()
 
     const int sourceIndex = 3;
 
-    QmlDebugObjectReference obj = findRootObject(sourceIndex);
+    QQmlEngineDebugObjectReference obj = findRootObject(sourceIndex);
     QVERIFY(!obj.className.isEmpty());
     QVERIFY(obj.debugId != -1);
     QVERIFY(obj.children.count() >= 2);
@@ -1233,11 +1234,11 @@ void tst_QQmlEngineDebugService::setBindingInStates()
 
 
     // change the binding
-    QmlDebugObjectReference state = obj.children[1];
+    QQmlEngineDebugObjectReference state = obj.children[1];
     QCOMPARE(state.className, QString("State"));
     QVERIFY(state.children.count() > 0);
 
-    QmlDebugObjectReference propertyChange = state.children[0];
+    QQmlEngineDebugObjectReference propertyChange = state.children[0];
     QVERIFY(!propertyChange.className.isEmpty());
     QVERIFY(propertyChange.debugId != -1);
 
@@ -1316,43 +1317,43 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 {
     const int sourceIndex = 3;
 
-    QmlDebugObjectReference obj = findRootObject(sourceIndex, true);
+    QQmlEngineDebugObjectReference obj = findRootObject(sourceIndex, true);
     QVERIFY(!obj.className.isEmpty());
     QVERIFY(obj.debugId != -1);
     QVERIFY(obj.children.count() >= 2);
 
     // check state
-    QmlDebugObjectReference state = obj.children[1];
+    QQmlEngineDebugObjectReference state = obj.children[1];
     QCOMPARE(state.className, QString("State"));
     QVERIFY(state.children.count() > 0);
 
-    QmlDebugObjectReference propertyChange = state.children[0];
+    QQmlEngineDebugObjectReference propertyChange = state.children[0];
     QVERIFY(!propertyChange.className.isEmpty());
     QVERIFY(propertyChange.debugId != -1);
 
-    QmlDebugPropertyReference propertyChangeTarget = findProperty(propertyChange.properties,"target");
+    QQmlEngineDebugPropertyReference propertyChangeTarget = findProperty(propertyChange.properties,"target");
     QCOMPARE(propertyChangeTarget.objectDebugId, propertyChange.debugId);
 
-    QmlDebugObjectReference targetReference = qvariant_cast<QmlDebugObjectReference>(propertyChangeTarget.value);
+    QQmlEngineDebugObjectReference targetReference = qvariant_cast<QQmlEngineDebugObjectReference>(propertyChangeTarget.value);
     QVERIFY(!targetReference.className.isEmpty());
     QCOMPARE(targetReference.debugId, -1);
     QCOMPARE(targetReference.name, QString("<unnamed object>"));
 
     // check transition
-    QmlDebugObjectReference transition = obj.children[0];
+    QQmlEngineDebugObjectReference transition = obj.children[0];
     QCOMPARE(transition.className, QString("Transition"));
     QCOMPARE(findProperty(transition.properties,"from").value.toString(), QString("*"));
     QCOMPARE(findProperty(transition.properties,"to").value, findProperty(state.properties,"name").value);
     QVERIFY(transition.children.count() > 0);
 
-    QmlDebugObjectReference animation = transition.children[0];
+    QQmlEngineDebugObjectReference animation = transition.children[0];
     QVERIFY(!animation.className.isEmpty());
     QVERIFY(animation.debugId != -1);
 
-    QmlDebugPropertyReference animationTarget = findProperty(animation.properties,"target");
+    QQmlEngineDebugPropertyReference animationTarget = findProperty(animation.properties,"target");
     QCOMPARE(animationTarget.objectDebugId, animation.debugId);
 
-    targetReference = qvariant_cast<QmlDebugObjectReference>(animationTarget.value);
+    targetReference = qvariant_cast<QQmlEngineDebugObjectReference>(animationTarget.value);
     QVERIFY(!targetReference.className.isEmpty());
     QCOMPARE(targetReference.debugId, -1);
     QCOMPARE(targetReference.name, QString("<unnamed object>"));
@@ -1362,7 +1363,7 @@ void tst_QQmlEngineDebugService::queryObjectTree()
 }
 
 void tst_QQmlEngineDebugService::asynchronousCreate() {
-    QmlDebugObjectReference object;
+    QQmlEngineDebugObjectReference object;
     auto connection = connect(m_dbg, &QQmlEngineDebugClient::newObject, this, [&](int objectId) {
         object.debugId = objectId;
     });

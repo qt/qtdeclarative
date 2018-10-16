@@ -7,7 +7,6 @@ SOURCES += tst_qqmldebugjs.cpp
 
 INCLUDEPATH += ../shared
 include(../shared/debugutil.pri)
-include(../shared/qqmlenginedebugclient.pri)
 
 TESTDATA = data/*
 

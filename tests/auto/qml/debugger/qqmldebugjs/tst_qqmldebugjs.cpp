@@ -28,9 +28,9 @@
 
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
-#include "../shared/qqmlenginedebugclient.h"
 #include "../../../shared/util.h"
 
+#include <private/qqmlenginedebugclient_p.h>
 #include <private/qv4debugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 #include <private/qpacket_p.h>
@@ -836,7 +836,7 @@ void tst_QQmlDebugJS::evaluateInContext()
     QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
 
     QVERIFY(engineClient->engines().count());
-    engineClient->queryRootContexts(engineClient->engines()[0].debugId, &success);
+    engineClient->queryRootContexts(engineClient->engines()[0], &success);
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(engineClient.data(), SIGNAL(result())));
 
