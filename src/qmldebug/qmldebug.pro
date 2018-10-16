@@ -14,7 +14,8 @@ SOURCES += \
     qqmlprofilerevent.cpp \
     qqmlprofilereventlocation.cpp \
     qqmlprofilereventtype.cpp \
-    qqmlprofilertypedevent.cpp
+    qqmlprofilertypedevent.cpp \
+    qv4debugclient.cpp
 
 HEADERS += \
     qqmldebugclient_p.h \
@@ -32,4 +33,6 @@ HEADERS += \
     qqmlprofilereventreceiver_p.h \
     qqmlprofilereventtype_p.h \
     qqmlprofilertypedevent_p.h \
-    qqmlprofilerclientdefinitions_p.h
+    qqmlprofilerclientdefinitions_p.h \
+    qv4debugclient_p.h \
+    qv4debugclient_p_p.h
