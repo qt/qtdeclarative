@@ -26,12 +26,12 @@
 **
 ****************************************************************************/
 
-#include "qqmlinspectorclient.h"
 #include "../shared/debugutil_p.h"
 #include "../../../shared/util.h"
 
 #include <private/qqmldebugconnection_p.h>
 #include <private/qqmlenginedebugclient_p.h>
+#include <private/qqmlinspectorclient_p.h>
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>

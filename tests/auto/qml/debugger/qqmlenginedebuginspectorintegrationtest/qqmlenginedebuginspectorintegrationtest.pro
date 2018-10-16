@@ -6,7 +6,6 @@ osx:CONFIG -= app_bundle
 
 SOURCES += tst_qqmlenginedebuginspectorintegration.cpp
 
-include(../shared/qqmlinspectorclient.pri)
 include(../shared/debugutil.pri)
 
 TESTDATA = data/*
