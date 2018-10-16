@@ -133,6 +133,7 @@ public:
         beginResetModel();
         m_rows = 0;
         m_columns = 0;
+        modelData.clear();
         endResetModel();
     }
 

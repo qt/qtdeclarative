@@ -1466,6 +1466,7 @@ void tst_QQuickTableView::modelSignals()
     QCOMPARE(tableView->columns(), 10);
 
     model.clear();
+    model.setColumnCount(1);
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->columns(), 1);
