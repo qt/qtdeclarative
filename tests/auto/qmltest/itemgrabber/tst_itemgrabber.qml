@@ -49,8 +49,8 @@ Item {
             // imageOnDisk at (0, 0) - (100x100)
             compare(imageOnDisk.width, 100);
             compare(imageOnDisk.height, 100);
-            verify(image.pixel(0, 0) === Qt.rgba(1, 0, 0, 1)); // Use verify because compare doesn't support colors (QTBUG-34878)
-            verify(image.pixel(99, 99) === Qt.rgba(0, 0, 1, 1));
+            compare(image.pixel(0, 0), Qt.rgba(1, 0, 0, 1));
+            compare(image.pixel(99, 99), Qt.rgba(0, 0, 1, 1));
 
             // imageOnDiskSmall at (100, 0) - 50x50
             compare(imageOnDiskSmall.width, 50);
@@ -99,8 +99,8 @@ Item {
             // imageInCache at (0, 100) - 100x100
             compare(imageInCache.width, 100);
             compare(imageInCache.height, 100);
-            verify(image.pixel(0, 100) === Qt.rgba(1, 0, 0, 1));
-            verify(image.pixel(99, 199) === Qt.rgba(0, 0, 1, 1));
+            compare(image.pixel(0, 100), Qt.rgba(1, 0, 0, 1));
+            compare(image.pixel(99, 199), Qt.rgba(0, 0, 1, 1));
 
             // imageInCacheSmall at (100, 100) - 50x50
             compare(imageInCacheSmall.width, 50);
