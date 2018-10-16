@@ -230,6 +230,9 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         ++vCells;
     if (innerTargetRect.bottom() != targetRect.bottom())
         ++vCells;
+    if (hCells * vCells * 4 >= 0x10000)
+        qWarning("QTBUG-58924 - Too many tiles in QSGInternalImageNode, rendering will be partially missing.");
+
     QVarLengthArray<X, 32> xData(2 * hCells);
     QVarLengthArray<Y, 32> yData(2 * vCells);
     X *xs = xData.data();
