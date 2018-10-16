@@ -75,6 +75,7 @@ private slots:
     void addItem();
     void menuSeparator();
     void repeater();
+    void repeaterWithItemsBeforeAndAfter();
     void order();
     void popup();
     void actions();
@@ -591,7 +592,7 @@ void tst_QQuickMenu::repeater()
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = menu->itemAt(i);
-        QVERIFY(item);
+        QVERIFY2(item, qPrintable(QString::fromLatin1("Expected item to be at index %1").arg(i)));
         QCOMPARE(item->property("idx").toInt(), i);
 
         QQuickItem *repeaterItem = nullptr;
@@ -612,6 +613,35 @@ void tst_QQuickMenu::repeater()
         QQuickItem *repeaterItem = nullptr;
         QVERIFY(QMetaObject::invokeMethod(repeater, "itemAt", Q_RETURN_ARG(QQuickItem*, repeaterItem), Q_ARG(int, i)));
         QCOMPARE(item, repeaterItem);
+    }
+}
+
+void tst_QQuickMenu::repeaterWithItemsBeforeAndAfter()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("repeaterWithItemsBeforeAndAfter.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    menu->open();
+    QVERIFY(menu->isVisible());
+    waitForMenuListViewPolish(menu);
+
+    QStringList expectedItemTexts;
+    expectedItemTexts << QLatin1String("Before") << QLatin1String("Repeater Item #1")
+        << QLatin1String("Repeater Item #2") << QLatin1String("After");
+
+    for (int i = 0; i < expectedItemTexts.size(); ++i) {
+        const QString expectedText = expectedItemTexts.at(i);
+        QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(i));
+        QVERIFY(menuItem);
+        QCOMPARE(menuItem->text(), expectedText);
     }
 }
 
