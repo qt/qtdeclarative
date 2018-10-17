@@ -1515,6 +1515,17 @@ void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
 }
 
+int QQuickTableViewPrivate::resolveImportVersion()
+{
+    const auto data = QQmlData::get(q_func());
+    if (!data || !data->propertyCache)
+        return 0;
+
+    const auto cppMetaObject = data->propertyCache->firstCppMetaObject();
+    const auto qmlTypeView = QQmlMetaType::qmlType(cppMetaObject);
+    return qmlTypeView.minorVersion();
+}
+
 void QQuickTableViewPrivate::createWrapperModel()
 {
     Q_Q(QQuickTableView);
@@ -1524,6 +1535,7 @@ void QQuickTableViewPrivate::createWrapperModel()
     // common interface to any kind of model (js arrays, QAIM, number etc), and
     // help us create delegate instances.
     tableModel = new QQmlTableInstanceModel(qmlContext(q));
+    tableModel->useImportVersion(resolveImportVersion());
     model = tableModel;
 }
 

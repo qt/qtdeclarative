@@ -1008,6 +1008,11 @@ int QQmlAdaptorModel::indexAt(int row, int column) const
     return column * rowCount() + row;
 }
 
+void QQmlAdaptorModel::useImportVersion(int minorVersion)
+{
+    modelItemRevision = minorVersion;
+}
+
 void QQmlAdaptorModel::objectDestroyed(QObject *)
 {
     setModel(QVariant(), nullptr, nullptr);

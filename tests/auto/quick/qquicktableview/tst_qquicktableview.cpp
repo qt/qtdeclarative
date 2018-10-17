@@ -156,6 +156,7 @@ private slots:
     void checkRebuildViewportOnly();
     void useDelegateChooserWithoutDefault();
     void checkTableviewInsideAsyncLoader();
+    void checkThatRevisionedPropertiesCannotBeUsedInOldImports();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2002,6 +2003,17 @@ void tst_QQuickTableView::checkTableviewInsideAsyncLoader()
     QVERIFY(width > 0);
     QVERIFY(height > 0);
 };
+
+void tst_QQuickTableView::checkThatRevisionedPropertiesCannotBeUsedInOldImports()
+{
+    // Check that if you use a QQmlAdaptorModel together with a Repeater, the
+    // revisioned context properties 'row' and 'column' are not accessible.
+    LOAD_TABLEVIEW("checkmodelpropertyrevision.qml");
+    const int resolvedRow = view->rootObject()->property("resolvedDelegateRow").toInt();
+    const int resolvedColumn = view->rootObject()->property("resolvedDelegateColumn").toInt();
+    QCOMPARE(resolvedRow, 42);
+    QCOMPARE(resolvedColumn, 42);
+}
 
 QTEST_MAIN(tst_QQuickTableView)
 

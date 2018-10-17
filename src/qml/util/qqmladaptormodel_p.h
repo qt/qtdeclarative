@@ -130,6 +130,8 @@ public:
     int columnAt(int index) const;
     int indexAt(int row, int column) const;
 
+    void useImportVersion(int minorVersion);
+
     inline bool adaptsAim() const { return qobject_cast<QAbstractItemModel *>(object()); }
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }
     inline const QAbstractItemModel *aim() const { return static_cast<const QAbstractItemModel *>(object()); }
