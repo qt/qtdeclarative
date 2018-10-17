@@ -1,7 +1,7 @@
 {
     "Id": "shadow_angular_material",
     "Name": "Shadow values from Angular Material",
-    "QDocModule": "qtquickcontrols2",
+    "QDocModule": "qtquickcontrols",
     "QtUsage": "Used in the Material Style of Qt Quick Controls 2.",
     "Files": "ElevationEffect.qml",
     "Description": "Shadow values for the elevation effect.",

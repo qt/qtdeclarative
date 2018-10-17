@@ -26,6 +26,7 @@
 ****************************************************************************/
 /*!
     \example texteditor
+    \keyword Qt Quick Controls - Text Editor
     \title Qt Quick Controls 2 - Text Editor
     \ingroup qtquickcontrols2-examples
     \brief A QML app using Qt Quick Controls 2 and a C++ class to

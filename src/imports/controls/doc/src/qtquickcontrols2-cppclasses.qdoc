@@ -27,6 +27,7 @@
 
 /*!
     \module QtQuickControls2
+    \keyword Qt Quick Controls C++ Classes
     \title Qt Quick Controls 2 C++ Classes
     \ingroup modules
     \brief Provides classes for setting up the controls from C++.

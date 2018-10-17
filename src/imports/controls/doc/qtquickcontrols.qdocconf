@@ -1,36 +1,36 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 include(manifest-meta.qdocconf)
 
-project                 = QtQuickControls2
-description             = Qt Quick Controls 2 Reference Documentation
+project                 = QtQuickControls
+description             = Qt Quick Controls Reference Documentation
 version                 = $QT_VERSION
 
-qhp.projects            = QtQuickControls2
+qhp.projects            = QtQuickControls
 
-qhp.QtQuickControls2.file          = qtquickcontrols2.qhp
-qhp.QtQuickControls2.namespace     = org.qt-project.qtquickcontrols2.$QT_VERSION_TAG
-qhp.QtQuickControls2.virtualFolder = qtquickcontrols2
-qhp.QtQuickControls2.indexTitle    = Qt Quick Controls 2
-qhp.QtQuickControls2.indexRoot     =
+qhp.QtQuickControls.file          = qtquickcontrols.qhp
+qhp.QtQuickControls.namespace     = org.qt-project.qtquickcontrols.$QT_VERSION_TAG
+qhp.QtQuickControls.virtualFolder = qtquickcontrols
+qhp.QtQuickControls.indexTitle    = Qt Quick Controls
+qhp.QtQuickControls.indexRoot     =
 
-qhp.QtQuickControls2.filterAttributes                  = qtquickcontrols2 $QT_VERSION qtrefdoc
-qhp.QtQuickControls2.customFilters.Qt.name             = QtQuickControls2 $QT_VERSION
-qhp.QtQuickControls2.customFilters.Qt.filterAttributes = qtquickcontrols2 $QT_VERSION
+qhp.QtQuickControls.filterAttributes                  = qtquickcontrols $QT_VERSION qtrefdoc
+qhp.QtQuickControls.customFilters.Qt.name             = QtQuickControls $QT_VERSION
+qhp.QtQuickControls.customFilters.Qt.filterAttributes = qtquickcontrols $QT_VERSION
 
-qhp.QtQuickControls2.subprojects = qmltypes classes examples
-qhp.QtQuickControls2.subprojects.qmltypes.title = QML Types
-qhp.QtQuickControls2.subprojects.qmltypes.indexTitle = Qt Quick Controls 2 QML Types
-qhp.QtQuickControls2.subprojects.qmltypes.selectors = qmlclass
-qhp.QtQuickControls2.subprojects.qmltypes.sortPages = true
-qhp.QtQuickControls2.subprojects.classes.title = C++ Classes
-qhp.QtQuickControls2.subprojects.classes.indexTitle = Qt Quick Controls 2 C++ Classes
-qhp.QtQuickControls2.subprojects.classes.selectors = class fake:headerfile
-qhp.QtQuickControls2.subprojects.classes.sortPages = true
-qhp.QtQuickControls2.subprojects.examples.title = Examples
-qhp.QtQuickControls2.subprojects.examples.indexTitle = Qt Quick Controls 2 Examples
-qhp.QtQuickControls2.subprojects.examples.selectors = fake:example
+qhp.QtQuickControls.subprojects = qmltypes classes examples
+qhp.QtQuickControls.subprojects.qmltypes.title = QML Types
+qhp.QtQuickControls.subprojects.qmltypes.indexTitle = Qt Quick Controls QML Types
+qhp.QtQuickControls.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQuickControls.subprojects.qmltypes.sortPages = true
+qhp.QtQuickControls.subprojects.classes.title = C++ Classes
+qhp.QtQuickControls.subprojects.classes.indexTitle = Qt Quick Controls C++ Classes
+qhp.QtQuickControls.subprojects.classes.selectors = class fake:headerfile
+qhp.QtQuickControls.subprojects.classes.sortPages = true
+qhp.QtQuickControls.subprojects.examples.title = Examples
+qhp.QtQuickControls.subprojects.examples.indexTitle = Qt Quick Controls Examples
+qhp.QtQuickControls.subprojects.examples.selectors = fake:example
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols qtquickextras qmake qtsql qtwidgets qtlabscalendar qtlabsplatform
+depends = qtcore qtgui qtdoc qtqml qtquick qtquickdialogs qtquickcontrols1 qtquickextras qmake qtsql qtwidgets qtlabscalendar qtlabsplatform
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
@@ -41,7 +41,7 @@ exampledirs += ../../../../examples/quickcontrols2 \
 
 examples.fileextensions += "*.conf"
 
-examplesinstallpath = quickcontrols2
+examplesinstallpath = quickcontrols
 
 headerdirs += ../../../quicktemplates2 \
               ../../../quickcontrols2
@@ -58,11 +58,11 @@ sources.fileextensions = "*.c++ *.cc *.cpp *.cxx *.mm *.qdoc"
 imagedirs += images \
              ..
 
-navigation.landingpage  = "Qt Quick Controls 2"
-navigation.qmltypespage = "Qt Quick Controls 2 QML Types"
-navigation.cppclassespage = "Qt Quick Controls 2 C++ Classes"
+navigation.landingpage  = "Qt Quick Controls"
+navigation.qmltypespage = "Qt Quick Controls QML Types"
+navigation.cppclassespage = "Qt Quick Controls C++ Classes"
 
-tagfile                 = qtquickcontrols2.tags
+tagfile                 = qtquickcontrols.tags
 
 # \styleimport {QtQuick.Controls.Universal 2.0}
 macro.styleimport.HTML = "<table class=\"alignedsummary\"><tbody><tr><td class=\"memItemLeft rightAlign topAlign\"> Import Statement:</td><td class=\"memItemRight bottomAlign\"> import \1</td></tr><tr><td class=\"memItemLeft rightAlign topAlign\"> Since:</td><td class=\"memItemRight bottomAlign\"> \2</td></tr></tbody></table>"
