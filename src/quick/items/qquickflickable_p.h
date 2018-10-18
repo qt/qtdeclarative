@@ -267,10 +267,11 @@ Q_SIGNALS:
     Q_REVISION(9) void horizontalOvershootChanged();
     Q_REVISION(9) void verticalOvershootChanged();
 
-    Q_REVISION(12) void atXEndChanged();
-    Q_REVISION(12) void atYEndChanged();
-    Q_REVISION(12) void atXBeginningChanged();
-    Q_REVISION(12) void atYBeginningChanged();
+    // The next four signals should be marked as Q_REVISION(12). See QTBUG-71243
+    void atXEndChanged();
+    void atYEndChanged();
+    void atXBeginningChanged();
+    void atYBeginningChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
