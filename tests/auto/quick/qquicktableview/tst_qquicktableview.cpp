@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+#include <QtQuickTest/quicktest.h>
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquicktableview_p.h>
@@ -79,8 +80,8 @@ Q_DECLARE_METATYPE(QMarginsF);
     DECLARE_TABLEVIEW_VARIABLES
 
 #define WAIT_UNTIL_POLISHED \
-    QVERIFY(tableViewPrivate->polishScheduled); \
-    QTRY_VERIFY(!tableViewPrivate->polishScheduled)
+    QVERIFY(QQuickTest::qIsPolishScheduled(tableView)); \
+    QVERIFY(QQuickTest::qWaitForItemPolished(tableView))
 
 class tst_QQuickTableView : public QQmlDataTest
 {

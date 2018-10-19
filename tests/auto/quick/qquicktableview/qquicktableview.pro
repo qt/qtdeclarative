@@ -1,4 +1,5 @@
 CONFIG += testcase
+QT += qmltest
 TARGET = tst_qquicktableview
 macos:CONFIG -= app_bundle
 
