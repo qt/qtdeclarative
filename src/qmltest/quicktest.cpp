@@ -48,6 +48,8 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
 #include <QtQml/qqmlpropertymap.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/qquickitem.h>
 #include <QtGui/qopengl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
@@ -71,6 +73,22 @@
 #endif
 
 QT_BEGIN_NAMESPACE
+
+/*!
+    \fn bool qIsPolishScheduled(const QQuickItem *item)
+    \fn relates QtQuickTest
+    \since 5.13
+
+    Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
+    on \a item since the last call to \l {QQuickItem::}{polish()},
+    otherwise returns \c false.
+
+    \sa QQuickItem::polish(), QQuickItem::updatePolish()
+*/
+bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
+{
+    return QQuickItemPrivate::get(item)->polishScheduled;
+}
 
 class QTestRootObject : public QObject
 {

@@ -45,6 +45,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickItem;
+
 Q_QUICK_TEST_EXPORT int quick_test_main(int argc, char **argv, const char *name, const char *sourceDir);
 Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup);
 
@@ -97,6 +99,10 @@ Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const 
     }
 
 #endif
+
+namespace QQuickTest {
+Q_QUICK_TEST_EXPORT bool qIsPolishScheduled(const QQuickItem *item);
+}
 
 QT_END_NAMESPACE
 

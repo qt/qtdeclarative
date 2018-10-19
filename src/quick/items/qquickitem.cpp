@@ -4444,6 +4444,8 @@ void QQuickItem::update()
 
     When the scene graph processes the request, it will call updatePolish()
     on this item.
+
+    \sa updatePolish(), QQuickTest::qIsPolishScheduled()
   */
 void QQuickItem::polish()
 {

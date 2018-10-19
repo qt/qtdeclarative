@@ -4,7 +4,7 @@ QMAKE_DOCS = $$PWD/doc/qtqmltest.qdocconf
 
 DEFINES += QT_NO_URL_CAST_FROM_STRING QT_NO_FOREACH
 QT = core testlib-private
-QT_PRIVATE = quick qml-private  gui core-private gui-private
+QT_PRIVATE = quick quick-private qml-private  gui core-private gui-private
 
 # Testlib is only a private dependency, which results in our users not
 # inheriting testlibs's MODULE_CONFIG transitively. Make it explicit.
