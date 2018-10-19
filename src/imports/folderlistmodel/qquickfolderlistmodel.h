@@ -81,7 +81,7 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
 
 //![abslistmodel]
 public:
-    QQuickFolderListModel(QObject *parent = 0);
+    QQuickFolderListModel(QObject *parent = nullptr);
     ~QQuickFolderListModel();
 
     enum Roles {
