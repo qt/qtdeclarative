@@ -76,11 +76,12 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(bool caseSensitive READ caseSensitive WRITE setCaseSensitive REVISION 2)
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION 11)
+    Q_PROPERTY(bool sortCaseSensitive READ sortCaseSensitive WRITE setSortCaseSensitive REVISION 12)
 //![class props]
 
 //![abslistmodel]
 public:
-    QQuickFolderListModel(QObject *parent = 0);
+    QQuickFolderListModel(QObject *parent = nullptr);
     ~QQuickFolderListModel();
 
     enum Roles {
@@ -142,6 +143,8 @@ public:
     enum Status { Null, Ready, Loading };
     Q_ENUM(Status)
     Status status() const;
+    bool sortCaseSensitive() const;
+    void setSortCaseSensitive(bool on);
 //![prop funcs]
 
     Q_INVOKABLE bool isFolder(int index) const;

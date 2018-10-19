@@ -65,6 +65,9 @@ public:
 
         // revision in Qt 5.11: added status property
         qmlRegisterType<QQuickFolderListModel,11>(uri, 2, 11, "FolderListModel");
+
+        // revision in Qt 5.12: added sortCaseSensitive property
+        qmlRegisterType<QQuickFolderListModel,12>(uri, 2, 12, "FolderListModel");
     }
 };
 //![class decl]

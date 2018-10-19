@@ -52,6 +52,7 @@
             "section": "QML",
             "condition": [
                 "features.commandlineparser",
+                "features.filesystemwatcher",
                 "features.qml-network && features.localserver",
                 "features.process",
                 "features.qml-debug"

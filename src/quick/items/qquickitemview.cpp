@@ -1185,6 +1185,7 @@ void QQuickItemView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
 {
     Q_D(QQuickItemView);
     if (reset) {
+        cancelFlick();
         if (d->transitioner)
             d->transitioner->setPopulateTransitionEnabled(true);
         d->moveReason = QQuickItemViewPrivate::SetIndex;

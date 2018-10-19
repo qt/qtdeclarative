@@ -990,7 +990,7 @@ int QQmlAdaptorModel::rowCount() const
 
 int QQmlAdaptorModel::columnCount() const
 {
-    return qMax(isValid() ? 1 : 0, accessors->columnCount(*this));
+    return qMax(0, accessors->columnCount(*this));
 }
 
 int QQmlAdaptorModel::rowAt(int index) const

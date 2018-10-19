@@ -552,6 +552,7 @@ private:
     friend class QQmlScriptBlob;
 
     void initialize(QQmlEngine *);
+    QQmlContextData *qmlContextDataForContext(QQmlContextData *parentQmlContextData);
 
     bool m_loaded;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;

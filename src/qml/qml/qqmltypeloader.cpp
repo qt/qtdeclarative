@@ -2905,6 +2905,55 @@ void QQmlScriptData::initialize(QQmlEngine *engine)
     addref();
 }
 
+QQmlContextData *QQmlScriptData::qmlContextDataForContext(QQmlContextData *parentQmlContextData)
+{
+    Q_ASSERT(parentQmlContextData && parentQmlContextData->engine);
+
+    if (m_precompiledScript->isESModule())
+        return nullptr;
+
+    auto qmlContextData = new QQmlContextData();
+
+    qmlContextData->isInternal = true;
+    qmlContextData->isJSContext = true;
+    if (m_precompiledScript->isSharedLibrary())
+        qmlContextData->isPragmaLibraryContext = true;
+    else
+        qmlContextData->isPragmaLibraryContext = parentQmlContextData->isPragmaLibraryContext;
+    qmlContextData->baseUrl = url;
+    qmlContextData->baseUrlString = urlString;
+
+    // For backward compatibility, if there are no imports, we need to use the
+    // imports from the parent context.  See QTBUG-17518.
+    if (!typeNameCache->isEmpty()) {
+        qmlContextData->imports = typeNameCache;
+    } else if (!m_precompiledScript->isSharedLibrary()) {
+        qmlContextData->imports = parentQmlContextData->imports;
+        qmlContextData->importedScripts = parentQmlContextData->importedScripts;
+    }
+
+    if (!m_precompiledScript->isSharedLibrary()) {
+        qmlContextData->setParent(parentQmlContextData);
+    } else {
+        qmlContextData->engine = parentQmlContextData->engine; // Fix for QTBUG-21620
+    }
+
+    QV4::ExecutionEngine *v4 = parentQmlContextData->engine->handle();
+    QV4::Scope scope(v4);
+    QV4::ScopedObject scriptsArray(scope);
+    if (qmlContextData->importedScripts.isNullOrUndefined()) {
+        scriptsArray = v4->newArrayObject(scripts.count());
+        qmlContextData->importedScripts.set(v4, scriptsArray);
+    } else {
+        scriptsArray = qmlContextData->importedScripts.valueRef();
+    }
+    QV4::ScopedValue v(scope);
+    for (int ii = 0; ii < scripts.count(); ++ii)
+        scriptsArray->put(ii, (v = scripts.at(ii)->scriptData()->scriptValueForContext(qmlContextData)));
+
+    return qmlContextData;
+}
+
 QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentCtxt)
 {
     if (m_loaded)
@@ -2913,7 +2962,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     Q_ASSERT(parentCtxt && parentCtxt->engine);
     QV4::ExecutionEngine *v4 = parentCtxt->engine->handle();
 
-    if (m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsESModule) {
+    if (m_precompiledScript->isESModule()) {
         m_loaded = true;
 
         m_value.set(v4, m_precompiledScript->instantiate(v4));
@@ -2926,54 +2975,14 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
     QV4::Scope scope(v4);
 
-    bool shared = m_precompiledScript->unitData()->flags & QV4::CompiledData::Unit::IsSharedLibrary;
-
-    QQmlContextData *effectiveCtxt = parentCtxt;
-    if (shared)
-        effectiveCtxt = nullptr;
-
     // Create the script context if required
-    QQmlContextDataRef ctxt(new QQmlContextData);
-    ctxt->isInternal = true;
-    ctxt->isJSContext = true;
-    if (shared)
-        ctxt->isPragmaLibraryContext = true;
-    else
-        ctxt->isPragmaLibraryContext = parentCtxt->isPragmaLibraryContext;
-    ctxt->baseUrl = url;
-    ctxt->baseUrlString = urlString;
-
-    // For backward compatibility, if there are no imports, we need to use the
-    // imports from the parent context.  See QTBUG-17518.
-    if (!typeNameCache->isEmpty()) {
-        ctxt->imports = typeNameCache;
-    } else if (effectiveCtxt) {
-        ctxt->imports = effectiveCtxt->imports;
-        ctxt->importedScripts = effectiveCtxt->importedScripts;
-    }
-
-    if (effectiveCtxt) {
-        ctxt->setParent(effectiveCtxt);
-    } else {
-        ctxt->engine = parentCtxt->engine; // Fix for QTBUG-21620
-    }
-
-    QV4::ScopedObject scriptsArray(scope);
-    if (ctxt->importedScripts.isNullOrUndefined()) {
-        scriptsArray = v4->newArrayObject(scripts.count());
-        ctxt->importedScripts.set(v4, scriptsArray);
-    } else {
-        scriptsArray = ctxt->importedScripts.valueRef();
-    }
-    QV4::ScopedValue v(scope);
-    for (int ii = 0; ii < scripts.count(); ++ii)
-        scriptsArray->put(ii, (v = scripts.at(ii)->scriptData()->scriptValueForContext(ctxt)));
+    QQmlContextDataRef ctxt(qmlContextDataForContext(parentCtxt));
 
     if (!hasEngine())
         initialize(parentCtxt->engine);
 
     if (!m_program) {
-        if (shared)
+        if (m_precompiledScript->isSharedLibrary())
             m_loaded = true;
         return QV4::Encode::undefined();
     }
@@ -2990,7 +2999,7 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parent
     }
 
     QV4::ScopedValue retval(scope, qmlContext->d()->qml());
-    if (shared) {
+    if (m_precompiledScript->isSharedLibrary()) {
         m_value.set(scope.engine, retval);
         m_loaded = true;
     }

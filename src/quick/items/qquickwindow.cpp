@@ -774,6 +774,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
 
 void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &ids)
 {
+    QQuickPointerEvent *ev = nullptr;
     for (int i = 0; i < ids.count(); ++i) {
         int id = ids.at(i);
         if (Q_UNLIKELY(id < 0)) {
@@ -793,15 +794,26 @@ void QQuickWindowPrivate::grabTouchPoints(QObject *grabber, const QVector<int> &
             qCDebug(DBG_MOUSE_TARGET) << "grabTouchPoints: mouse grabber changed due to grabTouchPoints:" << touchMouseGrabber << "-> null";
         }
 
+        // optimization to avoid the loop over devices below:
+        // all ids are probably from the same event, so we don't have to search
+        if (ev) {
+            auto point = ev->pointById(id);
+            if (point && point->exclusiveGrabber() != grabber) {
+                point->setExclusiveGrabber(grabber);
+                continue; // next id in the ids loop
+            }
+        }
+        // search all devices for a QQuickPointerEvent instance that is delivering the point with id
         const auto touchDevices = QQuickPointerDevice::touchDevices();
         for (auto device : touchDevices) {
-            auto point = pointerEventInstance(device)->pointById(id);
-            if (!point)
-                continue;
-            QObject *oldGrabber = point->exclusiveGrabber();
-            if (oldGrabber == grabber)
-                continue;
-            point->setExclusiveGrabber(grabber);
+            QQuickPointerEvent *pev = pointerEventInstance(device);
+            auto point = pev->pointById(id);
+            if (point) {
+                ev = pev;
+                if (point->exclusiveGrabber() != grabber)
+                    point->setExclusiveGrabber(grabber);
+                break; // out of touchDevices loop
+            }
         }
     }
 }

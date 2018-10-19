@@ -68,14 +68,13 @@ public:
         return { {Qt::DisplayRole, "display"} };
     }
 
-    Q_INVOKABLE void setModelData(const QPoint &cell, const QSize &span, const QString &prefix)
+    Q_INVOKABLE void setModelData(const QPoint &cell, const QSize &span, const QString &string)
     {
         for (int c = 0; c < span.width(); ++c) {
             for (int r = 0; r < span.height(); ++r) {
                 const int changedRow = cell.y() + r;
                 const int changedColumn = cell.x() + c;
                 const int serializedIndex = changedRow + (changedColumn * m_rows);
-                const QString string = prefix + QStringLiteral("%1,%2").arg(changedColumn).arg(changedRow);
                 modelData.insert(serializedIndex, string);
             }
         }
@@ -129,10 +128,22 @@ public:
         return true;
     }
 
+    void swapRows(int row1, int row2)
+    {
+        layoutAboutToBeChanged();
+        Q_ASSERT(modelData.contains(row1));
+        Q_ASSERT(modelData.contains(row2));
+        const QString tmp = modelData[row1];
+        modelData[row1] = modelData[row2];
+        modelData[row2] = tmp;
+        layoutChanged();
+    }
+
     void clear() {
         beginResetModel();
         m_rows = 0;
         m_columns = 0;
+        modelData.clear();
         endResetModel();
     }
 

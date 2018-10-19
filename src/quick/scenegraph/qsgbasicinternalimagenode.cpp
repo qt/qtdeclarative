@@ -484,7 +484,7 @@ void QSGBasicInternalImageNode::updateGeometry()
         int hTiles = ceilRight - floorLeft;
         int vTiles = ceilBottom - floorTop;
 
-        bool hasTiles = hTiles != 1 || vTiles != 1;
+        bool hasTiles = hTiles > 1 || vTiles > 1;
         bool fullTexture = innerSourceRect == QRectF(0, 0, 1, 1);
 
         // An image can be rendered as a single quad if:

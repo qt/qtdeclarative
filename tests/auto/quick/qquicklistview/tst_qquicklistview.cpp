@@ -132,6 +132,8 @@ private slots:
     void sectionPropertyChange();
     void sectionDelegateChange();
     void sectionsItemInsertion();
+    void sectionsSnap_data();
+    void sectionsSnap();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
     void positionViewAtIndex();
@@ -2665,6 +2667,62 @@ void tst_QQuickListView::sectionsItemInsertion()
         QCOMPARE(item->property("nextSection").toString(), i < 14 ? QLatin1String("0") : QLatin1String("1"));
         QCOMPARE(item->property("prevSection").toString(), i > 10 ? QLatin1String("0") : QLatin1String("A"));
     }
+}
+
+void tst_QQuickListView::sectionsSnap_data()
+{
+    QTest::addColumn<QQuickListView::SnapMode>("snapMode");
+    QTest::addColumn<QPoint>("point");
+    QTest::addColumn<int>("duration");
+
+    QTest::newRow("drag") << QQuickListView::NoSnap << QPoint(100, 45) << 500;
+    QTest::newRow("flick") << QQuickListView::SnapOneItem << QPoint(100, 75) << 50;
+}
+
+void tst_QQuickListView::sectionsSnap()
+{
+    QFETCH(QQuickListView::SnapMode, snapMode);
+    QFETCH(QPoint, point);
+    QFETCH(int, duration);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("sectionSnapping.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listview != nullptr);
+    listview->setSnapMode(snapMode);
+
+    QTRY_COMPARE(QQuickItemPrivate::get(listview)->polishScheduled, false);
+    QTRY_COMPARE(listview->currentIndex(), 0);
+    QCOMPARE(listview->contentY(), qreal(-50));
+
+    // move down
+    flick(window.data(), QPoint(100, 100), point, duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(0));
+
+    flick(window.data(), QPoint(100, 100), point, duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(50));
+
+    flick(window.data(), QPoint(100, 100), point, duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(150));
+
+    // move back up
+    flick(window.data(), point, QPoint(100, 100), duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(50));
+
+    flick(window.data(), point, QPoint(100, 100), duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(0));
+
+    flick(window.data(), point, QPoint(100, 100), duration);
+    QTRY_VERIFY(!listview->isMovingVertically());
+    QCOMPARE(listview->contentY(), qreal(-50));
 }
 
 void tst_QQuickListView::currentIndex_delayedItemCreation()
