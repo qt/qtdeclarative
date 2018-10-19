@@ -112,11 +112,11 @@ bool StringObject::virtualDeleteProperty(Managed *m, PropertyKey id)
 struct StringObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     ~StringObjectOwnPropertyKeyIterator() override = default;
-    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+    PropertyKey next(const QV4::Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
 
 };
 
-PropertyKey StringObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+PropertyKey StringObjectOwnPropertyKeyIterator::next(const QV4::Object *o, Property *pd, PropertyAttributes *attrs)
 {
     const StringObject *s = static_cast<const StringObject *>(o);
     uint slen = s->d()->string->toQString().length();
