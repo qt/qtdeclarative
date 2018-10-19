@@ -102,6 +102,7 @@ Q_QUICK_TEST_EXPORT int quick_test_main_with_setup(int argc, char **argv, const 
 
 namespace QQuickTest {
 Q_QUICK_TEST_EXPORT bool qIsPolishScheduled(const QQuickItem *item);
+Q_QUICK_TEST_EXPORT bool qWaitForItemPolished(const QQuickItem *item, int timeout = 5000);
 }
 
 QT_END_NAMESPACE

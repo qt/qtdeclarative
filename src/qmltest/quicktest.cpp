@@ -44,6 +44,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
@@ -88,6 +90,31 @@ QT_BEGIN_NAMESPACE
 bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
 {
     return QQuickItemPrivate::get(item)->polishScheduled;
+}
+
+/*!
+    \fn bool qWaitForItemPolished(const QQuickItem *item, int timeout = 5000)
+    \relates QtQuickTest
+    \since 5.13
+
+    Waits for \a timeout milliseconds or until
+    \l {QQuickItem::}{updatePolish()} has been called on \a item.
+
+    Returns \c true if \c updatePolish() was called on \a item within
+    \a timeout milliseconds, otherwise returns \c false.
+
+    To use this function, add the following line to your test's \c .pro file:
+
+    \code
+        QT += qmltest
+    \endcode
+
+    \sa QQuickItem::polish(), QQuickItem::updatePolish(),
+        QQuickTest::qIsPolishScheduled()
+*/
+bool QQuickTest::qWaitForItemPolished(const QQuickItem *item, int timeout)
+{
+    return QTest::qWaitFor([&]() { return !QQuickItemPrivate::get(item)->polishScheduled; }, timeout);
 }
 
 class QTestRootObject : public QObject
