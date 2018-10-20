@@ -76,6 +76,25 @@ QT_BEGIN_NAMESPACE
         {Focus Management in Qt Quick Controls 2}
 */
 
+void QQuickMenuBarPrivate::createItems()
+{
+    // removeItem() will remove stuff from contentData, so we have to make a copy of it.
+    const auto originalContentData = QQuickContainerPrivate::contentData;
+    // Sanity check that there aren't any items we don't know about.
+    Q_ASSERT(contentModel->count() == 0);
+
+    for (QObject *object : originalContentData) {
+        if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(object)) {
+            // It's a QQuickMenu; create a QQuickMenuBarItem for it.
+            QQuickItem *menuItem = createItem(menu);
+            addObject(menuItem);
+        } else if (qobject_cast<QQuickMenuBarItem *>(object)) {
+            addObject(object);
+        }
+        // If it's neither, skip it because we don't care about it.
+    }
+}
+
 QQuickItem *QQuickMenuBarPrivate::beginCreateItem()
 {
     Q_Q(QQuickMenuBar);
@@ -254,9 +273,18 @@ void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
     QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
-    if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
-        obj = QQuickMenuBarPrivate::get(menuBar)->createItem(menu);
-    QQuickContainerPrivate::contentData_append(prop, obj);
+    QQuickMenuBarPrivate *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    if (!menuBarPrivate->componentComplete) {
+        // Don't add items until we're complete, as the delegate could change in the meantime.
+        // We'll add it to contentData and create it when we're complete.
+        menuBarPrivate->QQuickContainerPrivate::contentData.append(obj);
+        return;
+    }
+
+    if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj)) {
+        QQuickItem *menuItem = menuBarPrivate->createItem(menu);
+        menuBarPrivate->addObject(menuItem);
+    }
 }
 
 void QQuickMenuBarPrivate::menus_append(QQmlListProperty<QQuickMenu> *prop, QQuickMenu *obj)
@@ -452,6 +480,13 @@ QQmlListProperty<QObject> QQuickMenuBarPrivate::contentData()
                                      QQuickContainerPrivate::contentData_count,
                                      QQuickContainerPrivate::contentData_at,
                                      QQuickContainerPrivate::contentData_clear);
+}
+
+void QQuickMenuBar::componentComplete()
+{
+    Q_D(QQuickMenuBar);
+    QQuickContainer::componentComplete();
+    d->createItems();
 }
 
 bool QQuickMenuBar::eventFilter(QObject *object, QEvent *event)

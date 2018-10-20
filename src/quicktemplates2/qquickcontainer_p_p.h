@@ -73,6 +73,8 @@ public:
     void removeItem(int index, QQuickItem *item);
     void reorderItems();
 
+    void addObject(QObject *obj);
+
     void _q_currentIndexChanged();
 
     void itemChildAdded(QQuickItem *item, QQuickItem *child) override;
