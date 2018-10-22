@@ -95,7 +95,7 @@ public:
 class QML_PARSER_EXPORT DiagnosticMessage
 {
 public:
-    enum Kind { Warning, Error };
+    enum Kind { Hint, Warning, Error };
 
     DiagnosticMessage() {}
 
