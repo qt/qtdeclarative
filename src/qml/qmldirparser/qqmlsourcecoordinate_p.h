@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,51 +37,36 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLERROR_H
-#define QQMLERROR_H
+#ifndef QQMLSOURCECOORDINATE_P_H
+#define QQMLSOURCECOORDINATE_P_H
 
-#include <QtQml/qtqmlglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <QtCore/qurl.h>
-#include <QtCore/qstring.h>
+#include <QtCore/qglobal.h>
+
+#include <climits>
 
 QT_BEGIN_NAMESPACE
 
-// ### Qt 6: should this be called QQmlMessage, since it can have a message type?
-class QDebug;
-class QQmlErrorPrivate;
-class Q_QML_EXPORT QQmlError
+inline quint16 qmlSourceCoordinate(int n)
 {
-public:
-    QQmlError();
-    QQmlError(const QQmlError &);
-    QQmlError &operator=(const QQmlError &);
-    ~QQmlError();
+    return (n > 0 && n <= static_cast<int>(USHRT_MAX)) ? static_cast<quint16>(n) : 0;
+}
 
-    bool isValid() const;
-
-    QUrl url() const;
-    void setUrl(const QUrl &);
-    QString description() const;
-    void setDescription(const QString &);
-    int line() const;
-    void setLine(int);
-    int column() const;
-    void setColumn(int);
-    QObject *object() const;
-    void setObject(QObject *);
-    QtMsgType messageType() const;
-    void setMessageType(QtMsgType messageType);
-
-    QString toString() const;
-private:
-    QQmlErrorPrivate *d;
-};
-
-QDebug Q_QML_EXPORT operator<<(QDebug debug, const QQmlError &error);
-
-Q_DECLARE_TYPEINFO(QQmlError, Q_MOVABLE_TYPE);
+inline int qmlSourceCoordinate(quint16 n)
+{
+    return (n == 0) ? -1 : static_cast<int>(n);
+}
 
 QT_END_NAMESPACE
 
-#endif // QQMLERROR_H
+#endif // QQMLSOURCECOORDINATE_P_H

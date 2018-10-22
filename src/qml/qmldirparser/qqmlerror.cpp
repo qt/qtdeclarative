@@ -38,15 +38,17 @@
 ****************************************************************************/
 
 #include "qqmlerror.h"
-#include "qqmlglobal_p.h"
+#include "qqmlsourcecoordinate_p.h"
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qpointer.h>
 
-#include <private/qv4errorobject_p.h>
+#ifndef QT_NO_QOBJECT
+#include <QtCore/qobject.h>
+#include <QtCore/qpointer.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -85,11 +87,13 @@ public:
     quint16 line;
     quint16 column;
     QtMsgType messageType;
+#ifndef QT_NO_QOBJECT
     QPointer<QObject> object;
+#endif
 };
 
 QQmlErrorPrivate::QQmlErrorPrivate()
-: line(0), column(0), messageType(QtMsgType::QtWarningMsg), object()
+: line(0), column(0), messageType(QtMsgType::QtWarningMsg)
 {
 }
 
@@ -125,7 +129,9 @@ QQmlError &QQmlError::operator=(const QQmlError &other)
         d->description = other.d->description;
         d->line = other.d->line;
         d->column = other.d->column;
+#ifndef QT_NO_QOBJECT
         d->object = other.d->object;
+#endif
         d->messageType = other.d->messageType;
     }
     return *this;
@@ -227,6 +233,7 @@ void QQmlError::setColumn(int column)
     d->column = qmlSourceCoordinate(column);
 }
 
+#ifndef QT_NO_QOBJECT
 /*!
     Returns the nearest object where this error occurred.
     Exceptions in bound property expressions set this to the object
@@ -249,6 +256,7 @@ void QQmlError::setObject(QObject *object)
         d = new QQmlErrorPrivate;
     d->object = object;
 }
+#endif // QT_NO_QOBJECT
 
 /*!
     \since 5.9

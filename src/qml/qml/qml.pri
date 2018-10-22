@@ -18,7 +18,6 @@ SOURCES += \
     $$PWD/qqmlparserstatus.cpp \
     $$PWD/qqmltypeloader.cpp \
     $$PWD/qqmlinfo.cpp \
-    $$PWD/qqmlerror.cpp \
     $$PWD/qqmlvaluetype.cpp \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
@@ -44,7 +43,6 @@ SOURCES += \
     $$PWD/qqmltypewrapper.cpp \
     $$PWD/qqmlfileselector.cpp \
     $$PWD/qqmlobjectcreator.cpp \
-    $$PWD/qqmldirparser.cpp \
     $$PWD/qqmldelayedcallqueue.cpp \
     $$PWD/qqmlloggingcategory.cpp
 
@@ -81,7 +79,6 @@ HEADERS += \
     $$PWD/qqmllist.h \
     $$PWD/qqmllist_p.h \
     $$PWD/qqmldata_p.h \
-    $$PWD/qqmlerror.h \
     $$PWD/qqmlvaluetype_p.h \
     $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlpropertycache_p.h \
@@ -112,7 +109,6 @@ HEADERS += \
     $$PWD/qqmlfileselector_p.h \
     $$PWD/qqmlfileselector.h \
     $$PWD/qqmlobjectcreator_p.h \
-    $$PWD/qqmldirparser_p.h \
     $$PWD/qqmldelayedcallqueue_p.h \
     $$PWD/qqmlloggingcategory_p.h
 

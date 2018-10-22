@@ -174,16 +174,6 @@ T qmlobject_cast(QObject *object)
         return 0;
 }
 
-inline quint16 qmlSourceCoordinate(int n)
-{
-    return (n > 0 && n <= static_cast<int>(USHRT_MAX)) ? static_cast<quint16>(n) : 0;
-}
-
-inline int qmlSourceCoordinate(quint16 n)
-{
-    return (n == 0) ? -1 : static_cast<int>(n);
-}
-
 #define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
 do { \
     QObject *sender = (Sender); \

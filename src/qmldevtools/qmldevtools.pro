@@ -17,5 +17,6 @@ include(../qml/parser/parser.pri)
 include(../qml/jsruntime/jsruntime.pri)
 include(../qml/compiler/compiler.pri)
 include(../qml/memory/memory.pri)
+include(../qml/qmldirparser/qmldirparser.pri)
 
 load(qt_module)

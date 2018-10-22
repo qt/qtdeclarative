@@ -367,12 +367,10 @@ QList<QQmlDirParser::Script> QQmlDirParser::scripts() const
     return _scripts;
 }
 
-#ifdef QT_CREATOR
 QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
 {
     return _typeInfos;
 }
-#endif
 
 bool QQmlDirParser::designerSupported() const
 {

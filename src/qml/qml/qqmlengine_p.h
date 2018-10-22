@@ -64,7 +64,6 @@
 #include "qqmlproperty_p.h"
 #include "qqmlpropertycache_p.h"
 #include "qqmlmetatype_p.h"
-#include "qqmldirparser_p.h"
 #include <private/qintrusivelist_p.h>
 #include <private/qrecyclepool_p.h>
 #include <private/qfieldlist_p.h>
@@ -80,6 +79,7 @@
 
 #include <private/qv8engine_p.h>
 #include <private/qjsengine_p.h>
+#include <private/qqmldirparser_p.h>
 
 QT_BEGIN_NAMESPACE
 

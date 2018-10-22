@@ -122,7 +122,6 @@ public:
     QList<Plugin> plugins() const;
     bool designerSupported() const;
 
-#ifdef QT_CREATOR
     struct TypeInfo
     {
         TypeInfo() {}
@@ -133,7 +132,6 @@ public:
     };
 
     QList<TypeInfo> typeInfos() const;
-#endif
 
     QString className() const;
 
@@ -149,9 +147,7 @@ private:
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported;
-#ifdef QT_CREATOR
     QList<TypeInfo> _typeInfos;
-#endif
     QString _className;
 };
 
