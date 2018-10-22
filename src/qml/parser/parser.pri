@@ -8,7 +8,8 @@ HEADERS += \
     $$PWD/qqmljsglobal_p.h \
     $$PWD/qqmljskeywords_p.h \
     $$PWD/qqmljsengine_p.h \
-    $$PWD/qqmljsglobal_p.h
+    $$PWD/qqmljsglobal_p.h \
+    $$PWD/qqmljssourcelocation_p.h
 
 SOURCES += \
     $$PWD/qqmljsast.cpp \
