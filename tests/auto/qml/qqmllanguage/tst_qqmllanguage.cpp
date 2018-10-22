@@ -298,6 +298,8 @@ private slots:
 
     void retrieveQmlTypeId();
 
+    void polymorphicFunctionLookup();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5047,6 +5049,17 @@ void tst_qqmllanguage::retrieveQmlTypeId()
     QVERIFY(qmlTypeId("Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyTypeObjectSingleton") >= 0);
+}
+
+void tst_qqmllanguage::polymorphicFunctionLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("polymorphicFunctionLookup.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QVERIFY(o->property("ok").toBool());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
