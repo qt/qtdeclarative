@@ -50,7 +50,7 @@
 
 pragma Singleton
 
-import QtQuick 2.8
+import QtQuick 2.12
 
 QtObject {
     readonly property color gray: "#b2b1b1"

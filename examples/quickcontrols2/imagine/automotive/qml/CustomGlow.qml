@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtGraphicalEffects 1.0
+import QtGraphicalEffects 1.12
 
 Glow {
     color: glowColor

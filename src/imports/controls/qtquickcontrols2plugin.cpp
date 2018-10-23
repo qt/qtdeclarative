@@ -119,7 +119,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
         stylePlugin->initializeTheme(theme);
     qDeleteAll(stylePlugins);
 
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    // Register the latest version, even if there are no new types or new revisions for existing types yet.
+    // Before Qt 5.12, we would do the following:
+    //
+    // qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    //
+    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
 
     // QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType(resolvedUrl(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
@@ -186,8 +192,14 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType(resolvedUrl(QStringLiteral("MenuBarItem.qml")), uri, 2, 3, "MenuBarItem");
     qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
 
+    // Register the latest version, even if there are no new types or new revisions for existing types yet.
+    // Before Qt 5.12, we would do the following:
+    //
+    // qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    //
+    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
     const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR);
 
     // QtQuick.Controls.impl 2.0 (Qt 5.7)
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");

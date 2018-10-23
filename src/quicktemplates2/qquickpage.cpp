@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     toolbar header and an application-wide tabbar footer.
 
     \qml
-    import QtQuick.Controls 2.1
+    import QtQuick.Controls 2.12
 
     ApplicationWindow {
         visible: true

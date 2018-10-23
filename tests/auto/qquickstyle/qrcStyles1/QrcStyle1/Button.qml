@@ -1,2 +1,2 @@
-import QtQuick.Templates 2.0 as T
+import QtQuick.Templates 2.12 as T
 T.Button { }

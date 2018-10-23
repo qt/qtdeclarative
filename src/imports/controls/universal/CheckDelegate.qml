@@ -35,11 +35,11 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Templates 2.5 as T
-import QtQuick.Controls 2.5
-import QtQuick.Controls.impl 2.5
-import QtQuick.Controls.Universal 2.5
-import QtQuick.Controls.Universal.impl 2.5
+import QtQuick.Templates 2.12 as T
+import QtQuick.Controls 2.12
+import QtQuick.Controls.impl 2.12
+import QtQuick.Controls.Universal 2.12
+import QtQuick.Controls.Universal.impl 2.12
 
 T.CheckDelegate {
     id: control

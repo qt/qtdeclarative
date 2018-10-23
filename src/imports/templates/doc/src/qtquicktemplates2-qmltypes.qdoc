@@ -38,7 +38,7 @@
     \c .qml file:
 
     \badcode
-    import QtQuick.Templates 2.5 as T
+    import QtQuick.Templates 2.12 as T
     \endcode
 
     For the sake of clarity, there is a one-to-one mapping between the types

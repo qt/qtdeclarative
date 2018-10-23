@@ -25,9 +25,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
 import Qt.labs.calendar 1.0
-import QtQuick.Controls 2.1
+import QtQuick.Controls 2.12
 
 //! [1]
 ListView {
