@@ -1392,7 +1392,7 @@ class ScopedEnumsWithNameClash
 
 public:
     enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
-    enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
+    enum class OtherScopedEnum : int { ScopedVal1 = 10, ScopedVal2 = 11, ScopedVal3 = 12 };
 };
 
 class ScopedEnumsWithResolvedNameClash

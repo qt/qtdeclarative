@@ -1947,11 +1947,7 @@ QQmlPropertyData *JSCodeGen::lookupQmlCompliantProperty(QQmlPropertyCache *cache
 {
     QQmlPropertyData *pd = cache->property(name, /*object*/nullptr, /*context*/nullptr);
 
-    // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
-    if (!pd || pd->isFunction())
-        return nullptr;
-
-    if (!cache->isAllowedInRevision(pd))
+    if (pd && !cache->isAllowedInRevision(pd))
         return nullptr;
 
     return pd;
@@ -2280,6 +2276,10 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
     if (_scopeObject) {
         QQmlPropertyData *data = lookupQmlCompliantProperty(_scopeObject, name);
         if (data) {
+            // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
+            if (data->isFunction())
+                return Reference::fromName(this, name);
+
             Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
             Reference::PropertyCapturePolicy capturePolicy;
             if (!data->isConstant() && !data->isQmlBinding())
@@ -2293,6 +2293,10 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
     if (_contextObject) {
         QQmlPropertyData *data = lookupQmlCompliantProperty(_contextObject, name);
         if (data) {
+            // Q_INVOKABLEs can't be FINAL, so we have to look them up at run-time
+            if (data->isFunction())
+                return Reference::fromName(this, name);
+
             Reference base = Reference::fromStackSlot(this, _qmlContextSlot);
             Reference::PropertyCapturePolicy capturePolicy;
             if (!data->isConstant() && !data->isQmlBinding())

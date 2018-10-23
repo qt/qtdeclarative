@@ -847,21 +847,40 @@ void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
         }
     }
 
+    QSet<QString> localEnums;
+    const QMetaObject *localMetaObject = nullptr;
+
     // Add any enum values defined by this class, overwriting any inherited values
     for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
         QMetaEnum e = metaObject->enumerator(ii);
         const bool isScoped = e.isScoped();
         QStringHash<int> *scoped = isScoped ? new QStringHash<int>() : nullptr;
 
+        // We allow enums in sub-classes to overwrite enums from base-classes, such as
+        // ListView.Center (from enum PositionMode) overwriting Item.Center (from enum TransformOrigin).
+        // This is acceptable because the _use_ of the enum from the QML side requires qualification
+        // anyway, i.e. ListView.Center vs. Item.Center.
+        // However if a class defines two enums with the same value, then that must produce a warning
+        // because it represents a valid conflict.
+        if (e.enclosingMetaObject() != localMetaObject) {
+            localEnums.clear();
+            localMetaObject = e.enclosingMetaObject();
+        }
+
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
              if (!isScoped || (regType == QQmlType::CppType && extraData.cd->registerEnumClassesUnscoped)) {
-                if (enums.contains(key)) {
-                    qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
-                    createEnumConflictReport(metaObject, key);
-                }
-                enums.insert(key, value);
+                 if (localEnums.contains(key)) {
+                     auto existingEntry = enums.find(key);
+                     if (existingEntry != enums.end() && existingEntry.value() != value) {
+                         qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
+                         createEnumConflictReport(metaObject, key);
+                     }
+                 } else {
+                     localEnums.insert(key);
+                 }
+                 enums.insert(key, value);
             }
             if (isScoped)
                 scoped->insert(key, value);

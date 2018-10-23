@@ -357,6 +357,8 @@ private slots:
     void jumpStrictNotEqualUndefined();
     void removeBindingsWithNoDependencies();
     void temporaryDeadZone();
+    void importLexicalVariables_data();
+    void importLexicalVariables();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8810,6 +8812,38 @@ void tst_qqmlecmascript::temporaryDeadZone()
     QVERIFY(v.isError());
     v = engine.evaluate(QString::fromLatin1("class C { constructor() { super[x]; let x; } }; new C()"));
     QVERIFY(v.isError());
+}
+
+void tst_qqmlecmascript::importLexicalVariables_data()
+{
+    QTest::addColumn<QUrl>("testFile");
+    QTest::addColumn<QString>("expected");
+
+    QTest::newRow("script")
+        << testFileUrl("importLexicalVariables_script.qml")
+        << QStringLiteral("0?? 1?? 2??");
+    QTest::newRow("pragmaLibrary")
+        << testFileUrl("importLexicalVariables_pragmaLibrary.qml")
+        << QStringLiteral("0?? 1?? 2??");
+    QTest::newRow("module")
+        << testFileUrl("importLexicalVariables_module.qml")
+        << QStringLiteral("000 000 110");
+}
+
+void tst_qqmlecmascript::importLexicalVariables()
+{
+    QFETCH(QUrl, testFile);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFile);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QVERIFY(!component.isError());
+
+    QVariant result;
+    QMetaObject::invokeMethod(object.data(), "runTest", Qt::DirectConnection, Q_RETURN_ARG(QVariant, result));
+    QCOMPARE(result, QVariant(expected));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
