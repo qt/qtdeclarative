@@ -2585,7 +2585,7 @@ void tst_QQuickListView::sectionDelegateChange()
     QQuickItem *contentItem = listview->contentItem();
     QVERIFY(contentItem != nullptr);
 
-    QQUICK_VERIFY_POLISH(listview);
+    QQuickTest::qWaitForItemPolished(listview);
 
     QVERIFY(findItems<QQuickItem>(contentItem, "section1").count() > 0);
     QCOMPARE(findItems<QQuickItem>(contentItem, "section2").count(), 0);
@@ -2597,7 +2597,7 @@ void tst_QQuickListView::sectionDelegateChange()
     }
 
     QMetaObject::invokeMethod(window->rootObject(), "switchDelegates");
-    QQUICK_VERIFY_POLISH(listview);
+    QQuickTest::qWaitForItemPolished(listview);
 
     QCOMPARE(findItems<QQuickItem>(contentItem, "section1").count(), 0);
     QVERIFY(findItems<QQuickItem>(contentItem, "section2").count() > 0);

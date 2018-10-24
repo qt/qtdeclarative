@@ -38,6 +38,7 @@
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuickTest/QtQuickTest>
 #include <QtQml/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
 #include <QtGui/qstandarditemmodel.h>
@@ -714,13 +715,13 @@ void tst_QQuickPathView::consecutiveModelChanges()
                 pathview->setCurrentIndex(changes[i].index);
                 break;
         case ListChange::Polish:
-                QQUICK_VERIFY_POLISH(pathview);
+                QQuickTest::qWaitForItemPolished(pathview);
                 break;
             default:
                 continue;
         }
     }
-    QQUICK_VERIFY_POLISH(pathview);
+    QQuickTest::qWaitForItemPolished(pathview);
 
     QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), count);
     QCOMPARE(pathview->count(), count);

@@ -100,7 +100,4 @@ namespace QQuickVisualTestUtil
     bool compareImages(const QImage &ia, const QImage &ib);
 }
 
-#define QQUICK_VERIFY_POLISH(item) \
-    QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
-
 #endif // QQUICKVISUALTESTUTIL_H
