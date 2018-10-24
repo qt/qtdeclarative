@@ -85,6 +85,24 @@ QT_BEGIN_NAMESPACE
     on \a item since the last call to \l {QQuickItem::}{polish()},
     otherwise returns \c false.
 
+    When assigning values to properties in QML, any layouting the item
+    must do as a result of the assignment might not take effect immediately,
+    but can instead be postponed until the item is polished. For these cases,
+    you can use this function to ensure that the item has been polished
+    before the execution of the test continues. For example:
+
+    \code
+        QVERIFY(QQuickTest::qIsPolishScheduled(item));
+        QVERIFY(QQuickTest::qWaitForItemPolished(item));
+    \endcode
+
+    Without the call to \c qIsPolishScheduled() above, the
+    call to \c qWaitForItemPolished() might see that no polish
+    was scheduled and therefore pass instantly, assuming that
+    the item had already been polished. This function
+    makes it obvious why an item wasn't polished and allows tests to
+    fail early under such circumstances.
+
     \sa QQuickItem::polish(), QQuickItem::updatePolish()
 */
 bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
