@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtCore/qstringlistmodel.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuickTest/QtQuickTest>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
@@ -535,7 +536,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
         insertCount = insertCount_ttb;
     }
     if (setContentPos(gridview, contentYRowOffset))
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QList<QPair<QString, QString> > newData;
     for (int i=0; i<insertCount; i++)
@@ -721,13 +722,13 @@ void tst_QQuickGridView::insertBeforeVisible()
     QTRY_VERIFY(contentItem != nullptr);
 
     gridview->setCacheBuffer(cacheBuffer);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // trigger a refill (not just setting contentY) so that the visibleItems grid is updated
     int firstVisibleIndex = 12;     // move to an index where the top item is not visible
     gridview->setContentY(firstVisibleIndex/3 * 60.0);
     gridview->setCurrentIndex(firstVisibleIndex);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QTRY_COMPARE(gridview->currentIndex(), firstVisibleIndex);
     QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", firstVisibleIndex);
@@ -744,7 +745,7 @@ void tst_QQuickGridView::insertBeforeVisible()
     // now, moving to the top of the view should position the inserted items correctly
     int itemsOffsetAfterMove = (insertCount / 3) * -60.0;
     gridview->setCurrentIndex(0);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     QTRY_COMPARE(gridview->currentIndex(), 0);
     QTRY_COMPARE(gridview->contentY(), 0.0 + itemsOffsetAfterMove);
 
@@ -803,7 +804,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.removeItem(1);
     QTRY_COMPARE(window->rootObject()->property("count").toInt(), model.count());
@@ -890,7 +891,7 @@ void tst_QQuickGridView::removed_basic()
     QTRY_VERIFY(gridview->currentItem() != oldCurrent);
 
     gridview->setContentY(0);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // Confirm items positioned correctly
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -966,7 +967,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
         firstVisible = firstVisible_ttb;
     }
     if (setContentPos(gridview, contentYRowOffset))
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.removeItems(removeIndex, removeCount);
     gridview->forceLayout();
@@ -1182,7 +1183,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
 
     gridview->setCurrentIndex(0);
     qApp->processEvents();
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // scroll down until item 0 is no longer drawn
     // (bug not triggered if we just move using content y, since that doesn't
@@ -1193,7 +1194,7 @@ void tst_QQuickGridView::addOrRemoveBeforeVisible()
     QTRY_COMPARE(gridview->currentIndex(), 24);
     QTRY_COMPARE(gridview->contentY(), 220.0);
 
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     QTRY_VERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 0));  // 0 shouldn't be visible
 
     if (doAdd) {
@@ -1254,7 +1255,7 @@ void tst_QQuickGridView::clear()
     QVERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.clear();
     gridview->forceLayout();
@@ -1307,7 +1308,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *currentItem = gridview->currentItem();
     QTRY_VERIFY(currentItem != nullptr);
@@ -1318,10 +1319,10 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
         count = count_ttb;
     }
     if (setContentPos(gridview, contentYRowOffset))
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.moveItems(from, to, count);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // Confirm items positioned correctly and indexes correct
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
@@ -1560,7 +1561,7 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QTRY_VERIFY(gridview != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     for (int i=0; i<changes.count(); i++) {
         switch (changes[i].type) {
@@ -1588,10 +1589,10 @@ void tst_QQuickGridView::multipleChanges(bool condensed)
                 break;
         }
         if (condensed) {
-            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+            QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
         }
     }
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QCOMPARE(gridview->count(), newCount);
     QCOMPARE(gridview->count(), model.count());
@@ -1834,7 +1835,7 @@ void tst_QQuickGridView::currentIndex()
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != nullptr);
-    QTRY_VERIFY(!QQuickItemPrivate::get(gridview)->polishScheduled);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
@@ -1936,7 +1937,7 @@ void tst_QQuickGridView::noCurrentIndex()
     QVERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // current index should be -1
     QCOMPARE(gridview->currentIndex(), -1);
@@ -1981,7 +1982,7 @@ void tst_QQuickGridView::keyNavigation()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -2491,7 +2492,7 @@ void tst_QQuickGridView::positionViewAtBeginningEnd()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // positionViewAtBeginning
     gridview->setContentY(150);
@@ -2578,10 +2579,10 @@ void tst_QQuickGridView::positionViewAtIndex()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     window->rootObject()->setProperty("enforceRange", enforceRange);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     if (topToBottom)
         gridview->setContentX(initContentPos);
@@ -2791,7 +2792,7 @@ void tst_QQuickGridView::resetModel()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QTRY_COMPARE(gridview->count(), model.rowCount());
 
@@ -2840,7 +2841,7 @@ void tst_QQuickGridView::enforceRange()
     QTRY_COMPARE(gridview->preferredHighlightBegin(), 100.0);
     QTRY_COMPARE(gridview->preferredHighlightEnd(), 100.0);
     QTRY_COMPARE(gridview->highlightRangeMode(), QQuickGridView::StrictlyEnforceRange);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -3023,7 +3024,7 @@ void tst_QQuickGridView::footer()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -3272,7 +3273,7 @@ void tst_QQuickGridView::header()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -3296,7 +3297,7 @@ void tst_QQuickGridView::header()
     QCOMPARE(item->position(), firstDelegatePos);
 
     model.clear();
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     QCOMPARE(header->position(), initialHeaderPos); // header should stay where it is
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentHeight(), header->height());
@@ -3349,7 +3350,7 @@ void tst_QQuickGridView::header()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     gridview->setWidth(240);
     gridview->setHeight(320);
@@ -3494,7 +3495,7 @@ void tst_QQuickGridView::extents()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setVerticalLayoutDirection(verticalLayoutDirection);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -3655,7 +3656,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // item at index 10 should not be currently visible
     QVERIFY(!findItem<QQuickItem>(contentItem, "wrapper", 10));
@@ -3736,7 +3737,7 @@ void tst_QQuickGridView::resizeGrid()
     // items are aligned correctly in right-to-left
     window->rootObject()->setWidth(260);
     window->rootObject()->setHeight(320);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QCOMPARE(gridview->contentX(), initialContentPos.x());
     QCOMPARE(gridview->contentY(), initialContentPos.y());
@@ -3760,7 +3761,7 @@ void tst_QQuickGridView::resizeGrid()
     // change from 3x5 grid to 4x7
     window->rootObject()->setWidth(window->rootObject()->width() + 80);
     window->rootObject()->setHeight(window->rootObject()->height() + 60*2);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // other than in LeftToRight+RightToLeft layout, the first item should not move
     // if view is resized
@@ -3865,7 +3866,7 @@ void tst_QQuickGridView::changeColumnCount()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     // a single column of 6 items are visible
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
@@ -3879,7 +3880,7 @@ void tst_QQuickGridView::changeColumnCount()
 
     // now 6x3 grid is visible, plus 1 extra below for refill
     gridview->setWidth(240);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     QCOMPARE(itemCount, 6*3 + 1);
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
@@ -3891,7 +3892,7 @@ void tst_QQuickGridView::changeColumnCount()
 
     // back to single column
     gridview->setWidth(100);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     QCOMPARE(itemCount, 6);
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
@@ -4139,7 +4140,7 @@ void tst_QQuickGridView::margins()
         QTRY_VERIFY(gridview != nullptr);
         QQuickItem *contentItem = gridview->contentItem();
         QTRY_VERIFY(contentItem != nullptr);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
         QCOMPARE(gridview->contentX(), -30.);
         QCOMPARE(gridview->originX(), 0.);
@@ -4217,7 +4218,7 @@ void tst_QQuickGridView::margins()
         // remove item before visible and check that left margin is maintained
         // and originX is updated
         gridview->setContentX(-400);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
         model.removeItems(0, 4);
         gridview->forceLayout();
         QTRY_COMPARE(model.count(), gridview->count());
@@ -4259,7 +4260,7 @@ void tst_QQuickGridView::margins()
         QVERIFY(gridview != nullptr);
         QQuickItem *contentItem = gridview->contentItem();
         QVERIFY(contentItem != nullptr);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
         QCOMPARE(contentItem->x(), 200);
         QCOMPARE(contentItem->y(), 20);
 
@@ -4341,7 +4342,7 @@ void tst_QQuickGridView::snapToRow()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -4461,7 +4462,7 @@ void tst_QQuickGridView::snapOneRow()
     gridview->setFlow(flow);
     gridview->setLayoutDirection(layoutDirection);
     gridview->setHighlightRangeMode(QQuickItemView::HighlightRangeMode(highlightRangeMode));
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QQuickItem *contentItem = gridview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
@@ -4623,7 +4624,7 @@ void tst_QQuickGridView::populateTransitions()
         QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
         QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 18);
     } else {
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
         QCOMPARE(gridview->property("countPopulateTransitions").toInt(), 0);
         QCOMPARE(gridview->property("countAddTransitions").toInt(), 0);
     }
@@ -4659,7 +4660,7 @@ void tst_QQuickGridView::populateTransitions()
     for (int i = 0; i < 30; i++)
         model.addItem("item" + QString::number(i), "");
     window->rootContext()->setContextProperty("testModel", &model);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QTRY_COMPARE(gridview->property("countPopulateTransitions").toInt(), usePopulateTransition ? 18 : 0);
     QTRY_COMPARE(gridview->property("countAddTransitions").toInt(), 0);
@@ -4747,11 +4748,11 @@ void tst_QQuickGridView::addTransitions()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     if (contentYRowOffset != 0) {
         gridview->setContentY(contentYRowOffset * 60.0);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     }
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
@@ -4956,7 +4957,7 @@ void tst_QQuickGridView::moveTransitions()
 
     if (contentYRowOffset != 0) {
         gridview->setContentY(contentYRowOffset * 60.0);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     }
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
@@ -5197,11 +5198,11 @@ void tst_QQuickGridView::removeTransitions()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     if (contentYRowOffset != 0) {
         gridview->setContentY(contentYRowOffset * 60.0);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     }
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
@@ -5415,7 +5416,7 @@ void tst_QQuickGridView::displacedTransitions()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     QList<QPair<QString,QString> > expectedDisplacedValues = expectedDisplacedIndexes.getModelDataValues(model);
     gridview->setProperty("displaceTransitionsDone", false);
@@ -5436,7 +5437,7 @@ void tst_QQuickGridView::displacedTransitions()
             break;
         case ListChange::Moved:
             model.moveItems(change.index, change.to, change.count);
-            QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+            QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
             break;
         case ListChange::SetCurrent:
         case ListChange::SetContentY:
@@ -5634,11 +5635,11 @@ void tst_QQuickGridView::multipleTransitions()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     if (contentY != 0) {
         gridview->setContentY(contentY);
-        QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
     }
 
     int timeBetweenActions = window->rootObject()->property("timeBetweenActions").toInt();
@@ -5675,7 +5676,7 @@ void tst_QQuickGridView::multipleTransitions()
             case ListChange::Moved:
                 model.moveItems(changes[i].index, changes[i].to, changes[i].count);
                 gridview->forceLayout();
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
                 if (i == changes.count() - 1) {
                     QTRY_VERIFY(!gridview->property("runningMoveTargets").toBool());
                     QTRY_VERIFY(!gridview->property("runningMoveDisplaced").toBool());
@@ -5685,12 +5686,12 @@ void tst_QQuickGridView::multipleTransitions()
                 break;
             case ListChange::SetCurrent:
                 gridview->setCurrentIndex(changes[i].index);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
                 gridview->forceLayout();
                 break;
             case ListChange::SetContentY:
                 gridview->setContentY(changes[i].pos);
-                QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+                QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
                 gridview->forceLayout();
                 break;
             case ListChange::Polish:
@@ -5804,7 +5805,7 @@ void tst_QQuickGridView::multipleDisplaced()
     QTRY_VERIFY(gridview != nullptr);
     QQuickItem *contentItem = gridview->contentItem();
     QVERIFY(contentItem != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.moveItems(12, 8, 1);
     QTest::qWait(window->rootObject()->property("duration").toInt() / 2);
@@ -5854,7 +5855,7 @@ void tst_QQuickGridView::regression_QTBUG_57225()
 
     QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "grid");
     QVERIFY(gridview != nullptr);
-    QTRY_COMPARE(QQuickItemPrivate::get(gridview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
 
     model.removeItems(removeIndex, removeCount);
     QTRY_VERIFY(gridview->property("animationDone").toBool());
@@ -6127,7 +6128,7 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
-    QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(leftview));
 
     QTRY_VERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
     QCOMPARE(delegateVisible(item), false);
@@ -6150,7 +6151,7 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     // move a visible item out of view
     model.moveItems(5, 3, 1);
-    QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(delegateVisible(item), false);
@@ -6163,7 +6164,7 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     // move a non-visible item into view
     model.moveItems(3, 5, 1);
-    QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(delegateVisible(item), false);
@@ -6176,7 +6177,7 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     // move a visible item out of view
     model.moveItems(9, 10, 1);
-    QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(delegateVisible(item), false);
@@ -6189,7 +6190,7 @@ void tst_QQuickGridView::unrequestedVisibility()
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
-    QTRY_COMPARE(QQuickItemPrivate::get(leftview)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
     QCOMPARE(delegateVisible(item), false);
