@@ -10,7 +10,13 @@ SOURCES += \
     contactmodel.cpp
 
 RESOURCES += \
-   $$files(*.qml)
+    ContactDelegate.ui.qml \
+    ContactDialog.qml \
+    ContactForm.ui.qml \
+    contactlist.qml \
+    ContactView.ui.qml \
+    designer/Backend/ContactModel.qml \
+    SectionDelegate.ui.qml
 
 # Additional import path used to resolve QML modules just for Qt Quick Designer
 QML_DESIGNER_IMPORT_PATH = $$PWD/designer
