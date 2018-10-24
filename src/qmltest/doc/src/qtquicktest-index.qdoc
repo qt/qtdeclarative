@@ -181,6 +181,8 @@
 
     class Setup : public QObject
     {
+        Q_OBJECT
+
     public:
         Setup() {}
 
@@ -194,6 +196,15 @@
     QUICK_TEST_MAIN_WITH_SETUP(mytest, Setup)
 
     #include "tst_mytest.moc"
+    \endcode
+
+    The \c .moc include is based on the file name of the \c .cpp file.
+    For example, in the example above, the \c .cpp file is named
+    \c tst_mytest.cpp. If the file was named \c MyTest.cpp, the include would
+    be:
+
+    \code
+    #include "MyTest.moc"
     \endcode
 
     \section1 Licenses
