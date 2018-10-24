@@ -28,6 +28,7 @@
 #include <QtTest/QtTest>
 #include "../../shared/util.h"
 #include <QtQuick/qquickview.h>
+#include <QtQuickTest/QtQuickTest>
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
 #include <private/qquickitem_p.h>
@@ -290,8 +291,8 @@ void tst_qquickanimatedsprite::test_reparenting()
     sprite->setParentItem(window.rootObject());
     // don't crash (QTBUG-51162)
     sprite->polish();
-    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, true);
-    QTRY_COMPARE(QQuickItemPrivate::get(sprite)->polishScheduled, false);
+    QVERIFY(QQuickTest::qIsPolishScheduled(sprite));
+    QVERIFY(QQuickTest::qWaitForItemPolished(sprite));
 }
 
 class KillerThread : public QThread
