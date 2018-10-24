@@ -31,6 +31,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickpositioners_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuickTest/QtQuickTest>
 #include <private/qquickitem_p.h>
 #include <qqmlexpression.h>
 #include "../shared/viewtestutil.h"
@@ -1062,7 +1063,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), model.count());
     } else {
-        QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+        QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
     }
@@ -1128,7 +1129,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
 
     for (int i = 0; i < initialItemCount; i++)
         model.addItem("Original item" + QString::number(i), "");
@@ -1253,7 +1254,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
 
     switch (change.type) {
         case ListChange::Removed:
@@ -1262,7 +1263,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
             break;
         case ListChange::Moved:
             model.moveItems(change.index, change.to, change.count);
-            QTRY_COMPARE(QQuickItemPrivate::get(positioner)->polishScheduled, false);
+            QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
             break;
         case ListChange::Inserted:
         case ListChange::SetCurrent:
@@ -3815,7 +3816,7 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *positionerB = itemB->parentItem();
             positionerA->setWidth(positionerA->width() * 2);
             positionerB->setWidth(positionerB->width() * 2);
-            QTRY_VERIFY(!QQuickItemPrivate::get(positionerA)->polishScheduled && !QQuickItemPrivate::get(positionerB)->polishScheduled);
+            QVERIFY(QQuickTest::qWaitForItemPolished(positionerA) && QQuickTest::qWaitForItemPolished(positionerB));
             QTRY_COMPARE(itemA->x(), itemB->x());
         }
 
