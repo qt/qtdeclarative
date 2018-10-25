@@ -3,6 +3,11 @@ pragma Singleton
 
 Item {
     enum EnumInSingleton {
-        EnumValue = 42
+        EnumValue = 42,
+        AnotherEnumValue
+    }
+
+    enum AnotherEnumInSingleton {
+        AnotherEnumValue = 2
     }
 }

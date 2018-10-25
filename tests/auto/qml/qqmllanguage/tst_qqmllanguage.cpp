@@ -3860,6 +3860,11 @@ void tst_qqmllanguage::qmlEnums()
         QCOMPARE(o->property("enumValue2").toInt(), 0);
         QCOMPARE(o->property("scopedEnumValue").toInt(), 2);
         QCOMPARE(o->property("enumValueFromSingleton").toInt(), 42);
+         // while this next test verifies current duplication behavior, I'm not sure it should be codified
+        QCOMPARE(o->property("duplicatedEnumValueFromSingleton").toInt(), 2);
+        QCOMPARE(o->property("scopedEnumValueFromSingleton1").toInt(), 43);
+        QCOMPARE(o->property("scopedEnumValueFromSingleton2").toInt(), 2);
+        QCOMPARE(o->property("scopedEnumValueFromSingleton3").toInt(), 2);
     }
 }
 
