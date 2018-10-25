@@ -302,7 +302,8 @@ void QQuickStateGroup::componentComplete()
     Q_D(QQuickStateGroup);
     d->componentComplete = true;
 
-    QSet<QString> names;
+    QVarLengthArray<QString, 4> names;
+    names.reserve(d->states.count());
     for (int ii = 0; ii < d->states.count(); ++ii) {
         QQuickState *state = d->states.at(ii);
         if (!state->isNamed())
@@ -312,7 +313,7 @@ void QQuickStateGroup::componentComplete()
         if (names.contains(stateName)) {
             qmlWarning(state->parent()) << "Found duplicate state name: " << stateName;
         } else {
-            names << stateName;
+            names.append(std::move(stateName));
         }
     }
 
