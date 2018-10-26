@@ -163,16 +163,26 @@
     \enum QJSValue::ErrorType
     \since 5.12
 
-    This enum is used to specify a type of Error object.
+    Use this enum for JavaScript language-specific types of Error objects.
 
-    \value NoError Not an Error object.
+    They may be useful when emulating language features in C++ requires the use
+    of specialized exception types. In addition, they may help to more clearly
+    communicate certain typical conditions, instead of throwing a generic
+    JavaScript exception. For example, code that deals with networking and
+    resource locators may find it useful to propagate errors related to
+    malformed locators using the URIError type.
+
+    \omitvalue NoError
     \value GenericError A generic Error object, but not of a specific sub-type.
-    \value EvalError An error regarding the global eval() function.
+    \omitvalue EvalError
     \value RangeError A value did not match the expected set or range.
     \value ReferenceError A non-existing variable referenced.
-    \value SyntaxError Invalid syntax.
-    \value TypeError A value did not match the expected type.
-    \value URIError A URI handling function was used incorrectly.
+    \value SyntaxError An invalid token or sequence of tokens was encountered
+    that does not conform with the syntax of the language.
+    \value TypeError An operand or argument is incompatible with the type
+    expected.
+    \value URIError A URI handling function was used incorrectly or the URI
+    provided is malformed.
 */
 
 QT_BEGIN_NAMESPACE

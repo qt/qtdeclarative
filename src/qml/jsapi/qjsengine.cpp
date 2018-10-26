@@ -927,6 +927,10 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     }
     \endcode
 
+    If you need a more specific run-time error to describe an exception, you can use the
+    \l {QJSEngine::}{throwError(QJSValue::ErrorType errorType, const QString &message)}
+    overload.
+
     \since Qt 5.12
     \sa {Script Exceptions}
 */
@@ -936,6 +940,8 @@ void QJSEngine::throwError(const QString &message)
 }
 
 /*!
+    \overload throwError()
+
     Throws a run-time error (exception) with the given \a errorType and
     \a message.
 
