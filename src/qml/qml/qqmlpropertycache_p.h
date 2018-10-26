@@ -394,7 +394,7 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
     QQmlPropertyCache();
-    QQmlPropertyCache(const QMetaObject *);
+    QQmlPropertyCache(const QMetaObject *, int metaObjectRevision = 0);
     ~QQmlPropertyCache() override;
 
     void update(const QMetaObject *);

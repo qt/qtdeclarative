@@ -252,12 +252,22 @@ QQmlPropertyCache::QQmlPropertyCache()
 /*!
 Creates a new QQmlPropertyCache of \a metaObject.
 */
-QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject)
+QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, int metaObjectRevision)
     : QQmlPropertyCache()
 {
     Q_ASSERT(metaObject);
 
     update(metaObject);
+
+    if (metaObjectRevision > 0) {
+        // Set the revision of the meta object that this cache describes to be
+        // 'metaObjectRevision'. This is useful when constructing a property cache
+        // from a type that was created directly in C++, and not through QML. For such
+        // types, the revision for each recorded QMetaObject would normally be zero, which
+        // would exclude any revisioned properties.
+        for (int metaObjectOffset = 0; metaObjectOffset < allowedRevisionCache.size(); ++metaObjectOffset)
+            allowedRevisionCache[metaObjectOffset] = metaObjectRevision;
+    }
 }
 
 QQmlPropertyCache::~QQmlPropertyCache()
