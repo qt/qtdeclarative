@@ -39,10 +39,12 @@
 
 #include "qqmlsettings_p.h"
 #include <qcoreevent.h>
+#include <qcoreapplication.h>
 #include <qloggingcategory.h>
 #include <qsettings.h>
 #include <qpointer.h>
 #include <qjsvalue.h>
+#include <qqmlinfo.h>
 #include <qdebug.h>
 #include <qhash.h>
 
@@ -271,6 +273,26 @@ QSettings *QQmlSettingsPrivate::instance() const
     if (!settings) {
         QQmlSettings *q = const_cast<QQmlSettings*>(q_func());
         settings = fileName.isEmpty() ? new QSettings(q) : new QSettings(fileName, QSettings::IniFormat, q);
+        if (settings->status() != QSettings::NoError) {
+            // TODO: can't print out the enum due to the following error:
+            // error: C2666: 'QQmlInfo::operator <<': 15 overloads have similar conversions
+            qmlWarning(q) << "Failed to initialize QSettings instance. Status code is: " << int(settings->status());
+
+            if (settings->status() == QSettings::AccessError) {
+                QVector<QString> missingIdentifiers;
+                if (QCoreApplication::organizationName().isEmpty())
+                    missingIdentifiers.append(QLatin1String("organizationName"));
+                if (QCoreApplication::organizationDomain().isEmpty())
+                    missingIdentifiers.append(QLatin1String("organizationDomain"));
+                if (QCoreApplication::applicationName().isEmpty())
+                    missingIdentifiers.append(QLatin1String("applicationName"));
+
+                if (!missingIdentifiers.isEmpty())
+                    qmlWarning(q) << "The following application identifiers have not been set: " << missingIdentifiers;
+            }
+            return settings;
+        }
+
         if (!category.isEmpty())
             settings->beginGroup(category);
         if (initialized)

@@ -462,6 +462,8 @@ Unlike an ordinary property, an alias has the following restrictions:
 \li The \e {alias reference} is not optional,
     unlike the optional default value for an ordinary property; the alias reference
     must be provided when the alias is first declared.
+\li It cannot refer to \l {Attached Properties and Attached Signal Handlers}
+    {attached properties}.
 \li It cannot refer to grouped properties; the following code will not work:
     \code
     property alias color: rectangle.border.color
