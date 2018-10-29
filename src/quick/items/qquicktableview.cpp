@@ -314,7 +314,7 @@
 */
 
 /*!
-    \qmlmethod real QtQuick::TableView::forceLayout
+    \qmlmethod QtQuick::TableView::forceLayout
 
     Responding to changes in the model are batched so that they are handled
     only once per frame. This means the TableView delays showing any changes
