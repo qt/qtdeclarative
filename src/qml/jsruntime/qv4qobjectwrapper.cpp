@@ -764,11 +764,11 @@ struct QObjectWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     int propertyIndex = 0;
     ~QObjectWrapperOwnPropertyKeyIterator() override = default;
-    PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
+    PropertyKey next(const QV4::Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override;
 
 };
 
-PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
+PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const QV4::Object *o, Property *pd, PropertyAttributes *attrs)
 {
     // Used to block access to QObject::destroyed() and QObject::deleteLater() from QML
     static const int destroyedIdx1 = QObject::staticMetaObject.indexOfSignal("destroyed(QObject*)");

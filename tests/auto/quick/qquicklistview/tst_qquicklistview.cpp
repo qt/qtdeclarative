@@ -2676,7 +2676,7 @@ void tst_QQuickListView::sectionsSnap_data()
     QTest::addColumn<int>("duration");
 
     QTest::newRow("drag") << QQuickListView::NoSnap << QPoint(100, 45) << 500;
-    QTest::newRow("flick") << QQuickListView::SnapOneItem << QPoint(100, 75) << 50;
+    QTest::newRow("flick") << QQuickListView::SnapOneItem << QPoint(100, 60) << 100;
 }
 
 void tst_QQuickListView::sectionsSnap()

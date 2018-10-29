@@ -302,10 +302,19 @@ void QQuickStateGroup::componentComplete()
     Q_D(QQuickStateGroup);
     d->componentComplete = true;
 
+    QVarLengthArray<QString, 4> names;
+    names.reserve(d->states.count());
     for (int ii = 0; ii < d->states.count(); ++ii) {
         QQuickState *state = d->states.at(ii);
         if (!state->isNamed())
             state->setName(QLatin1String("anonymousState") + QString::number(++d->unnamedCount));
+
+        const QString stateName = state->name();
+        if (names.contains(stateName)) {
+            qmlWarning(state->parent()) << "Found duplicate state name: " << stateName;
+        } else {
+            names.append(std::move(stateName));
+        }
     }
 
     if (d->updateAutoState()) {

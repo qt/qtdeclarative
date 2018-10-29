@@ -39,6 +39,7 @@
 #include <QQmlComponent>
 #include <QQmlIncubator>
 #include "../../shared/util.h"
+#include <private/qjsvalue_p.h>
 #include <private/qqmlincubator_p.h>
 #include <private/qqmlobjectcreator_p.h>
 
@@ -68,6 +69,7 @@ private slots:
     void chainedAsynchronousClear();
     void selfDelete();
     void contextDelete();
+    void garbageCollection();
 
 private:
     QQmlIncubationController controller;
@@ -1142,6 +1144,34 @@ void tst_qqmlincubator::contextDelete()
         bool b = false;
         controller.incubateWhile(&b);
     }
+}
+
+// QTBUG-53111
+void tst_qqmlincubator::garbageCollection()
+{
+    QQmlComponent component(&engine, testFileUrl("garbageCollection.qml"));
+    QScopedPointer<QObject> obj(component.create());
+
+    engine.collectGarbage();
+
+    bool b = true;
+    controller.incubateWhile(&b);
+
+    // verify incubation completed (the incubator was not prematurely collected)
+    QVariant incubatorVariant;
+    QMetaObject::invokeMethod(obj.data(), "getAndClearIncubator", Q_RETURN_ARG(QVariant, incubatorVariant));
+    QJSValue strongRef = incubatorVariant.value<QJSValue>();
+    QVERIFY(!strongRef.isNull() && !strongRef.isUndefined());
+
+    // turn the last strong reference to the incubator into a weak one and collect
+    QV4::WeakValue weakIncubatorRef;
+    weakIncubatorRef.set(QQmlEnginePrivate::getV4Engine(&engine), *QJSValuePrivate::getValue(&strongRef));
+    strongRef = QJSValue();
+    incubatorVariant.clear();
+
+    // verify incubator is correctly collected now that incubation is complete and all references are gone
+    engine.collectGarbage();
+    QVERIFY(weakIncubatorRef.isNullOrUndefined());
 }
 
 QTEST_MAIN(tst_qqmlincubator)

@@ -238,20 +238,20 @@ void Heap::RegExpCtor::clearLastMatch()
     lastMatchEnd = 0;
 }
 
-static bool isRegExp(ExecutionEngine *e, const Value *arg)
+static bool isRegExp(ExecutionEngine *e, const QV4::Value *arg)
 {
-    const Object *o = arg->objectValue();
+    const QV4::Object *o = arg->objectValue();
     if (!o)
         return false;
 
-    Value isRegExp = Value::fromReturnedValue(o->get(e->symbol_match()));
+    QV4::Value isRegExp = QV4::Value::fromReturnedValue(o->get(e->symbol_match()));
     if (!isRegExp.isUndefined())
         return isRegExp.toBoolean();
     const RegExpObject *re = o->as<RegExpObject>();
     return re ? true : false;
 }
 
-uint parseFlags(Scope &scope, const Value *f)
+uint parseFlags(Scope &scope, const QV4::Value *f)
 {
     uint flags = CompiledData::RegExp::RegExp_NoFlags;
     if (!f->isUndefined()) {
@@ -546,13 +546,13 @@ static int advanceStringIndex(int index, const QString &str, bool unicode)
     return index;
 }
 
-static void advanceLastIndexOnEmptyMatch(ExecutionEngine *e, bool unicode, Object *rx, const String *matchString, const QString &str)
+static void advanceLastIndexOnEmptyMatch(ExecutionEngine *e, bool unicode, QV4::Object *rx, const String *matchString, const QString &str)
 {
     Scope scope(e);
     if (matchString->d()->length() == 0) {
-        ScopedValue v(scope, rx->get(scope.engine->id_lastIndex()));
+        QV4::ScopedValue v(scope, rx->get(scope.engine->id_lastIndex()));
         int lastIndex = advanceStringIndex(v->toLength(), str, unicode);
-        if (!rx->put(scope.engine->id_lastIndex(), Value::fromInt32(lastIndex)))
+        if (!rx->put(scope.engine->id_lastIndex(), QV4::Value::fromInt32(lastIndex)))
             scope.engine->throwTypeError();
     }
 }

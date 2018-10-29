@@ -377,7 +377,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
         if (lhs.m()->internalClass->vtable->isString)
             return RuntimeHelpers::stringToNumber(static_cast<String &>(lhs).toQString()) == rhs;
         accumulator = lhs;
-        lhs = Value::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
+        lhs = QV4::Value::fromReturnedValue(RuntimeHelpers::objectDefaultValue(&static_cast<QV4::Object &>(accumulator), PREFERREDTYPE_HINT));
         goto redo;
     case QV4::Value::QT_Empty:
         Q_UNREACHABLE();
