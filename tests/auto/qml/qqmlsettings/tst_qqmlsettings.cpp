@@ -53,6 +53,7 @@ private slots:
     void categories();
     void siblings();
     void initial();
+    void noApplicationIdentifiersSet();
 };
 
 // ### Replace keyValueMap("foo", "bar") with QVariantMap({{"foo", "bar"}})
@@ -147,10 +148,6 @@ void tst_QQmlSettings::initTestCase()
 {
     QQmlDataTest::initTestCase();
 
-    QCoreApplication::setApplicationName("tst_QQmlSettings");
-    QCoreApplication::setOrganizationName("QtProject");
-    QCoreApplication::setOrganizationDomain("qt-project.org");
-
     qmlRegisterType<CppObject>("Qt.test", 1, 0, "CppObject");
 }
 
@@ -158,6 +155,10 @@ void tst_QQmlSettings::init()
 {
     QSettings settings;
     settings.clear();
+
+    QCoreApplication::setApplicationName("tst_QQmlSettings");
+    QCoreApplication::setOrganizationName("QtProject");
+    QCoreApplication::setOrganizationDomain("qt-project.org");
 }
 
 void tst_QQmlSettings::cleanup()
@@ -479,6 +480,31 @@ void tst_QQmlSettings::initial()
     // verify that the initial value from QSettings gets properly loaded
     // even if no initial value is set in QML
     QCOMPARE(settings->property("value").toString(), QStringLiteral("initial"));
+}
+
+void tst_QQmlSettings::noApplicationIdentifiersSet()
+{
+#ifdef Q_OS_MACOS
+    QSKIP("macOS doesn't complain about empty application identifiers");
+#endif
+
+    QCoreApplication::setApplicationName(QString());
+    QCoreApplication::setOrganizationName(QString());
+    QCoreApplication::setOrganizationDomain(QString());
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Settings: Failed to initialize QSettings instance. Status code is: 1"));
+    // Can't set an empty applicationName because QCoreApplication won't allow it, which is why it's not listed here.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Settings: The following application identifiers have not been set: QVector\\(\"organizationName\", \"organizationDomain\"\\)"));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("basic.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root.data());
+    // The value of the QML property will be true because it defaults to it...
+    QVERIFY(root->property("success").toBool());
+    QSettings settings;
+    // ... but the settings' value should be false because it was never loaded.
+    QVERIFY(!settings.value("success").toBool());
 }
 
 QTEST_MAIN(tst_QQmlSettings)

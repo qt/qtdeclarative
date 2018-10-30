@@ -66,9 +66,6 @@
 #include <QtGui/private/qsimulatorconnection_p.h>
 #endif
 
-#ifdef Q_OS_UNIX
-#include <signal.h>
-#endif
 #ifdef Q_OS_WIN
 #  if !defined(Q_CC_MINGW)
 #    include <crtdbg.h>
@@ -750,17 +747,6 @@ enum ExitCode {
     EXIT_IMPORTERROR = 3
 };
 
-#ifdef Q_OS_UNIX
-Q_NORETURN void sigSegvHandler(int) {
-    fprintf(stderr, "Error: SEGV\n");
-    if (!currentProperty.isEmpty())
-        fprintf(stderr, "While processing the property '%s', which probably has uninitialized data.\n", currentProperty.toLatin1().constData());
-    if (!inObjectInstantiation.isEmpty())
-        fprintf(stderr, "While instantiating the object '%s'.\n", inObjectInstantiation.toLatin1().constData());
-    exit(EXIT_SEGV);
-}
-#endif
-
 void printUsage(const QString &appName)
 {
     std::cerr << qPrintable(QString(
@@ -985,17 +971,6 @@ int main(int argc, char *argv[])
 #endif // Q_OS_WIN && !Q_CC_MINGW
     // The default message handler might not print to console on some systems. Enforce this.
     qInstallMessageHandler(printDebugMessage);
-#ifdef Q_OS_UNIX
-    // qmldump may crash, but we don't want any crash handlers to pop up
-    // therefore we intercept the segfault and just exit() ourselves
-    struct sigaction sigAction;
-
-    sigemptyset(&sigAction.sa_mask);
-    sigAction.sa_handler = &sigSegvHandler;
-    sigAction.sa_flags   = 0;
-
-    sigaction(SIGSEGV, &sigAction, nullptr);
-#endif
 
 #ifdef QT_SIMULATOR
     // Running this application would bring up the Qt Simulator (since it links Qt GUI), avoid that!

@@ -42,9 +42,11 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquicktext_p.h>
 
 #include "../../shared/util.h"
-
+#include "../shared/visualtestutil.h"
 
 #define EXPECT(cond) \
     do { \
@@ -221,6 +223,72 @@ void tst_QQuickAccessible::quickAttachedProperties()
             p = attachedObject->property("description");
             QCOMPARE(p.isNull(), false);
             QCOMPARE(p.toString(), QLatin1String("Duck"));
+        }
+        delete object;
+    }
+
+    // Check overriding of attached role for Text
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\nText {\n"
+                          "Accessible.role: Accessible.Button\n"
+                          "Accessible.name: \"TextButton\"\n"
+                          "Accessible.description: \"Text Button\"\n"
+                          "}", QUrl());
+        QObject *object = component.create();
+        QVERIFY(object != nullptr);
+
+        QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(object);
+        QVERIFY(attachedObject);
+        if (attachedObject) {
+            QVariant p = attachedObject->property("role");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toInt(), int(QAccessible::PushButton));
+            p = attachedObject->property("name");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toString(), QLatin1String("TextButton"));
+            p = attachedObject->property("description");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toString(), QLatin1String("Text Button"));
+        }
+        delete object;
+    }
+    // Check overriding of attached role for Text
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.0\nListView {\n"
+                          "id: list\n"
+                          "model: 5\n"
+                          "delegate: Text {\n"
+                          "objectName: \"acc_text\"\n"
+                          "Accessible.role: Accessible.Button\n"
+                          "Accessible.name: \"TextButton\"\n"
+                          "Accessible.description: \"Text Button\"\n"
+                          "}\n"
+                          "}", QUrl());
+        QObject *object = component.create();
+        QVERIFY(object != nullptr);
+
+        QQuickListView *listview = qobject_cast<QQuickListView *>(object);
+        QVERIFY(listview != nullptr);
+        QQuickItem *contentItem = listview->contentItem();
+        QQuickText *childItem = QQuickVisualTestUtil::findItem<QQuickText>(contentItem, "acc_text");
+        QVERIFY(childItem != nullptr);
+
+        QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(childItem);
+        QVERIFY(attachedObject);
+        if (attachedObject) {
+            QVariant p = attachedObject->property("role");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toInt(), int(QAccessible::PushButton));
+            p = attachedObject->property("name");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toString(), QLatin1String("TextButton"));
+            p = attachedObject->property("description");
+            QCOMPARE(p.isNull(), false);
+            QCOMPARE(p.toString(), QLatin1String("Text Button"));
         }
         delete object;
     }
