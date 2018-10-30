@@ -109,6 +109,10 @@ namespace QQmlPrivate
             // the size that was allocated.
             ::operator delete (ptr);
         }
+        static void operator delete(void *, void *) {
+            // Deliberately empty placement delete operator.
+            // Silences MSVC warning C4291: no matching operator delete found
+        }
     };
 
     template<typename T>
