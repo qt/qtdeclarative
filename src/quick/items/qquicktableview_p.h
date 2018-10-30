@@ -82,7 +82,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
 
 public:
     QQuickTableView(QQuickItem *parent = nullptr);
-
+    ~QQuickTableView() override;
     int rows() const;
     int columns() const;
 
@@ -98,8 +98,8 @@ public:
     QJSValue columnWidthProvider() const;
     void setColumnWidthProvider(QJSValue provider);
 
-    QVariant model() const;
-    void setModel(const QVariant &newModel);
+    virtual QVariant model() const;
+    virtual void setModel(const QVariant &newModel);
 
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *);

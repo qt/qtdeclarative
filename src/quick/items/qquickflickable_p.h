@@ -117,7 +117,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickFlickable : public QQuickItem
 
 public:
     QQuickFlickable(QQuickItem *parent=nullptr);
-    ~QQuickFlickable();
+    ~QQuickFlickable() override;
 
     QQmlListProperty<QObject> flickableData();
     QQmlListProperty<QQuickItem> flickableChildren();

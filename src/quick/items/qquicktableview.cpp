@@ -1772,6 +1772,10 @@ QQuickTableView::QQuickTableView(QQuickItem *parent)
     setFlag(QQuickItem::ItemIsFocusScope);
 }
 
+QQuickTableView::~QQuickTableView()
+{
+}
+
 QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
     : QQuickFlickable(dd, parent)
 {
