@@ -4,8 +4,7 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
-    labsmodels \
-    wavefrontmesh
+    labsmodels
 
 qtConfig(thread): SUBDIRS += folderlistmodel
 qtHaveModule(sql): SUBDIRS += localstorage
@@ -18,7 +17,8 @@ qtHaveModule(quick) {
     SUBDIRS += \
         layouts \
         qtquick2 \
-        window
+        window \
+        wavefrontmesh
 
     qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage
