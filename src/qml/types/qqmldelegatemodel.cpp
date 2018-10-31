@@ -2036,7 +2036,9 @@ void QV4::Heap::QQmlDelegateModelItemObject::destroy()
 }
 
 
-QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex, int row, int column)
+QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
+                                             QQmlAdaptorModel::Accessors *accessor,
+                                             int modelIndex, int row, int column)
     : v4(metaType->v4Engine)
     , metaType(metaType)
     , contextData(nullptr)
@@ -2053,6 +2055,21 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *meta
     , column(column)
 {
     metaType->addref();
+
+    if (accessor->propertyCache) {
+        // The property cache in the accessor is common for all the model
+        // items in the model it wraps. It describes available model roles,
+        // together with revisioned properties like row, column and index, all
+        // which should be available in the delegate. We assign this cache to the
+        // model item so that the QML engine can use the revision information
+        // when resolving the properties (rather than falling back to just
+        // inspecting the QObject in the model item directly).
+        QQmlData *qmldata = QQmlData::get(this, true);
+        if (qmldata->propertyCache)
+            qmldata->propertyCache->release();
+        qmldata->propertyCache = accessor->propertyCache.data();
+        qmldata->propertyCache->addref();
+    }
 }
 
 QQmlDelegateModelItem::~QQmlDelegateModelItem()

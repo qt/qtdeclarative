@@ -100,7 +100,9 @@ class QQmlDelegateModelItem : public QObject
     Q_PROPERTY(int column MEMBER column NOTIFY columnChanged)
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
-    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType, int modelIndex, int row, int column);
+    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
+                          QQmlAdaptorModel::Accessors *accessor, int modelIndex,
+                          int row, int column);
     ~QQmlDelegateModelItem();
 
     void referenceObject() { ++objectRef; }

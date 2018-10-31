@@ -104,11 +104,16 @@ public:
             return QVariant(); }
         virtual bool canFetchMore(const QQmlAdaptorModel &) const { return false; }
         virtual void fetchMore(QQmlAdaptorModel &) const {}
+
+        QScopedPointer<QMetaObject, QScopedPointerPodDeleter> metaObject;
+        QQmlRefPointer<QQmlPropertyCache> propertyCache;
     };
 
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
+
+    int modelItemRevision = 0;
 
     QQmlAdaptorModel();
     ~QQmlAdaptorModel();
