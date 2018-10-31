@@ -383,13 +383,20 @@ void QQuickDesignerSupport::resetAnchor(QQuickItem *item, const QString &name)
     }
 }
 
-void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QQuickItem *item)
+void QQuickDesignerSupport::emitComponentCompleteSignalForAttachedProperty(QObject *object)
 {
-    QQmlData *data = QQmlData::get(item);
+    if (!object)
+        return;
+
+    QQmlData *data = QQmlData::get(object);
     if (data && data->context) {
         QQmlComponentAttached *componentAttached = data->context->componentAttached;
-        if (componentAttached) {
-            emit componentAttached->completed();
+        while (componentAttached) {
+            if (componentAttached->parent())
+                if (componentAttached->parent() == object)
+                    emit componentAttached->completed();
+
+            componentAttached = componentAttached->next;
         }
     }
 }
