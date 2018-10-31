@@ -34,7 +34,18 @@ One of the core features of QML is that it enables QML object types to be easily
 
 \section1 Defining an Object Type with a QML File
 
-To create an object type, a QML document should be placed into a text file named as \e <TypeName>.qml where \e <TypeName> is the desired name of the type, which must be comprised of alphanumeric characters or underscores and beginning with an uppercase letter. This document is then automatically recognized by the engine as a definition of a QML type. Additionally, a type defined in this manner is automatically made available to other QML files within the same directory as the engine searches within the immediate directory when resolving QML type names.
+\section2 Naming Custom QML Object Types
+
+To create an object type, a QML document should be placed into a text file named as \e <TypeName>.qml where \e <TypeName> is the desired name of the type. The type name has the following requirements:
+
+\list
+    \li It must be comprised of alphanumeric characters or underscores.
+    \li It must begin with an uppercase letter.
+\endlist
+
+This document is then automatically recognized by the engine as a definition of a QML type. Additionally, a type defined in this manner is automatically made available to other QML files within the same directory as the engine searches within the immediate directory when resolving QML type names.
+
+\section2 Custom QML Type Definition
 
 For example, below is a document that declares a \l Rectangle with a child \l MouseArea. The document has been saved to file named \c SquareButton.qml:
 
