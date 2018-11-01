@@ -201,7 +201,7 @@ private:
         CheckType = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckFileEndsWith
     };
 
-    ConnectResult connect(bool block, const QString &testFile, bool recordFromStart = true,
+    ConnectResult connect(bool block, const QString &file, bool recordFromStart = true,
                           uint flushInterval = 0, bool restrictServices = true,
                           const QString &executable
             = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
@@ -209,8 +209,8 @@ private:
     void checkTraceReceived();
     void checkJsHeap();
     bool verify(MessageListType type, int expectedPosition,
-                const QQmlProfilerEventType &expectedType, quint32 checks,
-                const QVector<qint64> &numbers);
+                const QQmlProfilerEventType &expected, quint32 checks,
+                const QVector<qint64> &expectedNumbers);
 
     QList<QQmlDebugClient *> createClients() override;
     QScopedPointer<QQmlProfilerTestClient> m_client;
@@ -235,7 +235,7 @@ private slots:
 
 private:
     bool m_recordFromStart = true;
-    bool m_flushInterval = 0;
+    bool m_flushInterval = false;
     bool m_isComplete = false;
 
     // Don't use ({...}) here as MSVC will interpret that as the "QVector(int size)" ctor.
@@ -305,7 +305,7 @@ void tst_QQmlProfilerService::checkJsHeap()
     qint64 used = 0;
     qint64 lastTimestamp = -1;
     foreach (const QQmlProfilerEvent &message, m_client->jsHeapMessages) {
-        const qint64 amount = message.number<qint64>(0);
+        const auto amount = message.number<qint64>(0);
         const QQmlProfilerEventType &type = m_client->types.at(message.typeIndex());
         switch (type.detailType()) {
         case HeapPage:
@@ -328,9 +328,10 @@ void tst_QQmlProfilerService::checkJsHeap()
         if (lastTimestamp == -1) {
             lastTimestamp = message.timestamp();
             continue;
-        } else if (message.timestamp() == lastTimestamp) {
-            continue;
         }
+
+        if (message.timestamp() == lastTimestamp)
+            continue;
 
         lastTimestamp = message.timestamp();
 
@@ -759,7 +760,7 @@ void tst_QQmlProfilerService::memory()
 
     QVERIFY(m_client);
     int smallItems = 0;
-    for (auto message : m_client->jsHeapMessages) {
+    for (const auto& message : m_client->jsHeapMessages) {
         const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
         if (type.detailType() == SmallItem)
             ++smallItems;
@@ -793,7 +794,7 @@ void tst_QQmlProfilerService::compile()
     checkJsHeap();
 
     Message rangeStage = MaximumMessage;
-    for (auto message : m_client->qmlMessages) {
+    for (const auto& message : m_client->qmlMessages) {
         const QQmlProfilerEventType &type = m_client->types[message.typeIndex()];
         if (type.rangeType() == Compiling) {
             switch (rangeStage) {
