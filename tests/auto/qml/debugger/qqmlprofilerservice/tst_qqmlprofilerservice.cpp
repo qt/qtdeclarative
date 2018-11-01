@@ -373,7 +373,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         return false;
     }
 
-    uint position = expectedPosition;
+    int position = expectedPosition;
     qint64 timestamp = target->at(expectedPosition).timestamp();
     while (position > 0 && target->at(position - 1).timestamp() == timestamp)
         --position;
@@ -448,7 +448,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         }
 
         return true;
-    } while (target->at(++position).timestamp() == timestamp);
+    } while (++position < target->length() && target->at(position).timestamp() == timestamp);
 
     foreach (const QString &message, warnings)
         qWarning() << message.toLocal8Bit().constData();
