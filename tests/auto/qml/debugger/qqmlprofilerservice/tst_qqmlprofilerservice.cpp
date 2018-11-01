@@ -69,6 +69,9 @@ public:
     int numLoadedEventTypes() const override;
     void addEventType(const QQmlProfilerEventType &type) override;
     void addEvent(const QQmlProfilerEvent &event) override;
+
+private:
+    qint64 lastTimestamp = -1;
 };
 
 void QQmlProfilerTestClient::startTrace(qint64 timestamp, const QList<int> &engineIds)
@@ -101,6 +104,9 @@ void QQmlProfilerTestClient::addEvent(const QQmlProfilerEvent &event)
     QVERIFY(typeIndex < types.length());
 
     const QQmlProfilerEventType &type = types[typeIndex];
+
+    QVERIFY(event.timestamp() >= lastTimestamp);
+    lastTimestamp = event.timestamp();
 
     switch (type.message()) {
     case Event: {
