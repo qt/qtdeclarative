@@ -137,6 +137,7 @@ private slots:
     void revertListBug();
     void QTBUG_38492();
     void revertListMemoryLeak();
+    void duplicateStateName();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1653,6 +1654,17 @@ void tst_qquickstates::revertListMemoryLeak()
     }
     QVERIFY(bindingPtr->ref == 1);
 }
+
+void tst_qquickstates::duplicateStateName()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("duplicateStateName.qml"));
+    QTest::ignoreMessage(QtWarningMsg, fullDataPath("duplicateStateName.qml") + ":3:1: QML Rectangle: Found duplicate state name: state1");
+    QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem *>(c.create()));
+    QVERIFY(!item.isNull());
+}
+
 
 QTEST_MAIN(tst_qquickstates)
 

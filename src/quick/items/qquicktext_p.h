@@ -272,8 +272,10 @@ Q_SIGNALS:
     void textFormatChanged(QQuickText::TextFormat textFormat);
     void elideModeChanged(QQuickText::TextElideMode mode);
     void contentSizeChanged();
-    Q_REVISION(12) void contentWidthChanged(qreal contentWidth);
-    Q_REVISION(12) void contentHeightChanged(qreal contentHeight);
+    // The next two signals should be marked as Q_REVISION(12). See QTBUG-71247
+    void contentWidthChanged(qreal contentWidth);
+    void contentHeightChanged(qreal contentHeight);
+
     void lineHeightChanged(qreal lineHeight);
     void lineHeightModeChanged(LineHeightMode mode);
     void fontSizeModeChanged();

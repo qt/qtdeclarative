@@ -74,10 +74,14 @@
     false, the item's size will be fixed to its preferred size. Otherwise, it will grow or shrink
     between its minimum and maximum size as the layout is resized.
 
-    \note It is not recommended to have bindings to the x, y, width, or height properties of items
-    in a layout, since this would conflict with the goals of Layout, and can also cause binding
-    loops.
-
+    \note Do not bind to the x, y, width, or height properties of items in a layout,
+    as this would conflict with the goals of Layout, and can also cause binding loops.
+    The width and height properties are used by the layout engine to store the current
+    size of items as calculated from the minimum/preferred/maximum attached properties,
+    and can be ovewritten each time the items are laid out. Use
+    \l {Layout::preferredWidth}{Layout.preferredWidth} and
+    \l {Layout::preferredHeight}{Layout.preferredHeight}, or \l {Item::}{implicitWidth}
+    and \l {Item::}{implicitHeight} to specify the preferred size of items.
 
     \sa GridLayout
     \sa RowLayout

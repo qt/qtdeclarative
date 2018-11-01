@@ -98,6 +98,22 @@ private:
     qreal m_radius;
 };
 
+class EventSender : public QObject {
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE void sendMouseClick(QObject* obj ,qreal x , qreal y) {
+        {
+            QMouseEvent event(QEvent::MouseButtonPress, QPointF(x , y), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            qApp->sendEvent(obj, &event);
+        }
+        {
+            QMouseEvent event(QEvent::MouseButtonRelease, QPointF(x , y), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            qApp->sendEvent(obj, &event);
+        }
+    }
+};
+
 class tst_QQuickMouseArea: public QQmlDataTest
 {
     Q_OBJECT
@@ -106,6 +122,7 @@ public:
         : device(nullptr)
     {
         qmlRegisterType<CircleMask>("Test", 1, 0, "CircleMask");
+        qmlRegisterType<EventSender>("Test", 1, 0, "EventSender");
     }
 
 private slots:
@@ -165,6 +182,7 @@ private slots:
     void pressOneAndTapAnother_data();
     void pressOneAndTapAnother();
     void mask();
+    void nestedEventDelivery();
 
 private:
     int startDragDistance() const {
@@ -2296,6 +2314,21 @@ void tst_QQuickMouseArea::mask()
     QCOMPARE(window.rootObject()->property("pressed").toInt(), 1);
     QCOMPARE(window.rootObject()->property("released").toInt(), 1);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
+}
+
+void tst_QQuickMouseArea::nestedEventDelivery() // QTBUG-70898
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("nestedSendEvent.qml"));
+    QScopedPointer<QQuickWindow> window(qmlobject_cast<QQuickWindow *>(c.create()));
+    QVERIFY(window.data());
+
+    // Click each MouseArea and verify that it doesn't crash
+    QByteArray message = "event went missing during delivery! (nested sendEvent() is not allowed)";
+    QTest::ignoreMessage(QtWarningMsg, message);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
+    QTest::ignoreMessage(QtWarningMsg, message); // twice though, actually
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50,150));
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
