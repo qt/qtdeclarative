@@ -73,7 +73,6 @@ protected:
     void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
     void itemChildRemoved(QQuickItem *, QQuickItem *child) override;
 
-private:
     void removeAncestorListeners(QQuickItem *item);
     void addAncestorListeners(QQuickItem *item);
 

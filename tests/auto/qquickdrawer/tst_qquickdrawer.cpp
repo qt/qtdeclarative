@@ -109,6 +109,8 @@ private slots:
     void slider_data();
     void slider();
 
+    void topEdgeScreenEdge();
+
 private:
     struct TouchDeviceDeleter
     {
@@ -1314,6 +1316,20 @@ void tst_QQuickDrawer::slider()
         QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
     else
         QTest::touchEvent(window, touchDevice.data()).release(0, to);
+}
+
+void tst_QQuickDrawer::topEdgeScreenEdge()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("topEdgeScreenEdge.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickDrawer *drawer = window->property("drawer").value<QQuickDrawer *>();
+    QVERIFY(drawer);
+
+    QVERIFY(QMetaObject::invokeMethod(drawer, "open"));
+    QTRY_COMPARE(drawer->position(), 1.0);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)
