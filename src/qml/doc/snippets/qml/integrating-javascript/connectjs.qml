@@ -48,20 +48,19 @@
 **
 ****************************************************************************/
 //![0]
-import QtQuick 2.0
+import QtQuick 2.12
 import "script.js" as MyScript
 
 Item {
     id: item
     width: 200; height: 200
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
+    TapHandler {
+        id: inputHandler
     }
 
     Component.onCompleted: {
-        mouseArea.clicked.connect(MyScript.jsFunction)
+        inputHandler.tapped.connect(MyScript.jsFunction)
     }
 }
 //![0]

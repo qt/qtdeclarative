@@ -90,4 +90,16 @@
   underlying C++ object. Note that the name of the script variable
   can be anything; i.e., it is not dependent upon QObject::objectName().
 
+  \section1 Implications for Application Security
+
+  The security model of application scripting with JavaScript follows
+  the same model as for C++ code: the user installs scripts to run
+  that they trust in the same way as they install Qt applications.
+
+  In order to preserve the trust of users, application developers should
+  not evaluate arbitrary JavaScript code. The JavaScript engine's sandbox is
+  only a semantic barrier. The script is evaluated in the same process and
+  with the same privileges as the rest of the application and shares the
+  same memory. As a consequence, C++ objects exposed to scripts are
+  accessible without additional security guards.
  */

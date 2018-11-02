@@ -2992,7 +2992,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     ControlFlow *savedControlFlow = controlFlow;
     controlFlow = nullptr;
 
-    if (_context->contextType == ContextType::Global) {
+    if (_context->contextType == ContextType::Global || _context->contextType == ContextType::ScriptImportedByQML) {
         _module->blocks.append(_context);
         _context->blockIndex = _module->blocks.count() - 1;
     }

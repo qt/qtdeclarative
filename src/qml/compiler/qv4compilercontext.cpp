@@ -207,7 +207,7 @@ void Context::emitBlockHeader(Codegen *codegen)
             blockIndex = codegen->module()->blocks.count() - 1;
         }
 
-        if (contextType == ContextType::Global) {
+        if (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML) {
             Instruction::PushScriptContext scriptContext;
             scriptContext.index = blockIndex;
             bytecodeGenerator->addInstruction(scriptContext);
@@ -256,7 +256,7 @@ void Context::emitBlockHeader(Codegen *codegen)
         r.storeConsumeAccumulator();
     }
 
-    if (contextType == ContextType::Global || (contextType == ContextType::Eval && !isStrict)) {
+    if (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML || (contextType == ContextType::Eval && !isStrict)) {
         // variables in global code are properties of the global context object, not locals as with other functions.
         for (Context::MemberMap::const_iterator it = members.constBegin(), cend = members.constEnd(); it != cend; ++it) {
             if (it->isLexicallyScoped())
@@ -316,7 +316,7 @@ void Context::emitBlockFooter(Codegen *codegen)
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
-    if (contextType == ContextType::Global)
+    if (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML)
         bytecodeGenerator->addInstruction(Instruction::PopScriptContext());
     else if (contextType != ContextType::ESModule)
         bytecodeGenerator->addInstruction(Instruction::PopContext());
@@ -371,9 +371,10 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         break;
     }
     case ContextType::Global:
+    case ContextType::ScriptImportedByQML:
     case ContextType::Eval:
         for (Context::MemberMap::iterator it = members.begin(), end = members.end(); it != end; ++it) {
-            if (!it->isLexicallyScoped() && (contextType == ContextType::Global || !isStrict))
+            if (!it->isLexicallyScoped() && (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML || !isStrict))
                 continue;
             if (it->canEscape)
                 registerLocal(it);

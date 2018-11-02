@@ -103,7 +103,8 @@ struct Q_QML_EXPORT Script {
 
     static QQmlRefPointer<CompiledData::CompilationUnit> precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
             const QString &fileName, const QString &finalUrl, const QString &source,
-            QList<QQmlError> *reportedErrors = nullptr);
+            QList<QQmlError> *reportedErrors = nullptr,
+            QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Global);
     static Script *createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlContext, const QString &fileName, const QUrl &originalUrl, QString *error);
 
     static ReturnedValue evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext);
