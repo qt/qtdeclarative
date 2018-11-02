@@ -437,8 +437,6 @@ void QQmlDelegateModel::setModel(const QVariant &model)
     The delegate provides a template defining each item instantiated by a view.
     The index is exposed as an accessible \c index property.  Properties of the
     model are also available depending upon the type of \l {qml-data-models}{Data Model}.
-
-    \sa DelegateComponent
 */
 QQmlComponent *QQmlDelegateModel::delegate() const
 {
