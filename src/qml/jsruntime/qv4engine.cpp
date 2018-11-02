@@ -342,7 +342,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[BooleanProto] = memoryManager->allocate<BooleanPrototype>();
     jsObjects[DateProto] = memoryManager->allocate<DatePrototype>();
 
-#ifdef QT_NO_DEBUG
+#if defined(QT_NO_DEBUG) && !defined(QT_FORCE_ASSERTS)
     InternalClassEntry *index = nullptr;
 #else
     InternalClassEntry _index;
