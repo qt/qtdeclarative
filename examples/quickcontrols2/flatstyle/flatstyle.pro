@@ -6,10 +6,14 @@ QT += quick quickcontrols2 widgets
 SOURCES += main.cpp
 
 RESOURCES += \
-   qtquickcontrols2.conf \
-   $$files(*.qml) \
-   $$files(imports/Theme/*) \
-   $$files(Flat/*.qml)
+    qtquickcontrols2.conf \
+    flatstyle.qml \
+    MainForm.ui.qml \
+    Flat/Button.qml \
+    Flat/CheckBox.qml \
+    Flat/Switch.qml \
+    imports/Theme/Theme.qml \
+    imports/Theme/qmldir
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH = $$PWD/imports

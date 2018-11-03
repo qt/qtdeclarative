@@ -146,7 +146,7 @@
 
     For example, to style a button in Qt Quick Controls:
 
-    \badcode
+    \qml
     Button {
         style: ButtonStyle {
             label: Label {
@@ -154,7 +154,7 @@
             }
         }
     }
-    \endcode
+    \endqml
 
     To style a button in Qt Quick Controls 2:
 
@@ -174,21 +174,21 @@
     moved to a file named \c Button.qml in a directory named \c controls, and
     used in the following manner:
 
-    \badcode
+    \qml
     import "controls" as Controls
 
     Controls.Button {
-        ...
+        // ...
     }
-    \endcode
+    \endqml
 
     This works with both modules, and will reduce the amount of work needed
     when the migration begins.
 
     \section2 Type Comparison Table
 
-    The first column lists all types available in \l {Qt Quick Controls}
-    {Qt Quick Controls 1}, \l {Qt Quick Dialogs}, and \l {Qt Quick Extras}.
+    The first column lists all types available in \l {Qt Quick Controls 1},
+    \l {Qt Quick Dialogs}, and \l {Qt Quick Extras}.
     The second column documents the respective type in Qt Quick Controls 2.
     When a direct alternative is not available, the third column contains
     an alternative that provides related functionality. The last column
@@ -202,27 +202,27 @@
         \li Alternatives
         \li Remarks
     \row
-        \li \l [QML QtQuickControls] {Action}
+        \li \l [QML QtQuickControls1] {Action}
         \li \l [QML QtQuickControls2] {Action}
         \li \l [QML QtQuick] {Shortcut} \br\sup {(Qt Quick)}
         \li
     \row
-        \li \l [QML QtQuickControls] {ApplicationWindow}
+        \li \l [QML QtQuickControls1] {ApplicationWindow}
         \li \l [QML QtQuickControls2] {ApplicationWindow}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {BusyIndicator}
+        \li \l [QML QtQuickControls1] {BusyIndicator}
         \li \l [QML QtQuickControls2] {BusyIndicator}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {Button}
+        \li \l [QML QtQuickControls1] {Button}
         \li \l [QML QtQuickControls2] {Button}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {Calendar}
+        \li \l [QML QtQuickControls1] {Calendar}
         \li \mdash
         \li \l [QML QtLabsCalendar] {MonthGrid},\br
             \l [QML QtLabsCalendar] {DayOfWeekRow},\br
@@ -232,17 +232,17 @@
                     are \e experimental unstyled building blocks for calendar views.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {CheckBox}
+        \li \l [QML QtQuickControls1] {CheckBox}
         \li \l [QML QtQuickControls2] {CheckBox}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {ComboBox}
+        \li \l [QML QtQuickControls1] {ComboBox}
         \li \l [QML QtQuickControls2] {ComboBox}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {ExclusiveGroup}
+        \li \l [QML QtQuickControls1] {ExclusiveGroup}
         \li \mdash
         \li \l [QML QtQuickControls2] {ActionGroup},\br
             \l [QML QtQuickControls2] {ButtonGroup} \br\sup {(Qt Quick Controls 2)}
@@ -250,17 +250,17 @@
                 \li \b {Qt Quick Controls 2}: \c ActionGroup and \c ButtonGroup offer similar functionality.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {GroupBox}
+        \li \l [QML QtQuickControls1] {GroupBox}
         \li \l [QML QtQuickControls2] {GroupBox}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {Label}
+        \li \l [QML QtQuickControls1] {Label}
         \li \l [QML QtQuickControls2] {Label}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {Menu}
+        \li \l [QML QtQuickControls1] {Menu}
         \li \l [QML QtQuickControls2] {Menu}
         \li \l [QML QtLabsPlatform] {Menu} \br\sup {(Qt Labs Platform)}
         \li \list
@@ -281,7 +281,7 @@
                     is not available in the Qt Platform Abstraction Layer.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {MenuBar}
+        \li \l [QML QtQuickControls1] {MenuBar}
         \li \l [QML QtQuickControls2] {MenuBar}
         \li \l [QML QtLabsPlatform] {MenuBar} \br\sup {(Qt Labs Platform)}
         \li \list
@@ -295,8 +295,8 @@
                     in the Qt Platform Abstraction Layer.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {MenuItem},\br
-            \l [QML QtQuickControls] {MenuSeparator}
+        \li \l [QML QtQuickControls1] {MenuItem},\br
+            \l [QML QtQuickControls1] {MenuSeparator}
         \li \l [QML QtQuickControls2] {MenuItem},\br
             \l [QML QtQuickControls2] {MenuSeparator}
         \li \l [QML QtLabsPlatform] {MenuItem},\br
@@ -312,39 +312,39 @@
                     native menu items and separators.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {ProgressBar}
+        \li \l [QML QtQuickControls1] {ProgressBar}
         \li \l [QML QtQuickControls2] {ProgressBar}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {RadioButton}
+        \li \l [QML QtQuickControls1] {RadioButton}
         \li \l [QML QtQuickControls2] {RadioButton}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {ScrollView}
+        \li \l [QML QtQuickControls1] {ScrollView}
         \li \l [QML QtQuickControls2] {ScrollView}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {Slider}
+        \li \l [QML QtQuickControls1] {Slider}
         \li \l [QML QtQuickControls2] {Slider}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {SpinBox}
+        \li \l [QML QtQuickControls1] {SpinBox}
         \li \l [QML QtQuickControls2] {SpinBox}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {SplitView}
+        \li \l [QML QtQuickControls1] {SplitView}
         \li \mdash
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {StackView},\br
-            \l [QML QtQuickControls] {StackViewDelegate},\br
-            \l [QML QtQuickControls] {Stack}
+        \li \l [QML QtQuickControls1] {StackView},\br
+            \l [QML QtQuickControls1] {StackViewDelegate},\br
+            \l [QML QtQuickControls1] {Stack}
         \li \l [QML QtQuickControls2] {StackView}
         \li
         \li \list
@@ -352,7 +352,7 @@
                     and attached properties via a single \c StackView type.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {StatusBar}
+        \li \l [QML QtQuickControls1] {StatusBar}
         \li \mdash
         \li \l [QML QtQuickControls2] {ToolBar} \br\sup {(Qt Quick Controls 2)}
         \li \list
@@ -360,13 +360,13 @@
                     item or control, such as \c ToolBar, as a header or footer.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {Switch}
+        \li \l [QML QtQuickControls1] {Switch}
         \li \l [QML QtQuickControls2] {Switch}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {TabView},\br
-            \l [QML QtQuickControls] {Tab}
+        \li \l [QML QtQuickControls1] {TabView},\br
+            \l [QML QtQuickControls1] {Tab}
         \li \mdash
         \li \l [QML QtQuickControls2] {TabBar},\br
             \l [QML QtQuickControls2] {TabButton} \br\sup {(Qt Quick Controls 2)}
@@ -375,12 +375,12 @@
                     functionality, and can be used to build tabbed views.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {TableView}
+        \li \l [QML QtQuickControls1] {TableView}
         \li \mdash
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {TextArea}
+        \li \l [QML QtQuickControls1] {TextArea}
         \li \l [QML QtQuickControls2] {TextArea}
         \li
         \li \list
@@ -392,22 +392,22 @@
                     scrollable areas, which can be problematic and cause usability issues.
             \endlist
     \row
-        \li \l [QML QtQuickControls] {TextField}
+        \li \l [QML QtQuickControls1] {TextField}
         \li \l [QML QtQuickControls2] {TextField}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {ToolBar}
+        \li \l [QML QtQuickControls1] {ToolBar}
         \li \l [QML QtQuickControls2] {ToolBar}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {ToolButton}
+        \li \l [QML QtQuickControls1] {ToolButton}
         \li \l [QML QtQuickControls2] {ToolButton}
         \li
         \li
     \row
-        \li \l [QML QtQuickControls] {TreeView}
+        \li \l [QML QtQuickControls1] {TreeView}
         \li \mdash
         \li
         \li
@@ -519,14 +519,14 @@
     \row
         \li \mdash
         \li \l [QML QtQuickControls2] {ActionGroup}
-        \li \l [QML QtQuickControls] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
+        \li \l [QML QtQuickControls1] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
         \li \list
                 \li \b {Qt Quick Controls 1}: \c ExclusiveGroup offers similar functionality.
             \endlist
     \row
         \li \mdash
         \li \l [QML QtQuickControls2] {ButtonGroup}
-        \li \l [QML QtQuickControls] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
+        \li \l [QML QtQuickControls1] {ExclusiveGroup} \br\sup {(Qt Quick Controls 1)}
         \li \list
                 \li \b {Qt Quick Controls 1}: \c ExclusiveGroup offers similar functionality.
             \endlist
@@ -599,7 +599,7 @@
         \li \mdash
         \li \l [QML QtQuickControls2] {ScrollBar},\br
             \l [QML QtQuickControls2] {ScrollIndicator}
-        \li \l [QML QtQuickControls] {ScrollView} \br\sup {(Qt Quick Controls 1)}
+        \li \l [QML QtQuickControls1] {ScrollView} \br\sup {(Qt Quick Controls 1)}
         \li \list
                 \li \b {Qt Quick Controls 1}: \c ScrollView offers similar functionality.
                     It combines horizontal and vertical scrollbars, and the background and
@@ -644,7 +644,7 @@
         \li \mdash
         \li \l [QML QtQuickControls2] {TabBar},\br
             \l [QML QtQuickControls2] {TabButton}
-        \li \l [QML QtQuickControls] {TabView} \br\sup {(Qt Quick Controls 1)}
+        \li \l [QML QtQuickControls1] {TabView} \br\sup {(Qt Quick Controls 1)}
         \li \list
                 \li \b {Qt Quick Controls 1}: \c TabView offers similar functionality.
                     It combines the tab bar, background and frame around the tabs.
@@ -670,7 +670,7 @@
     \list
       \li \l{Qt Quick}
       \li \l{Qt Quick Controls 2 QML Types}
-      \li \l{Qt Quick Controls QML Types}
+      \li \l{Qt Quick Controls 1 QML Types}
       \li \l{Qt Quick Extras QML Types}
       \li \l{Qt Labs Calendar QML Types}
       \li \l{Qt Labs Platform QML Types}

@@ -27,6 +27,7 @@
 
 /*!
     \example swipetoremove
+    \keyword Qt Quick Controls - Swipe to Remove
     \title Qt Quick Controls 2 - Swipe to Remove
     \ingroup qtquickcontrols2-examples
     \brief Demonstrates removal of list items by swipe gesture.

@@ -27,6 +27,7 @@
 
 /*!
     \page qtquickcontrols2-configuration.html
+    \keyword Qt Quick Controls Configuration File
     \title Qt Quick Controls 2 Configuration File
 
     Qt Quick Controls 2 support a special configuration file, \c :/qtquickcontrols2.conf,

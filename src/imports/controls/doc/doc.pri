@@ -1,4 +1,4 @@
-QMAKE_DOCS = $$PWD/qtquickcontrols2.qdocconf
+QMAKE_DOCS = $$PWD/qtquickcontrols.qdocconf
 
 OTHER_FILES += \
     $$files($$PWD/snippets/*.qml) \

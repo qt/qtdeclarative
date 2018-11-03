@@ -26,7 +26,8 @@
 ****************************************************************************/
 
 /*!
-    \page qtquickcontrols2-index.html
+    \page qtquickcontrols-index.html
+    \keyword Qt Quick Controls
     \title Qt Quick Controls 2
 
     \brief Provides a set of UI controls for Qt Quick.

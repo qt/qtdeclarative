@@ -55,11 +55,15 @@ static int runTests(QObject *testObject, int argc, char *argv[])
     int res = 0;
     QTest::qInit(testObject, argc, argv);
     const QByteArray testObjectName = QTestResult::currentTestObjectName();
+    // setCurrentTestObject() takes a C string, which means we must ensure
+    // that the string we pass in lives long enough (i.e until the next call
+    // to setCurrentTestObject()), so store the name outside of the loop.
+    QByteArray testName;
     const QStringList styles = testStyles();
     for (const QString &style : styles) {
         qmlClearTypeRegistrations();
         QQuickStyle::setStyle(style);
-        const QByteArray testName = testObjectName + "::" + style.toLocal8Bit();
+        testName = testObjectName + "::" + style.toLocal8Bit();
         QTestResult::setCurrentTestObject(testName);
         res += QTest::qRun();
     }

@@ -22,7 +22,10 @@ qhp.QtLabsCalendar.subprojects.qmltypes.indexTitle = Qt Labs Calendar QML Types
 qhp.QtLabsCalendar.subprojects.qmltypes.selectors = qmlclass
 qhp.QtLabsCalendar.subprojects.qmltypes.sortPages = true
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickcontrols2
+depends = qtcore qtgui qtdoc qtqml qtquick qtquickcontrols
+
+# This module has no documented C++ types, clear the module header
+moduleheader =
 
 headerdirs += ../
 sourcedirs += ../ src
