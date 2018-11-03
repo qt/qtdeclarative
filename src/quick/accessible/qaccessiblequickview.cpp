@@ -91,7 +91,7 @@ QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
 
 QAccessible::Role QAccessibleQuickWindow::role() const
 {
-    return QAccessible::Window; // FIXME
+    return QAccessible::Window;
 }
 
 QAccessible::State QAccessibleQuickWindow::state() const
