@@ -21,7 +21,6 @@ QMAKE_DOCS = $$PWD/doc/qtquick.qdocconf
 ANDROID_LIB_DEPENDENCIES = \
     lib/libQt5QuickParticles.so
 MODULE_PLUGIN_TYPES += \
-    accessible/libqtaccessiblequick.so \
     scenegraph
 ANDROID_BUNDLED_FILES += \
     qml \
