@@ -471,8 +471,7 @@ void tst_QQuickListView::items(const QUrl &source)
     // Force a layout, necessary if ListView is completed before DelegateModel.
     listview->forceLayout();
 
-    int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
-    QTRY_COMPARE(itemCount, 0);
+    QTRY_VERIFY(findItems<QQuickItem>(contentItem, "wrapper").isEmpty());
 
     QTRY_COMPARE(listview->highlightResizeVelocity(), 1000.0);
     QTRY_COMPARE(listview->highlightMoveVelocity(), 100000.0);
