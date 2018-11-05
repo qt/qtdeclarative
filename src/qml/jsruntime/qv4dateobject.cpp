@@ -755,16 +755,16 @@ void Heap::DateCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Date"));
 }
 
-ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *)
+ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, const Value *argv, int argc, const Value *newTarget)
 {
-    ExecutionEngine *e = that->engine();
+    ExecutionEngine *v4 = that->engine();
     double t = 0;
 
     if (argc == 0)
         t = currentTime();
 
     else if (argc == 1) {
-        Scope scope(e);
+        Scope scope(v4);
         ScopedValue arg(scope, argv[0]);
         if (DateObject *d = arg->as<DateObject>()) {
             t = d->date();
@@ -772,7 +772,7 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
             arg = RuntimeHelpers::toPrimitive(arg, PREFERREDTYPE_HINT);
 
             if (String *s = arg->stringValue())
-                t = ParseString(s->toQString(), e->localTZA);
+                t = ParseString(s->toQString(), v4->localTZA);
             else
                 t = TimeClip(arg->toNumber());
         }
@@ -789,10 +789,16 @@ ReturnedValue DateCtor::virtualCallAsConstructor(const FunctionObject *that, con
         if (year >= 0 && year <= 99)
             year += 1900;
         t = MakeDate(MakeDay(year, month, day), MakeTime(hours, mins, secs, ms));
-        t = TimeClip(UTC(t, e->localTZA));
+        t = TimeClip(UTC(t, v4->localTZA));
     }
 
-    return Encode(e->newDateObject(Value::fromDouble(t)));
+    ReturnedValue o = Encode(v4->newDateObject(Value::fromDouble(t)));
+    if (!newTarget)
+        return o;
+    Scope scope(v4);
+    ScopedObject obj(scope, o);
+    obj->setProtoFromNewTarget(newTarget);
+    return obj->asReturnedValue();
 }
 
 ReturnedValue DateCtor::virtualCall(const FunctionObject *m, const Value *, const Value *, int)

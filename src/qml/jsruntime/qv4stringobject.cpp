@@ -170,7 +170,7 @@ void Heap::StringCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("String"));
 }
 
-ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *v4 = static_cast<const Object *>(f)->engine();
     Scope scope(v4);
@@ -180,7 +180,13 @@ ReturnedValue StringCtor::virtualCallAsConstructor(const FunctionObject *f, cons
     else
         value = v4->newString();
     CHECK_EXCEPTION();
-    return Encode(v4->newStringObject(value));
+    ReturnedValue o = Encode(v4->newStringObject(value));
+
+    if (!newTarget)
+        return o;
+    ScopedObject obj(scope, o);
+    obj->setProtoFromNewTarget(newTarget);
+    return obj->asReturnedValue();
 }
 
 ReturnedValue StringCtor::virtualCall(const FunctionObject *m, const Value *, const Value *argv, int argc)

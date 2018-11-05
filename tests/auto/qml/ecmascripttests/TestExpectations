@@ -139,7 +139,6 @@ built-ins/Date/prototype/toTimeString/invalid-date.js fails
 built-ins/Date/prototype/toUTCString/day-names.js fails
 built-ins/Date/prototype/toUTCString/format.js fails
 built-ins/Date/prototype/toUTCString/month-names.js fails
-built-ins/Date/subclassing.js fails
 built-ins/Function/internals/Construct/base-ctor-revoked-proxy.js fails
 built-ins/Function/prototype/bind/BoundFunction_restricted-properties.js fails
 built-ins/Function/prototype/bind/instance-name-chained.js fails
@@ -177,14 +176,10 @@ built-ins/Object/prototype/toString/proxy-function.js fails
 built-ins/Object/prototype/valueOf/S15.2.4.4_A14.js fails
 built-ins/Object/values/getter-adding-key.js fails
 built-ins/Object/values/observable-operations.js fails
-built-ins/Promise/all/ctx-ctor.js fails
 built-ins/Promise/prototype/catch/this-value-obj-coercible.js fails
-built-ins/Promise/prototype/then/capability-executor-called-twice.js fails
 built-ins/Promise/prototype/then/capability-executor-not-callable.js fails
 built-ins/Promise/prototype/then/ctor-custom.js fails
 built-ins/Promise/race/ctx-ctor.js fails
-built-ins/Promise/reject/ctx-ctor.js fails
-built-ins/Promise/resolve/ctx-ctor.js fails
 built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js fails
 built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js fails
 built-ins/RegExp/S15.10.2.12_A2_T1.js fails

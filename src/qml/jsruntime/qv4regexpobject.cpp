@@ -332,7 +332,13 @@ ReturnedValue RegExpCtor::virtualCallAsConstructor(const FunctionObject *fo, con
         return scope.engine->throwSyntaxError(QStringLiteral("Invalid regular expression"));
     }
 
-    return Encode(scope.engine->newRegExpObject(regexp));
+    ReturnedValue o = Encode(scope.engine->newRegExpObject(regexp));
+
+    if (!newTarget)
+        return o;
+    ScopedObject obj(scope, o);
+    obj->setProtoFromNewTarget(newTarget);
+    return obj->asReturnedValue();
 }
 
 ReturnedValue RegExpCtor::virtualCall(const FunctionObject *f, const Value *, const Value *argv, int argc)

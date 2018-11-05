@@ -276,7 +276,7 @@ QQmlRefPointer<CompiledData::CompilationUnit> FunctionCtor::parse(ExecutionEngin
     return cg.generateCompilationUnit();
 }
 
-ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *engine = f->engine();
 
@@ -286,7 +286,14 @@ ReturnedValue FunctionCtor::virtualCallAsConstructor(const FunctionObject *f, co
 
     Function *vmf = compilationUnit->linkToEngine(engine);
     ExecutionContext *global = engine->scriptContext();
-    return Encode(FunctionObject::createScriptFunction(global, vmf));
+    ReturnedValue o = Encode(FunctionObject::createScriptFunction(global, vmf));
+
+    if (!newTarget)
+        return o;
+    Scope scope(engine);
+    ScopedObject obj(scope, o);
+    obj->setProtoFromNewTarget(newTarget);
+    return obj->asReturnedValue();
 }
 
 // 15.3.1: This is equivalent to new Function(...)

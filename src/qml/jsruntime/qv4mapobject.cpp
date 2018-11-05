@@ -59,11 +59,14 @@ void Heap::MapCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Map"));
 }
 
-ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool weakMap)
+ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget, bool weakMap)
 {
     Scope scope(f);
     Scoped<MapObject> a(scope, scope.engine->memoryManager->allocate<MapObject>());
-    if (weakMap) {
+    bool protoSet = false;
+    if (newTarget)
+        protoSet = a->setProtoFromNewTarget(newTarget);
+    if (!protoSet && weakMap) {
         a->setPrototypeOf(scope.engine->weakMapPrototype());
         scope.engine->memoryManager->registerWeakMap(a->d());
     }

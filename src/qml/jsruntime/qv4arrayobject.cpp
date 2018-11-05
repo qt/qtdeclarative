@@ -60,11 +60,13 @@ void Heap::ArrayCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Array"));
 }
 
-ReturnedValue ArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue ArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     ExecutionEngine *v4 = static_cast<const ArrayCtor *>(f)->engine();
     Scope scope(v4);
     ScopedArrayObject a(scope, v4->newArrayObject());
+    if (newTarget)
+        a->setProtoFromNewTarget(newTarget);
     uint len;
     if (argc == 1 && argv[0].isNumber()) {
         bool ok;
