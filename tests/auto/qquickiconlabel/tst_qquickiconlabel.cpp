@@ -216,6 +216,11 @@ void tst_qquickiconlabel::display()
             QCOMPARE(label->implicitHeight(), qMax(icon->implicitHeight(), text->implicitHeight()) + verticalPadding);
             break;
         }
+
+        if (text)
+            QCOMPARE(label->baselineOffset(), text->y() + text->baselineOffset());
+        else
+            QCOMPARE(label->baselineOffset(), 0);
     }
 }
 

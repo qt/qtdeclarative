@@ -233,6 +233,7 @@ static QRectF alignedRect(bool mirrored, Qt::Alignment alignment, const QSizeF &
 
 void QQuickIconLabelPrivate::layout()
 {
+    Q_Q(QQuickIconLabel);
     if (!componentComplete)
         return;
 
@@ -327,6 +328,8 @@ void QQuickIconLabelPrivate::layout()
         }
         break;
     }
+
+    q->setBaselineOffset(label ? label->y() + label->baselineOffset() : 0);
 }
 
 static const QQuickItemPrivate::ChangeTypes itemChangeTypes =
