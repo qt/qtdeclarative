@@ -500,8 +500,8 @@ class QML_PARSER_EXPORT TemplateLiteral : public LeftHandSideExpression
 public:
     QQMLJS_DECLARE_AST_NODE(TemplateLiteral)
 
-    TemplateLiteral(const QStringRef &str, ExpressionNode *e)
-        : value(str), expression(e), next(nullptr)
+    TemplateLiteral(const QStringRef &str, const QStringRef &raw, ExpressionNode *e)
+        : value(str), rawValue(raw), expression(e), next(nullptr)
     { kind = K; }
 
     SourceLocation firstSourceLocation() const override
@@ -513,6 +513,7 @@ public:
     void accept0(Visitor *visitor) override;
 
     QStringRef value;
+    QStringRef rawValue;
     ExpressionNode *expression;
     TemplateLiteral *next;
     SourceLocation literalToken;

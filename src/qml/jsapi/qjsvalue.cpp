@@ -159,6 +159,32 @@
     This is a typedef for a QList<QJSValue>.
 */
 
+/*!
+    \enum QJSValue::ErrorType
+    \since 5.12
+
+    Use this enum for JavaScript language-specific types of Error objects.
+
+    They may be useful when emulating language features in C++ requires the use
+    of specialized exception types. In addition, they may help to more clearly
+    communicate certain typical conditions, instead of throwing a generic
+    JavaScript exception. For example, code that deals with networking and
+    resource locators may find it useful to propagate errors related to
+    malformed locators using the URIError type.
+
+    \omitvalue NoError
+    \value GenericError A generic Error object, but not of a specific sub-type.
+    \omitvalue EvalError
+    \value RangeError A value did not match the expected set or range.
+    \value ReferenceError A non-existing variable referenced.
+    \value SyntaxError An invalid token or sequence of tokens was encountered
+    that does not conform with the syntax of the language.
+    \value TypeError An operand or argument is incompatible with the type
+    expected.
+    \value URIError A URI handling function was used incorrectly or the URI
+    provided is malformed.
+*/
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -371,7 +397,7 @@ bool QJSValue::isUndefined() const
   Returns true if this QJSValue is an object of the Error class;
   otherwise returns false.
 
-  \sa {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
+  \sa errorType(), {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
 */
 bool QJSValue::isError() const
 {
@@ -379,6 +405,41 @@ bool QJSValue::isError() const
     if (!val)
         return false;
     return val->as<ErrorObject>();
+}
+
+/*!
+  \since 5.12
+  Returns the error type this QJSValue represents if it is an Error object.
+  Otherwise, returns \c NoError."
+
+  \sa isError(), {QJSEngine#Script Exceptions}{QJSEngine - Script Exceptions}
+*/
+QJSValue::ErrorType QJSValue::errorType() const
+{
+    QV4::Value *val = QJSValuePrivate::getValue(this);
+    if (!val)
+        return NoError;
+    QV4::ErrorObject *error = val->as<ErrorObject>();
+    if (!error)
+        return NoError;
+    switch (error->d()->errorType) {
+    case QV4::Heap::ErrorObject::Error:
+        return GenericError;
+    case QV4::Heap::ErrorObject::EvalError:
+        return EvalError;
+    case QV4::Heap::ErrorObject::RangeError:
+        return RangeError;
+    case QV4::Heap::ErrorObject::ReferenceError:
+        return ReferenceError;
+    case QV4::Heap::ErrorObject::SyntaxError:
+        return SyntaxError;
+    case QV4::Heap::ErrorObject::TypeError:
+        return TypeError;
+    case QV4::Heap::ErrorObject::URIError:
+        return URIError;
+    }
+    Q_UNREACHABLE();
+    return NoError;
 }
 
 /*!

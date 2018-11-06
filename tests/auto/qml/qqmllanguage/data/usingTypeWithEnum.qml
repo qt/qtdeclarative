@@ -7,4 +7,9 @@ QtObject {
     property int scopedEnumValue: TypeWithEnum.MyEnum.EnumValue3
     property int enumValueFromSingleton: { var x = SingletonType.EnumValue; return x; }
     Component.onCompleted: enumValue2 = TypeWithEnum.EnumValue1
+
+    property int duplicatedEnumValueFromSingleton: SingletonType.AnotherEnumValue
+    property int scopedEnumValueFromSingleton1: SingletonType.EnumInSingleton.AnotherEnumValue
+    property int scopedEnumValueFromSingleton2: SingletonType.AnotherEnumInSingleton.AnotherEnumValue
+    property int scopedEnumValueFromSingleton3: { var x = SingletonType.AnotherEnumInSingleton.AnotherEnumValue; return x; }
 }

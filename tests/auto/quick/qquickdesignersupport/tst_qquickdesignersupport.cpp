@@ -61,6 +61,7 @@ private slots:
     void statesPropertyChanges();
     void testNotifyPropertyChangeCallBack();
     void testFixResourcePathsForObjectCallBack();
+    void testComponentOnCompleteSignal();
 };
 
 void tst_qquickdesignersupport::customData()
@@ -488,6 +489,101 @@ void tst_qquickdesignersupport::testFixResourcePathsForObjectCallBack()
 
     //Check that the fixResourcePathsForObjectCallBack was called on simpleItem
     QCOMPARE(simpleItem , s_object);
+}
+
+void doComponentCompleteRecursive(QObject *object)
+{
+    if (object) {
+        QQuickItem *item = qobject_cast<QQuickItem*>(object);
+
+        if (item && DesignerSupport::isComponentComplete(item))
+            return;
+
+        DesignerSupport::emitComponentCompleteSignalForAttachedProperty(object);
+
+        QList<QObject*> childList = object->children();
+
+        if (item) {
+            foreach (QQuickItem *childItem, item->childItems()) {
+                if (!childList.contains(childItem))
+                    childList.append(childItem);
+            }
+        }
+
+        foreach (QObject *child, childList)
+                doComponentCompleteRecursive(child);
+
+        if (item) {
+            static_cast<QQmlParserStatus*>(item)->componentComplete();
+        } else {
+            QQmlParserStatus *qmlParserStatus = dynamic_cast< QQmlParserStatus*>(object);
+            if (qmlParserStatus)
+                qmlParserStatus->componentComplete();
+        }
+    }
+}
+
+void tst_qquickdesignersupport::testComponentOnCompleteSignal()
+{
+    {
+        QScopedPointer<QQuickView> view(new QQuickView);
+        view->engine()->setOutputWarningsToStandardError(false);
+        view->setSource(testFileUrl("componentTest.qml"));
+
+        QVERIFY(view->errors().isEmpty());
+        QQuickItem *rootItem = view->rootObject();
+        QVERIFY(rootItem);
+
+        QQuickItem *item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("red"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("blue"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("green"));
+    }
+
+    {
+        ComponentCompleteDisabler disableComponentComplete;
+
+        QScopedPointer<QQuickView> view(new QQuickView);
+        view->engine()->setOutputWarningsToStandardError(false);
+        view->setSource(testFileUrl("componentTest.qml"));
+
+        QVERIFY(view->errors().isEmpty());
+        QQuickItem *rootItem = view->rootObject();
+        QVERIFY(rootItem);
+
+        QQuickItem *item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("white"));
+
+        doComponentCompleteRecursive(rootItem);
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("topLevelComplete"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("red"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("implemented"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("blue"));
+
+        item = findItem<QQuickItem>(view->rootObject(), QLatin1String("most inner"));
+        QVERIFY(item);
+        QCOMPARE(item->property("color").value<QColor>(), QColor("green"));
+    }
 }
 
 

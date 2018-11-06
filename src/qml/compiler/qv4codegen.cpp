@@ -2260,8 +2260,6 @@ int Codegen::createTemplateArray(TemplateLiteral *t)
 {
     int arrayTemp = bytecodeGenerator->newRegister();
 
-    RegisterScope scope(this);
-
     int argc = 0;
     int args = -1;
     auto push = [this, &argc, &args](const QStringRef &arg) {
@@ -2278,22 +2276,50 @@ int Codegen::createTemplateArray(TemplateLiteral *t)
         ++argc;
     };
 
-    for (TemplateLiteral *it = t; it; it = it->next)
-        push(it->value);
+    {
+        RegisterScope scope(this);
 
-    if (args == -1) {
-        Q_ASSERT(argc == 0);
-        args = 0;
+        for (TemplateLiteral *it = t; it; it = it->next)
+            push(it->value);
+
+        if (args == -1) {
+            Q_ASSERT(argc == 0);
+            args = 0;
+        }
+
+        Instruction::DefineArray call;
+        call.argc = argc;
+        call.args = Moth::StackSlot::createRegister(args);
+        bytecodeGenerator->addInstruction(call);
+
+        Instruction::StoreReg store;
+        store.reg = arrayTemp;
+        bytecodeGenerator->addInstruction(store);
     }
 
-    Instruction::DefineArray call;
-    call.argc = argc;
-    call.args = Moth::StackSlot::createRegister(args);
-    bytecodeGenerator->addInstruction(call);
+    {
+        RegisterScope scope(this);
 
-    Instruction::StoreReg store;
-    store.reg = arrayTemp;
-    bytecodeGenerator->addInstruction(store);
+        argc = 0;
+        args = -1;
+
+        for (TemplateLiteral *it = t; it; it = it->next)
+            push(it->rawValue);
+
+        if (args == -1) {
+            Q_ASSERT(argc == 0);
+            args = 0;
+        }
+
+        Instruction::DefineArray call;
+        call.argc = argc;
+        call.args = Moth::StackSlot::createRegister(args);
+        bytecodeGenerator->addInstruction(call);
+
+        Reference a = Reference::fromStackSlot(this, arrayTemp);
+        Reference m = Reference::fromMember(a, QStringLiteral("raw"));
+        m.storeConsumeAccumulator();
+    }
 
     return arrayTemp;
 }
@@ -2992,7 +3018,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     ControlFlow *savedControlFlow = controlFlow;
     controlFlow = nullptr;
 
-    if (_context->contextType == ContextType::Global) {
+    if (_context->contextType == ContextType::Global || _context->contextType == ContextType::ScriptImportedByQML) {
         _module->blocks.append(_context);
         _context->blockIndex = _module->blocks.count() - 1;
     }

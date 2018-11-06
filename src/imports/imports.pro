@@ -17,7 +17,8 @@ qtHaveModule(quick) {
     SUBDIRS += \
         layouts \
         qtquick2 \
-        window
+        window \
+        wavefrontmesh
 
     qtHaveModule(testlib): SUBDIRS += testlib
     qtConfig(systemsemaphore): SUBDIRS += sharedimage

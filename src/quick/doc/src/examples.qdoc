@@ -127,7 +127,7 @@ Creator.
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
         \li \l{Qt Quick System Dialog Examples}{Dialog Examples}
         \li \l{Calendar Example}
-        \li \l{Qt Quick Controls - Table View Example}{TableView}
+        \li \l{tableview/gameoflife}{TableView}
         \li \l{Qt Quick Examples - Text}{Text and Fonts}
         \li \l{Qt Quick Examples - Toggle Switch}{Custom Toggle Switch}
         \endlist
@@ -159,7 +159,6 @@ Creator.
         \list
         \li \l{Qt Quick Examples - Key Interaction}{Key Interaction}
         \li \l{Qt Quick Examples - MouseArea}{MouseArea}
-        \li \l{Qt Quick Controls - Touch Gallery}{Touch Gallery}
         \endlist
     \enddiv
     \div {class="doc-column"}

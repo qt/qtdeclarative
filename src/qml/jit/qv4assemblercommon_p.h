@@ -398,7 +398,8 @@ public:
 
     void generatePlatformFunctionExit(bool tailCall = false)
     {
-        move(AccumulatorRegister, ReturnValueRegister);
+        if (!tailCall) // do not overwrite arg0 (used in the tail call)
+            move(AccumulatorRegister, ReturnValueRegister);
         popPair(EngineRegister, CppStackFrameRegister);
         popPair(JSStackFrameRegister, AccumulatorRegister);
         popPair(JSC::ARM64Registers::fp, JSC::ARM64Registers::lr);
@@ -492,8 +493,10 @@ public:
 
     void generatePlatformFunctionExit(bool tailCall = false)
     {
-        move(AccumulatorRegisterValue, ReturnValueRegisterValue);
-        move(AccumulatorRegisterTag, ReturnValueRegisterTag);
+        if (!tailCall) { // do not overwrite arg0 and arg1 (used in the tail call)
+            move(AccumulatorRegisterValue, ReturnValueRegisterValue);
+            move(AccumulatorRegisterTag, ReturnValueRegisterTag);
+        }
         addPtr(TrustedImm32(4), StackPointerRegister); // stack alignment
         pop(EngineRegister);
         pop(CppStackFrameRegister);

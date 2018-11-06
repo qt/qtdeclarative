@@ -849,6 +849,11 @@ Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
     return ErrorObject::create<ErrorObject>(this, value, errorCtor());
 }
 
+Heap::Object *ExecutionEngine::newErrorObject(const QString &message)
+{
+    return ErrorObject::create<ErrorObject>(this, message);
+}
+
 Heap::Object *ExecutionEngine::newSyntaxErrorObject(const QString &message)
 {
     return ErrorObject::create<SyntaxErrorObject>(this, message);
@@ -916,6 +921,16 @@ Promise::ReactionHandler *ExecutionEngine::getPromiseReactionHandler()
 {
     Q_ASSERT(m_reactionHandler);
     return m_reactionHandler.data();
+}
+
+Heap::Object *ExecutionEngine::newURIErrorObject(const QString &message)
+{
+    return ErrorObject::create<URIErrorObject>(this, message);
+}
+
+Heap::Object *ExecutionEngine::newEvalErrorObject(const QString &message)
+{
+    return ErrorObject::create<EvalErrorObject>(this, message);
 }
 
 Heap::Object *ExecutionEngine::newVariantObject(const QVariant &v)

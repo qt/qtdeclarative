@@ -75,7 +75,8 @@ enum class ContextType {
                //  * return statements are allowed everywhere (like in FunctionCode)
                //  * variable declarations are treated as true locals (like in FunctionCode)
     Block,
-    ESModule
+    ESModule,
+    ScriptImportedByQML,
 };
 
 struct Context;
@@ -313,7 +314,7 @@ struct Context {
     bool requiresImplicitReturnValue() const {
         return contextType == ContextType::Binding ||
                contextType == ContextType::Eval ||
-               contextType == ContextType::Global;
+               contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML;
     }
 
     void addUsedVariable(const QString &name) {

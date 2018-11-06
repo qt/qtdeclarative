@@ -406,10 +406,7 @@ struct Scoped
         return getPointer();
     }
 
-    bool operator!() const {
-        return !ptr->m();
-    }
-    operator void *() const {
+    explicit operator bool() const {
         return ptr->m();
     }
 

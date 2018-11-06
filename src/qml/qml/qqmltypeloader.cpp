@@ -3084,7 +3084,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         QList<QQmlError> errors;
         unit = QV4::Script::precompile(
                     &irUnit.jsModule, &irUnit.jsParserEngine, &irUnit.jsGenerator, urlString(), finalUrlString(),
-                    source, &errors);
+                    source, &errors, QV4::Compiler::ContextType::ScriptImportedByQML);
         // No need to addref on unit, it's initial refcount is 1
         source.clear();
         if (!errors.isEmpty()) {

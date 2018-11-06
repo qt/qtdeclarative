@@ -392,6 +392,9 @@ protected:
     inline QStringRef &stringRef(int index)
     { return string_stack [tos + index - 1]; }
 
+    inline QStringRef &rawStringRef(int index)
+    { return rawString_stack [tos + index - 1]; }
+
     inline AST::SourceLocation &loc(int index)
     { return location_stack [tos + index - 1]; }
 
@@ -416,6 +419,7 @@ protected:
     int *state_stack = nullptr;
     AST::SourceLocation *location_stack = nullptr;
     QVector<QStringRef> string_stack;
+    QVector<QStringRef> rawString_stack;
 
     AST::Node *program = nullptr;
 
@@ -427,11 +431,13 @@ protected:
        double dval;
        AST::SourceLocation loc;
        QStringRef spell;
+       QStringRef raw;
     };
 
     int yytoken = -1;
     double yylval = 0.;
     QStringRef yytokenspell;
+    QStringRef yytokenraw;
     AST::SourceLocation yylloc;
     AST::SourceLocation yyprevlloc;
 
@@ -493,6 +499,7 @@ void Parser::reallocateStack()
     state_stack = reinterpret_cast<int*> (realloc(state_stack, stack_size * sizeof(int)));
     location_stack = reinterpret_cast<AST::SourceLocation*> (realloc(location_stack, stack_size * sizeof(AST::SourceLocation)));
     string_stack.resize(stack_size);
+    rawString_stack.resize(stack_size);
 }
 
 Parser::Parser(Engine *engine):
@@ -555,6 +562,7 @@ void Parser::pushToken(int token)
     last_token->token = yytoken;
     last_token->dval = yylval;
     last_token->spell = yytokenspell;
+    last_token->raw = yytokenraw;
     last_token->loc = yylloc;
     ++last_token;
     yytoken = token;
@@ -566,6 +574,7 @@ int Parser::lookaheadToken(Lexer *lexer)
         yytoken = lexer->lex();
         yylval = lexer->tokenValue();
         yytokenspell = lexer->tokenSpell();
+        yytokenraw = lexer->rawString();
         yylloc = location(lexer);
     }
     return yytoken;
@@ -618,11 +627,13 @@ bool Parser::parse(int startToken)
                 yytoken = lexer->lex();
                 yylval = lexer->tokenValue();
                 yytokenspell = lexer->tokenSpell();
+                yytokenraw = lexer->rawString();
                 yylloc = location(lexer);
             } else {
                 yytoken = first_token->token;
                 yylval = first_token->dval;
                 yytokenspell = first_token->spell;
+                yytokenraw = first_token->raw;
                 yylloc = first_token->loc;
                 ++first_token;
                 if (first_token == last_token)
@@ -643,6 +654,7 @@ bool Parser::parse(int startToken)
                 yytoken = -1;
                 sym(1).dval = yylval;
                 stringRef(1) = yytokenspell;
+                rawStringRef(1) = yytokenraw;
                 loc(1) = yylloc;
             } else {
               --tos;
@@ -1889,7 +1901,7 @@ TemplateLiteral: T_NO_SUBSTITUTION_TEMPLATE;
 TemplateSpans: T_TEMPLATE_TAIL;
 /.
     case $rule_number: {
-        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), nullptr);
+        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), rawStringRef(1), nullptr);
         node->literalToken = loc(1);
         sym(1).Node = node;
     } break;
@@ -1901,7 +1913,7 @@ TemplateSpans: T_TEMPLATE_MIDDLE Expression TemplateSpans;
 TemplateLiteral: T_TEMPLATE_HEAD Expression TemplateSpans;
 /.
     case $rule_number: {
-        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), sym(2).Expression);
+        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), rawStringRef(1), sym(2).Expression);
         node->next = sym(3).Template;
         node->literalToken = loc(1);
         sym(1).Node = node;
@@ -4354,6 +4366,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
             tk.token = yytoken;
             tk.dval = yylval;
             tk.spell = yytokenspell;
+            tk.raw = yytokenraw;
             tk.loc = yylloc;
 
             yylloc = yyprevlloc;
@@ -4380,11 +4393,13 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         token_buffer[0].token = yytoken;
         token_buffer[0].dval = yylval;
         token_buffer[0].spell = yytokenspell;
+        token_buffer[0].raw = yytokenraw;
         token_buffer[0].loc = yylloc;
 
         token_buffer[1].token = yytoken       = lexer->lex();
         token_buffer[1].dval  = yylval        = lexer->tokenValue();
         token_buffer[1].spell = yytokenspell  = lexer->tokenSpell();
+        token_buffer[1].raw   = yytokenraw    = lexer->rawString();
         token_buffer[1].loc   = yylloc        = location(lexer);
 
         if (t_action(errorState, yytoken)) {

@@ -203,9 +203,18 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                 const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
                 if (includeEnums && name->startsWithUpper()) {
                     bool ok = false;
-                    const int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
+                    int value = enumForSingleton(v4, name, qobjectSingleton, type, &ok);
                     if (ok)
                         return QV4::Value::fromInt32(value).asReturnedValue();
+
+                    value = type.scopedEnumIndex(QQmlEnginePrivate::get(v4->qmlEngine()), name, &ok);
+                    if (ok) {
+                        Scoped<QQmlScopedEnumWrapper> enumWrapper(scope, v4->memoryManager->allocate<QQmlScopedEnumWrapper>());
+                        enumWrapper->d()->typePrivate = type.priv();
+                        QQmlType::refHandle(enumWrapper->d()->typePrivate);
+                        enumWrapper->d()->scopeEnumIndex = value;
+                        return enumWrapper.asReturnedValue();
+                    }
                 }
 
                 // check for property.

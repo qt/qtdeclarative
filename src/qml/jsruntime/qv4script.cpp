@@ -174,7 +174,8 @@ Function *Script::function()
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine, Compiler::JSUnitGenerator *unitGenerator,
                                                                       const QString &fileName, const QString &finalUrl, const QString &source,
-                                                                      QList<QQmlError> *reportedErrors)
+                                                                      QList<QQmlError> *reportedErrors,
+                                                                      QV4::Compiler::ContextType contextType)
 {
     using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
@@ -201,7 +202,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(QV4::Compi
 
     Codegen cg(unitGenerator, /*strict mode*/false);
     cg.setUseFastLookups(false);
-    cg.generateFromProgram(fileName, finalUrl, source, program, module, ContextType::Global);
+    cg.generateFromProgram(fileName, finalUrl, source, program, module, contextType);
     errors = cg.qmlErrors();
     if (!errors.isEmpty()) {
         if (reportedErrors)

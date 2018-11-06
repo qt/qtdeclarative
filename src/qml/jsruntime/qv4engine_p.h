@@ -522,13 +522,16 @@ public:
     Heap::RegExpObject *newRegExpObject(const QRegExp &re);
 
     Heap::Object *newErrorObject(const Value &value);
+    Heap::Object *newErrorObject(const QString &message);
     Heap::Object *newSyntaxErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newSyntaxErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message);
     Heap::Object *newReferenceErrorObject(const QString &message, const QString &fileName, int line, int column);
     Heap::Object *newTypeErrorObject(const QString &message);
     Heap::Object *newRangeErrorObject(const QString &message);
+    Heap::Object *newURIErrorObject(const QString &message);
     Heap::Object *newURIErrorObject(const Value &message);
+    Heap::Object *newEvalErrorObject(const QString &message);
 
     Heap::PromiseObject *newPromiseObject();
     Heap::Object *newPromiseObject(const QV4::FunctionObject *thisObject, const QV4::PromiseCapability *capability);

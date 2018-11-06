@@ -56,7 +56,6 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick.Layouts"));
-        Q_UNUSED(uri);
 
         qmlRegisterType<QQuickRowLayout>(uri, 1, 0, "RowLayout");
         qmlRegisterType<QQuickColumnLayout>(uri, 1, 0, "ColumnLayout");
