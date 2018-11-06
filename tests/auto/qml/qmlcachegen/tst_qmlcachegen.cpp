@@ -36,6 +36,7 @@
 #include <QSysInfo>
 #include <QLoggingCategory>
 #include <private/qqmlcomponent_p.h>
+#include <qtranslator.h>
 
 class tst_qmlcachegen: public QObject
 {
@@ -169,10 +170,25 @@ void tst_qmlcachegen::loadGeneratedFile()
     QVERIFY(unitData->flags & QV4::CompiledData::Unit::StaticData);
 }
 
+class QTestTranslator : public QTranslator
+{
+public:
+    QString translate(const char *context, const char *sourceText, const char */*disambiguation*/, int /*n*/) const override
+    {
+        m_lastContext = QString::fromUtf8(context);
+        return QString::fromUtf8(sourceText).toUpper();
+    }
+    bool isEmpty() const override { return true; }
+    mutable QString m_lastContext;
+};
+
 void tst_qmlcachegen::translationExpressionSupport()
 {
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());
+
+    QTestTranslator translator;
+    qApp->installTranslator(&translator);
 
     const auto writeTempFile = [&tempDir](const QString &fileName, const char *contents) {
         QFile f(tempDir.path() + '/' + fileName);
@@ -207,7 +223,8 @@ void tst_qmlcachegen::translationExpressionSupport()
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
-    QCOMPARE(obj->property("text").toString(), QString("All Ok"));
+    QCOMPARE(obj->property("text").toString(), QString("ALL Ok"));
+    QCOMPARE(translator.m_lastContext, QStringLiteral("test"));
 }
 
 void tst_qmlcachegen::signalHandlerParameters()

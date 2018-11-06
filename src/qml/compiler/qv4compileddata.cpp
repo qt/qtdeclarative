@@ -730,7 +730,7 @@ QString Binding::valueAsString(const CompilationUnit *unit) const
     case Type_Translation: {
         const TranslationData &translation = unit->unitData()->translations()[value.translationDataIndex];
         // This code must match that in the qsTr() implementation
-        const QString &path = unit->stringAt(unit->unitData()->sourceFileIndex);
+        const QString &path = unit->fileName();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
                                               : QStringRef();
