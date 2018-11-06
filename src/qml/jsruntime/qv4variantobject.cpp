@@ -138,11 +138,14 @@ ReturnedValue VariantPrototype::method_toString(const FunctionObject *b, const V
     const VariantObject *o = thisObject->as<QV4::VariantObject>();
     if (!o)
         RETURN_UNDEFINED();
-    QString result = o->d()->data().toString();
-    if (result.isEmpty() && !o->d()->data().canConvert(QVariant::String)) {
-        result = QLatin1String("QVariant(")
-                 + QLatin1String(o->d()->data().typeName())
-                 + QLatin1Char(')');
+    const QVariant variant = o->d()->data();
+    QString result = variant.toString();
+    if (result.isEmpty() && !variant.canConvert(QVariant::String)) {
+        QDebug dbg(&result);
+        dbg << variant;
+        // QDebug appends a space, we're not interested in continuing the stream so we chop it off.
+        // Can't use nospace() because it would affect the debug-stream operator of the variant.
+        result.chop(1);
     }
     return Encode(v4->newString(result));
 }

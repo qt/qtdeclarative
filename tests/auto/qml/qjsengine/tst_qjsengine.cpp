@@ -500,7 +500,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
         QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isObject());
         QVERIFY(value.strictlyEquals(object));
-        QCOMPARE(object.toString(), QString::fromLatin1("QVariant(QPoint)"));
+        QCOMPARE(object.toString(), QString::fromLatin1("QVariant(QPoint, QPoint(10,20))"));
     }
 }
 

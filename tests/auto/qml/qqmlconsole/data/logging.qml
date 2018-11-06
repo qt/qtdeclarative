@@ -68,6 +68,7 @@ QtObject {
         console.log(1, ["ping","pong"], new Object, 2);
 
         console.log(contextStringListProperty);
+        console.log(customObject);
 
         try {
             console.log(exception);

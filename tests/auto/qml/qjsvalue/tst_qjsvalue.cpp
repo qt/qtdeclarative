@@ -405,7 +405,7 @@ void tst_QJSValue::toString()
     // then fall back to "QVariant(typename)"
     QJSValue variant = eng.toScriptValue(QPoint(10, 20));
     QVERIFY(variant.isVariant());
-    QCOMPARE(variant.toString(), QString::fromLatin1("QVariant(QPoint)"));
+    QCOMPARE(variant.toString(), QString::fromLatin1("QVariant(QPoint, QPoint(10,20))"));
     variant = eng.toScriptValue(QUrl());
     QVERIFY(variant.isVariant());
     QVERIFY(variant.toString().isEmpty());

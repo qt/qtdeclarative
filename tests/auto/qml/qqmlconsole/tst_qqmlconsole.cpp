@@ -51,6 +51,15 @@ private:
     QQmlEngine engine;
 };
 
+struct CustomObject {};
+
+QDebug operator<<(QDebug dbg, const CustomObject &)
+{
+    return dbg << "MY OBJECT";
+}
+
+Q_DECLARE_METATYPE(CustomObject)
+
 void tst_qqmlconsole::logging()
 {
     QUrl testUrl = testFileUrl("logging.qml");
@@ -83,10 +92,15 @@ void tst_qqmlconsole::logging()
     QTest::ignoreMessage(QtDebugMsg, "1 pong! [object Object]");
     QTest::ignoreMessage(QtDebugMsg, "1 [ping,pong] [object Object] 2");
     QTest::ignoreMessage(QtDebugMsg, "[Hello,World]");
+    QTest::ignoreMessage(QtDebugMsg, "QVariant(CustomObject, MY OBJECT)");
 
     QScopedPointer<QQmlContext> loggingContext(new QQmlContext(engine.rootContext()));
     QStringList stringList; stringList << QStringLiteral("Hello") << QStringLiteral("World");
     loggingContext->setContextProperty("contextStringListProperty", stringList);
+
+    CustomObject customObject;
+    QVERIFY(QMetaType::registerDebugStreamOperator<CustomObject>());
+    loggingContext->setContextProperty("customObject", QVariant::fromValue(customObject));
 
     QQmlComponent component(&engine, testUrl);
     QScopedPointer<QObject> object(component.create(loggingContext.data()));
