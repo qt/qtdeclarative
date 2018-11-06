@@ -6,5 +6,3 @@ osx
 [populateTransitions]
 opensuse-42.1
 #QTBUG-65964
-[QTBUG_34576_velocityZero]
-osx-10.11 ci
