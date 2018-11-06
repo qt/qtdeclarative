@@ -71,7 +71,7 @@ public:
 
     void createItems();
 
-    QQuickItem *beginCreateItem();
+    QQuickItem *beginCreateItem(QQuickMenu *menu);
     void completeCreateItem();
 
     QQuickItem *createItem(QQuickMenu *menu);

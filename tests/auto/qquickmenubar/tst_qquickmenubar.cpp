@@ -44,6 +44,7 @@
 
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
@@ -64,6 +65,7 @@ private slots:
     void mnemonics();
     void addRemove();
     void delegateFromSeparateComponent();
+    void openTwice();
 };
 
 void tst_qquickmenubar::delegate()
@@ -603,6 +605,64 @@ void tst_qquickmenubar::delegateFromSeparateComponent()
     QQuickItem *menuBarItemBg = menuBarItem->property("background").value<QQuickItem*>();
     QVERIFY(menuBarItemBg);
     QCOMPARE(menuBarItemBg->property("color").value<QColor>(), green);
+}
+
+void tst_qquickmenubar::openTwice()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
+    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    centerOnScreen(window.data());
+
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
+    QVERIFY(fileMenuBarMenu);
+
+    QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
+    QVERIFY(fileMenuBarItem);
+    QQuickMenuBarPrivate *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    menuBar->polish();
+    QVERIFY(menuBarPrivate->polishScheduled);
+    QTRY_VERIFY(!menuBarPrivate->polishScheduled);
+
+    // Open a menu.
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        fileMenuBarItem->mapToScene(QPointF(fileMenuBarItem->width() / 2, fileMenuBarItem->height() / 2)).toPoint());
+    QVERIFY(fileMenuBarItem->isHighlighted());
+    QVERIFY(fileMenuBarMenu->isVisible());
+    QTRY_VERIFY(fileMenuBarMenu->isOpened());
+    waitForMenuListViewPolish(fileMenuBarMenu);
+
+    // Click on an item to close the menu.
+    QQuickMenuItem *openMenuItem = qobject_cast<QQuickMenuItem *>(fileMenuBarMenu->itemAt(0));
+    QVERIFY(openMenuItem);
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        openMenuItem->mapToScene(QPointF(openMenuItem->width() / 2, openMenuItem->height() / 2)).toPoint());
+    QVERIFY(!fileMenuBarItem->isHighlighted());
+    QTRY_VERIFY(!fileMenuBarMenu->isVisible());
+
+    // Re-open the menu. It should open with one click of the QQuickMenuBarItem.
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        fileMenuBarItem->mapToScene(QPointF(fileMenuBarItem->width() / 2, fileMenuBarItem->height() / 2)).toPoint());
+    QVERIFY(fileMenuBarItem->isHighlighted());
+    QVERIFY(fileMenuBarMenu->isVisible());
+    QTRY_VERIFY(fileMenuBarMenu->isOpened());
+    waitForMenuListViewPolish(fileMenuBarMenu);
+
+    // Click on an item to close the menu.
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+        openMenuItem->mapToScene(QPointF(openMenuItem->width() / 2, openMenuItem->height() / 2)).toPoint());
+    QVERIFY(!fileMenuBarItem->isHighlighted());
+    QTRY_VERIFY(!fileMenuBarMenu->isVisible());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
