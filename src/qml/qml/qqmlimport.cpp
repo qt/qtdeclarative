@@ -511,6 +511,20 @@ QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSi
         findCompositeSingletons(set, compositeSingletons, baseUrl());
     }
 
+    std::stable_sort(compositeSingletons.begin(), compositeSingletons.end(),
+                     [](const QQmlImports::CompositeSingletonReference &lhs,
+                        const QQmlImports::CompositeSingletonReference &rhs) {
+        if (lhs.prefix != rhs.prefix)
+            return lhs.prefix < rhs.prefix;
+
+        if (lhs.typeName != rhs.typeName)
+            return lhs.typeName < rhs.typeName;
+
+        return lhs.majorVersion != rhs.majorVersion
+            ? lhs.majorVersion < rhs.majorVersion
+            : lhs.minorVersion < rhs.minorVersion;
+    });
+
     return compositeSingletons;
 }
 
