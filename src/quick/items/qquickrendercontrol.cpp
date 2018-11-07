@@ -192,7 +192,8 @@ void QQuickRenderControlPrivate::windowDestroyed()
         QQuickWindowPrivate::get(window)->animationController = nullptr;
 
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+        if (QOpenGLContext::currentContext())
+            QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
         window = nullptr;
