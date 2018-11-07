@@ -82,7 +82,6 @@ protected:
 
     void setPointId(int id);
 
-private:
     void reset();
 
 private:
