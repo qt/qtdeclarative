@@ -708,6 +708,11 @@ public:
         return *_returnLabel;
     }
 
+    void setGlobalNames(const QSet<QString>& globalNames) {
+        m_globalNames = globalNames;
+    }
+
+
 protected:
     friend class ScanFunctions;
     friend struct ControlFlow;
@@ -730,6 +735,7 @@ protected:
     bool inFormalParameterList = false;
     bool functionEndsWithReturn = false;
     bool _tailCallsAreAllowed = true;
+    QSet<QString> m_globalNames;
 
     ControlFlow *controlFlow = nullptr;
 

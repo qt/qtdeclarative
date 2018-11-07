@@ -241,6 +241,7 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
     QmlIR::Document::removeScriptPragmas(sourceCode);
 
     auto result = new QV4::Script(engine, qmlContext, sourceCode, originalUrl.toString());
+    result->contextType = QV4::Compiler::ContextType::ScriptImportedByQML;
     result->parse();
     return result;
 }
