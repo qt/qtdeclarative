@@ -228,6 +228,8 @@ public:
         return m_size;
     }
 
+    inline void makeExecutable();
+
 private:
     template <typename T> T applyOffset(T src)
     {
@@ -353,6 +355,11 @@ inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::performF
 
     ASSERT(m_size <= INT_MAX);
     MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
+inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::makeExecutable()
+{
     ExecutableAllocator::makeExecutable(code(), static_cast<int>(m_size));
 }
 
@@ -389,6 +396,7 @@ public:
     }
 
     inline void performFinalization();
+    inline void makeExecutable();
 
     inline void linkCode(void* ownerUID, JITCompilationEffort);
 
@@ -421,6 +429,11 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::performFinalization()
 #endif
 
     MacroAssembler::cacheFlush(code(), m_size);
+}
+
+template <typename MacroAssembler>
+inline void BranchCompactingLinkBuffer<MacroAssembler>::makeExecutable()
+{
     ExecutableAllocator::makeExecutable(code(), m_initialSize);
 }
 

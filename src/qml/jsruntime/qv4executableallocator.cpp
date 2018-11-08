@@ -38,15 +38,21 @@
 ****************************************************************************/
 
 #include "qv4executableallocator_p.h"
+#include "qv4functiontable_p.h"
 
 #include <wtf/StdLibExtras.h>
 #include <wtf/PageAllocation.h>
 
 using namespace QV4;
 
-void *ExecutableAllocator::Allocation::start() const
+void *ExecutableAllocator::Allocation::exceptionHandler() const
 {
     return reinterpret_cast<void*>(addr);
+}
+
+void *ExecutableAllocator::Allocation::start() const
+{
+    return reinterpret_cast<void*>(addr + exceptionHandlerSize());
 }
 
 void ExecutableAllocator::Allocation::deallocate(ExecutableAllocator *allocator)
@@ -162,7 +168,7 @@ ExecutableAllocator::Allocation *ExecutableAllocator::allocate(size_t size)
     Allocation *allocation = nullptr;
 
     // Code is best aligned to 16-byte boundaries.
-    size = WTF::roundUpToMultipleOf(16, size);
+    size = WTF::roundUpToMultipleOf(16, size + exceptionHandlerSize());
 
     QMultiMap<size_t, Allocation*>::Iterator it = freeAllocations.lowerBound(size);
     if (it != freeAllocations.end()) {

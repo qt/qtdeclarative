@@ -33,6 +33,8 @@
 #include "Yarr.h"
 #include "YarrCanonicalize.h"
 
+#include <private/qv4functiontable_p.h>
+
 #if ENABLE(YARR_JIT)
 
 using namespace WTF;
@@ -3529,17 +3531,30 @@ public:
 
         m_backtrackingState.linkDataLabels(linkBuffer);
 
+        CodeRef codeRef;
         if (compileMode == MatchOnly) {
-            if (m_charSize == Char8)
-                codeBlock.set8BitCodeMatchOnly(FINALIZE_CODE(linkBuffer, "YarJIT", "Match-only 8-bit regular expression"));
-            else
-                codeBlock.set16BitCodeMatchOnly(FINALIZE_CODE(linkBuffer, "YarJIT", "Match-only 16-bit regular expression"));
+            if (m_charSize == Char8) {
+                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT",
+                                        "Match-only 8-bit regular expression");
+                codeBlock.set8BitCodeMatchOnly(codeRef);
+            } else {
+                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT",
+                                        "Match-only 16-bit regular expression");
+                codeBlock.set16BitCodeMatchOnly(codeRef);
+            }
         } else {
-            if (m_charSize == Char8)
-                codeBlock.set8BitCode(FINALIZE_CODE(linkBuffer, "YarJIT", "8-bit regular expression"));
-            else
-                codeBlock.set16BitCode(FINALIZE_CODE(linkBuffer, "YarJIT", "16-bit regular expression"));
+            if (m_charSize == Char8) {
+                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT", "8-bit regular expression");
+                codeBlock.set8BitCode(codeRef);
+            } else {
+                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT", "16-bit regular expression");
+                codeBlock.set16BitCode(codeRef);
+            }
         }
+        QV4::generateFunctionTable(nullptr, &codeRef);
+
+        linkBuffer.makeExecutable();
+
         if (m_failureReason)
             codeBlock.setFallBackWithFailureReason(*m_failureReason);
     }
@@ -3586,6 +3601,15 @@ private:
     // This class records state whilst generating the backtracking path of code.
     BacktrackingState m_backtrackingState;
 };
+
+void YarrCodeBlock::replaceCodeRef(MacroAssemblerCodeRef &target,
+                                   const MacroAssemblerCodeRef &source)
+{
+    if (!!target && target.code().executableAddress() != source.code().executableAddress())
+        QV4::destroyFunctionTable(nullptr, &target);
+
+    target = source;
+}
 
 static void dumpCompileFailure(JITFailureReason failure)
 {

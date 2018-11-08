@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QV4EXECUTABLEALLOCATOR_H
-#define QV4EXECUTABLEALLOCATOR_H
+#ifndef QV4FUNCTIONTABLE_P_H
+#define QV4FUNCTIONTABLE_P_H
 
 //
 //  W A R N I N G
@@ -53,88 +53,23 @@
 
 #include "qv4global_p.h"
 
-#include <QMultiMap>
-#include <QHash>
-#include <QVector>
-#include <QByteArray>
-#include <QMutex>
-
-namespace WTF {
-class PageAllocation;
+namespace JSC {
+class MacroAssemblerCodeRef;
 }
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-class Q_QML_AUTOTEST_EXPORT ExecutableAllocator
-{
-public:
-    struct ChunkOfPages;
-    struct Allocation;
+struct Function;
 
-    ExecutableAllocator();
-    ~ExecutableAllocator();
+void generateFunctionTable(Function *function, JSC::MacroAssemblerCodeRef *codeRef);
+void destroyFunctionTable(Function *function, JSC::MacroAssemblerCodeRef *codeRef);
 
-    Allocation *allocate(size_t size);
-    void free(Allocation *allocation);
-
-    struct Allocation
-    {
-        Allocation()
-            : size(0)
-            , free(true)
-        {}
-
-        void *exceptionHandler() const;
-        void *start() const;
-        void invalidate() { addr = 0; }
-        bool isValid() const { return addr != 0; }
-        void deallocate(ExecutableAllocator *allocator);
-
-    private:
-        ~Allocation() {}
-
-        friend class ExecutableAllocator;
-
-        Allocation *split(size_t dividingSize);
-        bool mergeNext(ExecutableAllocator *allocator);
-        bool mergePrevious(ExecutableAllocator *allocator);
-
-        quintptr addr = 0;
-        uint size : 31; // More than 2GB of function code? nah :)
-        uint free : 1;
-        Allocation *next = nullptr;
-        Allocation *prev = nullptr;
-    };
-
-    // for debugging / unit-testing
-    int freeAllocationCount() const { return freeAllocations.count(); }
-    int chunkCount() const { return chunks.count(); }
-
-    struct ChunkOfPages
-    {
-        ChunkOfPages()
-
-        {}
-        ~ChunkOfPages();
-
-        WTF::PageAllocation *pages = nullptr;
-        Allocation *firstAllocation = nullptr;
-
-        bool contains(Allocation *alloc) const;
-    };
-
-    ChunkOfPages *chunkForAllocation(Allocation *allocation) const;
-
-private:
-    QMultiMap<size_t, Allocation*> freeAllocations;
-    QMap<quintptr, ChunkOfPages*> chunks;
-    mutable QMutex mutex;
-};
+size_t exceptionHandlerSize();
 
 }
 
 QT_END_NAMESPACE
 
-#endif // QV4EXECUTABLEALLOCATOR_H
+#endif // QV4FUNCTIONTABLE_P_H

@@ -147,7 +147,8 @@ HEADERS += \
     $$PWD/qv4value_p.h \
     $$PWD/qv4string_p.h \
     $$PWD/qv4util_p.h \
-    $$PWD/qv4value_p.h
+    $$PWD/qv4value_p.h \
+    $$PWD/qv4functiontable_p.h
 
 SOURCES += \
     $$PWD/qv4engine.cpp \
@@ -155,6 +156,23 @@ SOURCES += \
     $$PWD/qv4string.cpp \
     $$PWD/qv4value.cpp \
     $$PWD/qv4executableallocator.cpp
+
+qmldevtools_build {
+    SOURCES += \
+        $$PWD/qv4functiontable_noop.cpp
+} else:win32 {
+    equals(QT_ARCH, x86_64){
+        SOURCES += \
+            $$PWD/qv4functiontable_win64.cpp
+    } else {
+        SOURCES += \
+            $$PWD/qv4functiontable_noop.cpp
+    }
+} else {
+    SOURCES += \
+        $$PWD/qv4functiontable_unix.cpp
+}
+
 
 valgrind {
     DEFINES += V4_USE_VALGRIND

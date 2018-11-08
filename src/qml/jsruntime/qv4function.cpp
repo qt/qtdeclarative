@@ -46,6 +46,7 @@
 #include "qv4lookup_p.h"
 #include <private/qv4mm_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4functiontable_p.h>
 #include <assembler/MacroAssemblerCodeRef.h>
 #include <private/qv4vme_moth_p.h>
 #include <private/qqmlglobal_p.h>
@@ -98,7 +99,10 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
 
 Function::~Function()
 {
-    delete codeRef;
+    if (codeRef) {
+        destroyFunctionTable(this, codeRef);
+        delete codeRef;
+    }
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
@@ -143,6 +147,17 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
         internalClass = internalClass->addMember(arg->propertyKey(), Attr_NotConfigurable);
     }
     nFormals = parameters.size();
+}
+
+QString Function::prettyName(const Function *function, const void *code)
+{
+    QString prettyName = function ? function->name()->toQString() : QString();
+    if (prettyName.isEmpty()) {
+        prettyName = QString::number(reinterpret_cast<quintptr>(code), 16);
+        prettyName.prepend(QLatin1String("QV4::Function(0x"));
+        prettyName.append(QLatin1Char(')'));
+    }
+    return prettyName;
 }
 
 QQmlSourceLocation Function::sourceLocation() const

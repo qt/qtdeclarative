@@ -82,19 +82,28 @@ class YarrCodeBlock {
 
 public:
     YarrCodeBlock() = default;
+    ~YarrCodeBlock() { clear(); }
+
+    static void replaceCodeRef(MacroAssemblerCodeRef &target, const MacroAssemblerCodeRef &source);
 
     void setFallBackWithFailureReason(JITFailureReason failureReason) { m_failureReason = failureReason; }
     std::optional<JITFailureReason> failureReason() { return m_failureReason; }
 
     bool has8BitCode() { return m_ref8.size(); }
     bool has16BitCode() { return m_ref16.size(); }
-    void set8BitCode(MacroAssemblerCodeRef ref) { m_ref8 = ref; }
-    void set16BitCode(MacroAssemblerCodeRef ref) { m_ref16 = ref; }
+    void set8BitCode(MacroAssemblerCodeRef ref) { replaceCodeRef(m_ref8, ref); }
+    void set16BitCode(MacroAssemblerCodeRef ref) { replaceCodeRef(m_ref16, ref); }
 
     bool has8BitCodeMatchOnly() { return m_matchOnly8.size(); }
     bool has16BitCodeMatchOnly() { return m_matchOnly16.size(); }
-    void set8BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly8 = matchOnly; }
-    void set16BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly16 = matchOnly; }
+    void set8BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly)
+    {
+        replaceCodeRef(m_matchOnly8, matchOnly);
+    }
+    void set16BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly)
+    {
+        replaceCodeRef(m_matchOnly16, matchOnly);
+    }
 
 #if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
     bool usesPatternContextBuffer() { return m_usesPatternContextBuffer; }
@@ -190,10 +199,10 @@ public:
 
     void clear()
     {
-        m_ref8 = MacroAssemblerCodeRef();
-        m_ref16 = MacroAssemblerCodeRef();
-        m_matchOnly8 = MacroAssemblerCodeRef();
-        m_matchOnly16 = MacroAssemblerCodeRef();
+        replaceCodeRef(m_ref8, MacroAssemblerCodeRef());
+        replaceCodeRef(m_ref16, MacroAssemblerCodeRef());
+        replaceCodeRef(m_matchOnly8, MacroAssemblerCodeRef());
+        replaceCodeRef(m_matchOnly16, MacroAssemblerCodeRef());
         m_failureReason = std::nullopt;
     }
 

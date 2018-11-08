@@ -89,9 +89,12 @@ struct Q_QML_EXPORT Function {
     // used when dynamically assigning signal handlers (QQmlConnection)
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
 
-    inline Heap::String *name() {
+    inline Heap::String *name() const {
         return compilationUnit->runtimeStrings[compiledFunction->nameIndex];
     }
+
+    static QString prettyName(const Function *function, const void *address);
+
     inline QString sourceFile() const { return compilationUnit->fileName(); }
     inline QUrl finalUrl() const { return compilationUnit->finalUrl(); }
 

@@ -43,6 +43,7 @@
 #include "qv4engine_p.h"
 #include "qv4assemblercommon_p.h"
 #include <private/qv4function_p.h>
+#include <private/qv4functiontable_p.h>
 #include <private/qv4runtime_p.h>
 
 #include <assembler/MacroAssemblerCodeRef.h>
@@ -112,17 +113,6 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
     qDebug("%s", processedOutput.constData());
 }
 
-static QByteArray functionName(Function *function)
-{
-    QByteArray name = function->name()->toQString().toUtf8();
-    if (name.isEmpty()) {
-        name = QByteArray::number(reinterpret_cast<quintptr>(function), 16);
-        name.prepend("QV4::Function(0x");
-        name.append(')');
-    }
-    return name;
-}
-
 JIT::PlatformAssemblerCommon::~PlatformAssemblerCommon()
 {}
 
@@ -147,7 +137,9 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
         buf.open(QIODevice::WriteOnly);
         WTF::setDataFile(new QIODevicePrintStream(&buf));
 
-        QByteArray name = functionName(function);
+        // We use debugAddress here because it's actually for debugging and hidden behind an
+        // environment variable.
+        const QByteArray name = Function::prettyName(function, linkBuffer.debugAddress()).toUtf8();
         codeRef = linkBuffer.finalizeCodeWithDisassembly(jitKind, "function %s", name.constData());
 
         WTF::setDataFile(stderr);
@@ -159,31 +151,9 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
     function->codeRef = new JSC::MacroAssemblerCodeRef(codeRef);
     function->jittedCode = reinterpret_cast<Function::JittedCode>(function->codeRef->code().executableAddress());
 
-    // This implements writing of JIT'd addresses so that perf can find the
-    // symbol names.
-    //
-    // Perf expects the mapping to be in a certain place and have certain
-    // content, for more information, see:
-    // https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/jit-interface.txt
-    static bool doProfile = !qEnvironmentVariableIsEmpty("QV4_PROFILE_WRITE_PERF_MAP");
-    if (Q_UNLIKELY(doProfile)) {
-        static QFile perfMapFile(QString::fromLatin1("/tmp/perf-%1.map")
-                                 .arg(QCoreApplication::applicationPid()));
-        static const bool isOpen = perfMapFile.open(QIODevice::WriteOnly);
-        if (!isOpen) {
-            qWarning("QV4::JIT::Assembler: Cannot write perf map file.");
-            doProfile = false;
-        } else {
-            perfMapFile.write(QByteArray::number(reinterpret_cast<quintptr>(
-                                                     codeRef.code().executableAddress()), 16));
-            perfMapFile.putChar(' ');
-            perfMapFile.write(QByteArray::number(static_cast<qsizetype>(codeRef.size()), 16));
-            perfMapFile.putChar(' ');
-            perfMapFile.write(functionName(function));
-            perfMapFile.putChar('\n');
-            perfMapFile.flush();
-        }
-    }
+    generateFunctionTable(function, &codeRef);
+
+    linkBuffer.makeExecutable();
 }
 
 void PlatformAssemblerCommon::prepareCallWithArgCount(int argc)

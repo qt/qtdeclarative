@@ -82,6 +82,7 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
 
     inline bool isManaged() const { return true; }
 
+    void *exceptionHandler() { return m_allocation->exceptionHandler(); }
     void *start() { return m_allocation->start(); }
     size_t sizeInBytes() { return m_size; }
 

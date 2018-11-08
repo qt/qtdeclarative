@@ -26,17 +26,33 @@
 **
 ****************************************************************************/
 
+#include <util.h>
+
 #include <QtTest/QtTest>
 #include <QtCore/qprocess.h>
 #include <QtCore/qtemporaryfile.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlapplicationengine.h>
 
-class tst_QV4Assembler : public QObject
+#ifdef Q_OS_WIN
+#include <Windows.h>
+#endif
+
+class tst_QV4Assembler : public QQmlDataTest
 {
     Q_OBJECT
 
 private slots:
+    void initTestCase() override;
     void perfMapFile();
+    void functionTable();
 };
+
+void tst_QV4Assembler::initTestCase()
+{
+    qputenv("QV4_JIT_CALL_THRESHOLD", "0");
+    QQmlDataTest::initTestCase();
+}
 
 void tst_QV4Assembler::perfMapFile()
 {
@@ -82,6 +98,42 @@ void tst_QV4Assembler::perfMapFile()
         functions.append(fields[2]);
     }
     QVERIFY(functions.contains("foo\n"));
+#endif
+}
+
+#ifdef Q_OS_WIN
+class Crash : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Crash(QObject *parent = nullptr) : QObject(parent) { }
+    Q_INVOKABLE static void crash();
+};
+
+static bool crashHandlerHit = false;
+
+static LONG WINAPI crashHandler(EXCEPTION_POINTERS*)
+{
+    crashHandlerHit = true;
+    return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+void Crash::crash()
+{
+    SetUnhandledExceptionFilter(crashHandler);
+    RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, 0, nullptr);
+}
+#endif
+
+void tst_QV4Assembler::functionTable()
+{
+#ifndef Q_OS_WIN
+    QSKIP("Function tables only exist on windows.");
+#else
+    QQmlApplicationEngine engine;
+    qmlRegisterType<Crash>("Crash", 1, 0, "Crash");
+    engine.load(testFileUrl("crash.qml"));
+    QTRY_VERIFY(crashHandlerHit);
 #endif
 }
 
