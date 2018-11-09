@@ -2101,7 +2101,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 QTextCharFormat format = a->formatAccessor(pos);
                 QTextBlock block = textFrame->firstCursorPosition().block();
                 engine.setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
-                engine.addTextObject(QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
+                engine.addTextObject(block, QPointF(0, 0), format, QQuickTextNodeEngine::Unselected, d->document,
                                               pos, textFrame->frameFormat().position());
                 nodeStart = pos;
             } else {
