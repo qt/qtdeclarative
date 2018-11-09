@@ -2243,85 +2243,35 @@ bool Codegen::visit(TaggedTemplate *ast)
         break;
     }
 
-    int arrayTemp = createTemplateArray(ast->templateLiteral);
-    Q_UNUSED(arrayTemp);
+    createTemplateObject(ast->templateLiteral);
+    int templateObjectTemp = Reference::fromAccumulator(this).storeOnStack().stackSlot();
+    Q_UNUSED(templateObjectTemp);
     auto calldata = pushTemplateArgs(ast->templateLiteral);
     if (hasError)
         return false;
     ++calldata.argc;
-    Q_ASSERT(calldata.argv == arrayTemp + 1);
+    Q_ASSERT(calldata.argv == templateObjectTemp + 1);
     --calldata.argv;
 
     handleCall(base, calldata, functionObject, thisObject);
     return false;
 }
 
-int Codegen::createTemplateArray(TemplateLiteral *t)
+void Codegen::createTemplateObject(TemplateLiteral *t)
 {
-    int arrayTemp = bytecodeGenerator->newRegister();
+    TemplateObject obj;
 
-    int argc = 0;
-    int args = -1;
-    auto push = [this, &argc, &args](const QStringRef &arg) {
-        int temp = bytecodeGenerator->newRegister();
-        if (args == -1)
-            args = temp;
-        Instruction::LoadRuntimeString instr;
-        instr.stringId = registerString(arg.toString());
-        bytecodeGenerator->addInstruction(instr);
-        Instruction::StoreReg store;
-        store.reg = temp;
-        bytecodeGenerator->addInstruction(store);
-
-        ++argc;
-    };
-
-    {
-        RegisterScope scope(this);
-
-        for (TemplateLiteral *it = t; it; it = it->next)
-            push(it->value);
-
-        if (args == -1) {
-            Q_ASSERT(argc == 0);
-            args = 0;
-        }
-
-        Instruction::DefineArray call;
-        call.argc = argc;
-        call.args = Moth::StackSlot::createRegister(args);
-        bytecodeGenerator->addInstruction(call);
-
-        Instruction::StoreReg store;
-        store.reg = arrayTemp;
-        bytecodeGenerator->addInstruction(store);
+    for (TemplateLiteral *it = t; it; it = it->next) {
+        obj.strings.append(registerString(it->value.toString()));
+        obj.rawStrings.append(registerString(it->rawValue.toString()));
     }
 
-    {
-        RegisterScope scope(this);
+    int index = _module->templateObjects.size();
+    _module->templateObjects.append(obj);
 
-        argc = 0;
-        args = -1;
-
-        for (TemplateLiteral *it = t; it; it = it->next)
-            push(it->rawValue);
-
-        if (args == -1) {
-            Q_ASSERT(argc == 0);
-            args = 0;
-        }
-
-        Instruction::DefineArray call;
-        call.argc = argc;
-        call.args = Moth::StackSlot::createRegister(args);
-        bytecodeGenerator->addInstruction(call);
-
-        Reference a = Reference::fromStackSlot(this, arrayTemp);
-        Reference m = Reference::fromMember(a, QStringLiteral("raw"));
-        m.storeConsumeAccumulator();
-    }
-
-    return arrayTemp;
+    Instruction::GetTemplateObject getTemplateObject;
+    getTemplateObject.index = index;
+    bytecodeGenerator->addInstruction(getTemplateObject);
 }
 
 bool Codegen::visit(FunctionExpression *ast)

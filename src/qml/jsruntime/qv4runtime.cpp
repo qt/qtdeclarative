@@ -595,6 +595,12 @@ QV4::ReturnedValue RuntimeHelpers::addHelper(ExecutionEngine *engine, const Valu
     return Encode(x + y);
 }
 
+ReturnedValue RuntimeHelpers::getTemplateObject(Function *function, int index)
+{
+    return function->compilationUnit->templateObjectAt(index)->asReturnedValue();
+}
+
+
 void Runtime::method_storeProperty(ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)
 {
     Scope scope(engine);

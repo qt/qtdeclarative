@@ -269,7 +269,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             registerString(request);
     }
 
-    Q_ALLOCA_VAR(quint32_le, blockClassAndFunctionOffsets, (module->functions.size() + module->classes.size() + module->blocks.size()) * sizeof(quint32_le));
+    Q_ALLOCA_VAR(quint32_le, blockClassAndFunctionOffsets, (module->functions.size() + module->classes.size() + module->templateObjects.size() + module->blocks.size()) * sizeof(quint32_le));
     uint jsClassDataOffset = 0;
 
     char *dataPtr;
@@ -284,7 +284,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
 
     memcpy(dataPtr + unit->offsetToFunctionTable, blockClassAndFunctionOffsets, unit->functionTableSize * sizeof(quint32_le));
     memcpy(dataPtr + unit->offsetToClassTable, blockClassAndFunctionOffsets + unit->functionTableSize, unit->classTableSize * sizeof(quint32_le));
-    memcpy(dataPtr + unit->offsetToBlockTable, blockClassAndFunctionOffsets + unit->functionTableSize + unit->classTableSize, unit->blockTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToTemplateObjectTable, blockClassAndFunctionOffsets + unit->functionTableSize + unit->classTableSize, unit->templateObjectTableSize * sizeof(quint32_le));
+    memcpy(dataPtr + unit->offsetToBlockTable, blockClassAndFunctionOffsets + unit->functionTableSize + unit->classTableSize + unit->templateObjectTableSize, unit->blockTableSize * sizeof(quint32_le));
 
     for (int i = 0; i < module->functions.size(); ++i) {
         Context *function = module->functions.at(i);
@@ -300,10 +301,16 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         writeClass(dataPtr + blockClassAndFunctionOffsets[i + module->functions.size()], c);
     }
 
+    for (int i = 0; i < module->templateObjects.size(); ++i) {
+        const TemplateObject &t = module->templateObjects.at(i);
+
+        writeTemplateObject(dataPtr + blockClassAndFunctionOffsets[i + module->functions.size() + module->classes.size()], t);
+    }
+
     for (int i = 0; i < module->blocks.size(); ++i) {
         Context *block = module->blocks.at(i);
 
-        writeBlock(dataPtr + blockClassAndFunctionOffsets[i + module->classes.size() + module->functions.size()], block);
+        writeBlock(dataPtr + blockClassAndFunctionOffsets[i + module->classes.size() + module->templateObjects.size() + module->functions.size()], block);
     }
 
     CompiledData::Lookup *lookupsToWrite = reinterpret_cast<CompiledData::Lookup*>(dataPtr + unit->offsetToLookupTable);
@@ -532,6 +539,34 @@ void QV4::Compiler::JSUnitGenerator::writeClass(char *b, const QV4::Compiler::Cl
     }
 }
 
+void QV4::Compiler::JSUnitGenerator::writeTemplateObject(char *b, const QV4::Compiler::TemplateObject &t)
+{
+    QV4::CompiledData::TemplateObject *tmpl = reinterpret_cast<QV4::CompiledData::TemplateObject *>(b);
+    tmpl->size = t.strings.size();
+
+    quint32 currentOffset = sizeof(QV4::CompiledData::TemplateObject);
+
+    quint32_le *strings = reinterpret_cast<quint32_le *>(b + currentOffset);
+
+    // write methods
+    for (int i = 0; i < t.strings.size(); ++i)
+        strings[i] = t.strings.at(i);
+    strings += t.strings.size();
+
+    for (int i = 0; i < t.rawStrings.size(); ++i)
+        strings[i] = t.rawStrings.at(i);
+
+    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+    if (showCode) {
+        qDebug() << "=== TemplateObject size" << tmpl->size;
+        for (uint i = 0; i < tmpl->size; ++i) {
+            qDebug() << "    " << i << stringForIndex(tmpl->stringIndexAt(i));
+            qDebug() << "        raw: " << stringForIndex(tmpl->rawStringIndexAt(i));
+        }
+        qDebug();
+    }
+}
+
 void QV4::Compiler::JSUnitGenerator::writeBlock(char *b, QV4::Compiler::Context *irBlock) const
 {
     QV4::CompiledData::Block *block = reinterpret_cast<QV4::CompiledData::Block *>(b);
@@ -579,6 +614,10 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
     unit.classTableSize = module->classes.size();
     unit.offsetToClassTable = nextOffset;
     nextOffset += unit.classTableSize * sizeof(uint);
+
+    unit.templateObjectTableSize = module->templateObjects.size();
+    unit.offsetToTemplateObjectTable = nextOffset;
+    nextOffset += unit.templateObjectTableSize * sizeof(uint);
 
     unit.blockTableSize = module->blocks.size();
     unit.offsetToBlockTable = nextOffset;
@@ -657,6 +696,14 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
         nextOffset += QV4::CompiledData::Class::calculateSize(c.staticMethods.size(), c.methods.size());
     }
     blockAndFunctionOffsets += module->classes.size();
+
+    for (int i = 0; i < module->templateObjects.size(); ++i) {
+        const TemplateObject &t = module->templateObjects.at(i);
+        blockAndFunctionOffsets[i] = nextOffset;
+
+        nextOffset += QV4::CompiledData::TemplateObject::calculateSize(t.strings.size());
+    }
+    blockAndFunctionOffsets += module->templateObjects.size();
 
     for (int i = 0; i < module->blocks.size(); ++i) {
         Context *c = module->blocks.at(i);

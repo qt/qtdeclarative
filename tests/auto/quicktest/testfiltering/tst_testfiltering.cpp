@@ -56,7 +56,8 @@ void tst_TestFiltering::noFilters()
     QVERIFY(process.waitForFinished());
 
     const QString output = process.readAll();
-    QVERIFY(output.contains(QLatin1String("Totals: 10 passed")));
+    QVERIFY(output.contains(QLatin1String("Totals: 17 passed")));
+    QVERIFY(output.contains(QLatin1String(", 3 skipped")));
     QCOMPARE(process.exitStatus(), QProcess::NormalExit);
     QCOMPARE(process.exitCode(), 0);
 }

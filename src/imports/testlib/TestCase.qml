@@ -1866,6 +1866,7 @@ Item {
                         else
                             qtest_runFunction(prop, row)
                         qtest_results.dataTag = ""
+                        qtest_results.skipped = false
                     }
                     if (!haveData) {
                         if (datafunc === "init_data")

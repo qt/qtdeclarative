@@ -567,16 +567,9 @@ language/expressions/prefix-increment/S11.4.4_A5_T3.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T4.js sloppyFails
 language/expressions/prefix-increment/S11.4.4_A5_T5.js fails
 language/expressions/prefix-increment/S11.4.4_A6_T3.js fails
-language/expressions/tagged-template/cache-different-functions-same-site.js fails
-language/expressions/tagged-template/cache-eval-inner-function.js fails
-language/expressions/tagged-template/cache-same-site-top-level.js fails
-language/expressions/tagged-template/cache-same-site.js fails
+language/expressions/tagged-template/cache-eval-inner-function.js strictFails
 language/expressions/tagged-template/invalid-escape-sequences.js fails
 language/expressions/tagged-template/tco-member.js strictFails
-language/expressions/tagged-template/template-object-frozen-non-strict.js sloppyFails
-language/expressions/tagged-template/template-object-frozen-strict.js strictFails
-language/expressions/tagged-template/template-object.js fails
-language/expressions/template-literal/tv-null-character-escape-sequence.js fails
 language/function-code/each-param-has-own-non-shared-eval-scope.js sloppyFails
 language/function-code/each-param-has-own-scope.js sloppyFails
 language/function-code/eval-param-env-with-computed-key.js sloppyFails

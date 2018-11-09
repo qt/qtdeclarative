@@ -356,13 +356,36 @@
 */
 
 /*!
-  \fn int qmlRegisterInterface(const char *typeName)
-  \relates QQmlEngine
+    \fn int qmlRegisterInterface(const char *typeName)
+    \relates QQmlEngine
 
-  This template function registers the C++ type in the QML system
-  under the name \a typeName.
+    This template function registers the C++ type in the QML system
+    under the name \a typeName.
 
-  Returns the QML type id.
+    Types registered as an interface with the engine should also
+    declare themselves as an interface with the
+    \l {The Meta-Object System}{meta object system}. For example:
+
+    \code
+    struct FooInterface
+    {
+    public:
+        virtual ~FooInterface();
+        virtual void doSomething() = 0;
+    };
+
+    Q_DECLARE_INTERFACE(FooInterface, "org.foo.FooInterface")
+    \endcode
+
+    When registered with the QML engine in this way, they can be used as
+    property types:
+
+    Q_PROPERTY(FooInterface *foo READ foo WRITE setFoo)
+
+    When you assign a \l QObject sub-class to this property, the QML engine does
+    the interface cast to \c FooInterface* automatically.
+
+    Returns the QML type id.
 */
 
 /*!

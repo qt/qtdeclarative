@@ -1378,6 +1378,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         }
     MOTH_END_INSTR(ThrowOnNullOrUndefined)
 
+    MOTH_BEGIN_INSTR(GetTemplateObject)
+        acc = RuntimeHelpers::getTemplateObject(function, index);
+    MOTH_END_INSTR(GetTemplateObject)
+
     MOTH_BEGIN_INSTR(Debug)
 #if QT_CONFIG(qml_debug)
         STORE_IP();

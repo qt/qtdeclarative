@@ -2244,6 +2244,9 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
         return Unknown;
 }
 
+/*!
+    See qmlRegisterInterface() for information about when this will return true.
+*/
 bool QQmlMetaType::isInterface(int userType)
 {
     QMutexLocker lock(metaTypeDataLock());

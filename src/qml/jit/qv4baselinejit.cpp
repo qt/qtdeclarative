@@ -992,6 +992,15 @@ void BaselineJIT::generate_ThrowOnNullOrUndefined()
     as->checkException();
 }
 
+void BaselineJIT::generate_GetTemplateObject(int index)
+{
+    STORE_ACC();
+    as->prepareCallWithArgCount(2);
+    as->passInt32AsArg(index, 1);
+    as->passFunctionAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(RuntimeHelpers::getTemplateObject, CallResultDestination::InAccumulator);
+    as->checkException();
+}
 
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {

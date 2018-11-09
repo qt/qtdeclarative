@@ -494,7 +494,7 @@ void Test262Runner::writeTestExpectations()
 
 static bool executeTest(const QByteArray &data, bool runAsModule = false, const QString &testCasePath = QString(), const QByteArray &harnessForModules = QByteArray())
 {
-    QString testData = QString::fromUtf8(data);
+    QString testData = QString::fromUtf8(data.constData(), data.size());
 
     QV4::ExecutionEngine vm;
 
@@ -514,7 +514,7 @@ static bool executeTest(const QByteArray &data, bool runAsModule = false, const 
             QFile f(url.toLocalFile());
             if (f.open(QIODevice::ReadOnly)) {
                 QByteArray content = harnessForModules + f.readAll();
-                module = vm.compileModule(url.toString(), QString::fromUtf8(content), QFileInfo(f).lastModified());
+                module = vm.compileModule(url.toString(), QString::fromUtf8(content.constData(), content.length()), QFileInfo(f).lastModified());
                 if (vm.hasException)
                     break;
                 vm.injectModule(module);
