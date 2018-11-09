@@ -1044,7 +1044,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
         if (text.contains(QChar::ObjectReplacementCharacter)) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
-            if (frame && frame->frameFormat().position() == QTextFrameFormat::InFlow) {
+            if (!frame || frame->frameFormat().position() == QTextFrameFormat::InFlow) {
                 int blockRelativePosition = textPos - block.position();
                 QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
                 if (!currentLine().isValid()
