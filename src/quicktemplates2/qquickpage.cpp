@@ -344,7 +344,7 @@ void QQuickPage::setFooter(QQuickItem *footer)
 
     if (d->footer) {
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, LayoutChanges);
-        footer->setParentItem(nullptr);
+        d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {

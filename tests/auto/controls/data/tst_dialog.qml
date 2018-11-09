@@ -67,6 +67,14 @@ TestCase {
     }
 
     Component {
+        id: qtbug71444
+        Dialog {
+            header: null
+            footer: null
+        }
+    }
+
+    Component {
         id: buttonBox
         DialogButtonBox { }
     }
@@ -196,6 +204,11 @@ TestCase {
         verify(rejectedSpy.valid)
         box.rejected()
         compare(rejectedSpy.count, 1)
+    }
+
+    function test_qtbug71444() {
+        var control = createTemporaryObject(qtbug71444, testCase)
+        verify(control)
     }
 
     function test_standardButtons() {
