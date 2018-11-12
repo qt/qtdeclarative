@@ -122,10 +122,20 @@ QT_BEGIN_NAMESPACE
     \section1 Event Handling
 
     All controls, except non-interactive indicators, do not let clicks and
-    touches through to items below them. For example, if \l Pane is used as the
-    \l {ApplicationWindow::}{header} or \l {ApplicationWindow::}{footer} of
-    \l ApplicationWindow, items underneath it will not get mouse or touch
-    events.
+    touches through to items below them. For example, the \c console.log()
+    call in the example below will never be executed when clicking on the
+    Pane, because the \l MouseArea is below it in the scene:
+
+    \code
+    MouseArea {
+        anchors.fill: parent
+        onClicked: console.log("MouseArea was clicked")
+
+        Pane {
+            anchors.fill: parent
+        }
+    }
+    \endcode
 
     \sa ApplicationWindow, Container
 */

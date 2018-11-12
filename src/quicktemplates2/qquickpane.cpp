@@ -104,7 +104,7 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     \sa {Customizing Pane}, {Container Controls},
-        {Focus Management in Qt Quick Controls 2}
+        {Focus Management in Qt Quick Controls 2}, {Event Handling}
 */
 
 void QQuickPanePrivate::init()
