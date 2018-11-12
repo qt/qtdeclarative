@@ -922,6 +922,21 @@ Module {
     Component {
         name: "QQuickAnchors"
         prototype: "QObject"
+        Enum {
+            name: "Anchors"
+            values: {
+                "InvalidAnchor": 0,
+                "LeftAnchor": 1,
+                "RightAnchor": 2,
+                "TopAnchor": 4,
+                "BottomAnchor": 8,
+                "HCenterAnchor": 16,
+                "VCenterAnchor": 32,
+                "BaselineAnchor": 64,
+                "Horizontal_Mask": 19,
+                "Vertical_Mask": 108
+            }
+        }
         Property { name: "left"; type: "QQuickAnchorLine" }
         Property { name: "right"; type: "QQuickAnchorLine" }
         Property { name: "horizontalCenter"; type: "QQuickAnchorLine" }
@@ -1688,10 +1703,6 @@ Module {
         Signal { name: "synchronousDragChanged"; revision: 12 }
         Signal { name: "horizontalOvershootChanged"; revision: 9 }
         Signal { name: "verticalOvershootChanged"; revision: 9 }
-        Signal { name: "atXEndChanged"; revision: 12 }
-        Signal { name: "atYEndChanged"; revision: 12 }
-        Signal { name: "atXBeginningChanged"; revision: 12 }
-        Signal { name: "atYBeginningChanged"; revision: 12 }
         Method {
             name: "resizeContent"
             Parameter { name: "w"; type: "double" }
@@ -2230,6 +2241,16 @@ Module {
             "QtQuick/Item 2.7"
         ]
         exportMetaObjectRevisions: [0, 1, 11, 2, 7]
+        Enum {
+            name: "Flags"
+            values: {
+                "ItemClipsChildrenToShape": 1,
+                "ItemAcceptsInputMethod": 2,
+                "ItemIsFocusScope": 4,
+                "ItemHasContents": 8,
+                "ItemAcceptsDrops": 16
+            }
+        }
         Enum {
             name: "TransformOrigin"
             values: {
@@ -3095,6 +3116,12 @@ Module {
                 "InvertedYFramebufferObject": 2
             }
         }
+        Enum {
+            name: "PerformanceHints"
+            values: {
+                "FastFBOResizing": 1
+            }
+        }
         Property { name: "contentsSize"; type: "QSize" }
         Property { name: "fillColor"; type: "QColor" }
         Property { name: "contentsScale"; type: "double" }
@@ -3536,19 +3563,6 @@ Module {
         isCreatable: false
         exportMetaObjectRevisions: [0]
         Enum {
-            name: "DeviceType"
-            values: {
-                "UnknownDevice": 0,
-                "Mouse": 1,
-                "TouchScreen": 2,
-                "TouchPad": 4,
-                "Puck": 8,
-                "Stylus": 16,
-                "Airbrush": 32,
-                "AllDevices": 32767
-            }
-        }
-        Enum {
             name: "DeviceTypes"
             values: {
                 "UnknownDevice": 0,
@@ -3562,17 +3576,6 @@ Module {
             }
         }
         Enum {
-            name: "PointerType"
-            values: {
-                "GenericPointer": 1,
-                "Finger": 2,
-                "Pen": 4,
-                "Eraser": 8,
-                "Cursor": 16,
-                "AllPointerTypes": 32767
-            }
-        }
-        Enum {
             name: "PointerTypes"
             values: {
                 "GenericPointer": 1,
@@ -3581,21 +3584,6 @@ Module {
                 "Eraser": 8,
                 "Cursor": 16,
                 "AllPointerTypes": 32767
-            }
-        }
-        Enum {
-            name: "CapabilityFlag"
-            values: {
-                "Position": 1,
-                "Area": 2,
-                "Pressure": 4,
-                "Velocity": 8,
-                "MouseEmulation": 64,
-                "Scroll": 256,
-                "Hover": 512,
-                "Rotation": 1024,
-                "XTilt": 2048,
-                "YTilt": 4096
             }
         }
         Enum {
@@ -4340,10 +4328,6 @@ Module {
         Property { name: "columns"; type: "int"; isReadonly: true }
         Property { name: "rowSpacing"; type: "double" }
         Property { name: "columnSpacing"; type: "double" }
-        Property { name: "topMargin"; type: "double" }
-        Property { name: "bottomMargin"; type: "double" }
-        Property { name: "leftMargin"; type: "double" }
-        Property { name: "rightMargin"; type: "double" }
         Property { name: "rowHeightProvider"; type: "QJSValue" }
         Property { name: "columnWidthProvider"; type: "QJSValue" }
         Property { name: "model"; type: "QVariant" }
@@ -4351,8 +4335,6 @@ Module {
         Property { name: "reuseItems"; type: "bool" }
         Property { name: "contentWidth"; type: "double" }
         Property { name: "contentHeight"; type: "double" }
-        Signal { name: "contentWidthOverrideChanged" }
-        Signal { name: "contentHeightOverrideChanged" }
         Method { name: "forceLayout" }
     }
     Component {
@@ -4559,12 +4541,10 @@ Module {
         Signal { name: "contentSizeChanged" }
         Signal {
             name: "contentWidthChanged"
-            revision: 12
             Parameter { name: "contentWidth"; type: "double" }
         }
         Signal {
             name: "contentHeightChanged"
-            revision: 12
             Parameter { name: "contentHeight"; type: "double" }
         }
         Signal {
