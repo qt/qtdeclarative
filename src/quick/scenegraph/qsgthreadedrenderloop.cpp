@@ -499,7 +499,8 @@ void QSGRenderThread::invalidateOpenGL(QQuickWindow *window, bool inDestructor, 
     QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
 
 #if QT_CONFIG(quick_shadereffect)
-    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+    if (current)
+        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
