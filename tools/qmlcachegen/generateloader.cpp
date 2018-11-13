@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 #include <QByteArray>
+#include <QRegExp>
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
