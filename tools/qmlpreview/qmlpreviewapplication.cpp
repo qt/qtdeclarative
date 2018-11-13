@@ -63,9 +63,9 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::request,
             this, &QmlPreviewApplication::serveRequest);
 
-    connect(&m_watcher, &QFileSystemWatcher::fileChanged,
+    connect(&m_watcher, &QmlPreviewFileSystemWatcher::fileChanged,
             this, &QmlPreviewApplication::sendFile);
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged,
+    connect(&m_watcher, &QmlPreviewFileSystemWatcher::directoryChanged,
             this, &QmlPreviewApplication::sendDirectory);
 }
 
@@ -212,17 +212,12 @@ void QmlPreviewApplication::serveRequest(const QString &path)
 
     if (info.isDir()) {
         m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList());
-        m_watcher.addPath(path);
+        m_watcher.addDirectory(path);
     } else {
         QFile file(path);
         if (file.open(QIODevice::ReadOnly)) {
             m_qmlPreviewClient->sendFile(path, file.readAll());
-            m_watcher.addPath(path);
-
-            // Also watch the directory, because editors will rather replace a file than change it.
-            // Therefore when the file changes, we can't read it, but when the file is re-added we can
-            // see that from the directory changing.
-            m_watcher.addPath(info.absolutePath());
+            m_watcher.addFile(path);
         } else {
             logStatus(QString("Could not open file %1 for reading: %2").arg(path)
                       .arg(file.errorString()));
@@ -236,13 +231,10 @@ bool QmlPreviewApplication::sendFile(const QString &path)
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
         m_qmlPreviewClient->sendFile(path, file.readAll());
-        m_pendingFiles.removeAll(path);
         // Defer the Load, because files tend to change multiple times in a row.
         m_loadTimer.start();
         return true;
     }
-    if (!m_pendingFiles.contains(path))
-        m_pendingFiles.append(path);
     logStatus(QString("Could not open file %1 for reading: %2").arg(path).arg(file.errorString()));
     return false;
 }
@@ -250,17 +242,5 @@ bool QmlPreviewApplication::sendFile(const QString &path)
 void QmlPreviewApplication::sendDirectory(const QString &path)
 {
     m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList());
-    for (auto it = m_pendingFiles.begin(); it != m_pendingFiles.end();) {
-        const QString filePath = *it;
-        QFile file(filePath);
-        if (file.open(QIODevice::ReadOnly)) {
-            logStatus(QString("Sending replaced file %1.").arg(filePath));
-            m_qmlPreviewClient->sendFile(filePath, file.readAll());
-            m_watcher.addPath(filePath);
-            it = m_pendingFiles.erase(it);
-        } else {
-            ++it;
-        }
-    }
     m_loadTimer.start();
 }

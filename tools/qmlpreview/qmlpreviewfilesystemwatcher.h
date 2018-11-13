@@ -26,57 +26,45 @@
 **
 ****************************************************************************/
 
-#ifndef QMLPREVIEWAPPLICATION_H
-#define QMLPREVIEWAPPLICATION_H
+#ifndef QMLPREVIEWFILESYSTEMWATCHER_H
+#define QMLPREVIEWFILESYSTEMWATCHER_H
 
-#include "qmlpreviewfilesystemwatcher.h"
+#include <QtCore/qfilesystemwatcher.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qset.h>
 
-#include <private/qqmlpreviewclient_p.h>
-#include <private/qqmldebugconnection_p.h>
-
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qprocess.h>
-#include <QtCore/qtimer.h>
-
-#include <QtNetwork/qabstractsocket.h>
-
-class QmlPreviewApplication : public QCoreApplication
+class QmlPreviewFileSystemWatcher : public QObject
 {
     Q_OBJECT
-public:
-    QmlPreviewApplication(int &argc, char **argv);
-    ~QmlPreviewApplication();
 
-    void parseArguments();
-    int exec();
+public:
+    explicit QmlPreviewFileSystemWatcher(QObject *parent = nullptr);
+
+    void addFile(const QString &file);
+    void removeFile(const QString &file);
+    bool watchesFile(const QString &file) const;
+
+    void addDirectory(const QString &file);
+    void removeDirectory(const QString &file);
+    bool watchesDirectory(const QString &file) const;
+
+signals:
+    void fileChanged(const QString &path);
+    void directoryChanged(const QString &path);
 
 private:
-    void run();
-    void tryToConnect();
-    void processHasOutput();
-    void processFinished();
+    using WatchEntrySet = QSet<QString>;
+    using WatchEntrySetIterator = WatchEntrySet::iterator;
 
-    void logError(const QString &error);
-    void logStatus(const QString &status);
+    void onDirectoryChanged(const QString &path);
 
-    void serveRequest(const QString &request);
-    bool sendFile(const QString &path);
-    void sendDirectory(const QString &path);
+    WatchEntrySet m_files;
+    WatchEntrySet m_directories;
 
-    QString m_programPath;
-    QStringList m_programArguments;
-    QScopedPointer<QProcess> m_process;
-    bool m_verbose;
+    // Directories watched either explicitly or implicitly through files contained in them.
+    QHash<QString, int> m_directoryCount;
 
-    QString m_socketFile;
-
-    QScopedPointer<QQmlDebugConnection> m_connection;
-    QScopedPointer<QQmlPreviewClient> m_qmlPreviewClient;
-    QmlPreviewFileSystemWatcher m_watcher;
-
-    QTimer m_loadTimer;
-    QTimer m_connectTimer;
-    uint m_connectionAttempts;
+    QFileSystemWatcher *m_watcher = nullptr;
 };
 
-#endif // QMLPREVIEWAPPLICATION_H
+#endif // QMLPREVIEWFILESYSTEMWATCHER_H

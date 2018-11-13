@@ -3,10 +3,12 @@ CONFIG += no_import_scan
 
 SOURCES += \
     main.cpp \
-    qmlpreviewapplication.cpp
+    qmlpreviewapplication.cpp \
+    qmlpreviewfilesystemwatcher.cpp
 
 HEADERS += \
-    qmlpreviewapplication.h
+    qmlpreviewapplication.h \
+    qmlpreviewfilesystemwatcher.h
 
 QMAKE_TARGET_DESCRIPTION = QML Preview
 
