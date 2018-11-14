@@ -188,7 +188,7 @@ void SelectionHighlight::showName(const QPointF &displayPoint)
 {
     m_displayPoint = displayPoint;
     m_nameDisplayActive = true;
-    QTimer::singleShot(1500, this, SLOT(disableNameDisplay()));
+    QTimer::singleShot(1500, this, &SelectionHighlight::disableNameDisplay);
     update();
 }
 
