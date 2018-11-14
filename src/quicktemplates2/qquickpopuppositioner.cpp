@@ -300,7 +300,7 @@ void QQuickPopupPositioner::addAncestorListeners(QQuickItem *item)
 
     QQuickItem *p = item;
     while (p) {
-        QQuickItemPrivate::get(p)->updateOrAddItemChangeListener(this, AncestorChangeTypes);
+        QQuickItemPrivate::get(p)->addItemChangeListener(this, AncestorChangeTypes);
         p = p->parentItem();
     }
 }

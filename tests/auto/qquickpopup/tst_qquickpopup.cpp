@@ -36,7 +36,6 @@
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
-#include "../shared/menuutil.h"
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 #include "../shared/qtest_quickcontrols.h"
@@ -859,7 +858,6 @@ void tst_QQuickPopup::grabber()
 
     menu->open();
     QTRY_COMPARE(menu->isOpened(), true);
-    waitForMenuListViewPolish(menu);
     QCOMPARE(popup->isVisible(), false);
     QCOMPARE(combo->isVisible(), false);
 
@@ -882,7 +880,6 @@ void tst_QQuickPopup::grabber()
 
     menu->open();
     QTRY_COMPARE(menu->isOpened(), true);
-    waitForMenuListViewPolish(menu);
     QCOMPARE(popup->isVisible(), false);
     QCOMPARE(combo->isVisible(), false);
 
@@ -974,7 +971,6 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     QQuickPopup *optionsMenu = window->findChild<QQuickPopup*>("optionsMenu");
     QVERIFY(optionsMenu);
     QTRY_VERIFY(optionsMenu->isVisible());
-    waitForMenuListViewPolish(optionsMenu);
 
     QQuickItem *settingsMenuItem = window->findChild<QQuickItem*>("settingsMenuItem");
     QVERIFY(settingsMenuItem);

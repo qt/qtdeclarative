@@ -1,6 +1,5 @@
 CONFIG += testcase
 TARGET = tst_qquickmenu
-HEADERS += ../shared/menuutil.h
 SOURCES += tst_qquickmenu.cpp
 
 macos:CONFIG -= app_bundle
