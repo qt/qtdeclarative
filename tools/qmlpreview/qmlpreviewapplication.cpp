@@ -104,11 +104,11 @@ void QmlPreviewApplication::parseArguments()
     parser.addHelpOption();
     parser.addVersionOption();
 
-    parser.addPositionalArgument(QLatin1String("program"),
-                                 tr("The program to be started and previewed."),
-                                 QLatin1String("[program]"));
+    parser.addPositionalArgument(QLatin1String("executable"),
+                                 tr("The executable to be started and previewed."),
+                                 QLatin1String("[executable]"));
     parser.addPositionalArgument(QLatin1String("parameters"),
-                                 tr("Parameters for the program to be started."),
+                                 tr("Parameters for the executable to be started."),
                                  QLatin1String("[parameters...]"));
 
     parser.process(*this);
@@ -120,12 +120,12 @@ void QmlPreviewApplication::parseArguments()
     if (parser.isSet(verbose))
         m_verbose = true;
 
-    m_programArguments = parser.positionalArguments();
-    if (!m_programArguments.isEmpty())
-        m_programPath = m_programArguments.takeFirst();
+    m_arguments = parser.positionalArguments();
+    if (!m_arguments.isEmpty())
+        m_executablePath = m_arguments.takeFirst();
 
-    if (m_programPath.isEmpty()) {
-        logError(tr("You have to specify a program to start."));
+    if (m_executablePath.isEmpty()) {
+        logError(tr("You have to specify an executable to start."));
         parser.showHelp(2);
     }
 }
@@ -143,17 +143,17 @@ void QmlPreviewApplication::run()
     m_process.reset(new QProcess(this));
     QStringList arguments;
     arguments << QString("-qmljsdebugger=file:%1,block,services:QmlPreview").arg(m_socketFile);
-    arguments << m_programArguments;
+    arguments << m_arguments;
 
     m_process->setProcessChannelMode(QProcess::MergedChannels);
     connect(m_process.data(), &QIODevice::readyRead,
             this, &QmlPreviewApplication::processHasOutput);
     connect(m_process.data(), static_cast<void(QProcess::*)(int)>(&QProcess::finished),
             this, [this](int){ processFinished(); });
-    logStatus(QString("Starting '%1 %2' ...").arg(m_programPath, arguments.join(QLatin1Char(' '))));
-    m_process->start(m_programPath, arguments);
+    logStatus(QString("Starting '%1 %2' ...").arg(m_executablePath, arguments.join(QLatin1Char(' '))));
+    m_process->start(m_executablePath, arguments);
     if (!m_process->waitForStarted()) {
-        logError(QString("Could not run '%1': %2").arg(m_programPath, m_process->errorString()));
+        logError(QString("Could not run '%1': %2").arg(m_executablePath, m_process->errorString()));
         exit(1);
     }
     m_connectTimer.start();

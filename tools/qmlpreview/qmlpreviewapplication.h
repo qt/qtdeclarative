@@ -63,8 +63,8 @@ private:
     bool sendFile(const QString &path);
     void sendDirectory(const QString &path);
 
-    QString m_programPath;
-    QStringList m_programArguments;
+    QString m_executablePath;
+    QStringList m_arguments;
     QScopedPointer<QProcess> m_process;
     bool m_verbose;
 

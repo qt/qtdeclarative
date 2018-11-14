@@ -91,8 +91,8 @@ private:
     } m_runMode;
 
     // LaunchMode
-    QString m_programPath;
-    QStringList m_programArguments;
+    QString m_executablePath;
+    QStringList m_arguments;
     QProcess *m_process;
 
     QString m_socketFile;
