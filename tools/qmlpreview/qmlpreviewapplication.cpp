@@ -105,7 +105,7 @@ void QmlPreviewApplication::parseArguments()
     parser.addVersionOption();
 
     parser.addPositionalArgument(QLatin1String("program"),
-                                 tr("The program to be started and profiled."),
+                                 tr("The program to be started and previewed."),
                                  QLatin1String("[program]"));
     parser.addPositionalArgument(QLatin1String("parameters"),
                                  tr("Parameters for the program to be started."),
