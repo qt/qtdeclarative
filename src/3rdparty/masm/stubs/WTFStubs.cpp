@@ -66,7 +66,7 @@ uint32_t cryptographicallyRandomNumber()
     return 0;
 }
 
-static FilePrintStream* s_dataFile;
+static FilePrintStream* s_dataFile = nullptr;
 
 void setDataFile(FilePrintStream *ps)
 {

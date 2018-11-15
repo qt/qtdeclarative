@@ -2125,7 +2125,15 @@ public:
         auto outputTermIndexAndNest = [&](size_t index, unsigned termNesting) {
             for (unsigned nestingDepth = 0; nestingDepth < termIndexNest; nestingDepth++)
                 out.print("  ");
+#if defined(WIN32) && defined(__MINGW32__)
+#  if __SIZEOF_POINTER__ == 8
+            out.printf("%4I64u", index);
+#   else
+            out.printf("%4I32u", index);
+#  endif
+#else
             out.printf("%4zu", index);
+#endif
             for (unsigned nestingDepth = 0; nestingDepth < termNesting; nestingDepth++)
                 out.print("  ");
         };

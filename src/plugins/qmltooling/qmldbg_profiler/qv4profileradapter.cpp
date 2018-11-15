@@ -87,13 +87,16 @@ qint64 QV4ProfilerAdapter::appendMemoryEvents(qint64 until, QList<QByteArray> &m
 qint64 QV4ProfilerAdapter::finalizeMessages(qint64 until, QList<QByteArray> &messages,
                                             qint64 callNext, QQmlDebugPacket &d)
 {
+    qint64 memoryNext = -1;
+
     if (callNext == -1) {
         m_functionLocations.clear();
         m_functionCallData.clear();
         m_functionCallPos = 0;
+        memoryNext = appendMemoryEvents(until, messages, d);
+    } else {
+        memoryNext = appendMemoryEvents(qMin(callNext, until), messages, d);
     }
-
-    qint64 memoryNext = appendMemoryEvents(until, messages, d);
 
     if (memoryNext == -1) {
         m_memoryData.clear();

@@ -21,4 +21,5 @@ OTHER_FILES += \
     data/javascript.qml \
     data/timer.qml \
     data/qstr.qml \
-    data/memory.qml
+    data/memory.qml \
+    data/batchOverflow.qml

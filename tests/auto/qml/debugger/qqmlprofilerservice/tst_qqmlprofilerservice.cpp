@@ -225,6 +225,7 @@ private slots:
     void memory();
     void compile();
     void multiEngine();
+    void batchOverflow();
 
 private:
     bool m_recordFromStart = true;
@@ -824,6 +825,15 @@ void tst_QQmlProfilerService::multiEngine()
     QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 
     QCOMPARE(spy.count(), 1);
+}
+
+void tst_QQmlProfilerService::batchOverflow()
+{
+    // The trace client checks that the events are received in order.
+    QCOMPARE(connect(true, "batchOverflow.qml"), ConnectSuccess);
+    checkProcessTerminated();
+    checkTraceReceived();
+    checkJsHeap();
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)
