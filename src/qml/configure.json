@@ -12,7 +12,25 @@
         }
     },
 
+    "tests": {
+        "cxx14_make_unique": {
+            "label": "C++14 make_unique()",
+            "type": "compile",
+            "test": {
+                "include": "memory",
+                "main": [
+                    "std::unique_ptr<int> ptr = std::make_unique<int>();"
+                ]
+            }
+        }
+    },
+
     "features": {
+        "cxx14_make_unique": {
+            "label": "C++14 make_unique",
+            "condition": "tests.cxx14_make_unique",
+            "output": [ "privateFeature" ]
+        },
         "qml-network": {
             "label": "QML network support",
             "purpose": "Provides network transparency.",

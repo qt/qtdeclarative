@@ -177,11 +177,21 @@ class YarrGenerator : private DefaultMacroAssembler {
         uint32_t begin;
         uint32_t matchAmount;
         uintptr_t returnAddress;
+#if OS(INTEGRITY)
+        union {
+            struct Subpatterns {
+                unsigned start;
+                unsigned end;
+            } subpatterns[1];
+            uintptr_t frameSlots[1];
+        };
+#else
         struct Subpatterns {
             unsigned start;
             unsigned end;
         } subpatterns[0];
         uintptr_t frameSlots[0];
+#endif
 
         static size_t sizeFor(ParenContextSizes& parenContextSizes)
         {

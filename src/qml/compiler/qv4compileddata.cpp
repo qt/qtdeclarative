@@ -415,13 +415,20 @@ QStringList CompilationUnit::moduleRequests() const
 
 Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
 {
-    if (m_module)
+    if (isESModule() && m_module)
         return m_module;
+
+    if (data->indexOfRootFunction < 0)
+        return nullptr;
 
     if (!this->engine)
         linkToEngine(engine);
 
-    m_module = engine->memoryManager->allocate<Module>(engine, this);
+    Scope scope(engine);
+    Scoped<Module> module(scope, engine->memoryManager->allocate<Module>(engine, this));
+
+    if (isESModule())
+        m_module = module->d();
 
     for (const QString &request: moduleRequests()) {
         auto dependentModuleUnit = engine->loadModule(QUrl(request), this);
@@ -430,7 +437,6 @@ Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
         dependentModuleUnit->instantiate(engine);
     }
 
-    Scope scope(engine);
     ScopedString importName(scope);
 
     const uint importCount = data->importEntryTableSize;
@@ -465,7 +471,7 @@ Heap::Module *CompilationUnit::instantiate(ExecutionEngine *engine)
         }
     }
 
-    return m_module;
+    return module->d();
 }
 
 const Value *CompilationUnit::resolveExport(QV4::String *exportName)
@@ -590,10 +596,13 @@ void CompilationUnit::getExportedNamesRecursively(QStringList *names, QVector<co
 
 void CompilationUnit::evaluate()
 {
-    if (m_moduleEvaluated)
-        return;
-    m_moduleEvaluated = true;
+    QV4::Scope scope(engine);
+    QV4::Scoped<Module> module(scope, m_module);
+    module->evaluate();
+}
 
+void CompilationUnit::evaluateModuleRequests()
+{
     for (const QString &request: moduleRequests()) {
         auto dependentModuleUnit = engine->loadModule(QUrl(request), this);
         if (engine->hasException)
@@ -602,19 +611,6 @@ void CompilationUnit::evaluate()
         if (engine->hasException)
             return;
     }
-
-    QV4::Function *moduleFunction = runtimeFunctions[data->indexOfRootFunction];
-    CppStackFrame frame;
-    frame.init(engine, moduleFunction, nullptr, 0);
-    frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), m_module->scope,
-                       Value::undefinedValue(), Value::undefinedValue());
-
-    frame.push();
-    engine->jsStackTop += frame.requiredJSStackFrameSize();
-    auto frameCleanup = qScopeGuard([&frame]() {
-       frame.pop();
-    });
-    Moth::VME::exec(&frame, engine);
 }
 
 bool CompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString)
@@ -768,7 +764,7 @@ QString Binding::valueAsString(const CompilationUnit *unit) const
     case Type_Translation: {
         const TranslationData &translation = unit->unitData()->translations()[value.translationDataIndex];
         // This code must match that in the qsTr() implementation
-        const QString &path = unit->stringAt(unit->unitData()->sourceFileIndex);
+        const QString &path = unit->fileName();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
         QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
                                               : QStringRef();

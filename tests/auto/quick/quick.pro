@@ -41,11 +41,7 @@ PRIVATETESTS += \
     qquickstyledtext \
     qquickstates \
     qquicksystempalette \
-    qquicktimeline \
-    qquickxmllistmodel
-
-# This test requires the xmlpatterns module
-!qtHaveModule(xmlpatterns): PRIVATETESTS -= qquickxmllistmodel
+    qquicktimeline
 
 QUICKTESTS += \
     pointerhandlers \

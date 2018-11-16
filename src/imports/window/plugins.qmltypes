@@ -78,6 +78,16 @@ Module {
         exports: ["QtQuick.Window/Window 2.0"]
         exportMetaObjectRevisions: [0]
         Enum {
+            name: "CreateTextureOptions"
+            values: {
+                "TextureHasAlphaChannel": 1,
+                "TextureHasMipmaps": 2,
+                "TextureOwnsGLTexture": 4,
+                "TextureCanUseAtlas": 8,
+                "TextureIsOpaque": 16
+            }
+        }
+        Enum {
             name: "SceneGraphError"
             values: {
                 "ContextNotAvailable": 1

@@ -31,7 +31,7 @@ qhp.QtQmlTest.subprojects.qmltypes.sortPages = true
 
 tagfile                 = ../../../doc/qtqmltest/qtqmltest.tags
 
-depends += qtcore qtxmlpatterns qtgui qttestlib qtqml qtquick qtdoc
+depends += qtcore qtgui qttestlib qtqml qtquick qtdoc
 
 headerdirs  += ..
 

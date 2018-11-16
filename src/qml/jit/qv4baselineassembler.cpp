@@ -444,12 +444,12 @@ public:
 
     void moveReg(Address sourceRegAddress, Address destRegAddress)
     {
-        load32(sourceRegAddress, ReturnValueRegisterValue);
+        load32(sourceRegAddress, ScratchRegister);
+        store32(ScratchRegister, destRegAddress);
         sourceRegAddress.offset += 4;
-        load32(sourceRegAddress, ReturnValueRegisterTag);
-        store32(ReturnValueRegisterValue, destRegAddress);
         destRegAddress.offset += 4;
-        store32(ReturnValueRegisterTag, destRegAddress);
+        load32(sourceRegAddress, ScratchRegister);
+        store32(ScratchRegister, destRegAddress);
     }
 
     void loadString(int stringId)

@@ -88,12 +88,6 @@ tst_examples::tst_examples()
     excludedFiles << "examples/quick/shapes/content/main.qml"; // relies on resources
     excludedFiles << "examples/quick/shapes/content/interactive.qml"; // relies on resources
 
-#ifdef QT_NO_XMLPATTERNS
-    excludedFiles << "snippets/qml/xmlrole.qml";
-    excludedFiles << "particles/itemparticle/particleview.qml";
-    excludedFiles << "views/visualdatamodel/slideshow.qml";
-#endif
-
 #if !QT_CONFIG(opengl)
     //No support for Particles
     excludedFiles << "examples/qml/dynamicscene/dynamicscene.qml";

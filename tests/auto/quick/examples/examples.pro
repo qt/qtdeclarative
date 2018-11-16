@@ -8,5 +8,4 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 
 #temporary
 QT += core-private gui-private qml-private quick-private  testlib
-!qtHaveModule(xmlpatterns): DEFINES += QT_NO_XMLPATTERNS
 

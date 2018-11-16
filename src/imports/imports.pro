@@ -28,4 +28,3 @@ qtHaveModule(quick) {
     qtConfig(quick-path):qtConfig(thread): SUBDIRS += shapes
 }
 
-qtHaveModule(xmlpatterns) : SUBDIRS += xmllistmodel

@@ -54,6 +54,7 @@
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4module_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,8 +88,20 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
-    if (v4->callingQmlContext() != *resource->d()->context)
+    if (v4->callingQmlContext() != *resource->d()->context) {
+        if (resource->d()->module) {
+            Scoped<Module> module(scope, resource->d()->module);
+            bool hasProp = false;
+            ScopedValue value(scope, module->get(id, receiver, &hasProp));
+            if (hasProp) {
+                if (hasProperty)
+                    *hasProperty = hasProp;
+                return value->asReturnedValue();
+            }
+        }
+
         return Object::virtualGet(m, id, receiver, hasProperty);
+    }
 
     bool hasProp = false;
     ScopedValue result(scope, Object::virtualGet(m, id, receiver, &hasProp));
