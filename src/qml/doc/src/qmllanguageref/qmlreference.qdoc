@@ -59,6 +59,7 @@ modules.
         \li \l{qtqml-syntax-objectattributes.html#signal-attributes}{Signal Attributes}
         \li \l{qtqml-syntax-objectattributes.html#method-attributes}{Method Attributes}
         \li \l{qtqml-syntax-objectattributes.html#attached-properties-and-attached-signal-handlers}{Attached Properties and Attached Signal Handlers}
+        \li \l{qtqml-syntax-objectattributes.html#enumeration-attributes}{Enumeration Attributes}
         \endlist
 
     \li \l{qtqml-syntax-propertybinding.html}{Property Binding}

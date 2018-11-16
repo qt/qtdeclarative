@@ -673,4 +673,5 @@ property is only invoked when the property is reassigned to a different object v
     \endqml
 
     \sa {QML Basic Types}
+    \sa {qtqml-syntax-objectattributes.html#enumeration-attributes}{Enumeration Attributes}
 */
