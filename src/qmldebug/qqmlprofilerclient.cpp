@@ -95,11 +95,16 @@ int QQmlProfilerClientPrivate::resolveStackTop()
 
 void QQmlProfilerClientPrivate::forwardEvents(const QQmlProfilerEvent &last)
 {
+    forwardDebugMessages(last.timestamp());
+    eventReceiver->addEvent(last);
+}
+
+void QQmlProfilerClientPrivate::forwardDebugMessages(qint64 untilTimestamp)
+{
     while (!pendingDebugMessages.isEmpty()
-           && pendingDebugMessages.front().timestamp() <= last.timestamp()) {
+           && pendingDebugMessages.front().timestamp() <= untilTimestamp) {
         eventReceiver->addEvent(pendingDebugMessages.dequeue());
     }
-    eventReceiver->addEvent(last);
 }
 
 void QQmlProfilerClientPrivate::processCurrentEvent()
@@ -142,7 +147,7 @@ void QQmlProfilerClientPrivate::processCurrentEvent()
         int typeIndex = resolveType(currentEvent);
         currentEvent.event.setTypeIndex(typeIndex);
         if (rangesInProgress.isEmpty())
-            eventReceiver->addEvent(currentEvent.event);
+            forwardEvents(currentEvent.event);
         else
             pendingMessages.enqueue(currentEvent.event);
         break;
@@ -228,8 +233,7 @@ void QQmlProfilerClientPrivate::finalize()
         currentEvent.event.setTimestamp(maximumTime);
         processCurrentEvent();
     }
-    while (!pendingDebugMessages.isEmpty())
-        eventReceiver->addEvent(pendingDebugMessages.dequeue());
+    forwardDebugMessages(std::numeric_limits<qint64>::max());
 }
 
 
@@ -345,12 +349,14 @@ void QQmlProfilerClient::messageReceived(const QByteArray &data)
                && d->currentEvent.type.detailType() == StartTrace) {
         const QList<int> engineIds = d->currentEvent.event.numbers<QList<int>, qint32>();
         d->trackedEngines.append(engineIds);
+        d->forwardDebugMessages(d->currentEvent.event.timestamp());
         emit traceStarted(d->currentEvent.event.timestamp(), engineIds);
     } else if (d->currentEvent.type.message() == Event
                && d->currentEvent.type.detailType() == EndTrace) {
         const QList<int> engineIds = d->currentEvent.event.numbers<QList<int>, qint32>();
         for (int engineId : engineIds)
             d->trackedEngines.removeAll(engineId);
+        d->forwardDebugMessages(d->currentEvent.event.timestamp());
         emit traceFinished(d->currentEvent.event.timestamp(), engineIds);
     } else if (d->updateFeatures(d->currentEvent.type.feature())) {
         d->processCurrentEvent();

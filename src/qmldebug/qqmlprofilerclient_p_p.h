@@ -86,6 +86,7 @@ public:
     int resolveType(const QQmlProfilerTypedEvent &type);
     int resolveStackTop();
     void forwardEvents(const QQmlProfilerEvent &last);
+    void forwardDebugMessages(qint64 untilTimestamp);
     void processCurrentEvent();
     void finalize();
 

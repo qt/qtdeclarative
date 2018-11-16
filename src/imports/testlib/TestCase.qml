@@ -1787,17 +1787,28 @@ Item {
         running = true
 
         // Check the run list to see if this class is mentioned.
-        var functionsToRun = qtest_results.functionsToRun
-        if (functionsToRun.length > 0) {
+        let checkNames = false
+        let testsToRun = {} // explicitly provided function names to run and their tags for data-driven tests
+
+        if (qtest_results.functionsToRun.length > 0) {
+            checkNames = true
             var found = false
-            var list = []
+
             if (name.length > 0) {
-                var prefix = name + "::"
-                for (var index in functionsToRun) {
-                    if (functionsToRun[index].indexOf(prefix) == 0) {
-                        list.push(functionsToRun[index])
-                        found = true
-                    }
+                for (var index in qtest_results.functionsToRun) {
+                    let caseFuncName = qtest_results.functionsToRun[index]
+                    if (caseFuncName.indexOf(name + "::") != 0)
+                        continue
+
+                    found = true
+                    let funcName = caseFuncName.substring(name.length + 2)
+
+                    if (!(funcName in testsToRun))
+                        testsToRun[funcName] = []
+
+                    let tagName = qtest_results.tagsToRun[index]
+                    if (tagName.length > 0) // empty tags mean run all rows
+                        testsToRun[funcName].push(tagName)
                 }
             }
             if (!found) {
@@ -1809,7 +1820,6 @@ Item {
                 qtest_results.testCaseName = ""
                 return
             }
-            functionsToRun = list
         }
 
         // Run the initTestCase function.
@@ -1834,17 +1844,15 @@ Item {
             }
             testList.sort()
         }
-        var checkNames = (functionsToRun.length > 0)
+
         for (var index in testList) {
             var prop = testList[index]
+
+            if (checkNames && !(prop in testsToRun))
+                continue
+
             var datafunc = prop + "_data"
             var isBenchmark = (prop.indexOf("benchmark_") == 0)
-            if (checkNames) {
-                var index = functionsToRun.indexOf(name + "::" + prop)
-                if (index < 0)
-                    continue
-                functionsToRun.splice(index, 1)
-            }
             qtest_results.functionName = prop
 
             if (!(datafunc in testCase))
@@ -1854,12 +1862,22 @@ Item {
                 if (qtest_runInternal(datafunc)) {
                     var table = qtest_testCaseResult
                     var haveData = false
+
+                    let checkTags = (checkNames && testsToRun[prop].length > 0)
+
                     qtest_results.initTestTable()
                     for (var index in table) {
                         haveData = true
                         var row = table[index]
                         if (!row.tag)
                             row.tag = "row " + index    // Must have something
+                        if (checkTags) {
+                            let tags = testsToRun[prop]
+                            let tagIdx = tags.indexOf(row.tag)
+                            if (tagIdx < 0)
+                                continue
+                            tags.splice(tagIdx, 1)
+                        }
                         qtest_results.dataTag = row.tag
                         if (isBenchmark)
                             qtest_runBenchmarkFunction(prop, row)
@@ -1884,6 +1902,9 @@ Item {
             }
             qtest_results.finishTestFunction()
             qtest_results.skipped = false
+
+            if (checkNames && testsToRun[prop].length <= 0)
+                delete testsToRun[prop]
         }
 
         // Run the cleanupTestCase function.
@@ -1892,8 +1913,21 @@ Item {
         qtest_runInternal("cleanupTestCase")
 
         // Complain about missing functions that we were supposed to run.
-        if (functionsToRun.length > 0)
-            qtest_results.fail("Could not find functions: " + functionsToRun, "", 0)
+        if (checkNames) {
+            let missingTests = []
+            for (var func in testsToRun) {
+                let caseFuncName = name + '::' + func
+                let tags = testsToRun[func]
+                if (tags.length <= 0)
+                    missingTests.push(caseFuncName)
+                else
+                    for (var i in tags)
+                        missingTests.push(caseFuncName + ':' + tags[i])
+            }
+            missingTests.sort()
+            if (missingTests.length > 0)
+                qtest_results.fail("Could not find test functions: " + missingTests, "", 0)
+        }
 
         // Clean up and exit.
         running = false

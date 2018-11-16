@@ -69,6 +69,9 @@ public:
     int numLoadedEventTypes() const override;
     void addEventType(const QQmlProfilerEventType &type) override;
     void addEvent(const QQmlProfilerEvent &event) override;
+
+private:
+    qint64 lastTimestamp = -1;
 };
 
 void QQmlProfilerTestClient::startTrace(qint64 timestamp, const QList<int> &engineIds)
@@ -101,6 +104,9 @@ void QQmlProfilerTestClient::addEvent(const QQmlProfilerEvent &event)
     QVERIFY(typeIndex < types.length());
 
     const QQmlProfilerEventType &type = types[typeIndex];
+
+    QVERIFY(event.timestamp() >= lastTimestamp);
+    lastTimestamp = event.timestamp();
 
     switch (type.message()) {
     case Event: {
@@ -373,7 +379,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         return false;
     }
 
-    uint position = expectedPosition;
+    int position = expectedPosition;
     qint64 timestamp = target->at(expectedPosition).timestamp();
     while (position > 0 && target->at(position - 1).timestamp() == timestamp)
         --position;
@@ -448,7 +454,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         }
 
         return true;
-    } while (target->at(++position).timestamp() == timestamp);
+    } while (++position < target->length() && target->at(position).timestamp() == timestamp);
 
     foreach (const QString &message, warnings)
         qWarning() << message.toLocal8Bit().constData();

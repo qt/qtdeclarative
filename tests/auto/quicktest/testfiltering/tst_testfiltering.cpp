@@ -38,6 +38,10 @@ private slots:
     void twoFilters();
     void twoFiltersWithOneMatch();
     void manyFilters();
+    void filterTestWithDefaultDataTags();
+    void filterTestWithDataTags();
+    void filterTestByDataTag();
+    void filterInvalidDataTag();
 };
 
 
@@ -129,6 +133,62 @@ void tst_TestFiltering::manyFilters()
     QVERIFY(output.contains(QLatin1String("Totals: 8 passed")));
     QCOMPARE(process.exitStatus(), QProcess::NormalExit);
     QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_TestFiltering::filterTestWithDefaultDataTags()
+{
+    QProcess process;
+    process.start(testExe, { QLatin1String("Third::test_default_tags"), });
+
+    QVERIFY(process.waitForFinished());
+
+    const QString output = process.readAll();
+    QVERIFY(output.contains(QLatin1String("Totals: 5 passed")));
+    QVERIFY(output.contains(QLatin1String(" 2 skipped")));
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_TestFiltering::filterTestWithDataTags()
+{
+    QProcess process;
+    process.start(testExe, { QLatin1String("Third::test_tags"), });
+
+    QVERIFY(process.waitForFinished());
+
+    const QString output = process.readAll();
+    QVERIFY(output.contains(QLatin1String("Totals: 4 passed")));
+    QVERIFY(output.contains(QLatin1String(" 1 skipped")));
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_TestFiltering::filterTestByDataTag()
+{
+    QProcess process;
+    process.start(testExe, { QLatin1String("Third::test_default_tags:init_2"),
+                             QLatin1String("Third::test_default_tags:skip_3"),
+                             QLatin1String("Third::test_tags:baz"),
+                             QLatin1String("Third::test_tags:bar"), });
+
+    QVERIFY(process.waitForFinished());
+
+    const QString output = process.readAll();
+    QVERIFY(output.contains(QLatin1String("Totals: 4 passed")));
+    QVERIFY(output.contains(QLatin1String(" 2 skipped")));
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_TestFiltering::filterInvalidDataTag()
+{
+    QProcess process;
+    process.start(testExe, { QLatin1String("Third::test_tags:invalid_tag") });
+
+    QVERIFY(process.waitForFinished());
+
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 1);
 }
 
 QTEST_MAIN(tst_TestFiltering);
