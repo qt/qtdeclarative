@@ -76,8 +76,9 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
     for (auto dit = ddata->deferredData.rbegin(); dit != ddata->deferredData.rend(); ++dit) {
         QQmlData::DeferredData *deferData = *dit;
 
-        auto range = deferData->bindings.equal_range(propertyIndex);
-        if (range.first == deferData->bindings.end())
+        auto bindings = deferData->bindings;
+        auto range = bindings.equal_range(propertyIndex);
+        if (range.first == bindings.end())
             continue;
 
         QQmlComponentPrivate::ConstructionState *state = new QQmlComponentPrivate::ConstructionState;
