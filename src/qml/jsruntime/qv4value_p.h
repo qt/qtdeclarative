@@ -226,7 +226,7 @@ struct Q_QML_PRIVATE_EXPORT Value
     };
 
     // Used only by 64-bit encoding
-    static const quint64 NaNEncodeMask  = 0xfffc000000000000ll;
+    static const quint64 NaNEncodeMask = 0xfffc000000000000ull;
     enum {
         IsDouble_Shift = 64-14,
         IsManagedOrUndefined_Shift = 64-15,
