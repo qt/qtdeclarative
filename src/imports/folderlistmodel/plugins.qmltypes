@@ -16,9 +16,10 @@ Module {
             "Qt.labs.folderlistmodel/FolderListModel 2.0",
             "Qt.labs.folderlistmodel/FolderListModel 2.1",
             "Qt.labs.folderlistmodel/FolderListModel 2.11",
+            "Qt.labs.folderlistmodel/FolderListModel 2.12",
             "Qt.labs.folderlistmodel/FolderListModel 2.2"
         ]
-        exportMetaObjectRevisions: [0, 0, 1, 11, 2]
+        exportMetaObjectRevisions: [0, 0, 1, 11, 12, 2]
         Enum {
             name: "SortField"
             values: {
@@ -52,6 +53,7 @@ Module {
         Property { name: "caseSensitive"; revision: 2; type: "bool" }
         Property { name: "count"; type: "int"; isReadonly: true }
         Property { name: "status"; revision: 11; type: "Status"; isReadonly: true }
+        Property { name: "sortCaseSensitive"; revision: 12; type: "bool" }
         Signal { name: "rowCountChanged" }
         Signal { name: "countChanged"; revision: 1 }
         Signal { name: "statusChanged"; revision: 11 }

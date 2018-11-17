@@ -3059,34 +3059,36 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
 
     statementList(body);
 
-    bytecodeGenerator->setLocation(ast->lastSourceLocation());
-    _context->emitBlockFooter(this);
+    if (!hasError) {
+        bytecodeGenerator->setLocation(ast->lastSourceLocation());
+        _context->emitBlockFooter(this);
 
-    if (_returnLabel || hasError || !functionEndsWithReturn) {
-        if (_returnLabel)
-            _returnLabel->link();
+        if (_returnLabel || !functionEndsWithReturn) {
+            if (_returnLabel)
+                _returnLabel->link();
 
-        if (_returnLabel || requiresReturnValue) {
-            Instruction::LoadReg load;
-            load.reg = Moth::StackSlot::createRegister(_returnAddress);
-            bytecodeGenerator->addInstruction(load);
-        } else {
-            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            if (_returnLabel || requiresReturnValue) {
+                Instruction::LoadReg load;
+                load.reg = Moth::StackSlot::createRegister(_returnAddress);
+                bytecodeGenerator->addInstruction(load);
+            } else {
+                Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
+            }
+
+            bytecodeGenerator->addInstruction(Instruction::Ret());
         }
 
-        bytecodeGenerator->addInstruction(Instruction::Ret());
-    }
-
-    Q_ASSERT(_context == _functionContext);
-    bytecodeGenerator->finalize(_context);
-    _context->registerCountInFunction = bytecodeGenerator->registerCount();
-    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
-    if (showCode) {
-        qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
-                 << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
-        QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
-                                _context->line, _context->lineNumberMapping);
-        qDebug();
+        Q_ASSERT(_context == _functionContext);
+        bytecodeGenerator->finalize(_context);
+        _context->registerCountInFunction = bytecodeGenerator->registerCount();
+        static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
+        if (showCode) {
+            qDebug() << "=== Bytecode for" << _context->name << "strict mode" << _context->isStrict
+                     << "register count" << _context->registerCountInFunction << "implicit return" << requiresReturnValue;
+            QV4::Moth::dumpBytecode(_context->code, _context->locals.size(), _context->arguments.size(),
+                                    _context->line, _context->lineNumberMapping);
+            qDebug();
+        }
     }
 
     qSwap(_returnAddress, returnAddress);

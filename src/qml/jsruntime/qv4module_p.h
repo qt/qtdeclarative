@@ -62,7 +62,8 @@ namespace Heap {
 #define ModuleMembers(class, Member) \
     Member(class, NoMark, CompiledData::CompilationUnit *, unit) \
     Member(class, Pointer, CallContext *, scope) \
-    Member(class, HeapValue, HeapValue, self)
+    Member(class, HeapValue, HeapValue, self) \
+    Member(class, NoMark, bool, evaluated)
 
 DECLARE_EXPORTED_HEAP_OBJECT(Module, Object) {
     DECLARE_MARKOBJECTS(Module)
@@ -74,6 +75,9 @@ DECLARE_EXPORTED_HEAP_OBJECT(Module, Object) {
 
 struct Q_QML_EXPORT Module : public Object {
     V4_OBJECT2(Module, Object)
+
+    void evaluate();
+    const Value *resolveExport(PropertyKey key) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static PropertyAttributes virtualGetOwnProperty(const Managed *m, PropertyKey id, Property *p);

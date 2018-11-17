@@ -52,7 +52,7 @@
     It will trigger property binding updates every time \l selectionChanged()
     is emitted, even though its value hasn't changed.
 
-    \sa selection(), selectedIndexes, select(), selectionChanged()
+    \sa selection, selectedIndexes, select(), selectionChanged()
 */
 
 /*!
@@ -235,5 +235,5 @@
 
     Note that this signal will not be emitted when the item model is reset.
 
-    \sa currentIndex(), setCurrentIndex(), selectionChanged()
+    \sa currentIndex, setCurrentIndex(), selectionChanged()
 */

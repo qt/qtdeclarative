@@ -2881,28 +2881,7 @@ void QQmlTypeData::scriptImported(const QQmlRefPointer<QQmlScriptBlob> &blob, co
 QQmlScriptData::QQmlScriptData()
     : typeNameCache(nullptr)
     , m_loaded(false)
-    , m_program(nullptr)
 {
-}
-
-QQmlScriptData::~QQmlScriptData()
-{
-    delete m_program;
-}
-
-void QQmlScriptData::initialize(QQmlEngine *engine)
-{
-    Q_ASSERT(!m_program);
-    Q_ASSERT(engine);
-    Q_ASSERT(!hasEngine());
-
-    QV4::ExecutionEngine *v4 = engine->handle();
-
-    m_program = new QV4::Script(v4, nullptr, m_precompiledScript);
-
-    addToEngine(engine);
-
-    addref();
 }
 
 QQmlContextData *QQmlScriptData::qmlContextDataForContext(QQmlContextData *parentQmlContextData)
@@ -2954,57 +2933,54 @@ QQmlContextData *QQmlScriptData::qmlContextDataForContext(QQmlContextData *paren
     return qmlContextData;
 }
 
-QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentCtxt)
+QV4::ReturnedValue QQmlScriptData::scriptValueForContext(QQmlContextData *parentQmlContextData)
 {
     if (m_loaded)
         return m_value.value();
 
-    Q_ASSERT(parentCtxt && parentCtxt->engine);
-    QV4::ExecutionEngine *v4 = parentCtxt->engine->handle();
-
-    if (m_precompiledScript->isESModule()) {
-        m_loaded = true;
-
-        m_value.set(v4, m_precompiledScript->instantiate(v4));
-        if (!m_value.isNullOrUndefined())
-            m_precompiledScript->evaluate();
-
-        return m_value.value();
-    }
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(parentCtxt->engine);
+    Q_ASSERT(parentQmlContextData && parentQmlContextData->engine);
+    QV4::ExecutionEngine *v4 = parentQmlContextData->engine->handle();
     QV4::Scope scope(v4);
 
-    // Create the script context if required
-    QQmlContextDataRef ctxt(qmlContextDataForContext(parentCtxt));
-
-    if (!hasEngine())
-        initialize(parentCtxt->engine);
-
-    if (!m_program) {
-        if (m_precompiledScript->isSharedLibrary())
-            m_loaded = true;
-        return QV4::Encode::undefined();
+    if (!hasEngine()) {
+        addToEngine(parentQmlContextData->engine);
+        addref();
     }
 
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxt, nullptr));
+    QQmlContextDataRef qmlContextData = qmlContextDataForContext(parentQmlContextData);
+    QV4::Scoped<QV4::QmlContext> qmlExecutionContext(scope);
+    if (qmlContextData)
+        qmlExecutionContext =
+            QV4::QmlContext::create(v4->rootContext(), qmlContextData, /* scopeObject: */ nullptr);
 
-    m_program->qmlContext.set(scope.engine, qmlContext);
-    m_program->run();
-    m_program->qmlContext.clear();
-    if (scope.engine->hasException) {
-        QQmlError error = scope.engine->catchExceptionAsQmlError();
+    QV4::Scoped<QV4::Module> module(scope, m_precompiledScript->instantiate(v4));
+    if (module) {
+        if (qmlContextData) {
+            module->d()->scope->outer.set(v4, qmlExecutionContext->d());
+            qmlExecutionContext->d()->qml()->module.set(v4, module->d());
+        }
+
+        module->evaluate();
+    }
+
+    if (v4->hasException) {
+        QQmlError error = v4->catchExceptionAsQmlError();
         if (error.isValid())
-            ep->warning(error);
+            QQmlEnginePrivate::get(v4)->warning(error);
     }
 
-    QV4::ScopedValue retval(scope, qmlContext->d()->qml());
-    if (m_precompiledScript->isSharedLibrary()) {
-        m_value.set(scope.engine, retval);
+    QV4::ScopedValue value(scope);
+    if (qmlContextData)
+        value = qmlExecutionContext->d()->qml();
+    else if (module)
+        value = module->d();
+
+    if (m_precompiledScript->isSharedLibrary() || m_precompiledScript->isESModule()) {
         m_loaded = true;
+        m_value.set(v4, value);
     }
 
-    return retval->asReturnedValue();
+    return value->asReturnedValue();
 }
 
 void QQmlScriptData::clear()

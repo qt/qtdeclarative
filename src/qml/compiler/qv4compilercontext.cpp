@@ -187,7 +187,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AS
     }
 
     // ### can we relax the restrictions here?
-    if (contextType == ContextType::Eval || c->contextType == ContextType::Binding)
+    if (c->contextType == ContextType::Eval || c->contextType == ContextType::Binding)
         return result;
 
     result.type = ResolvedName::Global;
@@ -207,7 +207,7 @@ void Context::emitBlockHeader(Codegen *codegen)
             blockIndex = codegen->module()->blocks.count() - 1;
         }
 
-        if (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML) {
+        if (contextType == ContextType::Global) {
             Instruction::PushScriptContext scriptContext;
             scriptContext.index = blockIndex;
             bytecodeGenerator->addInstruction(scriptContext);
@@ -222,7 +222,7 @@ void Context::emitBlockHeader(Codegen *codegen)
                 blockContext.index = blockIndex;
                 bytecodeGenerator->addInstruction(blockContext);
             }
-        } else if (contextType != ContextType::ESModule) {
+        } else if (contextType != ContextType::ESModule && contextType != ContextType::ScriptImportedByQML) {
             Instruction::CreateCallContext createContext;
             bytecodeGenerator->addInstruction(createContext);
         }
@@ -316,9 +316,9 @@ void Context::emitBlockFooter(Codegen *codegen)
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
-    if (contextType == ContextType::Global || contextType == ContextType::ScriptImportedByQML)
+    if (contextType == ContextType::Global)
         bytecodeGenerator->addInstruction(Instruction::PopScriptContext());
-    else if (contextType != ContextType::ESModule)
+    else if (contextType != ContextType::ESModule && contextType != ContextType::ScriptImportedByQML)
         bytecodeGenerator->addInstruction(Instruction::PopContext());
 QT_WARNING_POP
 }

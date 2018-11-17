@@ -66,9 +66,9 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 
     To use this module, import the module with the following line:
 
-    \code
+    \qml
     import Qt.labs.qmlmodels 1.0
-    \endcode
+    \endqml
 */
 
 /*!
@@ -79,6 +79,7 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 
     The DelegateChoice type wraps a delegate and defines the circumstances
     in which it should be chosen.
+
     DelegateChoices can be nested inside a DelegateChooser.
 
     \sa DelegateChooser
@@ -86,7 +87,7 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 
 /*!
     \qmlproperty string QtQml.Models::DelegateChoice::roleValue
-    This property holds the value used to match the role data for the role provided by \l DefaultDelegateChooser::role.
+    This property holds the value used to match the role data for the role provided by \l DelegateChooser::role.
 */
 QVariant QQmlDelegateChoice::roleValue() const
 {
@@ -106,20 +107,20 @@ void QQmlDelegateChoice::setRoleValue(const QVariant &value)
     \qmlproperty index QtQml.Models::DelegateChoice::row
     This property holds the value used to match the row value of model elements.
     With models that have only the index property (and thus only one column), this property
-    should be intended as index, and set to the desired index value.
+    should be intended as an index, and set to the desired index value.
 
     \note Setting both row and index has undefined behavior. The two are equivalent and only
     one should be used.
 
-    \sa QtQml.Models::DelegateChoice::index
+    \sa index
 */
 
 /*!
     \qmlproperty index QtQml.Models::DelegateChoice::index
     This property holds the value used to match the index value of model elements.
-    This is effectively an alias for \l QtQml.Models::DelegateChoice::row
+    This is effectively an alias for \l row.
 
-    \sa QtQml.Models::DelegateChoice::row
+    \sa row
 */
 int QQmlDelegateChoice::row() const
 {
@@ -190,14 +191,14 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 }
 
 /*!
-    \qmltype QQmlDelegateChooser
+    \qmltype DelegateChooser
     \instantiates QQmlDelegateChooser
     \inqmlmodule Qt.labs.qmlmodels
     \brief Allows a view to use different delegates for different types of items in the model.
 
     The DelegateChooser is a special \l Component type intended for those scenarios where a Component is required
     by a view and used as a delegate.
-    DelegateChooser encapsulates a set of \l DelegateChoices.
+    DelegateChooser encapsulates a set of \l {DelegateChoice}s.
     These choices are used determine the delegate that will be instantiated for each
     item in the model.
     The selection of the choice is performed based on the value that a model item has for \l role,
@@ -227,13 +228,14 @@ void QQmlDelegateChooser::setRole(const QString &role)
 /*!
     \qmlproperty list<DelegateChoice> QtQml.Models::DelegateChooser::choices
     \default
+
     The list of DelegateChoices for the chooser.
 
     The list is treated as an ordered list, where the first DelegateChoice to match
     will be used be a view.
 
     It should not generally be necessary to refer to the \c choices property,
-    as it is the default property for DefaultDelegateChooser and thus all child items are
+    as it is the default property for DelegateChooser and thus all child items are
     automatically assigned to this property.
 */
 

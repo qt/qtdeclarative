@@ -46,6 +46,8 @@
 #include <private/qv4symbol_p.h>
 #include <private/qv4identifiertable_p.h>
 
+#include <QScopeGuard>
+
 using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(Module);
@@ -98,20 +100,60 @@ void Heap::Module::init(ExecutionEngine *engine, CompiledData::CompilationUnit *
     This->setPrototypeUnchecked(nullptr);
 }
 
+void Module::evaluate()
+{
+    if (d()->evaluated)
+        return;
+    d()->evaluated = true;
+
+    CompiledData::CompilationUnit *unit = d()->unit;
+
+    unit->evaluateModuleRequests();
+
+    ExecutionEngine *v4 = engine();
+    Function *moduleFunction = unit->runtimeFunctions[unit->data->indexOfRootFunction];
+    CppStackFrame frame;
+    frame.init(v4, moduleFunction, nullptr, 0);
+    frame.setupJSFrame(v4->jsStackTop, Value::undefinedValue(), d()->scope,
+                       Value::undefinedValue(), Value::undefinedValue());
+
+    frame.push();
+    v4->jsStackTop += frame.requiredJSStackFrameSize();
+    auto frameCleanup = qScopeGuard([&frame]() {
+        frame.pop();
+    });
+    Moth::VME::exec(&frame, v4);
+}
+
+const Value *Module::resolveExport(PropertyKey id) const
+{
+    if (d()->unit->isESModule()) {
+        if (!id.isString())
+            return nullptr;
+        Scope scope(engine());
+        ScopedString name(scope, id.asStringOrSymbol());
+        return d()->unit->resolveExport(name);
+    } else {
+        InternalClassEntry entry = d()->scope->internalClass->find(id);
+        if (entry.isValid())
+            return &d()->scope->locals[entry.index];
+        return nullptr;
+    }
+}
+
 ReturnedValue Module::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     if (id.isSymbol())
         return Object::virtualGet(m, id, receiver, hasProperty);
 
     const Module *module = static_cast<const Module *>(m);
-    Scope scope(m->engine());
-    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
-    const Value *v = module->d()->unit->resolveExport(expectedName);
+    const Value *v = module->resolveExport(id);
     if (hasProperty)
         *hasProperty = v != nullptr;
     if (!v)
         return Encode::undefined();
     if (v->isEmpty()) {
+        Scope scope(m->engine());
         ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
         return scope.engine->throwReferenceError(propName);
     }
@@ -124,9 +166,7 @@ PropertyAttributes Module::virtualGetOwnProperty(const Managed *m, PropertyKey i
         return Object::virtualGetOwnProperty(m, id, p);
 
     const Module *module = static_cast<const Module *>(m);
-    Scope scope(m->engine());
-    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
-    const Value *v = module->d()->unit->resolveExport(expectedName);
+    const Value *v = module->resolveExport(id);
     if (!v) {
         if (p)
             p->value = Encode::undefined();
@@ -135,6 +175,7 @@ PropertyAttributes Module::virtualGetOwnProperty(const Managed *m, PropertyKey i
     if (p)
         p->value = v->isEmpty() ? Encode::undefined() : v->asReturnedValue();
     if (v->isEmpty()) {
+        Scope scope(m->engine());
         ScopedValue propName(scope, id.toStringOrSymbol(scope.engine));
         scope.engine->throwReferenceError(propName);
     }
@@ -147,9 +188,7 @@ bool Module::virtualHasProperty(const Managed *m, PropertyKey id)
         return Object::virtualHasProperty(m, id);
 
     const Module *module = static_cast<const Module *>(m);
-    Scope scope(m->engine());
-    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
-    const Value *v = module->d()->unit->resolveExport(expectedName);
+    const Value *v = module->resolveExport(id);
     return v != nullptr;
 }
 
@@ -173,11 +212,7 @@ bool Module::virtualDeleteProperty(Managed *m, PropertyKey id)
     if (id.isSymbol())
         return Object::virtualDeleteProperty(m, id);
     const Module *module = static_cast<const Module *>(m);
-    Scope scope(m->engine());
-    ScopedString expectedName(scope, id.toStringOrSymbol(scope.engine));
-    if (!expectedName)
-        return true;
-    const Value *v = module->d()->unit->resolveExport(expectedName);
+    const Value *v = module->resolveExport(id);
     if (v)
         return false;
     return true;
@@ -202,7 +237,7 @@ PropertyKey ModuleNamespaceIterator::next(const Object *o, Property *pd, Propert
         Scope scope(module->engine());
         ScopedString exportName(scope, scope.engine->newString(exportedNames.at(exportIndex)));
         exportIndex++;
-        const Value *v = module->d()->unit->resolveExport(exportName);
+        const Value *v = module->resolveExport(exportName->toPropertyKey());
         if (pd) {
             if (v->isEmpty())
                 scope.engine->throwReferenceError(exportName);
@@ -218,7 +253,17 @@ OwnPropertyKeyIterator *Module::virtualOwnPropertyKeys(const Object *o, Value *t
 {
     const Module *module = static_cast<const Module *>(o);
     *target = *o;
-    return new ModuleNamespaceIterator(module->d()->unit->exportedNames());
+
+    QStringList names;
+    if (module->d()->unit->isESModule()) {
+        names = module->d()->unit->exportedNames();
+    } else {
+        Heap::InternalClass *scopeClass = module->d()->scope->internalClass;
+        for (uint i = 0; i < scopeClass->size; ++i)
+            names << scopeClass->keyAt(i);
+    }
+
+    return new ModuleNamespaceIterator(names);
 }
 
 Heap::Object *Module::virtualGetPrototypeOf(const Managed *)

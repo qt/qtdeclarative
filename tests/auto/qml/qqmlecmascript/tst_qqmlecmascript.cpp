@@ -359,6 +359,7 @@ private slots:
     void temporaryDeadZone();
     void importLexicalVariables_data();
     void importLexicalVariables();
+    void hugeObject();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8821,10 +8822,10 @@ void tst_qqmlecmascript::importLexicalVariables_data()
 
     QTest::newRow("script")
         << testFileUrl("importLexicalVariables_script.qml")
-        << QStringLiteral("0?? 1?? 2??");
+        << QStringLiteral("000 100 210");
     QTest::newRow("pragmaLibrary")
         << testFileUrl("importLexicalVariables_pragmaLibrary.qml")
-        << QStringLiteral("0?? 1?? 2??");
+        << QStringLiteral("000 100 210");
     QTest::newRow("module")
         << testFileUrl("importLexicalVariables_module.qml")
         << QStringLiteral("000 000 110");
@@ -8844,6 +8845,17 @@ void tst_qqmlecmascript::importLexicalVariables()
     QVariant result;
     QMetaObject::invokeMethod(object.data(), "runTest", Qt::DirectConnection, Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result, QVariant(expected));
+}
+
+void tst_qqmlecmascript::hugeObject()
+{
+    // mainly check that this doesn't crash
+    QJSEngine engine;
+    QJSValue v = engine.evaluate(QString::fromLatin1(
+        "var known = {}, prefix = 'x'\n"
+        "for (var i = 0; i < 150000; i++) known[prefix + i] = true;"
+    ));
+    QVERIFY(!v.isError());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

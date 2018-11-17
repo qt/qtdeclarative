@@ -40,6 +40,7 @@
 #pragma once
 
 #include <QtCore/qglobal.h>
+#include <QtQml/private/qtqmlglobal_p.h>
 
 #include <memory>
 #if __cplusplus > 201402L && QT_HAS_INCLUDE(<optional>)
@@ -83,7 +84,7 @@ private:
 
 #endif
 
-#if __cplusplus < 201402L && !defined(__cpp_lib_make_unique) && !defined(Q_CC_MSVC) && !defined(Q_CC_GHS)
+#if __cplusplus < 201402L && !QT_CONFIG(cxx14_make_unique)
 
 namespace std {
     template<typename T, class ...Args>
