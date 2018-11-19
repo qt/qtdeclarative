@@ -866,7 +866,7 @@ int Lexer::scanString(ScanStringMode mode)
             if (sequenceLength == 2)
                 _tokenText += *_codePtr;
             scanChar();
-        } else if (_char == mode) {
+        } else if (_char == quote) {
             scanChar();
 
             if (_engine)
