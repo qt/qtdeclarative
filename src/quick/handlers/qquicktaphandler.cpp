@@ -129,7 +129,7 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
     case QQuickEventPoint::Updated:
         switch (m_gesturePolicy) {
         case DragThreshold:
-            ret = !overThreshold;
+            ret = !overThreshold && parentContains(point);
             break;
         case WithinBounds:
             ret = parentContains(point);

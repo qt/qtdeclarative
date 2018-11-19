@@ -851,7 +851,7 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
         if (oldGrabberHandler && !oldGrabberHandler->approveGrabTransition(this, grabber))
             return;
         if (Q_UNLIKELY(lcPointerGrab().isDebugEnabled())) {
-            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this)
+            qCDebug(lcPointerGrab) << pointDeviceName(this) << "point" << hex << m_pointId << pointStateString(this) << "@" << m_scenePos
                                    << ": grab" << m_exclusiveGrabber << "->" << grabber;
         }
         QQuickItem *oldGrabberItem = grabberItem();
