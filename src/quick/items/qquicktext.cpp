@@ -343,6 +343,19 @@ void QQuickTextPrivate::updateBaseline(qreal baseline, qreal dy)
     q->setBaselineOffset(baseline + yoff + q->topPadding());
 }
 
+void QQuickTextPrivate::signalSizeChange(const QSizeF &previousSize)
+{
+    Q_Q(QQuickText);
+
+    if (layedOutTextRect.size() != previousSize) {
+        emit q->contentSizeChanged();
+        if (layedOutTextRect.width() != previousSize.width())
+            emit q->contentWidthChanged(layedOutTextRect.width());
+        if (layedOutTextRect.height() != previousSize.height())
+            emit q->contentHeightChanged(layedOutTextRect.height());
+    }
+}
+
 void QQuickTextPrivate::updateSize()
 {
     Q_Q(QQuickText);
@@ -363,6 +376,8 @@ void QQuickTextPrivate::updateSize()
     qreal hPadding = q->leftPadding() + q->rightPadding();
     qreal vPadding = q->topPadding() + q->bottomPadding();
 
+    const QSizeF previousSize = layedOutTextRect.size();
+
     if (text.isEmpty() && !isLineLaidOutConnected() && fontSizeMode() == QQuickText::FixedSize) {
         // How much more expensive is it to just do a full layout on an empty string here?
         // There may be subtle differences in the height and baseline calculations between
@@ -379,14 +394,13 @@ void QQuickTextPrivate::updateSize()
         q->setImplicitSize(hPadding, fontHeight + vPadding);
         layedOutTextRect = QRectF(0, 0, 0, fontHeight);
         advance = QSizeF();
-        emit q->contentSizeChanged();
+        signalSizeChange(previousSize);
         updateType = UpdatePaintNode;
         q->update();
         return;
     }
 
     QSizeF size(0, 0);
-    QSizeF previousSize = layedOutTextRect.size();
 
     //setup instance of QTextLayout for all cases other than richtext
     if (!richText) {
@@ -483,13 +497,7 @@ void QQuickTextPrivate::updateSize()
         }
     }
 
-
-    if (layedOutTextRect.size() != previousSize)
-        emit q->contentSizeChanged();
-    if (layedOutTextRect.width() != previousSize.width())
-        emit q->contentWidthChanged(layedOutTextRect.width());
-    if (layedOutTextRect.height() != previousSize.height())
-        emit q->contentHeightChanged(layedOutTextRect.height());
+    signalSizeChange(previousSize);
     updateType = UpdatePaintNode;
     q->update();
 }
