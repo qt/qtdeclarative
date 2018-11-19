@@ -2403,7 +2403,11 @@ void QQuickPathViewPrivate::snapToIndex(int index, MovementReason reason)
 
     const int duration = highlightMoveDuration;
 
-    if (!duration) {
+    const qreal count = pathItems == -1 ? modelCount : qMin(pathItems, modelCount);
+    const qreal averageItemLength = path->path().length() / count;
+    const qreal threshold = 0.5 / averageItemLength; // if we are within .5 px, we want to immediately assign rather than animate
+
+    if (!duration || qAbs(offset - targetOffset) < threshold || (qFuzzyIsNull(targetOffset) && qAbs(modelCount - offset) < threshold)) {
         tl.set(moveOffset, targetOffset);
     } else if (moveDirection == QQuickPathView::Positive || (moveDirection == QQuickPathView::Shortest && targetOffset - offset > modelCount/2.0)) {
         qreal distance = modelCount - targetOffset + offset;
