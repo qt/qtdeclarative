@@ -425,8 +425,11 @@ void QSGSoftwareInternalRectangleNode::generateCornerPixmap()
 {
     //Generate new corner Pixmap
     int radius = qFloor(qMin(qMin(m_rect.width(), m_rect.height()) * 0.5, m_radius));
+    const auto width = qRound(radius * 2 * m_devicePixelRatio);
 
-    m_cornerPixmap = QPixmap(qRound(radius * 2 * m_devicePixelRatio), qRound(radius * 2 * m_devicePixelRatio));
+    if (m_cornerPixmap.width() != width)
+        m_cornerPixmap = QPixmap(width, width);
+
     m_cornerPixmap.setDevicePixelRatio(m_devicePixelRatio);
     m_cornerPixmap.fill(Qt::transparent);
 
