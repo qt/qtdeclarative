@@ -121,7 +121,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
     for (const QGradientStop &stop : qAsConst(stops)) {
         if (stop.first < 0.0 || stop.first > 1.0) {
             needsNormalization = true;
-            continue;
+            break;
         }
     }
 
