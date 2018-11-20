@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -205,6 +205,8 @@ public:
     bool isViewMoving() const;
 
     void cancelInteraction();
+
+    void addPointerHandler(QQuickPointerHandler *h) override;
 
 public:
     QQuickItem *contentItem;
