@@ -399,23 +399,23 @@ static ReturnedValue qmlsqldatabase_changeVersion(const FunctionObject *b, const
     if (from_version != *r->d()->version)
         V4THROW_SQL(SQLEXCEPTION_VERSION_ERR, QQmlEngine::tr("Version mismatch: expected %1, found %2").arg(from_version).arg(*r->d()->version));
 
-    Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
-    ScopedObject p(scope, databaseData(scope.engine)->queryProto.value());
-    w->setPrototypeUnchecked(p.getPointer());
-    w->d()->type = Heap::QQmlSqlDatabaseWrapper::Query;
-    *w->d()->database = db;
-    *w->d()->version = *r->d()->version;
-
     bool ok = true;
     if (!!callback) {
+        Scoped<QQmlSqlDatabaseWrapper> query(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
+        ScopedObject p(scope, databaseData(scope.engine)->queryProto.value());
+        query->setPrototypeUnchecked(p.getPointer());
+        query->d()->type = Heap::QQmlSqlDatabaseWrapper::Query;
+        *query->d()->database = db;
+        *query->d()->version = *r->d()->version;
+
         ok = false;
         db.transaction();
 
         JSCallData jsCall(scope, 1);
         *jsCall->thisObject = scope.engine->globalObject;
-        jsCall->args[0] = w;
+        jsCall->args[0] = query;
 
-        TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
+        TransactionRollback rollbackOnException(&db, &query->d()->inTransaction);
         callback->call(jsCall);
         rollbackOnException.clear();
         if (!db.commit()) {
@@ -427,12 +427,18 @@ static ReturnedValue qmlsqldatabase_changeVersion(const FunctionObject *b, const
     }
 
     if (ok) {
+        Scoped<QQmlSqlDatabaseWrapper> w(scope, QQmlSqlDatabaseWrapper::create(scope.engine));
+        ScopedObject p(scope, databaseData(scope.engine)->databaseProto.value());
+        w->setPrototypeUnchecked(p.getPointer());
+        w->d()->type = Heap::QQmlSqlDatabaseWrapper::Database;
+        *w->d()->database = db;
         *w->d()->version = to_version;
 #if QT_CONFIG(settings)
         const QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(scope.engine->qmlEngine());
         QSettings ini(enginePrivate->offlineStorageDatabaseDirectory() + db.connectionName() + QLatin1String(".ini"), QSettings::IniFormat);
         ini.setValue(QLatin1String("Version"), to_version);
 #endif
+        RETURN_RESULT(w.asReturnedValue());
     }
 
     RETURN_UNDEFINED();
@@ -599,7 +605,8 @@ This data can be used by application tools.
 
 \section3 db.changeVersion(from, to, callback(tx))
 
-This method allows you to perform a \e{Scheme Upgrade}.
+This method allows you to perform a \e{Scheme Upgrade}. If it succeeds it returns a new
+database object of version \e to. Otherwise it returns \e undefined.
 
 If the current version of \e db is not \e from, then an exception is thrown.
 
