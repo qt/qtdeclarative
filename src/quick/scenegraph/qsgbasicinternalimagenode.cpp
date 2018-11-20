@@ -189,15 +189,30 @@ namespace {
     struct Y { float y, ty; };
 }
 
-static inline void appendQuad(quint16 **indices, quint16 topLeft, quint16 topRight,
-                              quint16 bottomLeft, quint16 bottomRight)
+static inline void appendQuad(int indexType, void **indexData,
+                              int topLeft, int topRight,
+                              int bottomLeft, int bottomRight)
 {
-    *(*indices)++ = topLeft;
-    *(*indices)++ = bottomLeft;
-    *(*indices)++ = bottomRight;
-    *(*indices)++ = bottomRight;
-    *(*indices)++ = topRight;
-    *(*indices)++ = topLeft;
+    if (indexType == QSGGeometry::UnsignedIntType) {
+        quint32 *indices = static_cast<quint32 *>(*indexData);
+        *indices++ = topLeft;
+        *indices++ = bottomLeft;
+        *indices++ = bottomRight;
+        *indices++ = bottomRight;
+        *indices++ = topRight;
+        *indices++ = topLeft;
+        *indexData = indices;
+    } else {
+        Q_ASSERT(indexType == QSGGeometry::UnsignedShortType);
+        quint16 *indices = static_cast<quint16 *>(*indexData);
+        *indices++ = topLeft;
+        *indices++ = bottomLeft;
+        *indices++ = bottomRight;
+        *indices++ = bottomRight;
+        *indices++ = topRight;
+        *indices++ = topLeft;
+        *indexData = indices;
+    }
 }
 
 QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
@@ -230,8 +245,6 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         ++vCells;
     if (innerTargetRect.bottom() != targetRect.bottom())
         ++vCells;
-    if (hCells * vCells * 4 >= 0x10000)
-        qWarning("QTBUG-58924 - Too many tiles in QSGInternalImageNode, rendering will be partially missing.");
 
     QVarLengthArray<X, 32> xData(2 * hCells);
     QVarLengthArray<Y, 32> yData(2 * vCells);
@@ -273,7 +286,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         float leftPlusRight = targetRect.left() + targetRect.right();
         int count = xData.size();
         xs = xData.data();
-        for (int i = 0; i < count >> 1; ++i)
+        for (int i = 0; i < (count >> 1); ++i)
             qSwap(xs[i], xs[count - 1 - i]);
         for (int i = 0; i < count; ++i)
             xs[i].x = leftPlusRight - xs[i].x;
@@ -311,16 +324,29 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
     }
     Q_ASSERT(ys == yData.data() + yData.size());
 
+    QSGGeometry::Type indexType = QSGGeometry::UnsignedShortType;
+    // We can handled up to 0xffff indices, but keep the limit lower here to
+    // merge better in the batch renderer.
+    if (hCells * vCells * 4 > 0x7fff)
+        indexType = QSGGeometry::UnsignedIntType;
+
     if (antialiasing) {
+        if (!geometry || geometry->indexType() != indexType) {
+            geometry = new QSGGeometry(smoothAttributeSet(),
+                                       hCells * vCells * 4 + (hCells + vCells - 1) * 4,
+                                       hCells * vCells * 6 + (hCells + vCells) * 12,
+                                       indexType);
+        } else {
+            geometry->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
+                               hCells * vCells * 6 + (hCells + vCells) * 12);
+        }
         QSGGeometry *g = geometry;
         Q_ASSERT(g);
 
-        g->allocate(hCells * vCells * 4 + (hCells + vCells - 1) * 4,
-                    hCells * vCells * 6 + (hCells + vCells) * 12);
         g->setDrawingMode(QSGGeometry::DrawTriangles);
         SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
         memset(vertices, 0, g->vertexCount() * g->sizeOfVertex());
-        quint16 *indices = g->indexDataAsUShort();
+        void *indexData = g->indexData();
 
         // The deltas are how much the fuzziness can reach into the image.
         // Only the border vertices are moved by the vertex shader, so the fuzziness
@@ -348,7 +374,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         float delta = float(qAbs(targetRect.width()) < qAbs(targetRect.height())
                             ? targetRect.width() : targetRect.height()) * 0.5f;
 
-        quint16 index = 0;
+        int index = 0;
         ys = yData.data();
         for (int j = 0; j < vCells; ++j, ys += 2) {
             xs = xData.data();
@@ -360,7 +386,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
 
                 SmoothVertex *v = vertices + index;
 
-                quint16 topLeft = index;
+                int topLeft = index;
                 for (int k = (isTop || isLeft ? 2 : 1); k--; ++v, ++index) {
                     v->x = xs[0].x;
                     v->u = xs[0].tx;
@@ -368,7 +394,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                     v->v = ys[0].ty;
                 }
 
-                quint16 topRight = index;
+                int topRight = index;
                 for (int k = (isTop || isRight ? 2 : 1); k--; ++v, ++index) {
                     v->x = xs[1].x;
                     v->u = xs[1].tx;
@@ -376,7 +402,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                     v->v = ys[0].ty;
                 }
 
-                quint16 bottomLeft = index;
+                int bottomLeft = index;
                 for (int k = (isBottom || isLeft ? 2 : 1); k--; ++v, ++index) {
                     v->x = xs[0].x;
                     v->u = xs[0].tx;
@@ -384,7 +410,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                     v->v = ys[1].ty;
                 }
 
-                quint16 bottomRight = index;
+                int bottomRight = index;
                 for (int k = (isBottom || isRight ? 2 : 1); k--; ++v, ++index) {
                     v->x = xs[1].x;
                     v->u = xs[1].tx;
@@ -392,45 +418,44 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                     v->v = ys[1].ty;
                 }
 
-                appendQuad(&indices, topLeft, topRight, bottomLeft, bottomRight);
+                appendQuad(g->indexType(), &indexData, topLeft, topRight, bottomLeft, bottomRight);
 
                 if (isTop) {
                     vertices[topLeft].dy = vertices[topRight].dy = topDy;
                     vertices[topLeft].dv = vertices[topRight].dv = topDv;
                     vertices[topLeft + 1].dy = vertices[topRight + 1].dy = -delta;
-                    appendQuad(&indices, topLeft + 1, topRight + 1, topLeft, topRight);
+                    appendQuad(g->indexType(), &indexData, topLeft + 1, topRight + 1, topLeft, topRight);
                 }
 
                 if (isBottom) {
                     vertices[bottomLeft].dy = vertices[bottomRight].dy = -bottomDy;
                     vertices[bottomLeft].dv = vertices[bottomRight].dv = -bottomDv;
                     vertices[bottomLeft + 1].dy = vertices[bottomRight + 1].dy = delta;
-                    appendQuad(&indices, bottomLeft, bottomRight, bottomLeft + 1, bottomRight + 1);
+                    appendQuad(g->indexType(), &indexData, bottomLeft, bottomRight, bottomLeft + 1, bottomRight + 1);
                 }
 
                 if (isLeft) {
                     vertices[topLeft].dx = vertices[bottomLeft].dx = leftDx;
                     vertices[topLeft].du = vertices[bottomLeft].du = leftDu;
                     vertices[topLeft + 1].dx = vertices[bottomLeft + 1].dx = -delta;
-                    appendQuad(&indices, topLeft + 1, topLeft, bottomLeft + 1, bottomLeft);
+                    appendQuad(g->indexType(), &indexData, topLeft + 1, topLeft, bottomLeft + 1, bottomLeft);
                 }
 
                 if (isRight) {
                     vertices[topRight].dx = vertices[bottomRight].dx = -rightDx;
                     vertices[topRight].du = vertices[bottomRight].du = -rightDu;
                     vertices[topRight + 1].dx = vertices[bottomRight + 1].dx = delta;
-                    appendQuad(&indices, topRight, topRight + 1, bottomRight, bottomRight + 1);
+                    appendQuad(g->indexType(), &indexData, topRight, topRight + 1, bottomRight, bottomRight + 1);
                 }
             }
         }
 
         Q_ASSERT(index == g->vertexCount());
-        Q_ASSERT(indices - g->indexCount() == g->indexData());
     } else {
-        if (!geometry) {
+        if (!geometry || geometry->indexType() != indexType) {
             geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(),
                                        hCells * vCells * 4, hCells * vCells * 6,
-                                       QSGGeometry::UnsignedShortType);
+                                       indexType);
         } else {
             geometry->allocate(hCells * vCells * 4, hCells * vCells * 6);
         }
@@ -453,10 +478,9 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                 vertices += 4;
             }
         }
-
-        quint16 *indices = geometry->indexDataAsUShort();
+        void *indexData = geometry->indexData();
         for (int i = 0; i < 4 * vCells * hCells; i += 4)
-            appendQuad(&indices, i, i + 1, i + 2, i + 3);
+            appendQuad(geometry->indexType(), &indexData, i, i + 1, i + 2, i + 3);
     }
     return geometry;
 }
@@ -515,6 +539,10 @@ void QSGBasicInternalImageNode::updateGeometry()
             if (m_antialiasing) {
                 QSGGeometry *g = geometry();
                 Q_ASSERT(g != &m_geometry);
+                if (g->indexType() != QSGGeometry::UnsignedShortType) {
+                    setGeometry(new QSGGeometry(smoothAttributeSet(), 0));
+                    g = geometry();
+                }
                 g->allocate(8, 14);
                 g->setDrawingMode(QSGGeometry::DrawTriangleStrip);
                 SmoothVertex *vertices = reinterpret_cast<SmoothVertex *>(g->vertexData());
@@ -549,10 +577,14 @@ void QSGBasicInternalImageNode::updateGeometry()
                 QSGGeometry::updateTexturedRectGeometry(&m_geometry, m_targetRect, sr);
             }
         } else {
-            QSGGeometry *g = m_antialiasing ? geometry() : &m_geometry;
-            updateGeometry(m_targetRect, m_innerTargetRect,
-                           sourceRect, innerSourceRect, m_subSourceRect,
-                           g, m_mirror, m_antialiasing);
+            QSGGeometry *g = geometry();
+            g = updateGeometry(m_targetRect, m_innerTargetRect,
+                               sourceRect, innerSourceRect, m_subSourceRect,
+                               g, m_mirror, m_antialiasing);
+            if (g != geometry()) {
+                setGeometry(g);
+                setFlag(OwnsGeometry, true);
+            }
         }
     }
     markDirty(DirtyGeometry);

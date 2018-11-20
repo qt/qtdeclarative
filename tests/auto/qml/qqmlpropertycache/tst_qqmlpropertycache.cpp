@@ -29,12 +29,14 @@
 #include <qtest.h>
 #include <private/qqmlpropertycache_p.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <private/qv8engine_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <QCryptographicHash>
 #include "../../shared/util.h"
 
-class tst_qqmlpropertycache : public QObject
+class tst_qqmlpropertycache : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -47,6 +49,7 @@ private slots:
     void methodsDerived();
     void signalHandlers();
     void signalHandlersDerived();
+    void passForeignEnums();
     void metaObjectSize_data();
     void metaObjectSize();
     void metaObjectChecksum();
@@ -270,6 +273,70 @@ void tst_qqmlpropertycache::signalHandlersDerived()
     QVERIFY((data = cacheProperty(cache, "onPropertyDChanged")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("propertyDChanged()"));
 }
+
+class MyEnum : public QObject
+ {
+    Q_OBJECT
+ public:
+     enum Option1Flag {
+         Option10 = 0,
+         Option1A = 1,
+         Option1B = 2,
+         Option1C = 4,
+         Option1D = 8,
+         Option1E = 16,
+         Option1F = 32,
+         Option1AD = Option1A | Option1D,
+     };
+     Q_DECLARE_FLAGS(Option1, Option1Flag)
+     Q_FLAG(Option1)
+};
+
+class MyData : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(MyEnum::Option1 opt1 READ opt1 WRITE setOpt1 NOTIFY opt1Changed)
+public:
+    MyEnum::Option1 opt1() const { return m_opt1;  }
+
+signals:
+    void opt1Changed(MyEnum::Option1 opt1);
+
+public slots:
+    void setOpt1(MyEnum::Option1 opt1)
+    {
+        QCOMPARE(opt1, MyEnum::Option1AD);
+        if (opt1 != m_opt1) {
+            m_opt1 = opt1;
+            emit opt1Changed(opt1);
+        }
+    }
+
+    void setOption1(MyEnum::Option1 opt1) { setOpt1(opt1); }
+
+private:
+    MyEnum::Option1 m_opt1 = MyEnum::Option10;
+};
+
+void tst_qqmlpropertycache::passForeignEnums()
+{
+    qmlRegisterType<MyEnum>("example", 1, 0, "MyEnum");
+    qmlRegisterType<MyData>("example", 1, 0, "MyData");
+
+    MyEnum myenum;
+    MyData data;
+
+    engine.rootContext()->setContextProperty("myenum", &myenum);
+    engine.rootContext()->setContextProperty("mydata", &data);
+
+    QQmlComponent component(&engine, testFile("foreignEnums.qml"));
+    QVERIFY(component.isReady());
+
+    QObject *obj = component.create(engine.rootContext());
+    QCOMPARE(data.opt1(), MyEnum::Option1AD);
+}
+
+Q_DECLARE_METATYPE(MyEnum::Option1)
 
 class TestClass : public QObject
 {

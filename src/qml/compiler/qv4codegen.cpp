@@ -530,6 +530,10 @@ Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
     Reference lhs = expression(p->bindingTarget);
     if (hasError)
         return lhs;
+    if (!lhs.isLValue()) {
+        throwReferenceError(p->bindingTarget->firstSourceLocation(), QStringLiteral("Binding target is not a reference."));
+        return lhs;
+    }
     lhs = lhs.asLValue();
     return lhs;
 }
@@ -2077,8 +2081,10 @@ bool Codegen::visit(ConditionalExpression *ast)
 
     iffalse.link();
     Reference ko = expression(ast->ko);
-    if (hasError)
+    if (hasError) {
+        jump_endif.link(); // dummy link, to prevent assert in Jump destructor from triggering
         return false;
+    }
     ko.loadInAccumulator();
 
     jump_endif.link();
