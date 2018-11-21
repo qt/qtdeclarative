@@ -1641,7 +1641,8 @@ bool QQuickTextEdit::event(QEvent *event)
     Q_D(QQuickTextEdit);
     if (event->type() == QEvent::ShortcutOverride) {
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
-        return event->isAccepted();
+        if (event->isAccepted())
+            return true;
     }
     return QQuickImplicitSizeItem::event(event);
 }

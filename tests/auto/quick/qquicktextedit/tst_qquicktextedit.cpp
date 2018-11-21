@@ -36,6 +36,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtGui/qguiapplication.h>
+#include <private/qquickrectangle_p.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
 #include <private/qquicktext_p.h>
@@ -205,6 +206,7 @@ private slots:
 
     void padding();
     void QTBUG_51115_readOnlyResetsSelection();
+    void keys_shortcutoverride();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -5669,6 +5671,36 @@ void tst_qquicktextedit::QTBUG_51115_readOnlyResetsSelection()
     QQuickTextEdit *obj = qobject_cast<QQuickTextEdit*>(view.rootObject());
 
     QCOMPARE(obj->selectedText(), QString());
+}
+
+void tst_qquicktextedit::keys_shortcutoverride()
+{
+    // Tests that QML TextEdit receives Keys.onShortcutOverride  (QTBUG-68711)
+    QQuickView view;
+    view.setSource(testFileUrl("keys_shortcutoverride.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QObject *root = view.rootObject();
+    QVERIFY(root);
+
+    QQuickTextEdit *textEdit = root->findChild<QQuickTextEdit*>();
+    QVERIFY(textEdit);
+    QQuickRectangle *rectangle = root->findChild<QQuickRectangle*>(QLatin1String("rectangle"));
+    QVERIFY(rectangle);
+
+    // Precondition: check if its not already changed
+    QCOMPARE(root->property("who").value<QString>(), QLatin1String("nobody"));
+
+    // send Key_Escape to the Rectangle
+    QVERIFY(rectangle->hasActiveFocus());
+    QTest::keyPress(&view, Qt::Key_Escape);
+    QCOMPARE(root->property("who").value<QString>(), QLatin1String("Rectangle"));
+
+    // send Key_Escape to TextEdit
+    textEdit->setFocus(true);
+    QTest::keyPress(&view, Qt::Key_Escape);
+    QCOMPARE(root->property("who").value<QString>(), QLatin1String("TextEdit"));
 }
 
 QTEST_MAIN(tst_qquicktextedit)
