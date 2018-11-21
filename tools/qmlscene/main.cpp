@@ -310,14 +310,6 @@ static void displayFileDialog(Options *options)
     puts("No filename specified...");
 }
 
-#if QT_CONFIG(translation)
-static void loadTranslationFile(QTranslator &translator, const QString& directory)
-{
-    translator.load(QLocale(), QLatin1String("qml"), QLatin1String("_"), directory + QLatin1String("/i18n"));
-    QCoreApplication::installTranslator(&translator);
-}
-#endif
-
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 {
     QDir dir(directory+"/dummydata", "*.qml");
@@ -588,10 +580,6 @@ int main(int argc, char ** argv)
 
     if (!options.url.isEmpty()) {
         if (!options.versionDetection || checkVersion(options.url)) {
-#if QT_CONFIG(translation)
-            QTranslator translator;
-#endif
-
             // TODO: as soon as the engine construction completes, the debug service is
             // listening for connections.  But actually we aren't ready to debug anything.
             QQmlEngine engine;
@@ -603,7 +591,9 @@ int main(int argc, char ** argv)
             if (options.url.isLocalFile()) {
                 QFileInfo fi(options.url.toLocalFile());
 #if QT_CONFIG(translation)
-                loadTranslationFile(translator, fi.path());
+                QTranslator *translator = new QTranslator(app.get());
+                if (translator->load(QLocale(), QLatin1String("qml"), QLatin1String("_"), fi.path() + QLatin1String("/i18n")))
+                    QCoreApplication::installTranslator(translator);
 #endif
                 loadDummyDataFiles(engine, fi.path());
             }
