@@ -281,6 +281,7 @@ public:
 
     bool hasPointerHandlers() const;
     bool hasHoverHandlers() const;
+    void addPointerHandler(QQuickPointerHandler *h);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);

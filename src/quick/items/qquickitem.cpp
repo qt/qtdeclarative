@@ -3281,11 +3281,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
             Q_ASSERT(pointerHandler->parentItem() == that);
-            // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
-            // because there can be multiple handlers...
-            that->setAcceptedMouseButtons(Qt::AllButtons);
-            QQuickItemPrivate *p = QQuickItemPrivate::get(that);
-            p->extra.value().pointerHandlers.prepend(pointerHandler);
+            QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
         } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
             QQuickItem *item = that;
@@ -8205,6 +8201,17 @@ bool QQuickItemPrivate::hasHoverHandlers() const
         if (qmlobject_cast<QQuickHoverHandler *>(h))
             return true;
     return false;
+}
+
+void QQuickItemPrivate::addPointerHandler(QQuickPointerHandler *h)
+{
+    Q_Q(QQuickItem);
+    // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
+    // because there can be multiple handlers...
+    q->setAcceptedMouseButtons(Qt::AllButtons);
+    auto &handlers = extra.value().pointerHandlers;
+    if (!handlers.contains(h))
+        handlers.prepend(h);
 }
 
 #if QT_CONFIG(quick_shadereffect)

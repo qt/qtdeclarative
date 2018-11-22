@@ -145,6 +145,7 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
                 return QQmlPrivate::Parented;
             }
         } else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(obj)) {
+            QQuickItemPrivate::get(parentItem)->addPointerHandler(handler);
             handler->setParent(parent);
             return QQmlPrivate::Parented;
         }
@@ -156,13 +157,14 @@ static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject
             qCDebug(lcTransient) << win << "is transient for" << parentWindow;
             win->setTransientParent(parentWindow);
             return QQmlPrivate::Parented;
-        } else {
-            QQuickItem *item = qmlobject_cast<QQuickItem *>(obj);
-            if (item) {
-                // The parent of an Item inside a Window is actually the implicit content Item
-                item->setParentItem(parentWindow->contentItem());
-                return QQmlPrivate::Parented;
-            }
+        } else if (QQuickItem *item = qmlobject_cast<QQuickItem *>(obj)) {
+            // The parent of an Item inside a Window is actually the implicit content Item
+            item->setParentItem(parentWindow->contentItem());
+            return QQmlPrivate::Parented;
+        } else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(obj)) {
+            QQuickItemPrivate::get(parentWindow->contentItem())->addPointerHandler(handler);
+            handler->setParent(parentWindow->contentItem());
+            return QQmlPrivate::Parented;
         }
         return QQmlPrivate::IncompatibleObject;
     } else if (qmlobject_cast<QQuickItem *>(obj)) {
