@@ -100,8 +100,6 @@ public:
     int currentInstructionOffset() const { return _currentOffset; }
     int nextInstructionOffset() const { return _nextOffset; }
 
-    static std::vector<int> collectLabelsInBytecode(const char *code, uint len);
-
 protected:
     FOR_EACH_MOTH_INSTR(BYTECODE_HANDLER_DEFINE_VIRTUAL_BYTECODE_HANDLER)
 

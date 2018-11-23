@@ -445,6 +445,12 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
     }
 
+    if (!irFunction->labelInfo.empty()) {
+        function->nLabelInfos = quint32(irFunction->labelInfo.size());
+        Q_ASSERT(function->labelInfosOffset() == currentOffset);
+        currentOffset += function->nLabelInfos * sizeof(quint32);
+    }
+
     function->location.line = irFunction->line;
     function->location.column = irFunction->column;
 
@@ -481,6 +487,11 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     for (auto property : irFunction->scopeObjectPropertyDependencies) {
         *writtenDeps++ = property.key(); // property index
         *writtenDeps++ = property.value(); // notify index
+    }
+
+    quint32_le *labels = (quint32_le *)(f + function->labelInfosOffset());
+    for (unsigned u : irFunction->labelInfo) {
+        *labels++ = u;
     }
 
     // write byte code
@@ -682,7 +693,7 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
         const int qmlIdDepsCount = f->idObjectDependencies.count();
         const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
         quint32 size = QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
-                                                                 qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
+                                                                 qmlIdDepsCount, qmlPropertyDepsCount, int(f->labelInfo.size()), f->code.size());
         functionSize += size - f->code.size();
         nextOffset += size;
     }

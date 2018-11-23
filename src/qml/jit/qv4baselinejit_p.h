@@ -221,16 +221,13 @@ public:
     void endInstruction(Moth::Instr::Type instr) override;
 
 protected:
-    bool hasLabel() const
-    { return std::find(labels.cbegin(), labels.cend(), currentInstructionOffset()) != labels.cend(); }
-
     int absoluteOffsetForJump(int relativeOffset) const
     { return nextInstructionOffset() + relativeOffset; }
 
 private:
     QV4::Function *function;
     QScopedPointer<BaselineAssembler> as;
-    std::vector<int> labels;
+    QSet<int> labels;
 };
 #endif // V4_ENABLE_JIT
 

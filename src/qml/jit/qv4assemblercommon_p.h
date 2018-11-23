@@ -670,7 +670,8 @@ public:
 
     void addLabelForOffset(int offset)
     {
-        labelForOffset.insert(offset, label());
+        if (!labelForOffset.contains(offset))
+            labelForOffset.insert(offset, label());
     }
 
     void addJumpToOffset(const Jump &jump, int offset)

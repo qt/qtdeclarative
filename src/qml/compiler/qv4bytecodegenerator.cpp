@@ -180,6 +180,10 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
     context->code = code;
     context->lineNumberMapping = lineNumbers;
+
+    for (const auto &li : _labelInfos) {
+        context->labelInfo.push_back(instructions.at(labels.at(li.labelIndex)).position);
+    }
 }
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {

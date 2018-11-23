@@ -306,6 +306,11 @@ QT_WARNING_POP
         return nTraceInfos;
     }
 
+    void addLoopStart(const Label &start)
+    {
+        _labelInfos.push_back({ start.index });
+    }
+
 private:
     friend struct Jump;
     friend struct Label;
@@ -342,6 +347,11 @@ private:
     Moth::Instr lastInstr;
 
     TraceInfoCount nTraceInfos = TraceInfoCount(0);
+
+    struct LabelInfo {
+        int labelIndex;
+    };
+    std::vector<LabelInfo> _labelInfos;
 };
 
 }

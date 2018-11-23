@@ -3260,24 +3260,27 @@ bool Codegen::visit(DoWhileStatement *ast)
 
     RegisterScope scope(this);
 
-    BytecodeGenerator::Label body = bytecodeGenerator->label();
+    BytecodeGenerator::Label body = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label cond = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &cond);
+    bytecodeGenerator->jump().link(body);
 
+    cond.link();
+    bytecodeGenerator->addLoopStart(cond);
+
+    if (!AST::cast<TrueLiteral *>(ast->expression)) {
+        TailCallBlocker blockTailCalls(this);
+        condition(ast->expression, &body, &end, true);
+    }
+
+    body.link();
     statement(ast->statement);
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->semicolonToken);
 
-    cond.link();
-
-    TailCallBlocker blockTailCalls(this);
-    if (!AST::cast<FalseLiteral *>(ast->expression)) {
-        if (AST::cast<TrueLiteral *>(ast->expression))
-            bytecodeGenerator->jump().link(body);
-        else
-            condition(ast->expression, &body, &end, false);
-    }
+    if (!AST::cast<FalseLiteral *>(ast->expression))
+        bytecodeGenerator->jump().link(cond);
 
     end.link();
 
@@ -3350,9 +3353,14 @@ bool Codegen::visit(ForEachStatement *ast)
             }
         };
         ControlFlowLoop flow(this, &end, &in, cleanup);
-        bytecodeGenerator->jump().link(in);
-
-        BytecodeGenerator::Label body = bytecodeGenerator->label();
+        bytecodeGenerator->addLoopStart(in);
+        in.link();
+        iterator.loadInAccumulator();
+        Instruction::IteratorNext next;
+        next.value = lhsValue.stackSlot();
+        next.done = iteratorDone.stackSlot();
+        bytecodeGenerator->addInstruction(next);
+        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(done);
 
         // each iteration gets it's own context, as per spec
         {
@@ -3383,22 +3391,17 @@ bool Codegen::visit(ForEachStatement *ast)
                 Q_UNREACHABLE();
             }
 
+            blockTailCalls.unblock();
             statement(ast->statement);
             setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
-
         }
 
-      error:
-        in.link();
-        iterator.loadInAccumulator();
-        Instruction::IteratorNext next;
-        next.value = lhsValue.stackSlot();
-        next.done = iteratorDone.stackSlot();
-        bytecodeGenerator->addInstruction(next);
-        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpFalse()).link(body);
-        bytecodeGenerator->jump().link(done);
+        bytecodeGenerator->jump().link(in);
 
+      error:
         end.link();
+
+        // ~ControlFlowLoop will be called here, which will generate unwind code when needed
     }
 
     done.link();
@@ -3427,7 +3430,7 @@ bool Codegen::visit(ForStatement *ast)
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &step);
-
+    bytecodeGenerator->addLoopStart(cond);
     condition(ast->condition, &body, &end, true);
 
     body.link();
@@ -3720,16 +3723,17 @@ bool Codegen::visit(WhileStatement *ast)
         return false;
 
     RegisterScope scope(this);
-    TailCallBlocker blockTailCalls(this);
 
     BytecodeGenerator::Label start = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label cond = bytecodeGenerator->label();
     ControlFlowLoop flow(this, &end, &cond);
+    bytecodeGenerator->addLoopStart(cond);
 
-    if (!AST::cast<TrueLiteral *>(ast->expression))
+    if (!AST::cast<TrueLiteral *>(ast->expression)) {
+        TailCallBlocker blockTailCalls(this);
         condition(ast->expression, &start, &end, true);
-    blockTailCalls.unblock();
+    }
 
     start.link();
     statement(ast->statement);

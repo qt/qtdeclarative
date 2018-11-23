@@ -201,6 +201,7 @@ struct Context {
     ControlFlow *controlFlow = nullptr;
     QByteArray code;
     QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
+    std::vector<unsigned> labelInfo;
 
     int nRegisters = 0;
     int registerOffset = -1;

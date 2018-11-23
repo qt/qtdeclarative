@@ -63,7 +63,9 @@ void BaselineJIT::generate()
 //    qDebug()<<"jitting" << function->name()->toQString();
     const char *code = function->codeData;
     uint len = function->compiledFunction->codeSize;
-    labels = collectLabelsInBytecode(code, len);
+
+    for (unsigned i = 0, ei = function->compiledFunction->nLabelInfos; i != ei; ++i)
+        labels.insert(int(function->compiledFunction->labelInfoTable()[i]));
 
     as->generatePrologue();
     decode(code, len);
@@ -591,7 +593,7 @@ void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
 void BaselineJIT::generate_SetUnwindHandler(int offset)
 {
     if (offset)
-        as->setUnwindHandler(absoluteOffsetForJump(offset));
+        labels.insert(as->setUnwindHandler(absoluteOffsetForJump(offset)));
     else
         as->clearUnwindHandler();
 }
@@ -603,7 +605,7 @@ void BaselineJIT::generate_UnwindDispatch()
 
 void BaselineJIT::generate_UnwindToLabel(int level, int offset)
 {
-    as->unwindToLabel(level, absoluteOffsetForJump(offset));
+    labels.insert(as->unwindToLabel(level, absoluteOffsetForJump(offset)));
 }
 
 void BaselineJIT::generate_DeadTemporalZoneCheck(int name)
@@ -870,11 +872,11 @@ void BaselineJIT::generate_ToObject()
 
 }
 
-void BaselineJIT::generate_Jump(int offset) { as->jump(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpTrue(int /*traceSlot*/, int offset) { as->jumpTrue(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpFalse(int /*traceSlot*/, int offset) { as->jumpFalse(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpNoException(int offset) { as->jumpNoException(absoluteOffsetForJump(offset)); }
-void BaselineJIT::generate_JumpNotUndefined(int offset) { as->jumpNotUndefined(absoluteOffsetForJump(offset)); }
+void BaselineJIT::generate_Jump(int offset) { labels.insert(as->jump(absoluteOffsetForJump(offset))); }
+void BaselineJIT::generate_JumpTrue(int /*traceSlot*/, int offset) { labels.insert(as->jumpTrue(absoluteOffsetForJump(offset))); }
+void BaselineJIT::generate_JumpFalse(int /*traceSlot*/, int offset) { labels.insert(as->jumpFalse(absoluteOffsetForJump(offset))); }
+void BaselineJIT::generate_JumpNoException(int offset) { labels.insert(as->jumpNoException(absoluteOffsetForJump(offset))); }
+void BaselineJIT::generate_JumpNotUndefined(int offset) { labels.insert(as->jumpNotUndefined(absoluteOffsetForJump(offset))); }
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
@@ -1004,7 +1006,7 @@ void BaselineJIT::generate_GetTemplateObject(int index)
 
 void BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
-    if (hasLabel())
+    if (labels.contains(currentInstructionOffset()))
         as->addLabel(currentInstructionOffset());
 }
 
