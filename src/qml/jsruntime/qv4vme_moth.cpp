@@ -65,6 +65,8 @@
 
 #undef COUNT_INSTRUCTIONS
 
+enum { ShowWhenDeoptimiationHappens = 0 };
+
 extern "C" {
 
 // This is the interface to Qt Creator's (new) QML debugger.
@@ -488,13 +490,17 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 #ifdef V4_ENABLE_JIT
     if (debugger == nullptr) {
         if (function->jittedCode == nullptr) {
-            if (engine->canJIT(function))
-                QV4::JIT::BaselineJIT(function).generate();
-            else
+            if (engine->canJIT(function)) {
+#if QT_CONFIG(qml_tracing)
+                if (function->tracingEnabled())
+                    runTracingJit(function);
+                else
+#endif
+                    QV4::JIT::BaselineJIT(function).generate();
+            } else {
                 ++function->interpreterCallCount;
+            }
         }
-        if (function->jittedCode != nullptr)
-            return function->jittedCode(frame, engine);
     }
 #endif // V4_ENABLE_JIT
 
@@ -502,7 +508,29 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     if (debugger)
         debugger->enteringFunction();
 
-    ReturnedValue result = interpret(frame, engine, function->codeData);
+    ReturnedValue result;
+    if (function->jittedCode != nullptr && debugger == nullptr) {
+        result = function->jittedCode(frame, engine);
+        if (QV4::Value::fromReturnedValue(result).isEmpty()) { // de-optimize!
+            if (ShowWhenDeoptimiationHappens) {
+                // This is debug code, which is disabled by default, and completely removed by the
+                // compiler.
+                fprintf(stderr, "*********************** DEOPT! %s ***********************\n"
+                                "*** deopt IP: %d, line: %d\n",
+                        function->name()->toQString().toUtf8().constData(),
+                        frame->instructionPointer,
+                        frame->lineNumber());
+            }
+            delete function->codeRef;
+            function->codeRef = nullptr;
+            function->jittedCode = nullptr;
+            function->interpreterCallCount = 0; // reset to restart tracing: apparently we didn't have enough info before
+            result = interpret(frame, engine, function->codeData + frame->instructionPointer);
+        }
+    } else {
+        // interpreter
+        result = interpret(frame, engine, function->codeData);
+    }
 
     if (debugger)
         debugger->leavingFunction(result);

@@ -293,7 +293,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *);
     };
-    struct Q_QML_PRIVATE_EXPORT CreateRestParameter : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT CreateRestParameter : PureMethod
     {
         static ReturnedValue call(ExecutionEngine *, int);
     };

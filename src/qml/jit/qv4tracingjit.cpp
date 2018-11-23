@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,43 +37,43 @@
 **
 ****************************************************************************/
 
-#ifndef QV4VME_MOTH_P_H
-#define QV4VME_MOTH_P_H
+#include <QtCore/qloggingcategory.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qv4global_p.h>
+#include "qv4vme_moth_p.h"
+#include "qv4graphbuilder_p.h"
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcTracing, "qt.v4.tracing")
+
 namespace QV4 {
-namespace Moth {
 
-void runTracingJit(QV4::Function *function);
-
-class VME
+// This is the entry point for the "tracing JIT". It uses the sea-of-nodes concept as described in
+// https://scholarship.rice.edu/bitstream/handle/1911/96451/TR95-252.pdf
+//
+// The minimal pipeline is as follows:
+//  - create the graph for the function
+//  - do generic lowering
+//  - schedule the nodes
+//  - run minimal stack slot allocation (no re-use of slots)
+//  - run the assembler
+//
+// This pipeline has no optimizations, and generates quite inefficient code. It does have the
+// advantage that no trace information is used, so it can be used for testing where it replaces
+// the baseline JIT. Any optimizations are additions to this pipeline.
+//
+// Note: generators (or resuming functions in general) are not supported by this JIT.
+void Moth::runTracingJit(QV4::Function *function)
 {
-public:
-    struct ExecData {
-        QV4::Function *function;
-        const QV4::ExecutionContext *scope;
-    };
-    static QV4::ReturnedValue exec(CppStackFrame *frame, ExecutionEngine *engine);
-    static QV4::ReturnedValue interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *codeEntry);
-};
+    IR::Function irFunction(function);
+    qCDebug(lcTracing).noquote() << "runTracingJit called for" << irFunction.name() << "...";
 
-} // namespace Moth
-} // namespace QV4
+    qCDebug(lcTracing).noquote().nospace() << function->traceInfoToString();
 
+    IR::GraphBuilder::buildGraph(&irFunction);
+    irFunction.dump(QStringLiteral("initial IR"));
+    irFunction.verify();
+}
+
+} // QV4 namespace
 QT_END_NAMESPACE
-
-#endif // QV4VME_MOTH_P_H

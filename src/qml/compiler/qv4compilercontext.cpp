@@ -423,9 +423,7 @@ bool Context::canUseTracingJit() const
     if (!onlyTrace.isEmpty())
         return onlyTrace.contains(name);
 
-    //### the next condition should be refined and have the IR distinguish between escaping and
-    //    non-escaping locals
-    return !hasTry && !requiresExecutionContext && !hasNestedFunctions;
+    return true;
 #else
     return false;
 #endif

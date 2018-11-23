@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,43 +37,67 @@
 **
 ****************************************************************************/
 
-#ifndef QV4VME_MOTH_P_H
-#define QV4VME_MOTH_P_H
+#include "qv4graph_p.h"
+#include "qv4operation_p.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <private/qv4global_p.h>
+QT_REQUIRE_CONFIG(qml_tracing);
 
 QT_BEGIN_NAMESPACE
-
 namespace QV4 {
-namespace Moth {
+namespace IR {
 
-void runTracingJit(QV4::Function *function);
-
-class VME
+Graph *Graph::create(Function *function)
 {
-public:
-    struct ExecData {
-        QV4::Function *function;
-        const QV4::ExecutionContext *scope;
-    };
-    static QV4::ReturnedValue exec(CppStackFrame *frame, ExecutionEngine *engine);
-    static QV4::ReturnedValue interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *codeEntry);
-};
+    auto storage = function->pool()->allocate(sizeof(Graph));
+    auto g = new (storage) Graph(function);
+    g->m_undefinedNode = g->createNode(g->opBuilder()->get<Meta::Undefined>());
+    g->m_emptyNode = g->createNode(g->opBuilder()->get<Meta::Empty>());
+    g->m_nullNode = g->createNode(g->opBuilder()->getConstant(QV4::Value::nullValue()));
+    g->m_trueNode = g->createNode(g->opBuilder()->getConstant(QV4::Value::fromBoolean(true)));
+    g->m_falseNode = g->createNode(g->opBuilder()->getConstant(QV4::Value::fromBoolean(false)));
+    return g;
+}
 
-} // namespace Moth
-} // namespace QV4
+Graph::MemoryPool *Graph::pool() const
+{
+    return m_function->pool();
+}
 
+Node *Graph::createNode(const Operation *op, Node *const operands[], size_t opCount,
+                        bool incomplete)
+{
+    return Node::create(pool(), m_nextNodeId++, op, opCount, operands, incomplete);
+}
+
+Node *Graph::createConstantBoolNode(bool value)
+{
+    return createNode(opBuilder()->getConstant(Primitive::fromBoolean(value)));
+}
+
+Node *Graph::createConstantIntNode(int value)
+{
+    return createNode(opBuilder()->getConstant(Primitive::fromInt32(value)));
+}
+
+Graph::Graph(Function *function)
+    : m_function(function)
+    , m_opBuilder(OperationBuilder::create(pool()))
+{}
+
+Node *Graph::createConstantHeapNode(Heap::Base *heap)
+{
+    return createNode(opBuilder()->getConstant(Primitive::fromHeapObject(heap)));
+}
+
+void Graph::addEndInput(Node *n)
+{
+    if (m_endNode) {
+        auto newEnd = m_opBuilder->getEnd(m_endNode->operation()->controlInputCount() + 1);
+        m_endNode->setOperation(newEnd);
+        m_endNode->addInput(m_function->pool(), n);
+    }
+}
+
+} // IR namespace
+} // QV4 namespace
 QT_END_NAMESPACE
-
-#endif // QV4VME_MOTH_P_H
