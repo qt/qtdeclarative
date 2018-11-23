@@ -238,6 +238,7 @@ private slots:
     void touchReleaseOutside_data();
     void touchReleaseOutside();
     void dynamicCreation();
+    void handlerInWindow();
     void dynamicCreationInWindow();
 
 protected:
@@ -624,6 +625,30 @@ void tst_PointerHandlers::dynamicCreation()
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointPressed, NoGrab);
     QCOMPARE_EVENT(1, Event::MouseDestination, QEvent::MouseButtonPress, Qt::TouchPointPressed, NoGrab);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+}
+
+void tst_PointerHandlers::handlerInWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("handlerInWindow.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(component.create());
+    QScopedPointer<QQuickWindow> cleanup(window);
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    EventHandler *handler = window->contentItem()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+
+    QCOMPARE(handler->parentItem(), window->contentItem());
+    QCOMPARE(handler->target(), window->contentItem());
+
+    QPoint p1(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 2);
 }
 
 void tst_PointerHandlers::dynamicCreationInWindow()

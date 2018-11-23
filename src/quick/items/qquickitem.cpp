@@ -89,6 +89,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
 Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
+Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1)
 {
@@ -3280,7 +3281,10 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
         if (o->inherits("QGraphicsItem"))
             qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
         else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
-            Q_ASSERT(pointerHandler->parentItem() == that);
+            if (pointerHandler->parent() != that) {
+                qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
+                pointerHandler->setParent(that);
+            }
             QQuickItemPrivate::get(that)->addPointerHandler(pointerHandler);
         } else {
             QQuickWindow *thisWindow = qmlobject_cast<QQuickWindow *>(o);
