@@ -39,6 +39,7 @@
 
 #include <QBuffer>
 #include <QFile>
+#include <QLoggingCategory>
 
 #include "qv4engine_p.h"
 #include "qv4assemblercommon_p.h"
@@ -57,6 +58,8 @@
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
+
+Q_LOGGING_CATEGORY(lcAsm, "qt.v4.asm")
 
 namespace {
 class QIODevicePrintStream: public FilePrintStream
@@ -110,7 +113,9 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
         }
     }
 
-    qDebug("%s", processedOutput.constData());
+    auto lines = processedOutput.split('\n');
+    for (const auto &line : lines)
+        qCDebug(lcAsm, "%s", line.constData());
 }
 
 JIT::PlatformAssemblerCommon::~PlatformAssemblerCommon()
@@ -131,7 +136,7 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
 
     JSC::MacroAssemblerCodeRef codeRef;
 
-    static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_ASM");
+    static const bool showCode = lcAsm().isDebugEnabled();
     if (showCode) {
         QBuffer buf;
         buf.open(QIODevice::WriteOnly);
