@@ -37,48 +37,71 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qloggingcategory.h>
+#ifndef QV4LOWERING_P_H
+#define QV4LOWERING_P_H
 
-#include "qv4vme_moth_p.h"
-#include "qv4graphbuilder_p.h"
-#include "qv4lowering_p.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qqmljsmemorypool_p.h>
+#include <private/qv4global_p.h>
+#include <private/qv4ir_p.h>
+#include <private/qv4util_p.h>
+#include <private/qv4node_p.h>
+#include <private/qv4graph_p.h>
+
+QT_REQUIRE_CONFIG(qml_tracing);
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTracing, "qt.v4.tracing")
-
 namespace QV4 {
+namespace IR {
 
-// This is the entry point for the "tracing JIT". It uses the sea-of-nodes concept as described in
-// https://scholarship.rice.edu/bitstream/handle/1911/96451/TR95-252.pdf
-//
-// The minimal pipeline is as follows:
-//  - create the graph for the function
-//  - do generic lowering
-//  - schedule the nodes
-//  - run minimal stack slot allocation (no re-use of slots)
-//  - run the assembler
-//
-// This pipeline has no optimizations, and generates quite inefficient code. It does have the
-// advantage that no trace information is used, so it can be used for testing where it replaces
-// the baseline JIT. Any optimizations are additions to this pipeline.
-//
-// Note: generators (or resuming functions in general) are not supported by this JIT.
-void Moth::runTracingJit(QV4::Function *function)
+// Lowering replaces JS level operations with lower level ones. E.g. a JSAdd is lowered to an AddI32
+// if both inputs and the output are 32bit integers, or to a runtime call in all other cases. This
+// transforms the graph into something that is closer to actual executable code.
+
+
+// Last lowering phase: replace all JSOperations that are left with runtime calls. There is nothing
+// smart here, all that should have been done before this phase.
+class GenericLowering final
 {
-    IR::Function irFunction(function);
-    qCDebug(lcTracing).noquote() << "runTracingJit called for" << irFunction.name() << "...";
+    Q_DISABLE_COPY(GenericLowering)
 
-    qCDebug(lcTracing).noquote().nospace() << function->traceInfoToString();
+public:
+    GenericLowering(Function &f);
 
-    IR::GraphBuilder::buildGraph(&irFunction);
-    irFunction.dump(QStringLiteral("initial IR"));
-    irFunction.verify();
+    void lower();
 
-    IR::GenericLowering(irFunction).lower();
-    irFunction.dump(QStringLiteral("after generic lowering"));
-    irFunction.verify();
-}
+private:
+    void replaceWithCall(Node *n);
+    void replaceWithVarArgsCall(Node *n);
+    static bool allUsesAsUnboxedBool(Node *n);
 
-} // QV4 namespace
+    Function &function()
+    { return m_function; }
+
+    Graph *graph()
+    { return function().graph(); }
+
+    OperationBuilder *opBuilder()
+    { return graph()->opBuilder(); }
+
+private:
+    Function &m_function;
+};
+
+} // namespace IR
+} // namespace QV4
+
 QT_END_NAMESPACE
+
+#endif // QV4LOWERING_P_H
