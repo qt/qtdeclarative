@@ -472,17 +472,6 @@ public:
         m_worklist.push_back(n);
     }
 
-    void reEnqueueLate(Node *n)
-    {
-        if (!n)
-            return;
-        State &s = nodeState(n);
-        if (s == Queued)
-            return;
-        s = Queued;
-        m_worklist.insert(m_worklist.begin(), n);
-    }
-
     void enqueueAllInputs(Node *n)
     {
         for (Node *input : n->inputs())
@@ -519,18 +508,13 @@ public:
             Node *n = m_worklist.back();
             m_worklist.pop_back();
             State &s = nodeState(n);
-            if (s == Queued) {
-                s = Visited;
-                return n;
-            }
-            Q_UNREACHABLE();
+            Q_ASSERT(s == Queued);
+            s = Visited;
+            return n;
         }
 
         return nullptr;
     }
-
-    void markAsVisited(Node *n)
-    { nodeState(n) = Visited; }
 
     bool isVisited(Node *n) const
     { return nodeState(n) == Visited; }
