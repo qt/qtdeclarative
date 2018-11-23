@@ -104,6 +104,8 @@ public:
     }
 
     template <typename Tp> Tp *New() { return new (this->allocate(sizeof(Tp))) Tp(); }
+    template <typename Tp, typename... Ta> Tp *New(Ta... args)
+    { return new (this->allocate(sizeof(Tp))) Tp(args...); }
 
     QStringRef newString(const QString &string) {
         strings.append(new QString(string));
@@ -170,6 +172,81 @@ public:
     void *operator new(size_t size, MemoryPool *pool) { return pool->allocate(size); }
     void operator delete(void *) {}
     void operator delete(void *, MemoryPool *) {}
+};
+
+template <typename T>
+class FixedPoolArray
+{
+    T *data;
+    int count = 0;
+
+public:
+    FixedPoolArray()
+        : data(nullptr)
+    {}
+
+    FixedPoolArray(MemoryPool *pool, int size)
+    { allocate(pool, size); }
+
+    void allocate(MemoryPool *pool, int size)
+    {
+        count = size;
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+    }
+
+    void allocate(MemoryPool *pool, const QVector<T> &vector)
+    {
+        count = vector.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+
+        if (QTypeInfo<T>::isComplex) {
+            for (int i = 0; i < count; ++i)
+                new (data + i) T(vector.at(i));
+        } else {
+            memcpy(data, static_cast<const void*>(vector.constData()), count * sizeof(T));
+        }
+    }
+
+    template <typename Container>
+    void allocate(MemoryPool *pool, const Container &container)
+    {
+        count = container.count();
+        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
+        typename Container::ConstIterator it = container.constBegin();
+        for (int i = 0; i < count; ++i)
+            new (data + i) T(*it++);
+    }
+
+    int size() const
+    { return count; }
+
+    const T &at(int index) const {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
+    T &at(int index) {
+        Q_ASSERT(index >= 0 && index < count);
+        return data[index];
+    }
+
+    T &operator[](int index) {
+        return at(index);
+    }
+
+
+    int indexOf(const T &value) const {
+        for (int i = 0; i < count; ++i)
+            if (data[i] == value)
+                return i;
+        return -1;
+    }
+
+    const T *begin() const { return data; }
+    const T *end() const { return data + count; }
+
+    T *begin() { return data; }
+    T *end() { return data + count; }
 };
 
 } // namespace QQmlJS

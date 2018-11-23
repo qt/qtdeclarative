@@ -1330,8 +1330,8 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject)
     }
 
     QmlIR::JSCodeGen::ObjectIdMapping idMapping;
-    idMapping.reserve(obj->namedObjectsInComponent.count);
-    for (int i = 0; i < obj->namedObjectsInComponent.count; ++i) {
+    idMapping.reserve(obj->namedObjectsInComponent.size());
+    for (int i = 0; i < obj->namedObjectsInComponent.size(); ++i) {
         const int objectIndex = obj->namedObjectsInComponent.at(i);
         QmlIR::JSCodeGen::IdMapping m;
         const QmlIR::Object *obj = qmlObjects.at(objectIndex);

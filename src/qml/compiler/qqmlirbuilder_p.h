@@ -198,69 +198,6 @@ struct PoolList
     Iterator end() { return Iterator(nullptr); }
 };
 
-template <typename T>
-class FixedPoolArray
-{
-    T *data;
-public:
-    int count = 0;
-
-    FixedPoolArray()
-        : data(nullptr)
-
-    {}
-
-    void allocate(QQmlJS::MemoryPool *pool, int size)
-    {
-        count = size;
-        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
-    }
-
-    void allocate(QQmlJS::MemoryPool *pool, const QVector<T> &vector)
-    {
-        count = vector.count();
-        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
-
-        if (QTypeInfo<T>::isComplex) {
-            for (int i = 0; i < count; ++i)
-                new (data + i) T(vector.at(i));
-        } else {
-            memcpy(data, static_cast<const void*>(vector.constData()), count * sizeof(T));
-        }
-    }
-
-    template <typename Container>
-    void allocate(QQmlJS::MemoryPool *pool, const Container &container)
-    {
-        count = container.count();
-        data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
-        typename Container::ConstIterator it = container.constBegin();
-        for (int i = 0; i < count; ++i)
-            new (data + i) T(*it++);
-    }
-
-    const T &at(int index) const {
-        Q_ASSERT(index >= 0 && index < count);
-        return data[index];
-    }
-
-    T &operator[](int index) {
-        Q_ASSERT(index >= 0 && index < count);
-        return data[index];
-    }
-
-
-    int indexOf(const T &value) const {
-        for (int i = 0; i < count; ++i)
-            if (data[i] == value)
-                return i;
-        return -1;
-    }
-
-    const T *begin() const { return data; }
-    const T *end() const { return data + count; }
-};
-
 struct Object;
 
 struct EnumValue : public QV4::CompiledData::EnumValue
@@ -411,7 +348,7 @@ public:
     FixedPoolArray<int> runtimeFunctionIndices;
 
     FixedPoolArray<quint32> namedObjectsInComponent;
-    int namedObjectsInComponentCount() const { return namedObjectsInComponent.count; }
+    int namedObjectsInComponentCount() const { return namedObjectsInComponent.size(); }
     const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
 
 private:
