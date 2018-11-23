@@ -630,17 +630,6 @@ private:
     QScopedPointer<QV4::Promise::ReactionHandler> m_reactionHandler;
 };
 
-// This is a trick to tell the code generators that functions taking a NoThrowContext won't
-// throw exceptions and therefore don't need a check after the call.
-#ifndef V4_BOOTSTRAP
-struct NoThrowEngine : public ExecutionEngine
-{
-};
-#else
-struct NoThrowEngine;
-#endif
-
-
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
     ExecutionEngineCallDepthRecorder _executionEngineCallDepthRecorder(v4);
 

@@ -57,184 +57,471 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 typedef uint Bool;
-struct NoThrowEngine;
-namespace {
-template <typename T>
-struct ExceptionCheck {
-    enum { NeedsCheck = 1 };
-};
-// push_catch and pop context methods shouldn't check for exceptions
-template <>
-struct ExceptionCheck<void (*)(QV4::NoThrowEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<void (*)(A, QV4::NoThrowEngine)> {
-    enum { NeedsCheck = 0 };
-};
-template <>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B>
-struct ExceptionCheck<QV4::ReturnedValue (*)(QV4::NoThrowEngine *, A, B)> {
-    enum { NeedsCheck = 0 };
-};
-template <typename A, typename B, typename C>
-struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
-    enum { NeedsCheck = 0 };
-};
-} // anonymous namespace
 
-#define FOR_EACH_RUNTIME_METHOD(F) \
-    /* call */ \
-    F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, Value *argv, int argc)) \
-    F(ReturnedValue, callName, (ExecutionEngine *engine, int nameIndex, Value *argv, int argc)) \
-    F(ReturnedValue, callProperty, (ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)) \
-    F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)) \
-    F(ReturnedValue, callElement, (ExecutionEngine *engine, Value *base, const Value &index, Value *argv, int argc)) \
-    F(ReturnedValue, callValue, (ExecutionEngine *engine, const Value &func, Value *argv, int argc)) \
-    F(ReturnedValue, callWithReceiver, (ExecutionEngine *engine, const Value &func, const Value *thisObject, Value *argv, int argc)) \
-    F(ReturnedValue, callPossiblyDirectEval, (ExecutionEngine *engine, Value *argv, int argc)) \
-    F(ReturnedValue, callWithSpread, (ExecutionEngine *engine, const Value &func, const Value &thisObject, Value *argv, int argc)) \
-    F(ReturnedValue, tailCall, (CppStackFrame *frame, ExecutionEngine *engine)) \
-    \
-    /* construct */ \
-    F(ReturnedValue, construct, (ExecutionEngine *engine, const Value &func, const Value &newTarget, Value *argv, int argc)) \
-    F(ReturnedValue, constructWithSpread, (ExecutionEngine *engine, const Value &func, const Value &newTarget, Value *argv, int argc)) \
-    \
-    /* load & store */ \
-    F(void, storeNameStrict, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
-    F(void, storeNameSloppy, (ExecutionEngine *engine, int nameIndex, const Value &value)) \
-    F(void, storeProperty, (ExecutionEngine *engine, const Value &object, int nameIndex, const Value &value)) \
-    F(void, storeElement, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value)) \
-    F(void, storeElement_traced, (ExecutionEngine *engine, const Value &object, const Value &index, const Value &value, quint8 *traceSlot)) \
-    F(ReturnedValue, loadProperty, (ExecutionEngine *engine, const Value &object, int nameIndex)) \
-    F(ReturnedValue, loadName, (ExecutionEngine *engine, int nameIndex)) \
-    F(ReturnedValue, loadElement, (ExecutionEngine *engine, const Value &object, const Value &index)) \
-    F(ReturnedValue, loadElement_traced, (ExecutionEngine *engine, const Value &object, const Value &index, quint8 *traceSlot)) \
-    F(ReturnedValue, loadSuperProperty, (ExecutionEngine *engine, const Value &property)) \
-    F(void, storeSuperProperty, (ExecutionEngine *engine, const Value &property, const Value &value)) \
-    F(ReturnedValue, loadSuperConstructor, (ExecutionEngine *engine, const Value &t)) \
-    \
-    /* typeof */  \
-    F(ReturnedValue, typeofValue, (ExecutionEngine *engine, const Value &val)) \
-    F(ReturnedValue, typeofName, (ExecutionEngine *engine, int nameIndex)) \
-    \
-    /* delete */ \
-    F(bool, deleteProperty, (ExecutionEngine *engine, const Value &base, const Value &index)) \
-    F(bool, deleteName, (ExecutionEngine *engine, int nameIndex)) \
-    \
-    /* exceptions & scopes */ \
-    F(void, throwException, (ExecutionEngine *engine, const Value &value)) \
-    F(ReturnedValue, createWithContext, (ExecutionEngine *, Value *jsStackFrame)) \
-    F(ReturnedValue, createCatchContext, (ExecutionContext *parent, int blockIndex, int exceptionVarNameIndex)) \
-    F(ReturnedValue, createBlockContext, (ExecutionContext *parent, int index)) \
-    F(ReturnedValue, createScriptContext, (ExecutionEngine *engine, int index)) \
-    F(ReturnedValue, cloneBlockContext, (ExecutionContext *previous)) \
-    F(ReturnedValue, popScriptContext, (ExecutionEngine *engine)) \
-    F(void, throwReferenceError, (ExecutionEngine *engine, int nameIndex)) \
-    \
-    /* closures */ \
-    F(ReturnedValue, closure, (ExecutionEngine *engine, int functionId)) \
-    \
-    /* function header */ \
-    F(void, declareVar, (ExecutionEngine *engine, bool deletable, int nameIndex)) \
-    F(ReturnedValue, createMappedArgumentsObject, (ExecutionEngine *engine)) \
-    F(ReturnedValue, createUnmappedArgumentsObject, (ExecutionEngine *engine)) \
-    F(ReturnedValue, createRestParameter, (ExecutionEngine *engine, int argIndex)) \
-    \
-    /* literals */ \
-    F(ReturnedValue, arrayLiteral, (ExecutionEngine *engine, Value *values, uint length)) \
-    F(ReturnedValue, objectLiteral, (ExecutionEngine *engine, int classId, const Value *args, int argc)) \
-    F(ReturnedValue, createClass, (ExecutionEngine *engine, int classIndex, const Value &heritage, const Value *computedNames)) \
-    \
-    /* for-in, for-of and array destructuring */ \
-    F(ReturnedValue, getIterator, (ExecutionEngine *engine, const Value &in, int iterator)) \
-    F(ReturnedValue, iteratorNext, (ExecutionEngine *engine, const Value &iterator, Value *value)) \
-    F(ReturnedValue, iteratorNextForYieldStar, (ExecutionEngine *engine, const Value &received, const Value &iterator, Value *object)) \
-    F(ReturnedValue, iteratorClose, (ExecutionEngine *engine, const Value &iterator, const Value &done)) \
-    F(ReturnedValue, destructureRestElement, (ExecutionEngine *engine, const Value &iterator)) \
-    \
-    /* unary operators */ \
-    F(ReturnedValue, uMinus, (const Value &value)) \
-    \
-    /* binary operators */ \
-    F(ReturnedValue, instanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(ReturnedValue, in, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(ReturnedValue, add, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(ReturnedValue, sub, (const Value &left, const Value &right)) \
-    F(ReturnedValue, mul, (const Value &left, const Value &right)) \
-    F(ReturnedValue, div, (const Value &left, const Value &right)) \
-    F(ReturnedValue, mod, (const Value &left, const Value &right)) \
-    F(ReturnedValue, shl, (const Value &left, const Value &right)) \
-    F(ReturnedValue, shr, (const Value &left, const Value &right)) \
-    F(ReturnedValue, ushr, (const Value &left, const Value &right)) \
-    F(ReturnedValue, greaterThan, (const Value &left, const Value &right)) \
-    F(ReturnedValue, lessThan, (const Value &left, const Value &right)) \
-    F(ReturnedValue, greaterEqual, (const Value &left, const Value &right)) \
-    F(ReturnedValue, lessEqual, (const Value &left, const Value &right)) \
-    F(ReturnedValue, equal, (const Value &left, const Value &right)) \
-    F(ReturnedValue, notEqual, (const Value &left, const Value &right)) \
-    F(ReturnedValue, strictEqual, (const Value &left, const Value &right)) \
-    F(ReturnedValue, strictNotEqual, (const Value &left, const Value &right)) \
-    \
-    /* comparisons */ \
-    F(Bool, compareGreaterThan, (const Value &l, const Value &r)) \
-    F(Bool, compareLessThan, (const Value &l, const Value &r)) \
-    F(Bool, compareGreaterEqual, (const Value &l, const Value &r)) \
-    F(Bool, compareLessEqual, (const Value &l, const Value &r)) \
-    F(Bool, compareEqual, (const Value &left, const Value &right)) \
-    F(Bool, compareNotEqual, (const Value &left, const Value &right)) \
-    F(Bool, compareStrictEqual, (const Value &left, const Value &right)) \
-    F(Bool, compareStrictNotEqual, (const Value &left, const Value &right)) \
-    \
-    F(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    F(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right)) \
-    \
-    F(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id)) \
-    \
-    /* qml */ \
-    F(ReturnedValue, loadQmlContext, (NoThrowEngine *engine)) \
-    F(ReturnedValue, loadQmlImportedScripts, (NoThrowEngine *engine)) \
-    F(ReturnedValue, loadQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, loadQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, loadQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \
-    F(ReturnedValue, callQmlScopeObjectProperty, (ExecutionEngine *engine, Value *base, int propertyIndex, Value *argv, int argc)) \
-    F(ReturnedValue, callQmlContextObjectProperty, (ExecutionEngine *engine, Value *base, int propertyIndex, Value *argv, int argc)) \
-    \
-    F(void, storeQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
-    F(void, storeQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
-    Runtime();
-
     typedef ReturnedValue (*UnaryOperation)(const Value &value);
     typedef ReturnedValue (*BinaryOperation)(const Value &left, const Value &right);
-    typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *engine, const Value &left, const Value &right);
+    typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *, const Value &left, const Value &right);
 
-#define DEFINE_RUNTIME_METHOD_ENUM(returnvalue, name, args) name,
-    enum RuntimeMethods {
-        FOR_EACH_RUNTIME_METHOD(DEFINE_RUNTIME_METHOD_ENUM)
-        RuntimeMethodCount,
-        InvalidRuntimeMethod = RuntimeMethodCount
+    enum class Throws { No, Yes };
+
+    template<Throws t>
+    struct Method {
+         static constexpr bool throws = t == Throws::Yes;
     };
-#undef DEFINE_RUNTIME_METHOD_ENUM
 
-    void *runtimeMethods[RuntimeMethodCount];
+    /* call */
+    struct Q_QML_PRIVATE_EXPORT CallGlobalLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, uint, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallName : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, int, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallPropertyLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, uint, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallElement : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallValue : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallWithReceiver : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallPossiblyDirectEval : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallWithSpread : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT TailCall : Method<Throws::Yes>
+    {
+        static ReturnedValue call(CppStackFrame *, ExecutionEngine *);
+    };
 
-    static uint runtimeMethodOffset(RuntimeMethods method) { return method*QT_POINTER_SIZE; }
+    /* construct Q_QML_PRIVATE_EXPORT */
+    struct Q_QML_PRIVATE_EXPORT Construct : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT ConstructWithSpread : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
+    };
 
-#define RUNTIME_METHOD(returnvalue, name, args) \
-    typedef returnvalue (*Method_##name)args; \
-    enum { Method_##name##_NeedsExceptionCheck = ExceptionCheck<Method_##name>::NeedsCheck }; \
-    static returnvalue method_##name args;
-    FOR_EACH_RUNTIME_METHOD(RUNTIME_METHOD)
-#undef RUNTIME_METHOD
+    /* load & store */
+    struct Q_QML_PRIVATE_EXPORT StoreNameStrict : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, int, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreNameSloppy : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, int, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreProperty : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, int, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreElement : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreElement_traced : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, const Value &, const Value &, quint8 *);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadName : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadElement : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadElement_Traced : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, quint8 *);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadSuperProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreSuperProperty : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadSuperConstructor : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadGlobalLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Function *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT GetLookup : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Function *, const Value &, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT SetLookupStrict : Method<Throws::Yes>
+    {
+        static void call(Function *, const Value &, int, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT SetLookupSloppy : Method<Throws::Yes>
+    {
+        static void call(Function *, const Value &, int, const Value &);
+    };
+
+    /* typeof */
+    struct Q_QML_PRIVATE_EXPORT TypeofValue : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT TypeofName : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *, int);
+    };
+
+    /* delete */
+    struct Q_QML_PRIVATE_EXPORT DeleteProperty_NoThrow : Method<Throws::No>
+    {
+        static Bool call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT DeleteProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Function *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT DeleteName_NoThrow : Method<Throws::No>
+    {
+        static Bool call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT DeleteName : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Function *, int);
+    };
+
+    /* exceptions & scopes */
+    struct Q_QML_PRIVATE_EXPORT ThrowException : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT PushCallContext : Method<Throws::No>
+    {
+        static void call(CppStackFrame *);
+    };
+    struct Q_QML_PRIVATE_EXPORT PushWithContext : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT PushCatchContext : Method<Throws::No>
+    {
+        static void call(ExecutionEngine *, int, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT PushBlockContext : Method<Throws::No>
+    {
+        static void call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CloneBlockContext : Method<Throws::No>
+    {
+        static void call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT PushScriptContext : Method<Throws::No>
+    {
+        static void call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT PopScriptContext : Method<Throws::No>
+    {
+        static void call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT ThrowReferenceError : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT ThrowOnNullOrUndefined : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &);
+    };
+
+    /* closures */
+    struct Q_QML_PRIVATE_EXPORT Closure : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *, int);
+    };
+
+    /* Function header */
+    struct Q_QML_PRIVATE_EXPORT ConvertThisToObject : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT DeclareVar : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, Bool, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CreateMappedArgumentsObject : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT CreateUnmappedArgumentsObject : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT CreateRestParameter : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, int);
+    };
+
+    /* literals */
+    struct Q_QML_PRIVATE_EXPORT ArrayLiteral : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, Value[], uint);
+    };
+    struct Q_QML_PRIVATE_EXPORT ObjectLiteral : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, int, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CreateClass : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, int, const Value &, Value[]);
+    };
+
+    /* for-in, for-of and array destructuring */
+    struct Q_QML_PRIVATE_EXPORT GetIterator : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT IteratorNext : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, Value *);
+    };
+    struct Q_QML_PRIVATE_EXPORT IteratorNextForYieldStar : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value *);
+    };
+    struct Q_QML_PRIVATE_EXPORT IteratorClose : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT DestructureRestElement : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+
+    /* conversions */
+    struct Q_QML_PRIVATE_EXPORT ToObject : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT ToBoolean : Method<Throws::No>
+    {
+        static Bool call(const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT ToNumber : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &);
+    };
+    /* unary operators */
+    struct Q_QML_PRIVATE_EXPORT UMinus : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &);
+    };
+
+    /* binary operators */
+    struct Q_QML_PRIVATE_EXPORT Instanceof : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT In : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Add : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Sub : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Mul : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Div : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Mod : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Exp : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT BitAnd : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT BitOr : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT BitXor : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Shl : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Shr : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT UShr : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT GreaterThan : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT LessThan : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT GreaterEqual : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT LessEqual : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT Equal : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT NotEqual : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StrictEqual : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StrictNotEqual : Method<Throws::Yes>
+    {
+        static ReturnedValue call(const Value &, const Value &);
+    };
+
+    /* comparisons */
+    struct Q_QML_PRIVATE_EXPORT CompareGreaterThan : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareLessThan : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareGreaterEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareLessEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareNotEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareStrictEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareStrictNotEqual : Method<Throws::Yes>
+    {
+        static Bool call(const Value &, const Value &);
+    };
+
+    struct Q_QML_PRIVATE_EXPORT CompareInstanceof : Method<Throws::Yes>
+    {
+        static Bool call(ExecutionEngine *, const Value &, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT CompareIn : Method<Throws::Yes>
+    {
+        static Bool call(ExecutionEngine *, const Value &, const Value &);
+    };
+
+    struct Q_QML_PRIVATE_EXPORT RegexpLiteral : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *, int);
+    };
+    struct Q_QML_PRIVATE_EXPORT GetTemplateObject : Method<Throws::No>
+    {
+        static ReturnedValue call(Function *, int);
+    };
+
+    /* qml */
+    struct Q_QML_PRIVATE_EXPORT LoadQmlContext : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadQmlImportedScripts : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadQmlScopeObjectProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int, Bool);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadQmlContextObjectProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int, Bool);
+    };
+    struct Q_QML_PRIVATE_EXPORT LoadQmlIdObject : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, uint);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallQmlScopeObjectProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int, Value[], int);
+    };
+    struct Q_QML_PRIVATE_EXPORT CallQmlContextObjectProperty : Method<Throws::Yes>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, int, Value[], int);
+    };
+
+    struct Q_QML_PRIVATE_EXPORT StoreQmlScopeObjectProperty : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, int, const Value &);
+    };
+    struct Q_QML_PRIVATE_EXPORT StoreQmlContextObjectProperty : Method<Throws::Yes>
+    {
+        static void call(ExecutionEngine *, const Value &, int, const Value &);
+    };
 
     struct StackOffsets {
         static const int tailCall_function   = -1;
@@ -245,7 +532,6 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
 };
 
 static_assert(std::is_standard_layout<Runtime>::value, "Runtime needs to be standard layout in order for us to be able to use offsetof");
-static_assert(offsetof(Runtime, runtimeMethods) == 0, "JIT expects this to be the first member");
 static_assert(sizeof(Runtime::BinaryOperation) == sizeof(void*), "JIT expects a function pointer to fit into a regular pointer, for cross-compilation offset translation");
 
 } // namespace QV4

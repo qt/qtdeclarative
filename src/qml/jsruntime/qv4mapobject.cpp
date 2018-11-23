@@ -80,7 +80,7 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
             if (!adder)
                 return scope.engine->throwTypeError();
 
-            ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
+            ScopedObject iter(scope, Runtime::GetIterator::call(scope.engine, iterable, true));
             if (scope.hasException())
                 return Encode::undefined();
             Q_ASSERT(iter);
@@ -89,7 +89,7 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
             Value *arguments = scope.alloc(2);
             ScopedValue done(scope);
             forever {
-                done = Runtime::method_iteratorNext(scope.engine, iter, obj);
+                done = Runtime::IteratorNext::call(scope.engine, iter, obj);
                 if (scope.hasException())
                     break;
                 if (done->toBoolean())
@@ -112,7 +112,7 @@ ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv,
                     break;
             }
             ScopedValue falsey(scope, Encode(false));
-            return Runtime::method_iteratorClose(scope.engine, iter, falsey);
+            return Runtime::IteratorClose::call(scope.engine, iter, falsey);
         }
     }
     return a->asReturnedValue();

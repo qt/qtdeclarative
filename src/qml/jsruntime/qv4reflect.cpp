@@ -148,7 +148,7 @@ ReturnedValue Reflect::method_deleteProperty(const FunctionObject *f, const Valu
     if (!argc || !argv[0].isObject())
         return e->throwTypeError();
 
-    bool result =  Runtime::method_deleteProperty(e, argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
+    bool result =  Runtime::DeleteProperty_NoThrow::call(e, argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
     return Encode(result);
 }
 

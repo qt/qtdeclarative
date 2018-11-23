@@ -1595,7 +1595,7 @@ ReturnedValue IntrinsicTypedArrayPrototype::method_toLocaleString(const Function
             R += separator;
 
         v = instance->get(k);
-        v = Runtime::method_callElement(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        v = Runtime::CallElement::call(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
         s = v->toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();

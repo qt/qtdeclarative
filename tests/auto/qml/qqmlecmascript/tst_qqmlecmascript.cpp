@@ -2478,7 +2478,7 @@ static inline bool evaluate_value(QV4::ExecutionEngine *v4, const QV4::Value &o,
         scope.engine->catchException();
         return false;
     }
-    return QV4::Runtime::method_strictEqual(value, result);
+    return QV4::Runtime::StrictEqual::call(value, result);
 }
 
 static inline QV4::ReturnedValue evaluate(QV4::ExecutionEngine *v4, const QV4::Value &o,
@@ -3112,7 +3112,7 @@ void tst_qqmlecmascript::resolveClashingProperties()
         QString key = name->toQStringNoThrow();
         if (key == QLatin1String("clashes")) {
             value = v;
-            QV4::ScopedValue typeString(scope, QV4::Runtime::method_typeofValue(engine, value));
+            QV4::ScopedValue typeString(scope, QV4::Runtime::TypeofValue::call(engine, value));
             QString type = typeString->toQStringNoThrow();
             if (type == QLatin1String("boolean")) {
                 QVERIFY(!seenProperty);

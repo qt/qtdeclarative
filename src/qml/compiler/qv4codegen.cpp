@@ -273,7 +273,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
             case Not:
                 return Reference::fromConst(this, Encode(!v.toBoolean()));
             case UMinus:
-                return Reference::fromConst(this, Runtime::method_uMinus(v));
+                return Reference::fromConst(this, Runtime::UMinus::call(v));
             case UPlus:
                 return expr;
             case Compl:

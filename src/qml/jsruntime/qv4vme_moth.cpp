@@ -607,16 +607,16 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(LoadRuntimeString)
 
     MOTH_BEGIN_INSTR(MoveRegExp)
-        STACK_VALUE(destReg) = Runtime::method_regexpLiteral(engine, regExpId);
+        STACK_VALUE(destReg) = Runtime::RegexpLiteral::call(engine, regExpId);
     MOTH_END_INSTR(MoveRegExp)
 
     MOTH_BEGIN_INSTR(LoadClosure)
-        acc = Runtime::method_closure(engine, value);
+        acc = Runtime::Closure::call(engine, value);
     MOTH_END_INSTR(LoadClosure)
 
     MOTH_BEGIN_INSTR(LoadName)
         STORE_IP();
-        acc = Runtime::method_loadName(engine, name);
+        acc = Runtime::LoadName::call(engine, name);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadName)
@@ -632,14 +632,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(StoreNameStrict)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_storeNameStrict(engine, name, accumulator);
+        Runtime::StoreNameStrict::call(engine, name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameStrict)
 
     MOTH_BEGIN_INSTR(StoreNameSloppy)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_storeNameSloppy(engine, name, accumulator);
+        Runtime::StoreNameSloppy::call(engine, name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreNameSloppy)
 
@@ -647,11 +647,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_IP();
         STORE_ACC();
 #if QT_CONFIG(qml_tracing)
-        acc = Runtime::method_loadElement_traced(engine, STACK_VALUE(base), accumulator, function->traceInfo(traceSlot));
+        acc = Runtime::LoadElement_Traced::call(engine, STACK_VALUE(base), accumulator, function->traceInfo(traceSlot));
         traceValue(acc, function, traceSlot);
 #else
         Q_UNUSED(traceSlot);
-        acc = Runtime::method_loadElement(engine, STACK_VALUE(base), accumulator);
+        acc = Runtime::LoadElement::call(engine, STACK_VALUE(base), accumulator);
 #endif
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadElement)
@@ -660,10 +660,10 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         STORE_IP();
         STORE_ACC();
 #if QT_CONFIG(qml_tracing)
-        Runtime::method_storeElement_traced(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator, function->traceInfo(traceSlot));
+        Runtime::StoreElement_traced::call(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator, function->traceInfo(traceSlot));
 #else
         Q_UNUSED(traceSlot);
-        Runtime::method_storeElement(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator);
+        Runtime::StoreElement::call(engine, STACK_VALUE(base), STACK_VALUE(index), accumulator);
 #endif
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreElement)
@@ -671,7 +671,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(LoadProperty)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_loadProperty(engine, accumulator, name);
+        acc = Runtime::LoadProperty::call(engine, accumulator, name);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(LoadProperty)
@@ -688,7 +688,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(StoreProperty)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_storeProperty(engine, STACK_VALUE(base), name, accumulator);
+        Runtime::StoreProperty::call(engine, STACK_VALUE(base), name, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreProperty)
 
@@ -704,45 +704,45 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(LoadSuperProperty)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_loadSuperProperty(engine, STACK_VALUE(property));
+        acc = Runtime::LoadSuperProperty::call(engine, STACK_VALUE(property));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadSuperProperty)
 
     MOTH_BEGIN_INSTR(StoreSuperProperty)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_storeSuperProperty(engine, STACK_VALUE(property), accumulator);
+        Runtime::StoreSuperProperty::call(engine, STACK_VALUE(property), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreSuperProperty)
 
     MOTH_BEGIN_INSTR(StoreScopeObjectProperty)
         STORE_ACC();
-        Runtime::method_storeQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
+        Runtime::StoreQmlScopeObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadScopeObjectProperty)
         STORE_IP();
-        acc = Runtime::method_loadQmlScopeObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
+        acc = Runtime::LoadQmlScopeObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, captureRequired);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(StoreContextObjectProperty)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_storeQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, accumulator);
+        Runtime::StoreQmlContextObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(StoreContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadContextObjectProperty)
         STORE_IP();
-        acc = Runtime::method_loadQmlContextObjectProperty(engine, STACK_VALUE(base), propertyIndex, captureRequired);
+        acc = Runtime::LoadQmlContextObjectProperty::call(engine, STACK_VALUE(base), propertyIndex, captureRequired);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadContextObjectProperty)
 
     MOTH_BEGIN_INSTR(LoadIdObject)
         STORE_IP();
-        acc = Runtime::method_loadQmlIdObject(engine, STACK_VALUE(base), index);
+        acc = Runtime::LoadQmlIdObject::call(engine, STACK_VALUE(base), index);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadIdObject)
 
@@ -773,7 +773,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(IteratorNextForYieldStar)
         STORE_ACC();
-        acc = Runtime::method_iteratorNextForYieldStar(engine, accumulator, STACK_VALUE(iterator), &STACK_VALUE(object));
+        acc = Runtime::IteratorNextForYieldStar::call(engine, accumulator, STACK_VALUE(iterator), &STACK_VALUE(object));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNextForYieldStar)
 
@@ -804,7 +804,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CallProperty)
         STORE_IP();
-        acc = Runtime::method_callProperty(engine, stack + base, name, stack + argv, argc);
+        acc = Runtime::CallProperty::call(engine, stack[base], name, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallProperty)
@@ -827,49 +827,49 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CallElement)
         STORE_IP();
-        acc = Runtime::method_callElement(engine, stack + base, STACK_VALUE(index), stack + argv, argc);
+        acc = Runtime::CallElement::call(engine, stack[base], STACK_VALUE(index), stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallElement)
 
     MOTH_BEGIN_INSTR(CallName)
         STORE_IP();
-        acc = Runtime::method_callName(engine, name, stack + argv, argc);
+        acc = Runtime::CallName::call(engine, name, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallName)
 
     MOTH_BEGIN_INSTR(CallPossiblyDirectEval)
         STORE_IP();
-        acc = Runtime::method_callPossiblyDirectEval(engine, stack + argv, argc);
+        acc = Runtime::CallPossiblyDirectEval::call(engine, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallPossiblyDirectEval)
 
     MOTH_BEGIN_INSTR(CallGlobalLookup)
         STORE_IP();
-        acc = Runtime::method_callGlobalLookup(engine, index, stack + argv, argc);
+        acc = Runtime::CallGlobalLookup::call(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallGlobalLookup)
 
     MOTH_BEGIN_INSTR(CallScopeObjectProperty)
         STORE_IP();
-        acc = Runtime::method_callQmlScopeObjectProperty(engine, stack + base, name, stack + argv, argc);
+        acc = Runtime::CallQmlScopeObjectProperty::call(engine, stack[base], name, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallScopeObjectProperty)
 
     MOTH_BEGIN_INSTR(CallContextObjectProperty)
         STORE_IP();
-        acc = Runtime::method_callQmlContextObjectProperty(engine, stack + base, name, stack + argv, argc);
+        acc = Runtime::CallQmlContextObjectProperty::call(engine, stack[base], name, stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallContextObjectProperty)
 
     MOTH_BEGIN_INSTR(CallWithSpread)
         STORE_IP();
-        acc = Runtime::method_callWithSpread(engine, STACK_VALUE(func), STACK_VALUE(thisObject), stack + argv, argc);
+        acc = Runtime::CallWithSpread::call(engine, STACK_VALUE(func), STACK_VALUE(thisObject), stack + argv, argc);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(CallWithSpread)
@@ -880,19 +880,19 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         *engine->jsAlloca(1) = Primitive::fromInt32(argv);
         *engine->jsAlloca(1) = STACK_VALUE(thisObject);
         *engine->jsAlloca(1) = STACK_VALUE(func);
-        return Runtime::method_tailCall(frame, engine);
+        return Runtime::TailCall::call(frame, engine);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(TailCall)
 
     MOTH_BEGIN_INSTR(Construct)
         STORE_IP();
-        acc = Runtime::method_construct(engine, STACK_VALUE(func), ACC, stack + argv, argc);
+        acc = Runtime::Construct::call(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Construct)
 
     MOTH_BEGIN_INSTR(ConstructWithSpread)
         STORE_IP();
-        acc = Runtime::method_constructWithSpread(engine, STACK_VALUE(func), ACC, stack + argv, argc);
+        acc = Runtime::ConstructWithSpread::call(engine, STACK_VALUE(func), ACC, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(ConstructWithSpread)
 
@@ -920,7 +920,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         if (ACC.isEmpty()) {
             STORE_IP();
             STORE_ACC();
-            Runtime::method_throwReferenceError(engine, name);
+            Runtime::ThrowReferenceError::call(engine, name);
             goto handleUnwind;
         }
     MOTH_END_INSTR(DeadTemporalZoneCheck)
@@ -928,7 +928,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(ThrowException)
         STORE_IP();
         STORE_ACC();
-        Runtime::method_throwException(engine, accumulator);
+        Runtime::ThrowException::call(engine, accumulator);
         goto handleUnwind;
     MOTH_END_INSTR(ThrowException)
 
@@ -946,40 +946,36 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(SetException)
 
     MOTH_BEGIN_INSTR(PushCatchContext)
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-        STACK_VALUE(CallData::Context) = Runtime::method_createCatchContext(c, index, name);
+        Runtime::PushCatchContext::call(engine, index, name);
     MOTH_END_INSTR(PushCatchContext)
 
     MOTH_BEGIN_INSTR(CreateCallContext)
-        stack[CallData::Context] = ExecutionContext::newCallContext(frame);
+        Runtime::PushCallContext::call(frame);
     MOTH_END_INSTR(CreateCallContext)
 
     MOTH_BEGIN_INSTR(PushWithContext)
         STORE_IP();
         STORE_ACC();
-        auto ctx = Runtime::method_createWithContext(engine, stack);
+        acc = Runtime::PushWithContext::call(engine, stack[CallData::Accumulator]);
         CHECK_EXCEPTION;
-        STACK_VALUE(CallData::Context) = ctx;
     MOTH_END_INSTR(PushWithContext)
 
     MOTH_BEGIN_INSTR(PushBlockContext)
         STORE_ACC();
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-        STACK_VALUE(CallData::Context) = Runtime::method_createBlockContext(c, index);
+        Runtime::PushBlockContext::call(engine, index);
     MOTH_END_INSTR(PushBlockContext)
 
     MOTH_BEGIN_INSTR(CloneBlockContext)
         STORE_ACC();
-        ExecutionContext *c = static_cast<ExecutionContext *>(stack + CallData::Context);
-        STACK_VALUE(CallData::Context) = Runtime::method_cloneBlockContext(c);
+        Runtime::CloneBlockContext::call(engine);
     MOTH_END_INSTR(CloneBlockContext)
 
     MOTH_BEGIN_INSTR(PushScriptContext)
-        STACK_VALUE(CallData::Context) = Runtime::method_createScriptContext(engine, index);
+        Runtime::PushScriptContext::call(engine, index);
     MOTH_END_INSTR(PushScriptContext)
 
     MOTH_BEGIN_INSTR(PopScriptContext)
-        STACK_VALUE(CallData::Context) = Runtime::method_popScriptContext(engine);
+        Runtime::PopScriptContext::call(engine);
     MOTH_END_INSTR(PopScriptContext)
 
     MOTH_BEGIN_INSTR(PopContext)
@@ -990,14 +986,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(GetIterator)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_getIterator(engine, accumulator, iterator);
+        acc = Runtime::GetIterator::call(engine, accumulator, iterator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetIterator)
 
     MOTH_BEGIN_INSTR(IteratorNext)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_iteratorNext(engine, accumulator, &STACK_VALUE(value));
+        acc = Runtime::IteratorNext::call(engine, accumulator, &STACK_VALUE(value));
         STACK_VALUE(done) = acc;
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorNext)
@@ -1005,97 +1001,73 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(IteratorClose)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_iteratorClose(engine, accumulator, STACK_VALUE(done));
+        acc = Runtime::IteratorClose::call(engine, accumulator, STACK_VALUE(done));
         CHECK_EXCEPTION;
     MOTH_END_INSTR(IteratorClose)
 
     MOTH_BEGIN_INSTR(DestructureRestElement)
         STORE_IP();
         STORE_ACC();
-        acc = Runtime::method_destructureRestElement(engine, ACC);
+        acc = Runtime::DestructureRestElement::call(engine, ACC);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(DestructureRestElement)
 
     MOTH_BEGIN_INSTR(DeleteProperty)
-        if (!Runtime::method_deleteProperty(engine, STACK_VALUE(base), STACK_VALUE(index))) {
-            if (function->isStrict()) {
-                STORE_IP();
-                engine->throwTypeError();
-                goto handleUnwind;
-            }
-            acc = Encode(false);
-        } else {
-            acc = Encode(true);
-        }
+        acc = Runtime::DeleteProperty::call(engine, function, STACK_VALUE(base), STACK_VALUE(index));
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(DeleteProperty)
 
     MOTH_BEGIN_INSTR(DeleteName)
-        if (!Runtime::method_deleteName(engine, name)) {
-            if (function->isStrict()) {
-                STORE_IP();
-                QString n = function->compilationUnit->runtimeStrings[name]->toQString();
-                engine->throwSyntaxError(QStringLiteral("Can't delete property %1").arg(n));
-                goto handleUnwind;
-            }
-            acc = Encode(false);
-        } else {
-            acc = Encode(true);
-        }
+        acc = Runtime::DeleteName::call(engine, function, name);
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(DeleteName)
 
     MOTH_BEGIN_INSTR(TypeofName)
-        acc = Runtime::method_typeofName(engine, name);
+        acc = Runtime::TypeofName::call(engine, name);
     MOTH_END_INSTR(TypeofName)
 
     MOTH_BEGIN_INSTR(TypeofValue)
         STORE_ACC();
-        acc = Runtime::method_typeofValue(engine, accumulator);
+        acc = Runtime::TypeofValue::call(engine, accumulator);
     MOTH_END_INSTR(TypeofValue)
 
     MOTH_BEGIN_INSTR(DeclareVar)
-        Runtime::method_declareVar(engine, isDeletable, varName);
+        Runtime::DeclareVar::call(engine, isDeletable, varName);
     MOTH_END_INSTR(DeclareVar)
 
     MOTH_BEGIN_INSTR(DefineArray)
         QV4::Value *arguments = stack + args;
-        acc = Runtime::method_arrayLiteral(engine, arguments, argc);
+        acc = Runtime::ArrayLiteral::call(engine, arguments, argc);
     MOTH_END_INSTR(DefineArray)
 
     MOTH_BEGIN_INSTR(DefineObjectLiteral)
         QV4::Value *arguments = stack + args;
-        acc = Runtime::method_objectLiteral(engine, internalClassId, arguments, argc);
+        acc = Runtime::ObjectLiteral::call(engine, internalClassId, arguments, argc);
     MOTH_END_INSTR(DefineObjectLiteral)
 
     MOTH_BEGIN_INSTR(CreateClass)
-        acc = Runtime::method_createClass(engine, classIndex, STACK_VALUE(heritage), stack + computedNames);
+        acc = Runtime::CreateClass::call(engine, classIndex, STACK_VALUE(heritage), stack + computedNames);
     MOTH_END_INSTR(CreateClass)
 
     MOTH_BEGIN_INSTR(CreateMappedArgumentsObject)
-        acc = Runtime::method_createMappedArgumentsObject(engine);
+        acc = Runtime::CreateMappedArgumentsObject::call(engine);
     MOTH_END_INSTR(CreateMappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(CreateUnmappedArgumentsObject)
-        acc = Runtime::method_createUnmappedArgumentsObject(engine);
+        acc = Runtime::CreateUnmappedArgumentsObject::call(engine);
     MOTH_END_INSTR(CreateUnmappedArgumentsObject)
 
     MOTH_BEGIN_INSTR(CreateRestParameter)
-        acc = Runtime::method_createRestParameter(engine, argIndex);
+        acc = Runtime::CreateRestParameter::call(engine, argIndex);
     MOTH_END_INSTR(CreateRestParameter)
 
     MOTH_BEGIN_INSTR(ConvertThisToObject)
-        Value *t = &stack[CallData::This];
-        if (!t->isObject()) {
-            if (t->isNullOrUndefined()) {
-                *t = engine->globalObject->asReturnedValue();
-            } else {
-                *t = t->toObject(engine)->asReturnedValue();
-                CHECK_EXCEPTION;
-            }
-        }
+        stack[CallData::This] = Runtime::ConvertThisToObject::call(engine, stack[CallData::This]);
+        CHECK_EXCEPTION;
     MOTH_END_INSTR(ConvertThisToObject)
 
     MOTH_BEGIN_INSTR(LoadSuperConstructor)
-        acc = Runtime::method_loadSuperConstructor(engine, stack[CallData::Function]);
+        acc = Runtime::LoadSuperConstructor::call(engine, stack[CallData::Function]);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadSuperConstructor)
 
@@ -1176,7 +1148,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(left.int_32() == ACC.int_32());
         } else {
             STORE_ACC();
-            acc = Encode(bool(Runtime::method_compareEqual(left, accumulator)));
+            acc = Encode(bool(Runtime::CompareEqual::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpEq)
@@ -1187,7 +1159,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(bool(left.int_32() != ACC.int_32()));
         } else {
             STORE_ACC();
-            acc = Encode(bool(!Runtime::method_compareEqual(left, accumulator)));
+            acc = Encode(bool(!Runtime::CompareEqual::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpNe)
@@ -1200,7 +1172,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(left.asDouble() > ACC.asDouble());
         } else {
             STORE_ACC();
-            acc = Encode(bool(Runtime::method_compareGreaterThan(left, accumulator)));
+            acc = Encode(bool(Runtime::CompareGreaterThan::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpGt)
@@ -1213,7 +1185,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(left.asDouble() >= ACC.asDouble());
         } else {
             STORE_ACC();
-            acc = Encode(bool(Runtime::method_compareGreaterEqual(left, accumulator)));
+            acc = Encode(bool(Runtime::CompareGreaterEqual::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpGe)
@@ -1226,7 +1198,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(left.asDouble() < ACC.asDouble());
         } else {
             STORE_ACC();
-            acc = Encode(bool(Runtime::method_compareLessThan(left, accumulator)));
+            acc = Encode(bool(Runtime::CompareLessThan::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpLt)
@@ -1239,7 +1211,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(left.asDouble() <= ACC.asDouble());
         } else {
             STORE_ACC();
-            acc = Encode(bool(Runtime::method_compareLessEqual(left, accumulator)));
+            acc = Encode(bool(Runtime::CompareLessEqual::call(left, accumulator)));
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpLe)
@@ -1249,7 +1221,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             acc = Encode(true);
         } else {
             STORE_ACC();
-            acc = Encode(bool(RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator)));
+            acc = Runtime::StrictEqual::call(STACK_VALUE(lhs), accumulator);
             CHECK_EXCEPTION;
         }
     MOTH_END_INSTR(CmpStrictEqual)
@@ -1257,7 +1229,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(CmpStrictNotEqual)
         if (STACK_VALUE(lhs).rawValue() != ACC.rawValue() || ACC.isNaN()) {
             STORE_ACC();
-            acc = Encode(!RuntimeHelpers::strictEqual(STACK_VALUE(lhs), accumulator));
+            acc = Runtime::StrictNotEqual::call(STACK_VALUE(lhs), accumulator);
             CHECK_EXCEPTION;
         } else {
             acc = Encode(false);
@@ -1266,13 +1238,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(CmpIn)
         STORE_ACC();
-        acc = Runtime::method_in(engine, STACK_VALUE(lhs), accumulator);
+        acc = Runtime::In::call(engine, STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CmpIn)
 
     MOTH_BEGIN_INSTR(CmpInstanceOf)
         STORE_ACC();
-        acc = Runtime::method_instanceof(engine, STACK_VALUE(lhs), ACC);
+        acc = Runtime::Instanceof::call(engine, STACK_VALUE(lhs), ACC);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CmpInstanceOf)
 
@@ -1350,7 +1322,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
-            acc = Runtime::method_add(engine, left, accumulator);
+            acc = Runtime::Add::call(engine, left, accumulator);
             CHECK_EXCEPTION;
             traceOtherValue(function, traceSlot);
         }
@@ -1365,7 +1337,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
-            acc = Runtime::method_sub(left, accumulator);
+            acc = Runtime::Sub::call(left, accumulator);
             CHECK_EXCEPTION;
             traceOtherValue(function, traceSlot);
         }
@@ -1390,7 +1362,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
             traceDoubleValue(function, traceSlot);
         } else {
             STORE_ACC();
-            acc = Runtime::method_mul(left, accumulator);
+            acc = Runtime::Mul::call(left, accumulator);
             CHECK_EXCEPTION;
             traceOtherValue(function, traceSlot);
         }
@@ -1398,13 +1370,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
 
     MOTH_BEGIN_INSTR(Div)
         STORE_ACC();
-        acc = Runtime::method_div(STACK_VALUE(lhs), accumulator);
+        acc = Runtime::Div::call(STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(Div)
 
     MOTH_BEGIN_INSTR(Mod)
         STORE_ACC();
-        acc = Runtime::method_mod(STACK_VALUE(lhs), accumulator);
+        acc = Runtime::Mod::call(STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;
         traceValue(acc, function, traceSlot);
     MOTH_END_INSTR(Mod)
@@ -1493,7 +1465,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(ThrowOnNullOrUndefined)
 
     MOTH_BEGIN_INSTR(GetTemplateObject)
-        acc = RuntimeHelpers::getTemplateObject(function, index);
+        acc = Runtime::GetTemplateObject::call(function, index);
     MOTH_END_INSTR(GetTemplateObject)
 
     MOTH_BEGIN_INSTR(Debug)
@@ -1504,11 +1476,11 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(Debug)
 
     MOTH_BEGIN_INSTR(LoadQmlContext)
-        STACK_VALUE(result) = Runtime::method_loadQmlContext(static_cast<QV4::NoThrowEngine*>(engine));
+        STACK_VALUE(result) = Runtime::LoadQmlContext::call(engine);
     MOTH_END_INSTR(LoadQmlContext)
 
     MOTH_BEGIN_INSTR(LoadQmlImportedScripts)
-        STACK_VALUE(result) = Runtime::method_loadQmlImportedScripts(static_cast<QV4::NoThrowEngine*>(engine));
+        STACK_VALUE(result) = Runtime::LoadQmlImportedScripts::call(engine);
     MOTH_END_INSTR(LoadQmlImportedScripts)
 
     handleUnwind:

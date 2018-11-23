@@ -943,7 +943,7 @@ void BaselineAssembler::uminus()
     saveAccumulatorInFrame();
     pasm()->prepareCallWithArgCount(1);
     pasm()->passAccumulatorAsArg(0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_uMinus, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(UMinus, CallResultDestination::InAccumulator);
     checkException();
 }
 
@@ -1044,7 +1044,7 @@ void BaselineAssembler::add(int lhs)
     pasm()->passAccumulatorAsArg(2);
     pasm()->passJSSlotAsArg(lhs, 1);
     pasm()->passEngineAsArg(0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_add, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(Add, CallResultDestination::InAccumulator);
     checkException();
 
     // done.
@@ -1196,7 +1196,7 @@ void BaselineAssembler::mul(int lhs)
     pasm()->prepareCallWithArgCount(2);
     pasm()->passAccumulatorAsArg(1);
     pasm()->passJSSlotAsArg(lhs, 0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_mul, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(Mul, CallResultDestination::InAccumulator);
     checkException();
 
     // done.
@@ -1209,7 +1209,7 @@ void BaselineAssembler::div(int lhs)
     pasm()->prepareCallWithArgCount(2);
     pasm()->passAccumulatorAsArg(1);
     pasm()->passJSSlotAsArg(lhs, 0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_div, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(Div, CallResultDestination::InAccumulator);
     checkException();
 }
 
@@ -1219,7 +1219,7 @@ void BaselineAssembler::mod(int lhs)
     pasm()->prepareCallWithArgCount(2);
     pasm()->passAccumulatorAsArg(1);
     pasm()->passJSSlotAsArg(lhs, 0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_mod, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(Mod, CallResultDestination::InAccumulator);
     checkException();
 }
 
@@ -1239,7 +1239,7 @@ void BaselineAssembler::sub(int lhs)
     pasm()->prepareCallWithArgCount(2);
     pasm()->passAccumulatorAsArg(1);
     pasm()->passJSSlotAsArg(lhs, 0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_sub, CallResultDestination::InAccumulator);
+    ASM_GENERATE_RUNTIME_CALL(Sub, CallResultDestination::InAccumulator);
     checkException();
 
     // done.
@@ -1269,7 +1269,7 @@ void BaselineAssembler::cmpeqInt(int lhs)
     else
         pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
     pasm()->pushAccumulatorAsArg(0);
-    pasm()->callRuntimeUnchecked("Runtime::method_equal", (void*)Runtime::method_equal);
+    pasm()->callRuntimeUnchecked("Equal", (void*)Runtime::Equal::call);
     pasm()->saveReturnValueInAccumulator();
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
@@ -1293,7 +1293,7 @@ void BaselineAssembler::cmpneInt(int lhs)
     else
         pasm()->move(PlatformAssembler::StackPointerRegister, pasm()->registerForArg(1));
     pasm()->pushAccumulatorAsArg(0);
-    pasm()->callRuntimeUnchecked("Runtime::method_notEqual", (void*)Runtime::method_notEqual);
+    pasm()->callRuntimeUnchecked("NotEqual", (void*)Runtime::NotEqual::call);
     pasm()->saveReturnValueInAccumulator();
     if (PlatformAssembler::ArgInRegCount < 2)
         pasm()->addPtr(TrustedImm32(2 * PlatformAssembler::PointerSize), PlatformAssembler::StackPointerRegister);
@@ -1314,7 +1314,6 @@ void BaselineAssembler::cmp(int cond, CmpFunc function, const char *functionName
         pasm()->compare32(c, PlatformAssembler::ScratchRegister,
                           PlatformAssembler::AccumulatorRegisterValue,
                           PlatformAssembler::AccumulatorRegisterValue);
-        pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
         return PlatformAssembler::Jump();
     });
 
@@ -1326,60 +1325,58 @@ void BaselineAssembler::cmp(int cond, CmpFunc function, const char *functionName
 
     callRuntime(functionName, reinterpret_cast<void*>(function), CallResultDestination::InAccumulator);
     checkException();
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
 
     // done.
     done.link(pasm());
+    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
 }
 
 void BaselineAssembler::cmpeq(int lhs)
 {
-    cmp(PlatformAssembler::Equal, &Runtime::method_compareEqual,
-        "Runtime::method_compareEqual", lhs);
+    cmp(PlatformAssembler::Equal, &Runtime::CompareEqual::call,
+        "CompareEqual", lhs);
 }
 
 void BaselineAssembler::cmpne(int lhs)
 {
-    cmp(PlatformAssembler::NotEqual, &Runtime::method_compareNotEqual,
-        "Runtime::method_compareNotEqual", lhs);
+    cmp(PlatformAssembler::NotEqual, &Runtime::CompareNotEqual::call,
+        "CompareNotEqual", lhs);
 }
 
 void BaselineAssembler::cmpgt(int lhs)
 {
-    cmp(PlatformAssembler::GreaterThan, &Runtime::method_compareGreaterThan,
-        "Runtime::method_compareGreaterThan", lhs);
+    cmp(PlatformAssembler::GreaterThan, &Runtime::CompareGreaterThan::call,
+        "CompareGreaterThan", lhs);
 }
 
 void BaselineAssembler::cmpge(int lhs)
 {
-    cmp(PlatformAssembler::GreaterThanOrEqual, &Runtime::method_compareGreaterEqual,
-        "Runtime::method_compareGreaterEqual", lhs);
+    cmp(PlatformAssembler::GreaterThanOrEqual, &Runtime::CompareGreaterEqual::call,
+        "CompareGreaterEqual", lhs);
 }
 
 void BaselineAssembler::cmplt(int lhs)
 {
-    cmp(PlatformAssembler::LessThan, &Runtime::method_compareLessThan,
-        "Runtime::method_compareLessThan", lhs);
+    cmp(PlatformAssembler::LessThan, &Runtime::CompareLessThan::call,
+        "CompareLessThan", lhs);
 }
 
 void BaselineAssembler::cmple(int lhs)
 {
-    cmp(PlatformAssembler::LessThanOrEqual, &Runtime::method_compareLessEqual,
-        "Runtime::method_compareLessEqual", lhs);
+    cmp(PlatformAssembler::LessThanOrEqual, &Runtime::CompareLessEqual::call,
+        "CompareLessEqual", lhs);
 }
 
 void BaselineAssembler::cmpStrictEqual(int lhs)
 {
-    cmp(PlatformAssembler::Equal, &RuntimeHelpers::strictEqual,
+    cmp(PlatformAssembler::Equal, &Runtime::CompareStrictEqual::call,
         "RuntimeHelpers::strictEqual", lhs);
 }
 
 void BaselineAssembler::cmpStrictNotEqual(int lhs)
 {
-    cmp(PlatformAssembler::Equal, &RuntimeHelpers::strictEqual,
-        "RuntimeHelpers::strictEqual", lhs);
-    pasm()->xor32(TrustedImm32(1), PlatformAssembler::AccumulatorRegisterValue);
-    pasm()->setAccumulatorTag(QV4::Value::ValueTypeInternal::Boolean);
+    cmp(PlatformAssembler::NotEqual, &Runtime::CompareStrictNotEqual::call,
+        "RuntimeHelpers::strictNotEqual", lhs);
 }
 
 int BaselineAssembler::jump(int offset)
@@ -1481,7 +1478,7 @@ void BaselineAssembler::saveAccumulatorInFrame()
 
 static ReturnedValue TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing(CppStackFrame *frame, ExecutionEngine *engine)
 {
-    return Runtime::method_tailCall(frame, engine);
+    return Runtime::TailCall::call(frame, engine);
 }
 
 void BaselineAssembler::jsTailCall(int func, int thisObject, int argc, int argv)
@@ -1588,9 +1585,8 @@ void BaselineAssembler::pushCatchContext(int index, int name)
     pasm()->prepareCallWithArgCount(3);
     pasm()->passInt32AsArg(name, 2);
     pasm()->passInt32AsArg(index, 1);
-    pasm()->passJSSlotAsArg(CallData::Context, 0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_createCatchContext, CallResultDestination::InAccumulator);
-    pasm()->storeAccumulator(pasm()->contextAddress());
+    pasm()->passEngineAsArg(0);
+    ASM_GENERATE_RUNTIME_CALL(PushCatchContext, CallResultDestination::Ignore);
 }
 
 void BaselineAssembler::popContext()
@@ -1610,7 +1606,7 @@ void BaselineAssembler::deadTemporalZoneCheck(int offsetForSavedIP, int variable
     prepareCallWithArgCount(2);
     passInt32AsArg(variableName, 1);
     passEngineAsArg(0);
-    ASM_GENERATE_RUNTIME_CALL(Runtime::method_throwReferenceError, CallResultDestination::Ignore);
+    ASM_GENERATE_RUNTIME_CALL(ThrowReferenceError, CallResultDestination::Ignore);
     gotoCatchException();
     valueIsAliveJump.link(pasm());
 }

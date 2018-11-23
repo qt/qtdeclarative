@@ -81,17 +81,17 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
     return c;
 }
 
-Heap::CallContext *ExecutionContext::cloneBlockContext(Heap::CallContext *context)
+Heap::CallContext *ExecutionContext::cloneBlockContext(ExecutionEngine *engine,
+                                                       Heap::CallContext *callContext)
 {
-    uint nLocals = context->locals.alloc;
+    uint nLocals = callContext->locals.alloc;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * nLocals;
 
-    ExecutionEngine *v4 = context->internalClass->engine;
-    Heap::CallContext *c = v4->memoryManager->allocManaged<CallContext>(requiredMemory, context->internalClass);
-    memcpy(c, context, requiredMemory);
+    Heap::CallContext *c = engine->memoryManager->allocManaged<CallContext>(
+                requiredMemory, callContext->internalClass);
+    memcpy(c, callContext, requiredMemory);
 
     return c;
-
 }
 
 Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
@@ -128,7 +128,7 @@ Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
     return c;
 }
 
-Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with)
+Heap::ExecutionContext *ExecutionContext::newWithContext(Heap::Object *with) const
 {
     Heap::ExecutionContext *c = engine()->memoryManager->alloc<ExecutionContext>(Heap::ExecutionContext::Type_WithContext);
     c->outer.set(engine(), d());

@@ -65,7 +65,7 @@ namespace JIT {
 
 #define GENERATE_RUNTIME_CALL(function, destination) \
     callRuntime(JIT_STRINGIFY(function), \
-                reinterpret_cast<void *>(&function), \
+                reinterpret_cast<void *>(&Runtime::function::call), \
                 destination)
 #define GENERATE_TAIL_CALL(function) \
     tailCallRuntime(JIT_STRINGIFY(function), \

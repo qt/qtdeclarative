@@ -76,7 +76,7 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
             ScopedFunctionObject adder(scope, a->get(ScopedString(scope, scope.engine->newString(QString::fromLatin1("add")))));
             if (!adder)
                 return scope.engine->throwTypeError();
-            ScopedObject iter(scope, Runtime::method_getIterator(scope.engine, iterable, true));
+            ScopedObject iter(scope, Runtime::GetIterator::call(scope.engine, iterable, true));
             CHECK_EXCEPTION();
             if (!iter)
                 return a.asReturnedValue();
@@ -84,7 +84,7 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
             Value *nextValue = scope.alloc(1);
             ScopedValue done(scope);
             forever {
-                done = Runtime::method_iteratorNext(scope.engine, iter, nextValue);
+                done = Runtime::IteratorNext::call(scope.engine, iter, nextValue);
                 CHECK_EXCEPTION();
                 if (done->toBoolean())
                     return a.asReturnedValue();
@@ -92,7 +92,7 @@ ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv,
                 adder->call(a, nextValue, 1);
                 if (scope.engine->hasException) {
                     ScopedValue falsey(scope, Encode(false));
-                    return Runtime::method_iteratorClose(scope.engine, iter, falsey);
+                    return Runtime::IteratorClose::call(scope.engine, iter, falsey);
                 }
             }
         }

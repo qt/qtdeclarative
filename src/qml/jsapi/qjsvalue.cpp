@@ -1042,7 +1042,7 @@ bool QJSValue::equals(const QJSValue& other) const
     if (!ov)
         return other.equals(*this);
 
-    return Runtime::method_compareEqual(*v, *ov);
+    return Runtime::CompareEqual::call(*v, *ov);
 }
 
 /*!

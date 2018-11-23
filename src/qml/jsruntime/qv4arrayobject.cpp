@@ -217,7 +217,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
         // Item iteration supported, so let's go ahead and try use that.
         ScopedObject a(createObjectFromCtorOrArray(scope, thatCtor, false, 0));
         CHECK_EXCEPTION();
-        ScopedObject iterator(scope, Runtime::method_getIterator(scope.engine, itemsObject, true));
+        ScopedObject iterator(scope, Runtime::GetIterator::call(scope.engine, itemsObject, true));
         CHECK_EXCEPTION(); // symbol_iterator threw; whoops.
         if (!iterator) {
             return scope.engine->throwTypeError(); // symbol_iterator wasn't an object.
@@ -234,11 +234,11 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
             if (k > (static_cast<qint64>(1) << 53) - 1) {
                 ScopedValue falsey(scope, Encode(false));
                 ScopedValue error(scope, scope.engine->throwTypeError());
-                return Runtime::method_iteratorClose(scope.engine, iterator, falsey);
+                return Runtime::IteratorClose::call(scope.engine, iterator, falsey);
             }
 
             // Retrieve the next value. If the iteration ends, we're done here.
-            done = Value::fromReturnedValue(Runtime::method_iteratorNext(scope.engine, iterator, nextValue));
+            done = Value::fromReturnedValue(Runtime::IteratorNext::call(scope.engine, iterator, nextValue));
             CHECK_EXCEPTION();
             if (done->toBoolean()) {
                 if (ArrayObject *ao = a->as<ArrayObject>()) {
@@ -255,7 +255,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);
                 if (scope.engine->hasException)
-                    return Runtime::method_iteratorClose(scope.engine, iterator, Value::fromBoolean(false));
+                    return Runtime::IteratorClose::call(scope.engine, iterator, Value::fromBoolean(false));
             } else {
                 mappedValue = *nextValue;
             }
@@ -269,7 +269,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
 
             if (scope.engine->hasException) {
                 ScopedValue falsey(scope, Encode(false));
-                return Runtime::method_iteratorClose(scope.engine, iterator, falsey);
+                return Runtime::IteratorClose::call(scope.engine, iterator, falsey);
             }
 
             k++;
@@ -385,7 +385,7 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
         v = instance->get(k);
         if (v->isNullOrUndefined())
             continue;
-        v = Runtime::method_callElement(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
+        v = Runtime::CallElement::call(scope.engine, v, *scope.engine->id_toLocaleString(), nullptr, 0);
         s = v->toString(scope.engine);
         if (scope.hasException())
             return Encode::undefined();
