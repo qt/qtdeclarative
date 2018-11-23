@@ -45,7 +45,8 @@ QQuickColor::QQuickColor(QObject *parent) :
 
 QColor QQuickColor::transparent(const QColor &color, qreal opacity) const
 {
-    return QColor(color.red(), color.green(), color.blue(), qBound(0.0, opacity, 1.0) * 255);
+    return QColor(color.red(), color.green(), color.blue(),
+                  int(qreal(255) * qBound(qreal(0), opacity, qreal(1))));
 }
 
 QColor QQuickColor::blend(const QColor &a, const QColor &b, qreal factor) const

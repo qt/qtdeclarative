@@ -191,13 +191,13 @@ qreal QQuickDialPrivate::linearPositionAt(const QPointF &point) const
         dragDistance = point.y() - pressPoint.y();
     }
     const qreal normalisedDifference = dragDistance / dragArea;
-    return qBound(0.0, positionBeforePress - normalisedDifference, 1.0);
+    return qBound(qreal(0), positionBeforePress - normalisedDifference, qreal(1));
 }
 
 void QQuickDialPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickDial);
-    pos = qBound<qreal>(0.0, pos, 1.0);
+    pos = qBound<qreal>(qreal(0), pos, qreal(1));
     if (qFuzzyCompare(position, pos))
         return;
 
@@ -219,7 +219,7 @@ void QQuickDialPrivate::updatePosition()
 
 bool QQuickDialPrivate::isLargeChange(const QPointF &eventPos, qreal proposedPosition) const
 {
-    return qAbs(proposedPosition - position) >= 0.5 && eventPos.y() >= height / 2;
+    return qAbs(proposedPosition - position) >= qreal(0.5) && eventPos.y() >= height / 2;
 }
 
 bool QQuickDialPrivate::isHorizontalOrVertical() const

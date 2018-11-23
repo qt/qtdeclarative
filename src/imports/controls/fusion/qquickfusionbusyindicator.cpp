@@ -82,7 +82,7 @@ void QQuickFusionBusyIndicator::paint(QPainter *painter)
     const qreal sz = qMin(w, h);
     const qreal dx = (w - sz) / 2;
     const qreal dy = (h - sz) / 2;
-    const int hpw = qRound(qMax(1.0, sz / 14)) & -1;
+    const int hpw = qRound(qMax(qreal(1), sz / 14)) & -1;
     const int pw = 2 * hpw;
     const QRectF bounds(dx + hpw, dy + hpw, sz - pw - 1, sz - pw - 1);
 
