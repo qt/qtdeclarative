@@ -59,11 +59,14 @@ void Heap::SetCtor::init(QV4::ExecutionContext *scope)
     Heap::FunctionObject::init(scope, QStringLiteral("Set"));
 }
 
-ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *, bool isWeak)
+ReturnedValue WeakSetCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget, bool isWeak)
 {
     Scope scope(f);
     Scoped<SetObject> a(scope, scope.engine->memoryManager->allocate<SetObject>());
-    if (isWeak)
+    bool protoSet = false;
+    if (newTarget)
+        protoSet = a->setProtoFromNewTarget(newTarget);
+    if (!protoSet && isWeak)
         a->setPrototypeOf(scope.engine->weakSetPrototype());
     a->d()->isWeakSet = isWeak;
 

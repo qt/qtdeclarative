@@ -31,6 +31,9 @@
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#if QT_CONFIG(process)
+#include <QtCore/qprocess.h>
+#endif
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
 #include "../../shared/testhttpserver.h"
@@ -50,6 +53,8 @@ private slots:
     void keepRegistrations();
     void intercept();
     void redirect();
+    void qmlSingletonWithinModule();
+    void multiSingletonModule();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -426,6 +431,57 @@ void tst_QQMLTypeLoader::redirect()
 
     QObject *object = component.create();
     QTRY_COMPARE(object->property("xy").toInt(), 323232);
+}
+
+void tst_QQMLTypeLoader::qmlSingletonWithinModule()
+{
+    qmlClearTypeRegistrations();
+    QQmlEngine engine;
+    qmlRegisterSingletonType(testFileUrl("Singleton.qml"), "modulewithsingleton", 1, 0, "Singleton");
+
+    QQmlComponent component(&engine, testFileUrl("singletonuser.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QVERIFY(obj->property("ok").toBool());
+}
+
+void tst_QQMLTypeLoader::multiSingletonModule()
+{
+    qmlClearTypeRegistrations();
+    QQmlEngine engine;
+    engine.addImportPath(testFile("imports"));
+
+    qmlRegisterSingletonType(testFileUrl("CppRegisteredSingleton1.qml"), "cppsingletonmodule",
+                             1, 0, "CppRegisteredSingleton1");
+    qmlRegisterSingletonType(testFileUrl("CppRegisteredSingleton2.qml"), "cppsingletonmodule",
+                             1, 0, "CppRegisteredSingleton2");
+
+    QQmlComponent component(&engine, testFileUrl("multisingletonuser.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QVERIFY(obj->property("ok").toBool());
+
+#if QT_CONFIG(process)
+    const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
+    if (qEnvironmentVariableIsSet(skipKey))
+        return;
+    for (int i = 0; i < 5; ++i) {
+        QProcess child;
+        child.setProgram(QCoreApplication::applicationFilePath());
+        child.setArguments(QStringList(QLatin1String("multiSingletonModule")));
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert(QLatin1String("QT_LOGGING_RULES"), QLatin1String("qt.qml.diskcache.debug=true"));
+        env.insert(QLatin1String(skipKey), QLatin1String("1"));
+        child.setProcessEnvironment(env);
+        child.start();
+        QVERIFY(child.waitForFinished());
+        QCOMPARE(child.exitCode(), 0);
+        QVERIFY(!child.readAllStandardOutput().contains("Checksum mismatch for cached version"));
+        QVERIFY(!child.readAllStandardError().contains("Checksum mismatch for cached version"));
+    }
+#endif
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

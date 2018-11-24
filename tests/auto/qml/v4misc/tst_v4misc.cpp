@@ -40,6 +40,9 @@ private slots:
 
     void parserMisc_data();
     void parserMisc();
+
+    void subClassing_data();
+    void subClassing();
 };
 
 void tst_v4misc::tdzOptimizations_data()
@@ -128,6 +131,46 @@ void tst_v4misc::parserMisc()
     QJSValue result = engine.evaluate(QString::fromUtf8(QTest::currentDataTag()));
     QVERIFY(result.isError());
     QCOMPARE(result.toString(), error);
+}
+
+void tst_v4misc::subClassing_data()
+{
+    QTest::addColumn<QString>("script");
+
+    QString code(
+                "class Foo extends %1 {"
+                "    constructor() { super(); this.reset(); }"
+                "    reset() { }"
+                "}"
+                "new Foo();");
+
+
+    QTest::newRow("Array") << code.arg("Array");
+    QTest::newRow("Boolean") << code.arg("Boolean");
+    QTest::newRow("Date") << code.arg("Date");
+    QTest::newRow("Function") << code.arg("Function");
+    QTest::newRow("Number") << code.arg("Number");
+    QTest::newRow("Map") << code.arg("Map");
+    QTest::newRow("Promise") << QString(
+            "class Foo extends Promise {"
+            "    constructor() { super(Function()); this.reset(); }"
+            "    reset() { }"
+            "}"
+            "new Foo();");
+    QTest::newRow("RegExp") << code.arg("RegExp");
+    QTest::newRow("Set") << code.arg("Set");
+    QTest::newRow("String") << code.arg("String");
+    QTest::newRow("WeakMap") << code.arg("WeakMap");
+    QTest::newRow("WeakSet") << code.arg("WeakSet");
+}
+
+void tst_v4misc::subClassing()
+{
+    QFETCH(QString, script);
+
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(script);
+    QVERIFY(!result.isError());
 }
 
 QTEST_MAIN(tst_v4misc);

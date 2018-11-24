@@ -364,7 +364,7 @@ void Heap::RejectWrapper::init()
 }
 
 
-ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *)
+ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
 {
     Scope scope(f);
 
@@ -395,6 +395,9 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
         a->d()->state = Heap::PromiseObject::Rejected;
         a->d()->resolution.set(scope.engine, Value::fromReturnedValue(scope.engine->catchException()));
     }
+
+    if (newTarget)
+        a->setProtoFromNewTarget(newTarget);
 
     return a->asReturnedValue();
 }

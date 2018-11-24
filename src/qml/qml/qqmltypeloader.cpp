@@ -2723,10 +2723,6 @@ void QQmlTypeData::resolveTypes()
         }
     }
 
-    std::stable_sort(m_compositeSingletons.begin(), m_compositeSingletons.end(), [](const TypeReference &lhs, const TypeReference &rhs){
-        return lhs.qualifiedName() < rhs.qualifiedName();
-    });
-
     for (QV4::CompiledData::TypeReferenceMap::ConstIterator unresolvedRef = m_typeReferences.constBegin(), end = m_typeReferences.constEnd();
          unresolvedRef != end; ++unresolvedRef) {
 

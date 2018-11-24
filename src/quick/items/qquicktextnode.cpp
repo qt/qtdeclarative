@@ -205,7 +205,7 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
 
             QTextBlock block = textFrame->firstCursorPosition().block();
             engine.setCurrentLine(block.layout()->lineForTextPosition(pos - block.position()));
-            engine.addTextObject(rect.topLeft(), format, QQuickTextNodeEngine::Unselected, textDocument,
+            engine.addTextObject(block, rect.topLeft(), format, QQuickTextNodeEngine::Unselected, textDocument,
                                  pos, textFrame->frameFormat().position());
         } else {
             QTextFrame::iterator it = textFrame->begin();

@@ -75,6 +75,7 @@ public:
 
     void updateBaseline(qreal baseline, qreal dy);
     void updateSize();
+    void signalSizeChange(const QSizeF &previousSize);
     void updateLayout();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickText::HAlignment, bool forceAlign = false);

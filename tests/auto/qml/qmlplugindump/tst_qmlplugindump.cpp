@@ -45,6 +45,8 @@ private slots:
     void initTestCase();
     void builtins();
     void singleton();
+    void compositeWithinSingleton();
+
     void plugin_data();
     void plugin();
 
@@ -115,6 +117,21 @@ void tst_qmlplugindump::singleton()
 
     const QString &result = dumper.readAllStandardOutput();
     QVERIFY2(result.contains(QLatin1String("exports: [\"Singleton 1.0\"]")), qPrintable(result));
+    QVERIFY2(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")), qPrintable(result));
+}
+
+void tst_qmlplugindump::compositeWithinSingleton()
+{
+    QProcess dumper;
+    QStringList args;
+    args << QLatin1String("dumper.CompositeWithinSingleton") << QLatin1String("1.0")
+         << QLatin1String(QT_QMLTEST_DIR "/data");
+    dumper.start(qmlplugindumpPath, args);
+    QVERIFY2(dumper.waitForStarted(), qPrintable(dumper.errorString()));
+    QVERIFY2(dumper.waitForFinished(), qPrintable(dumper.errorString()));
+
+    const QString &result = dumper.readAllStandardOutput();
+    QVERIFY2(result.contains(QLatin1String("exports: [\"Composite 1.0\"]")), qPrintable(result));
     QVERIFY2(result.contains(QLatin1String("exportMetaObjectRevisions: [0]")), qPrintable(result));
 }
 

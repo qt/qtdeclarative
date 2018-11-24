@@ -986,6 +986,21 @@ const FunctionObject *Object::speciesConstructor(Scope &scope, const FunctionObj
     return static_cast<const FunctionObject *>(f);
 }
 
+bool Object::setProtoFromNewTarget(const Value *newTarget)
+{
+    if (!newTarget || newTarget->isUndefined())
+        return false;
+
+    Q_ASSERT(newTarget->isFunctionObject());
+    Scope scope(this);
+    ScopedObject proto(scope, static_cast<const FunctionObject *>(newTarget)->protoProperty());
+    if (proto) {
+        setPrototypeOf(proto);
+        return true;
+    }
+    return false;
+}
+
 
 DEFINE_OBJECT_VTABLE(ArrayObject);
 

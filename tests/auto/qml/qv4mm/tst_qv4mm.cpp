@@ -30,6 +30,7 @@
 #include <QQmlEngine>
 #include <QLoggingCategory>
 #include <private/qv4mm_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 class tst_qv4mm : public QObject
 {
@@ -37,6 +38,7 @@ class tst_qv4mm : public QObject
 
 private slots:
     void gcStats();
+    void multiWrappedQObjects();
 };
 
 void tst_qv4mm::gcStats()
@@ -44,6 +46,44 @@ void tst_qv4mm::gcStats()
     QLoggingCategory::setFilterRules("qt.qml.gc.*=true");
     QQmlEngine engine;
     engine.collectGarbage();
+}
+
+void tst_qv4mm::multiWrappedQObjects()
+{
+    QV4::ExecutionEngine engine1;
+    QV4::ExecutionEngine engine2;
+    {
+        QObject object;
+        for (int i = 0; i < 10; ++i)
+            QV4::QObjectWrapper::wrap(i % 2 ? &engine1 : &engine2, &object);
+
+        QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+        QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+        {
+            QV4::WeakValue value;
+            value.set(&engine1, QV4::QObjectWrapper::wrap(&engine1, &object));
+        }
+
+        QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 1);
+        QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+
+        // Moves the additional WeakValue from m_multiplyWrappedQObjects to
+        // m_pendingFreedObjectWrapperValue. It's still alive after all.
+        engine1.memoryManager->runGC();
+        QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 2);
+
+        // engine2 doesn't own the object as engine1 was the first to wrap it above.
+        // Therefore, no effect here.
+        engine2.memoryManager->runGC();
+        QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+    }
+
+    // Clears m_pendingFreedObjectWrapperValue. Now it's really dead.
+    engine1.memoryManager->runGC();
+    QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+
+    engine2.memoryManager->runGC();
+    QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
 }
 
 QTEST_MAIN(tst_qv4mm)

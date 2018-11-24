@@ -373,6 +373,8 @@ public:
     bool isArray() const;
     const FunctionObject *speciesConstructor(Scope &scope, const FunctionObject *defaultConstructor) const;
 
+    bool setProtoFromNewTarget(const Value *newTarget);
+
 protected:
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver,bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);

@@ -7,7 +7,7 @@ qtConfig(qml-network): \
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
 msvc:equals(QT_ARCH, i386): QMAKE_LFLAGS += /BASE:0x66000000
-win32-msvc*:DEFINES *= _CRT_SECURE_NO_WARNINGS
+msvc:DEFINES *= _CRT_SECURE_NO_WARNINGS
 win32:!winrt:LIBS += -lshell32
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
@@ -47,7 +47,7 @@ exists("qqml_enable_gcov") {
 }
 
 # QTBUG-55238, disable new optimizer for MSVC 2015/Update 3.
-release:win32-msvc*:equals(QT_CL_MAJOR_VERSION, 19):equals(QT_CL_MINOR_VERSION, 00): \
+release:msvc:equals(QT_CL_MAJOR_VERSION, 19):equals(QT_CL_MINOR_VERSION, 00): \
         greaterThan(QT_CL_PATCH_VERSION, 24212):QMAKE_CXXFLAGS += -d2SSAOptimizer-
 
 QMAKE_DOCS = $$PWD/doc/qtqml.qdocconf

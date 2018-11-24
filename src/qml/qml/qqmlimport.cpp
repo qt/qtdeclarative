@@ -511,6 +511,20 @@ QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSi
         findCompositeSingletons(set, compositeSingletons, baseUrl());
     }
 
+    std::stable_sort(compositeSingletons.begin(), compositeSingletons.end(),
+                     [](const QQmlImports::CompositeSingletonReference &lhs,
+                        const QQmlImports::CompositeSingletonReference &rhs) {
+        if (lhs.prefix != rhs.prefix)
+            return lhs.prefix < rhs.prefix;
+
+        if (lhs.typeName != rhs.typeName)
+            return lhs.typeName < rhs.typeName;
+
+        return lhs.majorVersion != rhs.majorVersion
+            ? lhs.majorVersion < rhs.majorVersion
+            : lhs.minorVersion < rhs.minorVersion;
+    });
+
     return compositeSingletons;
 }
 
@@ -744,8 +758,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
     if (majversion >= 0 && minversion >= 0) {
         QQmlType t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
         if (t.isValid()) {
-            if (vmajor) *vmajor = majversion;
-            if (vminor) *vminor = minversion;
+            if (vmajor)
+                *vmajor = majversion;
+            if (vminor)
+                *vminor = minversion;
             if (type_return)
                 *type_return = t;
             return true;
@@ -804,10 +820,13 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         if (candidate != end) {
             if (!base) // ensure we have a componentUrl
                 componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
-            int major = vmajor ? *vmajor : -1;
-            int minor = vminor ? *vminor : -1;
             QQmlType returnType = fetchOrCreateTypeForUrl(componentUrl, type, isCompositeSingleton,
-                                                          nullptr, major, minor);
+                                                          nullptr, candidate->majorVersion,
+                                                          candidate->minorVersion);
+            if (vmajor)
+                *vmajor = candidate->majorVersion;
+            if (vminor)
+                *vminor = candidate->minorVersion;
             if (type_return)
                 *type_return = returnType;
             return returnType.isValid();

@@ -160,6 +160,8 @@ private slots:
 
     void fontInfo();
 
+    void initialContentHeight();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -4382,6 +4384,18 @@ void tst_qquicktext::fontInfo()
     QVERIFY(copy);
     QCOMPARE(copy->font().family(), QFontInfo(QFont()).family());
     QVERIFY(copy->font().pixelSize() < 1000);
+}
+
+void tst_qquicktext::initialContentHeight()
+{
+    QQmlComponent component(&engine, testFile("contentHeight.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> object(component.create());
+    QObject *root = object.data();
+    QVERIFY(root);
+    QQuickText *text = qobject_cast<QQuickText *>(root);
+    QVERIFY(text);
+    QCOMPARE(text->height(), text->contentHeight());
 }
 
 void tst_qquicktext::implicitSizeChangeRewrap()

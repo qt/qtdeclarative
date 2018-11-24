@@ -80,7 +80,7 @@
   used to test if a value is of a certain type. The methods named
   toT() (e.g. toBool(), toString()) can be used to convert a
   QJSValue to another type. You can also use the generic
-  QJSValue_cast() function.
+  qjsvalue_cast() function.
 
   Object values have zero or more properties which are themselves
   QJSValues. Use setProperty() to set a property of an object, and

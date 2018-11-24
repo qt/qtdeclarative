@@ -290,7 +290,14 @@ public:
     Iterator end() { return QHash<QObject*, QV4::WeakValue>::end(); }
 
     void insert(QObject *key, Heap::Object *value);
-    ReturnedValue value(QObject *key) const { return QHash<QObject*, QV4::WeakValue>::value(key).value(); }
+    ReturnedValue value(QObject *key) const
+    {
+        ConstIterator it = find(key);
+        return it == end()
+                ? QV4::WeakValue().value()
+                : it->value();
+    }
+
     Iterator erase(Iterator it);
     void remove(QObject *key);
     void mark(QObject *key, MarkStack *markStack);

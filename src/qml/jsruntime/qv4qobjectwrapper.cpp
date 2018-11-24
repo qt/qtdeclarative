@@ -2226,9 +2226,7 @@ void QmlSignalHandler::initProto(ExecutionEngine *engine)
 
 void MultiplyWrappedQObjectMap::insert(QObject *key, Heap::Object *value)
 {
-    QV4::WeakValue v;
-    v.set(value->internalClass->engine, value);
-    QHash<QObject*, QV4::WeakValue>::insert(key, v);
+    QHash<QObject*, QV4::WeakValue>::operator[](key).set(value->internalClass->engine, value);
     connect(key, SIGNAL(destroyed(QObject*)), this, SLOT(removeDestroyedObject(QObject*)));
 }
 

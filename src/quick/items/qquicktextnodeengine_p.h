@@ -179,7 +179,7 @@ public:
                 const QVarLengthArray<QTextLayout::FormatRange> &colorChanges,
                 int textPos, int fragmentEnd,
                 int selectionStart, int selectionEnd);
-    void addTextObject(const QPointF &position, const QTextCharFormat &format,
+    void addTextObject(const QTextBlock &block, const QPointF &position, const QTextCharFormat &format,
                        SelectionState selectionState,
                        QTextDocument *textDocument, int pos,
                        QTextFrameFormat::Position layoutPosition = QTextFrameFormat::InFlow);
