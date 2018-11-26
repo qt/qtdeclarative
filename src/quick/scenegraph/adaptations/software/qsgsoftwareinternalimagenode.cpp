@@ -99,13 +99,6 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
     xTarget.resize(columns + 1);
     yTarget.resize(rows + 1);
 
-    bool oldAA = painter->testRenderHint(QPainter::Antialiasing);
-    if (painter->paintEngine()->type() != QPaintEngine::OpenGL
-        && painter->paintEngine()->type() != QPaintEngine::OpenGL2
-        && oldAA && painter->combinedTransform().type() != QTransform::TxNone) {
-        painter->setRenderHint(QPainter::Antialiasing, false);
-    }
-
     xTarget[0] = targetRect.left();
     xTarget[1] = targetCenterLeft;
     xTarget[columns - 1] = targetCenterRight;
@@ -311,9 +304,6 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
         painter->drawPixmapFragments(opaqueData.data(), opaqueData.size(), pixmap, QPainter::OpaqueHint);
     if (translucentData.size())
         painter->drawPixmapFragments(translucentData.data(), translucentData.size(), pixmap);
-
-    if (oldAA)
-        painter->setRenderHint(QPainter::Antialiasing, true);
 }
 
 } // QSGSoftwareHelpers namespace
@@ -464,6 +454,8 @@ static Qt::TileRule getTileRule(qreal factor)
 void QSGSoftwareInternalImageNode::paint(QPainter *painter)
 {
     painter->setRenderHint(QPainter::SmoothPixmapTransform, m_smooth);
+    // Disable antialiased clipping. It causes transformed tiles to have gaps.
+    painter->setRenderHint(QPainter::Antialiasing, false);
 
     const QPixmap &pm = m_mirror || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
 
@@ -493,6 +485,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
         painter->drawPixmap(m_targetRect, pm, sr);
     }
 }
+
 
 QRectF QSGSoftwareInternalImageNode::rect() const
 {
