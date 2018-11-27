@@ -3285,14 +3285,7 @@ QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
     if (hasInlineSourceCode)
         return QDateTime();
 
-    QDateTime timeStamp = fileInfo.lastModified();
-    if (timeStamp.isValid())
-        return timeStamp;
-
-    static QDateTime appTimeStamp;
-    if (!appTimeStamp.isValid())
-        appTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
-    return appTimeStamp;
+    return fileInfo.lastModified();
 }
 
 bool QQmlDataBlob::SourceCodeData::exists() const
