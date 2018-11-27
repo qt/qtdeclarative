@@ -24,6 +24,7 @@ contains(CMAKE_BIN_DIR, "^\\.\\./.*") {
 
 load(qt_build_paths)
 
+equals(QMAKE_HOST.os, Windows): CMAKE_BIN_SUFFIX = ".exe"
 cmake_config_file.input = $$PWD/Qt5QuickCompilerConfig.cmake.in
 cmake_config_file.output = $$MODULE_BASE_OUTDIR/lib/cmake/Qt5QuickCompiler/Qt5QuickCompilerConfig.cmake
 QMAKE_SUBSTITUTES += cmake_config_file
