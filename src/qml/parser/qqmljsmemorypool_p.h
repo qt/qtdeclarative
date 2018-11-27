@@ -88,7 +88,7 @@ public:
 
     inline void *allocate(size_t size)
     {
-        size = (size + 7) & ~7;
+        size = (size + 7) & ~size_t(7);
         if (Q_LIKELY(_ptr && (_ptr + size < _end))) {
             void *addr = _ptr;
             _ptr += size;
@@ -113,7 +113,9 @@ public:
 private:
     Q_NEVER_INLINE void *allocate_helper(size_t size)
     {
-        Q_ASSERT(size < BLOCK_SIZE);
+        size_t currentBlockSize = DEFAULT_BLOCK_SIZE;
+        while (Q_UNLIKELY(size >= currentBlockSize))
+            currentBlockSize *= 2;
 
         if (++_blockCount == _allocatedBlocks) {
             if (! _allocatedBlocks)
@@ -121,7 +123,7 @@ private:
             else
                 _allocatedBlocks *= 2;
 
-            _blocks = (char **) realloc(_blocks, sizeof(char *) * _allocatedBlocks);
+            _blocks = reinterpret_cast<char **>(realloc(_blocks, sizeof(char *) * size_t(_allocatedBlocks)));
             Q_CHECK_PTR(_blocks);
 
             for (int index = _blockCount; index < _allocatedBlocks; ++index)
@@ -131,12 +133,12 @@ private:
         char *&block = _blocks[_blockCount];
 
         if (! block) {
-            block = (char *) malloc(BLOCK_SIZE);
+            block = reinterpret_cast<char *>(malloc(currentBlockSize));
             Q_CHECK_PTR(block);
         }
 
         _ptr = block;
-        _end = _ptr + BLOCK_SIZE;
+        _end = _ptr + currentBlockSize;
 
         void *addr = _ptr;
         _ptr += size;
@@ -153,7 +155,7 @@ private:
 
     enum
     {
-        BLOCK_SIZE = 8 * 1024,
+        DEFAULT_BLOCK_SIZE = 8 * 1024,
         DEFAULT_BLOCK_COUNT = 8
     };
 };
