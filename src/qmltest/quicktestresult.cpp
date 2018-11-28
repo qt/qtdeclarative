@@ -828,7 +828,7 @@ int QuickTestResult::exitCode()
 #endif
 }
 
+QT_END_NAMESPACE
+
 #include "quicktestresult.moc"
 #include "moc_quicktestresult_p.cpp"
-
-QT_END_NAMESPACE
