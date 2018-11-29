@@ -53,7 +53,7 @@
 #endif
 #include <private/qsgmaterialshader_p.h>
 
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && defined(__GLIBC__)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && defined(__GLIBC__) && !defined(__UCLIBC__)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
