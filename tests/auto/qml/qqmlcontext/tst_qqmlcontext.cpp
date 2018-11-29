@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QDebug>
+#include <QTimer>
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQmlComponent>
@@ -67,6 +68,8 @@ private slots:
     void qtbug_49232();
     void contextViaClosureAfterDestruction();
     void contextLeak();
+
+    void outerContextObject();
 
 private:
     QQmlEngine engine;
@@ -813,6 +816,61 @@ void tst_qqmlcontext::contextLeak()
     // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
     // Make sure that context does not leak.
     QVERIFY(scriptContext.isNull());
+}
+
+
+static bool buildObjectList(QQmlContext *ctxt)
+{
+    static QHash<QObject *, QString> deletedObjects;
+    QQmlContextData *p = QQmlContextData::get(ctxt);
+    QObject *object = p->contextObject;
+    if (object) {
+        // If the object was actually deleted this is likely to crash in one way or another.
+        // Either the memory is still intact, then we will probably find the objectName, or it is
+        // not, then the connect() below is likely to fail.
+        if (deletedObjects.contains(object) && deletedObjects[object] == object->objectName())
+            return false;
+        QObject::connect(object, &QObject::destroyed, [object]() {
+            object->setObjectName(QString::number(deletedObjects.size()));
+            deletedObjects.insert(object, object->objectName());
+        });
+    }
+
+    QQmlContextData *child = p->childContexts;
+    while (child) {
+        if (!buildObjectList(child->asQQmlContext()))
+            return false;
+        child = child->nextChild;
+    }
+
+    return true;
+}
+
+void tst_qqmlcontext::outerContextObject()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl("outerContextObject.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    int iterations = 0;
+    QTimer timer;
+    timer.setInterval(1);
+    QObject::connect(&timer, &QTimer::timeout, &engine, [&]() {
+        if (!buildObjectList(engine.rootContext())) {
+            iterations = 100;
+            timer.stop();
+            QFAIL("Deleted object found as context object");
+        } else {
+            ++iterations;
+        }
+    });
+    timer.start();
+
+    QTRY_VERIFY(iterations >= 100);
 }
 
 QTEST_MAIN(tst_qqmlcontext)
