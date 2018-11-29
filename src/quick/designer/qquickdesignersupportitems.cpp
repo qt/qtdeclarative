@@ -192,19 +192,19 @@ static bool isCrashingType(const QQmlType &type)
 {
     QString name = type.qmlTypeName();
 
-    if (type.qmlTypeName() == QLatin1String("QtMultimedia/MediaPlayer"))
+    if (name == QLatin1String("QtMultimedia/MediaPlayer"))
         return true;
 
-    if (type.qmlTypeName() == QLatin1String("QtMultimedia/Audio"))
+    if (name == QLatin1String("QtMultimedia/Audio"))
         return true;
 
-    if (type.qmlTypeName() == QLatin1String("QtQuick.Controls/MenuItem"))
+    if (name == QLatin1String("QtQuick.Controls/MenuItem"))
         return true;
 
-    if (type.qmlTypeName() == QLatin1String("QtQuick.Controls/Menu"))
+    if (name == QLatin1String("QtQuick.Controls/Menu"))
         return true;
 
-    if (type.qmlTypeName() == QLatin1String("QtQuick/Timer"))
+    if (name == QLatin1String("QtQuick/Timer"))
         return true;
 
     return false;

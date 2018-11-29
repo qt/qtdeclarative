@@ -1138,8 +1138,7 @@ int main(int argc, char *argv[])
             QRegularExpressionMatchIterator i = re.globalMatch(merge[1]);
             while (i.hasNext()) {
                 QRegularExpressionMatch m = i.next();
-                QString d = m.captured(1);
-                mergeDependencies  << m.captured(1);
+                mergeDependencies << m.captured(1);
             }
             mergeComponents = merge [2];
         }

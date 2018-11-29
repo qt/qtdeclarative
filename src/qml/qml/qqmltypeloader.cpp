@@ -1891,8 +1891,6 @@ bool QQmlTypeLoader::fileExists(const QString &path, const QString &file)
     if (!fileSet)
         return false;
 
-    QString absoluteFilePath;
-
     bool *value = fileSet->object(file);
     if (value) {
         return *value;

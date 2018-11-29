@@ -345,7 +345,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         for (int i = 0; i < compiledFiles.count(); ++i) {
             const QString compiledFile = compiledFiles.at(i);
             const QString ns = symbolNamespaceForPath(compiledFile);
-            stream << "namespace " << symbolNamespaceForPath(compiledFile) << " { \n";
+            stream << "namespace " << ns << " { \n";
             stream << "    extern const unsigned char qmlData[];\n";
             stream << "    const QQmlPrivate::CachedQmlUnit unit = {\n";
             stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), nullptr, nullptr\n";

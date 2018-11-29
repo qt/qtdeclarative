@@ -2493,9 +2493,6 @@ bool Codegen::visit(ObjectPattern *ast)
 
     TailCallBlocker blockTailCalls(this);
 
-    QVector<QPair<Reference, ObjectPropertyValue>> computedProperties;
-    QMap<QString, ObjectPropertyValue> valueMap;
-
     RegisterScope scope(this);
 
     QStringList members;

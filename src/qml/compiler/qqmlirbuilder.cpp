@@ -2514,8 +2514,6 @@ QmlIR::Object *IRLoader::loadObject(const QV4::CompiledData::Object *serializedO
         f->location = compiledFunction->location;
         f->nameIndex = compiledFunction->nameIndex;
 
-        const QString name = unit->stringAtInternal(compiledFunction->nameIndex);
-
         f->formals.allocate(pool, int(compiledFunction->nFormals));
         const quint32_le *formalNameIdx = compiledFunction->formalsTable();
         for (uint i = 0; i < compiledFunction->nFormals; ++i, ++formalNameIdx)
