@@ -61,7 +61,7 @@ void tst_v4misc::tdzOptimizations()
     QFETCH(QString, scriptToCompile);
 
     QV4::ExecutionEngine v4;
-    QV4::Script script(&v4, nullptr, scriptToCompile);
+    QV4::Script script(&v4, nullptr, /*parse as binding*/false, scriptToCompile);
     script.parse();
     QVERIFY(!v4.hasException);
 
