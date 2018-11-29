@@ -220,10 +220,6 @@ public:
     void startInstruction(Moth::Instr::Type instr) override;
     void endInstruction(Moth::Instr::Type instr) override;
 
-protected:
-    int absoluteOffsetForJump(int relativeOffset) const
-    { return nextInstructionOffset() + relativeOffset; }
-
 private:
     QV4::Function *function;
     QScopedPointer<BaselineAssembler> as;

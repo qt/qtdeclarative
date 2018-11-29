@@ -99,6 +99,8 @@ public:
 
     int currentInstructionOffset() const { return _currentOffset; }
     int nextInstructionOffset() const { return _nextOffset; }
+    int absoluteOffset(int relativeOffset) const
+    { return nextInstructionOffset() + relativeOffset; }
 
 protected:
     FOR_EACH_MOTH_INSTR(BYTECODE_HANDLER_DEFINE_VIRTUAL_BYTECODE_HANDLER)

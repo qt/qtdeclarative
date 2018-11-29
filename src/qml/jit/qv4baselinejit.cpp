@@ -593,7 +593,7 @@ void BaselineJIT::generate_ConstructWithSpread(int func, int argc, int argv)
 void BaselineJIT::generate_SetUnwindHandler(int offset)
 {
     if (offset)
-        labels.insert(as->setUnwindHandler(absoluteOffsetForJump(offset)));
+        labels.insert(as->setUnwindHandler(absoluteOffset(offset)));
     else
         as->clearUnwindHandler();
 }
@@ -605,7 +605,7 @@ void BaselineJIT::generate_UnwindDispatch()
 
 void BaselineJIT::generate_UnwindToLabel(int level, int offset)
 {
-    labels.insert(as->unwindToLabel(level, absoluteOffsetForJump(offset)));
+    labels.insert(as->unwindToLabel(level, absoluteOffset(offset)));
 }
 
 void BaselineJIT::generate_DeadTemporalZoneCheck(int name)
@@ -872,11 +872,30 @@ void BaselineJIT::generate_ToObject()
 
 }
 
-void BaselineJIT::generate_Jump(int offset) { labels.insert(as->jump(absoluteOffsetForJump(offset))); }
-void BaselineJIT::generate_JumpTrue(int /*traceSlot*/, int offset) { labels.insert(as->jumpTrue(absoluteOffsetForJump(offset))); }
-void BaselineJIT::generate_JumpFalse(int /*traceSlot*/, int offset) { labels.insert(as->jumpFalse(absoluteOffsetForJump(offset))); }
-void BaselineJIT::generate_JumpNoException(int offset) { labels.insert(as->jumpNoException(absoluteOffsetForJump(offset))); }
-void BaselineJIT::generate_JumpNotUndefined(int offset) { labels.insert(as->jumpNotUndefined(absoluteOffsetForJump(offset))); }
+void BaselineJIT::generate_Jump(int offset)
+{
+    labels.insert(as->jump(absoluteOffset(offset)));
+}
+
+void BaselineJIT::generate_JumpTrue(int /*traceSlot*/, int offset)
+{
+    labels.insert(as->jumpTrue(absoluteOffset(offset)));
+}
+
+void BaselineJIT::generate_JumpFalse(int /*traceSlot*/, int offset)
+{
+    labels.insert(as->jumpFalse(absoluteOffset(offset)));
+}
+
+void BaselineJIT::generate_JumpNoException(int offset)
+{
+    labels.insert(as->jumpNoException(absoluteOffset(offset)));
+}
+
+void BaselineJIT::generate_JumpNotUndefined(int offset)
+{
+    labels.insert(as->jumpNotUndefined(absoluteOffset(offset)));
+}
 
 void BaselineJIT::generate_CmpEqNull() { as->cmpeqNull(); }
 void BaselineJIT::generate_CmpNeNull() { as->cmpneNull(); }
