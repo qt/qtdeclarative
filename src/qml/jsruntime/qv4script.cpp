@@ -240,23 +240,7 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
     QString sourceCode = QString::fromUtf8(data);
     QmlIR::Document::removeScriptPragmas(sourceCode);
 
-    auto result = new QV4::Script(engine, qmlContext, sourceCode, originalUrl.toString());
+    auto result = new QV4::Script(engine, qmlContext, /*parseAsBinding*/false, sourceCode, originalUrl.toString());
     result->parse();
     return result;
-}
-
-QV4::ReturnedValue Script::evaluate(ExecutionEngine *engine, const QString &script, QmlContext *qmlContext)
-{
-    QV4::Scope scope(engine);
-    QV4::Script qmlScript(engine, qmlContext, script, QString());
-
-    qmlScript.parse();
-    QV4::ScopedValue result(scope);
-    if (!scope.engine->hasException)
-        result = qmlScript.run();
-    if (scope.engine->hasException) {
-        scope.engine->catchException();
-        return Encode::undefined();
-    }
-    return result->asReturnedValue();
 }

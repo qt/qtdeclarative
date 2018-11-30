@@ -96,6 +96,25 @@ void ScanFunctions::leaveEnvironment()
     _context = _contextStack.isEmpty() ? nullptr : _contextStack.top();
 }
 
+bool ScanFunctions::preVisit(Node *ast)
+{
+    if (_cg->hasError)
+        return false;
+    ++_recursionDepth;
+
+    if (_recursionDepth > 1000) {
+        _cg->throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Maximum statement or expression depth exceeded"));
+        return false;
+    }
+
+    return true;
+}
+
+void ScanFunctions::postVisit(Node *)
+{
+    --_recursionDepth;
+}
+
 void ScanFunctions::checkDirectivePrologue(StatementList *ast)
 {
     for (StatementList *it = ast; it; it = it->next) {

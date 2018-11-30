@@ -99,6 +99,8 @@ void QSGSoftwareImageNode::paint(QPainter *painter)
         updateCachedMirroredPixmap();
 
     painter->setRenderHint(QPainter::SmoothPixmapTransform, (m_filtering == QSGTexture::Linear));
+    // Disable antialiased clipping. It causes transformed tiles to have gaps.
+    painter->setRenderHint(QPainter::Antialiasing, false);
 
     if (!m_cachedPixmap.isNull()) {
         painter->drawPixmap(m_rect, m_cachedPixmap, m_sourceRect);
@@ -194,6 +196,9 @@ void QSGSoftwareNinePatchNode::update()
 
 void QSGSoftwareNinePatchNode::paint(QPainter *painter)
 {
+    // Disable antialiased clipping. It causes transformed tiles to have gaps.
+    painter->setRenderHint(QPainter::Antialiasing, false);
+
     if (m_margins.isNull())
         painter->drawPixmap(m_bounds, m_pixmap, QRectF(0, 0, m_pixmap.width(), m_pixmap.height()));
     else

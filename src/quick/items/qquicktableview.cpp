@@ -1647,8 +1647,9 @@ void QQuickTableViewPrivate::connectToModel()
     QObjectPrivate::connect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
 
     if (tableModel) {
-        QObjectPrivate::connect(tableModel, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-        QObjectPrivate::connect(tableModel, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        const auto tm = tableModel.data();
+        QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+        QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
     }
 
     if (auto const aim = model->abstractItemModel()) {
@@ -1678,8 +1679,9 @@ void QQuickTableViewPrivate::disconnectFromModel()
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
 
     if (tableModel) {
-        QObjectPrivate::disconnect(tableModel, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-        QObjectPrivate::disconnect(tableModel, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+        const auto tm = tableModel.data();
+        QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+        QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
     }
 
     if (auto const aim = model->abstractItemModel()) {
