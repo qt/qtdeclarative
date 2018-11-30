@@ -471,6 +471,10 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
     eventLoopQuitHack->moveToThread(this);
     connect(eventLoopQuitHack, SIGNAL(destroyed(QObject*)), SLOT(quit()), Qt::DirectConnection);
     start(QThread::LowestPriority);
+#if !QT_CONFIG(thread)
+    // call nonblocking run ourself, as nothread qthread does not
+    run();
+#endif
 }
 
 QQuickPixmapReader::~QQuickPixmapReader()
@@ -948,8 +952,11 @@ void QQuickPixmapReader::run()
     processJobs();
     exec();
 
+#if QT_CONFIG(thread)
+    // nothread exec is empty and returns
     delete threadObject;
     threadObject = nullptr;
+#endif
 }
 
 class QQuickPixmapKey
