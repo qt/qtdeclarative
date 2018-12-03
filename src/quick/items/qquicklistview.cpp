@@ -2460,6 +2460,11 @@ QString QQuickListView::currentSection() const
     if both the velocity and duration are set, the animation will use
     whichever gives the shorter duration.
 
+    The move velocity and duration properties are used to control movement due
+    to index changes; for example, when incrementCurrentIndex() is called. When
+    the user flicks a ListView, the velocity from the flick is used to control
+    the movement instead.
+
     To set only one property, the other can be set to \c -1. For example,
     if you only want to animate the duration and not velocity, use the
     following code:
