@@ -1039,7 +1039,7 @@ QQuickSplitView::~QQuickSplitView()
 
     Possible values:
     \value Qt.Horizontal The items are laid out horizontally (default).
-    \value Qt.Vertical The items are laid out vertically (default).
+    \value Qt.Vertical The items are laid out vertically.
 */
 Qt::Orientation QQuickSplitView::orientation() const
 {
