@@ -413,7 +413,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     delete oldContentItem;
 
     if (item) {
-        connect(contentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
+        connect(contentItem.data(), &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
         if (!item->parentItem())
             item->setParentItem(q);
         if (componentComplete)
