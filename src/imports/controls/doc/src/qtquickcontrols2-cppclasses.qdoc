@@ -28,7 +28,8 @@
 /*!
     \module QtQuickControls2
     \keyword Qt Quick Controls C++ Classes
-    \title Qt Quick Controls 2 C++ Classes
+    \title Qt Quick Controls C++ Classes
+    \keyword Qt Quick Controls 2 C++ Classes
     \ingroup modules
     \qtvariable quickcontrols2
 

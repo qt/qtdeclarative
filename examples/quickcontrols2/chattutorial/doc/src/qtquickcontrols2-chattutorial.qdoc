@@ -28,7 +28,8 @@
 /*!
 \example chattutorial
 \keyword Qt Quick Controls - Chat Tutorial
-    \title Qt Quick Controls 2 - Chat Tutorial
+    \title Qt Quick Controls - Chat Tutorial
+    \keyword Qt Quick Controls 2 - Chat Tutorial
 \brief Tutorial about writing a basic chat client using Qt Quick Controls 2.
 \ingroup qtquickcontrols2-examples
 

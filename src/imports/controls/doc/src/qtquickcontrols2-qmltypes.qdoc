@@ -28,7 +28,8 @@
 /*!
     \qmlmodule QtQuick.Controls 2.5
     \keyword Qt Quick Controls QML Types
-    \title Qt Quick Controls 2 QML Types
+    \title Qt Quick Controls QML Types
+    \keyword Qt Quick Controls 2 QML Types
     \ingroup qmlmodules
     \brief Provides QML types for user interfaces (Qt Quick Controls 2).
 

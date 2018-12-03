@@ -28,7 +28,8 @@
 /*!
     \example flatstyle
     \keyword Qt Quick Controls - Flat Style
-    \title Qt Quick Controls 2 - Flat Style
+    \title Qt Quick Controls - Flat Style
+    \keyword Qt Quick Controls 2 - Flat Style
     \ingroup qtquickcontrols2-examples
     \brief A QML app using Qt Quick Controls 2 and a QML plugin
     with customized controls.

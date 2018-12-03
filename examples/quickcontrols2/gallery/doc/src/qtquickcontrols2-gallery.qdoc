@@ -28,7 +28,8 @@
 /*!
     \example gallery
     \keyword Qt Quick Controls - Gallery
-    \title Qt Quick Controls 2 - Gallery
+    \title Qt Quick Controls - Gallery
+    \keyword Qt Quick Controls 2 - Gallery
     \ingroup qtquickcontrols2-examples
     \brief A gallery of controls.
 
