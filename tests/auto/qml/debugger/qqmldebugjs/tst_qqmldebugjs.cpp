@@ -1174,7 +1174,7 @@ void tst_QQmlDebugJS::changeBreakpoint()
     QCOMPARE(init(qmlscene, CHANGEBREAKPOINT_QMLFILE), ConnectSuccess);
 
     bool isStopped = false;
-    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() { isStopped = true; });
+    QObject::connect(m_client.data(), &QJSDebugClient::stopped, this, [&]() { isStopped = true; });
 
     auto continueDebugging = [&]() {
         m_client->continueDebugging(QJSDebugClient::Continue);
@@ -1198,7 +1198,7 @@ void tst_QQmlDebugJS::changeBreakpoint()
 
     auto setBreakPoint = [&](int sourceLine, bool enabled) {
         int id = -1;
-        auto connection = QObject::connect(m_client, &QJSDebugClient::result, [&]() {
+        auto connection = QObject::connect(m_client.data(), &QJSDebugClient::result, [&]() {
             id = extractBody().value("breakpoint").toInt();
         });
 
@@ -1551,7 +1551,7 @@ void tst_QQmlDebugJS::encodeQmlScope()
     bool isStopped = false;
     bool scopesFailed = false;
 
-    QObject::connect(m_client, &QJSDebugClient::failure, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::failure, this, [&]() {
         qWarning() << "received failure" << m_client->response;
         scopesFailed = true;
         m_process->stop();
@@ -1559,12 +1559,12 @@ void tst_QQmlDebugJS::encodeQmlScope()
         isStopped = false;
     });
 
-    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::stopped, this, [&]() {
         m_client->frame();
         isStopped = true;
     });
 
-    QObject::connect(m_client, &QJSDebugClient::result, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::result, this, [&]() {
         const QVariantMap value = m_client->parser.call(
                     QJSValueList() << QJSValue(QString(m_client->response))).toVariant().toMap();
 
@@ -1611,20 +1611,20 @@ void tst_QQmlDebugJS::breakOnAnchor()
 
     int breaks = 0;
     bool stopped = false;
-    QObject::connect(m_client, &QJSDebugClient::stopped, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::stopped, this, [&]() {
         stopped = true;
         ++breaks;
         m_client->evaluate("this", 0, -1);
     });
 
-    QObject::connect(m_client, &QJSDebugClient::result, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::result, this, [&]() {
         if (stopped) {
             m_client->continueDebugging(QJSDebugClient::Continue);
             stopped = false;
         }
     });
 
-    QObject::connect(m_client, &QJSDebugClient::failure, this, [&]() {
+    QObject::connect(m_client.data(), &QJSDebugClient::failure, this, [&]() {
         qWarning() << "received failure" << m_client->response;
     });
 

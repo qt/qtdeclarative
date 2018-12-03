@@ -101,11 +101,11 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
 {
     m_client = new QQmlPreviewClient(m_connection);
 
-    QObject::connect(m_client, &QQmlPreviewClient::request, this, &tst_QQmlPreview::serveRequest);
-    QObject::connect(m_client, &QQmlPreviewClient::error, this, [this](const QString &error) {
+    QObject::connect(m_client.data(), &QQmlPreviewClient::request, this, &tst_QQmlPreview::serveRequest);
+    QObject::connect(m_client.data(), &QQmlPreviewClient::error, this, [this](const QString &error) {
         m_serviceErrors.append(error);
     });
-    QObject::connect(m_client, &QQmlPreviewClient::fps,
+    QObject::connect(m_client.data(), &QQmlPreviewClient::fps,
                      this, [this](const QQmlPreviewClient::FpsInfo &info) {
         m_frameStats = info;
     });
