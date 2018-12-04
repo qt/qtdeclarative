@@ -640,7 +640,6 @@ void QQmlContextData::destroy()
         QQmlData *co = contextObjects;
         contextObjects = contextObjects->nextContextObject;
 
-        co->context = nullptr;
         co->outerContext = nullptr;
         co->nextContextObject = nullptr;
         co->prevContextObject = nullptr;
@@ -783,13 +782,17 @@ void QQmlContextData::refreshExpressions()
     }
 }
 
-void QQmlContextData::addObject(QObject *o)
+void QQmlContextData::addObject(QQmlData *data)
 {
-    QQmlData *data = QQmlData::get(o, true);
+    if (data->outerContext) {
+        if (data->nextContextObject)
+            data->nextContextObject->prevContextObject = data->prevContextObject;
+        if (data->prevContextObject)
+            *data->prevContextObject = data->nextContextObject;
+        else if (data->outerContext->contextObjects == data)
+            data->outerContext->contextObjects = data->nextContextObject;
+    }
 
-    Q_ASSERT(data->context == nullptr);
-
-    data->context = this;
     data->outerContext = this;
 
     data->nextContextObject = contextObjects;
