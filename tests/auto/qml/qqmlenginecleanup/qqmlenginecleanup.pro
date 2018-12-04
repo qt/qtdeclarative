@@ -1,9 +1,2 @@
-CONFIG += testcase
-TARGET = tst_qqmlenginecleanup
-macx:CONFIG -= app_bundle
-
-include (../../shared/util.pri)
-
-SOURCES += tst_qqmlenginecleanup.cpp
-
-QT += testlib qml qml-private
+TEMPLATE = subdirs
+SUBDIRS += tst_qqmlenginecleanup.pro CustomModuleImport/CustomModule.pro

@@ -1648,7 +1648,14 @@ void qmlClearTypeRegistrations() // Declared in qqml.h
 #endif
 }
 
-static int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent)
+static void unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function)
+{
+    QMutexLocker lock(metaTypeDataLock());
+    QQmlMetaTypeData *data = metaTypeData();
+    data->parentFunctions.removeOne(function);
+}
+
+static int registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
@@ -1955,6 +1962,26 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
     typeData->undeletableTypes.insert(dtype);
 
     return dtype.index();
+}
+
+void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
+{
+    switch (type) {
+        case AutoParentRegistration:
+            unregisterAutoParentFunction(reinterpret_cast<AutoParentFunction>(data));
+            break;
+        case QmlUnitCacheHookRegistration:
+            QQmlMetaType::removeCachedUnitLookupFunction(
+                    reinterpret_cast<QmlUnitCacheLookupFunction>(data));
+            break;
+        case TypeRegistration:
+        case InterfaceRegistration:
+        case SingletonRegistration:
+        case CompositeRegistration:
+        case CompositeSingletonRegistration:
+            qmlUnregisterType(data);
+            break;
+    }
 }
 
 //From qqml.h

@@ -357,6 +357,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
 
         stream << "struct Registry {\n";
         stream << "    Registry();\n";
+        stream << "    ~Registry();\n";
         stream << "    QHash<QString, const QQmlPrivate::CachedQmlUnit*> resourcePathToCachedUnit;\n";
         stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "};\n\n";
@@ -379,7 +380,11 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         if (!resourceRegisterCall.isEmpty())
             stream << resourceRegisterCall;
 
-        stream << "}\n";
+        stream << "}\n\n";
+        stream << "Registry::~Registry() {\n";
+        stream << "    QQmlPrivate::qmlunregister(QQmlPrivate::QmlUnitCacheHookRegistration, quintptr(&lookupCachedUnit));\n";
+        stream << "}\n\n";
+
         stream << "const QQmlPrivate::CachedQmlUnit *Registry::lookupCachedUnit(const QUrl &url) {\n";
         stream << "    if (url.scheme() != QLatin1String(\"qrc\"))\n";
         stream << "        return nullptr;\n";
