@@ -85,8 +85,6 @@ QColor QQuickFusionStyle::innerContrastLine()
 
 QColor QQuickFusionStyle::highlight(const QPalette &palette)
 {
-    if (isMacSystemPalette(palette))
-        return QColor(60, 140, 230);
     return palette.color(QPalette::Highlight);
 }
 

@@ -118,6 +118,22 @@ TestCase {
     }
 
     Component {
+        id: emptyFlickable
+        ScrollView {
+            Flickable {
+            }
+        }
+    }
+
+    Component {
+        id: labelComponent
+        Label {
+            text: "ABC"
+            font.pixelSize: 512
+        }
+    }
+
+    Component {
         id: scrollableListView
         ScrollView {
             ListView {
@@ -239,6 +255,39 @@ TestCase {
 
         compare(control.contentWidth, listview.contentWidth)
         compare(control.contentHeight, listview.contentHeight)
+    }
+
+    function test_flickableWithExplicitContentSize() {
+        var control = createTemporaryObject(emptyFlickable, testCase)
+        verify(control)
+
+        var flickable = control.contentItem
+        verify(flickable.hasOwnProperty("contentX"))
+        verify(flickable.hasOwnProperty("contentY"))
+
+        var flickableContentSize = 1000;
+        flickable.contentWidth = flickableContentSize;
+        flickable.contentHeight = flickableContentSize;
+
+        compare(flickable.contentWidth, flickableContentSize)
+        compare(flickable.contentHeight, flickableContentSize)
+        compare(control.implicitWidth, flickableContentSize)
+        compare(control.implicitHeight, flickableContentSize)
+        compare(control.contentWidth, flickableContentSize)
+        compare(control.contentHeight, flickableContentSize)
+
+        // Add a single child to the flickable. This should not
+        // trick ScrollView into taking the implicit size of
+        // the child as content size, since the flickable
+        // already has an explicit content size.
+        labelComponent.createObject(flickable);
+
+        compare(flickable.contentWidth, flickableContentSize)
+        compare(flickable.contentHeight, flickableContentSize)
+        compare(control.implicitWidth, flickableContentSize)
+        compare(control.implicitHeight, flickableContentSize)
+        compare(control.contentWidth, flickableContentSize)
+        compare(control.contentHeight, flickableContentSize)
     }
 
     function test_mouse() {

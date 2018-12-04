@@ -27,16 +27,16 @@
 
 /*!
     \page qtquickcontrols2-differences.html
-    \title Differences between Qt Quick Controls
+    \title Differences between Qt Quick Controls 1
 
-    Qt Quick Controls were originally developed to support desktop platforms,
+    Qt Quick Controls 1 was originally developed to support desktop platforms,
     with mobile and embedded support coming shortly afterwards. They have a
     very broad scope, in that they provide a styling system flexible enough to
     allow the development of applications that have either a platform-dependent
     or platform-independent style.
 
     On embedded systems, where the hardware has limited resources, this approach
-    can be inefficient. Qt Quick Controls 2 were designed to solve this problem,
+    can be inefficient. Qt Quick Controls 2 was designed to solve this problem,
     using
     \l {https://blog.qt.io/blog/2015/03/31/qt-quick-controls-for-embedded/}{benchmarks}
     to guide the development.
@@ -98,7 +98,7 @@
     \table
     \header
         \li
-        \li Qt Quick Controls
+        \li Qt Quick Controls 1
         \li Qt Quick Controls 2
     \row
         \li Stylable delegates
@@ -136,15 +136,15 @@
     \li Performance may not be optimal
     \endlist
 
-    \section2 Porting Qt Quick Controls Code
+    \section2 Porting Qt Quick Controls 1 Code
 
-    The API of Qt Quick Controls 2 is very similar to Qt Quick Controls, but it
+    The API of Qt Quick Controls 2 is very similar to Qt Quick Controls 1, but it
     does come with some changes necessary to facilitate the improvements. The
     majority of changes are to do with styling; all of a control's delegates
     are now accessible in the control itself, instead of in a separate style
     object.
 
-    For example, to style a button in Qt Quick Controls:
+    For example, to style a button in Qt Quick Controls 1:
 
     \qml
     Button {
@@ -170,7 +170,7 @@
 
     With this in mind, a good way to prepare for a migration to Qt Quick
     Controls 2 is to place each control that you have a custom style for in its
-    own QML file. For example, the Qt Quick Controls button above could be
+    own QML file. For example, the Qt Quick Controls 1 button above could be
     moved to a file named \c Button.qml in a directory named \c controls, and
     used in the following manner:
 

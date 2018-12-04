@@ -132,6 +132,9 @@ public:
     void updateContentWidth();
     void updateContentHeight();
 
+    qreal getContentWidth() const override;
+    qreal getContentHeight() const override;
+
     QQuickScrollBar *verticalScrollBar() const;
     QQuickScrollBar *horizontalScrollBar() const;
 
@@ -247,6 +250,28 @@ void QQuickScrollViewPrivate::updateContentHeight()
 
     implicitContentHeight = ch;
     emit q->implicitContentHeightChanged();
+}
+
+qreal QQuickScrollViewPrivate::getContentWidth() const
+{
+    if (flickable) {
+        const qreal cw = flickable->contentWidth();
+        if (cw > 0)
+            return cw;
+    }
+
+    return QQuickPanePrivate::getContentWidth();
+}
+
+qreal QQuickScrollViewPrivate::getContentHeight() const
+{
+    if (flickable) {
+        const qreal ch = flickable->contentHeight();
+        if (ch > 0)
+            return ch;
+    }
+
+    return QQuickPanePrivate::getContentHeight();
 }
 
 QQuickScrollBar *QQuickScrollViewPrivate::verticalScrollBar() const
