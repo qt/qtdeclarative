@@ -106,7 +106,6 @@ public:
 
     static QQuickSplitViewPrivate *get(QQuickSplitView *splitView);
 
-private:
     Qt::Orientation m_orientation = Qt::Horizontal;
     QQmlComponent *m_handle = nullptr;
     QVector<QQuickItem*> m_handleItems;
@@ -119,6 +118,7 @@ private:
     qreal m_rightOrBottomItemSizeBeforePress = 0.0;
     int m_fillIndex = -1;
     bool m_layingOut = false;
+    bool m_ignoreNextLayoutRequest = false;
     bool m_resizing = false;
 };
 

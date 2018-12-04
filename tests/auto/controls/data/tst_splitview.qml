@@ -1847,4 +1847,77 @@ TestCase {
         control.restoreState(settings.value("splitView"))
         compare(lastItem.SplitView.preferredWidth, 123)
     }
+
+    function test_changePreferredSizeDuringLayout() {
+        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        verify(control)
+
+        var firstItem = control.itemAt(0)
+        var secondItem = control.itemAt(1)
+        secondItem.widthChanged.connect(function() {
+            if (secondItem.width < 10)
+                firstItem.SplitView.preferredWidth = 50
+        })
+
+        // Change the size of the item so that a layout happens, but
+        // make the size small enough that the item's onWidthChanged handler gets triggered.
+        // The onWidthChanged handler will set the preferredWidth of another item during the
+        // layout, so we need to make sure the assignment isn't lost since we return early in that case.
+        secondItem.implicitWidth = 5
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
+        compare(secondItem.width, 5)
+        compare(firstItem.width, 50)
+
+        // Now do the same for height.
+        control.orientation = Qt.Vertical
+        secondItem.heightChanged.connect(function() {
+            if (secondItem.height < 10)
+                firstItem.SplitView.preferredHeight = 50
+        })
+        // Get the polishes for the orientation out of the way so that they
+        // don't intefere with our results.
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
+
+        secondItem.implicitHeight = 5
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
+        compare(secondItem.height, 5)
+        compare(firstItem.height, 50)
+    }
+
+    // When the user drags a handle, we internally set preferredWidth/Height
+    // to reflect the new value. However, we also have to make sure that when
+    // we do so, it doesn't trigger a delayed layout. This is why we have
+    // m_ignoreNextDelayedLayoutRequest. This test checks that
+    // m_ignoreNextDelayedLayoutRequest doesn't interfere with any action from
+    // the user that results in a delayed layout.
+    function test_changePreferredSizeDuringLayoutWhileDraggingHandle() {
+        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        verify(control)
+
+        var firstItem = control.itemAt(0)
+        var secondItem = control.itemAt(1)
+        firstItem.widthChanged.connect(function() {
+            if (firstItem.width === 0)
+                secondItem.SplitView.preferredWidth = 50
+        })
+
+        // Start dragging the handle.
+        var handles = findHandles(control)
+        var targetHandle = handles[0]
+        mousePress(targetHandle)
+        verify(control.resizing)
+        var localPos = testCase.mapToItem(targetHandle, 15, testCase.height / 2)
+
+        // Move the handle to the very left, so that the item's width becomes zero.
+        mouseMove(targetHandle, -100, targetHandle.height / 2)
+        verify(control.resizing)
+        compare(firstItem.width, 0)
+        compare(secondItem.SplitView.preferredWidth, 50)
+        compare(secondItem.width, 50)
+        mouseRelease(targetHandle, -100, targetHandle.height / 2, Qt.LeftButton)
+        verify(!control.resizing)
+    }
 }

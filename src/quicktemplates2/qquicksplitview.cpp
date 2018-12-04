@@ -383,6 +383,20 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                     attached = qobject_cast<QQuickSplitViewAttached*>(
                         qmlAttachedPropertiesObject<QQuickSplitView>(item, true));
                 }
+
+                /*
+                    Users could conceivably respond to size changes in items by setting attached
+                    SplitView properties:
+
+                        onWidthChanged: if (width < 10) secondItem.SplitView.preferredWidth = 100
+
+                    We handle this by doing another layout after the current layout if the
+                    attached/implicit size properties are set during this layout. However, we also
+                    need to set preferredWidth/Height here (for reasons mentioned in the comment above),
+                    but we don't want this to count as a request for a delayed layout, so we guard against it.
+                */
+                m_ignoreNextLayoutRequest = true;
+
                 if (horizontal)
                     attached->setPreferredWidth(newItemSize);
                 else
@@ -430,14 +444,17 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                     attached = qobject_cast<QQuickSplitViewAttached*>(
                         qmlAttachedPropertiesObject<QQuickSplitView>(item, true));
                 }
+
+                m_ignoreNextLayoutRequest = true;
+
                 if (horizontal)
                     attached->setPreferredWidth(newItemSize);
                 else
                     attached->setPreferredHeight(newItemSize);
 
-                // We still need to use requestedWidth in the setWidth() call below,
+                // We still need to use requestedSize in the setWidth()/setHeight() call below,
                 // because sizeData has already been calculated and now contains an old
-                // effectivePreferredWidth value.
+                // effectivePreferredWidth/Height value.
                 requestedSize = newItemSize;
 
                 qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": resized (dragged) " << item
@@ -1618,11 +1635,23 @@ void QQuickSplitViewAttached::setPreferredWidth(qreal width)
 {
     Q_D(QQuickSplitViewAttached);
     d->m_isPreferredWidthSet = true;
+    // Make sure that we clear this flag now, before we emit the change signals
+    // which could cause another setter to be called.
+    auto splitViewPrivate = QQuickSplitViewPrivate::get(d->m_splitView);
+    const bool ignoreNextLayoutRequest = splitViewPrivate->m_ignoreNextLayoutRequest;
+    splitViewPrivate->m_ignoreNextLayoutRequest = false;
+
     if (qFuzzyCompare(width, d->m_preferredWidth))
         return;
 
     d->m_preferredWidth = width;
-    d->requestLayoutView();
+
+    if (!ignoreNextLayoutRequest) {
+        // We are currently in the middle of performing a layout, and the user (not our internal code)
+        // changed the preferred width of one of the split items, so request another layout.
+        d->requestLayoutView();
+    }
+
     emit preferredWidthChanged();
 }
 
@@ -1674,11 +1703,23 @@ void QQuickSplitViewAttached::setPreferredHeight(qreal height)
 {
     Q_D(QQuickSplitViewAttached);
     d->m_isPreferredHeightSet = true;
+    // Make sure that we clear this flag now, before we emit the change signals
+    // which could cause another setter to be called.
+    auto splitViewPrivate = QQuickSplitViewPrivate::get(d->m_splitView);
+    const bool ignoreNextLayoutRequest = splitViewPrivate->m_ignoreNextLayoutRequest;
+    splitViewPrivate->m_ignoreNextLayoutRequest = false;
+
     if (qFuzzyCompare(height, d->m_preferredHeight))
         return;
 
     d->m_preferredHeight = height;
-    d->requestLayoutView();
+
+    if (!ignoreNextLayoutRequest) {
+        // We are currently in the middle of performing a layout, and the user (not our internal code)
+        // changed the preferred height of one of the split items, so request another layout.
+        d->requestLayoutView();
+    }
+
     emit preferredHeightChanged();
 }
 
