@@ -144,10 +144,11 @@ void QSGSoftwareNinePatchNode::setTexture(QSGTexture *texture)
     QSGSoftwarePixmapTexture *pt = qobject_cast<QSGSoftwarePixmapTexture*>(texture);
     if (!pt) {
         qWarning() << "Image used with invalid texture format.";
-        return;
+    } else {
+        m_pixmap = pt->pixmap();
+        markDirty(DirtyMaterial);
     }
-    m_pixmap = pt->pixmap();
-    markDirty(DirtyMaterial);
+    delete texture;
 }
 
 void QSGSoftwareNinePatchNode::setBounds(const QRectF &bounds)
