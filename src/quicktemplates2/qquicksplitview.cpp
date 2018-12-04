@@ -1003,6 +1003,16 @@ void QQuickSplitViewPrivate::itemVisibilityChanged(QQuickItem *item)
     layout();
 }
 
+void QQuickSplitViewPrivate::itemImplicitWidthChanged(QQuickItem *)
+{
+    layout();
+}
+
+void QQuickSplitViewPrivate::itemImplicitHeightChanged(QQuickItem *)
+{
+    layout();
+}
+
 QQuickSplitViewPrivate *QQuickSplitViewPrivate::get(QQuickSplitView *splitView)
 {
     return splitView->d_func();
@@ -1028,6 +1038,11 @@ QQuickSplitView::QQuickSplitView(QQuickSplitViewPrivate &dd, QQuickItem *parent)
 
 QQuickSplitView::~QQuickSplitView()
 {
+    Q_D(QQuickSplitView);
+    for (int i = 0; i < d->contentModel->count(); ++i) {
+        QQuickItem *item = qobject_cast<QQuickItem*>(d->contentModel->object(i));
+        d->removeImplicitSizeListener(item);
+    }
 }
 
 /*!
@@ -1358,6 +1373,8 @@ void QQuickSplitView::itemAdded(int index, QQuickItem *item)
         d->createHandleItem(index < count - 1 ? index : index - 1);
     }
 
+    d->addImplicitSizeListener(item);
+
     d->updateHandleVisibilities();
     d->updateFillIndex();
     d->layout();
@@ -1407,6 +1424,8 @@ void QQuickSplitView::itemRemoved(int index, QQuickItem *item)
         qmlAttachedPropertiesObject<QQuickSplitView>(item, false));
     if (attached)
         QQuickSplitViewAttachedPrivate::get(attached)->setView(this);
+
+    d->removeImplicitSizeListener(item);
 
     d->removeExcessHandles();
     d->updateHandleVisibilities();

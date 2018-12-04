@@ -1179,6 +1179,60 @@ TestCase {
         compareSizes(control, data.expectedGeometries)
     }
 
+    function test_splitItemImplicitSizeChanges_data() {
+        var defaultSplitViewWidth = testCase.width
+        var defaultSplitViewHeight = testCase.height
+
+        var data = [
+            {
+                tag: "growImplicitWidth",
+                orientation: Qt.Horizontal,
+                splitItemImplicitWidth: 50,
+                expectedGeometries: [
+                    { x: 0, y: 0, width: 50, height: defaultSplitViewHeight },
+                    { x: 50, y: 0, width: defaultHorizontalHandleWidth, height: defaultSplitViewHeight },
+                    { x: 50 + defaultHorizontalHandleWidth, y: 0, width: 100, height: defaultSplitViewHeight },
+                    { x: 50 + 100 + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth,
+                        height: defaultSplitViewHeight },
+                    { x: 50 + 100 + defaultHorizontalHandleWidth * 2, y: 0,
+                        width: defaultSplitViewWidth - 50 - 100 - defaultHorizontalHandleWidth * 2, height: defaultSplitViewHeight }
+                ]
+            },
+            {
+                tag: "growImplicitHeight",
+                orientation: Qt.Vertical,
+                splitItemImplicitHeight: 50,
+                expectedGeometries: [
+                    { x: 0, y: 0, width: defaultSplitViewWidth, height: 50 },
+                    { x: 0, y: 50, width: defaultSplitViewWidth, height: defaultVerticalHandleHeight },
+                    { x: 0, y: 50 + defaultVerticalHandleHeight, width: defaultSplitViewWidth, height: 100 },
+                    { x: 0, y: 50 + 100 + defaultVerticalHandleHeight, width: defaultSplitViewWidth,
+                        height: defaultVerticalHandleHeight },
+                    { x: 0, y: 50 + 100 + defaultVerticalHandleHeight * 2, width: defaultSplitViewWidth,
+                        height: defaultSplitViewHeight - 50 - 100 - defaultVerticalHandleHeight * 2 }
+                ]
+            }
+        ]
+        return data
+    }
+
+    // Tests that implicitWidth/Height changes in items are noticed by SplitView.
+    function test_splitItemImplicitSizeChanges(data) {
+        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+            { "handle": handleComponent, "orientation": data.orientation })
+        verify(control)
+
+        var firstItem = control.itemAt(0)
+
+        if (data.hasOwnProperty("splitItemImplicitWidth"))
+            firstItem.implicitWidth = data.splitItemImplicitWidth
+
+        if (data.hasOwnProperty("splitItemImplicitHeight"))
+            firstItem.implicitHeight = data.splitItemImplicitHeight
+
+        compareSizes(control, data.expectedGeometries)
+    }
+
     Component {
         id: largerHandle
         Rectangle {

@@ -98,6 +98,8 @@ public:
     void handleRelease(const QPointF &point) override;
 
     void itemVisibilityChanged(QQuickItem *item) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     static QQuickSplitViewPrivate *get(QQuickSplitView *splitView);
 
