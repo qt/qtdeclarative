@@ -640,7 +640,6 @@ private:
     QQmlPropertyCache *_scopeObject;
     int _qmlContextSlot;
     int _importedScriptsSlot;
-    QSet<QString> m_globalNames;
 };
 
 struct Q_QML_PRIVATE_EXPORT IRLoader {
