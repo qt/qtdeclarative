@@ -35,6 +35,7 @@
 #include <QtQuick/qquickitem.h>
 #include "../../shared/util.h"
 #include <QtGui/QWindow>
+#include <QtGui/QScreen>
 #include <QtGui/QImage>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
@@ -144,6 +145,7 @@ private slots:
 
 private:
     QTouchDevice *device = QTest::createTouchDevice();
+    const QRect m_availableGeometry = QGuiApplication::primaryScreen()->availableGeometry();
 };
 
 tst_qquickwidget::tst_qquickwidget()
@@ -199,7 +201,7 @@ void tst_qquickwidget::changeGeometry()
 void tst_qquickwidget::resizemodeitem()
 {
     QWidget window;
-    window.setGeometry(0, 0, 400, 400);
+    window.setGeometry(m_availableGeometry.left(), m_availableGeometry.top(), 400, 400);
 
     QScopedPointer<QQuickWidget> view(new QQuickWidget);
     view->setParent(&window);
@@ -533,18 +535,20 @@ void tst_qquickwidget::enterLeave()
     view.setSource(testFileUrl("enterleave.qml"));
 
     // Ensure it is not inside the window first
-    QCursor::setPos(QPoint(50, 50));
-    QTRY_VERIFY(QCursor::pos() == QPoint(50, 50));
+    const auto outside = m_availableGeometry.topLeft() + QPoint(50, 50);
+    QCursor::setPos(outside);
+    QTRY_VERIFY(QCursor::pos() == outside);
 
-    view.move(100, 100);
+    view.move(m_availableGeometry.topLeft() + QPoint(100, 100));
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view, 5000));
     QQuickItem *rootItem = view.rootObject();
     QVERIFY(rootItem);
+    const QPoint frameOffset = view.geometry().topLeft() - view.frameGeometry().topLeft();
 
     QTRY_VERIFY(!rootItem->property("hasMouse").toBool());
     // Check the enter
-    QCursor::setPos(view.pos() + QPoint(50, 50));
+    QCursor::setPos(view.pos() + QPoint(50, 50) + frameOffset);
     QTRY_VERIFY(rootItem->property("hasMouse").toBool());
     // Now check the leave
     QCursor::setPos(view.pos() - QPoint(50, 50));
