@@ -161,7 +161,7 @@ qmldevtools_build {
     SOURCES += \
         $$PWD/qv4functiontable_noop.cpp
 } else:win32 {
-    equals(QT_ARCH, x86_64){
+    !winrt:equals(QT_ARCH, x86_64) {
         SOURCES += \
             $$PWD/qv4functiontable_win64.cpp
     } else {
