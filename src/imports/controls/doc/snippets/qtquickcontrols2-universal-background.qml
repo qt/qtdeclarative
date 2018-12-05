@@ -25,9 +25,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Controls 2.0
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Universal 2.12
 
 Pane {
     padding: 10

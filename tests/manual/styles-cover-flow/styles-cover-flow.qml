@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
-import QtQuick.Window 2.3
+import QtQuick 2.12
+import QtQuick.Window 2.12
 
 Window {
     // Different delegate positions and widths and window background colors

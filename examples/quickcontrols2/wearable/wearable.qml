@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.10
+import QtQuick 2.12
 import QtQuick.Controls 2.3 as QQC2
 import Qt.labs.settings 1.0
 import "qml"

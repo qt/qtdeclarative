@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Templates 2.2 as T
-import QtQuick.Templates 2.2 as T
+import QtQuick 2.12
+import QtQuick.Templates 2.12 as T
+import QtQuick.Templates 2.12 as T
 
 T.ComboBox {
     id: control

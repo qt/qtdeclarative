@@ -35,9 +35,9 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Window 2.3
-import QtQuick.Templates 2.5 as T
-import QtQuick.Controls.Material 2.5
+import QtQuick.Window 2.12
+import QtQuick.Templates 2.12 as T
+import QtQuick.Controls.Material 2.12
 
 T.ApplicationWindow {
     id: window

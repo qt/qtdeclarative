@@ -25,9 +25,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Layouts 1.0
-import QtQuick.Controls 2.1
+import QtQuick 2.12
+import QtQuick.Layouts 1.12
+import QtQuick.Controls 2.12
 
 //! [file]
 ToolBar {

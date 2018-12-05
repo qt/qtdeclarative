@@ -27,8 +27,8 @@
 
 /*!
     \page qtquickcontrols-index.html
-    \keyword Qt Quick Controls
-    \title Qt Quick Controls 2
+    \keyword Qt Quick Controls 2
+    \title Qt Quick Controls
 
     \brief Provides a set of UI controls for Qt Quick.
 
@@ -46,8 +46,8 @@
     The \l{Qt Quick Controls 2 QML Types}{QML types} can be imported into your
     application using the following import statement in your \c {.qml} file:
 
-    \code
-    import QtQuick.Controls 2.5
+    \code \QtMinorVersion
+    import QtQuick.Controls 2.\1
     \endcode
 
     The \l{Qt Quick Controls 2 C++ Classes}{C++ classes} can be included into
@@ -78,7 +78,8 @@
     \section1 Versions
 
     Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
-    increment the import version of the Qt Quick Controls 2 modules by one. The
+    increment the import version of the Qt Quick Controls 2 modules by one,
+    until Qt 5.12, where the import versions match Qt's minor version. The
     experimental Qt Labs modules use import version 1.0.
 
     \table
@@ -119,7 +120,7 @@
       \row
         \li 5.12
         \li 2.12
-        \li 2.5
+        \li 2.12
         \li 1.0
       \row
         \li ...

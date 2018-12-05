@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
+import QtQuick 2.12
 import "../simple" as Simple
 
 Simple.Dial {
