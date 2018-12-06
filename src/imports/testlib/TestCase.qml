@@ -521,6 +521,75 @@ Item {
     }
 
     /*!
+        \since 5.13
+        \qmlmethod bool TestCase::isPolishScheduled(object item)
+
+        Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
+        on \a item since the last call to \l {QQuickItem::}{polish()},
+        otherwise returns \c false.
+
+        When assigning values to properties in QML, any layouting the item
+        must do as a result of the assignment might not take effect immediately,
+        but can instead be postponed until the item is polished. For these cases,
+        you can use this function to ensure that the item has been polished
+        before the execution of the test continues. For example:
+
+        \code
+            verify(isPolishScheduled(item))
+            verify(waitForItemPolished(item))
+        \endcode
+
+        Without the call to \c isPolishScheduled() above, the
+        call to \c waitForItemPolished() might see that no polish
+        was scheduled and therefore pass instantly, assuming that
+        the item had already been polished. This function
+        makes it obvious why an item wasn't polished and allows tests to
+        fail early under such circumstances.
+
+        \sa waitForItemPolished(), QQuickItem::polish(), QQuickItem::updatePolish()
+    */
+    function isPolishScheduled(item) {
+        if (!item || typeof item !== "object") {
+            qtest_results.fail("Argument must be a valid Item; actual type is " + typeof item,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        return qtest_results.isPolishScheduled(item)
+    }
+
+    /*!
+        \since 5.13
+        \qmlmethod bool waitForItemPolished(object item, int timeout = 5000)
+
+        Waits for \a timeout milliseconds or until
+        \l {QQuickItem::}{updatePolish()} has been called on \a item.
+
+        Returns \c true if \c updatePolish() was called on \a item within
+        \a timeout milliseconds, otherwise returns \c false.
+
+        \sa isPolishScheduled(), QQuickItem::polish(), QQuickItem::updatePolish()
+    */
+    function waitForItemPolished(item, timeout) {
+        if (!item || typeof item !== "object") {
+            qtest_results.fail("First argument must be a valid Item; actual type is " + typeof item,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (timeout !== undefined && typeof(timeout) != "number") {
+            qtest_results.fail("Second argument must be a number; actual type is " + typeof timeout,
+                util.callerFile(), util.callerLine())
+            throw new Error("QtQuickTest::fail")
+        }
+
+        if (!timeout)
+            timeout = 5000
+
+        return qtest_results.waitForItemPolished(item, timeout)
+    }
+
+    /*!
         \since 5.9
         \qmlmethod object TestCase::createTemporaryQmlObject(string qml, object parent, string filePath)
 
