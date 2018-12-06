@@ -65,6 +65,7 @@ public:
     void layoutResizeSplitItems(qreal &usedWidth, qreal &usedHeight, int &indexBeingResizedDueToDrag);
     void layoutResizeFillItem(QQuickItem *fillItem, qreal &usedWidth, qreal &usedHeight, int indexBeingResizedDueToDrag);
     void layoutPositionItems(const QQuickItem *fillItem);
+    void requestLayout();
     void layout();
     void createHandles();
     void createHandleItem(int index);
@@ -101,6 +102,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    void updatePolish() override;
+
     static QQuickSplitViewPrivate *get(QQuickSplitView *splitView);
 
 private:
@@ -127,7 +130,7 @@ public:
     QQuickSplitViewAttachedPrivate();
 
     void setView(QQuickSplitView *newView);
-    void layoutView();
+    void requestLayoutView();
 
     static QQuickSplitViewAttachedPrivate *get(QQuickSplitViewAttached *attached);
     static const QQuickSplitViewAttachedPrivate *get(const QQuickSplitViewAttached *attached);

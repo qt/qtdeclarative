@@ -630,6 +630,12 @@ void QQuickSplitViewPrivate::layoutPositionItems(const QQuickItem *fillItem)
     }
 }
 
+void QQuickSplitViewPrivate::requestLayout()
+{
+    Q_Q(QQuickSplitView);
+    q->polish();
+}
+
 void QQuickSplitViewPrivate::layout()
 {
     if (!componentComplete)
@@ -648,8 +654,9 @@ void QQuickSplitViewPrivate::layout()
     Q_ASSERT_X(!m_handle || m_handleItems.size() == count - 1, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
         "Expected %1 handle items, but there are %2").arg(count - 1).arg(m_handleItems.size())));
 
-    // If a split item is being resized, its preferredWidth/Height will be changed,
-    // which will in turn call layout(). This flag avoids recursive calls.
+    // We allow mouse events to instantly trigger layouts, whereas with e.g.
+    // attached properties being set, we require a delayed layout.
+    // To prevent recursive calls during mouse events, we need this guard.
     QBoolBlocker guard(m_layingOut, true);
 
     const bool horizontal = isHorizontal();
@@ -953,7 +960,9 @@ void QQuickSplitViewPrivate::handleMove(const QPointF &point)
 
     if (m_pressedHandleIndex != -1) {
         m_mousePos = point;
-        layout();
+        // Don't request layouts for input events because we want
+        // resizing to be as responsive and smooth as possible.
+        updatePolish();
     }
 }
 
@@ -1000,15 +1009,20 @@ void QQuickSplitViewPrivate::itemVisibilityChanged(QQuickItem *item)
 
     updateHandleVisibilities();
     updateFillIndex();
-    layout();
+    requestLayout();
 }
 
 void QQuickSplitViewPrivate::itemImplicitWidthChanged(QQuickItem *)
 {
-    layout();
+    requestLayout();
 }
 
 void QQuickSplitViewPrivate::itemImplicitHeightChanged(QQuickItem *)
+{
+    requestLayout();
+}
+
+void QQuickSplitViewPrivate::updatePolish()
 {
     layout();
 }
@@ -1070,7 +1084,7 @@ void QQuickSplitView::setOrientation(Qt::Orientation orientation)
 
     d->m_orientation = orientation;
     d->resizeHandles();
-    d->layout();
+    d->requestLayout();
     emit orientationChanged();
 }
 
@@ -1137,7 +1151,7 @@ void QQuickSplitView::setHandle(QQmlComponent *handle)
     if (d->m_handle)
         d->createHandles();
 
-    d->layout();
+    d->requestLayout();
 
     emit handleChanged();
 }
@@ -1286,7 +1300,7 @@ void QQuickSplitView::componentComplete()
     QQuickControl::componentComplete();
     d->resizeHandles();
     d->updateFillIndex();
-    d->layout();
+    d->updatePolish();
 }
 
 void QQuickSplitView::hoverMoveEvent(QHoverEvent *event)
@@ -1348,7 +1362,7 @@ void QQuickSplitView::geometryChanged(const QRectF &newGeometry, const QRectF &o
     Q_D(QQuickSplitView);
     QQuickControl::geometryChanged(newGeometry, oldGeometry);
     d->resizeHandles();
-    d->layout();
+    d->requestLayout();
 }
 
 void QQuickSplitView::itemAdded(int index, QQuickItem *item)
@@ -1377,7 +1391,7 @@ void QQuickSplitView::itemAdded(int index, QQuickItem *item)
 
     d->updateHandleVisibilities();
     d->updateFillIndex();
-    d->layout();
+    d->requestLayout();
 }
 
 void QQuickSplitView::itemMoved(int index, QQuickItem *item)
@@ -1390,7 +1404,7 @@ void QQuickSplitView::itemMoved(int index, QQuickItem *item)
 
     d->updateHandleVisibilities();
     d->updateFillIndex();
-    d->layout();
+    d->requestLayout();
 }
 
 void QQuickSplitView::itemRemoved(int index, QQuickItem *item)
@@ -1430,7 +1444,7 @@ void QQuickSplitView::itemRemoved(int index, QQuickItem *item)
     d->removeExcessHandles();
     d->updateHandleVisibilities();
     d->updateFillIndex();
-    d->layout();
+    d->requestLayout();
 }
 
 #if QT_CONFIG(accessibility)
@@ -1507,7 +1521,7 @@ void QQuickSplitViewAttached::setMinimumWidth(qreal width)
         return;
 
     d->m_minimumWidth = width;
-    d->layoutView();
+    d->requestLayoutView();
     emit minimumWidthChanged();
 }
 
@@ -1523,7 +1537,7 @@ void QQuickSplitViewAttached::resetMinimumWidth()
     if (qFuzzyCompare(newEffectiveMinimumWidth, oldEffectiveMinimumWidth))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit minimumWidthChanged();
 }
 
@@ -1554,7 +1568,7 @@ void QQuickSplitViewAttached::setMinimumHeight(qreal height)
         return;
 
     d->m_minimumHeight = height;
-    d->layoutView();
+    d->requestLayoutView();
     emit minimumHeightChanged();
 }
 
@@ -1570,7 +1584,7 @@ void QQuickSplitViewAttached::resetMinimumHeight()
     if (qFuzzyCompare(newEffectiveMinimumHeight, oldEffectiveMinimumHeight))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit minimumHeightChanged();
 }
 
@@ -1608,7 +1622,7 @@ void QQuickSplitViewAttached::setPreferredWidth(qreal width)
         return;
 
     d->m_preferredWidth = width;
-    d->layoutView();
+    d->requestLayoutView();
     emit preferredWidthChanged();
 }
 
@@ -1626,7 +1640,7 @@ void QQuickSplitViewAttached::resetPreferredWidth()
     if (qFuzzyCompare(newEffectivePreferredWidth, oldEffectivePreferredWidth))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit preferredWidthChanged();
 }
 
@@ -1664,7 +1678,7 @@ void QQuickSplitViewAttached::setPreferredHeight(qreal height)
         return;
 
     d->m_preferredHeight = height;
-    d->layoutView();
+    d->requestLayoutView();
     emit preferredHeightChanged();
 }
 
@@ -1682,7 +1696,7 @@ void QQuickSplitViewAttached::resetPreferredHeight()
     if (qFuzzyCompare(newEffectivePreferredHeight, oldEffectivePreferredHeight))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit preferredHeightChanged();
 }
 
@@ -1713,7 +1727,7 @@ void QQuickSplitViewAttached::setMaximumWidth(qreal width)
         return;
 
     d->m_maximumWidth = width;
-    d->layoutView();
+    d->requestLayoutView();
     emit maximumWidthChanged();
 }
 
@@ -1729,7 +1743,7 @@ void QQuickSplitViewAttached::resetMaximumWidth()
     if (qFuzzyCompare(newEffectiveMaximumWidth, oldEffectiveMaximumWidth))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit maximumWidthChanged();
 }
 
@@ -1760,7 +1774,7 @@ void QQuickSplitViewAttached::setMaximumHeight(qreal height)
         return;
 
     d->m_maximumHeight = height;
-    d->layoutView();
+    d->requestLayoutView();
     emit maximumHeightChanged();
 }
 
@@ -1776,7 +1790,7 @@ void QQuickSplitViewAttached::resetMaximumHeight()
     if (qFuzzyCompare(newEffectiveMaximumHeight, oldEffectiveMaximumHeight))
         return;
 
-    d->layoutView();
+    d->requestLayoutView();
     emit maximumHeightChanged();
 }
 
@@ -1811,7 +1825,7 @@ void QQuickSplitViewAttached::setFillWidth(bool fill)
     d->m_fillWidth = fill;
     if (d->m_splitView && d->m_splitView->orientation() == Qt::Horizontal)
         QQuickSplitViewPrivate::get(d->m_splitView)->updateFillIndex();
-    d->layoutView();
+    d->requestLayoutView();
     emit fillWidthChanged();
 }
 
@@ -1846,7 +1860,7 @@ void QQuickSplitViewAttached::setFillHeight(bool fill)
     d->m_fillHeight = fill;
     if (d->m_splitView && d->m_splitView->orientation() == Qt::Vertical)
         QQuickSplitViewPrivate::get(d->m_splitView)->updateFillIndex();
-    d->layoutView();
+    d->requestLayoutView();
     emit fillHeightChanged();
 }
 
@@ -1881,10 +1895,10 @@ void QQuickSplitViewAttachedPrivate::setView(QQuickSplitView *newView)
     emit q->viewChanged();
 }
 
-void QQuickSplitViewAttachedPrivate::layoutView()
+void QQuickSplitViewAttachedPrivate::requestLayoutView()
 {
     if (m_splitView)
-        QQuickSplitViewPrivate::get(m_splitView)->layout();
+        QQuickSplitViewPrivate::get(m_splitView)->requestLayout();
 }
 
 QQuickSplitViewAttachedPrivate *QQuickSplitViewAttachedPrivate::get(QQuickSplitViewAttached *attached)

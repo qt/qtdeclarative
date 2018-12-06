@@ -187,6 +187,8 @@ TestCase {
 
         var item0 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "salmon" })
         verify(item0)
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         // The last item fills the width by default, and since there is only one item...
         compare(item0.x, 0)
         compare(item0.y, 0)
@@ -195,6 +197,8 @@ TestCase {
 
         var item1 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "steelblue" })
         verify(item1)
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         // Now that a second item has been added, the first item goes back to its preferred (implicit) width.
         compare(item0.x, 0)
         compare(item0.y, 0)
@@ -218,6 +222,8 @@ TestCase {
 
         var item0 = rectangleComponent.createObject(control, { color: "salmon" })
         verify(item0)
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, testCase.width)
@@ -225,6 +231,8 @@ TestCase {
 
         var item1 = rectangleComponent.createObject(control, { color: "steelblue" })
         verify(item1)
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 0)
@@ -299,6 +307,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         item0.SplitView.preferredWidth = 25
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 25)
@@ -321,6 +331,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         item0.SplitView.minimumWidth = 50
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 50)
@@ -343,6 +355,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         item0.SplitView.preferredWidth = 100
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 100)
@@ -365,6 +379,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         item0.SplitView.maximumWidth = 75
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 75)
@@ -387,6 +403,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         item1.SplitView.fillWidth = true
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 75)
@@ -696,9 +714,13 @@ TestCase {
 
         var splitItem = control.itemAt(data.splitItemIndex)
         splitItem.SplitView[data.propertyName] = data.propertyValue
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesBefore, "after setting attached property")
 
         splitItem.SplitView[data.propertyName] = undefined
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfter, "after resetting attached property")
     }
 
@@ -738,6 +760,8 @@ TestCase {
         compare(item2.height, testCase.height)
 
         control.orientation = Qt.Vertical
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, testCase.width)
@@ -1076,6 +1100,8 @@ TestCase {
             fillItem.SplitView.fillHeight = true
 
         // Check the sizes of the items before the drag.
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesBeforeDrag, "before drag")
 
         // Drag the handle.
@@ -1176,6 +1202,8 @@ TestCase {
         else
             control.height = testCase.height
 
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometries)
     }
 
@@ -1230,6 +1258,8 @@ TestCase {
         if (data.hasOwnProperty("splitItemImplicitHeight"))
             firstItem.implicitHeight = data.splitItemImplicitHeight
 
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometries)
     }
 
@@ -1322,7 +1352,8 @@ TestCase {
         verify(control)
 
         control.handle = data.handleComponent
-
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometries)
     }
 
@@ -1427,6 +1458,8 @@ TestCase {
             control.insertItem(data.insertItemAtIndex, itemToAdd)
         }
 
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometries)
     }
 
@@ -1524,6 +1557,8 @@ TestCase {
             itemToHide.visible = false
         }
 
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometries)
     }
 
@@ -1570,6 +1605,8 @@ TestCase {
             verify(itemToHide)
             itemToHide.visible = false
         }
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterHiding, "after hiding")
 
         for (i = 0; i < data.showIndices.length; ++i) {
@@ -1577,6 +1614,8 @@ TestCase {
             verify(itemToShow)
             itemToShow.visible = true
         }
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterShowing, "after showing")
     }
 
@@ -1631,6 +1670,8 @@ TestCase {
         }
 
         control.moveItem(data.moveFromIndex, data.moveToIndex)
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterMoving, "after moving")
 
         for (i = 0; i < data.showIndices.length; ++i) {
@@ -1638,6 +1679,8 @@ TestCase {
             verify(itemToShow)
             itemToShow.visible = true
         }
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterShowing, "after showing")
     }
 
@@ -1663,6 +1706,8 @@ TestCase {
         control.height = control.parent.height - 100
         flickable.contentWidth = control.width
         flickable.contentHeight = control.height
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
 
         var contentXSpy = signalSpyComponent.createObject(flickable,
             { target: flickable, signalName: "contentXChanged" })
@@ -1688,6 +1733,8 @@ TestCase {
         control.width = control.parent.width - 100
         control.height = 400
         var firstItemOriginalHeight = firstItem.height
+        verify(isPolishScheduled(control))
+        verify(waitForItemPolished(control))
 
         // Add some horizontal movement in there as well.
         mouseDrag(firstHandle, firstHandle.width / 2, firstHandle.height / 2, 50, 100)
