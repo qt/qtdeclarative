@@ -151,17 +151,18 @@
             \li Name
             \li Purpose
         \row
-        \row
             \li void applicationAvailable()
             \li Called right after the QApplication object was instantiated.
                 Use this function to setup everything that is not related
                 to QML directly.
+        \row
             \li void qmlEngineAvailable(QQmlEngine*)
             \li Called when the QML engine is available.
                 Any \l {QQmlEngine::addImportPath}{import paths},
                 \l {QQmlEngine::addPluginPath}{plugin paths},
                 and \l {QQmlFileSelector::setExtraSelectors}{extra file selectors}
                 will have been set on the engine by this point.
+        \row
             \li void cleanupTestCase()
             \li Called right after the test execution has finished.
                 Use this function to clean up before everything will start to be destructed.
