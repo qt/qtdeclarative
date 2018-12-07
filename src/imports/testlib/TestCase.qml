@@ -919,12 +919,12 @@ Item {
 
         Additionally, the returned image object has the following methods:
         \list
-        \li red(x, y) Returns the red channel value of the pixel at \a x, \a y position
-        \li green(x, y) Returns the green channel value of the pixel at \a x, \a y position
-        \li blue(x, y) Returns the blue channel value of the pixel at \a x, \a y position
-        \li alpha(x, y) Returns the alpha channel value of the pixel at \a x, \a y position
-        \li pixel(x, y) Returns the color value of the pixel at \a x, \a y position
-        \li equals(image) Returns \c true if this image is identical to \a image -
+        \li \c {red(x, y)} Returns the red channel value of the pixel at \e x, \e y position
+        \li \c {green(x, y)} Returns the green channel value of the pixel at \e x, \e y position
+        \li \c {blue(x, y)} Returns the blue channel value of the pixel at \e x, \e y position
+        \li \c {alpha(x, y)} Returns the alpha channel value of the pixel at \e x, \e y position
+        \li \c {pixel(x, y)} Returns the color value of the pixel at \e x, \e y position
+        \li \c {equals(image)} Returns \c true if this image is identical to \e image -
             see \l QImage::operator== (since 5.6)
 
         For example:
@@ -938,7 +938,8 @@ Item {
         var newImage = grabImage(rect);
         verify(!newImage.equals(image));
         \endcode
-        \li save(path) Saves the image to the given \a path. If the image cannot
+
+        \li \c {save(path)} Saves the image to the given \e path. If the image cannot
         be saved, an exception will be thrown. (since 5.10)
 
         This can be useful to perform postmortem analysis on failing tests, for
@@ -955,8 +956,6 @@ Item {
         \endcode
 
         \endlist
-
-        \sa
     */
     function grabImage(item) {
         return qtest_results.grabImage(item);
@@ -1221,7 +1220,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyPress(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates pressing a \a key with an optional \a modifier on the currently
+        Simulates pressing a \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1249,7 +1248,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyRelease(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates releasing a \a key with an optional \a modifier on the currently
+        Simulates releasing a \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1275,7 +1274,7 @@ Item {
     /*!
         \qmlmethod TestCase::keyClick(key, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates clicking of \a key with an optional \a modifier on the currently
+        Simulates clicking of \a key with optional \a modifiers on the currently
         focused item.  If \a delay is larger than 0, the test will wait for
         \a delay milliseconds.
 
@@ -1321,7 +1320,7 @@ Item {
     /*!
         \qmlmethod TestCase::mousePress(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates pressing a mouse \a button with an optional \a modifier
+        Simulates pressing a mouse \a button with optional \a modifiers
         on an \a item.  The position is defined by \a x and \a y.
         If \a x or \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1355,7 +1354,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseRelease(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates releasing a mouse \a button with an optional \a modifier
+        Simulates releasing a mouse \a button with optional \a modifiers
         on an \a item.  The position of the release is defined by \a x and \a y.
         If \a x or \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1389,7 +1388,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseDrag(item, x, y, dx, dy, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates dragging the mouse on an \a item with \a button pressed and an optional \a modifier.
+        Simulates dragging the mouse on an \a item with \a button pressed and optional \a modifiers
         The initial drag position is defined by \a x and \a y,
         and drag distance is defined by \a dx and \a dy. If \a delay is specified,
         the test will wait for the specified amount of milliseconds before releasing the button.
@@ -1442,7 +1441,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates clicking a mouse \a button with an optional \a modifier
+        Simulates clicking a mouse \a button with optional \a modifiers
         on an \a item.  The position of the click is defined by \a x and \a y.
         If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1476,7 +1475,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseDoubleClick(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates double-clicking a mouse \a button with an optional \a modifier
+        Simulates double-clicking a mouse \a button with optional \a modifiers
         on an \a item.  The position of the click is defined by \a x and \a y.
         If \a x and \a y are not defined the position will be the center of \a item.
         If \a delay is specified, the test will wait for the specified amount of
@@ -1511,7 +1510,7 @@ Item {
         \qmlmethod TestCase::mouseDoubleClickSequence(item, x = item.width / 2, y = item.height / 2, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
         Simulates the full sequence of events generated by double-clicking a mouse
-        \a button with an optional \a modifier on an \a item.
+        \a button with optional \a modifiers on an \a item.
 
         This method reproduces the sequence of mouse events generated when a user makes
         a double click: Press-Release-Press-DoubleClick-Release.
@@ -1577,7 +1576,7 @@ Item {
     /*!
         \qmlmethod TestCase::mouseWheel(item, x, y, xDelta, yDelta, button = Qt.LeftButton, modifiers = Qt.NoModifier, delay = -1)
 
-        Simulates rotating the mouse wheel on an \a item with \a button pressed and an optional \a modifier.
+        Simulates rotating the mouse wheel on an \a item with \a button pressed and optional \a modifiers.
         The position of the wheel event is defined by \a x and \a y.
         If \a delay is specified, the test will wait for the specified amount of milliseconds before releasing the button.
 

@@ -887,19 +887,3 @@ console.log(c + " " + d); // false true
 
     \sa {QML Basic Types}
 */
-
-/*!
-\qmlmodule QtTest 1.\QtMinorVersion
-\title Qt Quick Test QML Types
-\brief This module provides QML types to unit test your QML application
-\ingroup qmlmodules
-
-You can import this module using the following statement:
-
-\qml \QtMinorVersion
-import QtTest 1.\1
-\endqml
-
-For more information about how to use these types, see
-\l{Qt Quick Test}.
-*/

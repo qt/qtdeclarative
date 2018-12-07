@@ -77,8 +77,6 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \fn bool qIsPolishScheduled(const QQuickItem *item)
-    \relates QtQuickTest
     \since 5.13
 
     Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
@@ -103,6 +101,9 @@ QT_BEGIN_NAMESPACE
     makes it obvious why an item wasn't polished and allows tests to
     fail early under such circumstances.
 
+    The QML equivalent of this function is
+    \l {TestCase::}{isPolishScheduled()}.
+
     \sa QQuickItem::polish(), QQuickItem::updatePolish()
 */
 bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
@@ -111,8 +112,6 @@ bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
 }
 
 /*!
-    \fn bool qWaitForItemPolished(const QQuickItem *item, int timeout = 5000)
-    \relates QtQuickTest
     \since 5.13
 
     Waits for \a timeout milliseconds or until
@@ -121,11 +120,8 @@ bool QQuickTest::qIsPolishScheduled(const QQuickItem *item)
     Returns \c true if \c updatePolish() was called on \a item within
     \a timeout milliseconds, otherwise returns \c false.
 
-    To use this function, add the following line to your test's \c .pro file:
-
-    \code
-        QT += qmltest
-    \endcode
+    The QML equivalent of this function is
+    \l {TestCase::}{waitForItemPolished()}.
 
     \sa QQuickItem::polish(), QQuickItem::updatePolish(),
         QQuickTest::qIsPolishScheduled()
