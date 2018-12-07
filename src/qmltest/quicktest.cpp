@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn bool qIsPolishScheduled(const QQuickItem *item)
-    \fn relates QtQuickTest
+    \relates QtQuickTest
     \since 5.13
 
     Returns \c true if \l {QQuickItem::}{updatePolish()} has not been called
