@@ -89,7 +89,7 @@ public:
     Qt_AllocaWrapper() { m_data = 0; }
     ~Qt_AllocaWrapper() { free(m_data); }
     void *data() { return m_data; }
-    void allocate(int size) { m_data = malloc(size); }
+    void allocate(int size) { m_data = malloc(size); memset(m_data, 0, size); }
 private:
     void *m_data;
 };
