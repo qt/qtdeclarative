@@ -241,8 +241,11 @@ void QQuickDialogButtonBoxPrivate::resizeContent()
         return;
 
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
-    if (alignment != 0)
-        geometry = alignedRect(q->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight, alignment, QSizeF(contentWidth, contentHeight), geometry);
+    if (alignment != 0) {
+        qreal cw = (alignment & Qt::AlignHorizontal_Mask) == 0 ? q->availableWidth() : contentItem->property("contentWidth").toReal();
+        qreal ch = (alignment & Qt::AlignVertical_Mask) == 0 ? q->availableHeight() : contentItem->property("contentHeight").toReal();
+        geometry = alignedRect(q->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight, alignment, QSizeF(cw, ch), geometry);
+    }
 
     contentItem->setPosition(geometry.topLeft());
     contentItem->setSize(geometry.size());

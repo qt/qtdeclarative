@@ -275,4 +275,21 @@ TestCase {
 
         compare(okButton.width + cancelButton.width, control.availableWidth - control.spacing)
     }
+
+    function test_oneButtonInFixedWidthBox() {
+        var control = createTemporaryObject(buttonBox, testCase,
+            { width: 400, standardButtons: Dialog.Close })
+        verify(control)
+
+        var listView = control.contentItem
+        waitForRendering(listView)
+
+        var button = control.itemAt(0)
+        verify(button)
+
+        // The button should never go outside of the box.
+        var buttonPosInBox = button.mapToItem(control, 0, 0)
+        verify(buttonPosInBox.x >= 0)
+        verify(buttonPosInBox.x + button.width < control.width)
+    }
 }
