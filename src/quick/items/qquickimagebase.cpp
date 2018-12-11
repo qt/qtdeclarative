@@ -241,46 +241,47 @@ int QQuickImageBase::frameCount() const
     return d->frameCount;
 }
 
-void QQuickImageBase::load()
+void QQuickImageBase::loadEmptyUrl()
 {
     Q_D(QQuickImageBase);
+    d->pix.clear(this);
+    if (d->progress != 0.0) {
+        d->progress = 0.0;
+        emit progressChanged(d->progress);
+    }
+    d->status = Null;
+    setImplicitSize(0, 0); // also called in QQuickImageBase::pixmapChange, but not QQuickImage/QQuickBorderImage overrides
+    pixmapChange(); // This calls update() in QQuickBorderImage and QQuickImage, not in QQuickImageBase...
 
-    if (d->url.isEmpty()) {
-        d->pix.clear(this);
-        if (d->progress != 0.0) {
-            d->progress = 0.0;
-            emit progressChanged(d->progress);
-        }
-        pixmapChange();
-        d->status = Null;
-        emit statusChanged(d->status);
+    emit statusChanged(d->status);
+    if (sourceSize() != d->oldSourceSize) {
+        d->oldSourceSize = sourceSize();
+        emit sourceSizeChanged();
+    }
+    if (autoTransform() != d->oldAutoTransform) {
+        d->oldAutoTransform = autoTransform();
+        emitAutoTransformBaseChanged();
+    }
+    update(); // .. but double updating should be harmless
+}
 
-        if (sourceSize() != d->oldSourceSize) {
-            d->oldSourceSize = sourceSize();
-            emit sourceSizeChanged();
-        }
-        if (autoTransform() != d->oldAutoTransform) {
-            d->oldAutoTransform = autoTransform();
-            emitAutoTransformBaseChanged();
-        }
-        update();
+void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
+{
+    Q_D(QQuickImageBase);
+    QQuickPixmap::Options options;
+    if (d->async)
+        options |= QQuickPixmap::Asynchronous;
+    if (d->cache)
+        options |= QQuickPixmap::Cache;
+    d->pix.clear(this);
+    QUrl loadUrl = url;
+    QQmlEngine* engine = qmlEngine(this);
+    if (engine && engine->urlInterceptor())
+        loadUrl = engine->urlInterceptor()->intercept(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
 
-    } else {
-        QQuickPixmap::Options options;
-        if (d->async)
-            options |= QQuickPixmap::Asynchronous;
-        if (d->cache)
-            options |= QQuickPixmap::Cache;
-        d->pix.clear(this);
-
+    if (loadOptions & HandleDPR) {
         const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
         d->devicePixelRatio = 1.0;
-
-        QUrl loadUrl = d->url;
-        QQmlEngine* engine = qmlEngine(this);
-        if (engine && engine->urlInterceptor())
-            loadUrl = engine->urlInterceptor()->intercept(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
-
         bool updatedDevicePixelRatio = false;
         if (d->sourcesize.isValid())
             updatedDevicePixelRatio = d->updateDevicePixelRatio(targetDevicePixelRatio);
@@ -290,34 +291,51 @@ void QQuickImageBase::load()
             // an "@2x" file is found.
             resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         }
+    }
 
-        d->pix.load(qmlEngine(this), loadUrl, d->sourcesize * d->devicePixelRatio, options, d->providerOptions, d->currentFrame, d->frameCount);
+    d->pix.load(qmlEngine(this),
+                loadUrl,
+                (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
+                options,
+                (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
+                d->currentFrame, d->frameCount);
 
-        if (d->pix.isLoading()) {
-            if (d->progress != 0.0) {
-                d->progress = 0.0;
-                emit progressChanged(d->progress);
-            }
-            if (d->status != Loading) {
-                d->status = Loading;
-                emit statusChanged(d->status);
-            }
-
-            static int thisRequestProgress = -1;
-            static int thisRequestFinished = -1;
-            if (thisRequestProgress == -1) {
-                thisRequestProgress =
-                    QQuickImageBase::staticMetaObject.indexOfSlot("requestProgress(qint64,qint64)");
-                thisRequestFinished =
-                    QQuickImageBase::staticMetaObject.indexOfSlot("requestFinished()");
-            }
-
-            d->pix.connectFinished(this, thisRequestFinished);
-            d->pix.connectDownloadProgress(this, thisRequestProgress);
-            update(); //pixmap may have invalidated texture, updatePaintNode needs to be called before the next repaint
-        } else {
-            requestFinished();
+    if (d->pix.isLoading()) {
+        if (d->progress != 0.0) {
+            d->progress = 0.0;
+            emit progressChanged(d->progress);
         }
+        if (d->status != Loading) {
+            d->status = Loading;
+            emit statusChanged(d->status);
+        }
+
+        static int thisRequestProgress = -1;
+        static int thisRequestFinished = -1;
+        if (thisRequestProgress == -1) {
+            thisRequestProgress =
+                QQuickImageBase::staticMetaObject.indexOfSlot("requestProgress(qint64,qint64)");
+            thisRequestFinished =
+                QQuickImageBase::staticMetaObject.indexOfSlot("requestFinished()");
+        }
+
+        d->pix.connectFinished(this, thisRequestFinished);
+        d->pix.connectDownloadProgress(this, thisRequestProgress);
+        update(); //pixmap may have invalidated texture, updatePaintNode needs to be called before the next repaint
+    } else {
+        requestFinished();
+    }
+}
+
+void QQuickImageBase::load()
+{
+    Q_D(QQuickImageBase);
+
+    if (d->url.isEmpty()) {
+        loadEmptyUrl();
+        update();
+    } else {
+        loadPixmap(d->url, LoadPixmapOptions(HandleDPR | UseProviderOptions));
     }
 }
 
