@@ -52,8 +52,8 @@ object, the object definition should declare a signal handler named
 letter capitalized. The signal handler should contain the JavaScript code to be
 executed when the signal handler is invoked.
 
-For example, the \l [QtQuick.Controls2]{Button} type from the
-\l{Qt Quick Controls 2}{Qt Quick Controls} module has a \c clicked signal, which
+For example, the \l [QtQuickControls]{Button} type from the
+\l{Qt Quick Controls} module has a \c clicked signal, which
 is emitted whenever the button is clicked. In this case, the signal handler for
 receiving this signal should be \c onClicked. In the example below, whenever
 the button is clicked, the \c onClicked handler is invoked, applying a random
