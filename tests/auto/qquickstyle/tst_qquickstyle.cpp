@@ -39,6 +39,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
 #include "../shared/util.h"
@@ -101,6 +102,10 @@ void tst_QQuickStyle::lookup()
     QVERIFY(!QQuickStyle::path().isEmpty());
 
     loadControls();
+
+    // The font size for editors in the (default) Normal variant is 16.
+    // If this is wrong, the style plugin may not have been loaded.
+    QCOMPARE(QQuickTheme::instance()->font(QQuickTheme::TextArea).pixelSize(), 16);
 
     QCOMPARE(QQuickStyle::name(), QString("Material"));
     QVERIFY(!QQuickStyle::path().isEmpty());

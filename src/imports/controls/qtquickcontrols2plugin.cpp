@@ -278,6 +278,10 @@ QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
                     // release versions of the same Qt libraries (due to the plugin's dependencies).
                     filePath += QStringLiteral("_debug");
 #endif // Q_OS_MACOS && QT_DEBUG
+#if defined(Q_OS_WIN) && defined(QT_DEBUG)
+                    // Debug versions of plugins have a "d" prefix on Windows.
+                    filePath += QLatin1Char('d');
+#endif // Q_OS_WIN && QT_DEBUG
                     loader.setFileName(filePath);
                     QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(loader.instance());
                     if (stylePlugin)
