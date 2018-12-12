@@ -141,6 +141,13 @@ struct RegisteredPlugin {
 
 struct StringRegisteredPluginMap : public QMap<QString, RegisteredPlugin> {
     QMutex mutex;
+
+    ~StringRegisteredPluginMap()
+    {
+        QMutexLocker lock(&mutex);
+        for (const RegisteredPlugin &plugin : qAsConst(*this))
+            delete plugin.loader;
+    }
 };
 
 Q_GLOBAL_STATIC(StringRegisteredPluginMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri and the PluginLoaders
