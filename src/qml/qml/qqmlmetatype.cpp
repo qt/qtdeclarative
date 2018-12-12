@@ -2150,11 +2150,14 @@ int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMet
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
 
-    QQmlType type(data->metaObjectToType.value(mo));
-    if (type.attachedPropertiesFunction(engine))
-        return type.attachedPropertiesId(engine);
-    else
-        return -1;
+    for (auto it = data->metaObjectToType.constFind(mo), end = data->metaObjectToType.constEnd();
+         it != end && it.key() == mo; ++it) {
+        const QQmlType type(it.value());
+        if (type.attachedPropertiesFunction(engine))
+            return type.attachedPropertiesId(engine);
+    }
+
+    return -1;
 }
 
 QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePrivate *engine, int id)
