@@ -17,6 +17,7 @@ Rectangle {
         anchors.fill: parent
         value: accelerating ? 400 : 0
         Behavior on value {
+            objectName: "behavior"
             NumberAnimation {
                 duration: 500
             }

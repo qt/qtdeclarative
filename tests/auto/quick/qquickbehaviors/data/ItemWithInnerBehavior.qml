@@ -5,6 +5,7 @@ Item {
 
     property bool someValue
     Behavior on someValue {
+        objectName: "behavior"
         ScriptAction { script: { parent.behaviorTriggered = true }}
     }
 }

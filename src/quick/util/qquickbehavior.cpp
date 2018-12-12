@@ -171,9 +171,28 @@ void QQuickBehavior::setEnabled(bool enabled)
     emit enabledChanged();
 }
 
+/*!
+    \qmlproperty Variant QtQuick::Behavior::targetValue
+
+    This property holds the target value of the property being controlled by the Behavior.
+    This value is set by the Behavior before the animation is started.
+
+    \since QtQuick 2.13
+*/
+QVariant QQuickBehavior::targetValue() const
+{
+    Q_D(const QQuickBehavior);
+    return d->targetValue;
+}
+
 void QQuickBehavior::write(const QVariant &value)
 {
     Q_D(QQuickBehavior);
+    const bool targetValueHasChanged = d->targetValue != value;
+    if (targetValueHasChanged) {
+        d->targetValue = value;
+        emit targetValueChanged(); // emitting the signal here should allow
+    }                              // d->enabled to change if scripted by the user.
     bool bypass = !d->enabled || !d->finalized || QQmlEnginePrivate::designerMode();
     if (!bypass)
         qmlExecuteDeferred(this);
@@ -181,15 +200,12 @@ void QQuickBehavior::write(const QVariant &value)
         if (d->animationInstance)
             d->animationInstance->stop();
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
-        d->targetValue = value;
         return;
     }
 
     bool behaviorActive = d->animation->isRunning();
-    if (behaviorActive && value == d->targetValue)
+    if (behaviorActive && !targetValueHasChanged)
         return;
-
-    d->targetValue = value;
 
     if (d->animationInstance
             && (d->animationInstance->duration() != -1
