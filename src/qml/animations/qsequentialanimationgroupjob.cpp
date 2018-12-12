@@ -204,6 +204,13 @@ int QSequentialAnimationGroupJob::duration() const
     return ret;
 }
 
+void QSequentialAnimationGroupJob::clear()
+{
+    m_currentAnimation = nullptr;
+    m_previousLoop = 0;
+    QAnimationGroupJob::clear();
+}
+
 void QSequentialAnimationGroupJob::updateCurrentTime(int currentTime)
 {
     if (!m_currentAnimation)

@@ -68,6 +68,7 @@ public:
     int duration() const override;
 
     QAbstractAnimationJob *currentAnimation() const { return m_currentAnimation; }
+    void clear() override;
 
 protected:
     void updateCurrentTime(int) override;

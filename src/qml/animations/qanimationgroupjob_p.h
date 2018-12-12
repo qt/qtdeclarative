@@ -72,7 +72,7 @@ public:
     QAbstractAnimationJob *firstChild() const { return m_firstChild; }
     QAbstractAnimationJob *lastChild() const { return m_lastChild; }
 
-    void clear();
+    virtual void clear();
 
     //called by QAbstractAnimationJob
     virtual void uncontrolledAnimationFinished(QAbstractAnimationJob *animation);
