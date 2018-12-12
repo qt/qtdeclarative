@@ -118,6 +118,7 @@ class QSGOpenVGNinePatchNode : public QSGNinePatchNode, public QSGOpenVGRenderab
 {
 public:
     QSGOpenVGNinePatchNode();
+    ~QSGOpenVGNinePatchNode();
 
     void setTexture(QSGTexture *texture) override;
     void setBounds(const QRectF &bounds) override;

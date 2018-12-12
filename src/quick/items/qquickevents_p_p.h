@@ -723,5 +723,6 @@ QML_DECLARE_TYPE(QQuickCloseEvent)
 QML_DECLARE_TYPE(QQuickPointerDevice)
 QML_DECLARE_TYPE(QPointingDeviceUniqueId)
 QML_DECLARE_TYPE(QQuickPointerEvent)
+Q_DECLARE_METATYPE(QQuickEventPoint::GrabTransition)
 
 #endif // QQUICKEVENTS_P_P_H

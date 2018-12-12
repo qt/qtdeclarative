@@ -468,7 +468,7 @@ QList<QQmlDebugClient *> tst_QQmlProfilerService::createClients()
     m_client.reset(new QQmlProfilerTestClient(m_connection));
     m_client->client->setRecording(m_recordFromStart);
     m_client->client->setFlushInterval(m_flushInterval);
-    QObject::connect(m_client->client, &QQmlProfilerClient::complete,
+    QObject::connect(m_client->client.data(), &QQmlProfilerClient::complete,
                      this, [this](){ m_isComplete = true; });
     return QList<QQmlDebugClient *>({m_client->client});
 }

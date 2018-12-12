@@ -45,6 +45,7 @@
 
 #include <private/qquickwindow_p.h>
 #include <QElapsedTimer>
+#include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>
 #include <private/qsgsoftwarerenderer_p.h>
 #include <qpa/qplatformbackingstore.h>
@@ -98,6 +99,8 @@ void QSGSoftwareRenderLoop::windowDestroyed(QQuickWindow *window)
     if (m_windows.size() == 0) {
         rc->invalidate();
     }
+
+    delete d->animationController;
 }
 
 void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)

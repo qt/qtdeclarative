@@ -102,6 +102,62 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
 }
 
+const char *globalNames[] = {
+    "isNaN",
+    "parseFloat",
+    "String",
+    "EvalError",
+    "URIError",
+    "Math",
+    "encodeURIComponent",
+    "RangeError",
+    "eval",
+    "isFinite",
+    "ReferenceError",
+    "Infinity",
+    "Function",
+    "RegExp",
+    "Number",
+    "parseInt",
+    "Object",
+    "decodeURI",
+    "TypeError",
+    "Boolean",
+    "encodeURI",
+    "NaN",
+    "Error",
+    "decodeURIComponent",
+    "Date",
+    "Array",
+    "Symbol",
+    "escape",
+    "unescape",
+    "SyntaxError",
+    "undefined",
+    "JSON",
+    "ArrayBuffer",
+    "SharedArrayBuffer",
+    "DataView",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
+    "WeakSet",
+    "Set",
+    "WeakMap",
+    "Map",
+    "Reflect",
+    "Proxy",
+    "Atomics",
+    "Promise",
+    nullptr
+};
+
 void Codegen::generateFromProgram(const QString &fileName,
                                   const QString &finalUrl,
                                   const QString &sourceCode,
@@ -117,6 +173,18 @@ void Codegen::generateFromProgram(const QString &fileName,
     // ### should be set on the module outside of this method
     _module->fileName = fileName;
     _module->finalUrl = finalUrl;
+
+    if (contextType == ContextType::ScriptImportedByQML) {
+        // the global object is frozen, so we know that members of it are
+        // pointing to the global object. This is important so that references
+        // to Math etc. do not go through the expensive path in the context wrapper
+        // that tries to see whether we have a matching type
+        //
+        // Since this can be called from the loader thread we can't get the list
+        // directly from the engine, so let's hardcode the most important ones here
+        for (const char **g = globalNames; *g != nullptr; ++g)
+            m_globalNames << QString::fromLatin1(*g);
+    }
 
     ScanFunctions scan(this, sourceCode, contextType);
     scan(node);
@@ -2336,6 +2404,8 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
 
     Reference r = Reference::fromName(this, name);
     r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
+    if (!r.global && m_globalNames.contains(name))
+        r.global = true;
     return r;
 }
 

@@ -174,7 +174,7 @@ void QSGOpenVGRectangleNode::render()
 
 }
 
-QSGOpenVGImageNode::QSGOpenVGImageNode()
+QSGOpenVGImageNode::QSGOpenVGImageNode() : m_texture(nullptr), m_owns(false)
 {
     // Set Dummy material and geometry to avoid asserts
     setMaterial((QSGMaterial*)1);
@@ -184,9 +184,8 @@ QSGOpenVGImageNode::QSGOpenVGImageNode()
 
 QSGOpenVGImageNode::~QSGOpenVGImageNode()
 {
-    if (m_owns) {
-        m_texture->deleteLater();
-    }
+    if (m_owns)
+        delete m_texture;
 }
 
 void QSGOpenVGImageNode::setRect(const QRectF &rect)
@@ -212,6 +211,8 @@ QRectF QSGOpenVGImageNode::sourceRect() const
 
 void QSGOpenVGImageNode::setTexture(QSGTexture *texture)
 {
+    if (m_owns)
+        delete m_texture;
     m_texture = texture;
     markDirty(DirtyMaterial);
 }
@@ -321,7 +322,7 @@ void QSGOpenVGImageNode::render()
 
 }
 
-QSGOpenVGNinePatchNode::QSGOpenVGNinePatchNode()
+QSGOpenVGNinePatchNode::QSGOpenVGNinePatchNode() : m_texture(nullptr)
 {
     // Set Dummy material and geometry to avoid asserts
     setMaterial((QSGMaterial*)1);
@@ -329,8 +330,14 @@ QSGOpenVGNinePatchNode::QSGOpenVGNinePatchNode()
 
 }
 
+QSGOpenVGNinePatchNode::~QSGOpenVGNinePatchNode()
+{
+    delete m_texture;
+}
+
 void QSGOpenVGNinePatchNode::setTexture(QSGTexture *texture)
 {
+    delete m_texture;
     m_texture = texture;
     markDirty(DirtyMaterial);
 }

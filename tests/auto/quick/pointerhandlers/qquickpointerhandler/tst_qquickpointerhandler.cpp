@@ -182,12 +182,18 @@ public:
 
 class EventHandler : public QQuickPointerHandler
 {
+public:
     void handlePointerEventImpl(QQuickPointerEvent *event) override
     {
         QQuickPointerHandler::handlePointerEventImpl(event);
         if (!enabled())
             return;
-        EventItem *item = static_cast<EventItem *>(target());
+        ++eventCount;
+        EventItem *item = qmlobject_cast<EventItem *>(target());
+        if (!item) {
+            event->point(0)->setGrabberPointerHandler(this);
+            return;
+        }
         qCDebug(lcPointerTests) << item->objectName() << event;
         int c = event->pointCount();
         for (int i = 0; i < c; ++i) {
@@ -206,10 +212,13 @@ class EventHandler : public QQuickPointerHandler
 
     void onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabTransition stateChange, QQuickEventPoint *point) override
     {
-        EventItem *item = static_cast<EventItem *>(target());
-        item->eventList.append(Event(Event::HandlerDestination, QEvent::None,
-            static_cast<Qt::TouchPointState>(point->state()), stateChange, eventPos(point), point->scenePosition()));
+        EventItem *item = qmlobject_cast<EventItem *>(target());
+        if (item)
+            item->eventList.append(Event(Event::HandlerDestination, QEvent::None,
+                static_cast<Qt::TouchPointState>(point->state()), stateChange, eventPos(point), point->scenePosition()));
     }
+
+    int eventCount = 0;
 };
 
 class tst_PointerHandlers : public QQmlDataTest
@@ -228,6 +237,9 @@ private slots:
     void mouseEventDelivery();
     void touchReleaseOutside_data();
     void touchReleaseOutside();
+    void dynamicCreation();
+    void handlerInWindow();
+    void dynamicCreationInWindow();
 
 protected:
     bool eventFilter(QObject *, QEvent *event)
@@ -591,6 +603,76 @@ void tst_PointerHandlers::touchReleaseOutside()
     qCDebug(lcPointerTests) << eventItem1->eventList;
     QCOMPARE(eventItem1->eventList.size(), eventCount);
     QCOMPARE_EVENT(endIndexToTest, endDestination, endType, endState, endGrabState);
+}
+
+void tst_PointerHandlers::dynamicCreation()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "dynamicallyCreated.qml");
+    QQuickView * window = windowPtr.data();
+
+    EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
+    QVERIFY(eventItem1);
+    EventHandler *handler = window->rootObject()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+
+    QCOMPARE(handler->parentItem(), eventItem1);
+    QCOMPARE(handler->target(), eventItem1);
+
+    QPoint p1(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, Qt::TouchPointPressed, NoGrab);
+    QCOMPARE_EVENT(1, Event::MouseDestination, QEvent::MouseButtonPress, Qt::TouchPointPressed, NoGrab);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+}
+
+void tst_PointerHandlers::handlerInWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("handlerInWindow.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(component.create());
+    QScopedPointer<QQuickWindow> cleanup(window);
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    EventHandler *handler = window->contentItem()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+
+    QCOMPARE(handler->parentItem(), window->contentItem());
+    QCOMPARE(handler->target(), window->contentItem());
+
+    QPoint p1(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 2);
+}
+
+void tst_PointerHandlers::dynamicCreationInWindow()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("dynamicallyCreatedInWindow.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(component.create());
+    QScopedPointer<QQuickWindow> cleanup(window);
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    EventHandler *handler = window->contentItem()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+
+    QCOMPARE(handler->parentItem(), window->contentItem());
+    QCOMPARE(handler->target(), window->contentItem());
+
+    QPoint p1(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 1);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(handler->eventCount, 2);
 }
 
 QTEST_MAIN(tst_PointerHandlers)

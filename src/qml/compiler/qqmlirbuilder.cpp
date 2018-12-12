@@ -1835,8 +1835,9 @@ JSCodeGen::JSCodeGen(const QString &sourceCode, QV4::Compiler::JSUnitGenerator *
     , _scopeObject(nullptr)
     , _qmlContextSlot(-1)
     , _importedScriptsSlot(-1)
-    , m_globalNames(globalNames)
 {
+    m_globalNames = globalNames;
+
     _module = jsModule;
     _fileNameIsUrl = true;
 }
@@ -2306,15 +2307,10 @@ QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &n
             return Reference::fromQmlContextObject(base, data->coreIndex(), data->notifyIndex(), capturePolicy);
         }
     }
-
-    Reference r = Reference::fromName(this, name);
-    if (m_globalNames.contains(name))
-        r.global = true;
-    return r;
 #else
     Q_UNUSED(name)
-    return Reference();
 #endif // V4_BOOTSTRAP
+    return Reference();
 }
 
 #ifndef V4_BOOTSTRAP

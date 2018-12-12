@@ -3,6 +3,7 @@ QT_FOR_CONFIG += qml-private
 
 qtConfig(qml-devtools) {
     SUBDIRS += \
+        qmllint \
         qmlmin \
         qmlimportscanner
 
@@ -13,7 +14,6 @@ qtConfig(thread):!android|android_app {
     SUBDIRS += \
         qml
 
-    qtConfig(qml-devtools): SUBDIRS += qmllint
     qtConfig(qml-profiler): SUBDIRS += qmlprofiler
     qtConfig(qml-preview): SUBDIRS += qmlpreview
 

@@ -550,6 +550,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(LoadName)
 
     MOTH_BEGIN_INSTR(LoadGlobalLookup)
+        STORE_IP();
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
         acc = l->globalGetter(l, engine);
         CHECK_EXCEPTION;

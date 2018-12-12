@@ -84,7 +84,8 @@ private:
 
 #endif
 
-#if __cplusplus < 201402L && !QT_CONFIG(cxx14_make_unique)
+#if __cplusplus < 201402L && !QT_CONFIG(cxx14_make_unique)\
+&& !defined(__cpp_lib_make_unique)
 
 namespace std {
     template<typename T, class ...Args>

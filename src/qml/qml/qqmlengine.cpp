@@ -755,6 +755,9 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
             d->context = nullptr;
         }
 
+        if (d->outerContext && d->outerContext->contextObject == o)
+            d->outerContext->contextObject = nullptr;
+
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
         QQmlData::markAsDeleted(o);

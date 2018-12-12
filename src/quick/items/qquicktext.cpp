@@ -2082,6 +2082,8 @@ void QQuickText::resetMaximumLineCount()
 
     \code
     <b></b> - bold
+    <del></del> - strike out (removed content)
+    <s></s> - strike out (no longer accurate or no longer relevant content)
     <strong></strong> - bold
     <i></i> - italic
     <br> - new line
