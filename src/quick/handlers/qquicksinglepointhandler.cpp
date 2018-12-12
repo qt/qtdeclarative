@@ -108,7 +108,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         int candidatePointCount = 0;
         int c = event->pointCount();
         QQuickEventPoint *chosen = nullptr;
-        for (int i = 0; i < c; ++i) {
+        for (int i = 0; i < c && !chosen; ++i) {
             QQuickEventPoint *p = event->point(i);
             if (!p->exclusiveGrabber() && wantsEventPoint(p)) {
                 if (!chosen)
