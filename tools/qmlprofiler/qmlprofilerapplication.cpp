@@ -29,7 +29,6 @@
 #include "qmlprofilerapplication.h"
 #include "constants.h"
 #include <QtCore/QStringList>
-#include <QtCore/QTextStream>
 #include <QtCore/QProcess>
 #include <QtCore/QTimer>
 #include <QtCore/QDateTime>
@@ -37,6 +36,8 @@
 #include <QtCore/QDebug>
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTemporaryFile>
+
+#include <iostream>
 
 static const char commandTextC[] =
         "The following commands are available:\n"
@@ -120,10 +121,8 @@ QmlProfilerApplication::~QmlProfilerApplication()
         logStatus("Killing process ...");
         m_process->kill();
     }
-    if (isInteractive()) {
-        QTextStream err(stderr);
-        err << endl;
-    }
+    if (isInteractive())
+        std::cerr << std::endl;
     delete m_process;
 }
 
@@ -539,10 +538,8 @@ void QmlProfilerApplication::disconnected()
 void QmlProfilerApplication::processHasOutput()
 {
     Q_ASSERT(m_process);
-    while (m_process->bytesAvailable()) {
-        QTextStream out(stderr);
-        out << m_process->readAll();
-    }
+    while (m_process->bytesAvailable())
+        std::cerr << m_process->readAll().constData();
 }
 
 void QmlProfilerApplication::processFinished()
@@ -594,10 +591,9 @@ void QmlProfilerApplication::traceFinished()
 void QmlProfilerApplication::prompt(const QString &line, bool ready)
 {
     if (m_interactive) {
-        QTextStream err(stderr);
         if (!line.isEmpty())
-            err << line << endl;
-        err << QLatin1String("> ");
+            std::cerr << qPrintable(line) << std::endl;
+        std::cerr << "> ";
         if (ready)
             emit readyForCommand();
     }
@@ -605,14 +601,12 @@ void QmlProfilerApplication::prompt(const QString &line, bool ready)
 
 void QmlProfilerApplication::logError(const QString &error)
 {
-    QTextStream err(stderr);
-    err << "Error: " << error << endl;
+    std::cerr << "Error: " << qPrintable(error) << std::endl;
 }
 
 void QmlProfilerApplication::logStatus(const QString &status)
 {
     if (!m_verbose)
         return;
-    QTextStream err(stderr);
-    err << status << endl;
+    std::cerr << qPrintable(status) << std::endl;
 }
