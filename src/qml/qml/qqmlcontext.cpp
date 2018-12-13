@@ -640,6 +640,8 @@ void QQmlContextData::destroy()
         QQmlData *co = contextObjects;
         contextObjects = contextObjects->nextContextObject;
 
+        if (co->context == this)
+            co->context = nullptr;
         co->outerContext = nullptr;
         co->nextContextObject = nullptr;
         co->prevContextObject = nullptr;
