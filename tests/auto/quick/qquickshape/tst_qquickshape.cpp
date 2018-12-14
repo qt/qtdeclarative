@@ -233,7 +233,10 @@ void tst_QQuickShape::render()
     QImage refImg(testFileUrl("pathitem3.png").toLocalFile());
     QVERIFY(!refImg.isNull());
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+             qPrintable(errorMessage));
 }
 
 void tst_QQuickShape::renderWithMultipleSp()
@@ -254,7 +257,10 @@ void tst_QQuickShape::renderWithMultipleSp()
     QImage refImg(testFileUrl("pathitem4.png").toLocalFile());
     QVERIFY(!refImg.isNull());
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+             qPrintable(errorMessage));
 }
 
 void tst_QQuickShape::radialGrad()
@@ -275,7 +281,10 @@ void tst_QQuickShape::radialGrad()
     QImage refImg(testFileUrl("pathitem5.png").toLocalFile());
     QVERIFY(!refImg.isNull());
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+             qPrintable(errorMessage));
 }
 
 void tst_QQuickShape::conicalGrad()
@@ -296,7 +305,10 @@ void tst_QQuickShape::conicalGrad()
     QImage refImg(testFileUrl("pathitem6.png").toLocalFile());
     QVERIFY(!refImg.isNull());
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(img.convertToFormat(refImg.format()), refImg));
+    QString errorMessage;
+    const QImage actualImg = img.convertToFormat(refImg.format());
+    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+             qPrintable(errorMessage));
 }
 
 QTEST_MAIN(tst_QQuickShape)

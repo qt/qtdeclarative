@@ -264,6 +264,7 @@ void tst_SceneGraph::manyWindows()
     const int COUNT = 4;
 
     QImage baseLine;
+    QString errorMessage;
     for (int i=0; i<COUNT; ++i) {
         views << createView(file, parent.data(), (i % 2) * 100, (i / 2) * 100, 100, 100);
     }
@@ -275,7 +276,8 @@ void tst_SceneGraph::manyWindows()
             baseLine = content;
             QVERIFY(containsSomethingOtherThanWhite(baseLine));
         } else {
-            QVERIFY(compareImages(content, baseLine));
+            QVERIFY2(compareImages(content, baseLine, &errorMessage),
+                     qPrintable(errorMessage));
         }
     }
 
@@ -284,7 +286,8 @@ void tst_SceneGraph::manyWindows()
     QQuickView *last = createView(file, parent.data(), 100, 100, 100, 100);
     QVERIFY(QTest::qWaitForWindowExposed(last));
     views << last;
-    QVERIFY(compareImages(baseLine, last->grabWindow()));
+    QVERIFY2(compareImages(baseLine, last->grabWindow(), &errorMessage),
+             qPrintable(errorMessage));
 
     // Wipe and recreate all
     qDeleteAll(views);
@@ -297,7 +300,8 @@ void tst_SceneGraph::manyWindows()
         QQuickView *view = views.at(i);
         QVERIFY(QTest::qWaitForWindowExposed(view));
         QImage content = view->grabWindow();
-        QVERIFY(compareImages(content, baseLine));
+        QVERIFY2(compareImages(content, baseLine, &errorMessage),
+                 qPrintable(errorMessage));
     }
 }
 

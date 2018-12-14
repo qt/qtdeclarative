@@ -596,7 +596,9 @@ void tst_qquickborderimage::borderImageMesh()
     window->setSource(testFileUrl("mesh.qml"));
     QImage mesh = window->grabWindow();
 
-    QVERIFY(QQuickVisualTestUtil::compareImages(mesh, nonmesh));
+    QString errorMessage;
+    QVERIFY2(QQuickVisualTestUtil::compareImages(mesh, nonmesh, &errorMessage),
+             qPrintable(errorMessage));
 }
 #endif
 QTEST_MAIN(tst_qquickborderimage)
