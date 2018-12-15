@@ -594,7 +594,7 @@ int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags 
                 break;
             }
             case Qt::MatchWildcard: {
-                QRegularExpression rx(QRegularExpression::anchoredPattern(QRegularExpression::wildcardToRegularExpression(text)),
+                QRegularExpression rx(QRegularExpression::wildcardToRegularExpression(text),
                                       options);
                 if (rx.match(t).hasMatch())
                     return idx;
