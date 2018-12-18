@@ -85,11 +85,13 @@ public:
     QJSValue roleDataProvider() const;
     void setRoleDataProvider(QJSValue roleDataProvider);
 
-    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    Q_INVOKABLE QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role) const override;
-    bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+    Q_INVOKABLE QVariant data(const QModelIndex &index, const QString &role) const;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    Q_INVOKABLE bool setData(const QModelIndex &index, const QString &role, const QVariant &value);
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::DisplayRole) override;
     QHash<int, QByteArray> roleNames() const override;
 
 Q_SIGNALS:

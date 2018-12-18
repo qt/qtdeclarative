@@ -581,6 +581,36 @@ void QQmlTableModel::setRoleDataProvider(QJSValue roleDataProvider)
     emit roleDataProviderChanged();
 }
 
+/*!
+    \qmlmethod QModelIndex TableModel::index(int row, int column)
+
+    Returns a \l QModelIndex object referencing the given \a row and \a column,
+    which can be passed to the data() function to get the data from that cell,
+    or to setData() to edit the contents of that cell.
+
+    \code
+    import QtQml 2.14
+    import Qt.labs.qmlmodels 1.0
+
+    TableModel {
+        id: model
+        rows: [
+            [{ fruitType: "Apple" }, { fruitPrice: 1.50 }],
+            [{ fruitType: "Orange" }, { fruitPrice: 2.50 }]
+        ]
+        Component.onCompleted: {
+            for (var r = 0; r < model.rowCount; ++r) {
+                console.log("An " + model.data(model.index(r, 0)).fruitType +
+                            " costs " + model.data(model.index(r, 1)).fruitPrice.toFixed(2))
+            }
+        }
+    }
+    \endcode
+
+    \sa {QModelIndex and related Classes in QML}, data()
+*/
+// Note: we don't document the parent argument, because you never need it, because
+// cells in a TableModel don't have parents.  But it is there because this function is an override.
 QModelIndex QQmlTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     return row >= 0 && row < rowCount() && column >= 0 && column < columnCount() && !parent.isValid()
@@ -622,6 +652,22 @@ int QQmlTableModel::columnCount(const QModelIndex &parent) const
     return mColumnCount;
 }
 
+/*!
+    \qmlmethod variant TableModel::data(QModelIndex index, string role)
+
+    Returns the data from the table cell at the given \a index belonging to the
+    given \a role.
+
+    \sa index()
+*/
+QVariant QQmlTableModel::data(const QModelIndex &index, const QString &role) const
+{
+    const int iRole = mRoleNames.key(role.toUtf8(), -1);
+    if (iRole >= 0)
+        return data(index, iRole);
+    return QVariant();
+}
+
 QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
 {
     const int row = index.row();
@@ -660,6 +706,22 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
     const QString propertyName = QString::fromUtf8(roleNames().value(effectiveRole));
     const QVariant value = columnData.value(propertyName);
     return value;
+}
+
+/*!
+    \qmlmethod bool TableModel::setData(QModelIndex index, string role, variant value)
+
+    Inserts or updates the data field named by \a role in the table cell at the
+    given \a index with \a value. Returns true if sucessful, false if not.
+
+    \sa index()
+*/
+bool QQmlTableModel::setData(const QModelIndex &index, const QString &role, const QVariant &value)
+{
+    const int iRole = mRoleNames.key(role.toUtf8(), -1);
+    if (iRole >= 0)
+        return setData(index, value, iRole);
+    return false;
 }
 
 bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
