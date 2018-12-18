@@ -53,10 +53,26 @@
 
 #include "qquickimagebase_p_p.h"
 #include "qquickimage_p.h"
+#include <QtQuick/qsgtextureprovider.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImageTextureProvider;
+class Q_QUICK_PRIVATE_EXPORT QQuickImageTextureProvider : public QSGTextureProvider
+{
+    Q_OBJECT
+public:
+    QQuickImageTextureProvider();
+
+    void updateTexture(QSGTexture *texture);
+
+    QSGTexture *texture() const override ;
+
+    friend class QQuickImage;
+
+    QSGTexture *m_texture;
+    bool m_smooth;
+    bool m_mipmap;
+};
 
 class Q_QUICK_PRIVATE_EXPORT QQuickImagePrivate : public QQuickImageBasePrivate
 {

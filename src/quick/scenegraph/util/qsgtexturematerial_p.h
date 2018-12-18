@@ -72,7 +72,7 @@ protected:
     int m_matrix_id;
 };
 
-class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
+class Q_QUICK_PRIVATE_EXPORT QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
 {
 public:
     QSGTextureMaterialShader();
