@@ -65,6 +65,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)
     Q_PROPERTY(int rowCount READ rowCount NOTIFY rowCountChanged FINAL)
     Q_PROPERTY(QVariant rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
+    Q_PROPERTY(QJSValue roleDataProvider READ roleDataProvider WRITE setRoleDataProvider NOTIFY roleDataProviderChanged)
 
 public:
     QQmlTableModel(QObject *parent = nullptr);
@@ -81,6 +82,9 @@ public:
     Q_INVOKABLE void removeRow(int rowIndex, int rows = 1);
     Q_INVOKABLE void setRow(int rowIndex, const QVariant &row);
 
+    QJSValue roleDataProvider() const;
+    void setRoleDataProvider(QJSValue roleDataProvider);
+
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -92,6 +96,7 @@ Q_SIGNALS:
     void columnCountChanged();
     void rowCountChanged();
     void rowsChanged();
+    void roleDataProviderChanged();
 
 private:
     class ColumnPropertyInfo
@@ -136,6 +141,7 @@ private:
     // key = column index
     // value = index (key) into mRoleNames
     QHash<int, int> mDefaultDisplayRoles;
+    QJSValue mRoleDataProvider;
 };
 
 QT_END_NAMESPACE

@@ -56,6 +56,7 @@ private slots:
     void setRowsImperatively();
     void setRowsMultipleTimes();
     void defaultDisplayRoles();
+    void roleDataProvider();
 };
 
 void tst_QQmlTableModel::appendRemoveRow()
@@ -857,6 +858,24 @@ void tst_QQmlTableModel::defaultDisplayRoles()
     QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), 22);
     QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Oliver"));
     QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toInt(), 33);
+}
+
+void tst_QQmlTableModel::roleDataProvider()
+{
+    QQuickView view(testFileUrl("roleDataProvider.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QQmlTableModel *model = view.rootObject()->property("testModel").value<QQmlTableModel*>();
+    QVERIFY(model);
+
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+    QVERIFY(roleNames.values().contains("display"));
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Rex"));
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), 3 * 7);
+    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Buster"));
+    QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toInt(), 5 * 7);
 }
 
 QTEST_MAIN(tst_QQmlTableModel)

@@ -548,6 +548,38 @@ void QQmlTableModel::setRow(int rowIndex, const QVariant &row)
     }
 }
 
+/*!
+    \qmlproperty var TableModel::roleDataProvider
+
+    This property can hold a function that will map roles to values.
+
+    When assigned, it will be called each time data() is called, to enable
+    extracting arbitrary values, converting the data in arbitrary ways, or even
+    doing calculations. It takes 4 arguments: \c row, \c column, \c role (as a
+    string), and \c cellData, which is the complete data that is stored in the
+    given cell. (If the cell contains a JS object with multiple named values,
+    the entire object will be given in cellData.) The function that you define
+    must return the value to be used; for example a typical delegate will
+    display the value returned for the \c display role, so you can check
+    whether that is the role and return data in a form that is suitable for the
+    delegate to show:
+
+    \snippet qml/tablemodel/roleDataProvider.qml 0
+*/
+QJSValue QQmlTableModel::roleDataProvider() const
+{
+    return mRoleDataProvider;
+}
+
+void QQmlTableModel::setRoleDataProvider(QJSValue roleDataProvider)
+{
+    if (roleDataProvider.strictlyEquals(mRoleDataProvider))
+        return;
+
+    mRoleDataProvider = roleDataProvider;
+    emit roleDataProviderChanged();
+}
+
 QModelIndex QQmlTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     return row >= 0 && row < rowCount() && column >= 0 && column < columnCount() && !parent.isValid()
@@ -603,6 +635,14 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     const QVariantList rowData = mRows.at(row).toList();
+
+    if (mRoleDataProvider.isCallable()) {
+        const auto args = QJSValueList() << row << column <<
+                                            QString::fromUtf8(mRoleNames.value(role)) <<
+                                            qmlEngine(this)->toScriptValue(rowData.at(column));
+        return const_cast<QQmlTableModel*>(this)->mRoleDataProvider.call(args).toVariant();
+    }
+
     const QVariantMap columnData = rowData.at(column).toMap();
 
     int effectiveRole = role;
