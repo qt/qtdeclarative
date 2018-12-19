@@ -1026,7 +1026,8 @@ QQuickPixmapStore::~QQuickPixmapStore()
     m_timerId = -2;
 
     // unreference all (leaked) pixmaps
-    for (auto *pixmap : qAsConst(m_cache)) {
+    const auto cache = m_cache; // NOTE: intentional copy (QTBUG-65077); releasing items from the cache modifies m_cache.
+    for (auto *pixmap : cache) {
         int currRefCount = pixmap->refCount;
         if (currRefCount) {
 #ifndef QT_NO_DEBUG
