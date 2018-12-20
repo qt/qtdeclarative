@@ -8464,7 +8464,8 @@ void tst_qqmlecmascript::stringify_qtbug_50592()
 
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != nullptr);
-    QCOMPARE(obj->property("source").toString(), QString::fromLatin1("http://example.org/some_nonexistant_image.png"));
+    QCOMPARE(obj->property("source").toString(),
+             QString::fromLatin1("\"http://example.org/some_nonexistant_image.png\""));
 }
 
 // Tests for the JS-only instanceof. Tests for the QML extensions for

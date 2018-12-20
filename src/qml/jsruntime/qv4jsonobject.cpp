@@ -739,7 +739,7 @@ QString Stringify::Str(const QString &key, const Value &v)
     }
 
     if (const QV4::VariantObject *v = value->as<QV4::VariantObject>()) {
-        return v->d()->data().toString();
+        return quote(v->d()->data().toString());
     }
 
     o = value->asReturnedValue();
