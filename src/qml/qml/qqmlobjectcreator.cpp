@@ -381,6 +381,16 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
 
+    if (property->isQObject()) {
+        if (binding->type == QV4::CompiledData::Binding::Type_Null) {
+            QObject *value = nullptr;
+            const bool ok = property->writeProperty(_qobject, &value, propertyWriteFlags);
+            Q_ASSERT(ok);
+            Q_UNUSED(ok);
+            return;
+        }
+    }
+
     switch (propertyType) {
     case QMetaType::QVariant: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
@@ -407,6 +417,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             } else {
                 QVariant value(binding->valueAsBoolean());
                 property->writeProperty(_qobject, &value, propertyWriteFlags);
+            }
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {
+            if (property->isVarProperty()) {
+                _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::nullValue());
+            } else {
+                QVariant nullValue = QVariant::fromValue(nullptr);
+                property->writeProperty(_qobject, &nullValue, propertyWriteFlags);
             }
         } else {
             QString stringValue = binding->valueAsString(compilationUnit.data());
@@ -663,6 +680,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                     value = QJSValue(int(n));
                 } else
                     value = QJSValue(n);
+            } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {
+                value = QJSValue::NullValue;
             } else {
                 value = QJSValue(binding->valueAsString(compilationUnit.data()));
             }

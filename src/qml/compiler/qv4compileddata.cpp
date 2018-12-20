@@ -745,6 +745,8 @@ QString Binding::valueAsString(const CompilationUnit *unit) const
     case Type_Script:
     case Type_String:
         return unit->stringAt(stringIndex);
+    case Type_Null:
+        return QStringLiteral("null");
     case Type_Boolean:
         return value.b ? QStringLiteral("true") : QStringLiteral("false");
     case Type_Number:

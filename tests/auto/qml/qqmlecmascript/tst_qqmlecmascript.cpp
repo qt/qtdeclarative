@@ -5991,6 +5991,13 @@ void tst_qqmlecmascript::nullObjectInitializer()
         QVERIFY(value.userType() == qMetaTypeId<QObject*>());
         QVERIFY(!value.value<QObject*>());
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("qmlVarNullBinding.qml"));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QVERIFY(!obj->property("signalSeen").toBool());
+    }
 }
 
 // Test that bindings don't evaluate once the engine has been destroyed

@@ -336,6 +336,9 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     case QV4::CompiledData::Binding::Type_Boolean:
         var = binding->valueAsBoolean();
         break;
+    case QV4::CompiledData::Binding::Type_Null:
+        var = QVariant::fromValue(nullptr);
+        break;
     default:
         break;
     }

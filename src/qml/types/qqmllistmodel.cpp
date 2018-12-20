@@ -2758,6 +2758,8 @@ bool QQmlListModelParser::applyProperty(const QQmlRefPointer<QV4::CompiledData::
             value = binding->valueAsNumber(compilationUnit->constants);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
             value = binding->valueAsBoolean();
+        } else if (binding->type == QV4::CompiledData::Binding::Type_Null) {
+            value = QVariant::fromValue(nullptr);
         } else if (binding->type == QV4::CompiledData::Binding::Type_Script) {
             QString scriptStr = binding->valueAsScriptString(compilationUnit.data());
             if (definesEmptyList(scriptStr)) {

@@ -575,6 +575,9 @@ QQmlCompileError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache
             break;
         } else if (property->propType() == qMetaTypeId<QQmlScriptString>()) {
             break;
+        } else if (property->isQObject()
+                   && binding->type == QV4::CompiledData::Binding::Type_Null) {
+            break;
         }
 
         // otherwise, try a custom type assignment

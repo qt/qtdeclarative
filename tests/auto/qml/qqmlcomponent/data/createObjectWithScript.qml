@@ -18,7 +18,7 @@ Item{
         id: b
         Item{
             property bool testBool: false
-            property int testInt: null
+            property int testInt: { return null; }
             property QtObject testObject: null
         }
     }

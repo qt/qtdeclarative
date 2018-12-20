@@ -10,7 +10,7 @@ Item {
         }
     }
 
-    property bool expectNull: null
+    property bool expectNull: { return null; }
 
     function setExpectNull(b) {
         success = false;

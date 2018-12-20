@@ -1083,6 +1083,9 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
                 binding->type = QV4::CompiledData::Binding::Type_Number;
                 binding->value.constantValueIndex = jsGenerator->registerConstant(QV4::Encode(-lit->value));
             }
+        } else if (QQmlJS::AST::cast<QQmlJS::AST::NullExpression *>(expr)) {
+            binding->type = QV4::CompiledData::Binding::Type_Null;
+            binding->value.nullMarker = 0;
         }
     }
 

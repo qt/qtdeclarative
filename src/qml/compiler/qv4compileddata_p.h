@@ -440,6 +440,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
         Type_Boolean,
         Type_Number,
         Type_String,
+        Type_Null,
         Type_Translation,
         Type_TranslationById,
         Type_Script,
@@ -471,6 +472,7 @@ struct Q_QML_PRIVATE_EXPORT Binding
         quint32_le compiledScriptIndex; // used when Type_Script
         quint32_le objectIndex;
         quint32_le translationDataIndex; // used when Type_Translation
+        quint32 nullMarker;
     } value;
     quint32_le stringIndex; // Set for Type_String and Type_Script (the latter because of script strings)
 
