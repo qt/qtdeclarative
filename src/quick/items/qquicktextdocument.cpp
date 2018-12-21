@@ -237,6 +237,14 @@ void QQuickTextDocumentWithImageResources::setText(const QString &text)
 #endif
 }
 
+#if QT_CONFIG(textmarkdownreader)
+void QQuickTextDocumentWithImageResources::setMarkdownText(const QString &text)
+{
+    clearResources();
+    QTextDocument::setMarkdown(text);
+}
+#endif
+
 QSet<QUrl> QQuickTextDocumentWithImageResources::errors;
 
 QT_END_NAMESPACE
