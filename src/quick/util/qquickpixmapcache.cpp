@@ -369,15 +369,27 @@ static void maybeRemoveAlpha(QImage *image)
         switch (image->format()) {
         case QImage::Format_RGBA8888:
         case QImage::Format_RGBA8888_Premultiplied:
+            if (image->data_ptr()->convertInPlace(QImage::Format_RGBX8888, Qt::AutoColor))
+                break;
+
             *image = image->convertToFormat(QImage::Format_RGBX8888);
             break;
         case QImage::Format_A2BGR30_Premultiplied:
+            if (image->data_ptr()->convertInPlace(QImage::Format_BGR30, Qt::AutoColor))
+                break;
+
             *image = image->convertToFormat(QImage::Format_BGR30);
             break;
         case QImage::Format_A2RGB30_Premultiplied:
+            if (image->data_ptr()->convertInPlace(QImage::Format_RGB30, Qt::AutoColor))
+                break;
+
             *image = image->convertToFormat(QImage::Format_RGB30);
             break;
         default:
+            if (image->data_ptr()->convertInPlace(QImage::Format_RGB32, Qt::AutoColor))
+                break;
+
             *image = image->convertToFormat(QImage::Format_RGB32);
             break;
         }
