@@ -183,6 +183,11 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     void destroyObject(bool lastCall);
 
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired = true);
+
+    static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
+    static ReturnedValue lookupGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
+
 protected:
     static void setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value);
 
@@ -228,7 +233,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
     static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index);
-    static ReturnedValue create(QV4::ExecutionContext *scope, const QQmlValueTypeWrapper *valueType, int index);
+    static ReturnedValue create(QV4::ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index);
 
     int methodIndex() const { return d()->index; }
     QObject *object() const { return d()->object(); }

@@ -52,6 +52,7 @@
 #include <private/qv4dateobject_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4lookup_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -1611,6 +1612,12 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     const int elementIndex = that->d()->elementIndex();
     QVariant value = that->d()->m_model->data(elementIndex, role->index);
     return that->engine()->fromVariant(value);
+}
+
+ReturnedValue ModelObject::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
+{
+    lookup->getter = Lookup::getterFallback;
+    return lookup->getter(lookup, engine, *object);
 }
 
 struct ModelObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator

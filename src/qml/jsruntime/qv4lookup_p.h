@@ -116,6 +116,18 @@ struct Lookup {
             quintptr _unused2;
             uint index;
         } indexedLookup;
+        struct {
+            Heap::InternalClass *ic;
+            quintptr unused;
+            QQmlPropertyCache *propertyCache;
+            QQmlPropertyData *propertyData;
+        } qobjectLookup;
+        struct {
+            Heap::InternalClass *ic;
+            quintptr unused;
+            QQmlPropertyCache *propertyCache;
+            QQmlPropertyData *propertyData;
+        } qgadgetLookup;
     };
     uint nameIndex;
 
