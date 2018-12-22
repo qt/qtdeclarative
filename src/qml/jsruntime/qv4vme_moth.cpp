@@ -594,7 +594,17 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();
         STORE_ACC();
+
         QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+
+        if (accumulator.isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot read property '%1' of %2")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(accumulator.toQStringNoThrow());
+            acc = engine->throwTypeError(message);
+            goto handleUnwind;
+        }
+
         acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetLookup)
@@ -723,11 +733,23 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_BEGIN_INSTR(CallPropertyLookup)
         STORE_IP();
         Lookup *l = function->compilationUnit->runtimeLookups + lookupIndex;
+
+        if (stack[base].isNullOrUndefined()) {
+            QString message = QStringLiteral("Cannot call method '%1' of %2")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(stack[base].toQStringNoThrow());
+            acc = engine->throwTypeError(message);
+            goto handleUnwind;
+        }
+
         // ok to have the value on the stack here
         Value f = Value::fromReturnedValue(l->getter(l, engine, stack[base]));
 
         if (Q_UNLIKELY(!f.isFunctionObject())) {
-            acc = engine->throwTypeError();
+            QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
+                    .arg(stack[base].toQStringNoThrow());
+            acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
 
