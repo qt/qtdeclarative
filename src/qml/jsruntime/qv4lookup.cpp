@@ -379,7 +379,7 @@ ReturnedValue Lookup::getterIndexed(Lookup *l, ExecutionEngine *engine, const Va
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.type() == l->primitiveLookup.type) {
+    if (object.type() == l->primitiveLookup.type && !object.isObject()) {
         Heap::Object *o = l->primitiveLookup.proto;
         if (l->primitiveLookup.protoId == o->internalClass->protoId)
             return l->primitiveLookup.data->asReturnedValue();
@@ -390,7 +390,7 @@ ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, c
 
 ReturnedValue Lookup::primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.type() == l->primitiveLookup.type) {
+    if (object.type() == l->primitiveLookup.type && !object.isObject()) {
         Heap::Object *o = l->primitiveLookup.proto;
         if (l->primitiveLookup.protoId == o->internalClass->protoId) {
             const Value *getter = l->primitiveLookup.data;
