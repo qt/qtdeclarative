@@ -103,7 +103,7 @@ Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
     pushExpr();
 }
 
-const char *globalNames[] = {
+const char *Codegen::s_globalNames[] = {
     "isNaN",
     "parseFloat",
     "String",
@@ -183,7 +183,7 @@ void Codegen::generateFromProgram(const QString &fileName,
         //
         // Since this can be called from the loader thread we can't get the list
         // directly from the engine, so let's hardcode the most important ones here
-        for (const char **g = globalNames; *g != nullptr; ++g)
+        for (const char **g = s_globalNames; *g != nullptr; ++g)
             m_globalNames << QString::fromLatin1(*g);
     }
 

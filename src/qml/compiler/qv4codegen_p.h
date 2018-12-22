@@ -754,6 +754,7 @@ public:
         m_globalNames = globalNames;
     }
 
+    static const char *s_globalNames[];
 
 protected:
     friend class ScanFunctions;
