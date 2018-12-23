@@ -480,6 +480,10 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
     eventLoopQuitHack->moveToThread(this);
     connect(eventLoopQuitHack, SIGNAL(destroyed(QObject*)), SLOT(quit()), Qt::DirectConnection);
     start(QThread::LowestPriority);
+#if !QT_CONFIG(thread)
+    // call nonblocking run ourself, as nothread qthread does not
+    run();
+#endif
 }
 
 QQuickPixmapReader::~QQuickPixmapReader()
@@ -957,8 +961,11 @@ void QQuickPixmapReader::run()
     processJobs();
     exec();
 
+#if QT_CONFIG(thread)
+    // nothread exec is empty and returns
     delete threadObject;
     threadObject = nullptr;
+#endif
 }
 
 class QQuickPixmapKey
@@ -1028,7 +1035,8 @@ QQuickPixmapStore::~QQuickPixmapStore()
     m_timerId = -2;
 
     // unreference all (leaked) pixmaps
-    for (auto *pixmap : qAsConst(m_cache)) {
+    const auto cache = m_cache; // NOTE: intentional copy (QTBUG-65077); releasing items from the cache modifies m_cache.
+    for (auto *pixmap : cache) {
         int currRefCount = pixmap->refCount;
         if (currRefCount) {
 #ifndef QT_NO_DEBUG

@@ -546,15 +546,15 @@ int main(int argc, char ** argv)
     QLocale locale;
     QTranslator qtTranslator;
     if (qtTranslator.load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
-        app->installTranslator(&qtTranslator);
+        QCoreApplication::installTranslator(&qtTranslator);
     QTranslator translator;
     if (translator.load(locale, QLatin1String("qmlscene"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
-        app->installTranslator(&translator);
+        QCoreApplication::installTranslator(&translator);
 
     QTranslator qmlTranslator;
     if (!options.translationFile.isEmpty()) {
         if (qmlTranslator.load(options.translationFile)) {
-            app->installTranslator(&qmlTranslator);
+            QCoreApplication::installTranslator(&qmlTranslator);
         } else {
             fprintf(stderr, "Could not load the translation file \"%s\"\n",
                     qPrintable(options.translationFile));

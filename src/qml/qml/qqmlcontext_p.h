@@ -129,7 +129,7 @@ public:
     void setParent(QQmlContextData *, bool stronglyReferencedByParent = false);
     void refreshExpressions();
 
-    void addObject(QObject *);
+    void addObject(QQmlData *data);
 
     QUrl resolvedUrl(const QUrl &);
 

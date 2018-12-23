@@ -1518,7 +1518,9 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
     }
 
     QQmlContextData *contextData = QQmlContextData::get(context);
-    contextData->addObject(object);
+    Q_ASSERT(data->context == nullptr);
+    data->context = contextData;
+    contextData->addObject(data);
 }
 
 /*!
@@ -1882,6 +1884,8 @@ void QQmlData::destroyed(QObject *object)
         nextContextObject->prevContextObject = prevContextObject;
     if (prevContextObject)
         *prevContextObject = nextContextObject;
+    else if (outerContext && outerContext->contextObjects == this)
+        outerContext->contextObjects = nextContextObject;
 
     QQmlAbstractBinding *binding = bindings;
     while (binding) {

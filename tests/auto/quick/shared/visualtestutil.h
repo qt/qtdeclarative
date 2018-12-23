@@ -97,7 +97,7 @@ namespace QQuickVisualTestUtil
         return items;
     }
 
-    bool compareImages(const QImage &ia, const QImage &ib);
+    bool compareImages(const QImage &ia, const QImage &ib, QString *errorMessage);
 }
 
 #endif // QQUICKVISUALTESTUTIL_H

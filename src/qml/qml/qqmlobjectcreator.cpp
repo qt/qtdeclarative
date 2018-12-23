@@ -1230,13 +1230,15 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             QQmlContextData *c = ddata->context;
             while (c->linkedContext) c = c->linkedContext;
             c->linkedContext = context;
-        } else
-            context->addObject(instance);
+        } else {
+            ddata->context = context;
+        }
         ddata->ownContext = ddata->context;
-    } else if (!ddata->context)
-        context->addObject(instance);
+    } else if (!ddata->context) {
+        ddata->context = context;
+    }
 
-    ddata->outerContext = context;
+    context->addObject(ddata);
 
     if (parserStatus) {
         parserStatus->classBegin();

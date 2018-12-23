@@ -642,7 +642,7 @@ class YarrGenerator : private DefaultMacroAssembler {
                 subPtr(Imm32(callFrameSizeInBytes), stackPointerRegister);
                 if (callFrameSizeInBytes <= 128) {
                     for (unsigned offset = 0; offset < callFrameSizeInBytes; offset += sizeof(intptr_t))
-                        storePtr(TrustedImmPtr(0), Address(regT0, -8 - offset));
+                        storePtr(TrustedImmPtr(0), Address(regT0, -8 - int(offset)));
                 } else {
                     Label zeroLoop = label();
                     subPtr(TrustedImm32(sizeof(intptr_t) * 2), regT0);

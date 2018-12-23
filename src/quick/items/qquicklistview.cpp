@@ -2456,7 +2456,18 @@ QString QQuickListView::currentSection() const
     The default value for the duration properties is -1, i.e. the
     highlight will take as much time as necessary to move at the set speed.
 
-    These properties have the same characteristics as a SmoothedAnimation.
+    These properties have the same characteristics as a SmoothedAnimation:
+    if both the velocity and duration are set, the animation will use
+    whichever gives the shorter duration.
+
+    To set only one property, the other can be set to \c -1. For example,
+    if you only want to animate the duration and not velocity, use the
+    following code:
+
+    \code
+    highlightMoveDuration: 1000
+    highlightMoveVelocity: -1
+    \endcode
 
     \sa highlightFollowsCurrentItem
 */
