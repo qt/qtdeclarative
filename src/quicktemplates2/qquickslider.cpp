@@ -848,7 +848,6 @@ void QQuickSlider::wheelEvent(QWheelEvent *event)
         const bool wasMoved = !qFuzzyCompare(d->value, oldValue);
         if (wasMoved)
             emit moved();
-        event->setAccepted(wasMoved);
     }
 }
 #endif
