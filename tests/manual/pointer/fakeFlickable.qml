@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -30,6 +30,7 @@ import QtQuick 2.12
 import "content"
 
 Rectangle {
+    id: root
     color: "#444"
     width: 480
     height: 640
@@ -49,8 +50,14 @@ Rectangle {
                                        ", parent " + parent + " geom " + parent.width + "x" + parent.height)
         }
 
-        onFlickStarted: console.log("flick started with velocity " + velocity)
-        onFlickEnded: console.log("flick ended with velocity " + velocity)
+        onFlickStarted: {
+            root.border.color = "green"
+            console.log("flick started with velocity " + velocity)
+        }
+        onFlickEnded: {
+            root.border.color = "transparent"
+            console.log("flick ended with velocity " + velocity)
+        }
 
         Component.onCompleted: {
             var request = new XMLHttpRequest()

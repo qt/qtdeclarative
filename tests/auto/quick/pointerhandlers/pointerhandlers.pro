@@ -10,4 +10,5 @@ qtConfig(private_tests) {
         qquickpointerhandler \
         qquickpointhandler \
         qquicktaphandler \
+        qquickwheelhandler \
 }

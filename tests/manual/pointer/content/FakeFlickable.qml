@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,10 +26,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
+import Qt.labs.animation 1.0
 
 Item {
     id: root
+    objectName: "viewport"
     default property alias data: __contentItem.data
     property alias velocity: anim.velocity
     property alias contentX: __contentItem.x // sign is reversed compared to Flickable.contentX
@@ -45,52 +47,81 @@ Item {
         width: childrenRect.width
         height: childrenRect.height
 
-        property real xlimit: root.width - __contentItem.width
-        property real ylimit: root.height - __contentItem.height
+        BoundaryRule on x {
+            id: xbr
+            minimum: root.width - __contentItem.width
+            maximum: 0
+            minimumOvershoot: 100
+            maximumOvershoot: 100
+            overshootFilter: BoundaryRule.Peak
+        }
 
-        function returnToBounds() {
-            if (x > 0) {
-                returnXAnim.to = 0
-                returnXAnim.start()
-            } else if (x < xlimit) {
-                returnXAnim.to = xlimit
-                returnXAnim.start()
-            }
-            if (y > 0) {
-                returnYAnim.to = 0
-                returnYAnim.start()
-            } else if (y < ylimit) {
-                returnYAnim.to = ylimit
-                returnYAnim.start()
-            }
+        BoundaryRule on y {
+            id: ybr
+            minimum: root.height - __contentItem.height
+            maximum: 0
+            minimumOvershoot: 100
+            maximumOvershoot: 100
+            overshootFilter: BoundaryRule.Peak
         }
 
         DragHandler {
             id: dragHandler
-            onActiveChanged: if (!active) anim.restart(centroid.velocity)
+            onActiveChanged:
+                if (active) {
+                    anim.stop()
+                    root.flickStarted()
+                } else {
+                    var vel = centroid.velocity
+                    if (xbr.returnToBounds())
+                        vel.x = 0
+                    if (ybr.returnToBounds())
+                        vel.y = 0
+                    if (vel.x !== 0 || vel.y !== 0)
+                        anim.restart(vel)
+                    else
+                        root.flickEnded()
+                }
+        }
+        WheelHandler {
+            rotationScale: 15
+            property: "x"
+            orientation: Qt.Horizontal
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onActiveChanged:
+                // emitting signals in both instances is redundant but hard to avoid
+                // when the touchpad is flicking along both axes
+                if (active) {
+                    anim.stop()
+                    root.flickStarted()
+                } else {
+                    xbr.returnToBounds()
+                    root.flickEnded()
+                }
+        }
+        WheelHandler {
+            rotationScale: 15
+            property: "y"
+            orientation: Qt.Vertical
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onActiveChanged:
+                if (active) {
+                    anim.stop()
+                    root.flickStarted()
+                } else {
+                    ybr.returnToBounds()
+                    root.flickEnded()
+                }
         }
         MomentumAnimation {
             id: anim
             target: __contentItem
             onStarted: root.flickStarted()
             onStopped: {
-                __contentItem.returnToBounds()
+                xbr.returnToBounds()
+                ybr.returnToBounds()
                 root.flickEnded()
             }
-        }
-        NumberAnimation {
-            id: returnXAnim
-            target: __contentItem
-            property: "x"
-            duration: 200
-            easing.type: Easing.OutQuad
-        }
-        NumberAnimation {
-            id: returnYAnim
-            target: __contentItem
-            property: "y"
-            duration: 200
-            easing.type: Easing.OutQuad
         }
     }
 }

@@ -605,6 +605,7 @@ private:
     bool m_inverted = false;
 
     friend class QQuickWindowPrivate;
+    friend class QQuickWheelHandler;
 
     Q_DISABLE_COPY(QQuickPointerScrollEvent)
 };

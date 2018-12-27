@@ -27,3 +27,9 @@ SOURCES += \
     $$PWD/qquicksinglepointhandler.cpp \
     $$PWD/qquicktaphandler.cpp \
     $$PWD/qquickdragaxis.cpp
+
+qtConfig(wheelevent) {
+    HEADERS += $$PWD/qquickwheelhandler_p.h $$PWD/qquickwheelhandler_p_p.h
+    SOURCES += $$PWD/qquickwheelhandler.cpp
+}
+

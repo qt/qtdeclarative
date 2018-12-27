@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 
 Item {
     width: 640
@@ -40,6 +40,20 @@ Item {
         width: image.width
         height: image.height
         transform: Rotation { id: tilt; origin.x: width / 2; origin.y: height / 2; axis { x: 1; y: 0; z: 0 } }
+
+        WheelHandler {
+            id: wheelHandler
+            objectName: "vertical mouse wheel for scaling"
+            property: "scale"
+            onWheel: console.log("rotation " + event.angleDelta + " scaled " + rotation + " @ " + point.position + " => " + map.scale)
+        }
+
+        WheelHandler {
+            id: horizontalWheelHandler
+            objectName: "horizontal mouse wheel for side-scrolling"
+            property: "x"
+            orientation: Qt.Horizontal
+        }
 
         Image {
             id: image
