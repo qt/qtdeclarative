@@ -451,10 +451,6 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         // 3. Drag/translate
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
-        if (!xAxis()->enabled())
-            m_activeTranslation.setX(0);
-        if (!yAxis()->enabled())
-            m_activeTranslation.setY(0);
         // apply rotation + scaling around the centroid - then apply translation.
         QMatrix4x4 mat;
 
@@ -473,14 +469,16 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
+        else
+            pos.rx() -= m_activeTranslation.x();
         if (yAxis()->enabled())
             pos.setY(qBound(yAxis()->minimum(), pos.y(), yAxis()->maximum()));
+        else
+            pos.ry() -= m_activeTranslation.y();
 
         target()->setPosition(pos);
         target()->setRotation(rotation);
         target()->setScale(m_accumulatedScale);
-
-        // TODO some translation inadvertently happens; try to hold the chosen pinch origin in place
     } else {
         m_activeTranslation = QVector2D(m_centroid.scenePosition() - m_centroid.scenePressPosition());
     }

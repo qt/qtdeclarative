@@ -33,7 +33,7 @@ Rectangle {
     property real scale: -1.0
     property int activeCount : 0
     property int deactiveCount : 0
-    width: 240; height: 320
+    width: 320; height: 320
     color: "white"
     Rectangle {
         id: blackRect
@@ -45,6 +45,14 @@ Rectangle {
         height: 100
         opacity: (whiteRect.width-blackRect.x+whiteRect.height-blackRect.y-199)/200
         Text { color: "white"; text: "opacity: " + blackRect.opacity + "\nscale: " + blackRect.scale}
+        Rectangle {
+            color: "red"
+            width: 6; height: 6; radius: 3
+            visible: pincharea.active
+            x: pincharea.centroid.position.x - radius
+            y: pincharea.centroid.position.y - radius
+        }
+
         PinchHandler {
             id: pincharea
             objectName: "pinchHandler"
