@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Retain.qml</file>
+    </qresource>
+</RCC>

@@ -21,4 +21,7 @@ RESOURCES += Enums.qml
 
 RESOURCES += jsmoduleimport.qml script.mjs
 
+RESOURCES += retain.qrc
+QTQUICK_COMPILER_RETAINED_RESOURCES += retain.qrc
+
 QT += core-private qml-private testlib

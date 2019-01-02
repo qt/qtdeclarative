@@ -43,8 +43,12 @@
 
 #include "resourcefilemapper.h"
 
+#include <algorithm>
+
 int filterResourceFile(const QString &input, const QString &output);
-bool generateLoader(const QStringList &compiledFiles, const QString &output, const QStringList &resourceFileMappings, QString *errorString);
+bool generateLoader(const QStringList &compiledFiles, const QStringList &retainedFiles,
+                    const QString &output, const QStringList &resourceFileMappings,
+                    QString *errorString);
 QString symbolNamespaceForPath(const QString &relativePath);
 
 QSet<QString> illegalNames;
@@ -438,6 +442,8 @@ int main(int argc, char **argv)
     parser.addOption(resourceFileMappingOption);
     QCommandLineOption resourceOption(QStringLiteral("resource"), QCoreApplication::translate("main", "Qt resource file that might later contain one of the compiled files"), QCoreApplication::translate("main", "resource-file-name"));
     parser.addOption(resourceOption);
+    QCommandLineOption retainOption(QStringLiteral("retain"), QCoreApplication::translate("main", "Qt resource file the contents of which should not be replaced by empty stubs"), QCoreApplication::translate("main", "resource-file-name"));
+    parser.addOption(retainOption);
     QCommandLineOption resourcePathOption(QStringLiteral("resource-path"), QCoreApplication::translate("main", "Qt resource file path corresponding to the file being compiled"), QCoreApplication::translate("main", "resource-path"));
     parser.addOption(resourcePathOption);
 
@@ -485,9 +491,13 @@ int main(int argc, char **argv)
 
     if (target == GenerateLoader) {
         ResourceFileMapper mapper(sources);
+        ResourceFileMapper retain(parser.values(retainOption));
 
         Error error;
-        if (!generateLoader(mapper.qmlCompilerFiles(), outputFileName, parser.values(resourceFileMappingOption), &error.message)) {
+        QStringList retainedFiles = retain.qmlCompilerFiles();
+        std::sort(retainedFiles.begin(), retainedFiles.end());
+        if (!generateLoader(mapper.qmlCompilerFiles(), retainedFiles, outputFileName,
+                            parser.values(resourceFileMappingOption), &error.message)) {
             error.augment(QLatin1String("Error generating loader stub: ")).print();
             return EXIT_FAILURE;
         }

@@ -36,6 +36,8 @@
 #include <QFileInfo>
 #include <QSaveFile>
 
+#include <algorithm>
+
 /*!
  * \internal
  * Mangles \a str to be a unique C++ identifier. Characters that are invalid for C++ identifiers
@@ -261,7 +263,8 @@ private:
     }
 };
 
-static QByteArray generateResourceDirectoryTree(QTextStream &code, const QStringList &qrcFiles)
+static QByteArray generateResourceDirectoryTree(QTextStream &code, const QStringList &qrcFiles,
+                                                const QStringList &sortedRetainedFiles)
 {
     QByteArray call;
     if (qrcFiles.isEmpty())
@@ -277,7 +280,8 @@ static QByteArray generateResourceDirectoryTree(QTextStream &code, const QString
 
         for (int i = 0; i < segments.count() - 1; ++i)
             dirEntry = dirEntry->append(segments.at(i));
-        dirEntry->appendEmptyFile(segments.last());
+        if (!std::binary_search(sortedRetainedFiles.begin(), sortedRetainedFiles.end(), entry))
+            dirEntry->appendEmptyFile(segments.last());
     }
 
     if (resourceDirs.isEmpty())
@@ -328,7 +332,9 @@ static QString qtResourceNameForFile(const QString &fileName)
     return name;
 }
 
-bool generateLoader(const QStringList &compiledFiles, const QString &outputFileName, const QStringList &resourceFileMappings, QString *errorString)
+bool generateLoader(const QStringList &compiledFiles, const QStringList &sortedRetainedFiles,
+                    const QString &outputFileName, const QStringList &resourceFileMappings,
+                    QString *errorString)
 {
     QByteArray generatedLoaderCode;
 
@@ -339,7 +345,8 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         stream << "#include <QtCore/qurl.h>\n";
         stream << "\n";
 
-        QByteArray resourceRegisterCall = generateResourceDirectoryTree(stream, compiledFiles);
+        QByteArray resourceRegisterCall = generateResourceDirectoryTree(stream, compiledFiles,
+                                                                        sortedRetainedFiles);
 
         stream << "namespace QmlCacheGeneratedCode {\n";
         for (int i = 0; i < compiledFiles.count(); ++i) {

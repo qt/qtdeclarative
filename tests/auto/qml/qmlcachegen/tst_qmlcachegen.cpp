@@ -52,6 +52,7 @@ private slots:
     void aheadOfTimeCompilation();
     void functionExpressions();
     void versionChecksForAheadOfTimeUnits();
+    void retainedResources();
 
     void workerScripts();
 
@@ -390,6 +391,13 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
     temporaryModifiedCachedUnit = nullptr;
 
     QQmlMetaType::removeCachedUnitLookupFunction(testHandler);
+}
+
+void tst_qmlcachegen::retainedResources()
+{
+    QFile file(":/Retain.qml");
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QVERIFY(file.readAll().startsWith("import QtQml 2.0"));
 }
 
 void tst_qmlcachegen::workerScripts()
