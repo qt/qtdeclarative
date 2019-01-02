@@ -889,6 +889,17 @@ struct StaticQtMetaObject : public QObject
         { return &staticQtMetaObject; }
 };
 
+static bool isNamedEnumeratorInScope(const QMetaObject *resolvedMetaObject, const QByteArray &scope,
+                                     const QByteArray &name)
+{
+    for (int i = resolvedMetaObject->enumeratorCount() - 1; i >= 0; --i) {
+        QMetaEnum m = resolvedMetaObject->enumerator(i);
+        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
+            return true;
+    }
+    return false;
+}
+
 static bool isNamedEnumerator(const QMetaObject *metaObj, const QByteArray &scopedName)
 {
     QByteArray scope;
@@ -900,52 +911,21 @@ static bool isNamedEnumerator(const QMetaObject *metaObj, const QByteArray &scop
     } else {
         name = scopedName;
     }
-    const QMetaObject *meta;
+
     if (scope == "Qt")
-        meta = StaticQtMetaObject::get();
-    else
-        meta = metaObj;
-    for (int i = meta->enumeratorCount() - 1; i >= 0; --i) {
-        QMetaEnum m = meta->enumerator(i);
-        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
-            return true;
-    }
-    return false;
-}
+        return isNamedEnumeratorInScope(StaticQtMetaObject::get(), scope, name);
 
-static bool passTypeAsInt(int type)
-{
-    // We should not encounter the unknown type here.
-    // In order to check that we need extra information.
-    Q_ASSERT(type != QMetaType::UnknownType);
-
-    const QMetaType::TypeFlags flags = QMetaType::typeFlags(type);
-
-    // Cast enumerations to int.
-    if (flags & QMetaType::IsEnumeration)
+    if (isNamedEnumeratorInScope(metaObj, scope, name))
         return true;
 
-    // Qt builtins can be handled as they are.
-    if (type < int(QMetaType::User))
-        return false;
+    if (metaObj->d.relatedMetaObjects && !scope.isEmpty()) {
+        for (auto related = metaObj->d.relatedMetaObjects; *related; ++related) {
+            if (isNamedEnumeratorInScope(*related, scope, name))
+                return true;
+        }
+    }
 
-    // Pointers to QObjects and QGadgets can be handled as they are.
-    if (flags & (QMetaType::PointerToQObject | QMetaType::PointerToGadget))
-        return false;
-
-    // If it wasn't declared as metatype, better don't touch it.
-    if (!(flags & QMetaType::WasDeclaredAsMetaType))
-        return false;
-
-    // If it needs construction or destruction (that is, it is a structured type),
-    // pass as original type.
-    if (flags & (QMetaType::NeedsConstruction | QMetaType::NeedsDestruction))
-        return false;
-
-    // A single value that's not a pointer to a QObject or QGadget, not a builtin type, was declared
-    // as meta type, but we don't know it as an enumeration (although it probably is one).
-    // Pass as int if it fits into an int.
-    return QMetaType::sizeOf(type) <= int(sizeof(int));
+    return false;
 }
 
 QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int argc, const QList<QByteArray> &names)
@@ -1649,14 +1629,18 @@ int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *u
         propTypeName = m.typeName();
     }
 
-    if (type == QMetaType::UnknownType) {
+    if (QMetaType::sizeOf(type) <= int(sizeof(int))) {
+        if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration)
+            return QMetaType::Int;
+
         if (isNamedEnumerator(metaObject(), propTypeName))
-            type = QVariant::Int;
-        else if (unknownTypeError)
-            *unknownTypeError = propTypeName;
-    } else if (passTypeAsInt(type)) {
-        type = QVariant::Int;
-    }
+            return QMetaType::Int;
+
+        if (type == QMetaType::UnknownType) {
+            if (unknownTypeError)
+                *unknownTypeError = propTypeName;
+        }
+    } // else we know that it's a known type, as sizeOf(UnknownType) == 0
 
     return type;
 }
@@ -1695,18 +1679,23 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
 
         for (int ii = 0; ii < argc; ++ii) {
             int type = m.parameterType(ii);
-            if (type == QMetaType::UnknownType) {
+
+            if (QMetaType::sizeOf(type) > int(sizeof(int))) {
+                // Cannot be passed as int
+                // We know that it's a known type, as sizeOf(UnknownType) == 0
+            } else if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration) {
+                type = QMetaType::Int;
+            } else {
                 if (argTypeNames.isEmpty())
                     argTypeNames = m.parameterTypes();
                 if (isNamedEnumerator(metaObject, argTypeNames.at(ii))) {
-                    type = QVariant::Int;
-                } else {
+                    type = QMetaType::Int;
+                } else if (type == QMetaType::UnknownType){
                     if (unknownTypeError)
                         *unknownTypeError = argTypeNames.at(ii);
                     return nullptr;
                 }
-            } else if (passTypeAsInt(type)) {
-                type = QVariant::Int;
+
             }
             args->arguments[ii + 1] = type;
         }
@@ -1732,18 +1721,21 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
 
     for (int ii = 0; ii < argc; ++ii) {
         int type = m.parameterType(ii);
-        if (type == QMetaType::UnknownType) {
+        if (QMetaType::sizeOf(type) > int(sizeof(int))) {
+            // Cannot be passed as int
+            // We know that it's a known type, as sizeOf(UnknownType) == 0
+        } else if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration) {
+            type = QMetaType::Int;
+        } else {
             if (argTypeNames.isEmpty())
                 argTypeNames = m.parameterTypes();
             if (isNamedEnumerator(_m.asT2(), argTypeNames.at(ii))) {
-                type = QVariant::Int;
-            } else {
+                type = QMetaType::Int;
+            } else if (type == QMetaType::UnknownType) {
                 if (unknownTypeError)
                     *unknownTypeError = argTypeNames.at(ii);
                 return nullptr;
             }
-        } else if (passTypeAsInt(type)) {
-            type = QVariant::Int;
         }
         argStorage->operator[](ii + 1) = type;
     }

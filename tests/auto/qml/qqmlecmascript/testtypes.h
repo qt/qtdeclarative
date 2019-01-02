@@ -179,7 +179,6 @@ public:
     Q_INVOKABLE MyQmlObject *returnme() { return this; }
 
     struct MyType {
-        MyType() {}
         int value;
     };
     struct MyOtherType {
