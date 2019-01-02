@@ -160,9 +160,10 @@ static_assert(sizeof(RegExp) == 4, "RegExp structure needs to have the expected 
 struct Lookup
 {
     enum Type : unsigned int {
-        Type_Getter = 0x0,
-        Type_Setter = 0x1,
-        Type_GlobalGetter = 2
+        Type_Getter = 0,
+        Type_Setter = 1,
+        Type_GlobalGetter = 2,
+        Type_QmlContextPropertyGetter = 3
     };
 
     union {

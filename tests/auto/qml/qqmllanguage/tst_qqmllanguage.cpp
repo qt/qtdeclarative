@@ -5020,6 +5020,8 @@ void tst_qqmllanguage::thisInQmlScope()
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("x"), QVariant(42));
     QCOMPARE(o->property("y"), QVariant(42));
+    QCOMPARE(o->property("a"), QVariant(42));
+    QCOMPARE(o->property("b"), QVariant(42));
 }
 
 void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()

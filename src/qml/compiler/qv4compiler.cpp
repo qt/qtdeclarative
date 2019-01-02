@@ -154,15 +154,19 @@ int QV4::Compiler::JSUnitGenerator::registerSetterLookup(int nameIndex)
     return lookups.size() - 1;
 }
 
-int QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(const QString &name)
-{
-    return registerGlobalGetterLookup(registerString(name));
-}
-
 int QV4::Compiler::JSUnitGenerator::registerGlobalGetterLookup(int nameIndex)
 {
     CompiledData::Lookup l;
     l.type_and_flags = CompiledData::Lookup::Type_GlobalGetter;
+    l.nameIndex = nameIndex;
+    lookups << l;
+    return lookups.size() - 1;
+}
+
+int QV4::Compiler::JSUnitGenerator::registerQmlContextPropertyGetterLookup(int nameIndex)
+{
+    CompiledData::Lookup l;
+    l.type_and_flags = CompiledData::Lookup::Type_QmlContextPropertyGetter;
     l.nameIndex = nameIndex;
     lookups << l;
     return lookups.size() - 1;

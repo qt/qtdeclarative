@@ -1301,16 +1301,40 @@ uint Runtime::method_compareIn(ExecutionEngine *engine, const Value &left, const
     return v->booleanValue();
 }
 
+static ReturnedValue throwPropertyIsNotAFunctionTypeError(ExecutionEngine *engine, Value *thisObject, const QString &propertyName)
+{
+    QString objectAsString = QStringLiteral("[null]");
+    if (!thisObject->isUndefined())
+        objectAsString = thisObject->toQStringNoThrow();
+    QString msg = QStringLiteral("Property '%1' of object %2 is not a function")
+                  .arg(propertyName, objectAsString);
+    return engine->throwTypeError(msg);
+}
 
 ReturnedValue Runtime::method_callGlobalLookup(ExecutionEngine *engine, uint index, Value *argv, int argc)
 {
+    Scope scope(engine);
     Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
     Value function = Value::fromReturnedValue(l->globalGetter(l, engine));
-    if (!function.isFunctionObject())
-        return engine->throwTypeError();
-
     Value thisObject = Value::undefinedValue();
+    if (!function.isFunctionObject())
+        return throwPropertyIsNotAFunctionTypeError(engine, &thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+
     return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
+}
+
+ReturnedValue Runtime::method_callQmlContextPropertyLookup(ExecutionEngine *engine, uint index, Value *argv, int argc)
+{
+    Scope scope(engine);
+    ScopedValue thisObject(scope);
+    Lookup *l = engine->currentStackFrame->v4Function->compilationUnit->runtimeLookups + index;
+    Value function = Value::fromReturnedValue(l->qmlContextPropertyGetter(l, engine, thisObject));
+    if (!function.isFunctionObject())
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+
+    return static_cast<FunctionObject &>(function).call(thisObject, argv, argc);
 }
 
 ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Value *argv, int argc)
@@ -1323,13 +1347,8 @@ ReturnedValue Runtime::method_callPossiblyDirectEval(ExecutionEngine *engine, Va
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!function) {
-        QString objectAsString = QStringLiteral("[null]");
-        if (!thisObject->isUndefined())
-            objectAsString = thisObject->toQStringNoThrow();
-        QString msg = QStringLiteral("Property 'eval' of object %2 is not a function").arg(objectAsString);
-        return engine->throwTypeError(msg);
-    }
+    if (!function)
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject, QLatin1String("eval"));
 
     if (function->d() == engine->evalFunction()->d())
         return static_cast<EvalFunction *>(function.getPointer())->evalCall(thisObject, argv, argc, true);
@@ -1348,15 +1367,9 @@ ReturnedValue Runtime::method_callName(ExecutionEngine *engine, int nameIndex, V
     if (engine->hasException)
         return Encode::undefined();
 
-    if (!f) {
-        QString objectAsString = QStringLiteral("[null]");
-        if (!thisObject->isUndefined())
-            objectAsString = thisObject->toQStringNoThrow();
-        QString msg = QStringLiteral("Property '%1' of object %2 is not a function")
-                .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString(),
-                     objectAsString);
-        return engine->throwTypeError(msg);
-    }
+    if (!f)
+        return throwPropertyIsNotAFunctionTypeError(engine, thisObject,
+                                                    engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]->toQString());
 
     return f->call(thisObject, argv, argc);
 }

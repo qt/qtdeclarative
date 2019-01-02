@@ -207,7 +207,8 @@ public:
             subscriptRequiresTDZCheck(false),
             stackSlotIsLocalOrArgument(false),
             isVolatile(false),
-            global(false)
+            global(false),
+            qmlGlobal(false)
         {}
 
         Reference(const Reference &) = default;
@@ -421,6 +422,7 @@ public:
         quint32 stackSlotIsLocalOrArgument:1;
         quint32 isVolatile:1;
         quint32 global:1;
+        quint32 qmlGlobal:1;
 
     private:
         void storeAccumulator() const;
@@ -553,6 +555,7 @@ public:
     int registerGetterLookup(int nameIndex) { return jsUnitGenerator->registerGetterLookup(nameIndex); }
     int registerSetterLookup(int nameIndex) { return jsUnitGenerator->registerSetterLookup(nameIndex); }
     int registerGlobalGetterLookup(int nameIndex) { return jsUnitGenerator->registerGlobalGetterLookup(nameIndex); }
+    int registerQmlContextPropertyGetterLookup(int nameIndex) { return jsUnitGenerator->registerQmlContextPropertyGetterLookup(nameIndex); }
 
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, AST::Node *ast,

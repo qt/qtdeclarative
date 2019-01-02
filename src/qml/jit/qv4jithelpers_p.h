@@ -66,6 +66,7 @@ namespace Helpers {
 
 void convertThisToObject(ExecutionEngine *engine, Value *t);
 ReturnedValue loadGlobalLookup(Function *f, ExecutionEngine *engine, int index);
+ReturnedValue loadQmlContextPropertyLookup(Function *f, ExecutionEngine *engine, int index);
 ReturnedValue toObject(ExecutionEngine *engine, const Value &obj);
 ReturnedValue exp(const Value &base, const Value &exp);
 ReturnedValue getLookup(Function *f, ExecutionEngine *engine, const Value &base, int index);

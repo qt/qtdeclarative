@@ -170,6 +170,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
                 l->setter = QV4::Lookup::setterGeneric;
             else if (type == CompiledData::Lookup::Type_GlobalGetter)
                 l->globalGetter = QV4::Lookup::globalGetterGeneric;
+            else if (type == CompiledData::Lookup::Type_QmlContextPropertyGetter)
+                l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
             l->nameIndex = compiledLookups[i].nameIndex;
         }
     }

@@ -86,6 +86,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_LoadClosure(op) INSTRUCTION(op, LoadClosure, 1, value)
 #define INSTR_LoadName(op) INSTRUCTION(op, LoadName, 1, name)
 #define INSTR_LoadGlobalLookup(op) INSTRUCTION(op, LoadGlobalLookup, 1, index)
+#define INSTR_LoadQmlContextPropertyLookup(op) INSTRUCTION(op, LoadQmlContextPropertyLookup, 1, index)
 #define INSTR_StoreNameSloppy(op) INSTRUCTION(op, StoreNameSloppy, 1, name)
 #define INSTR_StoreNameStrict(op) INSTRUCTION(op, StoreNameStrict, 1, name)
 #define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 1, name)
@@ -113,6 +114,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallName(op) INSTRUCTION(op, CallName, 3, name, argc, argv)
 #define INSTR_CallPossiblyDirectEval(op) INSTRUCTION(op, CallPossiblyDirectEval, 2, argc, argv)
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
+#define INSTR_CallQmlContextPropertyLookup(op) INSTRUCTION(op, CallQmlContextPropertyLookup, 3, index, argc, argv)
 #define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallWithSpread(op) INSTRUCTION(op, CallWithSpread, 4, func, thisObject, argc, argv)
@@ -228,6 +230,7 @@ QT_BEGIN_NAMESPACE
     F(LoadClosure) \
     F(LoadName) \
     F(LoadGlobalLookup) \
+    F(LoadQmlContextPropertyLookup) \
     F(StoreNameSloppy) \
     F(StoreNameStrict) \
     F(LoadElement) \
@@ -296,6 +299,7 @@ QT_BEGIN_NAMESPACE
     F(CallName) \
     F(CallPossiblyDirectEval) \
     F(CallGlobalLookup) \
+    F(CallQmlContextPropertyLookup) \
     F(CallScopeObjectProperty) \
     F(CallContextObjectProperty) \
     F(CallWithSpread) \

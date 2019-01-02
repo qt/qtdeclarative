@@ -93,6 +93,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
 #define FOR_EACH_RUNTIME_METHOD(F) \
     /* call */ \
     F(ReturnedValue, callGlobalLookup, (ExecutionEngine *engine, uint index, Value *argv, int argc)) \
+    F(ReturnedValue, callQmlContextPropertyLookup, (ExecutionEngine *engine, uint index, Value *argv, int argc)) \
     F(ReturnedValue, callName, (ExecutionEngine *engine, int nameIndex, Value *argv, int argc)) \
     F(ReturnedValue, callProperty, (ExecutionEngine *engine, Value *base, int nameIndex, Value *argv, int argc)) \
     F(ReturnedValue, callPropertyLookup, (ExecutionEngine *engine, Value *base, uint index, Value *argv, int argc)) \

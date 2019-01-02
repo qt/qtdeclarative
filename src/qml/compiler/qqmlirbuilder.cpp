@@ -2228,7 +2228,8 @@ void JSCodeGen::beginFunctionBodyHook()
 QV4::Compiler::Codegen::Reference JSCodeGen::fallbackNameLookup(const QString &name)
 {
 #ifndef V4_BOOTSTRAP
-    if (_disableAcceleratedLookups)
+    // FIXME: Remove this function.
+    if (_disableAcceleratedLookups || true)
         return Reference();
 
     // Implement QML lookup semantics in the current file context.

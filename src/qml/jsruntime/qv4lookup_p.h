@@ -68,6 +68,7 @@ struct Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
+        ReturnedValue (*qmlContextPropertyGetter)(Lookup *l, ExecutionEngine *engine, Value *thisObject);
         bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
     union {

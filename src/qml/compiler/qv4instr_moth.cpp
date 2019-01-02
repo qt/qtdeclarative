@@ -286,6 +286,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << index;
         MOTH_END_INSTR(LoadGlobalLookup)
 
+        MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+            d << index;
+        MOTH_END_INSTR(LoadQmlContextPropertyLookup)
+
         MOTH_BEGIN_INSTR(StoreNameSloppy)
             d << name;
         MOTH_END_INSTR(StoreNameSloppy)
@@ -387,6 +391,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_BEGIN_INSTR(CallGlobalLookup)
             d << index << dumpArguments(argc, argv, nFormals);
         MOTH_END_INSTR(CallGlobalLookup)
+
+        MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
+            d << index << dumpArguments(argc, argv, nFormals);
+        MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
         MOTH_BEGIN_INSTR(CallScopeObjectProperty)
             d << dumpRegister(base, nFormals) << "." << name << dumpArguments(argc, argv, nFormals);

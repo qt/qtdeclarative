@@ -1982,11 +1982,19 @@ void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunctio
             call.argv = calldata.argv;
             bytecodeGenerator->addInstruction(call);
         } else if (!disable_lookups && useFastLookups && base.global) {
-            Instruction::CallGlobalLookup call;
-            call.index = registerGlobalGetterLookup(base.nameAsIndex());
-            call.argc = calldata.argc;
-            call.argv = calldata.argv;
-            bytecodeGenerator->addInstruction(call);
+            if (base.qmlGlobal) {
+                Instruction::CallQmlContextPropertyLookup call;
+                call.index = registerQmlContextPropertyGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addInstruction(call);
+            } else {
+                Instruction::CallGlobalLookup call;
+                call.index = registerGlobalGetterLookup(base.nameAsIndex());
+                call.argc = calldata.argc;
+                call.argv = calldata.argv;
+                bytecodeGenerator->addInstruction(call);
+            }
         } else {
             Instruction::CallName call;
             call.name = base.nameAsIndex();
@@ -2361,8 +2369,9 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         return fallback;
 
     Reference r = Reference::fromName(this, name);
-    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
-    if (!r.global && canAccelerateGlobalLookups() && m_globalNames.contains(name))
+    r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global || resolved.type == Context::ResolvedName::QmlGlobal);
+    r.qmlGlobal = resolved.type == Context::ResolvedName::QmlGlobal;
+    if (!r.global && !r.qmlGlobal && m_globalNames.contains(name))
         r.global = true;
     return r;
 }
@@ -4385,9 +4394,15 @@ QT_WARNING_POP
             }
         }
         if (!disable_lookups && global) {
-            Instruction::LoadGlobalLookup load;
-            load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
-            codegen->bytecodeGenerator->addInstruction(load);
+            if (qmlGlobal) {
+                Instruction::LoadQmlContextPropertyLookup load;
+                load.index = codegen->registerQmlContextPropertyGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addInstruction(load);
+            } else {
+                Instruction::LoadGlobalLookup load;
+                load.index = codegen->registerGlobalGetterLookup(nameAsIndex());
+                codegen->bytecodeGenerator->addInstruction(load);
+            }
         } else {
             Instruction::LoadName load;
             load.name = nameAsIndex();

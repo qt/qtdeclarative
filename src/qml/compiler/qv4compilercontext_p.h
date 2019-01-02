@@ -336,6 +336,7 @@ struct Context {
     struct ResolvedName {
         enum Type {
             Unresolved,
+            QmlGlobal,
             Global,
             Local,
             Stack,

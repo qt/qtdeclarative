@@ -192,6 +192,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(LoadGlobalLookup)
         COLLECTOR_END_INSTR(LoadGlobalLookup)
 
+        COLLECTOR_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+        COLLECTOR_END_INSTR(LoadQmlContextPropertyLookup)
+
         COLLECTOR_BEGIN_INSTR(StoreNameSloppy)
         COLLECTOR_END_INSTR(StoreNameSloppy)
 
@@ -269,6 +272,9 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(CallGlobalLookup)
         COLLECTOR_END_INSTR(CallGlobalLookup)
+
+        COLLECTOR_BEGIN_INSTR(CallQmlContextPropertyLookup)
+        COLLECTOR_END_INSTR(CallQmlContextPropertyLookup)
 
         COLLECTOR_BEGIN_INSTR(CallScopeObjectProperty)
         COLLECTOR_END_INSTR(CallScopeObjectProperty)

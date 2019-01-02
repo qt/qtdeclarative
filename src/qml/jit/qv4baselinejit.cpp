@@ -213,6 +213,16 @@ void BaselineJIT::generate_LoadGlobalLookup(int index)
     as->checkException();
 }
 
+void BaselineJIT::generate_LoadQmlContextPropertyLookup(int index)
+{
+    as->prepareCallWithArgCount(3);
+    as->passInt32AsArg(index, 2);
+    as->passEngineAsArg(1);
+    as->passFunctionAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Helpers::loadQmlContextPropertyLookup, CallResultDestination::InAccumulator);
+    as->checkException();
+}
+
 void BaselineJIT::generate_StoreNameSloppy(int name)
 {
     STORE_IP();
@@ -511,6 +521,18 @@ void BaselineJIT::generate_CallGlobalLookup(int index, int argc, int argv)
     as->passInt32AsArg(index, 1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callGlobalLookup, CallResultDestination::InAccumulator);
+    as->checkException();
+}
+
+void BaselineJIT::generate_CallQmlContextPropertyLookup(int index, int argc, int argv)
+{
+    STORE_IP();
+    as->prepareCallWithArgCount(4);
+    as->passInt32AsArg(argc, 3);
+    as->passJSSlotAsArg(argv, 2);
+    as->passInt32AsArg(index, 1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_callQmlContextPropertyLookup, CallResultDestination::InAccumulator);
     as->checkException();
 }
 

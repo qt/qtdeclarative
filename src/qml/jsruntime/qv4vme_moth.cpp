@@ -556,6 +556,13 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadGlobalLookup)
 
+    MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
+        STORE_IP();
+        QV4::Lookup *l = function->compilationUnit->runtimeLookups + index;
+        acc = l->qmlContextPropertyGetter(l, engine, nullptr);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(LoadQmlContextPropertyLookup)
+
     MOTH_BEGIN_INSTR(StoreNameStrict)
         STORE_IP();
         STORE_ACC();
@@ -780,6 +787,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
         acc = Runtime::method_callGlobalLookup(engine, index, stack + argv, argc);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(CallGlobalLookup)
+
+    MOTH_BEGIN_INSTR(CallQmlContextPropertyLookup)
+        STORE_IP();
+        acc = Runtime::method_callQmlContextPropertyLookup(engine, index, stack + argv, argc);
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(CallQmlContextPropertyLookup)
 
     MOTH_BEGIN_INSTR(CallScopeObjectProperty)
         STORE_IP();

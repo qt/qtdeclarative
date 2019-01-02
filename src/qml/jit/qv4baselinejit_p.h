@@ -97,6 +97,7 @@ public:
     void generate_LoadClosure(int value) override;
     void generate_LoadName(int name) override;
     void generate_LoadGlobalLookup(int index) override;
+    void generate_LoadQmlContextPropertyLookup(int index) override;
     void generate_StoreNameSloppy(int name) override;
     void generate_StoreNameStrict(int name) override;
     void generate_LoadElement(int base) override;
@@ -128,6 +129,7 @@ public:
     void generate_CallName(int name, int argc, int argv) override;
     void generate_CallPossiblyDirectEval(int argc, int argv) override;
     void generate_CallGlobalLookup(int index, int argc, int argv) override;
+    void generate_CallQmlContextPropertyLookup(int index, int argc, int argv) override;
     void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallWithSpread(int func, int thisObject, int argc, int argv) override;

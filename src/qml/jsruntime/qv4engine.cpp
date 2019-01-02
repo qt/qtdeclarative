@@ -1169,6 +1169,14 @@ ReturnedValue ExecutionEngine::throwTypeError(const QString &message)
     return throwError(error);
 }
 
+ReturnedValue ExecutionEngine::throwReferenceError(const QString &name)
+{
+    Scope scope(this);
+    QString msg = name + QLatin1String(" is not defined");
+    ScopedObject error(scope, newReferenceErrorObject(msg));
+    return throwError(error);
+}
+
 ReturnedValue ExecutionEngine::throwReferenceError(const Value &value)
 {
     Scope scope(this);

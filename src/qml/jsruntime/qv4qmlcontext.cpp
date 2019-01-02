@@ -55,6 +55,8 @@
 #include <private/qjsvalue_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4module_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4identifiertable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,14 +79,11 @@ void Heap::QQmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base)
 {
-    Q_ASSERT(m->as<QQmlContextWrapper>());
-
     if (!id.isString())
-        return Object::virtualGet(m, id, receiver, hasProperty);
+        return Object::virtualGet(resource, id, receiver, hasProperty);
 
-    const QQmlContextWrapper *resource = static_cast<const QQmlContextWrapper *>(m);
     QV4::ExecutionEngine *v4 = resource->engine();
     QV4::Scope scope(v4);
 
@@ -100,11 +99,11 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
             }
         }
 
-        return Object::virtualGet(m, id, receiver, hasProperty);
+        return Object::virtualGet(resource, id, receiver, hasProperty);
     }
 
     bool hasProp = false;
-    ScopedValue result(scope, Object::virtualGet(m, id, receiver, &hasProp));
+    ScopedValue result(scope, Object::virtualGet(resource, id, receiver, &hasProp));
     if (hasProp) {
         if (hasProperty)
             *hasProperty = hasProp;
@@ -234,6 +233,8 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
+                if (base)
+                    *base = QV4::QObjectWrapper::wrap(v4, scopeObject);
                 return result->asReturnedValue();
             }
         }
@@ -247,6 +248,8 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
+                if (base)
+                    *base = QV4::QObjectWrapper::wrap(v4, context->contextObject);
                 return result->asReturnedValue();
             }
         }
@@ -262,6 +265,13 @@ ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, c
     expressionContext->unresolvedNames = true;
 
     return Encode::undefined();
+}
+
+ReturnedValue QQmlContextWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
+{
+    Q_ASSERT(m->as<QQmlContextWrapper>());
+    const QQmlContextWrapper *This = static_cast<const QQmlContextWrapper *>(m);
+    return getPropertyAndBase(This, id, receiver, hasProperty, /*base*/nullptr);
 }
 
 bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver)
@@ -298,8 +308,16 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
     while (context) {
         const QV4::IdentifierHash &properties = context->propertyNames();
         // Search context properties
-        if (properties.count() && properties.value(name) != -1)
-            return false;
+        if (properties.count()) {
+            const int propertyIndex = properties.value(name);
+            if (propertyIndex != -1) {
+                if (propertyIndex < context->idValueCount) {
+                    v4->throwError(QLatin1String("left-hand side of assignment operator is not an lvalue"));
+                    return false;
+                }
+                return false;
+            }
+        }
 
         // Search scope object
         if (scopeObject &&
@@ -321,6 +339,32 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
             QLatin1Char('"');
     v4->throwError(error);
     return false;
+}
+
+ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Scope scope(engine);
+    PropertyKey name =engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->
+                                                             runtimeStrings[l->nameIndex]);
+
+    // Special hack for bounded signal expressions, where the parameters of signals are injected
+    // into the handler expression through the locals of the call context. So for onClicked: { ... }
+    // the parameters of the clicked signal are injected and we must allow for them to be found here
+    // before any other property from the QML context.
+    ExecutionContext &ctx = static_cast<ExecutionContext &>(engine->currentStackFrame->jsFrame->context);
+    if (ctx.d()->type == Heap::ExecutionContext::Type_CallContext) {
+        uint index = ctx.d()->internalClass->indexOfValueOrGetter(name);
+        if (index < UINT_MAX)
+            return static_cast<Heap::CallContext*>(ctx.d())->locals[index].asReturnedValue();
+    }
+
+    Scoped<QQmlContextWrapper> qmlContext(scope, engine->qmlContext()->qml());
+    bool hasProperty = false;
+    ScopedValue result(scope, QQmlContextWrapper::getPropertyAndBase(qmlContext, name, /*receiver*/nullptr,
+                                                                     &hasProperty, base));
+    if (!hasProperty)
+        return engine->throwReferenceError(name.toQString());
+    return result->asReturnedValue();
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
