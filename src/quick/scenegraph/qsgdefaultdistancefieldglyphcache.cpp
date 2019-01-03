@@ -67,7 +67,7 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 
 QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLContext *c,
                                                                      const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(c, font)
+    : QSGDistanceFieldGlyphCache(font)
     , m_maxTextureSize(0)
     , m_maxTextureCount(3)
     , m_areaAllocator(nullptr)
@@ -88,6 +88,8 @@ QSGDefaultDistanceFieldGlyphCache::QSGDefaultDistanceFieldGlyphCache(QOpenGLCont
     } else {
         qWarning("Buffer creation failed");
     }
+
+    m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
 
     // Load a pregenerated cache if the font contains one
     loadPregeneratedCache(font);

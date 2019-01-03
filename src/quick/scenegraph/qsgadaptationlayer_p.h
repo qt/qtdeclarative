@@ -62,7 +62,6 @@
 #include <QtCore/qurl.h>
 #include <private/qfontengine_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
-#include <private/qopenglcontext_p.h>
 #include <private/qdistancefield_p.h>
 #include <private/qintrusivelist_p.h>
 
@@ -75,7 +74,6 @@ class QSGNode;
 class QImage;
 class TextureReference;
 class QSGDistanceFieldGlyphNode;
-class QOpenGLContext;
 class QSGInternalImageNode;
 class QSGPainterNode;
 class QSGInternalRectangleNode;
@@ -413,7 +411,7 @@ typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphCons
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font);
+    QSGDistanceFieldGlyphCache(const QRawFont &font);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -514,8 +512,6 @@ protected:
     void saveTexture(GLuint textureId, int width, int height) const;
 #endif
 
-    inline bool isCoreProfile() const { return m_coreProfile; }
-
     bool m_doubleGlyphResolution;
 
 protected:
@@ -523,9 +519,6 @@ protected:
 
 private:
     int m_glyphCount;
-
-    bool m_coreProfile;
-
     QList<Texture> m_textures;
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;

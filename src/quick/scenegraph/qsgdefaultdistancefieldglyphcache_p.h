@@ -88,6 +88,7 @@ public:
 
 private:
     bool loadPregeneratedCache(const QRawFont &font);
+    inline bool isCoreProfile() const { return m_coreProfile; }
 
     struct TextureInfo {
         GLuint texture;
@@ -137,6 +138,7 @@ private:
 
     mutable int m_maxTextureSize;
     int m_maxTextureCount;
+    bool m_coreProfile;
 
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;

@@ -56,7 +56,7 @@ static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QOpenGLContext *c, const QRawFont &font)
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font)
     : m_pendingGlyphs(64)
 {
     Q_ASSERT(font.isValid());
@@ -71,11 +71,6 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(QOpenGLContext *c, const 
     // this allows us to call pathForGlyph once and reuse the result.
     m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
-#if QT_CONFIG(opengl)
-    m_coreProfile = (c->format().profile() == QSurfaceFormat::CoreProfile);
-#else
-    Q_UNUSED(c)
-#endif
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
