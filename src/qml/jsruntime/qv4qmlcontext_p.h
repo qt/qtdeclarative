@@ -100,11 +100,13 @@ struct Q_QML_EXPORT QQmlContextWrapper : Object
     inline QQmlContextData *getContext() const { return *d()->context; }
 
     static ReturnedValue getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver,
-                                            bool *hasProperty, Value *base);
+                                            bool *hasProperty, Value *base, Lookup *lookup = nullptr);
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);
 
     static ReturnedValue resolveQmlContextPropertyLookupGetter(Lookup *l, ExecutionEngine *engine, Value *base);
+    static ReturnedValue lookupScript(Lookup *l, ExecutionEngine *engine, Value *base);
+    static ReturnedValue lookupSingleton(Lookup *l, ExecutionEngine *engine, Value *base);
 };
 
 struct Q_QML_EXPORT QmlContext : public ExecutionContext

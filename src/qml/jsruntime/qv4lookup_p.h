@@ -129,6 +129,15 @@ struct Lookup {
             QQmlPropertyCache *propertyCache;
             QQmlPropertyData *propertyData;
         } qgadgetLookup;
+        struct {
+            quintptr unused1;
+            quintptr unused2;
+            int scriptIndex;
+        } qmlContextScriptLookup;
+        struct {
+            Heap::Object *singleton;
+            quintptr unused;
+        } qmlContextSingletonLookup;
     };
     uint nameIndex;
 

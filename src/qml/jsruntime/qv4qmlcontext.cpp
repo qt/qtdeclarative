@@ -79,7 +79,7 @@ void Heap::QQmlContextWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base)
+ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base, Lookup *lookup)
 {
     if (!id.isString())
         return Object::virtualGet(resource, id, receiver, hasProperty);
@@ -159,6 +159,8 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     // Note: The scope object is only a QADMO for example when somebody registers a QQmlPropertyMap
     // sub-class as QML type and then instantiates it in .qml.
     if (scopeObject && QQmlPropertyCache::isDynamicMetaObject(scopeObject->metaObject())) {
+        // all bets are off, so don't try to optimize any lookups
+        lookup = nullptr;
         if (performGobalLookUp())
             return result->asReturnedValue();
     }
@@ -171,11 +173,35 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             if (hasProperty)
                 *hasProperty = true;
             if (r.scriptIndex != -1) {
+                if (lookup) {
+                    lookup->qmlContextScriptLookup.scriptIndex = r.scriptIndex;
+                    lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupScript;
+                    return lookup->qmlContextPropertyGetter(lookup, v4, base);
+                }
                 QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
                 if (scripts)
                     return scripts->get(r.scriptIndex);
                 return QV4::Encode::null();
             } else if (r.type.isValid()) {
+                if (lookup) {
+                    if (r.type.isSingleton()) {
+                        QQmlEngine *e = v4->qmlEngine();
+                        QQmlType::SingletonInstanceInfo *siinfo = r.type.singletonInstanceInfo();
+                        siinfo->init(e);
+                        if (siinfo->qobjectApi(e)) {
+                            lookup->qmlContextSingletonLookup.singleton =
+                                    static_cast<Heap::Object*>(
+                                        Value::fromReturnedValue(
+                                            QQmlTypeWrapper::create(v4, nullptr, r.type)
+                                        ).heapObject());
+                        } else {
+                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, siinfo->scriptApi(e)));
+                            lookup->qmlContextSingletonLookup.singleton = o->d();
+                        }
+                        lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;
+                        return lookup->qmlContextPropertyGetter(lookup, v4, base);
+                    }
+                }
                 return QQmlTypeWrapper::create(v4, scopeObject, r.type);
             } else if (r.importNamespace) {
                 return QQmlTypeWrapper::create(v4, scopeObject, context->imports, r.importNamespace);
@@ -361,10 +387,35 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
     Scoped<QQmlContextWrapper> qmlContext(scope, engine->qmlContext()->qml());
     bool hasProperty = false;
     ScopedValue result(scope, QQmlContextWrapper::getPropertyAndBase(qmlContext, name, /*receiver*/nullptr,
-                                                                     &hasProperty, base));
+                                                                     &hasProperty, base, l));
     if (!hasProperty)
         return engine->throwReferenceError(name.toQString());
     return result->asReturnedValue();
+}
+
+ReturnedValue QQmlContextWrapper::lookupScript(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(base)
+    Scope scope(engine);
+    Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+    if (!qmlContext)
+        return QV4::Encode::null();
+
+    QQmlContextData *context = qmlContext->qmlContext();
+    if (!context)
+        return QV4::Encode::null();
+
+    QV4::ScopedObject scripts(scope, context->importedScripts.valueRef());
+    if (!scripts)
+        return QV4::Encode::null();
+    return scripts->get(l->qmlContextScriptLookup.scriptIndex);
+}
+
+ReturnedValue QQmlContextWrapper::lookupSingleton(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(engine)
+    Q_UNUSED(base)
+    return Value::fromHeapObject(l->qmlContextSingletonLookup.singleton).asReturnedValue();
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
