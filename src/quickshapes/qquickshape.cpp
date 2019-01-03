@@ -805,9 +805,8 @@ QQuickShape::Status QQuickShape::status() const
     \since QtQuick.Shapes 1.11
 
     This property determines the definition of \l {QQuickItem::contains()}{contains()}
-    for the Shape. It is useful in case you add
-    \l {Qt Quick Pointer Handlers QML Types}{Pointer Handlers} and you
-    want to react only when the mouse or touchpoint is fully inside the Shape.
+    for the Shape. It is useful in case you add \l {Qt Quick Input Handlers} and you want to
+    react only when the mouse or touchpoint is fully inside the Shape.
 
     \value Shape.BoundingRectContains
         The default implementation of \l QQuickItem::contains() checks only

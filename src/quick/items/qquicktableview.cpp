@@ -133,7 +133,7 @@
     width, unless the \l columnWidthProvider property is explicitly set. Once
     the column width is found, all other items in the same column are resized
     to this width, even if new items that are flicked in later have larger
-    \c implicitWidth. Setting an explicit \l width on an item is ignored and
+    \c implicitWidth. Setting an explicit \c width on an item is ignored and
     overwritten.
 
     \note The calculated width of a column is discarded when it is flicked out
@@ -256,9 +256,10 @@
     applies to \c row and \c column. Properties of the model are also available
     depending upon the type of \l {qml-data-models}{Data Model}.
 
-    A delegate should specify its size using \l implicitWidth and \l implicitHeight.
-    The TableView lays out the items based on that information. Explicit \l width or
-    \l height settings are ignored and overwritten.
+    A delegate should specify its size using \l [QML]{Item::implicitWidth}{implicitWidth} and
+    \l [QML]{Item::implicitHeight}{implicitHeight}.
+    The TableView lays out the items based on that information. Explicit width or
+    height settings are ignored and overwritten.
 
     \note Delegates are instantiated as needed and may be destroyed at any time.
     They are also reused if the \l reuseItems property is set to \c true. You
@@ -280,7 +281,7 @@
 /*!
     \qmlproperty real QtQuick::TableView::contentWidth
 
-    This property holds the width of the \l contentView, which is also
+    This property holds the width of the \l view, which is also
     the width of the table (including margins). As a TableView cannot
     always know the exact width of the table without loading all columns
     in the model, the \c contentWidth is usually an estimated width based on
@@ -298,7 +299,7 @@
 /*!
     \qmlproperty real QtQuick::TableView::contentHeight
 
-    This property holds the height of the \l contentView, which is also
+    This property holds the height of the \l view, which is also
     the height of the table (including margins). As a TableView cannot
     always know the exact height of the table without loading all rows
     in the model, the \c contentHeight is usually an estimated height
@@ -319,7 +320,7 @@
     Responding to changes in the model are batched so that they are handled
     only once per frame. This means the TableView delays showing any changes
     while a script is being run. The same is also true when changing
-    properties such as \l rowSpacing or \l leftMargin.
+    properties such as \l rowSpacing or \l {Item::anchors.leftMargin}{leftMargin}.
 
     This method forces the TableView to immediately update the layout so
     that any recent changes take effect.

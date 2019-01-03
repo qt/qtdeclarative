@@ -51,7 +51,7 @@
 
     Events are delivered to the window which contains the item specified in touchEvent.
 
-    \sa TestCase::touchEvent(), QTest::QTouchEventSequence
+    \sa TestCase::touchEvent()
 */
 
 /*!
