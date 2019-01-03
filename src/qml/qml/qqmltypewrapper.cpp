@@ -47,6 +47,8 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4lookup_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -169,6 +171,7 @@ static ReturnedValue throwLowercaseEnumError(QV4::ExecutionEngine *v4, String *n
 
 ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
+    // Keep this code in sync with ::virtualResolveLookupGetter
     Q_ASSERT(m->as<QQmlTypeWrapper>());
 
     if (!id.isString())
@@ -423,6 +426,64 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
     const QMetaObject *theirType = wrapperObject->metaObject();
 
     return QV4::Encode(QQmlMetaObject::canConvert(theirType, myQmlType));
+}
+
+ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
+{
+    // Keep this code in sync with ::virtualGet
+    PropertyKey id = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
+    if (!id.isString())
+        return Object::virtualResolveLookupGetter(object, engine, lookup);
+    Scope scope(engine);
+
+    const QQmlTypeWrapper *This = static_cast<const QQmlTypeWrapper *>(object);
+    ScopedString name(scope, id.asStringOrSymbol());
+    QQmlContextData *qmlContext = engine->callingQmlContext();
+
+    Scoped<QQmlTypeWrapper> w(scope, static_cast<const QQmlTypeWrapper *>(This));
+    QQmlType type = w->d()->type();
+
+    if (type.isValid()) {
+
+        if (type.isSingleton()) {
+            QQmlEngine *e = engine->qmlEngine();
+            QQmlType::SingletonInstanceInfo *siinfo = type.singletonInstanceInfo();
+            siinfo->init(e);
+
+            QObject *qobjectSingleton = siinfo->qobjectApi(e);
+            if (qobjectSingleton) {
+
+                const bool includeEnums = w->d()->mode == Heap::QQmlTypeWrapper::IncludeEnums;
+                if (!includeEnums || !name->startsWithUpper()) {
+                    QQmlData *ddata = QQmlData::get(qobjectSingleton, false);
+                    if (ddata && ddata->propertyCache) {
+                        ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
+                        QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
+                        if (property) {
+                            lookup->qobjectLookup.ic = This->internalClass();
+                            lookup->qobjectLookup.staticQObject = static_cast<Heap::QObjectWrapper *>(val->heapObject());
+                            lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+                            lookup->qobjectLookup.propertyCache->addref();
+                            lookup->qobjectLookup.propertyData = property;
+                            lookup->getter = QV4::QObjectWrapper::lookupGetter;
+                            return lookup->getter(lookup, engine, *This);
+                        }
+                        // Fall through to base implementation
+                    }
+                    // Fall through to base implementation
+                }
+                // Fall through to base implementation
+            }
+            // Fall through to base implementation
+        }
+        // Fall through to base implementation
+    }
+    return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
+}
+
+bool QQmlTypeWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value)
+{
+    return Object::virtualResolveLookupSetter(object, engine, lookup, value);
 }
 
 void Heap::QQmlScopedEnumWrapper::destroy()

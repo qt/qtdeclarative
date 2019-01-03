@@ -71,6 +71,7 @@ struct Lookup {
         ReturnedValue (*qmlContextPropertyGetter)(Lookup *l, ExecutionEngine *engine, Value *thisObject);
         bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
+    // NOTE: gc assumes the first two entries in the struct are pointers to heap objects or null
     union {
         struct {
             Heap::Base *h1;
@@ -119,7 +120,7 @@ struct Lookup {
         } indexedLookup;
         struct {
             Heap::InternalClass *ic;
-            quintptr unused;
+            Heap::QObjectWrapper *staticQObject;
             QQmlPropertyCache *propertyCache;
             QQmlPropertyData *propertyData;
         } qobjectLookup;
