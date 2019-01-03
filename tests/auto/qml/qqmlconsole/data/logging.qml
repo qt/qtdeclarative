@@ -69,6 +69,7 @@ QtObject {
 
         console.log(contextStringListProperty);
         console.log(customObject);
+        console.log([[1,2,3,[2,2,2,2],4],[5,6,7,8]]);
 
         try {
             console.log(exception);

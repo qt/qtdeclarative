@@ -1527,6 +1527,27 @@ static QString jsStack(QV4::ExecutionEngine *engine) {
     return stack;
 }
 
+static QString serializeArray(Object *array, ExecutionEngine *v4) {
+    Scope scope(v4);
+    ScopedValue val(scope);
+    QString result;
+
+    result += QLatin1Char('[');
+    const uint length = array->getLength();
+    for (uint i = 0; i < length; ++i) {
+        if (i != 0)
+            result += QLatin1Char(',');
+        val = array->get(i);
+        if (val->isManaged() && val->managed()->isArrayLike())
+            result += serializeArray(val->objectValue(), v4);
+        else
+            result += val->toQStringNoThrow();
+    }
+    result += QLatin1Char(']');
+
+    return result;
+};
+
 static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, const Value *argv, int argc,
                                     ConsoleLogTypes logType, bool printStack = false)
 {
@@ -1554,7 +1575,7 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, cons
             result.append(QLatin1Char(' '));
 
         if (argv[i].isManaged() && argv[i].managed()->isArrayLike())
-            result += QLatin1Char('[') + argv[i].toQStringNoThrow() + QLatin1Char(']');
+            result.append(serializeArray(argv[i].objectValue(), v4));
         else
             result.append(argv[i].toQStringNoThrow());
     }
