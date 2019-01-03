@@ -290,17 +290,27 @@ class MyEnum : public QObject
      };
      Q_DECLARE_FLAGS(Option1, Option1Flag)
      Q_FLAG(Option1)
+
+     enum ShortEnum: quint16 {
+         Short0  = 0,
+         Short8  = 0xff,
+         Short16 = 0xffff
+     };
+     Q_ENUM(ShortEnum);
 };
 
 class MyData : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(MyEnum::Option1 opt1 READ opt1 WRITE setOpt1 NOTIFY opt1Changed)
+    Q_PROPERTY(MyEnum::ShortEnum opt2 READ opt2 WRITE setOpt2 NOTIFY opt2Changed)
 public:
     MyEnum::Option1 opt1() const { return m_opt1;  }
+    MyEnum::ShortEnum opt2() const { return m_opt2;  }
 
 signals:
     void opt1Changed(MyEnum::Option1 opt1);
+    void opt2Changed(MyEnum::ShortEnum opt2);
 
 public slots:
     void setOpt1(MyEnum::Option1 opt1)
@@ -312,10 +322,21 @@ public slots:
         }
     }
 
+    void setOpt2(MyEnum::ShortEnum opt2)
+    {
+        QCOMPARE(opt2, MyEnum::Short16);
+        if (opt2 != m_opt2) {
+            m_opt2 = opt2;
+            emit opt2Changed(opt2);
+        }
+    }
+
     void setOption1(MyEnum::Option1 opt1) { setOpt1(opt1); }
+    void setOption2(MyEnum::ShortEnum opt2) { setOpt2(opt2); }
 
 private:
     MyEnum::Option1 m_opt1 = MyEnum::Option10;
+    MyEnum::ShortEnum m_opt2 = MyEnum::Short8;
 };
 
 void tst_qqmlpropertycache::passForeignEnums()
@@ -332,11 +353,14 @@ void tst_qqmlpropertycache::passForeignEnums()
     QQmlComponent component(&engine, testFile("foreignEnums.qml"));
     QVERIFY(component.isReady());
 
-    QObject *obj = component.create(engine.rootContext());
+    QScopedPointer<QObject> obj(component.create(engine.rootContext()));
+    QVERIFY(!obj.isNull());
     QCOMPARE(data.opt1(), MyEnum::Option1AD);
+    QCOMPARE(data.opt2(), MyEnum::Short16);
 }
 
 Q_DECLARE_METATYPE(MyEnum::Option1)
+Q_DECLARE_METATYPE(MyEnum::ShortEnum)
 
 class TestClass : public QObject
 {
