@@ -233,7 +233,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(ExecutionEngine *engine, QObject 
     return result;
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, bool captureRequired)
+ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property)
 {
     QQmlData::flushPendingBinding(object, QQmlPropertyIndex(property->coreIndex()));
 
@@ -259,7 +259,7 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
 
     QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
 
-    if (captureRequired && ep && ep->propertyCapture && !property->isConstant())
+    if (ep && ep->propertyCapture && !property->isConstant())
         ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
 
     if (property->isVarProperty()) {
@@ -355,26 +355,6 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
         *hasProperty = true;
 
     return getProperty(v4, d()->object(), result);
-}
-
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, bool captureRequired)
-{
-    if (QQmlData::wasDeleted(object))
-        return QV4::Encode::null();
-    QQmlData *ddata = QQmlData::get(object, /*create*/false);
-    if (!ddata)
-        return QV4::Encode::undefined();
-
-    if (Q_UNLIKELY(!ddata->propertyCache)) {
-        ddata->propertyCache = QQmlEnginePrivate::get(engine)->cache(object->metaObject());
-        ddata->propertyCache->addref();
-    }
-
-    QQmlPropertyCache *cache = ddata->propertyCache;
-    Q_ASSERT(cache);
-    QQmlPropertyData *property = cache->property(propertyIndex);
-    Q_ASSERT(property); // We resolved this property earlier, so it better exist!
-    return getProperty(engine, object, property, captureRequired);
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
@@ -873,7 +853,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
         QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, local);
-        return getProperty(engine, qobj, property, /*captureRequired*/true);
+        return getProperty(engine, qobj, property);
     }
     QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 
@@ -919,7 +899,7 @@ ReturnedValue QObjectWrapper::lookupGetter(Lookup *lookup, ExecutionEngine *engi
         return revertLookup();
 
     QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
-    return getProperty(engine, qobj, property, /*captureRequired = */true);
+    return getProperty(engine, qobj, property);
 }
 
 bool QObjectWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,

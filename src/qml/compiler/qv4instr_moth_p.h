@@ -91,8 +91,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_StoreNameStrict(op) INSTRUCTION(op, StoreNameStrict, 1, name)
 #define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 1, name)
 #define INSTR_GetLookup(op) INSTRUCTION(op, GetLookup, 1, index)
-#define INSTR_LoadScopeObjectProperty(op) INSTRUCTION(op, LoadScopeObjectProperty, 3, propertyIndex, base, captureRequired)
-#define INSTR_LoadContextObjectProperty(op) INSTRUCTION(op, LoadContextObjectProperty, 3, propertyIndex, base, captureRequired)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
 #define INSTR_Yield(op) INSTRUCTION(op, Yield, 0)
 #define INSTR_YieldStar(op) INSTRUCTION(op, YieldStar, 0)
@@ -102,8 +100,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_SetLookup(op) INSTRUCTION(op, SetLookup, 2, index, base)
 #define INSTR_LoadSuperProperty(op) INSTRUCTION(op, LoadSuperProperty, 1, property)
 #define INSTR_StoreSuperProperty(op) INSTRUCTION(op, StoreSuperProperty, 1, property)
-#define INSTR_StoreScopeObjectProperty(op) INSTRUCTION(op, StoreScopeObjectProperty, 2, base, propertyIndex)
-#define INSTR_StoreContextObjectProperty(op) INSTRUCTION(op, StoreContextObjectProperty, 2, base, propertyIndex)
 #define INSTR_LoadElement(op) INSTRUCTION(op, LoadElement, 1, base)
 #define INSTR_StoreElement(op) INSTRUCTION(op, StoreElement, 2, base, index)
 #define INSTR_CallValue(op) INSTRUCTION(op, CallValue, 3, name, argc, argv)
@@ -115,8 +111,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CallPossiblyDirectEval(op) INSTRUCTION(op, CallPossiblyDirectEval, 2, argc, argv)
 #define INSTR_CallGlobalLookup(op) INSTRUCTION(op, CallGlobalLookup, 3, index, argc, argv)
 #define INSTR_CallQmlContextPropertyLookup(op) INSTRUCTION(op, CallQmlContextPropertyLookup, 3, index, argc, argv)
-#define INSTR_CallScopeObjectProperty(op) INSTRUCTION(op, CallScopeObjectProperty, 4, name, base, argc, argv)
-#define INSTR_CallContextObjectProperty(op) INSTRUCTION(op, CallContextObjectProperty, 4, name, base, argc, argv)
 #define INSTR_CallWithSpread(op) INSTRUCTION(op, CallWithSpread, 4, func, thisObject, argc, argv)
 #define INSTR_Construct(op) INSTRUCTION(op, Construct, 3, func, argc, argv)
 #define INSTR_ConstructWithSpread(op) INSTRUCTION(op, ConstructWithSpread, 3, func, argc, argv)
@@ -196,7 +190,6 @@ QT_BEGIN_NAMESPACE
 #define INSTR_Div(op) INSTRUCTION(op, Div, 1, lhs)
 #define INSTR_Mod(op) INSTRUCTION(op, Mod, 1, lhs)
 #define INSTR_Sub(op) INSTRUCTION(op, Sub, 1, lhs)
-#define INSTR_LoadQmlContext(op) INSTRUCTION(op, LoadQmlContext, 1, result)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
 #define INSTR_ThrowOnNullOrUndefined(op) INSTRUCTION(op, ThrowOnNullOrUndefined, 0)
@@ -241,11 +234,6 @@ QT_BEGIN_NAMESPACE
     F(SetLookup) \
     F(LoadSuperProperty) \
     F(StoreSuperProperty) \
-    F(StoreScopeObjectProperty) \
-    F(StoreContextObjectProperty) \
-    F(LoadScopeObjectProperty) \
-    F(LoadContextObjectProperty) \
-    F(LoadIdObject) \
     F(ConvertThisToObject) \
     F(ToObject) \
     F(Jump) \
@@ -300,8 +288,6 @@ QT_BEGIN_NAMESPACE
     F(CallPossiblyDirectEval) \
     F(CallGlobalLookup) \
     F(CallQmlContextPropertyLookup) \
-    F(CallScopeObjectProperty) \
-    F(CallContextObjectProperty) \
     F(CallWithSpread) \
     F(Construct) \
     F(ConstructWithSpread) \
@@ -332,8 +318,6 @@ QT_BEGIN_NAMESPACE
     F(CreateMappedArgumentsObject) \
     F(CreateUnmappedArgumentsObject) \
     F(CreateRestParameter) \
-    F(LoadQmlContext) \
-    F(LoadQmlImportedScripts) \
     F(Yield) \
     F(YieldStar) \
     F(Resume) \

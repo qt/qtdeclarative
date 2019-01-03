@@ -1457,38 +1457,6 @@ ReturnedValue Runtime::method_callWithReceiver(ExecutionEngine *engine, const Va
     return static_cast<const FunctionObject &>(func).call(thisObject, argv, argc);
 }
 
-ReturnedValue Runtime::method_callQmlScopeObjectProperty(ExecutionEngine *engine, Value *base,
-                                                         int propertyIndex, Value *argv, int argc)
-{
-    Scope scope(engine);
-    ScopedFunctionObject fo(scope, method_loadQmlScopeObjectProperty(engine, *base, propertyIndex,
-                                                                     /*captureRequired*/true));
-    if (!fo) {
-        QString error = QStringLiteral("Property '%1' of scope object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    QObject *qmlScopeObj = static_cast<QmlContext *>(base)->d()->qml()->scopeObject;
-    ScopedValue qmlScopeValue(scope, QObjectWrapper::wrap(engine, qmlScopeObj));
-    return fo->call(qmlScopeValue, argv, argc);
-}
-
-ReturnedValue Runtime::method_callQmlContextObjectProperty(ExecutionEngine *engine, Value *base,
-                                                           int propertyIndex, Value *argv, int argc)
-{
-    Scope scope(engine);
-    ScopedFunctionObject fo(scope, method_loadQmlContextObjectProperty(engine, *base, propertyIndex,
-                                                                       /*captureRequired*/true));
-    if (!fo) {
-        QString error = QStringLiteral("Property '%1' of context object is not a function").arg(propertyIndex);
-        return engine->throwTypeError(error);
-    }
-
-    QObject *qmlContextObj = static_cast<QmlContext *>(base)->d()->qml()->context->contextData()->contextObject;
-    ScopedValue qmlContextValue(scope, QObjectWrapper::wrap(engine, qmlContextObj));
-    return fo->call(qmlContextValue, argv, argc);
-}
-
 struct CallArgs {
     Value *argv;
     int argc;
@@ -1904,64 +1872,10 @@ QV4::ReturnedValue Runtime::method_createRestParameter(ExecutionEngine *engine, 
     return engine->newArrayObject(values, nValues)->asReturnedValue();
 }
 
-
-ReturnedValue Runtime::method_loadQmlContext(NoThrowEngine *engine)
-{
-    Heap::QmlContext *ctx = engine->qmlContext();
-    Q_ASSERT(ctx);
-    return ctx->asReturnedValue();
-}
-
 ReturnedValue Runtime::method_regexpLiteral(ExecutionEngine *engine, int id)
 {
     Heap::RegExpObject *ro = engine->newRegExpObject(engine->currentStackFrame->v4Function->compilationUnit->runtimeRegularExpressions[id].as<RegExp>());
     return ro->asReturnedValue();
-}
-
-ReturnedValue Runtime::method_loadQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, c.d()->qml()->scopeObject, propertyIndex, captureRequired);
-}
-
-ReturnedValue Runtime::method_loadQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::getProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, captureRequired);
-}
-
-ReturnedValue Runtime::method_loadQmlIdObject(ExecutionEngine *engine, const Value &c, uint index)
-{
-    const QmlContext &qmlContext = static_cast<const QmlContext &>(c);
-    QQmlContextData *context = *qmlContext.d()->qml()->context;
-    if (!context || index >= (uint)context->idValueCount)
-        return Encode::undefined();
-
-    QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
-    if (ep && ep->propertyCapture)
-        ep->propertyCapture->captureProperty(&context->idValues[index].bindings);
-
-    return QObjectWrapper::wrap(engine, context->idValues[index].data());
-}
-
-void Runtime::method_storeQmlScopeObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, c.d()->qml()->scopeObject, propertyIndex, value);
-}
-
-void Runtime::method_storeQmlContextObjectProperty(ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)
-{
-    const QmlContext &c = static_cast<const QmlContext &>(context);
-    return QV4::QObjectWrapper::setProperty(engine, (*c.d()->qml()->context)->contextObject, propertyIndex, value);
-}
-
-ReturnedValue Runtime::method_loadQmlImportedScripts(NoThrowEngine *engine)
-{
-    QQmlContextData *context = engine->callingQmlContext();
-    if (!context)
-        return Encode::undefined();
-    return context->importedScripts.value();
 }
 #endif // V4_BOOTSTRAP
 

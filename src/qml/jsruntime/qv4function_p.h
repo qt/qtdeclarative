@@ -80,7 +80,6 @@ struct Q_QML_EXPORT Function {
     Heap::InternalClass *internalClass;
     uint nFormals;
     int interpreterCallCount = 0;
-    bool hasQmlDependencies;
     bool isEval = false;
 
     Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit, const CompiledData::Function *function);

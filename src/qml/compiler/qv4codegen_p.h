@@ -184,9 +184,7 @@ public:
             Member,
             Subscript,
             Import,
-            QmlScopeObject,
-            QmlContextObject,
-            LastLValue = QmlContextObject,
+            LastLValue = Import,
             Const
         } type = Invalid;
 
@@ -223,10 +221,6 @@ public:
         bool isValid() const { return type != Invalid; }
         bool loadTriggersSideEffect() const {
             switch (type) {
-            case QmlScopeObject:
-                return capturePolicy != DontCapture;
-            case QmlContextObject:
-                return capturePolicy != DontCapture;
             case Name:
             case Member:
             case Subscript:
@@ -244,28 +238,6 @@ public:
         bool isRegister() const {
             return isStackSlot();
         }
-
-        enum PropertyCapturePolicy {
-            /*
-                We're reading a property from the scope or context object, but it's a CONSTANT property,
-                so we don't need to register a dependency at all.
-            */
-            DontCapture,
-            /*
-                We're reading the property of a QObject, and we know that it's the
-                scope object or context object, which we know very well. Instead of registering a
-                property capture every time, we can do that ahead of time and then register all those
-                captures in one shot in registerQmlDependencies().
-            */
-            CaptureAheadOfTime,
-            /*
-                We're reading the property of a QObject, and we're not quite sure where
-                the QObject comes from or what it is. So, when reading that property at run-time,
-                make sure that we capture where we read that property so that if it changes we can
-                re-evaluate the entire expression.
-            */
-            CaptureAtRuntime
-        };
 
         static Reference fromAccumulator(Codegen *cg) {
             return Reference(cg, Accumulator);
@@ -333,22 +305,6 @@ public:
             r.isReadonly = true;
             return r;
         }
-        static Reference fromQmlScopeObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
-            Reference r(base.codegen, QmlScopeObject);
-            r.qmlBase = base.storeOnStack().stackSlot();
-            r.qmlCoreIndex = coreIndex;
-            r.qmlNotifyIndex = notifyIndex;
-            r.capturePolicy = capturePolicy;
-            return r;
-        }
-        static Reference fromQmlContextObject(const Reference &base, qint16 coreIndex, qint16 notifyIndex, PropertyCapturePolicy capturePolicy) {
-            Reference r(base.codegen, QmlContextObject);
-            r.qmlBase = base.storeOnStack().stackSlot();
-            r.qmlCoreIndex = coreIndex;
-            r.qmlNotifyIndex = notifyIndex;
-            r.capturePolicy = capturePolicy;
-            return r;
-        }
         static Reference fromThis(Codegen *cg) {
             Reference r = fromStackSlot(cg, CallData::This);
             r.isReadonly = true;
@@ -402,12 +358,6 @@ public:
             struct {
                 Moth::StackSlot elementBase;
                 RValue elementSubscript;
-            };
-            struct { // QML scope/context object case
-                Moth::StackSlot qmlBase;
-                qint16 qmlCoreIndex;
-                qint16 qmlNotifyIndex;
-                PropertyCapturePolicy capturePolicy;
             };
             Moth::StackSlot property; // super property
         };
@@ -597,12 +547,6 @@ protected:
     void destructurePattern(AST::Pattern *p, const Reference &rhs);
 
     Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);
-
-    // Hooks provided to implement QML lookup semantics
-    virtual bool canAccelerateGlobalLookups() const { return true; }
-    virtual Reference fallbackNameLookup(const QString &name);
-
-    virtual void beginFunctionBodyHook() {}
 
     void emitReturn(const Reference &expr);
 

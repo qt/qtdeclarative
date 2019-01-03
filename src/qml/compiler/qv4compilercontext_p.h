@@ -276,11 +276,6 @@ struct Context {
         }
     };
 
-    // Qml extension:
-    SmallSet<int> idObjectDependencies;
-    PropertyDependencyMap contextObjectPropertyDependencies;
-    PropertyDependencyMap scopeObjectPropertyDependencies;
-
     Context(Context *parent, ContextType type)
         : parent(parent)
         , contextType(type)

@@ -78,7 +78,6 @@ Function::Function(ExecutionEngine *engine, CompiledData::CompilationUnit *unit,
     , codeData(function->code())
         , jittedCode(nullptr)
         , codeRef(nullptr)
-        , hasQmlDependencies(function->hasQmlDependencies())
 {
     Scope scope(engine);
     Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));

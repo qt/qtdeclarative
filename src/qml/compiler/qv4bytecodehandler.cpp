@@ -225,21 +225,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
         COLLECTOR_BEGIN_INSTR(StoreSuperProperty)
         COLLECTOR_END_INSTR(StoreSuperProperty)
 
-        COLLECTOR_BEGIN_INSTR(StoreScopeObjectProperty)
-        COLLECTOR_END_INSTR(StoreScopeObjectProperty)
-
-        COLLECTOR_BEGIN_INSTR(LoadScopeObjectProperty)
-        COLLECTOR_END_INSTR(LoadScopeObjectProperty)
-
-        COLLECTOR_BEGIN_INSTR(StoreContextObjectProperty)
-        COLLECTOR_END_INSTR(StoreContextObjectProperty)
-
-        COLLECTOR_BEGIN_INSTR(LoadContextObjectProperty)
-        COLLECTOR_END_INSTR(LoadContextObjectProperty)
-
-        COLLECTOR_BEGIN_INSTR(LoadIdObject)
-        COLLECTOR_END_INSTR(LoadIdObject)
-
         COLLECTOR_BEGIN_INSTR(Yield)
         COLLECTOR_END_INSTR(Yield)
 
@@ -275,12 +260,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(CallQmlContextPropertyLookup)
         COLLECTOR_END_INSTR(CallQmlContextPropertyLookup)
-
-        COLLECTOR_BEGIN_INSTR(CallScopeObjectProperty)
-        COLLECTOR_END_INSTR(CallScopeObjectProperty)
-
-        COLLECTOR_BEGIN_INSTR(CallContextObjectProperty)
-        COLLECTOR_END_INSTR(CallContextObjectProperty)
 
         COLLECTOR_BEGIN_INSTR(CallWithSpread)
         COLLECTOR_END_INSTR(CallWithSpread)
@@ -545,12 +524,6 @@ std::vector<int> ByteCodeHandler::collectLabelsInBytecode(const char *code, uint
 
         COLLECTOR_BEGIN_INSTR(GetTemplateObject)
         COLLECTOR_END_INSTR(GetTemplateObject)
-
-        COLLECTOR_BEGIN_INSTR(LoadQmlContext)
-        COLLECTOR_END_INSTR(LoadQmlContext)
-
-        COLLECTOR_BEGIN_INSTR(LoadQmlImportedScripts)
-        COLLECTOR_END_INSTR(LoadQmlImportedScripts)
 
         COLLECTOR_BEGIN_INSTR(TailCall)
         COLLECTOR_END_INSTR(TailCall)

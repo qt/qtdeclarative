@@ -108,15 +108,6 @@ public:
     void generate_SetLookup(int index, int base) override;
     void generate_LoadSuperProperty(int property) override;
     void generate_StoreSuperProperty(int property) override;
-    void generate_StoreScopeObjectProperty(int base,
-                                           int propertyIndex) override;
-    void generate_StoreContextObjectProperty(int base,
-                                             int propertyIndex) override;
-    void generate_LoadScopeObjectProperty(int propertyIndex, int base,
-                                          int captureRequired) override;
-    void generate_LoadContextObjectProperty(int propertyIndex, int base,
-                                            int captureRequired) override;
-    void generate_LoadIdObject(int index, int base) override;
     void generate_Yield() override;
     void generate_YieldStar() override;
     void generate_Resume(int) override;
@@ -130,8 +121,6 @@ public:
     void generate_CallPossiblyDirectEval(int argc, int argv) override;
     void generate_CallGlobalLookup(int index, int argc, int argv) override;
     void generate_CallQmlContextPropertyLookup(int index, int argc, int argv) override;
-    void generate_CallScopeObjectProperty(int propIdx, int base, int argc, int argv) override;
-    void generate_CallContextObjectProperty(int propIdx, int base, int argc, int argv) override;
     void generate_CallWithSpread(int func, int thisObject, int argc, int argv) override;
     void generate_TailCall(int func, int thisObject, int argc, int argv) override;
     void generate_Construct(int func, int argc, int argv) override;
@@ -213,8 +202,6 @@ public:
     void generate_Div(int lhs) override;
     void generate_Mod(int lhs) override;
     void generate_Sub(int lhs) override;
-    void generate_LoadQmlContext(int result) override;
-    void generate_LoadQmlImportedScripts(int result) override;
     void generate_InitializeBlockDeadTemporalZone(int firstReg, int count) override;
     void generate_ThrowOnNullOrUndefined() override;
     void generate_GetTemplateObject(int index) override;

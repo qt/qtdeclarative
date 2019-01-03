@@ -1605,8 +1605,7 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     if (QQmlEngine *qmlEngine = that->engine()->qmlEngine()) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine);
         if (ep && ep->propertyCapture)
-            ep->propertyCapture->captureProperty(that->object(), -1, role->index,
-                                                 QQmlPropertyCapture::OnlyOnce, false);
+            ep->propertyCapture->captureProperty(that->object(), -1, role->index, /*doNotify=*/ false);
     }
 
     const int elementIndex = that->d()->elementIndex();

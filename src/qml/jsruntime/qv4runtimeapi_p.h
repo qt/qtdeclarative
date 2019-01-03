@@ -195,19 +195,7 @@ struct ExceptionCheck<void (*)(QV4::NoThrowEngine *, A, B, C)> {
     F(Bool, compareInstanceof, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     F(Bool, compareIn, (ExecutionEngine *engine, const Value &left, const Value &right)) \
     \
-    F(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id)) \
-    \
-    /* qml */ \
-    F(ReturnedValue, loadQmlContext, (NoThrowEngine *engine)) \
-    F(ReturnedValue, loadQmlImportedScripts, (NoThrowEngine *engine)) \
-    F(ReturnedValue, loadQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, loadQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, bool captureRequired)) \
-    F(ReturnedValue, loadQmlIdObject, (ExecutionEngine *engine, const Value &context, uint index)) \
-    F(ReturnedValue, callQmlScopeObjectProperty, (ExecutionEngine *engine, Value *base, int propertyIndex, Value *argv, int argc)) \
-    F(ReturnedValue, callQmlContextObjectProperty, (ExecutionEngine *engine, Value *base, int propertyIndex, Value *argv, int argc)) \
-    \
-    F(void, storeQmlScopeObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
-    F(void, storeQmlContextObjectProperty, (ExecutionEngine *engine, const Value &context, int propertyIndex, const Value &value)) \
+    F(ReturnedValue, regexpLiteral, (ExecutionEngine *engine, int id))
 
 struct Q_QML_PRIVATE_EXPORT Runtime {
     Runtime();

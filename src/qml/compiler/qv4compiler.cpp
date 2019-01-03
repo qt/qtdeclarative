@@ -427,28 +427,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     function->nRegisters = irFunction->registerCountInFunction;
 
-    function->nDependingIdObjects = 0;
-    function->nDependingContextProperties = 0;
-    function->nDependingScopeProperties = 0;
-
-    if (!irFunction->idObjectDependencies.isEmpty()) {
-        function->nDependingIdObjects = irFunction->idObjectDependencies.count();
-        Q_ASSERT(function->dependingIdObjectsOffset() == currentOffset);
-        currentOffset += function->nDependingIdObjects * sizeof(quint32);
-    }
-
-    if (!irFunction->contextObjectPropertyDependencies.isEmpty()) {
-        function->nDependingContextProperties = irFunction->contextObjectPropertyDependencies.count();
-        Q_ASSERT(function->dependingContextPropertiesOffset() == currentOffset);
-        currentOffset += function->nDependingContextProperties * sizeof(quint32) * 2;
-    }
-
-    if (!irFunction->scopeObjectPropertyDependencies.isEmpty()) {
-        function->nDependingScopeProperties = irFunction->scopeObjectPropertyDependencies.count();
-        Q_ASSERT(function->dependingScopePropertiesOffset() == currentOffset);
-        currentOffset += function->nDependingScopeProperties * sizeof(quint32) * 2;
-    }
-
     function->location.line = irFunction->line;
     function->location.column = irFunction->column;
 
@@ -467,25 +445,6 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
 
     // write line numbers
     memcpy(f + function->lineNumberOffset(), irFunction->lineNumberMapping.constData(), irFunction->lineNumberMapping.size()*sizeof(CompiledData::CodeOffsetToLine));
-
-    // write QML dependencies
-    quint32_le *writtenDeps = (quint32_le *)(f + function->dependingIdObjectsOffset());
-    for (int id : irFunction->idObjectDependencies) {
-        Q_ASSERT(id >= 0);
-        *writtenDeps++ = static_cast<quint32>(id);
-    }
-
-    writtenDeps = (quint32_le *)(f + function->dependingContextPropertiesOffset());
-    for (auto property : irFunction->contextObjectPropertyDependencies) {
-        *writtenDeps++ = property.key(); // property index
-        *writtenDeps++ = property.value(); // notify index
-    }
-
-    writtenDeps = (quint32_le *)(f + function->dependingScopePropertiesOffset());
-    for (auto property : irFunction->scopeObjectPropertyDependencies) {
-        *writtenDeps++ = property.key(); // property index
-        *writtenDeps++ = property.value(); // notify index
-    }
 
     // write byte code
     memcpy(f + function->codeOffset, irFunction->code.constData(), irFunction->code.size());
@@ -683,10 +642,8 @@ QV4::CompiledData::Unit QV4::Compiler::JSUnitGenerator::generateHeader(QV4::Comp
         Context *f = module->functions.at(i);
         blockAndFunctionOffsets[i] = nextOffset;
 
-        const int qmlIdDepsCount = f->idObjectDependencies.count();
-        const int qmlPropertyDepsCount = f->scopeObjectPropertyDependencies.count() + f->contextObjectPropertyDependencies.count();
         quint32 size = QV4::CompiledData::Function::calculateSize(f->arguments.size(), f->locals.size(), f->lineNumberMapping.size(), f->nestedContexts.size(),
-                                                                 qmlIdDepsCount, qmlPropertyDepsCount, f->code.size());
+                                                                  f->code.size());
         functionSize += size - f->code.size();
         nextOffset += size;
     }

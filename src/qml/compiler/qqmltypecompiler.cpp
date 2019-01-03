@@ -146,7 +146,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         document->jsModule.fileName = typeData->urlString();
         document->jsModule.finalUrl = typeData->finalUrlString();
         QmlIR::JSCodeGen v4CodeGenerator(document->code, &document->jsGenerator, &document->jsModule, &document->jsParserEngine,
-                                         document->program, typeNameCache.data(), &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
+                                         document->program, &document->jsGenerator.stringTable, engine->v8engine()->illegalNames());
         QQmlJSCodeGenerator jsCodeGen(this, &v4CodeGenerator);
         if (!jsCodeGen.generateCodeForComponents())
             return nullptr;
@@ -766,10 +766,6 @@ void QQmlScriptStringScanner::scan()
             if (!pd || pd->propType() != scriptStringMetaType)
                 continue;
 
-            QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-            if (foe)
-                foe->disableAcceleratedLookups = true;
-
             QString script = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
             binding->stringIndex = compiler->registerString(script);
         }
@@ -1323,24 +1319,6 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject)
         contextObject = componentBinding->value.objectIndex;
     }
 
-    QmlIR::JSCodeGen::ObjectIdMapping idMapping;
-    idMapping.reserve(obj->namedObjectsInComponent.count);
-    for (int i = 0; i < obj->namedObjectsInComponent.count; ++i) {
-        const int objectIndex = obj->namedObjectsInComponent.at(i);
-        QmlIR::JSCodeGen::IdMapping m;
-        const QmlIR::Object *obj = qmlObjects.at(objectIndex);
-        m.name = stringAt(obj->idNameIndex);
-        m.idIndex = obj->id;
-        m.type = propertyCaches->at(objectIndex);
-
-        auto *tref = resolvedType(obj->inheritedTypeNameIndex);
-        if (tref && tref->isFullyDynamicType)
-            m.type = nullptr;
-
-        idMapping << m;
-    }
-    v4CodeGen->beginContextScope(idMapping, propertyCaches->at(contextObject));
-
     if (!compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject))
         return false;
 
@@ -1354,16 +1332,9 @@ bool QQmlJSCodeGenerator::compileJavaScriptCodeInObjectsRecursively(int objectIn
         return true;
 
     if (object->functionsAndExpressions->count > 0) {
-        QQmlPropertyCache *scopeObject = propertyCaches->at(scopeObjectIndex);
-        v4CodeGen->beginObjectScope(scopeObject);
-
         QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
-        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next) {
-            const bool haveCustomParser = customParsers.contains(object->inheritedTypeNameIndex);
-            if (haveCustomParser)
-                foe->disableAcceleratedLookups = true;
+        for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
             functionsToCompile << *foe;
-        }
         const QVector<int> runtimeFunctionIndices = v4CodeGen->generateJSCodeForFunctionsAndBindings(functionsToCompile);
         const QList<QQmlError> jsErrors = v4CodeGen->qmlErrors();
         if (!jsErrors.isEmpty()) {
