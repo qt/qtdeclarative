@@ -143,6 +143,13 @@ struct Lookup {
             quintptr unused2;
             int objectId;
         } qmlContextIdObjectLookup;
+        struct {
+            // Same as protoLookup, as used for global lookups
+            quintptr reserved1;
+            quintptr reserved2;
+            quintptr reserved3;
+            ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
+        } qmlContextGlobalLookup;
     };
     uint nameIndex;
 

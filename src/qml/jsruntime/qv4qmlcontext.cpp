@@ -213,6 +213,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
+    Lookup * const originalLookup = lookup;
 
     while (context) {
         // Search context properties
@@ -295,8 +296,24 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
     // true if we access properties of the global object.
-    if (performGobalLookUp())
-        return result->asReturnedValue();
+    if (originalLookup) {
+        // Try a lookup in the global object. It's theoretically possible to first find a property
+        // in the global object and then later a context property with the same name is added, but that
+        // never really worked as we used to detect access to global properties at type compile time anyway.
+        lookup = originalLookup;
+        result = lookup->resolveGlobalGetter(v4);
+        if (lookup->globalGetter != Lookup::globalGetterGeneric) {
+            if (hasProperty)
+                *hasProperty = true;
+            lookup->qmlContextGlobalLookup.getterTrampoline = lookup->globalGetter;
+            lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupInGlobalObject;
+            return result->asReturnedValue();
+        }
+        lookup->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+    } else {
+        if (performGobalLookUp())
+            return result->asReturnedValue();
+    }
 
     expressionContext->unresolvedNames = true;
 
@@ -447,6 +464,18 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
         qmlEngine->propertyCapture->captureProperty(&context->idValues[objectId].bindings);
 
     return QV4::QObjectWrapper::wrap(engine, context->idValues[objectId]);
+}
+
+ReturnedValue QQmlContextWrapper::lookupInGlobalObject(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(base);
+    ReturnedValue result = l->qmlContextGlobalLookup.getterTrampoline(l, engine);
+    // In the unlikely event of mutation of the global object, update the trampoline.
+    if (l->qmlContextPropertyGetter != lookupInGlobalObject) {
+        l->qmlContextGlobalLookup.getterTrampoline = l->globalGetter;
+        l->qmlContextPropertyGetter = QQmlContextWrapper::lookupInGlobalObject;
+    }
+    return result;
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
