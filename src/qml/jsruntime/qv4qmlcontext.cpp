@@ -261,13 +261,30 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // Search scope object
         if (scopeObject) {
             bool hasProp = false;
+
+            QQmlPropertyData *propertyData = nullptr;
             QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4, context, scopeObject,
-                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp));
+                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
                 if (base)
                     *base = QV4::QObjectWrapper::wrap(v4, scopeObject);
+
+                if (lookup && propertyData) {
+                    QQmlData *ddata = QQmlData::get(scopeObject, false);
+                    if (ddata && ddata->propertyCache) {
+                        ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, scopeObject)));
+                        const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
+                        lookup->qobjectLookup.ic = That->internalClass();
+                        lookup->qobjectLookup.staticQObject = nullptr;
+                        lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+                        lookup->qobjectLookup.propertyCache->addref();
+                        lookup->qobjectLookup.propertyData = propertyData;
+                        lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupScopeObjectProperty;
+                    }
+                }
+
                 return result->asReturnedValue();
             }
         }
@@ -464,6 +481,32 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
         qmlEngine->propertyCapture->captureProperty(&context->idValues[objectId].bindings);
 
     return QV4::QObjectWrapper::wrap(engine, context->idValues[objectId]);
+}
+
+ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(base)
+    Scope scope(engine);
+    Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+    if (!qmlContext)
+        return QV4::Encode::undefined();
+
+    QObject *scopeObject = qmlContext->qmlScope();
+    if (!scopeObject)
+        return QV4::Encode::undefined();
+
+    if (QQmlData::wasDeleted(scopeObject))
+        return QV4::Encode::undefined();
+
+    const auto revertLookup = [l, engine, base]() {
+        l->qobjectLookup.propertyCache->release();
+        l->qobjectLookup.propertyCache = nullptr;
+        l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+        return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
+    };
+
+    ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, scopeObject));
+    return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
 ReturnedValue QQmlContextWrapper::lookupInGlobalObject(Lookup *l, ExecutionEngine *engine, Value *base)

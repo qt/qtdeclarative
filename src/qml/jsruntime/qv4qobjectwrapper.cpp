@@ -357,7 +357,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(QQmlContextData *qmlContext, String
     return getProperty(v4, d()->object(), result);
 }
 
-ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty)
+ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, QQmlPropertyData **property)
 {
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
@@ -383,6 +383,9 @@ ReturnedValue QObjectWrapper::getQmlProperty(QV4::ExecutionEngine *engine, QQmlC
 
         if (hasProperty)
             *hasProperty = true;
+
+        if (property)
+            *property = result;
 
         return getProperty(engine, object, result);
     } else {
@@ -884,24 +887,7 @@ ReturnedValue QObjectWrapper::lookupGetter(Lookup *lookup, ExecutionEngine *engi
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
-    // we can safely cast to a QV4::Object here. If object is something else,
-    // the internal class won't match
-    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
-    if (!o || o->internalClass != lookup->qobjectLookup.ic)
-        return revertLookup();
-
-    const Heap::QObjectWrapper *This = lookup->qobjectLookup.staticQObject ? lookup->qobjectLookup.staticQObject :
-                                                                             static_cast<const Heap::QObjectWrapper *>(o);
-    QObject *qobj = This->object();
-    if (QQmlData::wasDeleted(qobj))
-        return QV4::Encode::undefined();
-
-    QQmlData *ddata = QQmlData::get(qobj, /*create*/false);
-    if (!ddata || ddata->propertyCache != lookup->qobjectLookup.propertyCache)
-        return revertLookup();
-
-    QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
-    return getProperty(engine, qobj, property);
+    return lookupGetterImpl(lookup, engine, object, /*useOriginalProperty*/ false, revertLookup);
 }
 
 bool QObjectWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,

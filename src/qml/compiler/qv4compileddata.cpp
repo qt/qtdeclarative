@@ -284,6 +284,11 @@ void CompilationUnit::unlink()
                 if (QQmlPropertyCache *pc = l.qgadgetLookup.propertyCache)
                     pc->release();
             }
+
+            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty) {
+                if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
+                    pc->release();
+            }
         }
     }
 

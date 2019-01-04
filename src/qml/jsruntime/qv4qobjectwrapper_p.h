@@ -62,6 +62,7 @@
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4lookup_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -167,7 +168,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     QObject *object() const { return d()->object(); }
 
     ReturnedValue getQmlProperty(QQmlContextData *qmlContext, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr, bool includeImports = false) const;
-    static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr);
+    static ReturnedValue getQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr, QQmlPropertyData **property = nullptr);
 
     static bool setQmlProperty(ExecutionEngine *engine, QQmlContextData *qmlContext, QObject *object, String *name, RevisionMode revisionMode, const Value &value);
 
@@ -185,6 +186,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static ReturnedValue lookupGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
+    template <typename ReversalFunctor> static ReturnedValue lookupGetterImpl(Lookup *l, ExecutionEngine *engine, const Value &object, bool useOriginalProperty, ReversalFunctor revert);
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
 
 protected:
@@ -220,6 +222,47 @@ inline ReturnedValue QObjectWrapper::wrap(ExecutionEngine *engine, QObject *obje
     }
 
     return wrap_slowPath(engine, object);
+}
+
+template <typename ReversalFunctor>
+inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionEngine *engine, const Value &object, bool useOriginalProperty, ReversalFunctor revertLookup)
+{
+    // we can safely cast to a QV4::Object here. If object is something else,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (!o || o->internalClass != lookup->qobjectLookup.ic)
+        return revertLookup();
+
+    const Heap::QObjectWrapper *This = lookup->qobjectLookup.staticQObject ? lookup->qobjectLookup.staticQObject :
+                                                                             static_cast<const Heap::QObjectWrapper *>(o);
+    QObject *qobj = This->object();
+    if (QQmlData::wasDeleted(qobj))
+        return QV4::Encode::undefined();
+
+    QQmlData *ddata = QQmlData::get(qobj, /*create*/false);
+    if (!ddata)
+        return revertLookup();
+
+    QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
+    if (ddata->propertyCache != lookup->qobjectLookup.propertyCache) {
+        if (property->isOverridden() && (!useOriginalProperty || property->isFunction() || property->isSignalHandler()))
+            return revertLookup();
+
+        QQmlPropertyCache *fromMo = ddata->propertyCache;
+        QQmlPropertyCache *toMo = lookup->qobjectLookup.propertyCache;
+        bool canConvert = false;
+        while (fromMo) {
+            if (fromMo == toMo) {
+                canConvert = true;
+                break;
+            }
+            fromMo = fromMo->parent();
+        }
+        if (!canConvert)
+            return revertLookup();
+    }
+
+    return getProperty(engine, qobj, property);
 }
 
 struct QQmlValueTypeWrapper;
