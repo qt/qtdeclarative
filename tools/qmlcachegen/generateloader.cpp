@@ -273,7 +273,7 @@ static QByteArray generateResourceDirectoryTree(QTextStream &code, const QString
     VirtualDirectoryEntry resourceDirs;
     resourceDirs.name = QStringLiteral("/");
 
-    foreach (const QString &entry, qrcFiles) {
+    for (const QString &entry : qrcFiles) {
         const QStringList segments = entry.split(QLatin1Char('/'), QString::SkipEmptyParts);
 
         VirtualDirectoryEntry *dirEntry = &resourceDirs;

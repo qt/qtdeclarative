@@ -117,7 +117,7 @@ static void annotateListElements(QmlIR::Document *document)
 {
     QStringList listElementNames;
 
-    foreach (const QV4::CompiledData::Import *import, document->imports) {
+    for (const QV4::CompiledData::Import *import : qAsConst(document->imports)) {
         const QString uri = document->stringAt(import->uriIndex);
         if (uri != QStringLiteral("QtQml.Models") && uri != QStringLiteral("QtQuick"))
             continue;
@@ -134,7 +134,7 @@ static void annotateListElements(QmlIR::Document *document)
     if (listElementNames.isEmpty())
         return;
 
-    foreach (QmlIR::Object *object, document->objects) {
+    for (QmlIR::Object *object : qAsConst(document->objects)) {
         if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
             continue;
         for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
