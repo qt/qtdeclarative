@@ -223,11 +223,17 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             if (propertyIdx != -1) {
 
                 if (propertyIdx < context->idValueCount) {
+                    if (hasProperty)
+                        *hasProperty = true;
+
+                    if (lookup) {
+                        lookup->qmlContextIdObjectLookup.objectId = propertyIdx;
+                        lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupIdObject;
+                        return lookup->qmlContextPropertyGetter(lookup, v4, base);
+                    }
 
                     if (ep->propertyCapture)
                         ep->propertyCapture->captureProperty(&context->idValues[propertyIdx].bindings);
-                    if (hasProperty)
-                        *hasProperty = true;
                     return QV4::QObjectWrapper::wrap(v4, context->idValues[propertyIdx]);
                 } else {
 
@@ -281,6 +287,10 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         }
 
         context = context->parent;
+
+        // As the hierarchy of contexts is not stable, we can't do accelerated lookups beyond
+        // the immediate QML context (of the .qml file).
+        lookup = nullptr;
     }
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
@@ -416,6 +426,27 @@ ReturnedValue QQmlContextWrapper::lookupSingleton(Lookup *l, ExecutionEngine *en
     Q_UNUSED(engine)
     Q_UNUSED(base)
     return Value::fromHeapObject(l->qmlContextSingletonLookup.singleton).asReturnedValue();
+}
+
+ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(base)
+    Scope scope(engine);
+    Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+    if (!qmlContext)
+        return QV4::Encode::null();
+
+    QQmlContextData *context = qmlContext->qmlContext();
+    if (!context)
+        return QV4::Encode::null();
+
+    QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine->qmlEngine());
+    const int objectId = l->qmlContextIdObjectLookup.objectId;
+
+    if (qmlEngine->propertyCapture)
+        qmlEngine->propertyCapture->captureProperty(&context->idValues[objectId].bindings);
+
+    return QV4::QObjectWrapper::wrap(engine, context->idValues[objectId]);
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)

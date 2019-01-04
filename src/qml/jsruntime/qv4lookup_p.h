@@ -138,6 +138,11 @@ struct Lookup {
             Heap::Object *singleton;
             quintptr unused;
         } qmlContextSingletonLookup;
+        struct {
+            quintptr unused1;
+            quintptr unused2;
+            int objectId;
+        } qmlContextIdObjectLookup;
     };
     uint nameIndex;
 
