@@ -175,8 +175,10 @@ void tst_PropertyRequirements::testQmlType(TestDepth testDepth, const QQmlType &
 
     // check if this type is derived from QObject and even can have signals
     // i.e. weed out the Q_GADGET classes
-    if (inheritanceHierarchy.first()->className() != QByteArray("QObject"))
+    if (inheritanceHierarchy.isEmpty()
+        || inheritanceHierarchy.constFirst()->className() != QByteArrayLiteral("QObject")) {
         return;
+    }
 
     if (testDepth == MainTypeOnly) {
         inheritanceHierarchy.clear();
