@@ -2977,7 +2977,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::Fun
 
     if (argc >= 1) {
         QFontMetrics fm(r->d()->context->state.font);
-        uint width = fm.width(argv[0].toQStringNoThrow());
+        uint width = fm.horizontalAdvance(argv[0].toQStringNoThrow());
         QV4::ScopedObject tm(scope, scope.engine->newObject());
         tm->put(QV4::ScopedString(scope, scope.engine->newIdentifier(QStringLiteral("width"))).getPointer(),
                 QV4::ScopedValue(scope, QV4::Value::fromDouble(width)));
@@ -4057,10 +4057,10 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
         value = QGuiApplication::layoutDirection() == Qt::LeftToRight ? QQuickContext2D::Right: QQuickContext2D::Left;
     switch (value) {
     case QQuickContext2D::Center:
-        offset = metrics.width(text)/2;
+        offset = metrics.horizontalAdvance(text) / 2;
         break;
     case QQuickContext2D::Right:
-        offset = metrics.width(text);
+        offset = metrics.horizontalAdvance(text);
     case QQuickContext2D::Left:
     default:
         break;

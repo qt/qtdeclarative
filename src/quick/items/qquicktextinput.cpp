@@ -877,7 +877,7 @@ QRectF QQuickTextInput::cursorRectangle() const
         if (c < text().length())
             w = l.cursorToX(c + 1) - x;
         else
-            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+            w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
     }
     return QRectF(x, y, w, l.height());
 }
@@ -1377,7 +1377,7 @@ QRectF QQuickTextInput::positionToRectangle(int pos) const
         if (pos < text().length())
             w = l.cursorToX(pos + 1) - x;
         else
-            w = QFontMetrics(font()).width(QLatin1Char(' ')); // in sync with QTextLine::draw()
+            w = QFontMetrics(font()).horizontalAdvance(QLatin1Char(' ')); // in sync with QTextLine::draw()
     }
     return QRectF(x, y, w, l.height());
 }
