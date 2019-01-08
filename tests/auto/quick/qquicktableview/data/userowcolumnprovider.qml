@@ -46,6 +46,8 @@ Item {
 
     property alias tableView: tableView
     property Component delegate: tableViewDelegate
+    property bool returnNegativeColumnWidth: false
+    property bool returnNegativeRowHeight: false
 
     TableView {
         id: tableView
@@ -56,8 +58,16 @@ Item {
         delegate: tableViewDelegate
         columnSpacing: 1
         rowSpacing: 1
-        columnWidthProvider: function(column) { return column + 10 }
-        rowHeightProvider: function(row) { return row + 10 }
+        columnWidthProvider: function(column) {
+            if (returnNegativeColumnWidth)
+                return -1
+            return column + 10
+        }
+        rowHeightProvider: function(row) {
+            if (returnNegativeRowHeight)
+                return -1
+            return row + 10
+        }
     }
 
     Component {

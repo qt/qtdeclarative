@@ -88,54 +88,52 @@ public:
     public:
         void begin(const QPoint &cell, const QPointF &pos, QQmlIncubator::IncubationMode incubationMode)
         {
-            Q_ASSERT(!active);
-            active = true;
-            tableEdge = Qt::Edge(0);
-            tableCells = QLine(cell, cell);
-            mode = incubationMode;
-            cellCount = 1;
-            currentIndex = 0;
-            startPos = pos;
+            Q_ASSERT(!m_active);
+            m_active = true;
+            m_edge = Qt::Edge(0);
+            m_mode = incubationMode;
+            m_edgeIndex = cell.x();
+            m_visibleCellsInEdge.clear();
+            m_visibleCellsInEdge.append(cell.y());
+            m_currentIndex = 0;
+            m_startPos = pos;
             qCDebug(lcTableViewDelegateLifecycle()) << "begin top-left:" << toString();
         }
 
-        void begin(const QLine cellsToLoad, Qt::Edge edgeToLoad, QQmlIncubator::IncubationMode incubationMode)
+        void begin(Qt::Edge edgeToLoad, int edgeIndex, const QList<int> visibleCellsInEdge, QQmlIncubator::IncubationMode incubationMode)
         {
-            Q_ASSERT(!active);
-            active = true;
-            tableEdge = edgeToLoad;
-            tableCells = cellsToLoad;
-            mode = incubationMode;
-            cellCount = tableCells.x2() - tableCells.x1() + tableCells.y2() - tableCells.y1() + 1;
-            currentIndex = 0;
+            Q_ASSERT(!m_active);
+            m_active = true;
+            m_edge = edgeToLoad;
+            m_edgeIndex = edgeIndex;
+            m_visibleCellsInEdge = visibleCellsInEdge;
+            m_mode = incubationMode;
+            m_currentIndex = 0;
             qCDebug(lcTableViewDelegateLifecycle()) << "begin:" << toString();
         }
 
-        inline void markAsDone() { active = false; }
-        inline bool isActive() { return active; }
+        inline void markAsDone() { m_active = false; }
+        inline bool isActive() { return m_active; }
 
-        inline QPoint firstCell() { return tableCells.p1(); }
-        inline QPoint lastCell() { return tableCells.p2(); }
-        inline QPoint currentCell() { return cellAt(currentIndex); }
-        inline QPoint previousCell() { return cellAt(currentIndex - 1); }
+        inline QPoint currentCell() { return cellAt(m_currentIndex); }
+        inline bool hasCurrentCell() { return m_currentIndex < m_visibleCellsInEdge.count(); }
+        inline void moveToNextCell() { ++m_currentIndex; }
 
-        inline bool atBeginning() { return currentIndex == 0; }
-        inline bool hasCurrentCell() { return currentIndex < cellCount; }
-        inline void moveToNextCell() { ++currentIndex; }
+        inline Qt::Edge edge() { return m_edge; }
+        inline int row() { return cellAt(0).y(); }
+        inline int column() { return cellAt(0).x(); }
+        inline QQmlIncubator::IncubationMode incubationMode() { return m_mode; }
 
-        inline Qt::Edge edge() { return tableEdge; }
-        inline QQmlIncubator::IncubationMode incubationMode() { return mode; }
-
-        inline QPointF startPosition() { return startPos; }
+        inline QPointF startPosition() { return m_startPos; }
 
         QString toString()
         {
             QString str;
             QDebug dbg(&str);
             dbg.nospace() << "TableSectionLoadRequest(" << "edge:"
-                << tableEdge << " cells:" << tableCells << " incubation:";
+                << m_edge << ", edgeIndex:" << m_edgeIndex << ", incubation:";
 
-            switch (mode) {
+            switch (m_mode) {
             case QQmlIncubator::Asynchronous:
                 dbg << "Asynchronous";
                 break;
@@ -151,20 +149,29 @@ public:
         }
 
     private:
-        Qt::Edge tableEdge = Qt::Edge(0);
-        QLine tableCells;
-        int currentIndex = 0;
-        int cellCount = 0;
-        bool active = false;
-        QQmlIncubator::IncubationMode mode = QQmlIncubator::AsynchronousIfNested;
-        QPointF startPos;
+        Qt::Edge m_edge = Qt::Edge(0);
+        QList<int> m_visibleCellsInEdge;
+        int m_edgeIndex = 0;
+        int m_currentIndex = 0;
+        bool m_active = false;
+        QQmlIncubator::IncubationMode m_mode = QQmlIncubator::AsynchronousIfNested;
+        QPointF m_startPos;
 
-        QPoint cellAt(int index)
-        {
-            int x = tableCells.p1().x() + (tableCells.dx() ? index : 0);
-            int y = tableCells.p1().y() + (tableCells.dy() ? index : 0);
-            return QPoint(x, y);
+        inline QPoint cellAt(int index) {
+            return !m_edge || (m_edge & (Qt::LeftEdge | Qt::RightEdge))
+                    ? QPoint(m_edgeIndex, m_visibleCellsInEdge[index])
+                    : QPoint(m_visibleCellsInEdge[index], m_edgeIndex);
         }
+    };
+
+    class EdgeRange {
+    public:
+        EdgeRange();
+        bool containsIndex(Qt::Edge edge, int index);
+
+        int startIndex;
+        int endIndex;
+        qreal size;
     };
 
     enum class RebuildState {
@@ -234,7 +241,6 @@ public:
 
     TableEdgeLoadRequest loadRequest;
 
-    QPoint contentSizeBenchMarkPoint = QPoint(-1, -1);
     QSizeF cellSpacing = QSizeF(0, 0);
 
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
@@ -247,6 +253,10 @@ public:
 
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
+
+    EdgeRange cachedNextVisibleEdgeIndex[4];
+    EdgeRange cachedColumnWidth;
+    EdgeRange cachedRowHeight;
 
     // TableView uses contentWidth/height to report the size of the table (this
     // will e.g make scrollbars written for Flickable work out of the box). This
@@ -281,8 +291,13 @@ public:
     qreal sizeHintForRow(int row);
     void calculateTableSize();
 
-    qreal resolveColumnWidth(int column);
-    qreal resolveRowHeight(int row);
+    inline bool isColumnHidden(int column);
+    inline bool isRowHidden(int row);
+
+    qreal getColumnLayoutWidth(int column);
+    qreal getRowLayoutHeight(int row);
+    qreal getColumnWidth(int column);
+    qreal getRowHeight(int row);
 
     inline int topRow() const { return loadedRows.firstKey(); }
     inline int bottomRow() const { return loadedRows.lastKey(); }
@@ -300,12 +315,16 @@ public:
     void updateContentWidth();
     void updateContentHeight();
     void updateAverageEdgeSize();
+    void forceLayout();
 
     void enforceTableAtOrigin();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
 
+    int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
+    inline int edgeToArrayIndex(Qt::Edge edge);
+    void clearEdgeSizeCache();
 
     bool canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;
     bool canUnloadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;
@@ -316,7 +335,6 @@ public:
     qreal cellHeight(const QPoint &cell);
 
     FxTableItem *loadedTableItem(const QPoint &cell) const;
-    FxTableItem *itemNextTo(const FxTableItem *fxTableItem, const QPoint &direction) const;
     FxTableItem *createFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
     FxTableItem *loadFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
 
@@ -324,18 +342,17 @@ public:
     void releaseLoadedItems(QQmlTableInstanceModel::ReusableFlag reusableFlag);
 
     void unloadItem(const QPoint &cell);
-    void unloadItems(const QLine &items);
-
     void loadInitialTopLeftItem(const QPoint &cell, const QPointF &pos);
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
     void loadAndUnloadVisibleEdges();
     void drainReusePoolAfterLoadRequest();
-    void cancelLoadRequest();
     void processLoadRequest();
 
     void processRebuildTable();
     bool moveToNextRebuildState();
+    QPoint calculateNewTopLeft();
+    void calculateTopLeft(QPoint &topLeft, QPointF &topLeftPos);
     void beginRebuildTable();
     void layoutAfterLoadingInitialTable();
 
