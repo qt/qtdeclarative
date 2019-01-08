@@ -20,7 +20,8 @@
                 "include": "memory",
                 "main": [
                     "std::unique_ptr<int> ptr = std::make_unique<int>();"
-                ]
+                ],
+                "qmake": "CONFIG += c++11"
             }
         }
     },
@@ -28,7 +29,7 @@
     "features": {
         "cxx14_make_unique": {
             "label": "C++14 make_unique",
-            "condition": "tests.cxx14_make_unique",
+            "condition": "features.c++14 || tests.cxx14_make_unique",
             "output": [ "privateFeature" ]
         },
         "qml-network": {
