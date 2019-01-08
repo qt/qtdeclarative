@@ -299,6 +299,9 @@ public:
       AST::ExportsList *ExportsList;
       AST::ExportClause *ExportClause;
       AST::ExportDeclaration *ExportDeclaration;
+      AST::TypeAnnotation *TypeAnnotation;
+      AST::TypeArgumentList *TypeArgumentList;
+      AST::Type *Type;
 
       AST::UiProgram *UiProgram;
       AST::UiHeaderItemList *UiHeaderItemList;
@@ -423,6 +426,8 @@ protected:
      void syntaxError(const AST::SourceLocation &location, const QString &message) {
         diagnostic_messages.append(compileError(location, message));
       }
+
+    bool ensureNoFunctionTypeAnnotations(AST::TypeAnnotation *returnTypeAnnotation, AST::FormalParameterList *formals);
 
 protected:
     Engine *driver;
@@ -592,6 +597,21 @@ int Parser::lookaheadToken(Lexer *lexer)
         yylloc = location(lexer);
     }
     return yytoken;
+}
+
+bool Parser::ensureNoFunctionTypeAnnotations(AST::TypeAnnotation *returnValueAnnotation, AST::FormalParameterList *formals)
+{
+    for (auto formal = formals; formal; formal = formal->next) {
+        if (formal->element && formal->element->typeAnnotation) {
+            syntaxError(formal->element->typeAnnotation->firstSourceLocation(), "Type annotations are not permitted in function parameters in JavaScript functions");
+            return false;
+        }
+    }
+    if (returnValueAnnotation) {
+        syntaxError(returnValueAnnotation->firstSourceLocation(), "Type annotations are not permitted for the return value of JavaScript functions");
+        return false;
+    }
+    return true;
 }
 
 //#define PARSER_DEBUG
@@ -1355,7 +1375,7 @@ UiObjectMember: T_READONLY T_PROPERTY UiPropertyType QmlIdentifier T_COLON Expre
     } break;
 ./
 
-UiObjectMember: FunctionDeclaration;
+UiObjectMember: FunctionDeclarationWithTypes;
 /.
     case $rule_number: {
         sym(1).Node = new (pool) AST::UiSourceElement(sym(1).Node);
@@ -1469,6 +1489,54 @@ JsIdentifier: T_AS;
 
 IdentifierReference: JsIdentifier;
 BindingIdentifier: IdentifierReference;
+
+--------------------------------------------------------------------------------------------------------
+-- Types
+--------------------------------------------------------------------------------------------------------
+
+TypeArguments: Type;
+/.
+    case $rule_number: {
+        sym(1).TypeArgumentList = new (pool) AST::TypeArgumentList(sym(1).Type);
+    } break;
+./
+
+TypeArguments: TypeArguments T_COMMA Type;
+/.
+    case $rule_number: {
+        sym(1).TypeArgumentList = new (pool) AST::TypeArgumentList(sym(1).TypeArgumentList, sym(3).Type);
+    } break;
+./
+
+Type: UiQualifiedId T_LT TypeArguments T_GT;
+/.
+    case $rule_number: {
+        sym(1).Type = new (pool) AST::Type(sym(1).UiQualifiedId, sym(3).TypeArgumentList->finish());
+    } break;
+./
+
+Type: UiQualifiedId;
+/.
+    case $rule_number: {
+        sym(1).Type = new (pool) AST::Type(sym(1).UiQualifiedId);
+    } break;
+./
+
+TypeAnnotation: T_COLON Type;
+/.
+    case $rule_number: {
+        sym(1).TypeAnnotation = new (pool) AST::TypeAnnotation(sym(2).Type);
+        sym(1).TypeAnnotation->colonToken = loc(1);
+    } break;
+./
+
+TypeAnnotationOpt: TypeAnnotation;
+TypeAnnotationOpt: ;
+/.
+    case $rule_number: {
+        sym(1).TypeAnnotation = nullptr;
+    } break;
+./
 
 --------------------------------------------------------------------------------------------------------
 -- Expressions
@@ -2851,7 +2919,14 @@ VarDeclaration: Var VariableDeclarationList;
 VarDeclaration_In: Var VariableDeclarationList_In;
 /.
     case $rule_number: {
-        AST::VariableStatement *node = new (pool) AST::VariableStatement(sym(2).VariableDeclarationList->finish(sym(1).scope));
+        AST::VariableDeclarationList *declarations = sym(2).VariableDeclarationList->finish(sym(1).scope);
+        for (auto it = declarations; it; it = it->next) {
+            if (it->declaration && it->declaration->typeAnnotation) {
+                syntaxError(it->declaration->typeAnnotation->firstSourceLocation(), "Type annotations are not permitted in variable declarations");
+                return false;
+            }
+        }
+        AST::VariableStatement *node = new (pool) AST::VariableStatement(declarations);
         node->declarationKindToken = loc(1);
         sym(1).Node = node;
     } break;
@@ -2888,22 +2963,22 @@ VariableDeclarationList_In: VariableDeclarationList_In T_COMMA VariableDeclarati
     } break;
 ./
 
-LexicalBinding: BindingIdentifier InitializerOpt;
+LexicalBinding: BindingIdentifier TypeAnnotationOpt InitializerOpt;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-LexicalBinding_In: BindingIdentifier InitializerOpt_In;
+LexicalBinding_In: BindingIdentifier TypeAnnotationOpt InitializerOpt_In;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-VariableDeclaration: BindingIdentifier InitializerOpt;
+VariableDeclaration: BindingIdentifier TypeAnnotationOpt InitializerOpt;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-VariableDeclaration_In: BindingIdentifier InitializerOpt_In;
+VariableDeclaration_In: BindingIdentifier TypeAnnotationOpt InitializerOpt_In;
 /.
     case $rule_number: {
-        auto *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
+        auto *node = new (pool) AST::PatternElement(stringRef(1), sym(2).TypeAnnotation, sym(3).Expression);
         node->identifierToken = loc(1);
         sym(1).Node = node;
         // if initializer is an anonymous function expression, we need to assign identifierref as it's name
-        if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+        if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression))
             f->name = stringRef(1);
-        if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+        if (auto *c = asAnonymousClassDefinition(sym(3).Expression))
             c->name = stringRef(1);
     } break;
 ./
@@ -3053,15 +3128,15 @@ BindingProperty: PropertyName T_COLON BindingPattern InitializerOpt_In;
     } break;
 ./
 
-BindingElement: BindingIdentifier InitializerOpt_In;
+BindingElement: BindingIdentifier TypeAnnotationOpt InitializerOpt_In;
 /.
     case $rule_number: {
-      AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(1), sym(2).Expression);
+      AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(1), sym(2).TypeAnnotation, sym(3).Expression);
       node->identifierToken = loc(1);
       // if initializer is an anonymous function expression, we need to assign identifierref as it's name
-      if (auto *f = asAnonymousFunctionDefinition(sym(2).Expression))
+      if (auto *f = asAnonymousFunctionDefinition(sym(3).Expression))
           f->name = stringRef(1);
-      if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
+      if (auto *c = asAnonymousClassDefinition(sym(3).Expression))
           c->name = stringRef(1);
       sym(1).Node = node;
     } break;
@@ -3078,7 +3153,7 @@ BindingElement: BindingPattern InitializerOpt_In;
 BindingRestElement: T_ELLIPSIS BindingIdentifier;
 /.
     case $rule_number: {
-        AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(2), nullptr, AST::PatternElement::RestElement);
+        AST::PatternElement *node = new (pool) AST::PatternElement(stringRef(2), /*type annotation*/nullptr, nullptr, AST::PatternElement::RestElement);
         node->identifierToken = loc(2);
         sym(1).Node = node;
     } break;
@@ -3268,12 +3343,16 @@ IterationStatement: T_FOR T_LPAREN ForDeclaration InOrOf Expression_In T_RPAREN 
     } break;
 ./
 
-ForDeclaration: LetOrConst BindingIdentifier;
+ForDeclaration: LetOrConst BindingIdentifier TypeAnnotationOpt;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-ForDeclaration: Var BindingIdentifier;
+ForDeclaration: Var BindingIdentifier TypeAnnotationOpt;
 /.
     case $rule_number: {
-        auto *node = new (pool) AST::PatternElement(stringRef(2), nullptr);
+        if (auto typeAnnotation = sym(3).TypeAnnotation) {
+            syntaxError(typeAnnotation->firstSourceLocation(), "Type annotations are not permitted in variable declarations");
+            return false;
+        }
+        auto *node = new (pool) AST::PatternElement(stringRef(2), sym(3).TypeAnnotation, nullptr);
         node->identifierToken = loc(2);
         node->scope = sym(1).scope;
         node->isForDeclaration = true;
@@ -3560,59 +3639,85 @@ DebuggerStatement: T_DEBUGGER T_SEMICOLON;
 -- otherwise conflict.
 Function: T_FUNCTION %prec REDUCE_HERE;
 
-FunctionDeclaration: Function BindingIdentifier T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+FunctionDeclaration: Function BindingIdentifier T_LPAREN FormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(6).TypeAnnotation, sym(4).FormalParameterList))
+            return false;
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(8).StatementList,
+                                                                             /*type annotation*/nullptr);
         node->functionToken = loc(1);
         node->identifierToken = loc(2);
         node->lparenToken = loc(3);
         node->rparenToken = loc(5);
+        node->lbraceToken = loc(7);
+        node->rbraceToken = loc(9);
+        sym(1).Node = node;
+    } break;
+./
+
+FunctionDeclarationWithTypes: Function BindingIdentifier T_LPAREN FormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
+/.
+    case $rule_number: {
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(stringRef(2), sym(4).FormalParameterList, sym(8).StatementList,
+                                                                             sym(6).TypeAnnotation);
+        node->functionToken = loc(1);
+        node->identifierToken = loc(2);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->lbraceToken = loc(7);
+        node->rbraceToken = loc(9);
+        sym(1).Node = node;
+    } break;
+./
+
+FunctionDeclaration_Default: FunctionDeclaration;
+FunctionDeclaration_Default: Function T_LPAREN FormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
+/.
+    case $rule_number: {
+        if (!ensureNoFunctionTypeAnnotations(sym(5).TypeAnnotation, sym(3).FormalParameterList))
+            return false;
+        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(3).FormalParameterList, sym(7).StatementList,
+                                                                             /*type annotation*/nullptr);
+        node->functionToken = loc(1);
+        node->lparenToken = loc(2);
+        node->rparenToken = loc(4);
         node->lbraceToken = loc(6);
         node->rbraceToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
 
-
-FunctionDeclaration_Default: FunctionDeclaration;
-FunctionDeclaration_Default: Function T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+FunctionExpression: T_FUNCTION BindingIdentifier T_LPAREN FormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionDeclaration *node = new (pool) AST::FunctionDeclaration(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
-        node->functionToken = loc(1);
-        node->lparenToken = loc(2);
-        node->rparenToken = loc(4);
-        node->lbraceToken = loc(5);
-        node->rbraceToken = loc(7);
-        sym(1).Node = node;
-    } break;
-./
-
-FunctionExpression: T_FUNCTION BindingIdentifier T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
-/.
-    case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(6).TypeAnnotation, sym(4).FormalParameterList))
+            return false;
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(8).StatementList,
+                                                                           /*type annotation*/nullptr);
         node->functionToken = loc(1);
         if (! stringRef(2).isNull())
           node->identifierToken = loc(2);
         node->lparenToken = loc(3);
         node->rparenToken = loc(5);
-        node->lbraceToken = loc(6);
-        node->rbraceToken = loc(8);
+        node->lbraceToken = loc(7);
+        node->rbraceToken = loc(9);
         sym(1).Node = node;
     } break;
 ./
 
-FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+FunctionExpression: T_FUNCTION T_LPAREN FormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(6).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(5).TypeAnnotation, sym(3).FormalParameterList))
+            return false;
+        AST::FunctionExpression *node = new (pool) AST::FunctionExpression(QStringRef(), sym(3).FormalParameterList, sym(7).StatementList,
+                                                                           /*type annotation*/nullptr);
         node->functionToken = loc(1);
         node->lparenToken = loc(2);
         node->rparenToken = loc(4);
-        node->lbraceToken = loc(5);
-        node->rbraceToken = loc(7);
+        node->lbraceToken = loc(6);
+        node->rbraceToken = loc(8);
         sym(1).Node = node;
     } break;
 ./
@@ -3722,7 +3827,7 @@ ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK Fun
 ArrowParameters: BindingIdentifier;
 /.
     case $rule_number: {
-        AST::PatternElement *e = new (pool) AST::PatternElement(stringRef(1), nullptr, AST::PatternElement::Binding);
+        AST::PatternElement *e = new (pool) AST::PatternElement(stringRef(1), /*type annotation*/nullptr, nullptr, AST::PatternElement::Binding);
         e->identifierToken = loc(1);
         sym(1).FormalParameterList = (new (pool) AST::FormalParameterList(nullptr, e))->finish(pool);
     } break;
@@ -3756,30 +3861,34 @@ ConciseBodyLookahead: ;
     } break;
 ./
 
-MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+MethodDefinition: PropertyName T_LPAREN StrictFormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(6).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(5).TypeAnnotation, sym(3).FormalParameterList))
+            return false;
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(1), sym(3).FormalParameterList, sym(7).StatementList);
         f->functionToken = sym(1).PropertyName->firstSourceLocation();
         f->lparenToken = loc(2);
         f->rparenToken = loc(4);
-        f->lbraceToken = loc(5);
-        f->rbraceToken = loc(7);
+        f->lbraceToken = loc(6);
+        f->rbraceToken = loc(8);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(1).PropertyName, f, AST::PatternProperty::Method);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
 
-MethodDefinition: T_STAR PropertyName GeneratorLParen StrictFormalParameters T_RPAREN FunctionLBrace GeneratorBody GeneratorRBrace;
+MethodDefinition: T_STAR PropertyName GeneratorLParen StrictFormalParameters T_RPAREN TypeAnnotationOpt FunctionLBrace GeneratorBody GeneratorRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(6).TypeAnnotation, sym(4).FormalParameterList))
+            return false;
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(8).StatementList);
         f->functionToken = sym(2).PropertyName->firstSourceLocation();
         f->lparenToken = loc(3);
         f->rparenToken = loc(5);
-        f->lbraceToken = loc(6);
-        f->rbraceToken = loc(8);
+        f->lbraceToken = loc(7);
+        f->rbraceToken = loc(9);
         f->isGenerator = true;
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Method);
         node->colonToken = loc(2);
@@ -3788,30 +3897,34 @@ MethodDefinition: T_STAR PropertyName GeneratorLParen StrictFormalParameters T_R
 ./
 
 
-MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+MethodDefinition: T_GET PropertyName T_LPAREN T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), nullptr, sym(6).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(5).TypeAnnotation, /*formals*/nullptr))
+            return false;
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), nullptr, sym(7).StatementList);
         f->functionToken = sym(2).PropertyName->firstSourceLocation();
         f->lparenToken = loc(3);
         f->rparenToken = loc(4);
-        f->lbraceToken = loc(5);
-        f->rbraceToken = loc(7);
+        f->lbraceToken = loc(6);
+        f->rbraceToken = loc(8);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Getter);
         node->colonToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
 
-MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN FunctionLBrace FunctionBody FunctionRBrace;
+MethodDefinition: T_SET PropertyName T_LPAREN PropertySetParameterList T_RPAREN TypeAnnotationOpt FunctionLBrace FunctionBody FunctionRBrace;
 /.
     case $rule_number: {
-        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(7).StatementList);
+        if (!ensureNoFunctionTypeAnnotations(sym(6).TypeAnnotation, sym(4).FormalParameterList))
+            return false;
+        AST::FunctionExpression *f = new (pool) AST::FunctionExpression(stringRef(2), sym(4).FormalParameterList, sym(8).StatementList);
         f->functionToken = sym(2).PropertyName->firstSourceLocation();
         f->lparenToken = loc(3);
         f->rparenToken = loc(5);
-        f->lbraceToken = loc(6);
-        f->rbraceToken = loc(8);
+        f->lbraceToken = loc(7);
+        f->rbraceToken = loc(9);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(sym(2).PropertyName, f, AST::PatternProperty::Setter);
         node->colonToken = loc(2);
         sym(1).Node = node;

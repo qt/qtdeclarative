@@ -32,12 +32,14 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 
+#include "../../shared/util.h"
+
 #include <qtest.h>
 #include <QDir>
 #include <QDebug>
 #include <cstdlib>
 
-class tst_qqmlparser : public QObject
+class tst_qqmlparser : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -56,6 +58,10 @@ private slots:
     void leadingSemicolonInClass();
     void templatedReadonlyProperty();
     void qmlImportInJSRequiresFullVersion();
+    void typeAnnotations_data();
+    void typeAnnotations();
+    void disallowedTypeAnnotations_data();
+    void disallowedTypeAnnotations();
 
 private:
     QStringList excludedDirs;
@@ -88,7 +94,7 @@ public:
                 qDebug() << "first source loc failed: node:" << node->kind << "at" << node->firstSourceLocation().startLine << "/" << node->firstSourceLocation().startColumn
                          << "parent" << parent->kind << "at" << parent->firstSourceLocation().startLine << "/" << parent->firstSourceLocation().startColumn;
             if (node->lastSourceLocation().end() > parentEnd)
-                qDebug() << "first source loc failed: node:" << node->kind << "at" << node->lastSourceLocation().startLine << "/" << node->lastSourceLocation().startColumn
+                qDebug() << "last source loc failed: node:" << node->kind << "at" << node->lastSourceLocation().startLine << "/" << node->lastSourceLocation().startColumn
                          << "parent" << parent->kind << "at" << parent->lastSourceLocation().startLine << "/" << parent->lastSourceLocation().startColumn;
 
             QVERIFY(node->firstSourceLocation().begin() >= parentBegin);
@@ -114,6 +120,27 @@ public:
     }
 };
 
+struct TypeAnnotationObserver: public AST::Visitor
+{
+    bool typeAnnotationSeen = false;
+
+    void operator()(AST::Node *node)
+    {
+        AST::Node::accept(node, this);
+    }
+
+    virtual bool visit(AST::TypeAnnotation *)
+    {
+        typeAnnotationSeen = true;
+        return true;
+    }
+
+    void throwRecursionDepthError() final
+    {
+        QFAIL("Maximum statement or expression depth exceeded");
+    }
+};
+
 }
 
 tst_qqmlparser::tst_qqmlparser()
@@ -122,6 +149,7 @@ tst_qqmlparser::tst_qqmlparser()
 
 void tst_qqmlparser::initTestCase()
 {
+    QQmlDataTest::initTestCase();
     // Add directories you want excluded here
 
     // These snippets are not expected to run on their own.
@@ -332,6 +360,82 @@ void tst_qqmlparser::qmlImportInJSRequiresFullVersion()
         QQmlJS::Parser parser(&engine);
         QVERIFY(!parser.parseProgram());
     }
+}
+
+void tst_qqmlparser::typeAnnotations_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QString tests = dataDirectory() + "/typeannotations/";
+
+    QStringList files;
+    files << findFiles(QDir(tests));
+
+    for (const QString &file: qAsConst(files))
+        QTest::newRow(qPrintable(file)) << file;
+}
+
+void tst_qqmlparser::typeAnnotations()
+{
+    using namespace QQmlJS;
+
+    QFETCH(QString, file);
+
+    QString code;
+
+    QFile f(file);
+    if (f.open(QFile::ReadOnly))
+        code = QString::fromUtf8(f.readAll());
+
+    const bool qmlMode = file.endsWith(QLatin1String(".qml"));
+
+    Engine engine;
+    Lexer lexer(&engine);
+    lexer.setCode(code, 1, qmlMode);
+    Parser parser(&engine);
+    bool ok = qmlMode ? parser.parse() : parser.parseProgram();
+    QVERIFY(ok);
+
+    check::TypeAnnotationObserver observer;
+    observer(parser.rootNode());
+
+    QVERIFY(observer.typeAnnotationSeen);
+}
+
+void tst_qqmlparser::disallowedTypeAnnotations_data()
+{
+    QTest::addColumn<QString>("file");
+
+    QString tests = dataDirectory() + "/disallowedtypeannotations/";
+
+    QStringList files;
+    files << findFiles(QDir(tests));
+
+    for (const QString &file: qAsConst(files))
+        QTest::newRow(qPrintable(file)) << file;
+}
+
+void tst_qqmlparser::disallowedTypeAnnotations()
+{
+    using namespace QQmlJS;
+
+    QFETCH(QString, file);
+
+    QString code;
+
+    QFile f(file);
+    if (f.open(QFile::ReadOnly))
+        code = QString::fromUtf8(f.readAll());
+
+    const bool qmlMode = file.endsWith(QLatin1String(".qml"));
+
+    Engine engine;
+    Lexer lexer(&engine);
+    lexer.setCode(code, 1, qmlMode);
+    Parser parser(&engine);
+    bool ok = qmlMode ? parser.parse() : parser.parseProgram();
+    QVERIFY(!ok);
+    QVERIFY2(parser.errorMessage().startsWith("Type annotations are not permitted "), qPrintable(parser.errorMessage()));
 }
 
 QTEST_MAIN(tst_qqmlparser)

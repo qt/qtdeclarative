@@ -131,7 +131,7 @@ FormalParameterList *ExpressionNode::reparseAsFormalParameterList(MemoryPool *po
     }
     AST::PatternElement *binding = nullptr;
     if (AST::IdentifierExpression *idExpr = AST::cast<AST::IdentifierExpression *>(expr)) {
-        binding = new (pool) AST::PatternElement(idExpr->name, rhs);
+        binding = new (pool) AST::PatternElement(idExpr->name, /*type annotation*/nullptr, rhs);
         binding->identifierToken = idExpr->identifierToken;
     } else if (AST::Pattern *p = expr->patternCast()) {
         SourceLocation loc;
@@ -961,6 +961,7 @@ void FunctionDeclaration::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(formals, visitor);
+        accept(typeAnnotation, visitor);
         accept(body, visitor);
     }
 
@@ -971,6 +972,7 @@ void FunctionExpression::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(formals, visitor);
+        accept(typeAnnotation, visitor);
         accept(body, visitor);
     }
 
@@ -1271,6 +1273,35 @@ void UiQualifiedId::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
+void Type::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(typeId, visitor);
+        accept(typeArguments, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void TypeArgumentList::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        for (TypeArgumentList *it = this; it; it = it->next)
+            accept(it->typeId, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
+void TypeAnnotation::accept0(Visitor *visitor)
+{
+    if (visitor->visit(this)) {
+        accept(type, visitor);
+    }
+
+    visitor->endVisit(this);
+}
+
 void UiImport::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
@@ -1339,6 +1370,7 @@ void PatternElement::accept0(Visitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(bindingTarget, visitor);
+        accept(typeAnnotation, visitor);
         accept(initializer, visitor);
     }
 
@@ -1382,6 +1414,7 @@ void PatternProperty::accept0(Visitor *visitor)
     if (visitor->visit(this)) {
         accept(name, visitor);
         accept(bindingTarget, visitor);
+        accept(typeAnnotation, visitor);
         accept(initializer, visitor);
     }
 

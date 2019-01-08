@@ -622,6 +622,9 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
 
     QTest::newRow("bareQmlImport") << "bareQmlImport.qml" << "bareQmlImport.errors.txt" << false;
+
+    QTest::newRow("typeAnnotations") << "typeAnnotations.qml" << "typeAnnotations.errors.txt" << false;
+    QTest::newRow("typeAnnotations.2") << "typeAnnotations.2.qml" << "typeAnnotations.2.errors.txt" << false;
 }
 
 

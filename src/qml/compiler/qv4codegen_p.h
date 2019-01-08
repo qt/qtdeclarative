@@ -593,6 +593,8 @@ protected:
 
     bool visit(AST::ExportDeclaration *ast) override;
 
+    bool visit(AST::TypeAnnotation *ast) override;
+
     // expressions
     bool visit(AST::Expression *ast) override;
     bool visit(AST::ArrayPattern *ast) override;
