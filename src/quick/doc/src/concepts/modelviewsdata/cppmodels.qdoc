@@ -331,9 +331,7 @@ signal after saving the changes.
 
 Unlike the C++ item views such as QListView or QTableView, the \c setData()
 method must be explicitly invoked from QML delegates whenever appropriate. This is done
-by simply assigning a new value to the corresponding model property. For example,
-on the \l[QML]{TextField::}{editingFinished}() or \l[QML]{TextField::}{accepted}()
-signal of \l[QtQuickControls]{TextField}.
+by simply assigning a new value to the corresponding model property.
 
 \qml
 ListView {

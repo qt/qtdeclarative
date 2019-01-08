@@ -70,6 +70,7 @@ private slots:
     void contextLeak();
 
     void outerContextObject();
+    void contextObjectHierarchy();
 
 private:
     QQmlEngine engine;
@@ -871,6 +872,24 @@ void tst_qqmlcontext::outerContextObject()
     timer.start();
 
     QTRY_VERIFY(iterations >= 100);
+}
+
+void tst_qqmlcontext::contextObjectHierarchy()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("contextObjectHierarchy.qml"));
+    QVERIFY(component.isReady());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    for (const QObject *child : root->children())
+        QVERIFY(QQmlData::get(child)->outerContext != nullptr);
+
+    connect(root.data(), &QObject::destroyed, [&root]() {
+        for (const QObject *child : root->children())
+            QCOMPARE(QQmlData::get(child)->outerContext, nullptr);
+    });
 }
 
 QTEST_MAIN(tst_qqmlcontext)

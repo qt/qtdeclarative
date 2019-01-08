@@ -2246,13 +2246,14 @@ QQuickPointerEvent *QQuickWindowPrivate::queryPointerEventInstance(QQuickPointer
 {
     // Search for a matching reusable event object.
     for (QQuickPointerEvent *e : pointerEventInstances) {
-        // If device can generate native gestures (e.g. a trackpad), there might be two QQuickPointerEvents:
-        // QQuickPointerNativeGestureEvent and QQuickPointerTouchEvent.  Use eventType to disambiguate.
+        // If device can generate native gestures (e.g. a trackpad), there might be multiple QQuickPointerEvents:
+        // QQuickPointerNativeGestureEvent, QQuickPointerScrollEvent, and QQuickPointerTouchEvent.
+        // Use eventType to disambiguate.
 #if QT_CONFIG(gestures)
-        if (eventType == QEvent::NativeGesture && !qobject_cast<QQuickPointerNativeGestureEvent*>(e))
+        if ((eventType == QEvent::NativeGesture) != bool(e->asPointerNativeGestureEvent()))
             continue;
 #endif
-        if (eventType == QEvent::Wheel && !qobject_cast<QQuickPointerScrollEvent*>(e))
+        if ((eventType == QEvent::Wheel) != bool(e->asPointerScrollEvent()))
             continue;
         // Otherwise we assume there's only one event type per device.
         // More disambiguation tests might need to be added above if that changes later.

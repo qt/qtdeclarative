@@ -49,7 +49,7 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
+    \li \l{Qt Quick XmlListModel QML Types}{Xml List Model} - contains types
     for creating models from XML data
     \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database

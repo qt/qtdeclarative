@@ -309,6 +309,8 @@ void QQuickMultiPointHandler::acceptPoints(const QVector<QQuickEventPoint *> &po
 
 bool QQuickMultiPointHandler::grabPoints(QVector<QQuickEventPoint *> points)
 {
+    if (points.isEmpty())
+        return false;
     bool allowed = true;
     for (QQuickEventPoint* point : points) {
         if (point->exclusiveGrabber() != this && !canGrab(point)) {

@@ -70,6 +70,7 @@ private slots:
     void mouseLongPress();
     void buttonsMultiTouch();
     void componentUserBehavioralOverride();
+    void rightLongPressIgnoreWheel();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -674,6 +675,44 @@ void tst_TapHandler::componentUserBehavioralOverride()
     QCOMPARE(tappedSpy.count(), 1); // only because the override handler makes that happen
     QCOMPARE(innerGrabChangedSpy.count(), 0);
     QCOMPARE(userGrabChangedSpy.count(), 2);
+}
+
+void tst_TapHandler::rightLongPressIgnoreWheel()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "rightTapHandler.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickTapHandler *tap = window->rootObject()->findChild<QQuickTapHandler*>();
+    QVERIFY(tap);
+    QSignalSpy tappedSpy(tap, SIGNAL(tapped(QQuickEventPoint *)));
+    QSignalSpy longPressedSpy(tap, SIGNAL(longPressed()));
+    QPoint p1(100, 100);
+
+    // Mouse wheel with ScrollBegin phase (because as soon as two fingers are touching
+    // the trackpad, it will send such an event: QTBUG-71955)
+    {
+        QWheelEvent wheelEvent(p1, p1, QPoint(0, 0), QPoint(0, 0),
+                               Qt::NoButton, Qt::NoModifier, Qt::ScrollBegin, false, Qt::MouseEventNotSynthesized);
+        QGuiApplication::sendEvent(window, &wheelEvent);
+    }
+
+    // Press
+    QTest::mousePress(window, Qt::RightButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(tap->isPressed(), true);
+
+    // Mouse wheel ScrollEnd phase
+    QWheelEvent wheelEvent(p1, p1, QPoint(0, 0), QPoint(0, 0),
+                           Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false, Qt::MouseEventNotSynthesized);
+    QGuiApplication::sendEvent(window, &wheelEvent);
+    QTRY_COMPARE(longPressedSpy.count(), 1);
+    QCOMPARE(tap->isPressed(), true);
+    QCOMPARE(tappedSpy.count(), 0);
+
+    // Release
+    QTest::mouseRelease(window, Qt::RightButton, Qt::NoModifier, p1, 500);
+    QTRY_COMPARE(tap->isPressed(), false);
+    QCOMPARE(tappedSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_TapHandler)

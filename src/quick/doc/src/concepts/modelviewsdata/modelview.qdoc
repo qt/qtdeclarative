@@ -226,7 +226,7 @@ To visualize data, bind the view's \c model property to a model and the
     \section2 XML Model
 
     XmlListModel allows construction of a model from an XML data source. The roles
-    are specified via the \l XmlRole type. The type needs to be imported.
+    are specified via the \l [QML]{XmlRole} type. The type needs to be imported.
 
     \code
     import QtQuick.XmlListModel 2.0

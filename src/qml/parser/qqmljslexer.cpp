@@ -884,7 +884,7 @@ int Lexer::scanString(ScanStringMode mode)
     scanChar();
 
     while (_codePtr <= _endPtr) {
-        if (_char == mode) {
+        if (_char == quote) {
             scanChar();
 
             if (_engine) {

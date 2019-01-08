@@ -201,8 +201,8 @@ QV4::Function *CompilationUnit::linkToEngine(ExecutionEngine *engine)
 
         // first locals
         const quint32_le *localsIndices = compiledBlock->localsTable();
-        for (quint32 i = 0; i < compiledBlock->nLocals; ++i)
-            ic = ic->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
+        for (quint32 j = 0; j < compiledBlock->nLocals; ++j)
+            ic = ic->addMember(engine->identifierTable->asPropertyKey(runtimeStrings[localsIndices[j]]), Attr_NotConfigurable);
         runtimeBlocks[i] = ic->d();
     }
 
