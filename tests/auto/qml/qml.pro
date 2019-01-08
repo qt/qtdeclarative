@@ -73,6 +73,7 @@ PRIVATETESTS += \
     qv4assembler \
     qv4mm \
     qv4identifiertable \
+    qv4regexp \
     ecmascripttests \
     bindingdependencyapi \
     v4misc
