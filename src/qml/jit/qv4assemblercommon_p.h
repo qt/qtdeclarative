@@ -320,14 +320,14 @@ public:
 
     void pushAligned(RegisterID reg)
     {
-        subPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        subPtr(TrustedImm32(3 * PointerSize), StackPointerRegister);
         push(reg);
     }
 
     void popAligned(RegisterID reg)
     {
         pop(reg);
-        addPtr(TrustedImm32(PointerSize), StackPointerRegister);
+        addPtr(TrustedImm32(3 * PointerSize), StackPointerRegister);
     }
 };
 
