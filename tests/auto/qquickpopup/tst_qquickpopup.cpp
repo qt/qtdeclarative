@@ -41,8 +41,10 @@
 #include "../shared/qtest_quickcontrols.h"
 
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtQuick/qquickview.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
+#include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -83,6 +85,7 @@ private slots:
     void enabled();
     void orientation_data();
     void orientation();
+    void qquickview();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1058,6 +1061,26 @@ void tst_QQuickPopup::orientation()
     popup->open();
 
     QCOMPARE(popup->popupItem()->position(), position);
+}
+
+void tst_QQuickPopup::qquickview()
+{
+    QQuickView view;
+    view.setObjectName("QQuickView");
+    view.resize(400, 400);
+    view.setSource(testFileUrl("dialog.qml"));
+    QVERIFY(view.status() != QQuickView::Error);
+    view.contentItem()->setObjectName("QQuickViewContentItem");
+    view.show();
+
+    QQuickDialog *dialog = view.rootObject()->property("dialog").value<QQuickDialog*>();
+    QVERIFY(dialog);
+    QTRY_COMPARE(dialog->property("opened").toBool(), true);
+
+    dialog->close();
+    QTRY_COMPARE(dialog->property("visible").toBool(), false);
+
+    // QTBUG-72746: shouldn't crash on application exit after closing a Dialog when using QQuickView.
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
