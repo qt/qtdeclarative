@@ -159,7 +159,11 @@ void tst_QQuickStyle::availableStyles()
 
     QQuickStyle::addStylePath(path);
     QStringList paths = QQuickStylePrivate::stylePaths();
+#ifndef Q_OS_WIN
     QVERIFY(paths.contains(path));
+#else
+    QVERIFY(paths.contains(path, Qt::CaseInsensitive));
+#endif
 
     const QStringList styles = QQuickStyle::availableStyles();
     QVERIFY(!styles.isEmpty());
