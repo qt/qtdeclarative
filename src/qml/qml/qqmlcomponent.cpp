@@ -756,12 +756,12 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 }
 
 /*!
-    Create an object instance from this component. Returns 0 if creation
+    Create an object instance from this component. Returns \nullptr if creation
     failed. \a context specifies the context within which to create the object
     instance.
 
-    If \a context is 0 (the default), it will create the instance in the
-    engine' s \l {QQmlEngine::rootContext()}{root context}.
+    If \a context is \nullptr (the default), it will create the instance in the
+    \l {QQmlEngine::rootContext()}{root context} of the engine.
 
     The ownership of the returned object instance is transferred to the caller.
 
@@ -791,7 +791,7 @@ QObject *QQmlComponent::create(QQmlContext *context)
     In general, programmers should use QQmlComponent::create() to create object
     instances.
 
-    Create an object instance from this component. Returns 0 if creation
+    Create an object instance from this component. Returns \nullptr if creation
     failed. \a publicContext specifies the context within which to create the object
     instance.
 

@@ -1343,11 +1343,11 @@ bool QJSValue::hasOwnProperty(const QString &name) const
 
 /*!
  * If this QJSValue is a QObject, returns the QObject pointer
- * that the QJSValue represents; otherwise, returns 0.
+ * that the QJSValue represents; otherwise, returns \nullptr.
  *
  * If the QObject that this QJSValue wraps has been deleted,
- * this function returns 0 (i.e. it is possible for toQObject()
- * to return 0 even when isQObject() returns true).
+ * this function returns \nullptr (i.e. it is possible for toQObject()
+ * to return \nullptr even when isQObject() returns true).
  *
  * \sa isQObject()
  */

@@ -184,7 +184,7 @@ bool QQmlListReference::isValid() const
 }
 
 /*!
-Returns the list property's object.  Returns 0 if the reference is invalid.
+Returns the list property's object. Returns \nullptr if the reference is invalid.
 */
 QObject *QQmlListReference::object() const
 {
@@ -193,8 +193,8 @@ QObject *QQmlListReference::object() const
 }
 
 /*!
-Returns the QMetaObject for the elements stored in the list property.  Returns 0 if the reference
-is invalid.
+Returns the QMetaObject for the elements stored in the list property,
+or \nullptr if the reference is invalid.
 
 The QMetaObject can be used ahead of time to determine whether a given instance can be added
 to a list.

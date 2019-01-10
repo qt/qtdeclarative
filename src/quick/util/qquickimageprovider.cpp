@@ -436,7 +436,7 @@ QPixmap QQuickImageProvider::requestPixmap(const QString &id, QSize *size, const
 
 /*!
     Implement this method to return the texture with \a id. The default
-    implementation returns 0.
+    implementation returns \nullptr.
 
     The \a id is the requested image source, with the "image:" scheme and
     provider identifier removed. For example, if the image \l{Image::}{source}
