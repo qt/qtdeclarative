@@ -1023,10 +1023,11 @@ void BaselineJIT::generate_GetTemplateObject(int index)
     as->checkException();
 }
 
-void BaselineJIT::startInstruction(Instr::Type /*instr*/)
+ByteCodeHandler::Verdict BaselineJIT::startInstruction(Instr::Type /*instr*/)
 {
     if (labels.contains(currentInstructionOffset()))
         as->addLabel(currentInstructionOffset());
+    return ProcessInstruction;
 }
 
 void BaselineJIT::endInstruction(Instr::Type instr)

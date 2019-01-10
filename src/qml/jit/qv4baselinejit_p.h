@@ -217,7 +217,7 @@ public:
     void generate_ThrowOnNullOrUndefined() override;
     void generate_GetTemplateObject(int index) override;
 
-    void startInstruction(Moth::Instr::Type instr) override;
+    Verdict startInstruction(Moth::Instr::Type instr) override;
     void endInstruction(Moth::Instr::Type instr) override;
 
 private:

@@ -58,9 +58,10 @@ ByteCodeHandler::~ByteCodeHandler()
         Q_UNUSED(base_ptr); \
         _currentOffset = _nextOffset; \
         _nextOffset = code - start; \
-        startInstruction(Instr::Type::instr); \
-        INSTR_##instr(DISPATCH) \
-        endInstruction(Instr::Type::instr); \
+        if (startInstruction(Instr::Type::instr) == ProcessInstruction) { \
+            INSTR_##instr(DISPATCH) \
+            endInstruction(Instr::Type::instr); \
+        } \
         continue; \
     }
 

@@ -105,7 +105,8 @@ public:
 protected:
     FOR_EACH_MOTH_INSTR(BYTECODE_HANDLER_DEFINE_VIRTUAL_BYTECODE_HANDLER)
 
-    virtual void startInstruction(Moth::Instr::Type instr) = 0;
+    enum Verdict { ProcessInstruction, SkipInstruction };
+    virtual Verdict startInstruction(Moth::Instr::Type instr) = 0;
     virtual void endInstruction(Moth::Instr::Type instr) = 0;
 
 private:
