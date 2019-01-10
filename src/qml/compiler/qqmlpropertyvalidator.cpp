@@ -669,8 +669,6 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
             }
         }
         return noError;
-    } else if (compilationUnit->objectAt(binding->value.objectIndex)->flags & QV4::CompiledData::Object::IsComponent) {
-        return noError;
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
     } else if (QQmlValueTypeFactory::isValueType(property->propType())) {

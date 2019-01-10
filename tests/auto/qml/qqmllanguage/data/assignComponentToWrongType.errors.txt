@@ -1,0 +1,1 @@
+4:27:Cannot assign object of type "Component" to property of type "QQmlTimer*" as the former is neither the same as the latter nor a sub-class of it.
