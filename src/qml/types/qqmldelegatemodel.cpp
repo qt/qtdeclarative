@@ -350,7 +350,7 @@ void QQmlDelegateModel::componentComplete()
     {QAbstractItemModel} subclass or a simple list.
 
     Models can also be created directly in QML, using a \l{ListModel} or
-    \l{XmlListModel}.
+    \l{QtQuick.XmlListModel::XmlListModel}{XmlListModel}.
 
     \sa {qml-data-models}{Data Models}
 */

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     occurs within the bounds of the \l {PointerHandler::parent}, and
     no sibling PointHandler within the same \l {PointerHandler::parent}
     has yet acquired a passive grab on that point, and if the other
-    constraints such as \l {SinglePointHandler::acceptedButtons},
+    constraints such as \l[QML]{SinglePointHandler::acceptedButtons},
     \l {PointerDeviceHandler::acceptedDevices} etc. are satisfied, it's
     eligible, and the PointHandler then acquires a passive grab. In
     this way, the \l {PointerHandler::parent} acts like an exclusive

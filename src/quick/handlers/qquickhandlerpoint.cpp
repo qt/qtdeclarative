@@ -282,8 +282,6 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
     This property holds the keyboard modifiers that were pressed at the time
     the event occurred.
-
-    \sa MouseArea::modifiers
 */
 
 /*!

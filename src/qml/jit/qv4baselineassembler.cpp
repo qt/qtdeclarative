@@ -483,6 +483,7 @@ public:
         auto isNumber = branch32(GreaterThanOrEqual, ScratchRegister, TrustedImm32(Value::QT_Int));
 
         if (ArgInRegCount < 2) {
+            subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister); // stack alignment
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         } else {
@@ -492,7 +493,7 @@ public:
         callRuntimeUnchecked("toNumberHelper", reinterpret_cast<void *>(&toNumberHelper));
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
 
         isNumber.link(this);
     }
@@ -513,28 +514,36 @@ public:
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         }
+
         if (ArgInRegCount < 2) {
+            if (!accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             push(lhsTarget);
             load32(lhs, lhsTarget);
             push(lhsTarget);
         } else {
+            if (accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             move(lhsTarget, registerForArg(1));
             load32(lhs, registerForArg(0));
         }
         callHelper(toInt32Helper);
         move(ReturnValueRegisterValue, lhsTarget);
-        if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
         if (accumulatorNeedsSaving) {
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             pop(AccumulatorRegisterValue);
             pop(AccumulatorRegisterTag);
+        } else if (ArgInRegCount < 2) {
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
         }
+
         lhsIsInt.link(this);
 
         auto rhsIsInt = branch32(Equal, TrustedImm32(int(IntegerTag)), AccumulatorRegisterTag);
 
         pushAligned(lhsTarget);
         if (ArgInRegCount < 2) {
+            subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         } else {
@@ -544,7 +553,7 @@ public:
         callRuntimeUnchecked("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper));
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
         popAligned(lhsTarget);
 
         rhsIsInt.link(this);
@@ -556,6 +565,7 @@ public:
         auto isInt = branch32(Equal, TrustedImm32(Value::QT_Int), ScratchRegister);
 
         if (ArgInRegCount < 2) {
+            subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister); // align the stack on a 16-byte boundary
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         } else {
@@ -565,7 +575,7 @@ public:
         callRuntimeUnchecked("toInt32Helper", reinterpret_cast<void *>(&toInt32Helper));
         saveReturnValueInAccumulator();
         if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
 
         isInt.link(this);
     }
@@ -579,6 +589,8 @@ public:
             push(AccumulatorRegisterValue);
         }
         if (ArgInRegCount < 2) {
+            if (!accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             srcReg.offset += 4;
             load32(srcReg, targetReg);
             push(targetReg);
@@ -586,17 +598,20 @@ public:
             load32(srcReg, targetReg);
             push(targetReg);
         } else {
+            if (accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             load32(srcReg, registerForArg(0));
             srcReg.offset += 4;
             load32(srcReg, registerForArg(1));
         }
         callHelper(toInt32Helper);
         move(ReturnValueRegisterValue, targetReg);
-        if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
         if (accumulatorNeedsSaving) {
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             pop(AccumulatorRegisterValue);
             pop(AccumulatorRegisterTag);
+        } else if (ArgInRegCount < 2) {
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
         }
     }
 
@@ -663,20 +678,24 @@ public:
         }
 
         if (ArgInRegCount < 2) {
+            if (!accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         } else {
+            if (accumulatorNeedsSaving)
+                subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             move(AccumulatorRegisterValue, registerForArg(0));
             move(AccumulatorRegisterTag, registerForArg(1));
         }
         callHelper(Value::toBooleanImpl);
-        if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
-
         and32(TrustedImm32(1), ReturnValueRegisterValue, ScratchRegister);
         if (accumulatorNeedsSaving) {
+            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             pop(AccumulatorRegisterValue);
             pop(AccumulatorRegisterTag);
+        } else if (ArgInRegCount < 2) {
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
         }
         continuation(ScratchRegister);
 
@@ -775,6 +794,7 @@ public:
     void callWithAccumulatorByValueAsFirstArgument(std::function<void()> doCall)
     {
         if (ArgInRegCount < 2) {
+            subPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
             push(AccumulatorRegisterTag);
             push(AccumulatorRegisterValue);
         } else {
@@ -783,7 +803,7 @@ public:
         }
         doCall();
         if (ArgInRegCount < 2)
-            addPtr(TrustedImm32(2 * PointerSize), StackPointerRegister);
+            addPtr(TrustedImm32(4 * PointerSize), StackPointerRegister);
     }
 };
 

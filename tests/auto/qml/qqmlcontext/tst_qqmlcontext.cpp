@@ -883,13 +883,13 @@ void tst_qqmlcontext::contextObjectHierarchy()
     QScopedPointer<QObject> root(component.create());
     QVERIFY(!root.isNull());
 
-    for (const QObject *child : root->children()) {
-        QQmlData *d = QQmlData::get(child);
-        QVERIFY(d->outerContext != nullptr);
-        connect(root.data(), &QObject::destroyed, [&]() {
-            QCOMPARE(d->outerContext, nullptr);
-        });
-    }
+    for (const QObject *child : root->children())
+        QVERIFY(QQmlData::get(child)->outerContext != nullptr);
+
+    connect(root.data(), &QObject::destroyed, [&root]() {
+        for (const QObject *child : root->children())
+            QCOMPARE(QQmlData::get(child)->outerContext, nullptr);
+    });
 }
 
 QTEST_MAIN(tst_qqmlcontext)

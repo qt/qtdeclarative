@@ -82,7 +82,7 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     and thus can be used to adjust some other feature independently of the
     usual pinch behavior: for example adjust a tilt transformation, or adjust
     some other numeric value, if the \c target is set to null. But if the
-    \l target is an Item, \l centroid is the point at which the drag begins and
+    \c target is an Item, \c centroid is the point at which the drag begins and
     to which the \c target will be moved (subject to constraints).
 
     At this time, drag-and-drop is not yet supported.
