@@ -120,7 +120,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
         stylePlugin->initializeTheme(theme);
     qDeleteAll(stylePlugins);
 
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    // Register the latest version, even if there are no new types or new revisions for existing types yet.
+    // Before Qt 5.12, we would do the following:
+    //
+    // qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    //
+    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR);
 
     // QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
     qmlRegisterType(resolvedUrl(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
@@ -192,8 +198,14 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 5, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
 
+    // Register the latest version, even if there are no new types or new revisions for existing types yet.
+    // Before Qt 5.12, we would do the following:
+    //
+    // qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    //
+    // However, we want to align with the rest of Qt Quick which uses Qt's minor version.
     const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR);
 
     // QtQuick.Controls.impl 2.0 (Qt 5.7)
     qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
@@ -272,6 +284,10 @@ QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
                     // release versions of the same Qt libraries (due to the plugin's dependencies).
                     filePath += QStringLiteral("_debug");
 #endif // Q_OS_MACOS && QT_DEBUG
+#if defined(Q_OS_WIN) && defined(QT_DEBUG)
+                    // Debug versions of plugins have a "d" prefix on Windows.
+                    filePath += QLatin1Char('d');
+#endif // Q_OS_WIN && QT_DEBUG
                     loader.setFileName(filePath);
                     QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(loader.instance());
                     if (stylePlugin)

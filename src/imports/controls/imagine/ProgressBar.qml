@@ -35,10 +35,10 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Templates 2.5 as T
-import QtQuick.Controls.Imagine 2.5
-import QtQuick.Controls.Imagine.impl 2.5
-import QtGraphicalEffects 1.0
+import QtQuick.Templates 2.12 as T
+import QtQuick.Controls.Imagine 2.12
+import QtQuick.Controls.Imagine.impl 2.12
+import QtGraphicalEffects 1.12
 
 T.ProgressBar {
     id: control

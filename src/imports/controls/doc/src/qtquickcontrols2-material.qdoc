@@ -32,7 +32,7 @@
     The Material Style is based on the Google Material Design Guidelines.
     \l{detailed-desc-material}{More...}
 
-    \styleimport {QtQuick.Controls.Material 2.5} {Qt 5.7}
+    \styleimport {QtQuick.Controls.Material 2.12} {Qt 5.7}
 
     \section1 Attached Properties
 
@@ -93,9 +93,9 @@
         \row
             \li
                 \qml
-                import QtQuick 2.0
-                import QtQuick.Controls 2.1
-                import QtQuick.Controls.Material 2.1
+                import QtQuick 2.12
+                import QtQuick.Controls 2.12
+                import QtQuick.Controls.Material 2.12
 
                 ApplicationWindow {
                     visible: true

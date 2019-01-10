@@ -65,11 +65,11 @@ QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObje
 
 void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
     qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.7->2.0, 5.8->2.1, 5.9->2.2...
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
 
     qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");
     qmlRegisterType<QQuickUniversalBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");

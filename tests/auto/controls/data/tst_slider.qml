@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.12
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.12
 
 TestCase {
     id: testCase
@@ -770,6 +770,63 @@ TestCase {
         compare(movedSpy.count, ++movedCount)
         compare(control.value, 2.5)
         compare(control.position, 0.25)
+    }
+
+    function test_wheelPropagation_data() {
+        return [
+            { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
+            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+        ]
+    }
+
+    Component {
+        id: mouseAreaComponent
+        MouseArea {}
+    }
+
+    function test_wheelPropagation(data) {
+        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase, { width: parent.width, height: parent.height })
+        verify(mouseArea)
+
+        var mouseAreaWheelSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "wheel" })
+        verify(mouseAreaWheelSpy.valid)
+
+        var control = createTemporaryObject(slider, mouseArea,
+            { wheelEnabled: true, orientation: data.orientation, stepSize: 1 })
+        verify(control)
+        compare(control.value, 0.0)
+
+        var movedCount = 0
+        var movedSpy = signalSpy.createObject(control, { target: control, signalName: "moved" })
+        verify(movedSpy.valid)
+
+        // Scroll the handle to the edge.
+        mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(control.value, 1.0)
+        compare(control.position, 1.0)
+        compare(movedSpy.count, ++movedCount)
+        compare(mouseAreaWheelSpy.count, 0)
+
+        // Scroll again; the wheel event shouldn't go through to the MouseArea parent.
+        mouseWheel(control, control.width / 2, control.height / 2, data.dx, data.dy)
+        compare(control.value, 1.0)
+        compare(control.position, 1.0)
+        compare(movedSpy.count, movedCount)
+        compare(mouseAreaWheelSpy.count, 0)
+
+        // Scroll the handle to the other edge.
+        mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+        compare(movedSpy.count, ++movedCount)
+        compare(mouseAreaWheelSpy.count, 0)
+
+        // Scroll again; the wheel event shouldn't go through to the MouseArea parent.
+        mouseWheel(control, control.width / 2, control.height / 2, -data.dx, -data.dy)
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+        compare(movedSpy.count, movedCount)
+        compare(mouseAreaWheelSpy.count, 0)
     }
 
     function test_valueAt_data() {

@@ -29,7 +29,8 @@
     \group qtquickcontrols2-examples
     \ingroup all-examples
     \keyword Qt Quick Controls Examples
-    \title Qt Quick Controls 2 Examples
+    \title Qt Quick Controls Examples
+    \keyword Qt Quick Controls 2 Examples
     \brief A collection of examples for \l {Qt Quick Controls 2}
 
     These examples demonstrate creating user interfaces using \l {Qt Quick Controls 2}.

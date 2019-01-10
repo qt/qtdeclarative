@@ -28,7 +28,8 @@
 /*!
     \page qtquickcontrols2-guidelines.html
     \keyword Qt Quick Controls Guidelines
-    \title Qt Quick Controls 2 Guidelines
+    \title Qt Quick Controls Guidelines
+    \keyword Qt Quick Controls 2 Guidelines
 
     Qt Quick Controls 2 offers a selection of controls that can be used to
     build complete interfaces in Qt Quick.

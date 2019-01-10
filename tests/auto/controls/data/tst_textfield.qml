@@ -48,9 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
+import QtQuick 2.12
 import QtTest 1.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 2.12
+import QtQuick.Layouts 1.12
 
 TestCase {
     id: testCase
@@ -633,4 +634,30 @@ TestCase {
         compare(control.background.height, 100)
     }
 
+    Component {
+        id: layoutComponent
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            property alias textField: textField
+
+            TextField {
+                id: textField
+                placeholderText: "Placeholder"
+                Layout.fillWidth: true
+            }
+        }
+    }
+
+    function test_inLayout() {
+        var layout = createTemporaryObject(layoutComponent, testCase)
+        verify(layout)
+
+        var control = layout.textField
+        verify(control)
+
+        compare(control.width, control.parent.width)
+        compare(control.background.width, control.width)
+    }
 }

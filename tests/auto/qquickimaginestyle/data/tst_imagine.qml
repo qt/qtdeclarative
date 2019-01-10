@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
+import QtQuick 2.12
 import QtQuick.Window 2.2
 import QtTest 1.1
-import QtQuick.Templates 2.3 as T
-import QtQuick.Controls 2.3
-import QtQuick.Controls.Imagine 2.3
+import QtQuick.Templates 2.12 as T
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Imagine 2.12
 
 TestCase {
     id: testCase

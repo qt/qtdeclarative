@@ -43,8 +43,6 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquicklistview_p.h>
-#include "../shared/menuutil.h"
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -88,7 +86,6 @@ private slots:
     void addRemoveSubMenus();
     void scrollable_data();
     void scrollable();
-    void delegateFromSeparateComponent();
 };
 
 void tst_QQuickMenu::defaults()
@@ -148,7 +145,6 @@ void tst_QQuickMenu::mouse()
     menu->open();
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
-    waitForMenuListViewPolish(menu);
 
     QQuickItem *firstItem = menu->itemAt(0);
     QSignalSpy clickedSpy(firstItem, SIGNAL(clicked()));
@@ -272,8 +268,6 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
-    waitForMenuListViewPolish(menu);
-
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
     QCOMPARE(menu->currentIndex(), -1);
@@ -940,7 +934,6 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    waitForMenuListViewPolish(mainMenu);
 
     // open the sub-menu with mouse click
     QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
@@ -951,7 +944,6 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    waitForMenuListViewPolish(subMenu1);
 
     // open the cascading sub-sub-menu with mouse hover
     QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
@@ -962,7 +954,6 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    QVERIFY(subSubMenu1Item->isHovered());
     if (cascade)
         QTRY_VERIFY(subSubMenu1->isVisible());
 
@@ -982,7 +973,6 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    QVERIFY(subSubMenu1Item->isHovered());
     if (cascade)
         QTRY_VERIFY(subSubMenu1->isVisible());
 
@@ -1209,7 +1199,6 @@ void tst_QQuickMenu::subMenuPosition()
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
-    waitForMenuListViewPolish(mainMenu);
 
     // open the sub-menu (never flips)
     QQuickMenuItem *subMenu1Item = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(1));
@@ -1344,94 +1333,7 @@ void tst_QQuickMenu::scrollable()
     QVERIFY(menu->isVisible());
 
     QQuickItem *contentItem = menu->contentItem();
-    // Can only be scrollable if it exceeds the height of the window.
-    QTRY_VERIFY(contentItem->property("contentHeight").toReal() > window->height());
     QCOMPARE(contentItem->property("interactive").toBool(), true);
-}
-
-// QTBUG-67559
-// Test that Actions and MenuItems declared as children of a Menu have the
-// correct delegate when it is declared outside of the Menu as a Component.
-void tst_QQuickMenu::delegateFromSeparateComponent()
-{
-    QQuickApplicationHelper helper(this, QLatin1String("delegateFromSeparateComponent.qml"));
-    QQuickWindow *window = helper.window;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowActive(window));
-
-    const QColor green = QColor::fromRgb(0x00ff00);
-
-    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
-    QVERIFY(menu);
-
-    // "Action Item 1"
-    QQuickMenuItem *actionItem1 = qobject_cast<QQuickMenuItem*>(menu->itemAt(0));
-    QVERIFY(actionItem1);
-    QCOMPARE(actionItem1->text(), QLatin1String("Action Item 1"));
-
-    QQuickItem *actionItem1Bg = actionItem1->property("background").value<QQuickItem*>();
-    QVERIFY(actionItem1Bg);
-    QCOMPARE(actionItem1Bg->property("color").value<QColor>(), green);
-
-    // "Sub-menu"
-    QQuickMenuItem *subMenuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(1));
-    QVERIFY(subMenuItem);
-    QCOMPARE(subMenuItem->text(), QLatin1String("Sub-menu"));
-
-    QQuickItem *subMenuItemBg = subMenuItem->property("background").value<QQuickItem*>();
-    QVERIFY(subMenuItemBg);
-    QCOMPARE(subMenuItemBg->property("color").value<QColor>(), green);
-
-    QQuickMenu *subMenu = subMenuItem->subMenu();
-    QVERIFY(subMenu);
-
-    // "Sub-menu Action Item 1"
-    QQuickMenuItem *subMenuActionItem1 = qobject_cast<QQuickMenuItem*>(subMenu->itemAt(0));
-    QVERIFY(subMenuActionItem1);
-    QCOMPARE(subMenuActionItem1->text(), QLatin1String("Sub-menu Action Item 1"));
-
-    QQuickItem *subMenuActionItem1Bg = subMenuActionItem1->property("background").value<QQuickItem*>();
-    QVERIFY(subMenuActionItem1Bg);
-    QCOMPARE(subMenuActionItem1Bg->property("color").value<QColor>(), green);
-
-    // "Sub-sub-menu"
-    QQuickMenuItem *subSubMenuItem = qobject_cast<QQuickMenuItem*>(subMenu->itemAt(1));
-    QVERIFY(subSubMenuItem);
-    QCOMPARE(subSubMenuItem->text(), QLatin1String("Sub-sub-menu"));
-
-    QQuickItem *subSubMenuItemBg = subSubMenuItem->property("background").value<QQuickItem*>();
-    QVERIFY(subSubMenuItemBg);
-    QCOMPARE(subSubMenuItemBg->property("color").value<QColor>(), green);
-
-    QQuickMenu *subSubMenu = subSubMenuItem->subMenu();
-    QVERIFY(subSubMenu);
-
-    // "Sub-sub-menu Action Item 1"
-    QQuickMenuItem *subSubMenuActionItem1 = qobject_cast<QQuickMenuItem*>(subSubMenu->itemAt(0));
-    QVERIFY(subSubMenuActionItem1);
-    QCOMPARE(subSubMenuActionItem1->text(), QLatin1String("Sub-sub-menu Action Item 1"));
-
-    QQuickItem *subSubMenuActionItem1Bg = subSubMenuActionItem1->property("background").value<QQuickItem*>();
-    QVERIFY(subSubMenuActionItem1Bg);
-    QCOMPARE(subSubMenuActionItem1Bg->property("color").value<QColor>(), green);
-
-    // "Sub-menu Action Item 2"
-    QQuickMenuItem *subMenuActionItem2 = qobject_cast<QQuickMenuItem*>(subMenu->itemAt(2));
-    QVERIFY(subMenuActionItem2);
-    QCOMPARE(subMenuActionItem2->text(), QLatin1String("Sub-menu Action Item 2"));
-
-    QQuickItem *subMenuActionItem2Bg = subMenuActionItem2->property("background").value<QQuickItem*>();
-    QVERIFY(subMenuActionItem2Bg);
-    QCOMPARE(subMenuActionItem2Bg->property("color").value<QColor>(), green);
-
-    // "Action Item 2"
-    QQuickMenuItem *actionItem2 = qobject_cast<QQuickMenuItem*>(menu->itemAt(2));
-    QVERIFY(actionItem2);
-    QCOMPARE(actionItem2->text(), QLatin1String("Action Item 2"));
-
-    QQuickItem *actionItem2Bg = actionItem2->property("background").value<QQuickItem*>();
-    QVERIFY(actionItem2Bg);
-    QCOMPARE(actionItem2Bg->property("color").value<QColor>(), green);
 }
 
 QTEST_MAIN(tst_QQuickMenu)

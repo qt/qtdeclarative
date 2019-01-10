@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
     toolbar header and an application-wide tabbar footer.
 
     \qml
-    import QtQuick.Controls 2.1
+    import QtQuick.Controls 2.12
 
     ApplicationWindow {
         visible: true
@@ -344,7 +344,7 @@ void QQuickPage::setFooter(QQuickItem *footer)
 
     if (d->footer) {
         QQuickItemPrivate::get(d->footer)->removeItemChangeListener(d, LayoutChanges);
-        footer->setParentItem(nullptr);
+        d->footer->setParentItem(nullptr);
     }
     d->footer = footer;
     if (footer) {

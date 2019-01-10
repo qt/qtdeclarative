@@ -28,7 +28,8 @@
 /*!
     \example wearable
     \keyword Qt Quick Controls - Wearable Demo
-    \title Qt Quick Controls 2 - Wearable Demo
+    \title Qt Quick Controls - Wearable Demo
+    \keyword Qt Quick Controls 2 - Wearable Demo
     \ingroup qtquickcontrols2-examples
     \brief Demonstrates an application launcher designed for wearable devices.
 

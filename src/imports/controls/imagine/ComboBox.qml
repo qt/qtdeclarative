@@ -35,11 +35,11 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Window 2.3
-import QtQuick.Templates 2.5 as T
-import QtQuick.Controls 2.5
-import QtQuick.Controls.Imagine 2.5
-import QtQuick.Controls.Imagine.impl 2.5
+import QtQuick.Window 2.12
+import QtQuick.Templates 2.12 as T
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Imagine 2.12
+import QtQuick.Controls.Imagine.impl 2.12
 
 T.ComboBox {
     id: control
@@ -61,6 +61,7 @@ T.ComboBox {
     delegate: ItemDelegate {
         width: parent.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
+        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex === index
         hoverEnabled: control.hoverEnabled
     }

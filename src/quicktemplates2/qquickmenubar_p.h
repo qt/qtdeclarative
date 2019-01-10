@@ -81,7 +81,6 @@ Q_SIGNALS:
     void menusChanged();
 
 protected:
-    void componentComplete() override;
     bool eventFilter(QObject *object, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;

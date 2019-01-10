@@ -28,7 +28,8 @@
 /*!
     \example imagine/musicplayer
     \keyword Qt Quick Controls - Imagine Style Example: Music Player
-    \title Qt Quick Controls 2 - Imagine Style Example: Music Player
+    \title Qt Quick Controls - Imagine Style Example: Music Player
+    \keyword Qt Quick Controls 2 - Imagine Style Example: Music Player
     \ingroup qtquickcontrols2-examples
     \brief An audio player user interface using custom Imagine style assets.
 

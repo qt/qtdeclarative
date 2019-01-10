@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.1
-import QtQuick.Templates 2.1 as T
-import QtQuick.Layouts 1.2
+import QtQuick 2.12
+import QtQuick.Controls 2.12
+import QtQuick.Templates 2.12 as T
+import QtQuick.Layouts 1.12
 
 ApplicationWindow {
     visible: true

@@ -41,7 +41,7 @@
 #include "qquickpopup_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
 
-#include <QtCore/qregexp.h>
+#include <QtCore/qregularexpression.h>
 #include <QtCore/qabstractitemmodel.h>
 #include <QtGui/qinputmethod.h>
 #include <QtGui/qguiapplication.h>
@@ -573,6 +573,8 @@ int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags 
     uint matchType = flags & 0x0F;
     bool wrap = flags & Qt::MatchWrap;
     Qt::CaseSensitivity cs = flags & Qt::MatchCaseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive;
+    QRegularExpression::PatternOptions options = flags & Qt::MatchCaseSensitive ? QRegularExpression::NoPatternOption
+                                                                                : QRegularExpression::CaseInsensitiveOption;
     int from = start;
     int to = q->count();
 
@@ -585,14 +587,19 @@ int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags 
                 if (t == text)
                     return idx;
                 break;
-            case Qt::MatchRegExp:
-                if (QRegExp(text, cs).exactMatch(t))
+            case Qt::MatchRegExp: {
+                QRegularExpression rx(QRegularExpression::anchoredPattern(text), options);
+                if (rx.match(t).hasMatch())
                     return idx;
                 break;
-            case Qt::MatchWildcard:
-                if (QRegExp(text, cs, QRegExp::Wildcard).exactMatch(t))
+            }
+            case Qt::MatchWildcard: {
+                QRegularExpression rx(QRegularExpression::wildcardToRegularExpression(text),
+                                      options);
+                if (rx.match(t).hasMatch())
                     return idx;
                 break;
+            }
             case Qt::MatchStartsWith:
                 if (t.startsWith(text, cs))
                     return idx;

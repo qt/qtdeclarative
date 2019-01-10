@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick 2.12
 import QtTest 1.0
-import QtQuick.Controls 2.2
-import QtQuick.Templates 2.2 as T
+import QtQuick.Controls 2.12
+import QtQuick.Templates 2.12 as T
 
 TestCase {
     id: testCase
@@ -64,6 +64,14 @@ TestCase {
     Component {
         id: dialog
         Dialog { }
+    }
+
+    Component {
+        id: qtbug71444
+        Dialog {
+            header: null
+            footer: null
+        }
     }
 
     Component {
@@ -196,6 +204,11 @@ TestCase {
         verify(rejectedSpy.valid)
         box.rejected()
         compare(rejectedSpy.count, 1)
+    }
+
+    function test_qtbug71444() {
+        var control = createTemporaryObject(qtbug71444, testCase)
+        verify(control)
     }
 
     function test_standardButtons() {

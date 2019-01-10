@@ -67,11 +67,11 @@ QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *
 
 void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, QT_VERSION_MINOR - 7); // Qt 5.10 -> 2.3, 5.11 -> 2.4, ...
+    qmlRegisterModule(uri, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
     qmlRegisterUncreatableType<QQuickImagineStyle>(uri, 2, 3, "Imagine", tr("Imagine is an attached property"));
 
     QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, QT_VERSION_MINOR - 7); // Qt 5.10 -> 2.3, 5.11 -> 2.4, ...
+    qmlRegisterModule(import, 2, QT_VERSION_MINOR); // Qt 5.12->2.12, 5.13->2.13...
 
     qmlRegisterType<QQuickAnimatedImageSelector>(import, 2, 3, "AnimatedImageSelector");
     qmlRegisterType<QQuickImageSelector>(import, 2, 3, "ImageSelector");

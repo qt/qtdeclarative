@@ -47,9 +47,9 @@
     can override the \l {Control::}{background} item and set the radius
     property of Rectangle:
 
-    \qml
-    import QtQuick 2.6
-    import QtQuick.Controls 2.1
+    \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.Controls 2.\1
 
     ApplicationWindow {
         width: 400
@@ -91,8 +91,8 @@
     module itself, we'll call the file \c MyButton.qml. To use the control in
     your application, refer to it by its filename:
 
-    \qml
-    import QtQuick.Controls 2.1
+    \qml \QtMinorVersion
+    import QtQuick.Controls 2.\1
 
     ApplicationWindow {
         MyButton {
@@ -107,8 +107,8 @@
     subfolder in your project named (for example) \c controls. To use the
     control, first import the folder into a namespace:
 
-    \qml
-    import QtQuick.Controls 2.1
+    \qml \QtMinorVersion
+    import QtQuick.Controls 2.\1
     import "controls" as MyControls
 
     ApplicationWindow {
@@ -328,9 +328,9 @@
     Next, we add a drop shadow to the \l {Control::}{background} delegate of
     the Button:
 
-    \code
+    \code \QtMinorVersion
     // ...
-    import QtGraphicalEffects 1.0
+    import QtGraphicalEffects 1.\1
     import MyStyle 1.0
     // ...
 
@@ -359,9 +359,9 @@
     To try out the attached property, we create a \l Row with two Buttons in
     \c main.qml:
 
-    \qml
-    import QtQuick 2.6
-    import QtQuick.Controls 2.1
+    \qml \QtMinorVersion
+    import QtQuick 2.\1
+    import QtQuick.Controls 2.\1
 
     import MyStyle 1.0
 
@@ -416,9 +416,9 @@
         to customize the \l {ApplicationWindow::overlay}{modal} and
         \l {ApplicationWindow::overlay}{modeless} items.
 
-        \code
-        import QtQuick 2.7
-        import QtQuick.Controls 2.0
+        \code \QtMinorVersion
+        import QtQuick 2.\1
+        import QtQuick.Controls 2.\1
 
         ApplicationWindow {
             visible: true
@@ -580,8 +580,8 @@
         \image qtquickcontrols2-menu-custom.png
 
         \quotefromfile qtquickcontrols2-menu-custom.qml
-        \skipto import QtQuick 2.10
-        \printuntil import QtQuick.Controls 2.3
+        \skipto import QtQuick
+        \printuntil import QtQuick.Controls
         \skipto Menu
         \printto eof
 
@@ -595,8 +595,8 @@
         \image qtquickcontrols2-menubar-custom.png
 
         \quotefromfile qtquickcontrols2-menubar-custom.qml
-        \skipto import QtQuick 2.10
-        \printuntil import QtQuick.Controls 2.3
+        \skipto import QtQuick
+        \printuntil import QtQuick.Controls
         \skipto MenuBar
         \printto eof
 
@@ -627,8 +627,8 @@
         \image qtquickcontrols2-popup-custom.png
 
         \quotefromfile qtquickcontrols2-popup-custom.qml
-        \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.0
+        \skipto import QtQuick 2.12
+        \printuntil import QtQuick.Controls 2.12
         \codeline
         \skipto Popup
         \printuntil {
@@ -862,8 +862,8 @@
         and \l {Popup::contentItem}{content item}.
 
         \quotefromfile qtquickcontrols2-tooltip-custom.qml
-        \skipto import QtQuick 2.6
-        \printuntil import QtQuick.Controls 2.1
+        \skipto import QtQuick
+        \printuntil import QtQuick.Controls
         \skipto ToolTip
         \printuntil }
         \printuntil }

@@ -27,7 +27,8 @@
 /*!
     \example contactlist
     \keyword Qt Quick Controls - Contact List
-    \title Qt Quick Controls 2 - Contact List
+    \title Qt Quick Controls - Contact List
+    \keyword Qt Quick Controls 2 - Contact List
     \ingroup qtquickcontrols2-examples
     \brief A QML app using Qt Quick Controls 2 and a C++ class that implements
     a simple contact list.
