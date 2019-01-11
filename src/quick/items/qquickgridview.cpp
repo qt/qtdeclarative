@@ -2636,6 +2636,19 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     \b Note: methods should only be called after the Component has completed.
 */
 
+/*!
+    \qmlmethod Item QtQuick::GridView::itemAtIndex(int index)
+
+    Returns the item for \a index. If there is no item for that index, for example
+    because it has not been created yet, or because it has been panned out of
+    the visible area and removed from the cache, null is returned.
+
+    \b Note: this method should only be called after the Component has completed.
+    The returned value should also not be stored since it can turn to null
+    as soon as control goes out of the calling scope, if the view releases that item.
+
+    \since 5.13
+*/
 
 /*!
     \qmlmethod QtQuick::GridView::forceLayout()

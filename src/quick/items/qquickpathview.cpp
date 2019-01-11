@@ -1550,6 +1550,33 @@ QQuickItem *QQuickPathView::itemAt(qreal x, qreal y) const
     return nullptr;
 }
 
+/*!
+    \qmlmethod Item QtQuick::QQuickPathView::itemAtIndex(int index)
+
+    Returns the item for \a index. If there is no item for that index, for example
+    because it has not been created yet, or because it has been panned out of
+    the visible area and removed from the cache, null is returned.
+
+    \b Note: this method should only be called after the Component has completed.
+    The returned value should also not be stored since it can turn to null
+    as soon as control goes out of the calling scope, if the view releases that item.
+
+    \since 5.13
+*/
+QQuickItem *QQuickPathView::itemAtIndex(int index) const
+{
+    Q_D(const QQuickPathView);
+    if (!d->isValid())
+        return nullptr;
+
+    for (QQuickItem *item : d->items) {
+        if (index ==  d->model->indexOf(item, nullptr))
+            return item;
+    }
+
+    return nullptr;
+}
+
 QPointF QQuickPathViewPrivate::pointNear(const QPointF &point, qreal *nearPercent) const
 {
     const auto pathLength = path->path().length();

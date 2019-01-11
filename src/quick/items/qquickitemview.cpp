@@ -951,6 +951,13 @@ QQuickItem *QQuickItemView::itemAt(qreal x, qreal y) const
     return item ? item->item : nullptr;
 }
 
+QQuickItem *QQuickItemView::itemAtIndex(int index) const
+{
+    Q_D(const QQuickItemView);
+    const FxViewItem *item = d->visibleItem(index);
+    return item ? item->item : nullptr;
+}
+
 void QQuickItemView::forceLayout()
 {
     Q_D(QQuickItemView);

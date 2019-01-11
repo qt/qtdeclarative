@@ -166,6 +166,7 @@ private slots:
     void QTBUG_16037();
     void indexAt_itemAt_data();
     void indexAt_itemAt();
+    void itemAtIndex();
     void incrementalModel();
     void onAdd();
     void onAdd_data();
@@ -4780,6 +4781,29 @@ void tst_QQuickListView::indexAt_itemAt()
 
     releaseView(window);
     delete testObject;
+}
+
+void tst_QQuickListView::itemAtIndex()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("listview-itematindex.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(listview != nullptr);
+
+    QCOMPARE(listview->itemAtIndex(-1), nullptr);
+    QCOMPARE(listview->itemAtIndex(3), nullptr);
+    QQuickItem *item = listview->itemAtIndex(0);
+    QVERIFY(item);
+    QCOMPARE(item->property("idx"), 0);
+    item = listview->itemAtIndex(1);
+    QVERIFY(item);
+    QCOMPARE(item->property("idx"), 1);
+    item = listview->itemAtIndex(2);
+    QVERIFY(item);
+    QCOMPARE(item->property("idx"), 2);
 }
 
 void tst_QQuickListView::incrementalModel()
