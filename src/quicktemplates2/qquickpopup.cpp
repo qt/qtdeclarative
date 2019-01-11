@@ -212,6 +212,9 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-popup.qml centerIn
 
+    To ensure that the popup is positioned within the bounds of the enclosing
+    window, the \l margins property can be set to a non-negative value.
+
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
