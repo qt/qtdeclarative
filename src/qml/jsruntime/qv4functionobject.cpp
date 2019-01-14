@@ -518,6 +518,7 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
     do {
         frame.pendingTailCall = false;
         result = Moth::VME::exec(&frame, engine);
+        frame.isTailCalling = true;
     } while (frame.pendingTailCall);
 
     frame.pop();

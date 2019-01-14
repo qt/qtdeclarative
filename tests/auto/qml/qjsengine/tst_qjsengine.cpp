@@ -1759,6 +1759,22 @@ void tst_QJSEngine::stacktrace()
     QJSValue result2 = eng.evaluate(script2, fileName);
     QVERIFY(!result2.isError());
     QVERIFY(result2.isString());
+
+    {
+        QString script3 = QString::fromLatin1(
+                    "'use strict'\n"
+                    "function throwUp() { throw new Error('up') }\n"
+                    "function indirectlyThrow() { return throwUp() }\n"
+                    "indirectlyThrow()\n"
+                    );
+        QJSValue result3 = eng.evaluate(script3);
+        QVERIFY(result3.isError());
+        QJSValue stack = result3.property("stack");
+        QVERIFY(stack.isString());
+        QString stackTrace = stack.toString();
+        QVERIFY(!stackTrace.contains(QStringLiteral("indirectlyThrow")));
+        QVERIFY(stackTrace.contains(QStringLiteral("elide")));
+    }
 }
 
 void tst_QJSEngine::numberParsing_data()
