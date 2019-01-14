@@ -35,6 +35,7 @@
 
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
+#include <private/qqmlengine_p.h>
 #include <private/qhashedstring_p.h>
 #include "../../shared/util.h"
 
@@ -64,6 +65,7 @@ private slots:
     void unregisterCustomSingletonType();
 
     void normalizeUrls();
+    void unregisterAttachedProperties();
 };
 
 class TestType : public QObject
@@ -531,6 +533,43 @@ void tst_qqmlmetatype::normalizeUrls()
     QVERIFY(QQmlMetaType::qmlType(normalizedURL, /*includeNonFileImports=*/true).isValid());
     qmlUnregisterType(registrationId);
     QVERIFY(!QQmlMetaType::qmlType(url, /*includeNonFileImports=*/true).isValid());
+}
+
+void tst_qqmlmetatype::unregisterAttachedProperties()
+{
+    qmlClearTypeRegistrations();
+
+    const QUrl dummy("qrc:///doesnotexist.qml");
+    {
+        QQmlEngine e;
+        QQmlComponent c(&e);
+        c.setData("import QtQuick 2.2\n Item { }", dummy);
+
+        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
+        QCOMPARE(attachedType.attachedPropertiesId(QQmlEnginePrivate::get(&e)),
+                 attachedType.index());
+
+        QVERIFY(c.create());
+    }
+
+    qmlClearTypeRegistrations();
+    {
+        QQmlEngine e;
+        QQmlComponent c(&e);
+
+        // The extra import shuffles the type IDs around, so that we
+        // get a different ID for the attached properties. If the attached
+        // properties aren't properly cleared, this will crash.
+        c.setData("import QtQml.StateMachine 1.0 \n"
+                  "import QtQuick 2.2 \n"
+                  "Item { KeyNavigation.up: null }", dummy);
+
+        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation", 2, 2);
+        QCOMPARE(attachedType.attachedPropertiesId(QQmlEnginePrivate::get(&e)),
+                 attachedType.index());
+
+        QVERIFY(c.create());
+    }
 }
 
 QTEST_MAIN(tst_qqmlmetatype)
