@@ -184,7 +184,6 @@ public Q_SLOTS:
         Q_UNUSED(url)
         if (o) {
             checkForWindow(o);
-            haveWindow = true;
             if (conf && qae)
                 for (PartialScene *ps : qAsConst(conf->completers))
                     if (o->inherits(ps->itemType().toUtf8().constData()))
@@ -240,9 +239,11 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 void LoadWatcher::checkForWindow(QObject *o)
 {
 #if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
-    if (verboseMode && o->isWindowType() && o->inherits("QQuickWindow")) {
-        connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
-                this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
+    if (o->isWindowType() && o->inherits("QQuickWindow")) {
+        haveWindow = true;
+        if (verboseMode)
+            connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
+                    this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
     }
 #else
     Q_UNUSED(o)
