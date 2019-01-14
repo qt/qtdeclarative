@@ -1371,6 +1371,7 @@ void tst_QQuickPathView::package()
     QSKIP("QTBUG-27170 view does not reliably receive polish without a running animation");
 #endif
 
+    QQUICK_VERIFY_POLISH(pathView);
     QQuickItem *item = findItem<QQuickItem>(pathView, "pathItem");
     QVERIFY(item);
     QVERIFY(item->scale() != 1.0);
