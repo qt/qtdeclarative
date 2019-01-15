@@ -221,8 +221,14 @@ QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     static bool enableDebug = qEnvironmentVariableIsSet("QSG_OPENGL_DEBUG");
-    format.setDepthBufferSize(useDepth ? 24 : 0);
-    format.setStencilBufferSize(useStencil ? 8 : 0);
+    if (useDepth && format.depthBufferSize() == -1)
+        format.setDepthBufferSize(24);
+    else if (!useDepth)
+        format.setDepthBufferSize(0);
+    if (useStencil && format.stencilBufferSize() == -1)
+        format.setStencilBufferSize(8);
+    else if (!useStencil)
+        format.setStencilBufferSize(0);
     if (enableDebug)
         format.setOption(QSurfaceFormat::DebugContext);
     if (QQuickWindow::hasDefaultAlphaBuffer())
