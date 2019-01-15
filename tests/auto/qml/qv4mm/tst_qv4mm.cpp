@@ -29,16 +29,23 @@
 #include <qtest.h>
 #include <QQmlEngine>
 #include <QLoggingCategory>
+#include <QQmlComponent>
+
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
-class tst_qv4mm : public QObject
+#include "../../shared/util.h"
+
+#include <memory>
+
+class tst_qv4mm : public QQmlDataTest
 {
     Q_OBJECT
 
 private slots:
     void gcStats();
     void multiWrappedQObjects();
+    void accessParentOnDestruction();
 };
 
 void tst_qv4mm::gcStats()
@@ -84,6 +91,21 @@ void tst_qv4mm::multiWrappedQObjects()
 
     engine2.memoryManager->runGC();
     QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+}
+
+void tst_qv4mm::accessParentOnDestruction()
+{
+    QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("createdestroy.qml"));
+    std::unique_ptr<QObject> obj(component.create());
+    QVERIFY(obj);
+    QPointer<QObject> timer = qvariant_cast<QObject *>(obj->property("timer"));
+    QVERIFY(timer);
+    QTRY_VERIFY(!timer->property("running").toBool());
+    QCOMPARE(obj->property("iterations").toInt(), 100);
+    QCOMPARE(obj->property("creations").toInt(), 100);
+    QCOMPARE(obj->property("destructions").toInt(), 100);
 }
 
 QTEST_MAIN(tst_qv4mm)
