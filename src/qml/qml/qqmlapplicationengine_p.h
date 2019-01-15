@@ -74,7 +74,6 @@ public:
     void loadTranslations(const QUrl &rootFile);
     void finishLoad(QQmlComponent *component);
     QList<QObject *> objects;
-    QObject *appObj;
 
 #if QT_CONFIG(translation)
     QList<QTranslator *> translators;
