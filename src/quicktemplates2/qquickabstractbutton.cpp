@@ -204,7 +204,9 @@ void QQuickAbstractButtonPrivate::handleUngrab()
 bool QQuickAbstractButtonPrivate::isPressAndHoldConnected()
 {
     Q_Q(QQuickAbstractButton);
-    IS_SIGNAL_CONNECTED(q, QQuickAbstractButton, pressAndHold, ());
+    const auto signal = &QQuickAbstractButton::pressAndHold;
+    const QMetaMethod method = QMetaMethod::fromSignal(signal);
+    return q->isSignalConnected(method);
 }
 
 void QQuickAbstractButtonPrivate::startPressAndHold()

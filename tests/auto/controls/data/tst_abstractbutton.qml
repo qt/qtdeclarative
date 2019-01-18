@@ -865,4 +865,20 @@ TestCase {
         compare(button3.checked, false)
         compare(button3.action.checked, false)
     }
+
+    function test_clickedAfterLongPress() {
+        var control = createTemporaryObject(button, testCase, { text: "Hello" })
+        verify(control)
+
+        var clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        verify(clickedSpy.valid)
+
+        mousePress(control)
+        // Ensure that clicked is emitted when no handler is defined for the pressAndHold() signal.
+        // Note that even though signal spies aren't considered in QObject::isSignalConnected(),
+        // we can't use one here to check for pressAndHold(), because otherwise clicked() won't be emitted.
+        wait(Qt.styleHints.mousePressAndHoldInterval + 100)
+        mouseRelease(control)
+        compare(clickedSpy.count, 1)
+    }
 }
