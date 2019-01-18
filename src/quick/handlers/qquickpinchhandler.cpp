@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquickpinchhandler_p.h"
+#include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickwindow.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <private/qquickitem_p.h>
@@ -151,57 +152,48 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
     emit maximumRotationChanged();
 }
 
-/*!
-    \qmlproperty real QtQuick::PinchHandler::minimumX
+#if QT_DEPRECATED_SINCE(5, 12)
+void QQuickPinchHandler::warnAboutMinMaxDeprecated() const
+{
+    qmlWarning(this) << "min and max constraints are now part of the xAxis and yAxis properties";
+}
 
-    The minimum acceptable x coordinate of the centroid
-*/
 void QQuickPinchHandler::setMinimumX(qreal minX)
 {
+    warnAboutMinMaxDeprecated();
     if (m_minimumX == minX)
         return;
     m_minimumX = minX;
     emit minimumXChanged();
 }
 
-/*!
-    \qmlproperty real QtQuick::PinchHandler::maximumX
-
-    The maximum acceptable x coordinate of the centroid
-*/
 void QQuickPinchHandler::setMaximumX(qreal maxX)
 {
+    warnAboutMinMaxDeprecated();
     if (m_maximumX == maxX)
         return;
     m_maximumX = maxX;
     emit maximumXChanged();
 }
 
-/*!
-    \qmlproperty real QtQuick::PinchHandler::minimumY
-
-    The minimum acceptable y coordinate of the centroid
-*/
 void QQuickPinchHandler::setMinimumY(qreal minY)
 {
+    warnAboutMinMaxDeprecated();
     if (m_minimumY == minY)
         return;
     m_minimumY = minY;
     emit minimumYChanged();
 }
 
-/*!
-    \qmlproperty real QtQuick::PinchHandler::maximumY
-
-    The maximum acceptable y coordinate of the centroid
-*/
 void QQuickPinchHandler::setMaximumY(qreal maxY)
 {
+    warnAboutMinMaxDeprecated();
     if (m_maximumY == maxY)
         return;
     m_maximumY = maxY;
     emit maximumYChanged();
 }
+#endif
 
 bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
@@ -228,6 +220,32 @@ bool QQuickPinchHandler::wantsPointerEvent(QQuickPointerEvent *event)
 
     return true;
 }
+
+/*!
+    \qmlpropertygroup QtQuick::PinchHandler::xAxis
+    \qmlproperty real QtQuick::PinchHandler::xAxis.minimum
+    \qmlproperty real QtQuick::PinchHandler::xAxis.maximum
+    \qmlproperty bool QtQuick::PinchHandler::xAxis.enabled
+
+    \c xAxis controls the constraints for horizontal translation of the \l target item.
+
+    \c minimum is the minimum acceptable x coordinate of the translation.
+    \c maximum is the maximum acceptable x coordinate of the translation.
+    If \c enabled is true, horizontal dragging is allowed.
+ */
+
+/*!
+    \qmlpropertygroup QtQuick::PinchHandler::yAxis
+    \qmlproperty real QtQuick::PinchHandler::yAxis.minimum
+    \qmlproperty real QtQuick::PinchHandler::yAxis.maximum
+    \qmlproperty bool QtQuick::PinchHandler::yAxis.enabled
+
+    \c yAxis controls the constraints for vertical translation of the \l target item.
+
+    \c minimum is the minimum acceptable y coordinate of the translation.
+    \c maximum is the maximum acceptable y coordinate of the translation.
+    If \c enabled is true, vertical dragging is allowed.
+ */
 
 /*!
     \qmlproperty int QtQuick::PinchHandler::minimumTouchPoints
