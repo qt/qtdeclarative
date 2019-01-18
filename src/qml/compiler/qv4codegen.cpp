@@ -3662,15 +3662,12 @@ void Codegen::handleTryCatch(TryStatement *ast)
 {
     Q_ASSERT(ast);
     RegisterScope scope(this);
-    BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
     {
         ControlFlowCatch catchFlow(this, ast->catchExpression);
         RegisterScope scope(this);
         TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before catch is generated
         statement(ast->statement);
-        bytecodeGenerator->jump().link(noException);
     }
-    noException.link();
 }
 
 void Codegen::handleTryFinally(TryStatement *ast)
