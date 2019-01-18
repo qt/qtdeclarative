@@ -481,7 +481,7 @@ void QQuickWorkerScriptEngine::run()
     \qmltype WorkerScript
     \instantiates QQuickWorkerScript
     \ingroup qtquick-threading
-    \inqmlmodule QtQuick
+    \inqmlmodule QtQml
     \brief Enables the use of threads in a Qt Quick application.
 
     Use WorkerScript to run operations in a new thread.
