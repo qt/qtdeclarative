@@ -45,6 +45,22 @@
 
 using namespace QV4;
 
+static JSC::RegExpFlags jscFlags(uint flags)
+{
+    JSC::RegExpFlags jscFlags = JSC::NoFlags;
+    if (flags & CompiledData::RegExp::RegExp_Global)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
+    if (flags & CompiledData::RegExp::RegExp_IgnoreCase)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
+    if (flags & CompiledData::RegExp::RegExp_Multiline)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
+    if (flags & CompiledData::RegExp::RegExp_Unicode)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
+    if (flags & CompiledData::RegExp::RegExp_Sticky)
+        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagSticky);
+    return jscFlags;
+}
+
 RegExpCache::~RegExpCache()
 {
     for (RegExpCache::Iterator it = begin(), e = end(); it != e; ++it) {
@@ -57,21 +73,43 @@ DEFINE_MANAGED_VTABLE(RegExp);
 
 uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
+    static const uint offsetJITFail = std::numeric_limits<unsigned>::max() - 1;
+
     if (!isValid())
         return JSC::Yarr::offsetNoMatch;
 
     WTF::String s(string);
 
 #if ENABLE(YARR_JIT)
-    if (d()->hasValidJITCode()) {
+    auto *priv = d();
+    if (priv->hasValidJITCode()) {
+        uint ret = JSC::Yarr::offsetNoMatch;
 #if ENABLE(YARR_JIT_ALL_PARENS_EXPRESSIONS)
         char buffer[8192];
-        return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets, buffer, 8192).start);
+        ret = uint(priv->jitCode->execute(s.characters16(), start, s.length(),
+                                          (int*)matchOffsets, buffer, 8192).start);
 #else
-        return uint(jitCode()->execute(s.characters16(), start, s.length(), (int*)matchOffsets).start);
+        ret = uint(priv->jitCode->execute(s.characters16(), start, s.length(),
+                                          (int*)matchOffsets).start);
 #endif
+        if (ret != offsetJITFail)
+            return ret;
+
+        // JIT failed. We need byteCode to run the interpreter.
+        if (!priv->byteCode) {
+            JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
+            JSC::Yarr::YarrPattern yarrPattern(WTF::String(*priv->pattern), jscFlags(priv->flags),
+                                               error);
+
+            // As we successfully parsed the pattern before, we should still be able to.
+            Q_ASSERT(error == JSC::Yarr::ErrorCode::NoError);
+
+            priv->byteCode = JSC::Yarr::byteCompile(
+                                     yarrPattern,
+                                     priv->internalClass->engine->bumperPointerAllocator).release();
+        }
     }
-#endif
+#endif // ENABLE(YARR_JIT)
 
     return JSC::Yarr::interpret(byteCode(), s.characters16(), string.length(), start, matchOffsets);
 }
@@ -176,19 +214,7 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, uint fl
     valid = false;
 
     JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
-    JSC::RegExpFlags jscFlags = JSC::NoFlags;
-    if (flags & CompiledData::RegExp::RegExp_Global)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagGlobal);
-    if (flags & CompiledData::RegExp::RegExp_IgnoreCase)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagIgnoreCase);
-    if (flags & CompiledData::RegExp::RegExp_Multiline)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagMultiline);
-    if (flags & CompiledData::RegExp::RegExp_Unicode)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagUnicode);
-    if (flags & CompiledData::RegExp::RegExp_Sticky)
-        jscFlags = static_cast<JSC::RegExpFlags>(flags | JSC::FlagSticky);
-
-    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags, error);
+    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags(flags), error);
     if (error != JSC::Yarr::ErrorCode::NoError)
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;

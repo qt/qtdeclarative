@@ -52,10 +52,11 @@ exampledirs +=  ../../../examples/quick \
 
 imagedirs   += images
 
-
-#add particles sources
-headerdirs += ../../particles
-sourcedirs += ../../particles
+#add particles and shapes sources
+headerdirs += ../../particles \
+              ../../quickshapes
+sourcedirs += ../../particles \
+              ../../quickshapes
 
 #add imports directory because of dependencies
 headerdirs += ../../imports
