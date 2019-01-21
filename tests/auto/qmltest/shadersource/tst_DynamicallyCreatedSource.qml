@@ -71,6 +71,9 @@ Item {
                 || (Qt.platform.pluginName === "minimal"))
                 skip("grabImage does not work on offscreen/minimal platforms");
 
+            if ((Qt.platform.pluginName === "xcb"))
+                skip("grabImage crashes on the xcb platform");
+
             var image = grabImage(root);
             compare(image.red(0,0), 255);
             compare(image.green(0,0), 0);
