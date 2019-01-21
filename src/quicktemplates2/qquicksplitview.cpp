@@ -165,7 +165,7 @@ QT_BEGIN_NAMESPACE
         orientation: Qt.Horizontal
 
         Rectangle {
-            width: 200
+            implicitWidth: 200
             SplitView.maximumWidth: 400
             color: "lightblue"
             Label {
@@ -184,7 +184,7 @@ QT_BEGIN_NAMESPACE
             }
         }
         Rectangle {
-            width: 200
+            implicitWidth: 200
             color: "lightgreen"
             Label {
                 text: "View 3"
