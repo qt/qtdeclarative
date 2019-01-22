@@ -46,6 +46,7 @@ public:
     int width = 0;
     int height = 0;
     QColor color = Qt::transparent;
+    bool cache = true;
 
     enum ResolveProperties {
         NameResolved = 0x0001,
@@ -53,6 +54,7 @@ public:
         WidthResolved = 0x0004,
         HeightResolved = 0x0008,
         ColorResolved = 0x0010,
+        CacheResolved = 0x0020,
         AllPropertiesResolved = 0x1ffff
     };
 
@@ -86,7 +88,8 @@ bool QQuickIcon::operator==(const QQuickIcon &other) const
                             && d->source == other.d->source
                             && d->width == other.d->width
                             && d->height == other.d->height
-                            && d->color == other.d->color);
+                            && d->color == other.d->color
+                            && d->cache == other.d->cache);
 }
 
 bool QQuickIcon::operator!=(const QQuickIcon &other) const
@@ -199,6 +202,26 @@ void QQuickIcon::resetColor()
     d->resolveMask &= ~QQuickIconPrivate::ColorResolved;
 }
 
+bool QQuickIcon::cache() const
+{
+    return d->cache;
+}
+
+void QQuickIcon::setCache(bool cache)
+{
+    if ((d->resolveMask & QQuickIconPrivate::CacheResolved) && d->cache == cache)
+        return;
+
+    d->cache = cache;
+    d->resolveMask |= QQuickIconPrivate::CacheResolved;
+}
+
+void QQuickIcon::resetCache()
+{
+    d->cache = true;
+    d->resolveMask &= ~QQuickIconPrivate::CacheResolved;
+}
+
 QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
 {
     QQuickIcon resolved = *this;
@@ -217,6 +240,9 @@ QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
 
     if (!(d->resolveMask & QQuickIconPrivate::ColorResolved))
         resolved.setColor(other.color());
+
+    if (!(d->resolveMask & QQuickIconPrivate::CacheResolved))
+        resolved.setCache(other.cache());
 
     return resolved;
 }

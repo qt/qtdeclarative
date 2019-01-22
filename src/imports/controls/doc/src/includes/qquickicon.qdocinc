@@ -38,5 +38,11 @@
 
         The icon is tinted with the specified color, unless the color is
         set to \c "transparent".
+
+\row
+    \li cache
+    \li This property specifies whether the icon should be cached.
+
+        The default value is true.
 \endtable
 //! [grouped-properties]

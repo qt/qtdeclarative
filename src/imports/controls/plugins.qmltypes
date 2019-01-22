@@ -1280,6 +1280,7 @@ Module {
         Property { name: "width"; type: "int" }
         Property { name: "height"; type: "int" }
         Property { name: "color"; type: "QColor" }
+        Property { name: "cache"; type: "bool" }
     }
     Component {
         name: "QQuickItemDelegate"

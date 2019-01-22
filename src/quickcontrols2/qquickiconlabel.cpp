@@ -81,6 +81,7 @@ bool QQuickIconLabelPrivate::createImage()
     image->setSource(icon.source());
     image->setSourceSize(QSize(icon.width(), icon.height()));
     image->setColor(icon.color());
+    image->setCache(icon.cache());
     QQmlEngine::setContextForObject(image, qmlContext(q));
     if (componentComplete)
         completeComponent(image);
@@ -114,6 +115,7 @@ void QQuickIconLabelPrivate::syncImage()
     image->setSource(icon.source());
     image->setSourceSize(QSize(icon.width(), icon.height()));
     image->setColor(icon.color());
+    image->setCache(icon.cache());
     const int valign = alignment & Qt::AlignVertical_Mask;
     image->setVerticalAlignment(static_cast<QQuickImage::VAlignment>(valign));
     const int halign = alignment & Qt::AlignHorizontal_Mask;
