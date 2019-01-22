@@ -454,7 +454,9 @@ QQuickAbstractButton::~QQuickAbstractButton()
     d->removeImplicitSizeListener(d->indicator);
     if (d->group)
         d->group->removeButton(this);
+#if QT_CONFIG(shortcut)
     d->ungrabShortcut();
+#endif
 }
 
 /*!

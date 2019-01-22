@@ -69,8 +69,10 @@ public:
         return action->d_func();
     }
 
+#if QT_CONFIG(shortcut)
     QVariant shortcut() const;
     void setShortcut(const QVariant &shortcut);
+#endif
 
     void setEnabled(bool enable);
 
@@ -87,6 +89,7 @@ public:
 
     void trigger(QObject*, bool doToggle);
 
+#if QT_CONFIG(shortcut)
     class ShortcutEntry
     {
     public:
@@ -108,6 +111,7 @@ public:
 
     ShortcutEntry *findShortcutEntry(QObject *target) const;
     void updateDefaultShortcutEntry();
+#endif // QT_CONFIG(shortcut)
 
     bool explicitEnabled = false;
     bool enabled = true;
@@ -115,10 +119,12 @@ public:
     bool checkable = false;
     QString text;
     QQuickIcon icon;
-    QVariant vshortcut;
     QKeySequence keySequence;
+#if QT_CONFIG(shortcut)
+    QVariant vshortcut;
     ShortcutEntry *defaultShortcutEntry = nullptr;
     QVector<ShortcutEntry *> shortcutEntries;
+#endif
     QQuickActionGroup *group = nullptr;
 };
 
