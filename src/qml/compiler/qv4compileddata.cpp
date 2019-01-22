@@ -756,7 +756,7 @@ QString Binding::valueAsString(const CompilationUnit *unit) const
 #if !QT_CONFIG(translation)
     case Type_TranslationById:
     case Type_Translation:
-        return unit->stringAt(unit->unitData->translations()[value.translationDataIndex].stringIndex);
+        return unit->stringAt(unit->unitData()->translations()[value.translationDataIndex].stringIndex);
 #else
     case Type_TranslationById: {
         const TranslationData &translation = unit->unitData()->translations()[value.translationDataIndex];

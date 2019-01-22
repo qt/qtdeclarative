@@ -125,6 +125,7 @@ struct Q_QML_EXPORT CppStackFrame {
     bool yieldIsIterator;
     bool callerCanHandleTailCall;
     bool pendingTailCall;
+    bool isTailCalling;
 
     void init(EngineBase *engine, Function *v4Function, const Value *argv, int argc, bool callerCanHandleTailCall = false) {
         this->engine = engine;
@@ -140,6 +141,7 @@ struct Q_QML_EXPORT CppStackFrame {
         yieldIsIterator = false;
         this->callerCanHandleTailCall = callerCanHandleTailCall;
         pendingTailCall = false;
+        isTailCalling = false;
     }
 
     void push() {

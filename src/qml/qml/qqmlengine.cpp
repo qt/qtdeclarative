@@ -1304,9 +1304,7 @@ void QQmlEngine::addImageProvider(const QString &providerId, QQmlImageProviderBa
 }
 
 /*!
-  Returns the image provider set for \a providerId.
-
-  Returns the provider if it was found; otherwise returns 0.
+  Returns the image provider set for \a providerId if found; otherwise returns \nullptr.
 
   \sa QQuickImageProvider
 */

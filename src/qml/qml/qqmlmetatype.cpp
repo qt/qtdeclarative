@@ -497,9 +497,9 @@ QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQm
     d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
     d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
     if (d->extraData.cd->attachedPropertiesType) {
-        QHash<const QMetaObject *, int>::Iterator iter = d->attachedPropertyIds.find(d->baseMetaObject);
-        if (iter == d->attachedPropertyIds.end())
-            iter = d->attachedPropertyIds.insert(d->baseMetaObject, d->index);
+        auto iter = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
+        if (iter == QQmlTypePrivate::attachedPropertyIds.end())
+            iter = QQmlTypePrivate::attachedPropertyIds.insert(d->baseMetaObject, d->index);
         d->extraData.cd->attachedPropertiesId = *iter;
     } else {
         d->extraData.cd->attachedPropertiesId = -1;
@@ -569,8 +569,16 @@ QQmlType::QQmlType(QQmlTypePrivate *priv)
 
 QQmlType::~QQmlType()
 {
-    if (d && !d->refCount.deref())
+    if (d && !d->refCount.deref()) {
+        // If attached properties were successfully registered, deregister them.
+        // (They may not have been registered if some other type used the same baseMetaObject)
+        if (d->regType == CppType && d->extraData.cd->attachedPropertiesType) {
+            auto it = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
+            if (it != QQmlTypePrivate::attachedPropertyIds.end() && *it == d->index)
+                QQmlTypePrivate::attachedPropertyIds.erase(it);
+        }
         delete d;
+    }
 }
 
 QHashedString QQmlType::module() const

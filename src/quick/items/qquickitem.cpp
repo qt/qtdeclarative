@@ -4800,7 +4800,7 @@ QQuickItem *QQuickItem::nextItemInFocusChain(bool forward)
     Returns the first visible child item found at point (\a x, \a y) within
     the coordinate system of this item.
 
-    Returns 0 if there is no such item.
+    Returns \nullptr if there is no such item.
 */
 QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
 {
@@ -7224,7 +7224,7 @@ bool QQuickItem::isFocusScope() const
     If this item is a focus scope, this returns the item in its focus chain
     that currently has focus.
 
-    Returns 0 if this item is not a focus scope.
+    Returns \nullptr if this item is not a focus scope.
   */
 QQuickItem *QQuickItem::scopedFocusItem() const
 {
@@ -8160,7 +8160,7 @@ bool QQuickItem::isTextureProvider() const
     \fn QSGTextureProvider *QQuickItem::textureProvider() const
 
     Returns the texture provider for an item. The default implementation
-    returns 0.
+    returns \nullptr.
 
     This function may only be called on the rendering thread.
  */

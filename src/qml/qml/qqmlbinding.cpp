@@ -517,11 +517,14 @@ QVariant QQmlBinding::evaluate()
 
 QString QQmlBinding::expressionIdentifier() const
 {
-    auto f = function();
-    QString url = f->sourceFile();
-    quint16 lineNumber = f->compiledFunction->location.line;
-    quint16 columnNumber = f->compiledFunction->location.column;
-    return url + QString::asprintf(":%u:%u", uint(lineNumber), uint(columnNumber));
+    if (auto f = function()) {
+        QString url = f->sourceFile();
+        quint16 lineNumber = f->compiledFunction->location.line;
+        quint16 columnNumber = f->compiledFunction->location.column;
+        return url + QString::asprintf(":%u:%u", uint(lineNumber), uint(columnNumber));
+    }
+
+    return QStringLiteral("[native code]");
 }
 
 void QQmlBinding::expressionChanged()

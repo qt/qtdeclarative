@@ -389,7 +389,7 @@ QSGTexture::~QSGTexture()
     it to a shader that operates on the texture coordinates 0-1 instead
     of the texture subrect inside the atlas.
 
-    If the texture is not part of a texture atlas, this function returns 0.
+    If the texture is not part of a texture atlas, this function returns \nullptr.
 
     Implementations of this function are recommended to return the same instance
     for multiple calls to limit memory usage.

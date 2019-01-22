@@ -63,6 +63,20 @@ StorageModel::StorageModel(QObject *parent) :
     refresh();
 }
 
+QHash<int, QByteArray> StorageModel::roleNames() const {
+    static auto roles = QHash<int, QByteArray> {
+        { int(Role::Type), "type" },
+        { int(Role::Heading), "heading" },
+        { int(Role::Value), "value" },
+        { int(Role::ValueMax), "valueMax" },
+        { int(Role::ValueDisplay), "valueDisplay" },
+        { int(Role::ValueMaxDisplay), "valueMaxDisplay" },
+        { Qt::CheckStateRole, "checkState" },
+    };
+    static auto ret = roles.unite(QAbstractTableModel::roleNames());;
+    return ret;
+}
+
 void StorageModel::refresh()
 {
     beginResetModel();
@@ -92,7 +106,6 @@ Qt::ItemFlags StorageModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags result = QAbstractTableModel::flags(index);
     switch (Column(index.column())) {
-    case Column::Available:
     case Column::IsReady:
     case Column::IsReadOnly:
     case Column::IsValid:
@@ -109,7 +122,9 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role == Qt::DisplayRole) {
+    switch (role) {
+    case Qt::DisplayRole:
+    case int(Role::ValueDisplay): {
         const QStorageInfo &volume = m_volumes.at(index.row());
         switch (Column(index.column())) {
         case Column::RootPath:
@@ -120,12 +135,8 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
             return volume.device();
         case Column::FileSystemName:
             return volume.fileSystemType();
-        case Column::Total:
-            return QLocale().formattedDataSize(volume.bytesTotal());
         case Column::Free:
             return QLocale().formattedDataSize(volume.bytesFree());
-        case Column::Available:
-            return QLocale().formattedDataSize(volume.bytesAvailable());
         case Column::IsReady:
             return volume.isReady();
         case Column::IsReadOnly:
@@ -135,7 +146,8 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
         default:
             break;
         }
-    } else if (role == Qt::CheckStateRole) {
+    } break;
+    case Qt::CheckStateRole: {
         const QStorageInfo &volume = m_volumes.at(index.row());
         switch (Column(index.column())) {
         case Column::IsReady:
@@ -147,17 +159,16 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
         default:
             break;
         }
-    } else if (role == Qt::TextAlignmentRole) {
+    } break;
+    case Qt::TextAlignmentRole:
         switch (Column(index.column())) {
-        case Column::Total:
         case Column::Free:
-        case Column::Available:
             return Qt::AlignTrailing;
         default:
             break;
         }
         return Qt::AlignLeading;
-    } else if (role == Qt::ToolTipRole) {
+    case Qt::ToolTipRole: {
         QLocale locale;
         const QStorageInfo &volume = m_volumes.at(index.row());
         return tr("Root path : %1\n"
@@ -186,6 +197,51 @@ QVariant StorageModel::data(const QModelIndex &index, int role) const
                 arg(volume.isValid() ? tr("true") : tr("false")).
                 arg(volume.isRoot() ? tr("true") : tr("false"));
     }
+    case int(Role::Type):
+        switch (Column(index.column())) {
+        case Column::RootPath:
+        case Column::Name:
+        case Column::Device:
+        case Column::FileSystemName:
+            return QVariant::fromValue(Type::String);
+            break;
+        case Column::Free:
+            return QVariant::fromValue(Type::Value);
+        case Column::IsReady:
+        case Column::IsReadOnly:
+        case Column::IsValid:
+            return QVariant::fromValue(Type::Flag);
+        default:
+            break;
+        }
+        break;
+    case int(Role::Heading):
+        return headerData(index.column());
+    case int(Role::Value):
+        switch (Column(index.column())) {
+        case Column::Free:
+            return m_volumes.at(index.row()).bytesFree();
+        default:
+            break;
+        }
+        break;
+    case int(Role::ValueMax):
+        switch (Column(index.column())) {
+        case Column::Free:
+            return m_volumes.at(index.row()).bytesTotal();
+        default:
+            break;
+        }
+        break;
+    case int(Role::ValueMaxDisplay):
+        switch (Column(index.column())) {
+        case Column::Free:
+            return QLocale().formattedDataSize(m_volumes.at(index.row()).bytesTotal());
+        default:
+            break;
+        }
+        break;
+    } // switch (role)
     return QVariant();
 }
 
@@ -206,12 +262,8 @@ QVariant StorageModel::headerData(int section, Qt::Orientation orientation, int 
         return tr("Device");
     case Column::FileSystemName:
         return tr("File System");
-    case Column::Total:
-        return tr("Total");
     case Column::Free:
         return tr("Free");
-    case Column::Available:
-        return tr("Available");
     case Column::IsReady:
         return tr("Ready");
     case Column::IsReadOnly:
