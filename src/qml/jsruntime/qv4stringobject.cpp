@@ -722,41 +722,52 @@ static void appendReplacementString(QString *result, const QString &input, const
     result->reserve(result->length() + replaceValue.length());
     for (int i = 0; i < replaceValue.length(); ++i) {
         if (replaceValue.at(i) == QLatin1Char('$') && i < replaceValue.length() - 1) {
-            ushort ch = replaceValue.at(++i).unicode();
+            ushort ch = replaceValue.at(i + 1).unicode();
             uint substStart = JSC::Yarr::offsetNoMatch;
             uint substEnd = JSC::Yarr::offsetNoMatch;
+            int skip = 0;
             if (ch == '$') {
                 *result += QChar(ch);
+                ++i;
                 continue;
             } else if (ch == '&') {
                 substStart = matchOffsets[0];
                 substEnd = matchOffsets[1];
+                skip = 1;
             } else if (ch == '`') {
                 substStart = 0;
                 substEnd = matchOffsets[0];
+                skip = 1;
             } else if (ch == '\'') {
                 substStart = matchOffsets[1];
                 substEnd = input.length();
-            } else if (ch >= '1' && ch <= '9') {
+                skip = 1;
+            } else if (ch >= '0' && ch <= '9') {
                 uint capture = ch - '0';
-                Q_ASSERT(capture > 0);
-                if (capture < static_cast<uint>(captureCount)) {
-                    substStart = matchOffsets[capture * 2];
-                    substEnd = matchOffsets[capture * 2 + 1];
-                }
-            } else if (ch == '0' && i < replaceValue.length() - 1) {
-                int capture = (ch - '0') * 10;
-                ch = replaceValue.at(++i).unicode();
-                if (ch >= '0' && ch <= '9') {
-                    capture += ch - '0';
-                    if (capture > 0 && capture < captureCount) {
-                        substStart = matchOffsets[capture * 2];
-                        substEnd = matchOffsets[capture * 2 + 1];
+                skip = 1;
+                if (i < replaceValue.length() - 2) {
+                    ch = replaceValue.at(i + 2).unicode();
+                    if (ch >= '0' && ch <= '9') {
+                        uint c = capture*10 + ch - '0';
+                        if (c < static_cast<uint>(captureCount)) {
+                            capture = c;
+                            skip = 2;
+                        }
                     }
                 }
+                if (capture > 0 && capture < static_cast<uint>(captureCount)) {
+                    substStart = matchOffsets[capture * 2];
+                    substEnd = matchOffsets[capture * 2 + 1];
+                } else {
+                    skip = 0;
+                }
             }
+            i += skip;
             if (substStart != JSC::Yarr::offsetNoMatch && substEnd != JSC::Yarr::offsetNoMatch)
                 *result += input.midRef(substStart, substEnd - substStart);
+            else {
+                *result += replaceValue.at(i);
+            }
         } else {
             *result += replaceValue.at(i);
         }

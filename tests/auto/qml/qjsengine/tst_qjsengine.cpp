@@ -220,6 +220,8 @@ private slots:
     void functionToString_data();
     void functionToString();
 
+    void stringReplace();
+
     void protoChanges_QTBUG68369();
     void multilineStrings();
 
@@ -4365,6 +4367,63 @@ void tst_QJSEngine::functionToString()
     QJSValue evaluationResult = engine.evaluate(source);
     QVERIFY(!evaluationResult.isError());
     QCOMPARE(evaluationResult.toString(), expectedString);
+}
+
+void tst_QJSEngine::stringReplace()
+{
+    QJSEngine engine;
+
+    QJSValue val = engine.evaluate("'x'.replace('x', '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$1"));
+
+    val = engine.evaluate("'x'.replace('x', '$10')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$10"));
+
+    val = engine.evaluate("'x'.replace('x', '$01')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$01"));
+
+    val = engine.evaluate("'x'.replace('x', '$0')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$0"));
+
+    val = engine.evaluate("'x'.replace('x', '$00')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$00"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$1')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("x"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$01')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("x"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$2')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$2"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$02')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$02"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$0')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$0"));
+
+    val = engine.evaluate("'x'.replace(/(x)/, '$00')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("$00"));
+
+    val = engine.evaluate("'x'.replace(/()()()()()()()()()(x)/, '$11')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("1"));
+
+    val = engine.evaluate("'x'.replace(/()()()()()()()()()(x)/, '$10')");
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString("x"));
 }
 
 void tst_QJSEngine::protoChanges_QTBUG68369()
