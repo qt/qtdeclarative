@@ -189,7 +189,7 @@ struct Context {
     MemberMap members;
     QSet<QString> usedVariables;
     QQmlJS::AST::FormalParameterList *formals = nullptr;
-    QStringList arguments;
+    QQmlJS::AST::BoundNames arguments;
     QStringList locals;
     QStringList moduleRequests;
     QVector<ImportEntry> importEntries;
@@ -288,7 +288,7 @@ struct Context {
     {
         // search backwards to handle duplicate argument names correctly
         for (int i = arguments.size() - 1; i >= 0; --i) {
-            if (arguments.at(i) == name)
+            if (arguments.at(i).id == name)
                 return i;
         }
         return -1;

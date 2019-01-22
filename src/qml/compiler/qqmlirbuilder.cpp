@@ -909,13 +909,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         f->index = index;
         f->nameIndex = registerString(funDecl->name.toString());
 
-        const QStringList formals = funDecl->formals ? funDecl->formals->formals() : QStringList();
+        const QQmlJS::AST::BoundNames formals = funDecl->formals ? funDecl->formals->formals() : QQmlJS::AST::BoundNames();
         int formalsCount = formals.size();
         f->formals.allocate(pool, formalsCount);
 
         int i = 0;
-        for (const QString &arg : formals) {
-            f->formals[i] = registerString(arg);
+        for (const auto &arg : formals) {
+            f->formals[i] = registerString(arg.id);
             ++i;
         }
 

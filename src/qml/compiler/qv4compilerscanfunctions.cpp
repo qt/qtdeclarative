@@ -696,10 +696,14 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     bool isSimpleParameterList = formals && formals->isSimpleParameterList();
 
-    _context->arguments = formals ? formals->formals() : QStringList();
+    _context->arguments = formals ? formals->formals() : BoundNames();
 
     const BoundNames boundNames = formals ? formals->boundNames() : BoundNames();
     for (int i = 0; i < boundNames.size(); ++i) {
+        if (auto type = boundNames.at(i).typeAnnotation) {
+            _cg->throwSyntaxError(type->firstSourceLocation(), QLatin1String("Type annotations are not supported (yet)."));
+            return false;
+        }
         const QString &arg = boundNames.at(i).id;
         if (_context->isStrict || !isSimpleParameterList) {
             bool duplicate = (boundNames.indexOf(arg, i + 1) != -1);

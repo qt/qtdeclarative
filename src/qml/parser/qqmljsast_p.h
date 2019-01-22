@@ -850,6 +850,11 @@ struct BoundNames : public QVector<BoundName>
             return -1;
         return found - constBegin();
     }
+
+    bool contains(const QString &name) const
+    {
+        return indexOf(name) != -1;
+    }
 };
 
 class QML_PARSER_EXPORT PatternElement : public Node
@@ -2410,7 +2415,7 @@ public:
         return false;
     }
 
-    QStringList formals() const;
+    BoundNames formals() const;
 
     BoundNames boundNames() const;
 

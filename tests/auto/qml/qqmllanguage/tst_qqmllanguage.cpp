@@ -625,6 +625,7 @@ void tst_qqmllanguage::errors_data()
 
     QTest::newRow("typeAnnotations") << "typeAnnotations.qml" << "typeAnnotations.errors.txt" << false;
     QTest::newRow("typeAnnotations.2") << "typeAnnotations.2.qml" << "typeAnnotations.2.errors.txt" << false;
+    QTest::newRow("typeAnnotations.3") << "typeAnnotations.3.qml" << "typeAnnotations.3.errors.txt" << false;
 }
 
 

@@ -269,7 +269,7 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
     for (Context *f : qAsConst(module->functions)) {
         registerString(f->name);
         for (int i = 0; i < f->arguments.size(); ++i)
-            registerString(f->arguments.at(i));
+            registerString(f->arguments.at(i).id);
         for (int i = 0; i < f->locals.size(); ++i)
             registerString(f->locals.at(i));
     }
@@ -467,7 +467,7 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
     // write formals
     quint32_le *formals = (quint32_le *)(f + function->formalsOffset);
     for (int i = 0; i < irFunction->arguments.size(); ++i)
-        formals[i] = getStringId(irFunction->arguments.at(i));
+        formals[i] = getStringId(irFunction->arguments.at(i).id);
 
     // write locals
     quint32_le *locals = (quint32_le *)(f + function->localsOffset);

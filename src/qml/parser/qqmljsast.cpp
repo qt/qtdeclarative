@@ -984,9 +984,9 @@ FunctionExpression *FunctionExpression::asFunctionDefinition()
     return this;
 }
 
-QStringList FormalParameterList::formals() const
+BoundNames FormalParameterList::formals() const
 {
-    QStringList formals;
+    BoundNames formals;
     int i = 0;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element) {
@@ -994,9 +994,9 @@ QStringList FormalParameterList::formals() const
             int duplicateIndex = formals.indexOf(name);
             if (duplicateIndex >= 0) {
                 // change the name of the earlier argument to enforce the lookup semantics from the spec
-                formals[duplicateIndex] += QLatin1String("#") + QString::number(i);
+                formals[duplicateIndex].id += QLatin1String("#") + QString::number(i);
             }
-            formals += name;
+            formals += {name, it->element->typeAnnotation};
         }
         ++i;
     }
