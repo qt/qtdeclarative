@@ -830,6 +830,28 @@ public:
     SourceLocation propertyNameToken;
 };
 
+struct QML_PARSER_EXPORT BoundName
+{
+    QString id;
+    TypeAnnotation *typeAnnotation = nullptr;
+    BoundName(const QString &id, TypeAnnotation *typeAnnotation)
+        : id(id), typeAnnotation(typeAnnotation)
+    {}
+    BoundName() = default;
+};
+
+struct BoundNames : public QVector<BoundName>
+{
+    int indexOf(const QString &name, int from = 0) const
+    {
+        auto found = std::find_if(constBegin() + from, constEnd(),
+                                  [name](const BoundName &it) { return it.id == name; });
+        if (found == constEnd())
+            return -1;
+        return found - constBegin();
+    }
+};
+
 class QML_PARSER_EXPORT PatternElement : public Node
 {
 public:
@@ -886,7 +908,7 @@ public:
     bool isVariableDeclaration() const { return scope != VariableScope::NoScope; }
     bool isLexicallyScoped() const { return scope == VariableScope::Let || scope == VariableScope::Const; }
 
-    virtual void boundNames(QStringList *names);
+    virtual void boundNames(BoundNames *names);
 
 // attributes
     SourceLocation identifierToken;
@@ -924,7 +946,7 @@ public:
 
     void accept0(Visitor *visitor) override;
 
-    void boundNames(QStringList *names);
+    void boundNames(BoundNames *names);
 
     SourceLocation firstSourceLocation() const override
     { return elision ? elision->firstSourceLocation() : element->firstSourceLocation(); }
@@ -964,7 +986,7 @@ public:
         return loc.isValid() ? loc : name->lastSourceLocation();
     }
 
-    void boundNames(QStringList *names) override;
+    void boundNames(BoundNames *names) override;
     bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage) override;
 
 // attributes
@@ -992,7 +1014,7 @@ public:
 
     void accept0(Visitor *visitor) override;
 
-    void boundNames(QStringList *names);
+    void boundNames(BoundNames *names);
 
     inline PatternPropertyList *finish ()
     {
@@ -2390,7 +2412,7 @@ public:
 
     QStringList formals() const;
 
-    QStringList boundNames() const;
+    BoundNames boundNames() const;
 
     void accept0(Visitor *visitor) override;
 

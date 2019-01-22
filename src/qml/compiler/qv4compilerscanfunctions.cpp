@@ -202,16 +202,16 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
             _context->exportEntries << entry;
         }
     } else if (auto *vstmt = AST::cast<AST::VariableStatement*>(declaration->variableStatementOrDeclaration)) {
-        QStringList boundNames;
+        BoundNames boundNames;
         for (VariableDeclarationList *it = vstmt->declarations; it; it = it->next) {
             if (!it->declaration)
                 continue;
             it->declaration->boundNames(&boundNames);
         }
-        for (const QString &name: boundNames) {
+        for (const auto &name: boundNames) {
             Compiler::ExportEntry entry;
-            entry.localName = name;
-            entry.exportName = name;
+            entry.localName = name.id;
+            entry.exportName = name.id;
             entry.location = location(vstmt->firstSourceLocation());
             _context->exportEntries << entry;
         }
@@ -326,26 +326,26 @@ bool ScanFunctions::visit(PatternElement *ast)
     if (!ast->isVariableDeclaration())
         return true;
 
-    QStringList names;
+    BoundNames names;
     ast->boundNames(&names);
 
     QQmlJS::AST::SourceLocation lastInitializerLocation = ast->lastSourceLocation();
     if (_context->lastBlockInitializerLocation.isValid())
         lastInitializerLocation = _context->lastBlockInitializerLocation;
 
-    for (const QString &name : qAsConst(names)) {
-        if (_context->isStrict && (name == QLatin1String("eval") || name == QLatin1String("arguments")))
+    for (const auto &name : qAsConst(names)) {
+        if (_context->isStrict && (name.id == QLatin1String("eval") || name.id == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-        checkName(QStringRef(&name), ast->identifierToken);
-        if (name == QLatin1String("arguments"))
+        checkName(QStringRef(&name.id), ast->identifierToken);
+        if (name.id == QLatin1String("arguments"))
             _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
         if (ast->scope == VariableScope::Const && !ast->initializer && !ast->isForDeclaration && !ast->destructuringPattern()) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Missing initializer in const declaration"));
             return false;
         }
-        if (!_context->addLocalVar(name, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope,
+        if (!_context->addLocalVar(name.id, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope,
                                    /*function*/nullptr, lastInitializerLocation)) {
-            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name));
+            _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name.id));
             return false;
         }
     }
@@ -698,9 +698,9 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
 
     _context->arguments = formals ? formals->formals() : QStringList();
 
-    const QStringList boundNames = formals ? formals->boundNames() : QStringList();
+    const BoundNames boundNames = formals ? formals->boundNames() : BoundNames();
     for (int i = 0; i < boundNames.size(); ++i) {
-        const QString &arg = boundNames.at(i);
+        const QString &arg = boundNames.at(i).id;
         if (_context->isStrict || !isSimpleParameterList) {
             bool duplicate = (boundNames.indexOf(arg, i + 1) != -1);
             if (duplicate) {

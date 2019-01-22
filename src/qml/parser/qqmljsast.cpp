@@ -1003,9 +1003,9 @@ QStringList FormalParameterList::formals() const
     return formals;
 }
 
-QStringList FormalParameterList::boundNames() const
+BoundNames FormalParameterList::boundNames() const
 {
-    QStringList names;
+    BoundNames names;
     for (const FormalParameterList *it = this; it; it = it->next) {
         if (it->element)
             it->element->boundNames(&names);
@@ -1377,7 +1377,7 @@ void PatternElement::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternElement::boundNames(QStringList *names)
+void PatternElement::boundNames(BoundNames *names)
 {
     if (bindingTarget) {
         if (PatternElementList *e = elementList())
@@ -1385,7 +1385,7 @@ void PatternElement::boundNames(QStringList *names)
         else if (PatternPropertyList *p = propertyList())
             p->boundNames(names);
     } else {
-        names->append(bindingIdentifier.toString());
+        names->append({bindingIdentifier.toString(), typeAnnotation});
     }
 }
 
@@ -1401,7 +1401,7 @@ void PatternElementList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternElementList::boundNames(QStringList *names)
+void PatternElementList::boundNames(BoundNames *names)
 {
     for (PatternElementList *it = this; it; it = it->next) {
         if (it->element)
@@ -1421,7 +1421,7 @@ void PatternProperty::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternProperty::boundNames(QStringList *names)
+void PatternProperty::boundNames(BoundNames *names)
 {
     PatternElement::boundNames(names);
 }
@@ -1437,7 +1437,7 @@ void PatternPropertyList::accept0(Visitor *visitor)
     visitor->endVisit(this);
 }
 
-void PatternPropertyList::boundNames(QStringList *names)
+void PatternPropertyList::boundNames(BoundNames *names)
 {
     for (PatternPropertyList *it = this; it; it = it->next)
         it->property->boundNames(names);
