@@ -2007,7 +2007,7 @@ void QQuickPathAngleArc::setCenterY(qreal centerY)
         return;
 
     _centerY = centerY;
-    emit centerXChanged();
+    emit centerYChanged();
     emit changed();
 }
 

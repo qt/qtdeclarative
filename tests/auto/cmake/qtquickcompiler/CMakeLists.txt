@@ -9,7 +9,7 @@ find_package(Qt5QuickCompiler)
 
 set(CMAKE_CXXFLAGS "${CMAKE_CXXFLAGS} ${Qt5Core_EXECUTABLE_COMPILE_FLAGS}")
 
-qtquick_compiler_add_resources(RESOURCES "resources with space/qqc_test.qrc")
+qtquick_compiler_add_resources(RESOURCES "empty.qrc" "resources with space/qqc_test.qrc")
 
 set(CMAKE_AUTOMOC ON)
 
