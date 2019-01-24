@@ -79,6 +79,7 @@ public:
 
     Q_INVOKABLE QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
     Q_INVOKABLE void setValue(const QString &key, const QVariant &value);
+    Q_INVOKABLE void sync();
 
 protected:
     void timerEvent(QTimerEvent *event) override;

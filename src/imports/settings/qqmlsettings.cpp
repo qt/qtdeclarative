@@ -487,6 +487,25 @@ void QQmlSettings::setValue(const QString &key, const QVariant &value)
     qCDebug(lcSettings) << "QQmlSettings: setValue" << key << ":" << value;
 }
 
+/*!
+   \qmlmethod Settings::sync()
+
+    Writes any unsaved changes to permanent storage, and reloads any
+    settings that have been changed in the meantime by another
+    application.
+
+    This function is called automatically from QSettings's destructor and
+    by the event loop at regular intervals, so you normally don't need to
+    call it yourself.
+
+   \sa QSettings::sync
+*/
+void QQmlSettings::sync()
+{
+    Q_D(QQmlSettings);
+    d->instance()->sync();
+}
+
 void QQmlSettings::classBegin()
 {
 }
