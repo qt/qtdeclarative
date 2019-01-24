@@ -65,11 +65,22 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     typedef ReturnedValue (*BinaryOperationContext)(ExecutionEngine *, const Value &left, const Value &right);
 
     enum class Throws { No, Yes };
+    enum class ChangesContext { No, Yes };
+    enum class Pure { No, Yes };
+    enum class LastArgumentIsOutputValue { No, Yes };
 
-    template<Throws t>
-    struct Method {
-         static constexpr bool throws = t == Throws::Yes;
+    template<Throws t, ChangesContext c = ChangesContext::No, Pure p = Pure::No,
+             LastArgumentIsOutputValue out = LastArgumentIsOutputValue::No>
+    struct Method
+    {
+        static constexpr bool throws = t == Throws::Yes;
+        static constexpr bool changesContext = c == ChangesContext::Yes;
+        static constexpr bool pure = p == Pure::Yes;
+        static constexpr bool lastArgumentIsOutputValue = out == LastArgumentIsOutputValue::Yes;
     };
+    using PureMethod = Method<Throws::No, ChangesContext::No, Pure::Yes>;
+    using IteratorMethod = Method<Throws::Yes, ChangesContext::No, Pure::No,
+                                  LastArgumentIsOutputValue::Yes>;
 
     /* call */
     struct Q_QML_PRIVATE_EXPORT CallGlobalLookup : Method<Throws::Yes>
@@ -113,7 +124,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         static ReturnedValue call(CppStackFrame *, ExecutionEngine *);
     };
 
-    /* construct Q_QML_PRIVATE_EXPORT */
+    /* construct */
     struct Q_QML_PRIVATE_EXPORT Construct : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value[], int);
@@ -190,7 +201,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     };
 
     /* typeof */
-    struct Q_QML_PRIVATE_EXPORT TypeofValue : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT TypeofValue : PureMethod
     {
         static ReturnedValue call(ExecutionEngine *, const Value &);
     };
@@ -222,31 +233,31 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static void call(ExecutionEngine *, const Value &);
     };
-    struct Q_QML_PRIVATE_EXPORT PushCallContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT PushCallContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(CppStackFrame *);
     };
-    struct Q_QML_PRIVATE_EXPORT PushWithContext : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT PushWithContext : Method<Throws::Yes, ChangesContext::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &);
     };
-    struct Q_QML_PRIVATE_EXPORT PushCatchContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT PushCatchContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(ExecutionEngine *, int, int);
     };
-    struct Q_QML_PRIVATE_EXPORT PushBlockContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT PushBlockContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(ExecutionEngine *, int);
     };
-    struct Q_QML_PRIVATE_EXPORT CloneBlockContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT CloneBlockContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(ExecutionEngine *);
     };
-    struct Q_QML_PRIVATE_EXPORT PushScriptContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT PushScriptContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(ExecutionEngine *, int);
     };
-    struct Q_QML_PRIVATE_EXPORT PopScriptContext : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT PopScriptContext : Method<Throws::No, ChangesContext::Yes>
     {
         static void call(ExecutionEngine *);
     };
@@ -274,7 +285,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static void call(ExecutionEngine *, Bool, int);
     };
-    struct Q_QML_PRIVATE_EXPORT CreateMappedArgumentsObject : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT CreateMappedArgumentsObject : Method<Throws::No>
     {
         static ReturnedValue call(ExecutionEngine *);
     };
@@ -306,11 +317,11 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, int);
     };
-    struct Q_QML_PRIVATE_EXPORT IteratorNext : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT IteratorNext : IteratorMethod
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, Value *);
     };
-    struct Q_QML_PRIVATE_EXPORT IteratorNextForYieldStar : Method<Throws::Yes>
+    struct Q_QML_PRIVATE_EXPORT IteratorNextForYieldStar : IteratorMethod
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &, Value *);
     };
@@ -328,7 +339,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *, const Value &);
     };
-    struct Q_QML_PRIVATE_EXPORT ToBoolean : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT ToBoolean : PureMethod
     {
         static Bool call(const Value &);
     };
@@ -475,11 +486,11 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
         static Bool call(ExecutionEngine *, const Value &, const Value &);
     };
 
-    struct Q_QML_PRIVATE_EXPORT RegexpLiteral : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT RegexpLiteral : PureMethod
     {
         static ReturnedValue call(ExecutionEngine *, int);
     };
-    struct Q_QML_PRIVATE_EXPORT GetTemplateObject : Method<Throws::No>
+    struct Q_QML_PRIVATE_EXPORT GetTemplateObject : PureMethod
     {
         static ReturnedValue call(Function *, int);
     };
