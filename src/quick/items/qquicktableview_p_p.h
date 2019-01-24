@@ -213,13 +213,14 @@ public:
     QVariant assignedModel = QVariant(int(0));
     QQmlComponent *assignedDelegate = nullptr;
 
-    // loadedTable describes the table cells that are currently loaded (from top left
+    // loadedRows/Columns describes the rows and columns that are currently loaded (from top left
     // row/column to bottom right row/column). loadedTableOuterRect describes the actual
-    // pixels that those cells cover, and is matched agains the viewport to determine when
+    // pixels that all the loaded delegate items cover, and is matched agains the viewport to determine when
     // we need to fill up with more rows/columns. loadedTableInnerRect describes the pixels
     // that the loaded table covers if you remove one row/column on each side of the table, and
     // is used to determine rows/columns that are no longer visible and can be unloaded.
-    QRect loadedTable;
+    QMap<int, int> loadedColumns;
+    QMap<int, int> loadedRows;
     QRectF loadedTableOuterRect;
     QRectF loadedTableInnerRect;
 
@@ -283,6 +284,11 @@ public:
     qreal resolveColumnWidth(int column);
     qreal resolveRowHeight(int row);
 
+    inline int topRow() const { return loadedRows.firstKey(); }
+    inline int bottomRow() const { return loadedRows.lastKey(); }
+    inline int leftColumn() const { return loadedColumns.firstKey(); }
+    inline int rightColumn() const { return loadedColumns.lastKey(); }
+
     void relayoutTable();
     void relayoutTableItems();
 
@@ -298,6 +304,8 @@ public:
     void enforceTableAtOrigin();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
+
+    int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
 
     bool canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;
     bool canUnloadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;

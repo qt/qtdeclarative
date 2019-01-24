@@ -251,8 +251,9 @@ void tst_QQuickTableView::checkPreload()
     WAIT_UNTIL_POLISHED;
 
     if (reuseItems) {
-        QSize visibleTableSize = tableViewPrivate->loadedTable.size();
-        int expectedPoolSize = visibleTableSize.height() + visibleTableSize.width() + 1;
+        const int rowCount = tableViewPrivate->loadedRows.count();
+        const int columnCount = tableViewPrivate->loadedColumns.count();
+        const int expectedPoolSize = rowCount + columnCount + 1;
         QCOMPARE(tableViewPrivate->tableModel->poolSize(), expectedPoolSize);
     } else {
         QCOMPARE(tableViewPrivate->tableModel->poolSize(), 0);
@@ -321,10 +322,9 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    QRect table = tableViewPrivate->loadedTable;
-    for (int column = table.left(); column <= table.right(); ++column) {
+    for (const int column : tableViewPrivate->loadedColumns.keys()) {
         const qreal expectedColumnWidth = tableViewPrivate->sizeHintForColumn(column);
-        for (int row = table.top(); row <= table.bottom(); ++row) {
+        for (const int row : tableViewPrivate->loadedRows.keys()) {
             const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
             QCOMPARE(item->width(), expectedColumnWidth);
         }
@@ -414,10 +414,9 @@ void tst_QQuickTableView::checkRowHeightWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    QRect table = tableViewPrivate->loadedTable;
-    for (int row = table.top(); row <= table.bottom(); ++row) {
+    for (const int row : tableViewPrivate->loadedRows.keys()) {
         const qreal expectedRowHeight = tableViewPrivate->sizeHintForRow(row);
-        for (int column = table.left(); column <= table.right(); ++column) {
+        for (const int column : tableViewPrivate->loadedColumns.keys()) {
             const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
             QCOMPARE(item->height(), expectedRowHeight);
         }
@@ -565,8 +564,8 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
 
     const int largeSizeCellCountInView = qCeil(tableView->width() / cellSizeLarge);
     const int columnCount = smallCellCount + largeSizeCellCountInView;
-    QCOMPARE(tableViewPrivate->loadedTable.left(), smallCellCount);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), smallCellCount);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
 
     const qreal firstHalfLength = smallCellCount * cellSizeSmall;
     const qreal secondHalfOneScreenLength = largeSizeCellCountInView * cellSizeLarge;
@@ -618,17 +617,18 @@ void tst_QQuickTableView::checkPageFlicking()
     const int cellWidth = 100;
     const int cellHeight = 50;
     auto model = TestModelAsVariant(10000, 10000);
+    const auto &loadedRows = tableViewPrivate->loadedRows;
+    const auto &loadedColumns = tableViewPrivate->loadedColumns;
 
     tableView->setModel(model);
 
     WAIT_UNTIL_POLISHED;
 
     // Sanity check startup table
-    QRect tableRect = tableViewPrivate->loadedTable;
-    QCOMPARE(tableRect.x(), 0);
-    QCOMPARE(tableRect.y(), 0);
-    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
-    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(loadedRows.count(), tableView->height() / cellHeight);
+    QCOMPARE(loadedColumns.count(), tableView->width() / cellWidth);
 
     // Since all cells have the same size, the average row/column
     // size found by TableView should be exactly equal to this.
@@ -652,11 +652,10 @@ void tst_QQuickTableView::checkPageFlicking()
 
     WAIT_UNTIL_POLISHED;
 
-    tableRect = tableViewPrivate->loadedTable;
-    QCOMPARE(tableRect.x(), flickToColumn);
-    QCOMPARE(tableRect.y(), 0);
-    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
-    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->leftColumn(), flickToColumn);
+    QCOMPARE(loadedColumns.count(), tableView->width() / cellWidth);
+    QCOMPARE(loadedRows.count(), tableView->height() / cellHeight);
 
     // Flick 5000 rows down as well. Since flicking down should only calculate a new row (but
     // keep the current column), we deliberatly change the average width to check that it's
@@ -675,11 +674,10 @@ void tst_QQuickTableView::checkPageFlicking()
 
     WAIT_UNTIL_POLISHED;
 
-    tableRect = tableViewPrivate->loadedTable;
-    QCOMPARE(tableRect.x(), flickToRow);
-    QCOMPARE(tableRect.y(), flickToColumn);
-    QCOMPARE(tableRect.width(), tableView->width() / cellWidth);
-    QCOMPARE(tableRect.height(), tableView->height() / cellHeight);
+    QCOMPARE(tableViewPrivate->topRow(), flickToColumn);
+    QCOMPARE(tableViewPrivate->leftColumn(), flickToRow);
+    QCOMPARE(loadedRows.count(), tableView->height() / cellHeight);
+    QCOMPARE(loadedColumns.count(), tableView->width() / cellWidth);
 }
 
 void tst_QQuickTableView::checkExplicitContentWidthAndHeight()
@@ -729,8 +727,8 @@ void tst_QQuickTableView::checkContentXY()
     // Check that we end up at the correct top-left cell:
     const qreal delegateWidth = tableViewPrivate->loadedItems.values().first()->item->width();
     const int expectedCellXY = qCeil(expectedXY / delegateWidth);
-    QCOMPARE(tableViewPrivate->loadedTable.left(), expectedCellXY);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), expectedCellXY);
+    QCOMPARE(tableViewPrivate->leftColumn(), expectedCellXY);
+    QCOMPARE(tableViewPrivate->topRow(), expectedCellXY);
 }
 
 void tst_QQuickTableView::noDelegate()
@@ -1004,7 +1002,8 @@ void tst_QQuickTableView::fillTableViewButNothingMore()
     auto const topLeftFxItem = tableViewPrivate->loadedTableItem(QPoint(0, 0));
     auto const topLeftItem = topLeftFxItem->item;
 
-    auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(tableViewPrivate->loadedTable.bottomRight());
+    auto const bottomRightLoadedCell = QPoint(tableViewPrivate->rightColumn(), tableViewPrivate->bottomRow());
+    auto const bottomRightFxItem = tableViewPrivate->loadedTableItem(bottomRightLoadedCell);
     auto const bottomRightItem = bottomRightFxItem->item;
     const QPoint bottomRightCell = getContextRowAndColumn(bottomRightItem.data());
 
@@ -1182,15 +1181,13 @@ void tst_QQuickTableView::flick()
 
         WAIT_UNTIL_POLISHED;
 
-        const QRect loadedTable = tableViewPrivate->loadedTable;
+        const int expectedTableLeft = int(cellsToFlick - int((margins.left() + spacing.width()) / cellWidth));
+        const int expectedTableTop = int(cellsToFlick - int((margins.top() + spacing.height()) / cellHeight));
 
-        const int expectedTableLeft = cellsToFlick - int((margins.left() + spacing.width()) / cellWidth);
-        const int expectedTableTop = cellsToFlick - int((margins.top() + spacing.height()) / cellHeight);
-
-        QCOMPARE(loadedTable.left(), expectedTableLeft);
-        QCOMPARE(loadedTable.right(), expectedTableLeft + visualColumnCount);
-        QCOMPARE(loadedTable.top(), expectedTableTop);
-        QCOMPARE(loadedTable.bottom(), expectedTableTop + visualRowCount);
+        QCOMPARE(tableViewPrivate->leftColumn(), expectedTableLeft);
+        QCOMPARE(tableViewPrivate->rightColumn(), expectedTableLeft + visualColumnCount);
+        QCOMPARE(tableViewPrivate->topRow(), expectedTableTop);
+        QCOMPARE(tableViewPrivate->bottomRow(), expectedTableTop + visualRowCount);
     }
 }
 
@@ -1252,10 +1249,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), 0);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 
     // Flick table out of view right
     tableView->setContentX(tableWidth + outsideMargin);
@@ -1264,10 +1261,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 
     // Flick table out of view on top
     tableView->setContentX(0);
@@ -1276,10 +1273,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), 0);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), 0);
 
     // Flick table out of view at the bottom
     tableView->setContentX(0);
@@ -1288,10 +1285,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), rowCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 
     // Flick table out of view left and top at the same time
     tableView->setContentX(-tableView->width() - outsideMargin);
@@ -1300,10 +1297,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), 0);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), 0);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), 0);
 
     // Flick table back to origo
     tableView->setContentX(0);
@@ -1312,10 +1309,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 
     // Flick table out of view right and bottom at the same time
     tableView->setContentX(tableWidth + outsideMargin);
@@ -1324,10 +1321,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), rowCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 
     // Flick table back to origo
     tableView->setContentX(0);
@@ -1336,10 +1333,10 @@ void tst_QQuickTableView::flickOvershoot()
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(tableViewPrivate->loadedTable.left(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.right(), columnCount - 1);
-    QCOMPARE(tableViewPrivate->loadedTable.top(), 0);
-    QCOMPARE(tableViewPrivate->loadedTable.bottom(), rowCount - 1);
+    QCOMPARE(tableViewPrivate->leftColumn(), 0);
+    QCOMPARE(tableViewPrivate->rightColumn(), columnCount - 1);
+    QCOMPARE(tableViewPrivate->topRow(), 0);
+    QCOMPARE(tableViewPrivate->bottomRow(), rowCount - 1);
 }
 
 void tst_QQuickTableView::checkRowColumnCount()
@@ -1353,6 +1350,8 @@ void tst_QQuickTableView::checkRowColumnCount()
     const qreal delegateWidth = 100;
     const qreal delegateHeight = 50;
     auto model = TestModelAsVariant(100, 100);
+    const auto &loadedRows = tableViewPrivate->loadedRows;
+    const auto &loadedColumns = tableViewPrivate->loadedColumns;
 
     tableView->setModel(model);
 
@@ -1360,17 +1359,15 @@ void tst_QQuickTableView::checkRowColumnCount()
 
     // We expect that the number of created items after start-up should match
     //the size of the visible table, pluss one extra preloaded row and column.
-    const QSize visibleTableSize = tableViewPrivate->loadedTable.size();
     const int qmlCountAfterInit = view->rootObject()->property(maxDelegateCountProp).toInt();
-    const int expectedCount = (visibleTableSize.width() + 1) * (visibleTableSize.height() + 1);
+    const int expectedCount = (loadedColumns.count() + 1) * (loadedRows.count() + 1);
     QCOMPARE(qmlCountAfterInit, expectedCount);
 
     // This test will keep track of the maximum number of delegate items TableView
     // had to show at any point while flicking (in countingtableview.qml). Because
     // of the geometries chosen for TableView and the delegate, only complete columns
     // will be shown at start-up.
-    const QRect loadedTable = tableViewPrivate->loadedTable;
-    QVERIFY(loadedTable.height() > loadedTable.width());
+    QVERIFY(loadedRows.count() > loadedColumns.count());
     QCOMPARE(tableViewPrivate->loadedTableOuterRect.width(), tableView->width());
     QCOMPARE(tableViewPrivate->loadedTableOuterRect.height(), tableView->height());
 
@@ -1619,8 +1616,8 @@ void tst_QQuickTableView::checkIfDelegatesAreReused()
         fxItem->item->setProperty("reusedCount", 0);
     }
 
-    const int visibleColumnCount = tableViewPrivate->loadedTable.width();
-    const int visibleRowCount = tableViewPrivate->loadedTable.height();
+    const int visibleColumnCount = tableViewPrivate->loadedColumns.count();
+    const int visibleRowCount = tableViewPrivate->loadedRows.count();
     const int delegateCountAfterInit = view->rootObject()->property(kDelegatesCreatedCountProp).toInt();
 
     for (int column = 1; column <= (visibleColumnCount * pageFlickCount); ++column) {
@@ -1687,7 +1684,7 @@ void tst_QQuickTableView::checkIfDelegatesAreReusedAsymmetricTableSize()
 
     // Since we have flicked half a delegate to the left, the number of visible
     // columns is now one more than the column count were when we started the test.
-    const int visibleColumnCount = tableViewPrivate->loadedTable.width();
+    const int visibleColumnCount = tableViewPrivate->loadedColumns.count();
     QCOMPARE(visibleColumnCount, columnCount + 1);
 
     // We expect no items to have been pooled so far
@@ -1887,7 +1884,7 @@ void tst_QQuickTableView::checkChangingModelFromDelegate()
 
     // We now expect two rows in the table, one more than initially
     QCOMPARE(tableViewPrivate->tableSize.height(), 2);
-    QCOMPARE(tableViewPrivate->loadedTable.height(), 2);
+    QCOMPARE(tableViewPrivate->loadedRows.count(), 2);
 
     // And since the QML code tried to add another row as well, we
     // expect rebuildScheduled to be true, and a polish event to be pending.
@@ -1897,7 +1894,7 @@ void tst_QQuickTableView::checkChangingModelFromDelegate()
 
     // After handling the polish event, we expect also the third row to now be added
     QCOMPARE(tableViewPrivate->tableSize.height(), 3);
-    QCOMPARE(tableViewPrivate->loadedTable.height(), 3);
+    QCOMPARE(tableViewPrivate->loadedRows.count(), 3);
 }
 
 void tst_QQuickTableView::checkRebuildViewportOnly()
@@ -1982,8 +1979,8 @@ void tst_QQuickTableView::checkTableviewInsideAsyncLoader()
     const qreal delegateHeight = 50;
     int expectedColumns = qCeil(tableView->width() / delegateWidth);
     int expectedRows = qCeil(tableView->height() / delegateHeight);
-    QCOMPARE(tableViewPrivate->loadedTable.width(), expectedColumns);
-    QCOMPARE(tableViewPrivate->loadedTable.height(), expectedRows);
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumns);
+    QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRows);
 
     // Check that the loader was still in a loading state while TableView was creating
     // delegate items. If we delayed creating delegate items until we got the first

@@ -377,36 +377,6 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
 
-static QLine rectangleEdge(const QRect &rect, Qt::Edge tableEdge)
-{
-    switch (tableEdge) {
-    case Qt::LeftEdge:
-        return QLine(rect.topLeft(), rect.bottomLeft());
-    case Qt::RightEdge:
-        return QLine(rect.topRight(), rect.bottomRight());
-    case Qt::TopEdge:
-        return QLine(rect.topLeft(), rect.topRight());
-    case Qt::BottomEdge:
-        return QLine(rect.bottomLeft(), rect.bottomRight());
-    }
-    return QLine();
-}
-
-static QRect expandedRect(const QRect &rect, Qt::Edge edge, int increment)
-{
-    switch (edge) {
-    case Qt::LeftEdge:
-        return rect.adjusted(-increment, 0, 0, 0);
-    case Qt::RightEdge:
-        return rect.adjusted(0, 0, increment, 0);
-    case Qt::TopEdge:
-        return rect.adjusted(0, -increment, 0, 0);
-    case Qt::BottomEdge:
-        return rect.adjusted(0, 0, 0, increment);
-    }
-    return QRect();
-}
-
 const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
 const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
 const QPoint QQuickTableViewPrivate::kUp = QPoint(0, -1);
@@ -427,8 +397,8 @@ QQuickTableViewPrivate::~QQuickTableViewPrivate()
 QString QQuickTableViewPrivate::tableLayoutToString() const
 {
     return QString(QLatin1String("table cells: (%1,%2) -> (%3,%4), item count: %5, table rect: %6,%7 x %8,%9"))
-            .arg(loadedTable.topLeft().x()).arg(loadedTable.topLeft().y())
-            .arg(loadedTable.bottomRight().x()).arg(loadedTable.bottomRight().y())
+            .arg(leftColumn()).arg(topRow())
+            .arg(rightColumn()).arg(bottomRow())
             .arg(loadedItems.count())
             .arg(loadedTableOuterRect.x())
             .arg(loadedTableOuterRect.y())
@@ -489,7 +459,7 @@ void QQuickTableViewPrivate::updateContentWidth()
     }
 
     const qreal thresholdBeforeAdjust = 0.1;
-    int currentRightColumn = loadedTable.right();
+    int currentRightColumn = rightColumn();
 
     if (currentRightColumn > contentSizeBenchMarkPoint.x()) {
         contentSizeBenchMarkPoint.setX(currentRightColumn);
@@ -526,7 +496,7 @@ void QQuickTableViewPrivate::updateContentHeight()
     }
 
     const qreal thresholdBeforeAdjust = 0.1;
-    int currentBottomRow = loadedTable.bottom();
+    int currentBottomRow = bottomRow();
 
     if (currentBottomRow > contentSizeBenchMarkPoint.y()) {
         contentSizeBenchMarkPoint.setY(currentBottomRow);
@@ -561,7 +531,7 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
     bool layoutNeeded = false;
     const qreal flickMargin = 50;
 
-    if (loadedTable.x() == 0 && loadedTableOuterRect.x() > 0) {
+    if (leftColumn() == 0 && loadedTableOuterRect.x() > 0) {
         // The table is at the beginning, but not at the edge of the
         // content view. So move the table to origin.
         loadedTableOuterRect.moveLeft(0);
@@ -569,15 +539,15 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
     } else if (loadedTableOuterRect.x() < 0) {
         // The table is outside the beginning of the content view. Move
         // the whole table inside, and make some room for flicking.
-        loadedTableOuterRect.moveLeft(loadedTable.x() == 0 ? 0 : flickMargin);
+        loadedTableOuterRect.moveLeft(leftColumn() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
-    if (loadedTable.y() == 0 && loadedTableOuterRect.y() > 0) {
+    if (topRow() == 0 && loadedTableOuterRect.y() > 0) {
         loadedTableOuterRect.moveTop(0);
         layoutNeeded = true;
     } else if (loadedTableOuterRect.y() < 0) {
-        loadedTableOuterRect.moveTop(loadedTable.y() == 0 ? 0 : flickMargin);
+        loadedTableOuterRect.moveTop(topRow() == 0 ? 0 : flickMargin);
         layoutNeeded = true;
     }
 
@@ -589,8 +559,8 @@ void QQuickTableViewPrivate::enforceTableAtOrigin()
 
 void QQuickTableViewPrivate::updateAverageEdgeSize()
 {
-    int bottomCell = loadedTable.bottom();
-    int rightCell = loadedTable.right();
+    int bottomCell = bottomRow();
+    int rightCell = rightColumn();
     qreal accRowSpacing = bottomCell * cellSpacing.height();
     qreal accColumnSpacing = rightCell * cellSpacing.width();
     averageEdgeSize.setHeight((loadedTableOuterRect.bottom() - accRowSpacing) / (bottomCell + 1));
@@ -599,9 +569,11 @@ void QQuickTableViewPrivate::updateAverageEdgeSize()
 
 void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 {
-    QRectF topLeftRect = loadedTableItem(loadedTable.topLeft())->geometry();
-    QRectF bottomRightRect = loadedTableItem(loadedTable.bottomRight())->geometry();
-    loadedTableOuterRect = topLeftRect.united(bottomRightRect);
+    const QPoint topLeft = QPoint(leftColumn(), topRow());
+    const QPoint bottomRight = QPoint(rightColumn(), bottomRow());
+    QRectF topLeftRect = loadedTableItem(topLeft)->geometry();
+    QRectF bottomRightRect = loadedTableItem(bottomRight)->geometry();
+    loadedTableOuterRect = QRectF(topLeftRect.topLeft(), bottomRightRect.bottomRight());
     loadedTableInnerRect = QRectF(topLeftRect.bottomRight(), bottomRightRect.topLeft());
 }
 
@@ -609,18 +581,19 @@ void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 {
     if (loadRequest.edge() == Qt::Edge(0)) {
         // No edge means we're loading the top-left item
-        loadedTable = QRect(loadRequest.firstCell(), loadRequest.lastCell());
+        loadedColumns.insert(loadRequest.firstCell().x(), 0);
+        loadedRows.insert(loadRequest.firstCell().y(), 0);
         return;
     }
 
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
-    case Qt::TopEdge:
-        loadedTable.setTopLeft(loadRequest.firstCell());
-        break;
     case Qt::RightEdge:
+        loadedColumns.insert(loadRequest.firstCell().x(), 0);
+        break;
+    case Qt::TopEdge:
     case Qt::BottomEdge:
-        loadedTable.setBottomRight(loadRequest.lastCell());
+        loadedRows.insert(loadRequest.firstCell().y(), 0);
         break;
     }
 }
@@ -776,23 +749,38 @@ void QQuickTableViewPrivate::unloadItems(const QLine &items)
     }
 }
 
+int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
+{
+    switch (edge) {
+    case Qt::LeftEdge:
+        return leftColumn() - 1;
+    case Qt::RightEdge:
+        return rightColumn() + 1;
+    case Qt::TopEdge:
+        return topRow() - 1;
+    case Qt::BottomEdge:
+        return bottomRow() + 1;
+    }
+    return -1;
+}
+
 bool QQuickTableViewPrivate::canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const
 {
     switch (tableEdge) {
     case Qt::LeftEdge:
-        if (loadedTable.topLeft().x() == 0)
+        if (leftColumn() == 0)
             return false;
         return loadedTableOuterRect.left() > fillRect.left() + cellSpacing.width();
     case Qt::RightEdge:
-        if (loadedTable.bottomRight().x() >= tableSize.width() - 1)
+        if (rightColumn() == tableSize.width() - 1)
             return false;
         return loadedTableOuterRect.right() < fillRect.right() - cellSpacing.width();
     case Qt::TopEdge:
-        if (loadedTable.topLeft().y() == 0)
+        if (topRow() == 0)
             return false;
         return loadedTableOuterRect.top() > fillRect.top() + cellSpacing.height();
     case Qt::BottomEdge:
-        if (loadedTable.bottomRight().y() >= tableSize.height() - 1)
+        if (bottomRow() == tableSize.height() - 1)
             return false;
         return loadedTableOuterRect.bottom() < fillRect.bottom() - cellSpacing.height();
     }
@@ -806,19 +794,19 @@ bool QQuickTableViewPrivate::canUnloadTableEdge(Qt::Edge tableEdge, const QRectF
     // they are needed as anchor point for further layouting.
     switch (tableEdge) {
     case Qt::LeftEdge:
-        if (loadedTable.width() <= 1)
+        if (loadedColumns.count() <= 1)
             return false;
         return loadedTableInnerRect.left() <= fillRect.left();
     case Qt::RightEdge:
-        if (loadedTable.width() <= 1)
+        if (loadedColumns.count() <= 1)
             return false;
         return loadedTableInnerRect.right() >= fillRect.right();
     case Qt::TopEdge:
-        if (loadedTable.height() <= 1)
+        if (loadedRows.count() <= 1)
             return false;
         return loadedTableInnerRect.top() <= fillRect.top();
     case Qt::BottomEdge:
-        if (loadedTable.height() <= 1)
+        if (loadedRows.count() <= 1)
             return false;
         return loadedTableInnerRect.bottom() >= fillRect.bottom();
     }
@@ -864,8 +852,10 @@ qreal QQuickTableViewPrivate::sizeHintForColumn(int column)
 {
     // Find the widest cell in the column, and return its width
     qreal columnWidth = 0;
-    for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row)
+    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
+        const int row = r.key();
         columnWidth = qMax(columnWidth, cellWidth(QPoint(column, row)));
+    }
 
     return columnWidth;
 }
@@ -874,8 +864,10 @@ qreal QQuickTableViewPrivate::sizeHintForRow(int row)
 {
     // Find the highest cell in the row, and return its height
     qreal rowHeight = 0;
-    for (int column = loadedTable.left(); column <= loadedTable.right(); ++column)
+    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+        const int column = c.key();
         rowHeight = qMax(rowHeight, cellHeight(QPoint(column, row)));
+    }
 
     return rowHeight;
 }
@@ -902,7 +894,6 @@ void QQuickTableViewPrivate::calculateTableSize()
 
 qreal QQuickTableViewPrivate::resolveColumnWidth(int column)
 {
-    Q_TABLEVIEW_ASSERT(column >= loadedTable.left() && column <= loadedTable.right(), column);
     qreal columnWidth = -1;
 
     if (!columnWidthProvider.isUndefined()) {
@@ -948,7 +939,6 @@ qreal QQuickTableViewPrivate::resolveColumnWidth(int column)
 
 qreal QQuickTableViewPrivate::resolveRowHeight(int row)
 {
-    Q_TABLEVIEW_ASSERT(row >= loadedTable.top() && row <= loadedTable.bottom(), row);
     qreal rowHeight = -1;
 
     if (!rowHeightProvider.isUndefined()) {
@@ -1011,11 +1001,13 @@ void QQuickTableViewPrivate::relayoutTableItems()
     qreal nextColumnX = loadedTableOuterRect.x();
     qreal nextRowY = loadedTableOuterRect.y();
 
-    for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
+    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+        const int column = c.key();
         // Adjust the geometry of all cells in the current column
         const qreal width = resolveColumnWidth(column);
 
-        for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
+        for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
+            const int row = r.key();
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
             geometry.moveLeft(nextColumnX);
@@ -1026,11 +1018,13 @@ void QQuickTableViewPrivate::relayoutTableItems()
         nextColumnX += width + cellSpacing.width();
     }
 
-    for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
+    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
+        const int row = r.key();
         // Adjust the geometry of all cells in the current row
         const qreal height = resolveRowHeight(row);
 
-        for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
+        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+            const int column = c.key();
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
             geometry.moveTop(nextRowY);
@@ -1042,8 +1036,10 @@ void QQuickTableViewPrivate::relayoutTableItems()
     }
 
     if (Q_UNLIKELY(lcTableViewDelegateLifecycle().isDebugEnabled())) {
-        for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
-            for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
+        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+            const int column = c.key();
+            for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
+                const int row = r.key();
                 QPoint cell = QPoint(column, row);
                 qCDebug(lcTableViewDelegateLifecycle()) << "relayout item:" << cell << loadedTableItem(cell)->geometry();
             }
@@ -1053,11 +1049,12 @@ void QQuickTableViewPrivate::relayoutTableItems()
 
 void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
 {
-    int column = (tableEdge == Qt::LeftEdge) ? loadedTable.left() : loadedTable.right();
+    int column = (tableEdge == Qt::LeftEdge) ? leftColumn() : rightColumn();
     QPoint neighbourDirection = (tableEdge == Qt::LeftEdge) ? kRight : kLeft;
     qreal width = resolveColumnWidth(column);
 
-    for (int row = loadedTable.top(); row <= loadedTable.bottom(); ++row) {
+    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
+        const int row = r.key();
         auto fxTableItem = loadedTableItem(QPoint(column, row));
         auto const neighbourItem = itemNextTo(fxTableItem, neighbourDirection);
 
@@ -1080,11 +1077,12 @@ void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
 
 void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 {
-    int row = (tableEdge == Qt::TopEdge) ? loadedTable.top() : loadedTable.bottom();
+    int row = (tableEdge == Qt::TopEdge) ? topRow() : bottomRow();
     QPoint neighbourDirection = (tableEdge == Qt::TopEdge) ? kDown : kUp;
     qreal height = resolveRowHeight(row);
 
-    for (int column = loadedTable.left(); column <= loadedTable.right(); ++column) {
+    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+        const int column = c.key();
         auto fxTableItem = loadedTableItem(QPoint(column, row));
         auto const neighbourItem = itemNextTo(fxTableItem, neighbourDirection);
 
@@ -1232,14 +1230,14 @@ void QQuickTableViewPrivate::processRebuildTable()
                           && reusableFlag == QQmlTableInstanceModel::Reusable);
 
     if (rebuildState == RebuildState::PreloadColumns) {
-        if (preload && loadedTable.right() < tableSize.width() - 1)
+        if (preload && rightColumn() < tableSize.width() - 1)
             loadEdge(Qt::RightEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
     }
 
     if (rebuildState == RebuildState::PreloadRows) {
-        if (preload && loadedTable.bottom() < tableSize.height() - 1)
+        if (preload && bottomRow() < tableSize.height() - 1)
             loadEdge(Qt::BottomEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
@@ -1289,7 +1287,7 @@ void QQuickTableViewPrivate::beginRebuildTable()
             topLeft.ry() = qBound(0, newRow, tableSize.height() - 1);
             topLeftPos.ry() = topLeft.y() * (averageEdgeSize.height() + cellSpacing.height());
         } else {
-            topLeft.ry() = qBound(0, loadedTable.topLeft().y(), tableSize.height() - 1);
+            topLeft.ry() = qBound(0, topRow(), tableSize.height() - 1);
             topLeftPos.ry() = loadedTableOuterRect.topLeft().y();
         }
         if (rebuildOptions & RebuildOption::CalculateNewTopLeftColumn) {
@@ -1297,14 +1295,15 @@ void QQuickTableViewPrivate::beginRebuildTable()
             topLeft.rx() = qBound(0, newColumn, tableSize.width() - 1);
             topLeftPos.rx() = topLeft.x() * (averageEdgeSize.width() + cellSpacing.width());
         } else {
-            topLeft.rx() = qBound(0, loadedTable.topLeft().x(), tableSize.width() - 1);
+            topLeft.rx() = qBound(0, leftColumn(), tableSize.width() - 1);
             topLeftPos.rx() = loadedTableOuterRect.topLeft().x();
         }
     } else {
         Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
     }
 
-    loadedTable = QRect();
+    loadedColumns.clear();
+    loadedRows.clear();
     loadedTableOuterRect = QRect();
     loadedTableInnerRect = QRect();
     contentSizeBenchMarkPoint = QPoint(-1, -1);
@@ -1351,15 +1350,44 @@ void QQuickTableViewPrivate::loadInitialTopLeftItem(const QPoint &cell, const QP
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
 {
-    unloadItems(rectangleEdge(loadedTable, edge));
-    loadedTable = expandedRect(loadedTable, edge, -1);
+    qCDebug(lcTableViewDelegateLifecycle) << edge;
+
+    switch (edge) {
+    case Qt::LeftEdge:
+    case Qt::RightEdge: {
+        const int column = edge == Qt::LeftEdge ? leftColumn() : rightColumn();
+        unloadItems(QLine(column, topRow(), column, bottomRow()));
+        loadedColumns.remove(column);
+        break; }
+    case Qt::TopEdge:
+    case Qt::BottomEdge: {
+        const int row = edge == Qt::TopEdge ? topRow() : bottomRow();
+        unloadItems(QLine(leftColumn(), row, rightColumn(), row));
+        loadedRows.remove(row);
+        break; }
+    }
+
     syncLoadedTableRectFromLoadedTable();
     qCDebug(lcTableViewDelegateLifecycle) << tableLayoutToString();
 }
 
 void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode)
 {
-    QLine cellsToLoad = rectangleEdge(expandedRect(loadedTable, edge, 1), edge);
+    const int edgeIndex = nextVisibleEdgeIndexAroundLoadedTable(edge);
+    qCDebug(lcTableViewDelegateLifecycle) << edge << edgeIndex;
+    QLine cellsToLoad;
+
+    switch (edge) {
+    case Qt::LeftEdge:
+    case Qt::RightEdge:
+        cellsToLoad = QLine(edgeIndex, topRow(), edgeIndex, bottomRow());
+        break;
+    case Qt::TopEdge:
+    case Qt::BottomEdge:
+        cellsToLoad = QLine(leftColumn(), edgeIndex, rightColumn(), edgeIndex);
+        break;
+    }
+
     loadRequest.begin(cellsToLoad, edge, incubationMode);
     processLoadRequest();
 }
@@ -1446,8 +1474,8 @@ void QQuickTableViewPrivate::drainReusePoolAfterLoadRequest()
     // in with varying sizes, causing some items not to be resued immediately), we multiply the
     // value by 2. Note that we also add an extra +1 to the column count, because the number of
     // visible columns will fluctuate between +1/-1 while flicking.
-    const int w = loadedTable.width();
-    const int h = loadedTable.height();
+    const int w = loadedColumns.count();
+    const int h = loadedRows.count();
     const int minTime = int(std::ceil(w > h ? qreal(w + 1) / h : qreal(h + 1) / w));
     const int maxTime = minTime * 2;
     tableModel->drainReusableItemsPool(maxTime);
@@ -1596,6 +1624,12 @@ void QQuickTableViewPrivate::syncRebuildOptions()
     rebuildOptions = scheduledRebuildOptions;
     scheduledRebuildOptions = RebuildOption::None;
     rebuildScheduled = false;
+
+    if (loadedItems.isEmpty()) {
+        // If we have no items from before, we cannot just rebuild the viewport, but need
+        // to rebuild everything, since we have no top-left loaded item to start from.
+        rebuildOptions.setFlag(RebuildOption::All);
+    }
 }
 
 void QQuickTableViewPrivate::syncDelegate()
