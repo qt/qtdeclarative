@@ -99,7 +99,7 @@ QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
 */
 void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 {
-    if (m_minimumScale == minimumScale)
+    if (qFuzzyCompare(m_minimumScale, minimumScale))
         return;
 
     m_minimumScale = minimumScale;
@@ -114,7 +114,7 @@ void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 */
 void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 {
-    if (m_maximumScale == maximumScale)
+    if (qFuzzyCompare(m_maximumScale, maximumScale))
         return;
 
     m_maximumScale = maximumScale;
@@ -129,7 +129,7 @@ void QQuickPinchHandler::setMaximumScale(qreal maximumScale)
 */
 void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 {
-    if (m_minimumRotation == minimumRotation)
+    if (qFuzzyCompare(m_minimumRotation, minimumRotation))
         return;
 
     m_minimumRotation = minimumRotation;
@@ -144,7 +144,7 @@ void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 */
 void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 {
-    if (m_maximumRotation == maximumRotation)
+    if (qFuzzyCompare(m_maximumRotation, maximumRotation))
         return;
 
     m_maximumRotation = maximumRotation;
@@ -158,7 +158,7 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 */
 void QQuickPinchHandler::setMinimumX(qreal minX)
 {
-    if (m_minimumX == minX)
+    if (qFuzzyCompare(m_minimumX, minX))
         return;
     m_minimumX = minX;
     emit minimumXChanged();
@@ -171,7 +171,7 @@ void QQuickPinchHandler::setMinimumX(qreal minX)
 */
 void QQuickPinchHandler::setMaximumX(qreal maxX)
 {
-    if (m_maximumX == maxX)
+    if (qFuzzyCompare(m_maximumX, maxX))
         return;
     m_maximumX = maxX;
     emit maximumXChanged();
@@ -184,7 +184,7 @@ void QQuickPinchHandler::setMaximumX(qreal maxX)
 */
 void QQuickPinchHandler::setMinimumY(qreal minY)
 {
-    if (m_minimumY == minY)
+    if (qFuzzyCompare(m_minimumY, minY))
         return;
     m_minimumY = minY;
     emit minimumYChanged();
@@ -197,7 +197,7 @@ void QQuickPinchHandler::setMinimumY(qreal minY)
 */
 void QQuickPinchHandler::setMaximumY(qreal maxY)
 {
-    if (m_maximumY == maxY)
+    if (qFuzzyCompare(m_maximumY, maxY))
         return;
     m_maximumY = maxY;
     emit maximumYChanged();
@@ -258,10 +258,10 @@ void QQuickPinchHandler::onActiveChanged()
             m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
             m_startRotation = t->rotation();
             QVector3D xformOrigin(t->transformOriginPoint());
-            m_startMatrix.translate(t->x(), t->y());
+            m_startMatrix.translate(float(t->x()), float(t->y()));
             m_startMatrix.translate(xformOrigin);
-            m_startMatrix.scale(m_startScale);
-            m_startMatrix.rotate(m_startRotation, 0, 0, -1);
+            m_startMatrix.scale(float(m_startScale));
+            m_startMatrix.rotate(float(m_startRotation), 0, 0, -1);
             m_startMatrix.translate(-xformOrigin);
         } else {
             m_startScale = m_accumulatedScale;
@@ -377,9 +377,9 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                     QVector2D centroidRelativeMovement = currentCentroidRelativePosition - pressCentroidRelativePosition;
                     accumulatedMovementMagnitude += centroidRelativeMovement.length();
 
-                    accumulatedCentroidDistance += pressCentroidRelativePosition.length();
+                    accumulatedCentroidDistance += qreal(pressCentroidRelativePosition.length());
                     if (event->isPressEvent())
-                        m_accumulatedStartCentroidDistance += (QVector2D(point->scenePressPosition()) - pressCentroid).length();
+                        m_accumulatedStartCentroidDistance += qreal((QVector2D(point->scenePressPosition()) - pressCentroid).length());
                 } else {
                     setPassiveGrab(point);
                 }
@@ -400,7 +400,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             if (!yAxis()->enabled())
                 avgDrag.setY(0);
 
-            const qreal centroidMovementDelta = (currentCentroid - pressCentroid).length();
+            const qreal centroidMovementDelta = qreal((currentCentroid - pressCentroid).length());
 
             qreal distanceToCentroidDelta = qAbs(accumulatedCentroidDistance - m_accumulatedStartCentroidDistance); // Used to detect scale
             if (numberOfPointsDraggedOverThreshold >= 1) {
@@ -456,8 +456,8 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
 
         const QVector3D centroidParentVector(centroidParentPos);
         mat.translate(centroidParentVector);
-        mat.rotate(m_activeRotation, 0, 0, 1);
-        mat.scale(m_activeScale);
+        mat.rotate(float(m_activeRotation), 0, 0, 1);
+        mat.scale(float(m_activeScale));
         mat.translate(-centroidParentVector);
         mat.translate(QVector3D(m_activeTranslation));
 
@@ -470,11 +470,11 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
         else
-            pos.rx() -= m_activeTranslation.x();
+            pos.rx() -= qreal(m_activeTranslation.x());
         if (yAxis()->enabled())
             pos.setY(qBound(yAxis()->minimum(), pos.y(), yAxis()->maximum()));
         else
-            pos.ry() -= m_activeTranslation.y();
+            pos.ry() -= qreal(m_activeTranslation.y());
 
         target()->setPosition(pos);
         target()->setRotation(rotation);
