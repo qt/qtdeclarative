@@ -39,6 +39,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -133,11 +134,25 @@ void tst_QQuickStyle::configurationFile()
 
     qputenv("QT_QUICK_CONTROLS_CONF", testFile(fileName).toLocal8Bit());
 
-    loadControls();
+    // Load a control. The import causes the configuration file to be read.
+    QQmlEngine engine;
+    QQmlComponent labelComponent(&engine);
+    labelComponent.setData("import QtQuick 2.0; import QtQuick.Controls 2.12; Label {}", QUrl());
+
+    QScopedPointer<QObject> object(labelComponent.create());
+    QVERIFY2(!object.isNull(), qPrintable(labelComponent.errorString()));
 
     QCOMPARE(QQuickStyle::name(), expectedStyle);
     if (!expectedPath.isEmpty())
         QCOMPARE(QQuickStyle::path(), expectedPath);
+
+    // Test that fonts and palettes specified in configuration files are respected.
+    QQuickLabel *label = qobject_cast<QQuickLabel *>(object.data());
+    QVERIFY(label);
+    // Make it small so that there's less possibility for the default/system
+    // pixel size to match it and give us false positives.
+    QCOMPARE(label->font().pixelSize(), 3);
+    QCOMPARE(label->palette().windowText(), Qt::red);
 }
 
 void tst_QQuickStyle::commandLineArgument()
