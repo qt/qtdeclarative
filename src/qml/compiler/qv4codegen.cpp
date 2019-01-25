@@ -3339,7 +3339,6 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-    BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
     {
         auto cleanup = [ast, iterator, iteratorDone, this]() {
@@ -3397,12 +3396,10 @@ bool Codegen::visit(ForEachStatement *ast)
         next.done = iteratorDone.stackSlot();
         bytecodeGenerator->addInstruction(next);
         bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
-        bytecodeGenerator->jump().link(done);
-
         end.link();
+        // all execution paths need to end up here (normal loop exit, break, and exceptions) in
+        // order to reset the unwind handler, and to close the iterator in calse of an for-of loop.
     }
-
-    done.link();
 
     return false;
 }
