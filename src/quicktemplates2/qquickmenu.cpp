@@ -468,10 +468,12 @@ void QQuickMenuPrivate::onItemTriggered()
     if (!item)
         return;
 
-    if (QQuickMenu *subMenu = item->subMenu())
-        subMenu->popup(subMenu->itemAt(0));
-    else
+    if (QQuickMenu *subMenu = item->subMenu()) {
+        auto subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+        subMenu->popup(subMenuPrivate->firstEnabledMenuItem());
+    } else {
         q->dismiss();
+    }
 }
 
 void QQuickMenuPrivate::onItemActiveFocusChanged()
@@ -619,6 +621,22 @@ bool QQuickMenuPrivate::activatePreviousItem()
         return true;
     }
     return false;
+}
+
+QQuickMenuItem *QQuickMenuPrivate::firstEnabledMenuItem() const
+{
+    for (int i = 0; i < contentModel->count(); ++i) {
+        QQuickItem *item = itemAt(i);
+        if (!item || !item->isEnabled())
+            continue;
+
+        QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
+        if (!menuItem)
+            continue;
+
+        return menuItem;
+    }
+    return nullptr;
 }
 
 void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
@@ -1419,7 +1437,8 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
             }
         } else {
             if (QQuickMenu *subMenu = d->currentSubMenu()) {
-                subMenu->popup(subMenu->itemAt(0));
+                auto subMenuPrivate = QQuickMenuPrivate::get(subMenu);
+                subMenu->popup(subMenuPrivate->firstEnabledMenuItem());
                 event->accept();
             }
         }
