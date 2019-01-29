@@ -39,7 +39,7 @@
 
 #include "qv4qobjectwrapper_p.h"
 
-#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlstaticmetaobject_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlbinding_p.h>

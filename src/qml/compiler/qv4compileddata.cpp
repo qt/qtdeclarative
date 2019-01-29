@@ -46,7 +46,6 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4regexpobject_p.h>
 #include <private/qv4regexp_p.h>
-#include <private/qqmlpropertycache_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4vme_moth_p.h>

@@ -45,7 +45,6 @@
 #include <QDebug>
 
 #include <private/qqmlengine_p.h>
-#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 

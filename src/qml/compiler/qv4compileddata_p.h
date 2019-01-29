@@ -66,7 +66,7 @@
 #include <private/qqmljsastfwd_p.h>
 #ifndef V4_BOOTSTRAP
 #include <private/qqmltypenamecache_p.h>
-#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlpropertycachevector_p.h>
 #include "private/qintrusivelist_p.h"
 #endif
 
@@ -76,7 +76,6 @@ QT_BEGIN_NAMESPACE
 #define QV4_DATA_STRUCTURE_VERSION 0x1b
 
 class QIODevice;
-class QQmlPropertyCache;
 class QQmlPropertyData;
 class QQmlTypeNameCache;
 class QQmlScriptData;

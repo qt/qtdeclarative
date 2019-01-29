@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
+#ifndef QQMLENUMVALUE_P_H
+#define QQMLENUMVALUE_P_H
 
 //
 //  W A R N I N G
@@ -51,33 +51,18 @@
 // We mean it.
 //
 
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
+struct QQmlEnumValue
 {
-public:
-    QQmlListReferencePrivate();
-
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
-
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
-
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
-    }
+    QQmlEnumValue() {}
+    QQmlEnumValue(const QString &n, int v) : namedValue(n), value(v) {}
+    QString namedValue;
+    int value = -1;
 };
-
 
 QT_END_NAMESPACE
 
-#endif // QQMLLIST_P_H
+#endif // QQMLENUMVALUE_P_H

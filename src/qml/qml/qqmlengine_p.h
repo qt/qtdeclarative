@@ -62,7 +62,6 @@
 #include "qqmlcontext_p.h"
 #include "qqmlexpression.h"
 #include "qqmlproperty_p.h"
-#include "qqmlpropertycache_p.h"
 #include "qqmlmetatype_p.h"
 #include <private/qintrusivelist_p.h>
 #include <private/qrecyclepool_p.h>
@@ -101,6 +100,7 @@ class QDir;
 class QQmlIncubator;
 class QQmlProfiler;
 class QQmlPropertyCapture;
+class QQmlMetaObject;
 
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h

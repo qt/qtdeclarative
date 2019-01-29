@@ -163,7 +163,6 @@ public:
 
 struct QQmlMetaTypeData;
 class QHashedCStringRef;
-class QQmlPropertyCache;
 class Q_QML_PRIVATE_EXPORT QQmlType
 {
 public:

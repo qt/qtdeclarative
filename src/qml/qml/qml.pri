@@ -21,7 +21,10 @@ SOURCES += \
     $$PWD/qqmlvaluetype.cpp \
     $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
+    $$PWD/qqmlmetaobject.cpp \
     $$PWD/qqmlnotifier.cpp \
+    $$PWD/qqmlobjectorgadget.cpp \
+    $$PWD/qqmlstaticmetaobject.cpp \
     $$PWD/qqmltypenotavailable.cpp \
     $$PWD/qqmltypenamecache.cpp \
     $$PWD/qqmlscriptstring.cpp \
@@ -81,9 +84,18 @@ HEADERS += \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlvaluetype_p.h \
     $$PWD/qqmlcleanup_p.h \
+    $$PWD/qqmlenumdata_p.h \
+    $$PWD/qqmlenumvalue_p.h \
     $$PWD/qqmlpropertycache_p.h \
+    $$PWD/qqmlpropertycachemethodarguments_p.h \
+    $$PWD/qqmlpropertycachevector_p.h \
+    $$PWD/qqmlpropertydata_p.h \
     $$PWD/qqmlpropertyindex_p.h \
+    $$PWD/qqmlpropertyrawdata_p.h \
+    $$PWD/qqmlmetaobject_p.h \
     $$PWD/qqmlnotifier_p.h \
+    $$PWD/qqmlobjectorgadget_p.h \
+    $$PWD/qqmlstaticmetaobject_p.h \
     $$PWD/qqmltypenotavailable_p.h \
     $$PWD/qqmltypenamecache_p.h \
     $$PWD/qqmlscriptstring.h \

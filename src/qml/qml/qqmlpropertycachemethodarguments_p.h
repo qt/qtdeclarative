@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
+#ifndef QQMLPROPERTYCACHEMETODARGUMENTS_P_H
+#define QQMLPROPERTYCACHEMETODARGUMENTS_P_H
 
 //
 //  W A R N I N G
@@ -51,33 +51,27 @@
 // We mean it.
 //
 
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include <QtCore/qlist.h>
+#include <QtCore/qbytearray.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
+class QString;
+class QQmlPropertyCacheMethodArguments
 {
 public:
-    QQmlListReferencePrivate();
+    QQmlPropertyCacheMethodArguments *next;
 
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
+    //for signal handler rewrites
+    QString *signalParameterStringForJS;
+    int parameterError:1;
+    int argumentsValid:1;
 
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
+    QList<QByteArray> *names;
 
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
-    }
+    int arguments[1];
 };
-
 
 QT_END_NAMESPACE
 
-#endif // QQMLLIST_P_H
+#endif // QQMLPROPERTYCACHEMETODARGUMENTS_P_H

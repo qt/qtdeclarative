@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
+#ifndef QQMLSTATICMETAOBJECT_P_H
+#define QQMLSTATICMETAOBJECT_P_H
 
 //
 //  W A R N I N G
@@ -51,33 +51,18 @@
 // We mean it.
 //
 
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include <private/qqmlobjectorgadget_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
-{
+class QQmlStaticMetaObject : public QQmlObjectOrGadget {
 public:
-    QQmlListReferencePrivate();
-
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
-
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
-
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
-    }
+    QQmlStaticMetaObject(const QMetaObject* metaObject)
+        : QQmlObjectOrGadget(metaObject)
+    {}
+    int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
 };
-
 
 QT_END_NAMESPACE
 
-#endif // QQMLLIST_P_H
+#endif // QQMLSTATICMETAOBJECT_P_H

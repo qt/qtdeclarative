@@ -65,7 +65,6 @@
 
 #include "qqmlguard_p.h"
 #include "qqmlcontext_p.h"
-#include "qqmlpropertycache_p.h"
 
 #include <private/qv8engine_p.h>
 #include <private/qflagpointer_p.h>

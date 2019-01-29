@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
+#ifndef QQMLOBJECTORGADGET_P_H
+#define QQMLOBJECTORGADGET_P_H
 
 //
 //  W A R N I N G
@@ -51,33 +51,33 @@
 // We mean it.
 //
 
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include <private/qqmlmetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
+class QQmlObjectOrGadget: public QQmlMetaObject
 {
 public:
-    QQmlListReferencePrivate();
+    QQmlObjectOrGadget(QObject *obj)
+        : QQmlMetaObject(obj),
+        ptr(obj)
+    {}
+    QQmlObjectOrGadget(QQmlPropertyCache *propertyCache, void *gadget)
+        : QQmlMetaObject(propertyCache)
+        , ptr(gadget)
+    {}
 
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
+    void metacall(QMetaObject::Call type, int index, void **argv) const;
 
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
+private:
+    QBiPointer<QObject, void> ptr;
 
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
-    }
+protected:
+    QQmlObjectOrGadget(const QMetaObject* metaObject)
+        : QQmlMetaObject(metaObject)
+    {}
 };
-
 
 QT_END_NAMESPACE
 
-#endif // QQMLLIST_P_H
+#endif // QQMLOBJECTORGADGET_P_H

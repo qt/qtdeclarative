@@ -57,7 +57,6 @@
 #include <QtCore/qhash.h>
 #include <private/qhashedstring_p.h>
 #include <private/qqmldata_p.h>
-#include <private/qqmlpropertycache_p.h>
 #include <private/qintrusivelist_p.h>
 
 #include <private/qv4value_p.h>

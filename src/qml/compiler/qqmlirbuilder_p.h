@@ -60,10 +60,6 @@
 #include <QTextStream>
 #include <QCoreApplication>
 
-#ifndef V4_BOOTSTRAP
-#include <private/qqmlpropertycache_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyCache;

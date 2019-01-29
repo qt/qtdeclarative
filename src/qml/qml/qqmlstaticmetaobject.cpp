@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,47 +37,15 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include "qqmlstaticmetaobject_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
+int *QQmlStaticMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
+                                                     QByteArray *unknownTypeError) const
 {
-public:
-    QQmlListReferencePrivate();
-
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
-
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
-
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
-    }
-};
-
+    QMetaMethod m = _m.asT2()->constructor(index);
+    return methodParameterTypes(m, dummy, unknownTypeError);
+}
 
 QT_END_NAMESPACE
-
-#endif // QQMLLIST_P_H

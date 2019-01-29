@@ -52,6 +52,7 @@
 
 #include <private/qqmlvaluetype_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlmetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
 

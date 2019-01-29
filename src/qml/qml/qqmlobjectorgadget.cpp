@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,47 +37,24 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLLIST_P_H
-#define QQMLLIST_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmllist.h"
-#include "qqmlmetaobject_p.h"
+#include "qqmlobjectorgadget_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQmlListReferencePrivate
+void QQmlObjectOrGadget::metacall(QMetaObject::Call type, int index, void **argv) const
 {
-public:
-    QQmlListReferencePrivate();
-
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
-
-    QPointer<QObject> object;
-    QQmlMetaObject elementType;
-    QQmlListProperty<QObject> property;
-    int propertyType;
-
-    void addref();
-    void release();
-    int refCount;
-
-    static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
-        return ref->d;
+    if (ptr.isNull()) {
+        const QMetaObject *metaObject = _m.asT2();
+        metaObject->d.static_metacall(nullptr, type, index, argv);
     }
-};
-
+    else if (ptr.isT1()) {
+        QMetaObject::metacall(ptr.asT1(), type, index, argv);
+    }
+    else {
+        const QMetaObject *metaObject = _m.asT1()->metaObject();
+        QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(type, &metaObject, &index);
+        metaObject->d.static_metacall(reinterpret_cast<QObject*>(ptr.asT2()), type, index, argv);
+    }
+}
 
 QT_END_NAMESPACE
-
-#endif // QQMLLIST_P_H

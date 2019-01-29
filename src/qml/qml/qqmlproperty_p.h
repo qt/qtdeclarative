@@ -56,7 +56,8 @@
 
 #include <private/qobject_p.h>
 #include <private/qtqmlglobal_p.h>
-#include <private/qqmlpropertycache_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmlcontext_p.h>
 #include <private/qqmlboundsignalexpressionpointer_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -64,6 +65,7 @@ QT_BEGIN_NAMESPACE
 class QQmlContext;
 class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
+class QQmlMetaObject;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
 {
