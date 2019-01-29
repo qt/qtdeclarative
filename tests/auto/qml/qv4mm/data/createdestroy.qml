@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,59 +26,35 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtTest 1.1
+import QtQml 2.2
 
-Item {
-    id: root
+QtObject {
+    property int creations: 0
+    property int destructions: 0
+    property int iterations: 0
 
-    width: 100
-    height: 62
-
-    Rectangle {
-        id: rect
-        anchors.fill: parent
-        color: "red"
-        visible: false
+    property Component itemComponent: Component {
+        QtObject {
+            property var parent;
+            Component.onCompleted: ++parent.creations
+            Component.onDestruction: ++parent.destructions
+        }
     }
 
-    Component {
-        id: component;
-        ShaderEffectSource { anchors.fill: parent }
-    }
-
-    property var source: undefined;
-
-    Timer {
-        id: timer
-        interval: 100
+    property QtObject item: null;
+    property Timer timer: Timer {
         running: true
+        repeat: true
+        interval: 1
         onTriggered: {
-            var source = component.createObject();
-            source.sourceItem = rect;
-            source.parent = root;
-            root.source = source;
+            if (parent.iterations === 100) {
+                item = null;
+                running = false;
+            } else {
+                ++parent.iterations;
+                item = itemComponent.createObject(null, { parent : parent });
+            }
+            gc();
         }
-    }
-
-    TestCase {
-        id: testcase
-        name: "shadersource-dynamic-shadersource"
-        when: root.source != undefined
-
-        function test_endresult() {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
-                skip("grabImage does not work on offscreen/minimal platforms");
-
-            if ((Qt.platform.pluginName === "xcb"))
-                skip("grabImage crashes on the xcb platform");
-
-            var image = grabImage(root);
-            compare(image.red(0,0), 255);
-            compare(image.green(0,0), 0);
-            compare(image.blue(0,0), 0);
-        }
-
     }
 }

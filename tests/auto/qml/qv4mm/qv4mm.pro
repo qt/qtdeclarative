@@ -1,6 +1,10 @@
 CONFIG += testcase
 TARGET = tst_qv4mm
-osx:CONFIG -= app_bundle
+include (../../shared/util.pri)
+
+macos:CONFIG -= app_bundle
+
+TESTDATA = data/*
 
 SOURCES += tst_qv4mm.cpp
 

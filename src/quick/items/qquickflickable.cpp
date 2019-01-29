@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -60,6 +60,8 @@
 #include <cmath>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
 
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
@@ -1897,6 +1899,8 @@ void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObjec
 {
     if (QQuickItem *i = qmlobject_cast<QQuickItem *>(o)) {
         i->setParentItem(static_cast<QQuickFlickablePrivate*>(prop->data)->contentItem);
+    } else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+        static_cast<QQuickFlickablePrivate*>(prop->data)->addPointerHandler(pointerHandler);
     } else {
         o->setParent(prop->object); // XXX todo - do we want this?
     }
@@ -2354,6 +2358,14 @@ void QQuickFlickablePrivate::cancelInteraction()
         if (!isViewMoving())
             q->movementEnding();
     }
+}
+
+void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
+{
+    Q_Q(const QQuickFlickable);
+    qCDebug(lcHandlerParent) << "reparenting handler" << h << "to contentItem of" << q;
+    h->setParent(contentItem);
+    QQuickItemPrivate::get(contentItem)->addPointerHandler(h);
 }
 
 /*!

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,59 +26,61 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtTest 1.1
+import QtQuick 2.12
 
 Item {
     id: root
+    width: 400; height: 400
 
-    width: 100
-    height: 62
+    PointHandler {
+        id: ph1
+        objectName: "ph1"
 
-    Rectangle {
-        id: rect
-        anchors.fill: parent
-        color: "red"
-        visible: false
-    }
-
-    Component {
-        id: component;
-        ShaderEffectSource { anchors.fill: parent }
-    }
-
-    property var source: undefined;
-
-    Timer {
-        id: timer
-        interval: 100
-        running: true
-        onTriggered: {
-            var source = component.createObject();
-            source.sourceItem = rect;
-            source.parent = root;
-            root.source = source;
+        target: Rectangle {
+            parent: root
+            visible: ph1.active
+            x: ph1.point.position.x - width / 2
+            y: ph1.point.position.y - height / 2
+            width: 140
+            height: width
+            radius: width / 2
+            color: "orange"
+            opacity: 0.3
         }
     }
 
-    TestCase {
-        id: testcase
-        name: "shadersource-dynamic-shadersource"
-        when: root.source != undefined
+    PointHandler {
+        id: ph2
+        objectName: "ph2"
 
-        function test_endresult() {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
-                skip("grabImage does not work on offscreen/minimal platforms");
-
-            if ((Qt.platform.pluginName === "xcb"))
-                skip("grabImage crashes on the xcb platform");
-
-            var image = grabImage(root);
-            compare(image.red(0,0), 255);
-            compare(image.green(0,0), 0);
-            compare(image.blue(0,0), 0);
+        target: Rectangle {
+            parent: root
+            visible: ph2.active
+            x: ph2.point.position.x - width / 2
+            y: ph2.point.position.y - height / 2
+            width: 140
+            height: width
+            radius: width / 2
+            color: "orange"
+            opacity: 0.3
         }
+    }
 
+    PointHandler {
+        id: ph3
+        objectName: "ph3"
+
+        target: Rectangle {
+            parent: root
+            visible: ph3.active
+            x: ph3.point.position.x - width / 2
+            y: ph3.point.position.y - height / 2
+            width: 140
+            height: width
+            radius: width / 2
+            color: "orange"
+            opacity: 0.3
+        }
     }
 }
+

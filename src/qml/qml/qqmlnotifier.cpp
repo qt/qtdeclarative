@@ -90,24 +90,20 @@ void QQmlNotifier::emitNotify(QQmlNotifierEndpoint *endpoint, void **a)
         NotifyListTraversalData &data = stack[i];
 
         if (!data.endpoint->isNotifying()) {
-            data.originalSenderPtr = data.endpoint->senderPtr;
+            data.endpoint->startNotifying(&data.originalSenderPtr);
             data.disconnectWatch = &data.originalSenderPtr;
-            data.endpoint->senderPtr = qintptr(data.disconnectWatch) | 0x1;
         } else {
             data.disconnectWatch = (qintptr *)(data.endpoint->senderPtr & ~0x1);
         }
     }
 
     while (--i >= 0) {
-        const NotifyListTraversalData &data = stack.at(i);
+        NotifyListTraversalData &data = stack[i];
         if (*data.disconnectWatch) {
-
             Q_ASSERT(QQmlNotifier_callbacks[data.endpoint->callback]);
             QQmlNotifier_callbacks[data.endpoint->callback](data.endpoint, a);
-
             if (data.disconnectWatch == &data.originalSenderPtr && data.originalSenderPtr) {
-                // End of notifying, restore values
-                data.endpoint->senderPtr = data.originalSenderPtr;
+                data.endpoint->stopNotifying(&data.originalSenderPtr);
             }
         }
     }
@@ -137,7 +133,7 @@ void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine
                qPrintable(engineName));
     }
 
-    senderPtr = qintptr(source);
+    setSender(qintptr(source));
     this->sourceSignal = sourceSignal;
     QQmlPropertyPrivate::flushSignal(source, sourceSignal);
     QQmlData *ddata = QQmlData::get(source, true);

@@ -33,9 +33,11 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/private/qquickitemview_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
+#include <QtQuick/private/qquicktableview_p.h>
 #include <qpa/qwindowsysteminterface.h>
 
 #include <private/qquickwindow_p.h>
@@ -75,6 +77,8 @@ private slots:
     void mouseDragFlickableBehindItemWithHandlers_data();
     void mouseDragFlickableBehindItemWithHandlers();
     void touchDragSliderAndFlickable();
+    void touchAndDragHandlerOnFlickable_data();
+    void touchAndDragHandlerOnFlickable();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -649,6 +653,140 @@ void tst_FlickableInterop::touchDragSliderAndFlickable()
 
     // Release
     touchSeq.release(1, p1, window).release(2, p2, window).commit();
+}
+
+void tst_FlickableInterop::touchAndDragHandlerOnFlickable_data()
+{
+    QTest::addColumn<QByteArray>("qmlFile");
+    QTest::addColumn<bool>("pressDelay");
+    QTest::addColumn<bool>("targetNull");
+    QTest::newRow("tapOnFlickable") << QByteArray("tapOnFlickable.qml") << false << false;
+    QTest::newRow("tapOnList") << QByteArray("tapOnList.qml") << false << false;
+    QTest::newRow("tapOnTable") << QByteArray("tapOnTable.qml") << false << false;
+    QTest::newRow("dragOnFlickable") << QByteArray("dragOnFlickable.qml") << false << false;
+    QTest::newRow("dragOnList") << QByteArray("dragOnList.qml") << false << false;
+    QTest::newRow("dragOnTable") << QByteArray("dragOnTable.qml") << false << false;
+    QTest::newRow("tapDelayOnFlickable") << QByteArray("tapOnFlickable.qml") << true << false;
+    QTest::newRow("tapDelayOnList") << QByteArray("tapOnList.qml") << true << false;
+    QTest::newRow("tapDelayOnTable") << QByteArray("tapOnTable.qml") << true << false;
+    QTest::newRow("dragDelayOnFlickable") << QByteArray("dragOnFlickable.qml") << true << false;
+    QTest::newRow("dragDelayOnList") << QByteArray("dragOnList.qml") << true << false;
+    QTest::newRow("dragDelayOnTable") << QByteArray("dragOnTable.qml") << true << false;
+    QTest::newRow("tapOnFlickableWithNullTargets") << QByteArray("tapOnFlickable.qml") << false << true;
+    QTest::newRow("tapOnListWithNullTargets") << QByteArray("tapOnList.qml") << false << true;
+    QTest::newRow("tapOnTableWithNullTargets") << QByteArray("tapOnTable.qml") << false << true;
+    QTest::newRow("dragOnFlickableWithNullTargets") << QByteArray("dragOnFlickable.qml") << false << true;
+    QTest::newRow("dragOnListWithNullTargets") << QByteArray("dragOnList.qml") << false << true;
+    QTest::newRow("dragOnTableWithNullTargets") << QByteArray("dragOnTable.qml") << false << true;
+    QTest::newRow("tapDelayOnFlickableWithNullTargets") << QByteArray("tapOnFlickable.qml") << true << true;
+    QTest::newRow("tapDelayOnListWithNullTargets") << QByteArray("tapOnList.qml") << true << true;
+    QTest::newRow("tapDelayOnTableWithNullTargets") << QByteArray("tapOnTable.qml") << true << true;
+    QTest::newRow("dragDelayOnFlickableWithNullTargets") << QByteArray("dragOnFlickable.qml") << true << true;
+    QTest::newRow("dragDelayOnListWithNullTargets") << QByteArray("dragOnList.qml") << true << true;
+    QTest::newRow("dragDelayOnTableWithNullTargets") << QByteArray("dragOnTable.qml") << true << true;
+}
+
+void tst_FlickableInterop::touchAndDragHandlerOnFlickable()
+{
+    QFETCH(QByteArray, qmlFile);
+    QFETCH(bool, pressDelay);
+    QFETCH(bool, targetNull);
+
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, qmlFile.constData());
+    QQuickView * window = windowPtr.data();
+    QQuickFlickable *flickable = qmlobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable);
+    flickable->setPressDelay(pressDelay ? 5000 : 0);
+    QQuickItem *delegate = nullptr;
+    if (QQuickItemView *itemView = qmlobject_cast<QQuickItemView *>(flickable))
+        delegate = itemView->currentItem();
+    if (!delegate)
+        delegate = flickable->property("delegateUnderTest").value<QQuickItem*>();
+    QQuickItem *button = delegate ? delegate->findChild<QQuickItem*>("button")
+                                  : flickable->findChild<QQuickItem*>("button");
+    if (!button)
+        button = flickable->property("buttonUnderTest").value<QQuickItem*>();
+    QVERIFY(button);
+    QQuickPointerHandler *buttonHandler = button->findChild<QQuickPointerHandler*>();
+    QVERIFY(buttonHandler);
+    QQuickTapHandler *buttonTapHandler = qmlobject_cast<QQuickTapHandler *>(buttonHandler);
+    QQuickDragHandler *buttonDragHandler = qmlobject_cast<QQuickDragHandler *>(buttonHandler);
+    QQuickPointerHandler *delegateHandler = delegate ? delegate->findChild<QQuickPointerHandler*>() : nullptr;
+    QQuickPointerHandler *contentItemHandler = flickable->findChild<QQuickPointerHandler*>();
+    QVERIFY(contentItemHandler);
+    // a handler declared directly in a Flickable (or item view) must actually be a child of the contentItem,
+    // just as Items declared inside are (QTBUG-71918 and QTBUG-73035)
+    QCOMPARE(contentItemHandler->parentItem(), flickable->contentItem());
+    if (targetNull) {
+        buttonHandler->setTarget(nullptr);
+        if (delegateHandler)
+            delegateHandler->setTarget(nullptr);
+        contentItemHandler->setTarget(nullptr);
+    }
+
+    // Drag one finger on the Flickable and make sure it flicks
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
+    QPoint p1(780, 460);
+    touchSeq.press(1, p1, window).commit();
+    QQuickTouchUtils::flush(window);
+    for (int i = 0; i < 4; ++i) {
+        p1 -= QPoint(dragThreshold, dragThreshold);
+        touchSeq.move(1, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+    }
+    if (!(buttonDragHandler && !pressDelay))
+        QVERIFY(flickable->contentY() >= dragThreshold);
+    if (buttonTapHandler)
+        QCOMPARE(buttonTapHandler->isPressed(), false);
+    touchSeq.release(1, p1, window).commit();
+    QQuickTouchUtils::flush(window);
+
+    // Drag one finger on the delegate and make sure Flickable flicks
+    if (delegate) {
+        flickable->setContentY(0);
+        QTRY_COMPARE(flickable->isMoving(), false);
+        QVERIFY(delegateHandler);
+        QQuickTapHandler *delegateTapHandler = qmlobject_cast<QQuickTapHandler *>(delegateHandler);
+        p1 = button->mapToScene(button->clipRect().bottomRight()).toPoint() + QPoint(10, 0);
+        touchSeq.press(1, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+        if (delegateTapHandler && !pressDelay)
+            QCOMPARE(delegateTapHandler->isPressed(), true);
+        for (int i = 0; i < 4; ++i) {
+            p1 -= QPoint(dragThreshold, dragThreshold);
+            touchSeq.move(1, p1, window).commit();
+            QQuickTouchUtils::flush(window);
+            if (i > 1)
+                QTRY_VERIFY(delegateHandler->active() || flickable->isMoving());
+        }
+        if (!(buttonDragHandler && !pressDelay))
+            QVERIFY(flickable->contentY() > 0);
+        if (delegateTapHandler)
+            QCOMPARE(delegateTapHandler->isPressed(), false);
+        touchSeq.release(1, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+    }
+
+    // Drag one finger on the button and make sure Flickable flicks
+    flickable->setContentY(0);
+    QTRY_COMPARE(flickable->isMoving(), false);
+    p1 = button->mapToScene(button->clipRect().center()).toPoint();
+    touchSeq.press(1, p1, window).commit();
+    QQuickTouchUtils::flush(window);
+    if (buttonTapHandler && !pressDelay)
+        QTRY_COMPARE(buttonTapHandler->isPressed(), true);
+    for (int i = 0; i < 4; ++i) {
+        p1 -= QPoint(dragThreshold, dragThreshold);
+        touchSeq.move(1, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+    }
+    if (!(buttonDragHandler && !pressDelay))
+        QVERIFY(flickable->contentY() > 0);
+    if (buttonTapHandler)
+        QCOMPARE(buttonTapHandler->isPressed(), false);
+    touchSeq.release(1, p1, window).commit();
 }
 
 QTEST_MAIN(tst_FlickableInterop)

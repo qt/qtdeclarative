@@ -7557,7 +7557,8 @@ public:
 
 private slots:
     void reviveFirstWeakReference() {
-        *resultPtr = weakRef->valueRef() && weakRef->isNullOrUndefined();
+        // weakRef is not required to be undefined here. The gc can clear it later.
+        *resultPtr = weakRef->valueRef();
         if (!*resultPtr)
             return;
         QV4::ExecutionEngine *v4 = qmlEngine(this)->handle();

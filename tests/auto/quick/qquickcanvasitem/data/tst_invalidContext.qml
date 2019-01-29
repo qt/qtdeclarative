@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,59 +26,61 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.4
 import QtTest 1.1
 
 Item {
     id: root
-
-    width: 100
-    height: 62
-
-    Rectangle {
-        id: rect
-        anchors.fill: parent
-        color: "red"
-        visible: false
-    }
-
-    Component {
-        id: component;
-        ShaderEffectSource { anchors.fill: parent }
-    }
-
-    property var source: undefined;
+    width: 500
+    height: 500
 
     Timer {
         id: timer
-        interval: 100
+        interval: 1
         running: true
+        repeat: true
         onTriggered: {
-            var source = component.createObject();
-            source.sourceItem = rect;
-            source.parent = root;
-            root.source = source;
+            if (myCanvas.parent == root) {
+                myCanvas.parent = null
+            } else {
+                myCanvas.parent = root
+            }
+        }
+    }
+
+    Canvas {
+        id: myCanvas
+        anchors.fill: parent
+        property var paintContext: null
+
+        function paint() {
+            paintContext.fillStyle = Qt.rgba(1, 0, 0, 1);
+            paintContext.fillRect(0, 0, width, height);
+            requestAnimationFrame(paint);
+        }
+
+        onAvailableChanged: {
+            if (available) {
+                paintContext = getContext("2d")
+                requestAnimationFrame(paint);
+            }
         }
     }
 
     TestCase {
-        id: testcase
-        name: "shadersource-dynamic-shadersource"
-        when: root.source != undefined
+        name: "invalidContext"
+        when: myCanvas.parent === null && myCanvas.paintContext !== null
 
-        function test_endresult() {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
-                skip("grabImage does not work on offscreen/minimal platforms");
-
-            if ((Qt.platform.pluginName === "xcb"))
-                skip("grabImage crashes on the xcb platform");
-
-            var image = grabImage(root);
-            compare(image.red(0,0), 255);
-            compare(image.green(0,0), 0);
-            compare(image.blue(0,0), 0);
+        function test_paintContextInvalid() {
+            verify(myCanvas.paintContext);
+            var caught = false;
+            try {
+                console.log(myCanvas.paintContext.fillStyle);
+            } catch(e) {
+                caught = true;
+            }
+            verify(caught);
+            timer.running = false
         }
-
     }
 }

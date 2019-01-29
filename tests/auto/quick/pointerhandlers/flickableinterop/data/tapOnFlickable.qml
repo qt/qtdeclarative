@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Gunnar Sletta <gunnar@sletta.org>
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,59 +26,32 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtTest 1.1
+import QtQuick 2.12
 
-Item {
+Flickable {
     id: root
-
-    width: 100
-    height: 62
+    objectName: "root"
+    width: 800
+    height: 480
+    contentWidth: 1000
+    contentHeight: 600
 
     Rectangle {
-        id: rect
-        anchors.fill: parent
-        color: "red"
-        visible: false
-    }
-
-    Component {
-        id: component;
-        ShaderEffectSource { anchors.fill: parent }
-    }
-
-    property var source: undefined;
-
-    Timer {
-        id: timer
-        interval: 100
-        running: true
-        onTriggered: {
-            var source = component.createObject();
-            source.sourceItem = rect;
-            source.parent = root;
-            root.source = source;
+        objectName: "button"
+        anchors.centerIn: parent
+        border.color: "tomato"
+        border.width: 10
+        color: innerTap.pressed ? "wheat" : "transparent"
+        width: 100
+        height: 100
+        TapHandler {
+            id: innerTap
+            objectName: "buttonTap"
         }
     }
 
-    TestCase {
-        id: testcase
-        name: "shadersource-dynamic-shadersource"
-        when: root.source != undefined
-
-        function test_endresult() {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
-                skip("grabImage does not work on offscreen/minimal platforms");
-
-            if ((Qt.platform.pluginName === "xcb"))
-                skip("grabImage crashes on the xcb platform");
-
-            var image = grabImage(root);
-            compare(image.red(0,0), 255);
-            compare(image.green(0,0), 0);
-            compare(image.blue(0,0), 0);
-        }
-
+    TapHandler {
+        objectName: "contentItemTap"
     }
+    Component.onCompleted: contentItem.objectName = "Flickable's contentItem"
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qquicktaphandler_p.h"
+#include "qquicksinglepointhandler_p_p.h"
 #include <qpa/qplatformtheme.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
@@ -312,8 +313,14 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
             // on release, ungrab after emitting changed signals
             setExclusiveGrab(point, press);
         }
-        if (cancel)
+        if (cancel) {
             emit canceled(point);
+            setExclusiveGrab(point, false);
+            // In case there is a filtering parent (Flickable), we should not give up the passive grab,
+            // so that it can continue to filter future events.
+            d_func()->reset();
+            emit pointChanged();
+        }
     }
 }
 

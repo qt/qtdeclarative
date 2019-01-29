@@ -3051,7 +3051,7 @@ public:
         UNUSED_PARAM(size);
 #endif
 #elif OS(INTEGRITY)
-        ManageCaches((Address)code, size, ACCESS_DST_COHERENT);
+        ManageCaches((Address)code, size, ACCESS_DST_SYNC);
 #else
 #error "The cacheFlush support is missing on this platform."
 #endif

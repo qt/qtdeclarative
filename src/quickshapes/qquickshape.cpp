@@ -53,16 +53,16 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
 
 /*!
-    \qmlmodule QtQuick.Shapes 1.11
+    \qmlmodule QtQuick.Shapes 1.\QtMinorVersion
     \title Qt Quick Shapes QML Types
     \ingroup qmlmodules
     \brief Provides QML types for drawing stroked and filled shapes.
 
     To use the types in this module, import the module with the following line:
 
-    \badcode
-    import QtQuick.Shapes 1.11
-    \endcode
+    \qml \QtMinorVersion
+    import QtQuick.Shapes 1.\1
+    \endqml
 */
 
 QQuickShapeStrokeFillParams::QQuickShapeStrokeFillParams()

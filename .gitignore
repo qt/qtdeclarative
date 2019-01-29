@@ -43,6 +43,8 @@ Makefile*
 *.prl
 *.app
 *.pro.user
+# e.g. .pro.user.4.8-pre1
+*.pro.user.*
 *.qmlproject.user
 *.gcov
 bin/Qt*.dll

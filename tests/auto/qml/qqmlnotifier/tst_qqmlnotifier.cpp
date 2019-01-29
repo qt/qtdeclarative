@@ -32,6 +32,9 @@
 #include <QQmlContext>
 #include <qqml.h>
 #include <QMetaMethod>
+#if QT_CONFIG(process)
+#include <QProcess>
+#endif
 
 #include "../../shared/util.h"
 
@@ -155,6 +158,8 @@ private slots:
     void propertyChange();
     void disconnectOnDestroy();
     void lotsOfBindings();
+
+    void deleteFromHandler();
 
 private:
     void createObjects();
@@ -333,6 +338,33 @@ void tst_qqmlnotifier::lotsOfBindings()
 
     qDeleteAll(components);
     delete e;
+}
+
+void tst_qqmlnotifier::deleteFromHandler()
+{
+#if !QT_CONFIG(process)
+    QSKIP("Need QProcess support to test qFatal.");
+#else
+    if (qEnvironmentVariableIsSet("TST_QQMLNOTIFIER_DO_CRASH")) {
+        QQmlEngine engine;
+        QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
+        QPointer<QObject> mess = component.create();
+        QObject::connect(mess, &QObject::objectNameChanged, [&]() { delete mess; });
+        QTRY_VERIFY(mess.isNull()); // BANG!
+    } else {
+        QProcess process;
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert("TST_QQMLNOTIFIER_DO_CRASH", "bang");
+        process.setProcessEnvironment(env);
+        process.setProgram(QCoreApplication::applicationFilePath());
+        process.setArguments({"deleteFromHandler"});
+        process.start();
+        QTRY_COMPARE(process.exitStatus(), QProcess::CrashExit);
+        const QByteArray output = process.readAllStandardOutput();
+        QVERIFY(output.contains("QFATAL"));
+        QVERIFY(output.contains("destroyed while one of its QML signal handlers is in progress"));
+    }
+#endif
 }
 
 QTEST_MAIN(tst_qqmlnotifier)

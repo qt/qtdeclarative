@@ -973,8 +973,6 @@ void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPt
         // signal before we start sweeping the heap
         if (QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>())
             qobjectWrapper->destroyObject(lastSweep);
-
-        (*it) = Value::undefinedValue();
     }
 
     // remove objects from weak maps and sets

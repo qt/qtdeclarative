@@ -1398,9 +1398,6 @@ Item {
         If \a item is obscured by another item, or a child of \a item occupies
         that position, then the event will be delivered to the other item instead.
 
-        Note: this method does not imply a drop action, to make a drop, an additional
-        mouseRelease(item, x + dx, y + dy) is needed.
-
         \sa mousePress(), mouseClick(), mouseDoubleClick(), mouseDoubleClickSequence(), mouseMove(), mouseRelease(), mouseWheel()
     */
     function mouseDrag(item, x, y, dx, dy, button, modifiers, delay) {

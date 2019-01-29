@@ -3534,20 +3534,20 @@ public:
         CodeRef codeRef;
         if (compileMode == MatchOnly) {
             if (m_charSize == Char8) {
-                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT",
+                codeRef = FINALIZE_CODE(linkBuffer, "YarrJIT",
                                         "Match-only 8-bit regular expression");
                 codeBlock.set8BitCodeMatchOnly(codeRef);
             } else {
-                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT",
+                codeRef = FINALIZE_CODE(linkBuffer, "YarrJIT",
                                         "Match-only 16-bit regular expression");
                 codeBlock.set16BitCodeMatchOnly(codeRef);
             }
         } else {
             if (m_charSize == Char8) {
-                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT", "8-bit regular expression");
+                codeRef = FINALIZE_CODE(linkBuffer, "YarrJIT", "8-bit regular expression");
                 codeBlock.set8BitCode(codeRef);
             } else {
-                codeRef = FINALIZE_CODE(linkBuffer, "YarJIT", "16-bit regular expression");
+                codeRef = FINALIZE_CODE(linkBuffer, "YarrJIT", "16-bit regular expression");
                 codeBlock.set16BitCode(codeRef);
             }
         }

@@ -150,10 +150,9 @@ private:
     qreal m_startDistance = 0;
     QPointF m_startPos;
     qreal m_accumulatedStartCentroidDistance = 0;
-
     QVector<PointData> m_startAngles;
-    QMatrix4x4 m_startMatrix;
     QQuickMatrix4x4 m_transform;
+    QMatrix4x4 m_startMatrix;
 };
 
 QT_END_NAMESPACE

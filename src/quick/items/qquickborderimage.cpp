@@ -600,7 +600,7 @@ void QQuickBorderImagePrivate::calculateRects(const QQuickScaleGrid *border,
         if (borderTop + borderBottom > sourceSize.height() && borderTop < sourceSize.height())
             borderBottom = sourceSize.height() - borderTop;
         *innerSourceRect = QRectF(QPointF(borderLeft / qreal(sourceSize.width()),
-                                          borderTop * devicePixelRatio / qreal(sourceSize.height())),
+                                          borderTop / qreal(sourceSize.height())),
                                   QPointF((sourceSize.width() - borderRight) / qreal(sourceSize.width()),
                                           (sourceSize.height() - borderBottom) / qreal(sourceSize.height()))),
         *innerTargetRect = QRectF(border->left(),

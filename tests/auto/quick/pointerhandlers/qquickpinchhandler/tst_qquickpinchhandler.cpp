@@ -37,6 +37,8 @@
 #include "../../../shared/util.h"
 #include "../../shared/viewtestutil.h"
 
+Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
+
 class tst_QQuickPinchHandler: public QQmlDataTest
 {
     Q_OBJECT
@@ -49,6 +51,8 @@ private slots:
     void scale();
     void scaleThreeFingers();
     void pan();
+    void dragAxesEnabled_data();
+    void dragAxesEnabled();
     void retouch();
     void cancel();
     void transformedpinchHandler_data();
@@ -457,6 +461,82 @@ void tst_QQuickPinchHandler::pan()
     QTest::touchEvent(window, device).release(0, p0, window).release(1, p1, window);
     QQuickTouchUtils::flush(window);
     QVERIFY(!root->property("pinchActive").toBool());
+}
+
+void tst_QQuickPinchHandler::dragAxesEnabled_data()
+{
+    QTest::addColumn<bool>("xEnabled");
+    QTest::addColumn<bool>("yEnabled");
+
+    QTest::newRow("both enabled") << true << true;
+    QTest::newRow("x enabled") << true << false;
+    QTest::newRow("y enabled") << false << true;
+    QTest::newRow("both disabled") << false << false;
+}
+
+void tst_QQuickPinchHandler::dragAxesEnabled()
+{
+    QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
+    window->setSource(testFileUrl("pinchproperties.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject() != nullptr);
+    QQuickItem *blackRect = window->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(blackRect != nullptr);
+    QQuickPinchHandler *pinchHandler = blackRect->findChild<QQuickPinchHandler*>();
+    QVERIFY(pinchHandler != nullptr);
+
+    QFETCH(bool, xEnabled);
+    QFETCH(bool, yEnabled);
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    pinchHandler->xAxis()->setEnabled(xEnabled);
+    pinchHandler->yAxis()->setEnabled(yEnabled);
+    QPoint c = blackRect->mapToScene(blackRect->clipRect().center()).toPoint();
+    QPoint p0 = c - QPoint(0, dragThreshold);
+    QPoint p1 = c + QPoint(0, dragThreshold);
+    QPoint blackRectPos = blackRect->position().toPoint();
+
+    // press two points, one above the rectangle's center and one below
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window, device);
+    pinchSequence.press(0, p0, window).press(1, p1, window).commit();
+    QQuickTouchUtils::flush(window);
+
+    // expand the pinch vertically
+    p0 -= QPoint(0, dragThreshold);
+    p1 += QPoint(0, dragThreshold);
+    pinchSequence.move(0, p0, window).move(1, p1, window).commit();
+    for (int pi = 0; pi < 4; ++pi) {
+        p0 -= QPoint(0, dragThreshold);
+        p1 += QPoint(0, dragThreshold);
+        pinchSequence.move(0, p0, window).move(1, p1, window).commit();
+        QQuickTouchUtils::flush(window);
+        qCDebug(lcPointerTests) << pi << "active" << pinchHandler->active() << "pts" << p0 << p1
+                                << "centroid" << pinchHandler->centroid().scenePosition()
+                                << "rect pos" << blackRect->position() << "scale" << blackRect->scale();
+    }
+    QCOMPARE(pinchHandler->active(), true);
+    QVERIFY(blackRect->scale() >= 2.0);
+    // drag started, but we only did scaling without any translation
+    QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), c);
+    QCOMPARE(blackRect->position().toPoint().x(), blackRectPos.x());
+    QCOMPARE(blackRect->position().toPoint().y(), blackRectPos.y());
+
+    // drag diagonally
+    p0 += QPoint(150, 150);
+    p1 += QPoint(150, 150);
+    pinchSequence.move(0, p0, window).move(1, p1, window).commit();
+    QQuickTouchUtils::flush(window);
+    // the target should move if the xAxis is enabled, or stay in place if not
+    qCDebug(lcPointerTests) << "after diagonal drag: pts" << p0 << p1
+                            << "centroid" << pinchHandler->centroid().scenePosition()
+                            << "rect pos" << blackRect->position() << "scale" << blackRect->scale();
+    QCOMPARE(pinchHandler->centroid().scenePosition().toPoint(), QPoint(250, 250));
+    QCOMPARE(blackRect->position().toPoint().x(), xEnabled ? 140 : blackRectPos.x()); // because of xAxis.maximum
+    QCOMPARE(blackRect->position().toPoint().y(), yEnabled ? 170 : blackRectPos.y()); // because of yAxis.maximum
+
+    QTest::touchEvent(window, device).release(0, p0, window).release(1, p1, window);
+    QQuickTouchUtils::flush(window);
 }
 
 // test pinchHandler, release one point, touch again to continue pinchHandler

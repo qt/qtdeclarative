@@ -517,8 +517,8 @@ Texture::Texture(Atlas *atlas, const QRect &textureRect, const QImage &image)
     , m_nonatlas_texture(nullptr)
     , m_has_alpha(image.hasAlphaChannel())
 {
-    float w = atlas->size().width();
-    float h = atlas->size().height();
+    qreal w = atlas->size().width();
+    qreal h = atlas->size().height();
     QRect nopad = atlasSubRectWithoutPadding();
     m_texture_coords_rect = QRectF(nopad.x() / w,
                                    nopad.y() / h,
