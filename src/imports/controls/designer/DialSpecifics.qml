@@ -130,6 +130,19 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+
+            Label {
+                text: qsTr("Input Mode")
+                tooltip: qsTr("How the dial tracks movement.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.inputMode
+                    model: [ "Circular", "Horizontal", "Vertical" ]
+                    scope: "Dial"
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 
