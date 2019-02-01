@@ -43,6 +43,7 @@
 #include <private/qqmltypemodule_p_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypeloader_p.h>
+#include <private/qqmlextensionplugin_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmutex.h>
@@ -483,29 +484,203 @@ void QQmlMetaType::registerUndeletableType(const QQmlType &dtype)
     data->undeletableTypes.insert(dtype);
 }
 
-bool QQmlMetaType::namespaceContainsRegistrations(const QString &uri, int majorVersion)
+static bool namespaceContainsRegistrations(const QQmlMetaTypeData *data, const QString &uri,
+                                           int majorVersion)
 {
-    const QQmlMetaTypeDataPtr data;
-
     // Has any type previously been installed to this namespace?
     QHashedString nameSpace(uri);
-    for (const QQmlType &type : data->types)
+    for (const QQmlType &type : data->types) {
         if (type.module() == nameSpace && type.majorVersion() == majorVersion)
             return true;
+    }
 
     return false;
 }
 
-void QQmlMetaType::protectNamespace(const QString &uri)
+class QQmlMetaTypeRegistrationFailureRecorder
 {
+    Q_DISABLE_COPY_MOVE(QQmlMetaTypeRegistrationFailureRecorder)
+public:
+    QQmlMetaTypeRegistrationFailureRecorder(QQmlMetaTypeData *data, QStringList *failures)
+        : data(data)
+    {
+        data->setTypeRegistrationFailures(failures);
+    }
+
+    ~QQmlMetaTypeRegistrationFailureRecorder()
+    {
+        data->setTypeRegistrationFailures(nullptr);
+    }
+
+    QQmlMetaTypeData *data = nullptr;
+};
+
+
+bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePath,
+                                       const QString &uri, const QString &typeNamespace, int vmaj,
+                                       QList<QQmlError> *errors)
+{
+    QQmlTypesExtensionInterface *iface = qobject_cast<QQmlTypesExtensionInterface *>(instance);
+    if (!iface) {
+        if (errors) {
+            QQmlError error;
+            error.setDescription(QStringLiteral("Module loaded for URI '%1' does not implement "
+                                                "QQmlTypesExtensionInterface").arg(typeNamespace));
+            errors->prepend(error);
+        }
+        return false;
+    }
+
+    if (!typeNamespace.isEmpty() && typeNamespace != uri) {
+        // This is an 'identified' module
+        // The namespace for type registrations must match the URI for locating the module
+        if (errors) {
+            QQmlError error;
+            error.setDescription(
+                    QStringLiteral("Module namespace '%1' does not match import URI '%2'")
+                            .arg(typeNamespace).arg(uri));
+            errors->prepend(error);
+        }
+        return false;
+    }
+
+    QStringList failures;
     QQmlMetaTypeDataPtr data;
-    data->protectedNamespaces.insert(uri);
+    {
+        QQmlMetaTypeRegistrationFailureRecorder failureRecorder(data, &failures);
+        if (!typeNamespace.isEmpty()) {
+            // This is an 'identified' module
+            if (namespaceContainsRegistrations(data, typeNamespace, vmaj)) {
+                // Other modules have already installed to this namespace
+                if (errors) {
+                    QQmlError error;
+                    error.setDescription(QStringLiteral("Namespace '%1' has already been used "
+                                                        "for type registration")
+                                                 .arg(typeNamespace));
+                    errors->prepend(error);
+                }
+                return false;
+            }
+
+            data->protectedNamespaces.insert(uri);
+        } else {
+            // This is not an identified module - provide a warning
+            qWarning().nospace() << qPrintable(
+                    QStringLiteral("Module '%1' does not contain a module identifier directive - "
+                                   "it cannot be protected from external registrations.").arg(uri));
+        }
+
+        if (auto *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
+        // basepath should point to the directory of the module, not the plugin file itself:
+        QQmlExtensionPluginPrivate::get(plugin)->baseUrl
+                = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
+        }
+
+        data->typeRegistrationNamespace = typeNamespace;
+        const QByteArray bytes = uri.toUtf8();
+        const char *moduleId = bytes.constData();
+        iface->registerTypes(moduleId);
+        data->typeRegistrationNamespace.clear();
+    }
+
+    if (!failures.isEmpty()) {
+        if (errors) {
+            for (const QString &failure : qAsConst(failures)) {
+                QQmlError error;
+                error.setDescription(failure);
+                errors->prepend(error);
+            }
+        }
+        return false;
+    }
+
+    return true;
 }
 
-void QQmlMetaType::setTypeRegistrationNamespace(const QString &uri)
+/*
+    \internal
+
+    Fetches the QQmlType instance registered for \a urlString, creating a
+    registration for it if it is not already registered, using the associated
+    \a typeName, \a isCompositeSingleton, \a majorVersion and \a minorVersion
+    details.
+
+    Errors (if there are any) are placed into \a errors, if it is nonzero.
+    Otherwise errors are printed as warnings.
+*/
+QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
+                                  const QHashedStringRef &qualifiedType,
+                                  bool isCompositeSingleton, QList<QQmlError> *errors,
+                                  int majorVersion, int minorVersion)
 {
+    // ### unfortunate (costly) conversion
+    const QUrl url = QQmlTypeLoader::normalize(QUrl(urlString));
+
     QQmlMetaTypeDataPtr data;
-    data->typeRegistrationNamespace = uri;
+    QQmlType ret(data->urlToType.value(url));
+    if (ret.isValid() && ret.sourceUrl() == url)
+        return ret;
+
+    const int dot = qualifiedType.indexOf(QLatin1Char('.'));
+    const QString typeName = dot < 0
+            ? qualifiedType.toString()
+            : QString(qualifiedType.constData() + dot + 1, qualifiedType.length() - dot - 1);
+
+    QStringList failures;
+    QQmlMetaTypeRegistrationFailureRecorder failureRecorder(data, &failures);
+
+    // Register the type. Note that the URI parameters here are empty; for
+    // file type imports, we do not place them in a URI as we don't
+    // necessarily have a good and unique one (picture a library import,
+    // which may be found in multiple plugin locations on disk), but there
+    // are other reasons for this too.
+    //
+    // By not putting them in a URI, we prevent the types from being
+    // registered on a QQmlTypeModule; this is important, as once types are
+    // placed on there, they cannot be easily removed, meaning if the
+    // developer subsequently loads a different import (meaning different
+    // types) with the same URI (using, say, a different plugin path), it is
+    // very undesirable that we continue to associate the types from the
+    // "old" URI with that new module.
+    //
+    // Not having URIs also means that the types cannot be found by name
+    // etc, the only way to look them up is through QQmlImports -- for
+    // better or worse.
+    const QQmlType::RegistrationType registrationType = isCompositeSingleton
+            ? QQmlType::CompositeSingletonType
+            : QQmlType::CompositeType;
+    if (checkRegistration(registrationType, data, nullptr, typeName, majorVersion)) {
+        auto *priv = new QQmlTypePrivate(registrationType);
+        priv->elementName = typeName;
+        priv->version_maj = majorVersion;
+        priv->version_min = minorVersion;
+
+        if (isCompositeSingleton) {
+            priv->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+            priv->extraData.sd->singletonInstanceInfo->url = url;
+            priv->extraData.sd->singletonInstanceInfo->typeName = typeName;
+        } else {
+            priv->extraData.fd->url = url;
+        }
+
+        data->registerType(priv);
+        priv->refCount.deref();
+        addTypeToData(priv, data);
+        data->urlToType.insertMulti(url, priv);
+        return QQmlType(priv);
+    }
+
+    // This means that the type couldn't be found by URL, but could not be
+    // registered either, meaning we most likely were passed some kind of bad
+    // data.
+    if (errors) {
+        QQmlError error;
+        error.setDescription(failures.join('\n'));
+        errors->prepend(error);
+    } else {
+        qWarning("%s", failures.join('\n').toLatin1().constData());
+    }
+    return QQmlType();
 }
 
 QMutex *QQmlMetaType::typeRegistrationLock()
@@ -1092,18 +1267,6 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
     }
 
     return typeName;
-}
-
-void QQmlMetaType::startRecordingTypeRegFailures(QStringList *failures)
-{
-    QQmlMetaTypeDataPtr data;
-    data->startRecordingTypeRegFailures(failures);
-}
-
-void QQmlMetaType::stopRecordingTypeRegFailures()
-{
-    QQmlMetaTypeDataPtr data;
-    data->stopRecordingTypeRegFailures();
 }
 
 QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject *mo,

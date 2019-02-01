@@ -115,20 +115,21 @@ struct QQmlMetaTypeData
     QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
-    void startRecordingTypeRegFailures(QStringList *storage)
-    { typeRegistrationFailures = storage; }
-    void stopRecordingTypeRegFailures()
-    { startRecordingTypeRegFailures(nullptr); }
+    void setTypeRegistrationFailures(QStringList *failures)
+    {
+        m_typeRegistrationFailures = failures;
+    }
+
     void recordTypeRegFailure(const QString &message)
     {
-        if (typeRegistrationFailures)
-            typeRegistrationFailures->append(message);
+        if (m_typeRegistrationFailures)
+            m_typeRegistrationFailures->append(message);
         else
             qWarning("%s", message.toUtf8().constData());
     }
 
 private:
-    QStringList *typeRegistrationFailures = nullptr;
+    QStringList *m_typeRegistrationFailures = nullptr;
 };
 
 inline uint qHash(const QQmlMetaTypeData::VersionedUri &v)

@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlTypeModule;
 class QMutex;
+class QQmlError;
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
@@ -68,6 +69,12 @@ public:
     static QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &type);
     static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
+    static bool registerPluginTypes(QObject *instance, const QString &basePath,
+                                    const QString &uri, const QString &typeNamespace, int vmaj,
+                                    QList<QQmlError> *errors);
+    static QQmlType typeForUrl(const QString &urlString, const QHashedStringRef& typeName,
+                               bool isCompositeSingleton, QList<QQmlError> *errors,
+                               int majorVersion = -1, int minorVersion = -1);
 
     static void unregisterType(int type);
 
@@ -145,12 +152,6 @@ public:
     static void prependCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
     static void removeCachedUnitLookupFunction(QQmlPrivate::QmlUnitCacheLookupFunction handler);
 
-    static bool namespaceContainsRegistrations(const QString &, int majorVersion);
-
-    static void protectNamespace(const QString &);
-
-    static void setTypeRegistrationNamespace(const QString &);
-
     static QMutex *typeRegistrationLock();
 
     static QString prettyTypeName(const QObject *object);
@@ -170,9 +171,6 @@ public:
     static int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent);
     static int registerUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration);
     static void clearTypeRegistrations();
-
-    static void startRecordingTypeRegFailures(QStringList *failures);
-    static void stopRecordingTypeRegFailures();
 
     static QList<QQmlProxyMetaObject::ProxyData> proxyData(const QMetaObject *mo,
                                                            const QMetaObject *baseMetaObject,

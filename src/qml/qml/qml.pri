@@ -15,7 +15,6 @@ SOURCES += \
     $$PWD/qqmlvme.cpp \
     $$PWD/qqmlboundsignal.cpp \
     $$PWD/qqmlmetatype.cpp \
-    $$PWD/qqmlmetatyperegistrationfailurerecorder.cpp \
     $$PWD/qqmlmetatypedata.cpp \
     $$PWD/qqmlstringconverters.cpp \
     $$PWD/qqmltype.cpp \
@@ -78,7 +77,6 @@ HEADERS += \
     $$PWD/qqmlprivate.h \
     $$PWD/qqmlmetatype_p.h \
     $$PWD/qqmlmetatypedata_p.h \
-    $$PWD/qqmlmetatyperegistrationfailurerecorder_p.h \
     $$PWD/qqmltype_p.h \
     $$PWD/qqmltype_p_p.h \
     $$PWD/qqmltypemodule_p.h \
