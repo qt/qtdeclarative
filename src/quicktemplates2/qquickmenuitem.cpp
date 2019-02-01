@@ -147,6 +147,11 @@ void QQuickMenuItemPrivate::executeArrow(bool complete)
         quickCompleteDeferred(q, arrowName(), arrow);
 }
 
+bool QQuickMenuItemPrivate::acceptKeyClick(Qt::Key key) const
+{
+    return key == Qt::Key_Space || key == Qt::Key_Return || key == Qt::Key_Enter;
+}
+
 /*!
     \qmlsignal void QtQuick.Controls::MenuItem::triggered()
 

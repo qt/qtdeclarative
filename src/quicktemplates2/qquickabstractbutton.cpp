@@ -201,6 +201,11 @@ void QQuickAbstractButtonPrivate::handleUngrab()
     emit q->canceled();
 }
 
+bool QQuickAbstractButtonPrivate::acceptKeyClick(Qt::Key key) const
+{
+    return key == Qt::Key_Space;
+}
+
 bool QQuickAbstractButtonPrivate::isPressAndHoldConnected()
 {
     Q_Q(QQuickAbstractButton);
@@ -1029,7 +1034,7 @@ void QQuickAbstractButton::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::keyPressEvent(event);
-    if (event->key() == Qt::Key_Space) {
+    if (d->acceptKeyClick(static_cast<Qt::Key>(event->key()))) {
         d->setPressPoint(QPoint(qRound(width() / 2), qRound(height() / 2)));
         setPressed(true);
 
@@ -1045,7 +1050,7 @@ void QQuickAbstractButton::keyReleaseEvent(QKeyEvent *event)
 {
     Q_D(QQuickAbstractButton);
     QQuickControl::keyReleaseEvent(event);
-    if (event->key() == Qt::Key_Space) {
+    if (d->acceptKeyClick(static_cast<Qt::Key>(event->key()))) {
         setPressed(false);
 
         nextCheckState();
