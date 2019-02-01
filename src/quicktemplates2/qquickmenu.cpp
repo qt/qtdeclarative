@@ -602,7 +602,7 @@ bool QQuickMenuPrivate::activateNextItem()
     int count = contentModel->count();
     while (++index < count) {
         QQuickItem *item = itemAt(index);
-        if (!item || !item->activeFocusOnTab())
+        if (!item || !item->activeFocusOnTab() || !item->isEnabled())
             continue;
         setCurrentIndex(index, Qt::TabFocusReason);
         return true;
@@ -615,7 +615,7 @@ bool QQuickMenuPrivate::activatePreviousItem()
     int index = currentIndex;
     while (--index >= 0) {
         QQuickItem *item = itemAt(index);
-        if (!item || !item->activeFocusOnTab())
+        if (!item || !item->activeFocusOnTab() || !item->isEnabled())
             continue;
         setCurrentIndex(index, Qt::BacktabFocusReason);
         return true;

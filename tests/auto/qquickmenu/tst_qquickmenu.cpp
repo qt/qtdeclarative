@@ -68,6 +68,7 @@ private slots:
     void mouse();
     void pressAndHold();
     void contextMenuKeyboard();
+    void disabledMenuItemKeyNavigation();
     void mnemonics();
     void menuButton();
     void addItem();
@@ -393,6 +394,69 @@ void tst_QQuickMenu::contextMenuKeyboard()
 
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(visibleSpy.count(), 4);
+    QVERIFY(!menu->isVisible());
+}
+
+// QTBUG-70181
+void tst_QQuickMenu::disabledMenuItemKeyNavigation()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This platform only allows tab focus for text controls");
+
+    QQuickApplicationHelper helper(this, QLatin1String("disabledMenuItemKeyNavigation.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(firstItem);
+
+    QQuickMenuItem *secondItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(secondItem);
+
+    QQuickMenuItem *thirdItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
+    QVERIFY(thirdItem);
+
+    menu->setFocus(true);
+    menu->open();
+    QVERIFY(menu->isVisible());
+    QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
+    QCOMPARE(menu->currentIndex(), -1);
+
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(menu->currentIndex(), 0);
+
+    // Shouldn't be possible to give focus to a disabled menu item.
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
+    QVERIFY(thirdItem->hasActiveFocus());
+    QVERIFY(thirdItem->hasVisualFocus());
+    QVERIFY(thirdItem->isHighlighted());
+    QCOMPARE(thirdItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Escape);
     QVERIFY(!menu->isVisible());
 }
 
