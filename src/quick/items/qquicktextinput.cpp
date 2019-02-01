@@ -1242,6 +1242,12 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     d->updateDisplayText();
     updateCursorRectangle();
 
+    // If this control is used for password input, we want to minimize
+    // the possibility of string reallocation not to leak (parts of)
+    // the password.
+    if (d->m_echoMode != QQuickTextInput::Normal)
+        d->m_text.reserve(30);
+
     emit echoModeChanged(echoMode());
 }
 

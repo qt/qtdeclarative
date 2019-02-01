@@ -691,7 +691,7 @@ public:
     QQmlListProperty<Message> messages();
 
 private:
-    QList<Message *> messages;
+    QList<Message *> m_messages;
 };
 \endcode
 

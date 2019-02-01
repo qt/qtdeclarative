@@ -301,7 +301,7 @@ void tst_FlickableInterop::touchDragSlider()
 
     // Drag the slider in the allowed (vertical) direction
     tappedSpy.clear();
-    QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint();
+    QPoint p1 = knob->mapToScene(knob->clipRect().center()).toPoint() - QPoint(0, 8);
     QTest::touchEvent(window, touchDevice).press(1, p1, window);
     QQuickTouchUtils::flush(window);
     QTRY_VERIFY(slider->property("pressed").toBool());
@@ -343,12 +343,12 @@ void tst_FlickableInterop::mouseDragSlider_data()
     QTest::addColumn<bool>("expectedDragHandlerActive");
     QTest::addColumn<bool>("expectedFlickableMoving");
 
-    QTest::newRow("drag down on knob of knobSlider") <<         "knobSlider" << QPoint(0, 0) << QPoint(0, 1) << true << true << false;
+    QTest::newRow("drag down on knob of knobSlider") <<         "knobSlider" << QPoint(0, -8) << QPoint(0, 1) << true << true << false;
     QTest::newRow("drag sideways on knob of knobSlider") <<     "knobSlider" << QPoint(0, 0) << QPoint(1, 0) << true << false << true;
     QTest::newRow("drag down on groove of knobSlider") <<       "knobSlider" << QPoint(0, 20) << QPoint(0, 1) << false << false << true;
     QTest::newRow("drag sideways on groove of knobSlider") <<   "knobSlider" << QPoint(0, 20) << QPoint(1, 0) << false << false << true;
 
-    QTest::newRow("drag down on knob of grooveSlider") <<       "grooveSlider" << QPoint(0, 0) << QPoint(0, 1) << true << true << false;
+    QTest::newRow("drag down on knob of grooveSlider") <<       "grooveSlider" << QPoint(0, -8) << QPoint(0, 1) << true << true << false;
     QTest::newRow("drag sideways on knob of grooveSlider") <<   "grooveSlider" << QPoint(0, 0) << QPoint(1, 0) << true << false << true;
     QTest::newRow("drag down on groove of grooveSlider") <<     "grooveSlider" << QPoint(0, 20) << QPoint(0, 1) << false << true << false;
     QTest::newRow("drag sideways on groove of grooveSlider") << "grooveSlider" << QPoint(0, 20) << QPoint(1, 0) << false << false << true;
@@ -391,6 +391,10 @@ void tst_FlickableInterop::mouseDragSlider()
     QCOMPARE(slider->property("value").toInt(), 49);
     p1 += dragDirection; // one more pixel
     QTest::mouseMove(window, p1);
+    // After moving by the drag threshold, the point should still be inside the knob.
+    // However, QQuickTapHandler::wantsEventPoint() returns false because the drag threshold is exceeded.
+    // Therefore QQuickTapHandler::setPressed(false, true, point) is called: the active state is canceled.
+    QCOMPARE(slider->property("pressed").toBool(), false);
     QCOMPARE(drag->active(), expectedDragHandlerActive);
     // drag farther, to make sure the knob gets adjusted significantly
     p1 += QPoint(10 * dragDirection.x(), 10 * dragDirection.y());

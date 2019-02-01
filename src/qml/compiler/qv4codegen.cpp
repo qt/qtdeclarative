@@ -3341,7 +3341,6 @@ bool Codegen::visit(ForEachStatement *ast)
 
     BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-    BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
     {
         auto cleanup = [ast, iterator, iteratorDone, this]() {
@@ -3360,7 +3359,7 @@ bool Codegen::visit(ForEachStatement *ast)
         next.value = lhsValue.stackSlot();
         next.done = iteratorDone.stackSlot();
         bytecodeGenerator->addInstruction(next);
-        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(done);
+        bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(end);
 
         // each iteration gets it's own context, as per spec
         {
@@ -3401,10 +3400,9 @@ bool Codegen::visit(ForEachStatement *ast)
       error:
         end.link();
 
-        // ~ControlFlowLoop will be called here, which will generate unwind code when needed
+        // all execution paths need to end up here (normal loop exit, break, and exceptions) in
+        // order to reset the unwind handler, and to close the iterator in calse of an for-of loop.
     }
-
-    done.link();
 
     return false;
 }
@@ -3664,15 +3662,12 @@ void Codegen::handleTryCatch(TryStatement *ast)
 {
     Q_ASSERT(ast);
     RegisterScope scope(this);
-    BytecodeGenerator::Label noException = bytecodeGenerator->newLabel();
     {
         ControlFlowCatch catchFlow(this, ast->catchExpression);
         RegisterScope scope(this);
         TailCallBlocker blockTailCalls(this); // IMPORTANT: destruction will unblock tail calls before catch is generated
         statement(ast->statement);
-        bytecodeGenerator->jump().link(noException);
     }
-    noException.link();
 }
 
 void Codegen::handleTryFinally(TryStatement *ast)

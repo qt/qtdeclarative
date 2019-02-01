@@ -20,20 +20,17 @@ Module {
         Property { name: "fileName"; revision: 1; type: "string" }
         Method {
             name: "value"
-            revision: 1
             type: "QVariant"
             Parameter { name: "key"; type: "string" }
             Parameter { name: "defaultValue"; type: "QVariant" }
         }
         Method {
             name: "value"
-            revision: 1
             type: "QVariant"
             Parameter { name: "key"; type: "string" }
         }
         Method {
             name: "setValue"
-            revision: 1
             Parameter { name: "key"; type: "string" }
             Parameter { name: "value"; type: "QVariant" }
         }
