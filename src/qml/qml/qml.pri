@@ -1,4 +1,5 @@
 SOURCES += \
+    $$PWD/qqml.cpp \
     $$PWD/qqmlopenmetaobject.cpp \
     $$PWD/qqmlvmemetaobject.cpp \
     $$PWD/qqmlengine.cpp \
@@ -14,7 +15,12 @@ SOURCES += \
     $$PWD/qqmlvme.cpp \
     $$PWD/qqmlboundsignal.cpp \
     $$PWD/qqmlmetatype.cpp \
+    $$PWD/qqmlmetatyperegistrationfailurerecorder.cpp \
+    $$PWD/qqmlmetatypedata.cpp \
     $$PWD/qqmlstringconverters.cpp \
+    $$PWD/qqmltype.cpp \
+    $$PWD/qqmltypemodule.cpp \
+    $$PWD/qqmltypemoduleversion.cpp \
     $$PWD/qqmlparserstatus.cpp \
     $$PWD/qqmltypeloader.cpp \
     $$PWD/qqmlinfo.cpp \
@@ -71,6 +77,13 @@ HEADERS += \
     $$PWD/qqmlexpression_p.h \
     $$PWD/qqmlprivate.h \
     $$PWD/qqmlmetatype_p.h \
+    $$PWD/qqmlmetatypedata_p.h \
+    $$PWD/qqmlmetatyperegistrationfailurerecorder_p.h \
+    $$PWD/qqmltype_p.h \
+    $$PWD/qqmltype_p_p.h \
+    $$PWD/qqmltypemodule_p.h \
+    $$PWD/qqmltypemodule_p_p.h \
+    $$PWD/qqmltypemoduleversion_p.h \
     $$PWD/qqmlengine.h \
     $$PWD/qqmlcontext.h \
     $$PWD/qqmlexpression.h \

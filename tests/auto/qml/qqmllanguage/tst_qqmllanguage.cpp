@@ -3804,7 +3804,7 @@ void tst_qqmllanguage::scopedEnumsWithNameClash()
 {
     auto typeId = qmlRegisterUncreatableType<ScopedEnumsWithNameClash>("ScopedEnumsWithNameClashTest", 1, 0, "ScopedEnum", "Dummy reason");
     auto registryGuard = qScopeGuard([typeId]() {
-        qmlUnregisterType(typeId);
+        QQmlMetaType::unregisterType(typeId);
     });
 
     QQmlEngine engine;
@@ -3823,7 +3823,7 @@ void tst_qqmllanguage::scopedEnumsWithResolvedNameClash()
 {
     auto typeId = qmlRegisterUncreatableType<ScopedEnumsWithResolvedNameClash>("ScopedEnumsWithResolvedNameClashTest", 1, 0, "ScopedEnum", "Dummy reason");
     auto registryGuard = qScopeGuard([typeId]() {
-        qmlUnregisterType(typeId);
+        QQmlMetaType::unregisterType(typeId);
     });
 
     QQmlEngine engine;

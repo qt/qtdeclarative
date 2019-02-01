@@ -38,7 +38,6 @@
 ****************************************************************************/
 
 #include "qqmlvaluetype_p.h"
-#include "qqmlmetatype_p.h"
 
 #include <private/qqmlglobal_p.h>
 #include <QtCore/qdebug.h>

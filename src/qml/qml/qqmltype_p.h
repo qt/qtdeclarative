@@ -1,0 +1,222 @@
+/****************************************************************************
+**
+** Copyright (C) 2019 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the QtQml module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#ifndef QQMLTYPE_P_H
+#define QQMLTYPE_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qtqmlglobal_p.h>
+
+#include <QtQml/qqmlprivate.h>
+#include <QtQml/qjsvalue.h>
+
+#include <QtCore/qobject.h>
+
+QT_BEGIN_NAMESPACE
+
+struct QQmlMetaTypeData;
+class QHashedCStringRef;
+class QQmlTypePrivate;
+class QHashedString;
+class QHashedStringRef;
+class QQmlCustomParser;
+class QQmlEnginePrivate;
+class QQmlPropertyCache;
+
+namespace QV4 {
+struct String;
+}
+
+class Q_QML_PRIVATE_EXPORT QQmlType
+{
+public:
+    QQmlType();
+    QQmlType(const QQmlType &other);
+    QQmlType &operator =(const QQmlType &other);
+    explicit QQmlType(QQmlTypePrivate *priv);
+    ~QQmlType();
+
+    bool operator ==(const QQmlType &other) const {
+        return d == other.d;
+    }
+
+    bool isValid() const { return d != nullptr; }
+    const QQmlTypePrivate *key() const { return d; }
+
+    QByteArray typeName() const;
+    QString qmlTypeName() const;
+    QString elementName() const;
+
+    QHashedString module() const;
+    int majorVersion() const;
+    int minorVersion() const;
+
+    bool availableInVersion(int vmajor, int vminor) const;
+    bool availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const;
+
+    QObject *create() const;
+    void create(QObject **, void **, size_t) const;
+
+    typedef void (*CreateFunc)(void *);
+    CreateFunc createFunction() const;
+    QQmlCustomParser *customParser() const;
+
+    bool isCreatable() const;
+    typedef QObject *(*ExtensionFunc)(QObject *);
+    ExtensionFunc extensionFunction() const;
+    bool isExtendedType() const;
+    QString noCreationReason() const;
+
+    bool isSingleton() const;
+    bool isInterface() const;
+    bool isComposite() const;
+    bool isCompositeSingleton() const;
+
+    int typeId() const;
+    int qListTypeId() const;
+
+    const QMetaObject *metaObject() const;
+    const QMetaObject *baseMetaObject() const;
+    int metaObjectRevision() const;
+    bool containsRevisionedAttributes() const;
+
+    QQmlAttachedPropertiesFunc attachedPropertiesFunction(QQmlEnginePrivate *engine) const;
+    const QMetaObject *attachedPropertiesType(QQmlEnginePrivate *engine) const;
+    int attachedPropertiesId(QQmlEnginePrivate *engine) const;
+
+    int parserStatusCast() const;
+    const char *interfaceIId() const;
+    int propertyValueSourceCast() const;
+    int propertyValueInterceptorCast() const;
+
+    int index() const;
+
+    class Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
+    {
+    public:
+        SingletonInstanceInfo()
+            : scriptCallback(nullptr), qobjectCallback(nullptr), instanceMetaObject(nullptr) {}
+
+        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
+        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
+        const QMetaObject *instanceMetaObject;
+        QString typeName;
+        QUrl url; // used by composite singletons
+
+        void setQObjectApi(QQmlEngine *, QObject *);
+        QObject *qobjectApi(QQmlEngine *) const;
+        void setScriptApi(QQmlEngine *, const QJSValue &);
+        QJSValue scriptApi(QQmlEngine *) const;
+
+        void init(QQmlEngine *);
+        void destroy(QQmlEngine *);
+
+        QHash<QQmlEngine *, QJSValue> scriptApis;
+        QHash<QQmlEngine *, QObject *> qobjectApis;
+    };
+    SingletonInstanceInfo *singletonInstanceInfo() const;
+
+    QUrl sourceUrl() const;
+
+    int enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, bool *ok) const;
+    int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
+    int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+
+    int scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
+    int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
+
+    QQmlTypePrivate *priv() const { return d; }
+    static void refHandle(QQmlTypePrivate *priv);
+    static void derefHandle(QQmlTypePrivate *priv);
+    static int refCount(QQmlTypePrivate *priv);
+
+    enum RegistrationType {
+        CppType = 0,
+        SingletonType = 1,
+        InterfaceType = 2,
+        CompositeType = 3,
+        CompositeSingletonType = 4,
+        AnyRegistrationType = 255
+    };
+
+private:
+    QQmlType superType() const;
+    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
+    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
+    QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
+    friend class QQmlTypePrivate;
+
+    friend QString registrationTypeString(RegistrationType);
+    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
+    friend QQmlType registerType(const QQmlPrivate::RegisterType &);
+    friend QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
+    friend QQmlType registerInterface(const QQmlPrivate::RegisterInterface &);
+    friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
+    friend uint qHash(const QQmlType &t, uint seed);
+    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
+    friend class QQmlMetaType;
+
+    QQmlType(QQmlMetaTypeData *data, const QQmlPrivate::RegisterInterface &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterSingletonType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeType &);
+    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
+
+    QQmlTypePrivate *d;
+};
+
+inline uint qHash(const QQmlType &t, uint seed = 0) { return qHash(reinterpret_cast<quintptr>(t.d), seed); }
+
+QT_END_NAMESPACE
+
+#endif // QQMLTYPE_P_H

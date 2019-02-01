@@ -51,40 +51,35 @@
 // We mean it.
 //
 
-#include "qqml.h"
 #include <private/qtqmlglobal_p.h>
-
-#include <QtCore/qglobal.h>
-#include <QtCore/qvariant.h>
-#include <QtCore/qbitarray.h>
-#include <QtQml/qjsvalue.h>
+#include <private/qqmltype_p.h>
+#include <private/qqmlproxymetaobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlType;
-class QQmlEngine;
-class QQmlEnginePrivate;
-class QQmlCustomParser;
-class QQmlTypePrivate;
 class QQmlTypeModule;
-class QHashedString;
-class QHashedStringRef;
 class QMutex;
-class QQmlPropertyCache;
-class QQmlCompiledData;
-
-namespace QV4 { struct String; }
-
-void Q_QML_PRIVATE_EXPORT qmlUnregisterType(int type);
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
+    static QQmlType registerType(const QQmlPrivate::RegisterType &type);
+    static QQmlType registerInterface(const QQmlPrivate::RegisterInterface &type);
+    static QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &type);
     static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
 
+    static void unregisterType(int type);
+
     static void registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
     static void unregisterInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit);
+
+    static void registerModule(const char *uri, int versionMajor, int versionMinor);
+    static bool protectModule(const char *uri, int majVersion);
+
+    static int typeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
+
+    static void registerUndeletableType(const QQmlType &dtype);
 
     static QList<QString> qmlTypeNames();
     static QList<QQmlType> qmlTypes();
@@ -159,217 +154,35 @@ public:
     static QMutex *typeRegistrationLock();
 
     static QString prettyTypeName(const QObject *object);
-};
 
-struct QQmlMetaTypeData;
-class QHashedCStringRef;
-class Q_QML_PRIVATE_EXPORT QQmlType
-{
-public:
-    QQmlType();
-    QQmlType(const QQmlType &other);
-    QQmlType &operator =(const QQmlType &other);
-    explicit QQmlType(QQmlTypePrivate *priv);
-    ~QQmlType();
-
-    bool operator ==(const QQmlType &other) const {
-        return d == other.d;
+    template <typename QQmlTypeContainer>
+    static void removeQQmlTypePrivate(QQmlTypeContainer &container,
+                                      const QQmlTypePrivate *reference)
+    {
+        for (typename QQmlTypeContainer::iterator it = container.begin(); it != container.end();) {
+            if (*it == reference)
+                it = container.erase(it);
+            else
+                ++it;
+        }
     }
 
-    bool isValid() const { return d != nullptr; }
-    const QQmlTypePrivate *key() const { return d; }
+    static int registerAutoParentFunction(QQmlPrivate::RegisterAutoParent &autoparent);
+    static int registerUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration);
+    static void clearTypeRegistrations();
 
-    QByteArray typeName() const;
-    QString qmlTypeName() const;
-    QString elementName() const;
+    static void startRecordingTypeRegFailures(QStringList *failures);
+    static void stopRecordingTypeRegFailures();
 
-    QHashedString module() const;
-    int majorVersion() const;
-    int minorVersion() const;
+    static QList<QQmlProxyMetaObject::ProxyData> proxyData(const QMetaObject *mo,
+                                                           const QMetaObject *baseMetaObject,
+                                                           QMetaObject *lastMetaObject);
 
-    bool availableInVersion(int vmajor, int vminor) const;
-    bool availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const;
-
-    QObject *create() const;
-    void create(QObject **, void **, size_t) const;
-
-    typedef void (*CreateFunc)(void *);
-    CreateFunc createFunction() const;
-    QQmlCustomParser *customParser() const;
-
-    bool isCreatable() const;
-    typedef QObject *(*ExtensionFunc)(QObject *);
-    ExtensionFunc extensionFunction() const;
-    bool isExtendedType() const;
-    QString noCreationReason() const;
-
-    bool isSingleton() const;
-    bool isInterface() const;
-    bool isComposite() const;
-    bool isCompositeSingleton() const;
-
-    int typeId() const;
-    int qListTypeId() const;
-
-    const QMetaObject *metaObject() const;
-    const QMetaObject *baseMetaObject() const;
-    int metaObjectRevision() const;
-    bool containsRevisionedAttributes() const;
-
-    QQmlAttachedPropertiesFunc attachedPropertiesFunction(QQmlEnginePrivate *engine) const;
-    const QMetaObject *attachedPropertiesType(QQmlEnginePrivate *engine) const;
-    int attachedPropertiesId(QQmlEnginePrivate *engine) const;
-
-    int parserStatusCast() const;
-    const char *interfaceIId() const;
-    int propertyValueSourceCast() const;
-    int propertyValueInterceptorCast() const;
-
-    int index() const;
-
-    class Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
-    {
-    public:
-        SingletonInstanceInfo()
-            : scriptCallback(nullptr), qobjectCallback(nullptr), instanceMetaObject(nullptr) {}
-
-        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *);
-        QObject *(*qobjectCallback)(QQmlEngine *, QJSEngine *);
-        const QMetaObject *instanceMetaObject;
-        QString typeName;
-        QUrl url; // used by composite singletons
-
-        void setQObjectApi(QQmlEngine *, QObject *);
-        QObject *qobjectApi(QQmlEngine *) const;
-        void setScriptApi(QQmlEngine *, const QJSValue &);
-        QJSValue scriptApi(QQmlEngine *) const;
-
-        void init(QQmlEngine *);
-        void destroy(QQmlEngine *);
-
-        QHash<QQmlEngine *, QJSValue> scriptApis;
-        QHash<QQmlEngine *, QObject *> qobjectApis;
-    };
-    SingletonInstanceInfo *singletonInstanceInfo() const;
-
-    QUrl sourceUrl() const;
-
-    int enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, bool *ok) const;
-    int enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &, bool *ok) const;
-    int enumValue(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
-
-    int scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *, bool *ok) const;
-    int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
-
-    QQmlTypePrivate *priv() const { return d; }
-    static void refHandle(QQmlTypePrivate *priv);
-    static void derefHandle(QQmlTypePrivate *priv);
-    static int refCount(QQmlTypePrivate *priv);
-
-    enum RegistrationType {
-        CppType = 0,
-        SingletonType = 1,
-        InterfaceType = 2,
-        CompositeType = 3,
-        CompositeSingletonType = 4,
-        AnyRegistrationType = 255
-    };
-
-private:
-    QQmlType superType() const;
-    QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
-    int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
-    QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
-    friend class QQmlTypePrivate;
-
-    friend QString registrationTypeString(RegistrationType);
-    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
-    friend QQmlType registerType(const QQmlPrivate::RegisterType &);
-    friend QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
-    friend QQmlType registerInterface(const QQmlPrivate::RegisterInterface &);
-    friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
-    friend uint qHash(const QQmlType &t, uint seed);
-    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
-    friend class QQmlMetaType;
-
-    QQmlType(QQmlMetaTypeData *data, const QQmlPrivate::RegisterInterface &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterSingletonType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
-
-    QQmlTypePrivate *d;
+    static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
+                      const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);
-
-
-inline uint qHash(const QQmlType &t, uint seed = 0) { return qHash(reinterpret_cast<quintptr>(t.d), seed); }
-
-
-class QQmlTypeModulePrivate;
-class QQmlTypeModule
-{
-public:
-    QString module() const;
-    int majorVersion() const;
-
-    int minimumMinorVersion() const;
-    int maximumMinorVersion() const;
-
-    QQmlType type(const QHashedStringRef &, int) const;
-    QQmlType type(const QV4::String *, int) const;
-
-    void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
-
-    QQmlTypeModulePrivate *priv() { return d; }
-private:
-    //Used by register functions and creates the QQmlTypeModule for them
-    friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);
-    friend void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data);
-    friend struct QQmlMetaTypeData;
-    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
-    friend class QQmlTypeModulePrivate;
-
-    QQmlTypeModule();
-    ~QQmlTypeModule();
-    QQmlTypeModulePrivate *d;
-};
-
-class QQmlTypeModuleVersion
-{
-public:
-    QQmlTypeModuleVersion();
-    QQmlTypeModuleVersion(QQmlTypeModule *, int);
-    QQmlTypeModuleVersion(const QQmlTypeModuleVersion &);
-    QQmlTypeModuleVersion &operator=(const QQmlTypeModuleVersion &);
-
-    QQmlTypeModule *module() const;
-    int minorVersion() const;
-
-    QQmlType type(const QHashedStringRef &) const;
-    QQmlType type(const QV4::String *) const;
-
-private:
-    QQmlTypeModule *m_module;
-    int m_minor;
-};
-
-class Q_AUTOTEST_EXPORT QQmlMetaTypeRegistrationFailureRecorder
-{
-    QStringList _failures;
-
-public:
-    QQmlMetaTypeRegistrationFailureRecorder();
-    ~QQmlMetaTypeRegistrationFailureRecorder();
-
-    QStringList failures() const
-    { return _failures; }
-};
 
 QT_END_NAMESPACE
 

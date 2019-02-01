@@ -54,6 +54,8 @@
 #include <private/qqmltypenamecache_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qfieldlist_p.h>
+#include <private/qqmltypemodule_p.h>
+#include <private/qqmlmetatyperegistrationfailurerecorder_p.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
 

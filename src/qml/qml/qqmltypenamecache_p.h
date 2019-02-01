@@ -57,6 +57,7 @@
 
 #include <private/qhashedstring_p.h>
 #include <private/qqmlimport_p.h>
+#include <private/qqmltypemoduleversion_p.h>
 
 #include <QtCore/qvector.h>
 

@@ -397,7 +397,7 @@ void tst_qqmlmetatype::unregisterCustomType()
         QCOMPARE(enumVal.type(), QVariant::Int);
         QCOMPARE(enumVal.toInt(), 1);
     }
-    qmlUnregisterType(controllerId);
+    QQmlMetaType::unregisterType(controllerId);
     {
         QQmlEngine engine;
         QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
@@ -420,7 +420,7 @@ void tst_qqmlmetatype::unregisterCustomType()
         QCOMPARE(enumVal.type(), QVariant::Int);
         QCOMPARE(enumVal.toInt(), 111);
     }
-    qmlUnregisterType(controllerId);
+    QQmlMetaType::unregisterType(controllerId);
     {
         QQmlEngine engine;
         QQmlType type = QQmlMetaType::qmlType(QString("Controller"), QString("mytypes"), 1, 0);
@@ -489,7 +489,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QCOMPARE(stringVal.type(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
-    qmlUnregisterType(staticProviderId);
+    QQmlMetaType::unregisterType(staticProviderId);
     {
         QQmlEngine engine;
         staticProviderId = qmlRegisterSingletonType<StaticProvider2>("mytypes", 1, 0, "StaticProvider", createStaticProvider2);
@@ -505,7 +505,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QCOMPARE(stringVal.type(), QVariant::String);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #2"));
     }
-    qmlUnregisterType(staticProviderId);
+    QQmlMetaType::unregisterType(staticProviderId);
     {
         QQmlEngine engine;
         staticProviderId = qmlRegisterSingletonType<StaticProvider1>("mytypes", 1, 0, "StaticProvider", createStaticProvider1);
@@ -531,7 +531,7 @@ void tst_qqmlmetatype::normalizeUrls()
     QVERIFY(QQmlMetaType::qmlType(url, /*includeNonFileImports=*/true).isValid());
     QUrl normalizedURL("qrc:/tstqqmlmetatype/data/CompositeType.qml");
     QVERIFY(QQmlMetaType::qmlType(normalizedURL, /*includeNonFileImports=*/true).isValid());
-    qmlUnregisterType(registrationId);
+    QQmlMetaType::unregisterType(registrationId);
     QVERIFY(!QQmlMetaType::qmlType(url, /*includeNonFileImports=*/true).isValid());
 }
 

@@ -51,7 +51,6 @@
 // We mean it.
 //
 
-#include "qqmlmetatype_p.h"
 #include "qqmlerror.h"
 #include "qqmlbinding_p.h"
 #include <private/qqmltypecompiler_p.h>

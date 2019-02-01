@@ -44,7 +44,6 @@
 #include "qqmlengine_p.h"
 #include "qqmlexpression_p.h"
 #include "qqmlcontext_p.h"
-#include "qqmlmetatype_p.h"
 #include "qqml.h"
 #include "qqmlcontext.h"
 #include "qqmlglobal_p.h"
