@@ -518,7 +518,9 @@ void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        fileDialog->setOptions(m_options);
+        fileDialog->setOptions(m_options); // setOptions only assigns a member and isn't virtual
+        if (m_firstShow && m_options->initialDirectory().isValid())
+            fileDialog->setDirectory(m_options->initialDirectory());
         if (m_selectedNameFilter) {
             const int index = m_selectedNameFilter->index();
             const QString filter = m_options->nameFilters().value(index);
@@ -527,6 +529,8 @@ void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
             connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickPlatformFileNameFilter::update);
         }
     }
+    if (m_firstShow)
+        m_firstShow = false;
 }
 
 void QQuickPlatformFileDialog::onHide(QPlatformDialogHelper *dialog)

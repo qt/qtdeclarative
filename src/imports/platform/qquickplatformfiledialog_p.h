@@ -149,6 +149,7 @@ private:
 
     FileMode m_fileMode;
     QList<QUrl> m_files;
+    bool m_firstShow = true;
     QSharedPointer<QFileDialogOptions> m_options;
     mutable QQuickPlatformFileNameFilter *m_selectedNameFilter;
 };
