@@ -162,6 +162,11 @@ public:
 
     ~QQuickTextInputPrivate()
     {
+        // If this control is used for password input, we don't want the
+        // password data to stay in the process memory, therefore we need
+        // to zero it out
+        if (m_echoMode != QQuickTextInput::Normal)
+            m_text.fill(0);
     }
 
     void init();

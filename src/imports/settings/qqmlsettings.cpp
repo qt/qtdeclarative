@@ -433,9 +433,9 @@ void QQmlSettings::setCategory(const QString &category)
     This property holds the path to the settings file. If the file doesn't
     already exist, it is created.
 
-    \sa QSettings::fileName, QSettings::IniFormat
+    \since Qt 5.12
 
-    \since Qt.labs.settings 1.1
+    \sa QSettings::fileName, QSettings::IniFormat
 */
 QString QQmlSettings::fileName() const
 {
@@ -460,9 +460,9 @@ void QQmlSettings::setFileName(const QString &fileName)
    Returns the value for setting \a key. If the setting doesn't exist,
    returns \a defaultValue.
 
-   \sa QSettings::value
+   \since Qt 5.12
 
-   \since Qt.labs.settings 1.1
+   \sa QSettings::value
 */
 QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) const
 {
@@ -476,15 +476,34 @@ QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) c
    Sets the value of setting key to value. If the key already exists,
    the previous value is overwritten.
 
-   \sa QSettings::setValue
+   \since Qt 5.12
 
-   \since Qt.labs.settings 1.1
+   \sa QSettings::setValue
 */
 void QQmlSettings::setValue(const QString &key, const QVariant &value)
 {
     Q_D(const QQmlSettings);
     d->instance()->setValue(key, value);
     qCDebug(lcSettings) << "QQmlSettings: setValue" << key << ":" << value;
+}
+
+/*!
+   \qmlmethod Settings::sync()
+
+    Writes any unsaved changes to permanent storage, and reloads any
+    settings that have been changed in the meantime by another
+    application.
+
+    This function is called automatically from QSettings's destructor and
+    by the event loop at regular intervals, so you normally don't need to
+    call it yourself.
+
+   \sa QSettings::sync
+*/
+void QQmlSettings::sync()
+{
+    Q_D(QQmlSettings);
+    d->instance()->sync();
 }
 
 void QQmlSettings::classBegin()
