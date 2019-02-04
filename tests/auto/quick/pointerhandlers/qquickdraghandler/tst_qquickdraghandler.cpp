@@ -60,6 +60,7 @@ private slots:
     void touchDragMultiSliders();
     void touchPassiveGrabbers_data();
     void touchPassiveGrabbers();
+    void touchPinchAndMouseMove();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -519,6 +520,51 @@ void tst_DragHandler::touchPassiveGrabbers()
     touch.release(1, p1.toPoint());
     touch.commit();
     QQuickTouchUtils::flush(window);
+}
+
+void tst_DragHandler::touchPinchAndMouseMove()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "draghandler_and_pinchhandler.qml");
+    QQuickView *window = windowPtr.data();
+    QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>(QLatin1String("Rect"));
+    QQuickPointerHandler *pinchHandler = window->rootObject()->findChild<QQuickPointerHandler*>(QLatin1String("PinchHandler"));
+
+    QPoint p1(150,200);
+    QPoint p2(250,200);
+
+    // Trigger a scale pinch, PinchHandler should activate
+    QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
+    touch.press(1, p1).press(2, p2).commit();
+    QQuickTouchUtils::flush(window);
+    QPoint delta(10,0);
+    for (int i = 0; i < 10 && !pinchHandler->active(); ++i) {
+        p1-=delta;
+        p2+=delta;
+        touch.move(1, p1).move(2, p2).commit();
+        QQuickTouchUtils::flush(window);
+    }
+    QCOMPARE(pinchHandler->active(), true);
+
+    // While having the touch points pressed, send wrong mouse event as MS Windows did:
+    //      * A MoveMove with LeftButton down
+    // (in order to synthesize that, qtestMouseButtons needs to be modified)
+    // (This will make the DragHandler do a passive grab)
+    QTestPrivate::qtestMouseButtons = Qt::LeftButton;
+    QTest::mouseMove(window, p1 + delta);
+
+    touch.release(1, p1).release(2, p2).commit();
+    QQuickTouchUtils::flush(window);
+
+    // Now move the mouse with no buttons down and check if the rect did not move
+    // At this point, no touch points are pressed and no mouse buttons are pressed.
+    QTestPrivate::qtestMouseButtons = Qt::NoButton;
+    QSignalSpy rectMovedSpy(rect, SIGNAL(xChanged()));
+    for (int i = 0; i < 10; ++i) {
+        p1 += delta;
+        QTest::mouseMove(window, p1);
+        QCOMPARE(rectMovedSpy.count(), 0);
+    }
 }
 
 QTEST_MAIN(tst_DragHandler)

@@ -162,6 +162,10 @@ QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointe
     bool stealingAllowed = event->isPressEvent() || event->isReleaseEvent();
     for (int i = 0; i < c; ++i) {
         QQuickEventPoint *p = event->point(i);
+        if (QQuickPointerMouseEvent *me = event->asPointerMouseEvent()) {
+            if (me->buttons() == Qt::NoButton)
+                continue;
+        }
         if (!stealingAllowed) {
             QObject *exclusiveGrabber = p->exclusiveGrabber();
             if (exclusiveGrabber && exclusiveGrabber != this && !canGrab(p))
