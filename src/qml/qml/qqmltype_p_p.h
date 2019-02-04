@@ -52,7 +52,7 @@
 //
 
 #include <private/qqmltype_p.h>
-#include <private/qhashedstring_p.h>
+#include <private/qstringhash_p.h>
 #include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlpropertycache_p.h>

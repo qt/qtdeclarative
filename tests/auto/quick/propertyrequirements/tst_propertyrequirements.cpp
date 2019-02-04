@@ -28,7 +28,6 @@
 #include <qtest.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
-#include <QtQml/private/qhashedstring_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtCore/QDebug>
 #include <QtCore/QHash>

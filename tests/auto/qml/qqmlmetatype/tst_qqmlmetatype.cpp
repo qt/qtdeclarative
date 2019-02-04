@@ -36,7 +36,6 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlengine_p.h>
-#include <private/qhashedstring_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmlmetatype : public QQmlDataTest

@@ -52,7 +52,7 @@
 //
 
 #include <private/qqmltypemodule_p.h>
-#include <private/qhashedstring_p.h>
+#include <private/qstringhash_p.h>
 #include <private/qqmlmetatypedata_p.h>
 
 QT_BEGIN_NAMESPACE

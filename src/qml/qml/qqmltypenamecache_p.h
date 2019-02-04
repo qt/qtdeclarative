@@ -55,7 +55,7 @@
 #include "qqmlcleanup_p.h"
 #include "qqmlmetatype_p.h"
 
-#include <private/qhashedstring_p.h>
+#include <private/qstringhash_p.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmltypemoduleversion_p.h>
 

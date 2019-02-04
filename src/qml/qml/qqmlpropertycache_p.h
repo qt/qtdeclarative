@@ -57,7 +57,7 @@
 #include "qqmlnotifier_p.h"
 #include <private/qqmlpropertyindex_p.h>
 
-#include <private/qhashedstring_p.h>
+#include <private/qstringhash_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
