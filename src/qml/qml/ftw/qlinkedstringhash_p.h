@@ -81,11 +81,6 @@ public:
                 nodePool->used = 0;
                 nodePool->nodes = new Node[additionalReserve];
 
-#ifdef QSTRINGHASH_LINK_DEBUG
-                data.linkCount++;
-                const_cast<QStringHash<T>&>(other).data.linkCount++;
-#endif
-
                 for (int ii = 0; ii < data.numBuckets; ++ii)
                     data.buckets[ii] = (Node *)other.data.buckets[ii];
 

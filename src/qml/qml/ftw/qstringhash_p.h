@@ -163,9 +163,6 @@ public:
     int numBuckets = 0;
     int size = 0;
     short numBits = 0;
-#ifdef QSTRINGHASH_LINK_DEBUG
-    int linkCount = 0;
-#endif
 
     template<typename StringHash>
     struct IteratorData {
@@ -421,16 +418,6 @@ QStringHash<T>::~QStringHash()
 template<class T>
 void QStringHash<T>::clear()
 {
-#ifdef QSTRINGHASH_LINK_DEBUG
-    if (link) {
-        data.linkCount--;
-        const_cast<QStringHash<T> *>(link)->data.linkCount--;
-    }
-
-    if (data.linkCount)
-        qFatal("QStringHash: Illegal attempt to clear a linked hash.");
-#endif
-
     // Delete the individually allocated nodes
     NewedNode *n = newedNodes;
     while (n) {

@@ -84,11 +84,6 @@ void QStringHashData::rehashToBits(short bits)
     if (nb == numBuckets && buckets)
         return;
 
-#ifdef QSTRINGHASH_LINK_DEBUG
-    if (linkCount)
-        qFatal("QStringHash: Illegal attempt to rehash a linked hash.");
-#endif
-
     QStringHashNode **newBuckets = new QStringHashNode *[nb];
     ::memset(newBuckets, 0, sizeof(QStringHashNode *) * nb);
 

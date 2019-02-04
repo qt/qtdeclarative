@@ -63,9 +63,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Enable this to debug hash linking assumptions.
-// #define QSTRINGHASH_LINK_DEBUG
-
 class QHashedStringRef;
 class Q_QML_PRIVATE_EXPORT QHashedString : public QString
 {
