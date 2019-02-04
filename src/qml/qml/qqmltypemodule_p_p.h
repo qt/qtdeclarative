@@ -55,27 +55,33 @@
 #include <private/qstringhash_p.h>
 #include <private/qqmlmetatypedata_p.h>
 
+#include <QtCore/qmutex.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeModulePrivate
 {
 public:
-    QQmlTypeModulePrivate()
-        : minMinorVersion(INT_MAX), maxMinorVersion(0), locked(false) {}
+    QQmlTypeModulePrivate(QString module, int majorVersion) :
+        module(std::move(module)), majorVersion(majorVersion)
+    {}
 
-    static QQmlTypeModulePrivate* get(QQmlTypeModule* q) { return q->d; }
+    const QString module;
+    const int majorVersion = 0;
 
-    QQmlMetaTypeData::VersionedUri uri;
+    // Can only ever decrease
+    QAtomicInt minMinorVersion = std::numeric_limits<int>::max();
 
-    int minMinorVersion;
-    int maxMinorVersion;
-    bool locked;
+    // Can only ever increase
+    QAtomicInt maxMinorVersion = 0;
 
-    void add(QQmlTypePrivate *);
-    void remove(const QQmlTypePrivate *type);
+    // Bool. Can only be set to 1 once.
+    QAtomicInt locked = 0;
 
     typedef QStringHash<QList<QQmlTypePrivate *> > TypeHash;
     TypeHash typeHash;
+
+    QMutex mutex;
 };
 
 QT_END_NAMESPACE

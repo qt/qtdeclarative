@@ -72,9 +72,19 @@ class QQmlTypeModulePrivate;
 class QQmlTypeModule
 {
 public:
+    QQmlTypeModule(const QString &uri = QString(), int majorVersion = 0);
+    ~QQmlTypeModule();
+
+    void add(QQmlTypePrivate *);
+    void remove(const QQmlTypePrivate *type);
+
+    bool isLocked() const;
+    void lock();
+
     QString module() const;
     int majorVersion() const;
 
+    void addMinorVersion(int minorVersion);
     int minimumMinorVersion() const;
     int maximumMinorVersion() const;
 
@@ -83,17 +93,7 @@ public:
 
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
-    QQmlTypeModulePrivate *priv() { return d; }
 private:
-    //Used by register functions and creates the QQmlTypeModule for them
-    friend QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMetaTypeData *data);
-    friend void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data);
-    friend struct QQmlMetaTypeData;
-    friend class QQmlMetaType;
-    friend class QQmlTypeModulePrivate;
-
-    QQmlTypeModule();
-    ~QQmlTypeModule();
     QQmlTypeModulePrivate *d;
 };
 

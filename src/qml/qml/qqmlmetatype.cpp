@@ -253,7 +253,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
             versionedUri.uri = nameSpace;
             versionedUri.majorVersion = majorVersion;
             if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
-                if (QQmlTypeModulePrivate::get(qqtm)->locked){
+                if (qqtm->isLocked()){
                     QString failure(QCoreApplication::translate("qmlRegisterType",
                                                                 "Cannot install %1 '%2' into protected module '%3' version '%4'"));
                     data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName).arg(nameSpace).arg(majorVersion));
@@ -272,8 +272,7 @@ QQmlTypeModule *getTypeModule(const QHashedString &uri, int majorVersion, QQmlMe
     QQmlMetaTypeData::VersionedUri versionedUri(uri, majorVersion);
     QQmlTypeModule *module = data->uriToModule.value(versionedUri);
     if (!module) {
-        module = new QQmlTypeModule;
-        module->d->uri = versionedUri;
+        module = new QQmlTypeModule(versionedUri.uri, versionedUri.majorVersion);
         data->uriToModule.insert(versionedUri, module);
     }
     return module;
@@ -309,7 +308,7 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
         QQmlTypeModule *module = getTypeModule(mod, type->version_maj, data);
         Q_ASSERT(module);
-        module->d->add(type);
+        module->add(type);
     }
 }
 
@@ -447,7 +446,7 @@ bool QQmlMetaType::protectModule(const char *uri, int majVersion)
     versionedUri.majorVersion = majVersion;
 
     if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)) {
-        QQmlTypeModulePrivate::get(qqtm)->locked = true;
+        qqtm->lock();
         return true;
     }
     return false;
@@ -460,9 +459,7 @@ void QQmlMetaType::registerModule(const char *uri, int versionMajor, int version
     QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), versionMajor, data);
     Q_ASSERT(module);
 
-    QQmlTypeModulePrivate *p = QQmlTypeModulePrivate::get(module);
-    p->minMinorVersion = qMin(p->minMinorVersion, versionMinor);
-    p->maxMinorVersion = qMax(p->maxMinorVersion, versionMinor);
+    module->addMinorVersion(versionMinor);
 }
 
 int QQmlMetaType::typeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
@@ -543,7 +540,7 @@ bool QQmlMetaType::isLockedModule(const QString &uri, int majVersion)
     versionedUri.uri = uri;
     versionedUri.majorVersion = majVersion;
     if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0))
-        return QQmlTypeModulePrivate::get(qqtm)->locked;
+        return qqtm->isLocked();
     return false;
 }
 
@@ -900,20 +897,15 @@ QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVe
 void QQmlMetaType::unregisterType(int typeIndex)
 {
     QQmlMetaTypeDataPtr data;
-    {
-        const QQmlTypePrivate *d = data->types.value(typeIndex).priv();
-        if (d) {
-            removeQQmlTypePrivate(data->idToType, d);
-            removeQQmlTypePrivate(data->nameToType, d);
-            removeQQmlTypePrivate(data->urlToType, d);
-            removeQQmlTypePrivate(data->urlToNonFileImportType, d);
-            removeQQmlTypePrivate(data->metaObjectToType, d);
-            for (QQmlMetaTypeData::TypeModules::Iterator module = data->uriToModule.begin(); module != data->uriToModule.end(); ++module) {
-                 QQmlTypeModulePrivate *modulePrivate = (*module)->priv();
-                 modulePrivate->remove(d);
-            }
-            data->types[typeIndex] = QQmlType();
-        }
+    if (const QQmlTypePrivate *d = data->types.value(typeIndex).priv()) {
+        removeQQmlTypePrivate(data->idToType, d);
+        removeQQmlTypePrivate(data->nameToType, d);
+        removeQQmlTypePrivate(data->urlToType, d);
+        removeQQmlTypePrivate(data->urlToNonFileImportType, d);
+        removeQQmlTypePrivate(data->metaObjectToType, d);
+        for (auto & module : data->uriToModule)
+            module->remove(d);
+        data->types[typeIndex] = QQmlType();
     }
 }
 
@@ -921,54 +913,48 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QQmlMetaTypeDataPtr data;
 
-    {
-        bool deletedAtLeastOneType;
-        do {
-            deletedAtLeastOneType = false;
-            QList<QQmlType>::Iterator it = data->types.begin();
-            while (it != data->types.end()) {
-                const QQmlTypePrivate *d = (*it).priv();
-                if (d && d->refCount == 1) {
-                    deletedAtLeastOneType = true;
+    bool deletedAtLeastOneType;
+    do {
+        deletedAtLeastOneType = false;
+        QList<QQmlType>::Iterator it = data->types.begin();
+        while (it != data->types.end()) {
+            const QQmlTypePrivate *d = (*it).priv();
+            if (d && d->refCount == 1) {
+                deletedAtLeastOneType = true;
 
-                    removeQQmlTypePrivate(data->idToType, d);
-                    removeQQmlTypePrivate(data->nameToType, d);
-                    removeQQmlTypePrivate(data->urlToType, d);
-                    removeQQmlTypePrivate(data->urlToNonFileImportType, d);
-                    removeQQmlTypePrivate(data->metaObjectToType, d);
+                removeQQmlTypePrivate(data->idToType, d);
+                removeQQmlTypePrivate(data->nameToType, d);
+                removeQQmlTypePrivate(data->urlToType, d);
+                removeQQmlTypePrivate(data->urlToNonFileImportType, d);
+                removeQQmlTypePrivate(data->metaObjectToType, d);
 
-                    for (QQmlMetaTypeData::TypeModules::Iterator module = data->uriToModule.begin(); module != data->uriToModule.end(); ++module) {
-                        QQmlTypeModulePrivate *modulePrivate = (*module)->priv();
-                        modulePrivate->remove(d);
-                    }
+                for (auto &module : data->uriToModule)
+                    module->remove(d);
 
-                    *it = QQmlType();
-                } else {
-                    ++it;
-                }
+                *it = QQmlType();
+            } else {
+                ++it;
             }
-        } while (deletedAtLeastOneType);
-    }
+        }
+    } while (deletedAtLeastOneType);
 
-    {
-        bool deletedAtLeastOneCache;
-        do {
-            deletedAtLeastOneCache = false;
-            QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = data->propertyCaches.begin();
-            while (it != data->propertyCaches.end()) {
+    bool deletedAtLeastOneCache;
+    do {
+        deletedAtLeastOneCache = false;
+        QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = data->propertyCaches.begin();
+        while (it != data->propertyCaches.end()) {
 
-                if ((*it)->count() == 1) {
-                    QQmlPropertyCache *pc = nullptr;
-                    qSwap(pc, *it);
-                    it = data->propertyCaches.erase(it);
-                    pc->release();
-                    deletedAtLeastOneCache = true;
-                } else {
-                    ++it;
-                }
+            if ((*it)->count() == 1) {
+                QQmlPropertyCache *pc = nullptr;
+                qSwap(pc, *it);
+                it = data->propertyCaches.erase(it);
+                pc->release();
+                deletedAtLeastOneCache = true;
+            } else {
+                ++it;
             }
-        } while (deletedAtLeastOneCache);
-    }
+        }
+    } while (deletedAtLeastOneCache);
 }
 
 /*!
