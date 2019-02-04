@@ -57,7 +57,7 @@
 #include "qqmlnotifier_p.h"
 #include <private/qqmlpropertyindex_p.h>
 
-#include <private/qstringhash_p.h>
+#include <private/qlinkedstringhash_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
@@ -191,7 +191,7 @@ private:
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count, const QList<QByteArray> &names);
 
     typedef QVector<QQmlPropertyData> IndexCache;
-    typedef QStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
+    typedef QLinkedStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
     typedef QVector<int> AllowedRevisionCache;
 
     QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *, QQmlContextData *) const;

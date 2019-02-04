@@ -167,10 +167,11 @@ public:
     int linkCount = 0;
 #endif
 
+    template<typename StringHash>
     struct IteratorData {
-        IteratorData() {}
-        QStringHashNode *n = nullptr;
-        void *p = nullptr;
+        IteratorData(QStringHashNode *n = nullptr, StringHash *p = nullptr) : n(n), p(p) {}
+        QStringHashNode *n;
+        StringHash *p;
     };
     void rehashToBits(short);
     void rehashToSize(int);
@@ -230,6 +231,9 @@ public:
     typedef QHashedString key_type;
     typedef T mapped_type;
 
+    using MutableIteratorData = QStringHashData::IteratorData<QStringHash<T>>;
+    using ConstIteratorData = QStringHashData::IteratorData<const QStringHash<T>>;
+
     struct Node : public QStringHashNode {
         Node(const QHashedString &key, const T &value) : QStringHashNode(key), value(value) {}
         Node(const QHashedCStringRef &key, const T &value) : QStringHashNode(key), value(value) {}
@@ -255,7 +259,6 @@ public:
     QStringHashData data;
     NewedNode *newedNodes;
     ReservedNodePool *nodePool;
-    const QStringHash<T> *link;
 
     template<typename K>
     inline Node *findNode(const K &) const;
@@ -279,8 +282,11 @@ public:
 
     void copyNode(const QStringHashNode *otherNode);
 
-    inline QStringHashData::IteratorData iterateFirst() const;
-    static inline QStringHashData::IteratorData iterateNext(const QStringHashData::IteratorData &);
+    template<typename StringHash, typename Data>
+    static inline Data iterateFirst(StringHash *self);
+
+    template<typename Data>
+    static inline Data iterateNext(const Data &);
 
 public:
     inline QStringHash();
@@ -290,36 +296,41 @@ public:
     QStringHash &operator=(const QStringHash<T> &);
 
     void copyAndReserve(const QStringHash<T> &other, int additionalReserve);
-    void linkAndReserve(const QStringHash<T> &other, int additionalReserve);
 
     inline bool isEmpty() const;
     inline void clear();
     inline int count() const;
 
     inline int numBuckets() const;
-    inline bool isLinked() const;
 
-    class ConstIterator {
+    template<typename Data>
+    class Iterator {
     public:
-        inline ConstIterator();
-        inline ConstIterator(const QStringHashData::IteratorData &);
+        inline Iterator() = default;
+        inline Iterator(const Data &d) : d(d) {}
 
-        inline ConstIterator &operator++();
+        inline Iterator &operator++()
+        {
+            d = QStringHash<T>::iterateNext(d);
+            return *this;
+        }
 
-        inline bool operator==(const ConstIterator &o) const;
-        inline bool operator!=(const ConstIterator &o) const;
+        inline bool operator==(const Iterator &o) const { return d.n == o.d.n; }
+        inline bool operator!=(const Iterator &o) const { return d.n != o.d.n; }
 
         template<typename K>
-        inline bool equals(const K &) const;
+        inline bool equals(const K &key) const { return d.n->equals(key); }
 
-        inline QHashedString key() const;
-        inline const T &value() const;
-        inline const T &operator*() const;
+        inline QHashedString key() const { return static_cast<Node *>(d.n)->key(); }
+        inline const T &value() const { return static_cast<Node *>(d.n)->value; }
+        inline const T &operator*() const { return static_cast<Node *>(d.n)->value; }
 
-        Node *node() const;
+        Node *node() const { return static_cast<Node *>(d.n); }
     private:
-        QStringHashData::IteratorData d;
+        Data d;
     };
+
+    using ConstIterator = Iterator<ConstIteratorData>;
 
     template<typename K>
     inline void insert(const K &, const T &);
@@ -341,8 +352,6 @@ public:
     inline ConstIterator begin() const;
     inline ConstIterator end() const;
 
-    inline ConstIterator iterator(Node *n) const;
-
     template<typename K>
     inline ConstIterator find(const K &) const;
 
@@ -351,13 +360,13 @@ public:
 
 template<class T>
 QStringHash<T>::QStringHash()
-: newedNodes(nullptr), nodePool(nullptr), link(nullptr)
+: newedNodes(nullptr), nodePool(nullptr)
 {
 }
 
 template<class T>
 QStringHash<T>::QStringHash(const QStringHash<T> &other)
-: newedNodes(nullptr), nodePool(nullptr), link(nullptr)
+: newedNodes(nullptr), nodePool(nullptr)
 {
     data.numBits = other.data.numBits;
     data.size = other.data.size;
@@ -385,41 +394,6 @@ template<class T>
 void QStringHash<T>::copyAndReserve(const QStringHash<T> &other, int additionalReserve)
 {
     clear();
-    data.numBits = other.data.numBits;
-    reserve(other.count() + additionalReserve);
-    copy(other);
-}
-
-template<class T>
-void QStringHash<T>::linkAndReserve(const QStringHash<T> &other, int additionalReserve)
-{
-    clear();
-
-    if (other.count()) {
-        data.size = other.data.size;
-        data.rehashToSize(other.count() + additionalReserve);
-
-        if (data.numBuckets == other.data.numBuckets) {
-            nodePool = new ReservedNodePool;
-            nodePool->count = additionalReserve;
-            nodePool->used = 0;
-            nodePool->nodes = new Node[additionalReserve];
-
-#ifdef QSTRINGHASH_LINK_DEBUG
-            data.linkCount++;
-            const_cast<QStringHash<T>&>(other).data.linkCount++;
-#endif
-
-            for (int ii = 0; ii < data.numBuckets; ++ii)
-                data.buckets[ii] = (Node *)other.data.buckets[ii];
-
-            link = &other;
-            return;
-        }
-
-        data.size = 0;
-    }
-
     data.numBits = other.data.numBits;
     reserve(other.count() + additionalReserve);
     copy(other);
@@ -462,7 +436,6 @@ void QStringHash<T>::clear()
 
     newedNodes = nullptr;
     nodePool = nullptr;
-    link = nullptr;
 }
 
 template<class T>
@@ -481,12 +454,6 @@ template<class T>
 int QStringHash<T>::numBuckets() const
 {
     return data.numBuckets;
-}
-
-template<class T>
-bool QStringHash<T>::isLinked() const
-{
-    return link != 0;
 }
 
 template<class T>
@@ -582,10 +549,10 @@ void QStringHash<T>::copy(const QStringHash<T> &other)
 }
 
 template<class T>
-QStringHashData::IteratorData
-QStringHash<T>::iterateNext(const QStringHashData::IteratorData &d)
+template<typename Data>
+Data QStringHash<T>::iterateNext(const Data &d)
 {
-    QStringHash<T> *This = (QStringHash<T> *)d.p;
+    auto *This = d.p;
     Node *node = (Node *)d.n;
 
     if (This->nodePool && node >= This->nodePool->nodes &&
@@ -601,65 +568,26 @@ QStringHash<T>::iterateNext(const QStringHashData::IteratorData &d)
             node = This->nodePool->nodes + This->nodePool->used - 1;
     }
 
-    if (node == nullptr && This->link)
-        return This->link->iterateFirst();
-
-    QStringHashData::IteratorData rv;
+    Data rv;
     rv.n = node;
     rv.p = d.p;
     return rv;
 }
 
 template<class T>
-QStringHashData::IteratorData QStringHash<T>::iterateFirst() const
+template<typename StringHash, typename Data>
+Data QStringHash<T>::iterateFirst(StringHash *self)
 {
-    Node *n = nullptr;
-    if (newedNodes)
-        n = newedNodes;
-    else if (nodePool && nodePool->used)
-        n = nodePool->nodes + nodePool->used - 1;
+    typename StringHash::Node *n = nullptr;
+    if (self->newedNodes)
+        n = self->newedNodes;
+    else if (self->nodePool && self->nodePool->used)
+        n = self->nodePool->nodes + self->nodePool->used - 1;
 
-    if (n == nullptr && link)
-        return link->iterateFirst();
-
-    QStringHashData::IteratorData rv;
+    Data rv;
     rv.n = n;
-    rv.p = const_cast<QStringHash<T> *>(this);
+    rv.p = self;
     return rv;
-}
-
-template<class T>
-typename QStringHash<T>::ConstIterator QStringHash<T>::iterator(Node *n) const
-{
-    if (!n)
-        return ConstIterator();
-
-    const QStringHash<T> *container = this;
-
-    if (link) {
-        // This node could be in the linked hash
-        if ((n >= nodePool->nodes) && (n < (nodePool->nodes + nodePool->used))) {
-            // The node is in this hash
-        } else if ((n >= link->nodePool->nodes) && (n < (link->nodePool->nodes + link->nodePool->used))) {
-            // The node is in the linked hash
-            container = link;
-        } else {
-            const NewedNode *ln = link->newedNodes;
-            while (ln) {
-                if (ln == n) {
-                    // This node is in the linked hash's newed list
-                    container = link;
-                    break;
-                }
-                ln = ln->nextNewed;
-            }
-        }
-    }
-
-    QStringHashData::IteratorData rv;
-    rv.n = n;
-    rv.p = const_cast<QStringHash<T> *>(container);
-    return ConstIterator(rv);
 }
 
 template<class T>
@@ -696,11 +624,11 @@ template<class T>
 template<class K>
 void QStringHash<T>::insert(const K &key, const T &value)
 {
-    // If this is a linked hash, we can't rely on owning the node, so we always
-    // create a new one.
-    Node *n = link?nullptr:findNode(key);
-    if (n) n->value = value;
-    else createNode(key, value);
+    Node *n = findNode(key);
+    if (n)
+        n->value = value;
+    else
+        createNode(key, value);
 }
 
 template<class T>
@@ -775,73 +703,9 @@ void QStringHash<T>::reserve(int n)
 }
 
 template<class T>
-QStringHash<T>::ConstIterator::ConstIterator()
-{
-}
-
-template<class T>
-QStringHash<T>::ConstIterator::ConstIterator(const QStringHashData::IteratorData &d)
-: d(d)
-{
-}
-
-template<class T>
-typename QStringHash<T>::ConstIterator &QStringHash<T>::ConstIterator::operator++()
-{
-    d = QStringHash<T>::iterateNext(d);
-    return *this;
-}
-
-template<class T>
-bool QStringHash<T>::ConstIterator::operator==(const ConstIterator &o) const
-{
-    return d.n == o.d.n;
-}
-
-template<class T>
-bool QStringHash<T>::ConstIterator::operator!=(const ConstIterator &o) const
-{
-    return d.n != o.d.n;
-}
-
-template<class T>
-template<typename K>
-bool QStringHash<T>::ConstIterator::equals(const K &key) const
-{
-    return d.n->equals(key);
-}
-
-template<class T>
-QHashedString QStringHash<T>::ConstIterator::key() const
-{
-    Node *n = (Node *)d.n;
-    return n->key();
-}
-template<class T>
-const T &QStringHash<T>::ConstIterator::value() const
-{
-    Node *n = (Node *)d.n;
-    return n->value;
-}
-
-template<class T>
-const T &QStringHash<T>::ConstIterator::operator*() const
-{
-    Node *n = (Node *)d.n;
-    return n->value;
-}
-
-template<class T>
-typename QStringHash<T>::Node *QStringHash<T>::ConstIterator::node() const
-{
-    Node *n = (Node *)d.n;
-    return n;
-}
-
-template<class T>
 typename QStringHash<T>::ConstIterator QStringHash<T>::begin() const
 {
-    return ConstIterator(iterateFirst());
+    return ConstIterator(iterateFirst<const QStringHash<T>, ConstIteratorData>(this));
 }
 
 template<class T>
@@ -854,53 +718,8 @@ template<class T>
 template<class K>
 typename QStringHash<T>::ConstIterator QStringHash<T>::find(const K &key) const
 {
-    return iterator(findNode(key));
-}
-
-template<class T>
-class QStringMultiHash : public QStringHash<T>
-{
-public:
-    typedef typename QStringHash<T>::ConstIterator ConstIterator;
-
-    template<typename K>
-    inline void insert(const K &, const T &);
-
-    inline void insert(const ConstIterator &);
-
-    inline ConstIterator findNext(const ConstIterator &) const;
-};
-
-template<class T>
-template<class K>
-void QStringMultiHash<T>::insert(const K &key, const T &value)
-{
-    // Always create a new node
-    QStringHash<T>::createNode(key, value);
-}
-
-template<class T>
-void QStringMultiHash<T>::insert(const ConstIterator &iter)
-{
-    // Always create a new node
-    QStringHash<T>::createNode(iter.key(), iter.value());
-}
-
-template<class T>
-typename QStringHash<T>::ConstIterator QStringMultiHash<T>::findNext(const ConstIterator &iter) const
-{
-    QStringHashNode *node = iter.node();
-    if (node) {
-        QHashedString key(node->key());
-
-        while ((node = *node->next)) {
-            if (node->equals(key)) {
-                return QStringHash<T>::iterator(static_cast<typename QStringHash<T>::Node *>(node));
-            }
-        }
-    }
-
-    return ConstIterator();
+    Node *n = findNode(key);
+    return n ? ConstIterator(ConstIteratorData(n, this)) : ConstIterator();
 }
 
 QT_END_NAMESPACE

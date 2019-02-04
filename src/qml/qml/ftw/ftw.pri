@@ -12,7 +12,8 @@ HEADERS +=  \
     $$PWD/qflagpointer_p.h \
     $$PWD/qlazilyallocated_p.h \
     $$PWD/qqmlnullablevalue_p.h \
-    $$PWD/qstringhash_p.h
+    $$PWD/qstringhash_p.h \
+    $$PWD/qlinkedstringhash_p.h
 
 SOURCES += \
     $$PWD/qintrusivelist.cpp \
