@@ -263,7 +263,6 @@ void QQuickPopupPrivate::init()
     popupItem = new QQuickPopupItem(q);
     popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
-    QObject::connect(popupItem, &QQuickItem::enabledChanged, q, &QQuickPopup::enabledChanged);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     QObject::connect(popupItem, &QQuickControl::backgroundChanged, q, &QQuickPopup::backgroundChanged);
     QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);

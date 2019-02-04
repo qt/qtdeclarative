@@ -86,6 +86,8 @@ private slots:
     void orientation_data();
     void orientation();
     void qquickview();
+    void disabledPalette();
+    void disabledParentPalette();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1081,6 +1083,92 @@ void tst_QQuickPopup::qquickview()
     QTRY_COMPARE(dialog->property("visible").toBool(), false);
 
     // QTBUG-72746: shouldn't crash on application exit after closing a Dialog when using QQuickView.
+}
+
+// TODO: also test it out without setting enabled directly on menu, but on a parent
+
+// QTBUG-73447
+void tst_QQuickPopup::disabledPalette()
+{
+    QQuickApplicationHelper helper(this, "disabledPalette.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QSignalSpy popupEnabledSpy(popup, SIGNAL(enabledChanged()));
+    QVERIFY(popupEnabledSpy.isValid());
+    QSignalSpy popupPaletteSpy(popup, SIGNAL(paletteChanged()));
+    QVERIFY(popupPaletteSpy.isValid());
+
+    QSignalSpy popupItemEnabledSpy(popup->popupItem(), SIGNAL(enabledChanged()));
+    QVERIFY(popupItemEnabledSpy.isValid());
+    QSignalSpy popupItemPaletteSpy(popup->popupItem(), SIGNAL(paletteChanged()));
+    QVERIFY(popupItemPaletteSpy.isValid());
+
+    QPalette palette = popup->palette();
+    palette.setColor(QPalette::Active, QPalette::Base, Qt::green);
+    palette.setColor(QPalette::Disabled, QPalette::Base, Qt::red);
+    popup->setPalette(palette);
+    QCOMPARE(popupPaletteSpy.count(), 1);
+    QCOMPARE(popupItemPaletteSpy.count(), 1);
+    QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::green);
+
+    popup->setEnabled(false);
+    QCOMPARE(popupEnabledSpy.count(), 1);
+    QCOMPARE(popupItemEnabledSpy.count(), 1);
+    QCOMPARE(popupPaletteSpy.count(), 2);
+    QCOMPARE(popupItemPaletteSpy.count(), 2);
+    QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::red);
+}
+
+void tst_QQuickPopup::disabledParentPalette()
+{
+    QQuickApplicationHelper helper(this, "disabledPalette.qml");
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QSignalSpy popupEnabledSpy(popup, SIGNAL(enabledChanged()));
+    QVERIFY(popupEnabledSpy.isValid());
+    QSignalSpy popupPaletteSpy(popup, SIGNAL(paletteChanged()));
+    QVERIFY(popupPaletteSpy.isValid());
+
+    QSignalSpy popupItemEnabledSpy(popup->popupItem(), SIGNAL(enabledChanged()));
+    QVERIFY(popupItemEnabledSpy.isValid());
+    QSignalSpy popupItemPaletteSpy(popup->popupItem(), SIGNAL(paletteChanged()));
+    QVERIFY(popupItemPaletteSpy.isValid());
+
+    QPalette palette = popup->palette();
+    palette.setColor(QPalette::Active, QPalette::Base, Qt::green);
+    palette.setColor(QPalette::Disabled, QPalette::Base, Qt::red);
+    popup->setPalette(palette);
+    QCOMPARE(popupPaletteSpy.count(), 1);
+    QCOMPARE(popupItemPaletteSpy.count(), 1);
+    QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::green);
+
+    // Disable the overlay (which is QQuickPopupItem's parent) to ensure that
+    // the palette is changed when the popup is indirectly disabled.
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QVERIFY(QMetaObject::invokeMethod(window, "disableOverlay"));
+    QVERIFY(!popup->isEnabled());
+    QVERIFY(!popup->popupItem()->isEnabled());
+    QCOMPARE(popup->background()->property("color").value<QColor>(), Qt::red);
+    QCOMPARE(popupEnabledSpy.count(), 1);
+    QCOMPARE(popupItemEnabledSpy.count(), 1);
+    QCOMPARE(popupPaletteSpy.count(), 2);
+    QCOMPARE(popupItemPaletteSpy.count(), 2);
+
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

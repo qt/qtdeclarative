@@ -278,6 +278,7 @@ protected:
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
     virtual void paletteChange(const QPalette &newPalette, const QPalette &oldPalette);
     virtual void insetChange(const QMarginsF &newInset, const QMarginsF &oldInset);
+    virtual void enabledChange();
 
 #if QT_CONFIG(accessibility)
     virtual QAccessible::Role accessibleRole() const;
