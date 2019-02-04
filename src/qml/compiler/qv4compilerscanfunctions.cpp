@@ -481,6 +481,14 @@ bool ScanFunctions::visit(FieldMemberExpression *ast)
     return true;
 }
 
+bool ScanFunctions::visit(ArrayPattern *ast)
+{
+    for (PatternElementList *it = ast->elements; it; it = it->next)
+        Node::accept(it->element, this);
+
+    return false;
+}
+
 bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
 {
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))

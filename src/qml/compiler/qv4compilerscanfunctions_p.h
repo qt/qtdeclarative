@@ -120,6 +120,7 @@ protected:
     bool visit(AST::TemplateLiteral *ast) override;
     bool visit(AST::SuperLiteral *) override;
     bool visit(AST::FieldMemberExpression *) override;
+    bool visit(AST::ArrayPattern *) override;
 
     bool enterFunction(AST::FunctionExpression *ast, bool enterName);
 
