@@ -2256,8 +2256,8 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
 
 void QQmlImportDatabase::clearDirCache()
 {
-    QStringHash<QmldirCache *>::ConstIterator itr = qmldirCache.begin();
-    while (itr != qmldirCache.end()) {
+    QStringHash<QmldirCache *>::ConstIterator itr = qmldirCache.constBegin();
+    while (itr != qmldirCache.constEnd()) {
         QmldirCache *cache = *itr;
         do {
             QmldirCache *nextCache = cache->next;

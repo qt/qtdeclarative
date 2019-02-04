@@ -170,6 +170,10 @@ public:
     template<typename StringHash>
     struct IteratorData {
         IteratorData(QStringHashNode *n = nullptr, StringHash *p = nullptr) : n(n), p(p) {}
+
+        template<typename OtherData>
+        IteratorData(const OtherData &other) : n(other.n), p(other.p) {}
+
         QStringHashNode *n;
         StringHash *p;
     };
@@ -303,7 +307,7 @@ public:
 
     inline int numBuckets() const;
 
-    template<typename Data>
+    template<typename Data, typename Value>
     class Iterator {
     public:
         inline Iterator() = default;
@@ -322,25 +326,26 @@ public:
         inline bool equals(const K &key) const { return d.n->equals(key); }
 
         inline QHashedString key() const { return static_cast<Node *>(d.n)->key(); }
-        inline const T &value() const { return static_cast<Node *>(d.n)->value; }
-        inline const T &operator*() const { return static_cast<Node *>(d.n)->value; }
+        inline Value &value() const { return static_cast<Node *>(d.n)->value; }
+        inline Value &operator*() const { return static_cast<Node *>(d.n)->value; }
 
         Node *node() const { return static_cast<Node *>(d.n); }
     private:
         Data d;
     };
 
-    using ConstIterator = Iterator<ConstIteratorData>;
+    using MutableIterator = Iterator<MutableIteratorData, T>;
+    using ConstIterator = Iterator<ConstIteratorData, const T>;
 
     template<typename K>
     inline void insert(const K &, const T &);
-
-    inline void insert(const ConstIterator  &);
+    inline void insert(const MutableIterator &);
+    inline void insert(const ConstIterator &);
 
     template<typename K>
     inline T *value(const K &) const;
-
     inline T *value(const QV4::String *string) const;
+    inline T *value(const MutableIterator &) const;
     inline T *value(const ConstIterator &) const;
 
     template<typename K>
@@ -349,8 +354,16 @@ public:
     template<typename K>
     inline T &operator[](const K &);
 
+    inline MutableIterator begin();
     inline ConstIterator begin() const;
+    inline ConstIterator constBegin() const { return begin(); }
+
+    inline MutableIterator end();
     inline ConstIterator end() const;
+    inline ConstIterator constEnd() const { return end(); }
+
+    template<typename K>
+    inline MutableIterator find(const K &);
 
     template<typename K>
     inline ConstIterator find(const K &) const;
@@ -632,6 +645,12 @@ void QStringHash<T>::insert(const K &key, const T &value)
 }
 
 template<class T>
+void QStringHash<T>::insert(const MutableIterator &iter)
+{
+    insert(iter.key(), iter.value());
+}
+
+template<class T>
 void QStringHash<T>::insert(const ConstIterator &iter)
 {
     insert(iter.key(), iter.value());
@@ -658,11 +677,16 @@ T *QStringHash<T>::value(const K &key) const
     return n?&n->value:nullptr;
 }
 
+template<typename T>
+T *QStringHash<T>::value(const MutableIterator &iter) const
+{
+    return value(iter.node()->key());
+}
+
 template<class T>
 T *QStringHash<T>::value(const ConstIterator &iter) const
 {
-    Node *n = iter.node();
-    return value(n->key());
+    return value(iter.node()->key());
 }
 
 template<class T>
@@ -703,15 +727,35 @@ void QStringHash<T>::reserve(int n)
 }
 
 template<class T>
+typename QStringHash<T>::MutableIterator QStringHash<T>::begin()
+{
+    return MutableIterator(iterateFirst<QStringHash<T>, MutableIteratorData>(this));
+}
+
+template<class T>
 typename QStringHash<T>::ConstIterator QStringHash<T>::begin() const
 {
     return ConstIterator(iterateFirst<const QStringHash<T>, ConstIteratorData>(this));
 }
 
 template<class T>
+typename QStringHash<T>::MutableIterator QStringHash<T>::end()
+{
+    return MutableIterator();
+}
+
+template<class T>
 typename QStringHash<T>::ConstIterator QStringHash<T>::end() const
 {
     return ConstIterator();
+}
+
+template<class T>
+template<class K>
+typename QStringHash<T>::MutableIterator QStringHash<T>::find(const K &key)
+{
+    Node *n = findNode(key);
+    return n ? MutableIterator(MutableIteratorData(n, this)) : MutableIterator();
 }
 
 template<class T>

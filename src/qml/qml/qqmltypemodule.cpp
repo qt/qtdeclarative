@@ -94,10 +94,8 @@ void QQmlTypeModulePrivate::add(QQmlTypePrivate *type)
 
 void QQmlTypeModulePrivate::remove(const QQmlTypePrivate *type)
 {
-    for (TypeHash::ConstIterator elementIt = typeHash.begin(); elementIt != typeHash.end();) {
-        QList<QQmlTypePrivate *> &list = const_cast<QList<QQmlTypePrivate *> &>(elementIt.value());
-
-        QQmlMetaType::removeQQmlTypePrivate(list, type);
+    for (TypeHash::MutableIterator elementIt = typeHash.begin(); elementIt != typeHash.end();) {
+        QQmlMetaType::removeQQmlTypePrivate(elementIt.value(), type);
 
 #if 0
         if (list.isEmpty())

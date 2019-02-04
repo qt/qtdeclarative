@@ -65,7 +65,7 @@ public:
     using typename QStringHash<T>::mapped_type;
 
     using ConstIteratorData = QStringHashData::IteratorData<const QLinkedStringHash>;
-    using ConstIterator = typename QStringHash<T>::template Iterator<ConstIteratorData>;
+    using ConstIterator = typename QStringHash<T>::template Iterator<ConstIteratorData, const T>;
 
     void linkAndReserve(const QLinkedStringHash<T> &other, int additionalReserve)
     {
