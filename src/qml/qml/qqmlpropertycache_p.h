@@ -172,6 +172,10 @@ public:
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
 
     QByteArray checksum(bool *ok);
+
+    int allowedRevision(int index) const { return allowedRevisionCache[index]; }
+    void setAllowedRevision(int index, int allowed) { allowedRevisionCache[index] = allowed; }
+
 private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;
@@ -179,7 +183,6 @@ private:
     template <typename T> friend class QQmlPropertyCacheAliasCreator;
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
-    friend struct QQmlMetaTypeData;
 
     inline QQmlPropertyCache *copy(int reserve);
 

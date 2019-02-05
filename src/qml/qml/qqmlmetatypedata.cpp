@@ -129,12 +129,15 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         int rev = currentType.metaObjectRevision();
         int moIndex = types.count() - 1 - ii;
 
-        if (raw->allowedRevisionCache[moIndex] != rev) {
+        if (raw->allowedRevision(moIndex) != rev) {
             if (!hasCopied) {
+                // TODO: The copy should be mutable, and the original should be const
+                //       Considering this, the setAllowedRevision() below does not violate
+                //       the immutability of already published property caches.
                 raw = raw->copy();
                 hasCopied = true;
             }
-            raw->allowedRevisionCache[moIndex] = rev;
+            raw->setAllowedRevision(moIndex, rev);
         }
     }
 
