@@ -1807,11 +1807,15 @@ bool QQuickPopup::hasActiveFocus() const
 
     Modal popups often have a distinctive background dimming effect defined
     in \l {Overlay::modal}{Overlay.modal}, and do not allow press
-    or release events through to items beneath them.
+    or release events through to items beneath them. For example, if the user
+    accidentally clicks outside of a popup, any item beneath that popup at
+    the location of the click will not receive the event.
 
     On desktop platforms, it is common for modal popups to be closed only when
     the escape key is pressed. To achieve this behavior, set
-    \l closePolicy to \c Popup.CloseOnEscape.
+    \l closePolicy to \c Popup.CloseOnEscape. By default, \c closePolicy
+    is set to \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}, which
+    means that clicking outside of a modal popup will close it.
 
     The default value is \c false.
 
