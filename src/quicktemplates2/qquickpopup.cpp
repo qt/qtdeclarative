@@ -1666,8 +1666,7 @@ void QQuickPopup::setBackground(QQuickItem *background)
 
     The content item is the visual implementation of the popup. When the
     popup is made visible, the content item is automatically reparented to
-    the \l {ApplicationWindow::overlay}{overlay item} of its application
-    window.
+    the \l {Overlay::overlay}{overlay item}.
 
     \note The content item is automatically resized to fit within the
     \l padding of the popup.
@@ -1807,7 +1806,7 @@ bool QQuickPopup::hasActiveFocus() const
     This property holds whether the popup is modal.
 
     Modal popups often have a distinctive background dimming effect defined
-    in \l {ApplicationWindow::overlay}{overlay.modal}, and do not allow press
+    in \l {Overlay::modal}{Overlay.modal}, and do not allow press
     or release events through to items beneath them.
 
     On desktop platforms, it is common for modal popups to be closed only when
