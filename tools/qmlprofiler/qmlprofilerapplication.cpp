@@ -472,7 +472,7 @@ void QmlProfilerApplication::run()
 
         m_process->setProcessChannelMode(QProcess::MergedChannels);
         connect(m_process, &QIODevice::readyRead, this, &QmlProfilerApplication::processHasOutput);
-        connect(m_process, static_cast<void(QProcess::*)(int)>(&QProcess::finished),
+        connect(m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                 this, [this](int){ processFinished(); });
         logStatus(QString("Starting '%1 %2' ...").arg(m_executablePath,
                                                       arguments.join(QLatin1Char(' '))));

@@ -148,7 +148,7 @@ void QmlPreviewApplication::run()
     m_process->setProcessChannelMode(QProcess::MergedChannels);
     connect(m_process.data(), &QIODevice::readyRead,
             this, &QmlPreviewApplication::processHasOutput);
-    connect(m_process.data(), static_cast<void(QProcess::*)(int)>(&QProcess::finished),
+    connect(m_process.data(), QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int){ processFinished(); });
     logStatus(QString("Starting '%1 %2' ...").arg(m_executablePath, arguments.join(QLatin1Char(' '))));
     m_process->start(m_executablePath, arguments);
