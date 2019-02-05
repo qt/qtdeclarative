@@ -96,6 +96,24 @@ QT_BEGIN_NAMESPACE
     \li Clips the content
     \endlist
 
+    \section2 Tab Focus
+
+    By default, pressing the tab key while TextArea has
+    \l {Item::activeFocus}{active focus} results in a tab character being input
+    into the control itself. To make tab pass active focus onto another item,
+    use the attached \l KeyNavigation properties:
+
+    \code
+    TextField {
+        id: textField
+    }
+
+    TextArea {
+        KeyNavigation.priority: KeyNavigation.BeforeItem
+        KeyNavigation.tab: textField
+    }
+    \endcode
+
     \sa TextField, {Customizing TextArea}, {Input Controls}
 */
 

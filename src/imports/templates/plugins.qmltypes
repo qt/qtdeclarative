@@ -463,14 +463,26 @@ Module {
         name: "QQuickDial"
         defaultProperty: "data"
         prototype: "QQuickControl"
-        exports: ["QtQuick.Templates/Dial 2.0", "QtQuick.Templates/Dial 2.2"]
-        exportMetaObjectRevisions: [0, 2]
+        exports: [
+            "QtQuick.Templates/Dial 2.0",
+            "QtQuick.Templates/Dial 2.2",
+            "QtQuick.Templates/Dial 2.5"
+        ]
+        exportMetaObjectRevisions: [0, 2, 5]
         Enum {
             name: "SnapMode"
             values: {
                 "NoSnap": 0,
                 "SnapAlways": 1,
                 "SnapOnRelease": 2
+            }
+        }
+        Enum {
+            name: "InputMode"
+            values: {
+                "Circular": 0,
+                "Horizontal": 1,
+                "Vertical": 2
             }
         }
         Property { name: "from"; type: "double" }
@@ -484,8 +496,10 @@ Module {
         Property { name: "pressed"; type: "bool"; isReadonly: true }
         Property { name: "handle"; type: "QQuickItem"; isPointer: true }
         Property { name: "live"; revision: 2; type: "bool" }
+        Property { name: "inputMode"; revision: 5; type: "InputMode" }
         Signal { name: "moved"; revision: 2 }
         Signal { name: "liveChanged"; revision: 2 }
+        Signal { name: "inputModeChanged"; revision: 5 }
         Method { name: "increase" }
         Method { name: "decrease" }
     }
@@ -553,23 +567,11 @@ Module {
                 "Footer": 1
             }
         }
-        Enum {
-            name: "ButtonLayout"
-            values: {
-                "UnknownLayout": -1,
-                "WinLayout": 0,
-                "MacLayout": 1,
-                "KdeLayout": 2,
-                "GnomeLayout": 3,
-                "MacModelessLayout": 4,
-                "AndroidLayout": 5
-            }
-        }
         Property { name: "position"; type: "Position" }
         Property { name: "alignment"; type: "Qt::Alignment" }
         Property { name: "standardButtons"; type: "QPlatformDialogHelper::StandardButtons" }
         Property { name: "delegate"; type: "QQmlComponent"; isPointer: true }
-        Property { name: "buttonLayout"; revision: 5; type: "ButtonLayout" }
+        Property { name: "buttonLayout"; revision: 5; type: "QPlatformDialogHelper::ButtonLayout" }
         Signal { name: "accepted" }
         Signal { name: "rejected" }
         Signal { name: "helpRequested" }
@@ -653,13 +655,26 @@ Module {
         prototype: "QQuickText"
         exports: [
             "QtQuick.Templates/Label 2.0",
-            "QtQuick.Templates/Label 2.3"
+            "QtQuick.Templates/Label 2.3",
+            "QtQuick.Templates/Label 2.5"
         ]
-        exportMetaObjectRevisions: [0, 3]
+        exportMetaObjectRevisions: [0, 3, 5]
         Property { name: "font"; type: "QFont" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "palette"; revision: 3; type: "QPalette" }
+        Property { name: "implicitBackgroundWidth"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitBackgroundHeight"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "topInset"; revision: 5; type: "double" }
+        Property { name: "leftInset"; revision: 5; type: "double" }
+        Property { name: "rightInset"; revision: 5; type: "double" }
+        Property { name: "bottomInset"; revision: 5; type: "double" }
         Signal { name: "paletteChanged"; revision: 3 }
+        Signal { name: "implicitBackgroundWidthChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundHeightChanged"; revision: 5 }
+        Signal { name: "topInsetChanged"; revision: 5 }
+        Signal { name: "leftInsetChanged"; revision: 5 }
+        Signal { name: "rightInsetChanged"; revision: 5 }
+        Signal { name: "bottomInsetChanged"; revision: 5 }
     }
     Component {
         name: "QQuickMenu"
@@ -1605,6 +1620,12 @@ Module {
         Property { name: "hoverEnabled"; revision: 1; type: "bool" }
         Property { name: "palette"; revision: 3; type: "QPalette" }
         Property { name: "placeholderTextColor"; revision: 5; type: "QColor" }
+        Property { name: "implicitBackgroundWidth"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitBackgroundHeight"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "topInset"; revision: 5; type: "double" }
+        Property { name: "leftInset"; revision: 5; type: "double" }
+        Property { name: "rightInset"; revision: 5; type: "double" }
+        Property { name: "bottomInset"; revision: 5; type: "double" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
         Signal {
@@ -1625,6 +1646,12 @@ Module {
         Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal { name: "paletteChanged"; revision: 3 }
         Signal { name: "placeholderTextColorChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundWidthChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundHeightChanged"; revision: 5 }
+        Signal { name: "topInsetChanged"; revision: 5 }
+        Signal { name: "leftInsetChanged"; revision: 5 }
+        Signal { name: "rightInsetChanged"; revision: 5 }
+        Signal { name: "bottomInsetChanged"; revision: 5 }
     }
     Component {
         name: "QQuickTextAreaAttached"
@@ -1652,6 +1679,12 @@ Module {
         Property { name: "hoverEnabled"; revision: 1; type: "bool" }
         Property { name: "palette"; revision: 3; type: "QPalette" }
         Property { name: "placeholderTextColor"; revision: 5; type: "QColor" }
+        Property { name: "implicitBackgroundWidth"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitBackgroundHeight"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "topInset"; revision: 5; type: "double" }
+        Property { name: "leftInset"; revision: 5; type: "double" }
+        Property { name: "rightInset"; revision: 5; type: "double" }
+        Property { name: "bottomInset"; revision: 5; type: "double" }
         Signal { name: "implicitWidthChanged3" }
         Signal { name: "implicitHeightChanged3" }
         Signal {
@@ -1672,6 +1705,12 @@ Module {
         Signal { name: "hoverEnabledChanged"; revision: 1 }
         Signal { name: "paletteChanged"; revision: 3 }
         Signal { name: "placeholderTextColorChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundWidthChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundHeightChanged"; revision: 5 }
+        Signal { name: "topInsetChanged"; revision: 5 }
+        Signal { name: "leftInsetChanged"; revision: 5 }
+        Signal { name: "rightInsetChanged"; revision: 5 }
+        Signal { name: "bottomInsetChanged"; revision: 5 }
     }
     Component {
         name: "QQuickToolBar"
