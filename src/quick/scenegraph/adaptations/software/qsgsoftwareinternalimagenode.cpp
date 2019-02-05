@@ -473,8 +473,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
         painter->save();
         qreal sx = m_targetRect.width()/(m_subSourceRect.width()*pm.width());
         qreal sy = m_targetRect.height()/(m_subSourceRect.height()*pm.height());
-        QMatrix transform(sx, 0, 0, sy, 0, 0);
-        painter->setMatrix(transform, true);
+        painter->setTransform(QTransform::fromScale(sx, sy), true);
         painter->drawTiledPixmap(QRectF(m_targetRect.x()/sx, m_targetRect.y()/sy, m_targetRect.width()/sx, m_targetRect.height()/sy),
                                  pm,
                                  QPointF(m_subSourceRect.left()*pm.width(), m_subSourceRect.top()*pm.height()));
