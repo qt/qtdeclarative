@@ -88,6 +88,9 @@ public:
 
     static void registerUndeletableType(const QQmlType &dtype);
 
+    static int registerAttachedPropertyId(const QMetaObject *metaObject, int index);
+    static bool unregisterAttachedPropertyId(const QMetaObject *metaObject, int index);
+
     static QList<QString> qmlTypeNames();
     static QList<QQmlType> qmlTypes();
     static QList<QQmlType> qmlSingletonTypes();

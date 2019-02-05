@@ -115,8 +115,6 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
     return scriptApis.value(e);
 }
 
-QHash<const QMetaObject *, int> QQmlTypePrivate::attachedPropertyIds;
-
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : refCount(1), regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
@@ -173,122 +171,6 @@ QQmlTypePrivate::~QQmlTypePrivate()
     }
 }
 
-QQmlType::QQmlType(QQmlMetaTypeData *data, const QQmlPrivate::RegisterInterface &interface)
-    : d(new QQmlTypePrivate(InterfaceType))
-{
-    d->iid = interface.iid;
-    d->typeId = interface.typeId;
-    d->listId = interface.listId;
-    d->isSetup = true;
-    d->version_maj = 0;
-    d->version_min = 0;
-    data->registerType(d);
-}
-
-QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterSingletonType &type)
-    : d(new QQmlTypePrivate(SingletonType))
-{
-    data->registerType(d);
-
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
-
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
-
-    if (type.qobjectApi) {
-        if (type.version >= 1) // static metaobject added in version 1
-            d->baseMetaObject = type.instanceMetaObject;
-        if (type.version >= 2) // typeId added in version 2
-            d->typeId = type.typeId;
-        if (type.version >= 2) // revisions added in version 2
-            d->revision = type.revision;
-    }
-
-    d->extraData.sd->singletonInstanceInfo = new SingletonInstanceInfo;
-    d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
-    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
-    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
-    d->extraData.sd->singletonInstanceInfo->instanceMetaObject
-            = (type.qobjectApi && type.version >= 1) ? type.instanceMetaObject : nullptr;
-}
-
-QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterCompositeSingletonType &type)
-    : d(new QQmlTypePrivate(CompositeSingletonType))
-{
-    data->registerType(d);
-
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
-
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
-
-    d->extraData.sd->singletonInstanceInfo = new SingletonInstanceInfo;
-    d->extraData.sd->singletonInstanceInfo->url = QQmlTypeLoader::normalize(type.url);
-    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
-}
-
-QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterType &type)
-    : d(new QQmlTypePrivate(CppType))
-{
-    data->registerType(d);
-
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
-
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
-    if (type.version >= 1) // revisions added in version 1
-        d->revision = type.revision;
-    d->typeId = type.typeId;
-    d->listId = type.listId;
-    d->extraData.cd->allocationSize = type.objectSize;
-    d->extraData.cd->newFunc = type.create;
-    d->extraData.cd->noCreationReason = type.noCreationReason;
-    d->baseMetaObject = type.metaObject;
-    d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
-    d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
-    if (d->extraData.cd->attachedPropertiesType) {
-        auto iter = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
-        if (iter == QQmlTypePrivate::attachedPropertyIds.end())
-            iter = QQmlTypePrivate::attachedPropertyIds.insert(d->baseMetaObject, d->index);
-        d->extraData.cd->attachedPropertiesId = *iter;
-    } else {
-        d->extraData.cd->attachedPropertiesId = -1;
-    }
-    d->extraData.cd->parserStatusCast = type.parserStatusCast;
-    d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
-    d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
-    d->extraData.cd->extFunc = type.extensionObjectCreate;
-    d->extraData.cd->customParser = type.customParser;
-    d->extraData.cd->registerEnumClassesUnscoped = true;
-
-    if (type.extensionMetaObject)
-        d->extraData.cd->extMetaObject = type.extensionMetaObject;
-
-    // Check if the user wants only scoped enum classes
-    if (d->baseMetaObject) {
-        auto indexOfClassInfo = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
-        if (indexOfClassInfo != -1 && QString::fromUtf8(d->baseMetaObject->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
-            d->extraData.cd->registerEnumClassesUnscoped = false;
-    }
-}
-
-QQmlType::QQmlType(QQmlMetaTypeData *data, const QString &elementName, const QQmlPrivate::RegisterCompositeType &type)
-    : d(new QQmlTypePrivate(CompositeType))
-{
-    data->registerType(d);
-
-    d->elementName = elementName;
-
-    d->module = QString::fromUtf8(type.uri);
-    d->version_maj = type.versionMajor;
-    d->version_min = type.versionMinor;
-
-    d->extraData.fd->url = QQmlTypeLoader::normalize(type.url);
-}
-
 QQmlType::QQmlType()
     : d(nullptr)
 {
@@ -325,11 +207,8 @@ QQmlType::~QQmlType()
     if (d && !d->refCount.deref()) {
         // If attached properties were successfully registered, deregister them.
         // (They may not have been registered if some other type used the same baseMetaObject)
-        if (d->regType == CppType && d->extraData.cd->attachedPropertiesType) {
-            auto it = QQmlTypePrivate::attachedPropertyIds.find(d->baseMetaObject);
-            if (it != QQmlTypePrivate::attachedPropertyIds.end() && *it == d->index)
-                QQmlTypePrivate::attachedPropertyIds.erase(it);
-        }
+        if (d->regType == CppType && d->extraData.cd->attachedPropertiesType)
+            QQmlMetaType::unregisterAttachedPropertyId(d->baseMetaObject, d->index);
         delete d;
     }
 }

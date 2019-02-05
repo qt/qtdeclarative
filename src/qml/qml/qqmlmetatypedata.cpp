@@ -56,8 +56,13 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
     for (QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = propertyCaches.begin(), end = propertyCaches.end();
          it != end; ++it)
         (*it)->release();
+
+    // Do this before the attached properties disappear.
+    types.clear();
+    undeletableTypes.clear();
 }
 
+// This expects a "fresh" QQmlTypePrivate and adopts its reference.
 void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
 {
     for (int i = 0; i < types.count(); ++i) {
@@ -69,6 +74,7 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     }
     types.append(QQmlType(priv));
     priv->index = types.count() - 1;
+    priv->refCount.deref();
 }
 
 QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject)

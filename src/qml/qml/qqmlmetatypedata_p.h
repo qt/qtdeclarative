@@ -128,8 +128,27 @@ struct QQmlMetaTypeData
             qWarning("%s", message.toUtf8().constData());
     }
 
+    int attachedPropertyId(const QMetaObject *metaObject, int ownIndex)
+    {
+        auto iter = attachedPropertyIds.find(metaObject);
+        return (iter == attachedPropertyIds.end())
+                ? *attachedPropertyIds.insert(metaObject, ownIndex)
+                : *iter;
+    }
+
+    bool removeAttachedPropertyId(const QMetaObject *metaObject, int ownIndex)
+    {
+        auto iter = attachedPropertyIds.find(metaObject);
+        if (iter != attachedPropertyIds.end() && *iter == ownIndex) {
+            attachedPropertyIds.erase(iter);
+            return true;
+        }
+        return false;
+    }
+
 private:
     QStringList *m_typeRegistrationFailures = nullptr;
+    QHash<const QMetaObject *, int> attachedPropertyIds;
 };
 
 inline uint qHash(const QQmlMetaTypeData::VersionedUri &v)

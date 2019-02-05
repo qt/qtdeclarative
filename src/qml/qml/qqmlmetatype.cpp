@@ -81,6 +81,129 @@ private:
     LockedData *data = nullptr;
 };
 
+static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
+                                       const QQmlPrivate::RegisterInterface &type)
+{
+    auto *d = new QQmlTypePrivate(QQmlType::InterfaceType);
+    d->iid = type.iid;
+    d->typeId = type.typeId;
+    d->listId = type.listId;
+    d->isSetup = true;
+    d->version_maj = 0;
+    d->version_min = 0;
+    data->registerType(d);
+    return d;
+}
+
+static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
+                                       const QQmlPrivate::RegisterSingletonType &type)
+{
+    auto *d = new QQmlTypePrivate(QQmlType::SingletonType);
+    data->registerType(d);
+
+    d->elementName = elementName;
+    d->module = QString::fromUtf8(type.uri);
+
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+
+    if (type.qobjectApi) {
+        if (type.version >= 1) // static metaobject added in version 1
+            d->baseMetaObject = type.instanceMetaObject;
+        if (type.version >= 2) // typeId added in version 2
+            d->typeId = type.typeId;
+        if (type.version >= 2) // revisions added in version 2
+            d->revision = type.revision;
+    }
+
+    d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+    d->extraData.sd->singletonInstanceInfo->scriptCallback = type.scriptApi;
+    d->extraData.sd->singletonInstanceInfo->qobjectCallback = type.qobjectApi;
+    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
+    d->extraData.sd->singletonInstanceInfo->instanceMetaObject
+            = (type.qobjectApi && type.version >= 1) ? type.instanceMetaObject : nullptr;
+
+    return d;
+}
+
+static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
+                                       const QQmlPrivate::RegisterType &type)
+{
+    QQmlTypePrivate *d = new QQmlTypePrivate(QQmlType::CppType);
+    data->registerType(d);
+    d->elementName = elementName;
+    d->module = QString::fromUtf8(type.uri);
+
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+    if (type.version >= 1) // revisions added in version 1
+        d->revision = type.revision;
+    d->typeId = type.typeId;
+    d->listId = type.listId;
+    d->extraData.cd->allocationSize = type.objectSize;
+    d->extraData.cd->newFunc = type.create;
+    d->extraData.cd->noCreationReason = type.noCreationReason;
+    d->baseMetaObject = type.metaObject;
+    d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
+    d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;
+    if (d->extraData.cd->attachedPropertiesType) {
+        d->extraData.cd->attachedPropertiesId = data->attachedPropertyId(d->baseMetaObject,
+                                                                         d->index);
+    } else {
+        d->extraData.cd->attachedPropertiesId = -1;
+    }
+    d->extraData.cd->parserStatusCast = type.parserStatusCast;
+    d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
+    d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
+    d->extraData.cd->extFunc = type.extensionObjectCreate;
+    d->extraData.cd->customParser = type.customParser;
+    d->extraData.cd->registerEnumClassesUnscoped = true;
+
+    if (type.extensionMetaObject)
+        d->extraData.cd->extMetaObject = type.extensionMetaObject;
+
+    // Check if the user wants only scoped enum classes
+    if (d->baseMetaObject) {
+        auto indexOfClassInfo = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
+        if (indexOfClassInfo != -1 && QString::fromUtf8(d->baseMetaObject->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
+            d->extraData.cd->registerEnumClassesUnscoped = false;
+    }
+
+    return d;
+}
+
+static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
+                                       const QQmlPrivate::RegisterCompositeType &type)
+{
+    auto *d = new QQmlTypePrivate(QQmlType::CompositeType);
+    data->registerType(d);
+    d->elementName = elementName;
+
+    d->module = QString::fromUtf8(type.uri);
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+
+    d->extraData.fd->url = QQmlTypeLoader::normalize(type.url);
+    return d;
+}
+
+static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
+                                       const QQmlPrivate::RegisterCompositeSingletonType &type)
+{
+    auto *d = new QQmlTypePrivate(QQmlType::CompositeSingletonType);
+    data->registerType(d);
+    d->elementName = elementName;
+    d->module = QString::fromUtf8(type.uri);
+
+    d->version_maj = type.versionMajor;
+    d->version_min = type.versionMinor;
+
+    d->extraData.sd->singletonInstanceInfo = new QQmlType::SingletonInstanceInfo;
+    d->extraData.sd->singletonInstanceInfo->url = QQmlTypeLoader::normalize(type.url);
+    d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
+    return d;
+}
+
 void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                          const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd)
 {
@@ -182,9 +305,7 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
-
-    QQmlType dtype(data, type);
-    QQmlTypePrivate *priv = dtype.priv();
+    QQmlTypePrivate *priv = createQQmlType(data, type);
     Q_ASSERT(priv);
 
     data->idToType.insert(priv->typeId, priv);
@@ -200,7 +321,7 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
     data->interfaces.setBit(type.typeId, true);
     data->lists.setBit(type.listId, true);
 
-    return dtype;
+    return QQmlType(priv);
 }
 
 QString registrationTypeString(QQmlType::RegistrationType typeType)
@@ -321,13 +442,13 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.versionMajor))
         return QQmlType();
 
-    QQmlType dtype(data, elementName, type);
+    QQmlTypePrivate *priv = createQQmlType(data, elementName, type);
 
-    addTypeToData(dtype.priv(), data);
+    addTypeToData(priv, data);
     if (!type.typeId)
-        data->idToType.insert(dtype.typeId(), dtype.priv());
+        data->idToType.insert(priv->typeId, priv);
 
-    return dtype;
+    return QQmlType(priv);
 }
 
 QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
@@ -338,11 +459,11 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
     if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.versionMajor))
         return QQmlType();
 
-    QQmlType dtype(data, typeName, type);
+    QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
 
-    addTypeToData(dtype.priv(), data);
+    addTypeToData(priv, data);
 
-    return dtype;
+    return QQmlType(priv);
 }
 
 QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
@@ -357,14 +478,13 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? nullptr : type.uri, typeName))
         return QQmlType();
 
-    QQmlType dtype(data, typeName, type);
-
-    addTypeToData(dtype.priv(), data);
+    QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
+    addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), dtype.priv());
+    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
 
-    return dtype;
+    return QQmlType(priv);
 }
 
 QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
@@ -379,13 +499,13 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     if (!checkRegistration(QQmlType::CompositeType, data, fileImport?nullptr:type.uri, typeName, type.versionMajor))
         return QQmlType();
 
-    QQmlType dtype(data, typeName, type);
-    addTypeToData(dtype.priv(), data);
+    QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
+    addTypeToData(priv, data);
 
     QQmlMetaTypeData::Files *files = fileImport ? &(data->urlToType) : &(data->urlToNonFileImportType);
-    files->insertMulti(QQmlTypeLoader::normalize(type.url), dtype.priv());
+    files->insertMulti(QQmlTypeLoader::normalize(type.url), priv);
 
-    return dtype;
+    return QQmlType(priv);
 }
 
 void QQmlMetaType::registerInternalCompositeType(QV4::CompiledData::CompilationUnit *compilationUnit)
@@ -482,6 +602,19 @@ void QQmlMetaType::registerUndeletableType(const QQmlType &dtype)
 {
     QQmlMetaTypeDataPtr data;
     data->undeletableTypes.insert(dtype);
+}
+
+int QQmlMetaType::registerAttachedPropertyId(const QMetaObject *metaObject, int index)
+{
+    QQmlMetaTypeDataPtr data;
+    return data->attachedPropertyId(metaObject, index);
+}
+
+bool QQmlMetaType::unregisterAttachedPropertyId(const QMetaObject *metaObject, int index)
+{
+    QQmlMetaTypeDataPtr data;
+    // This is run from the QQmlType dtor. QQmlTypes in user code can outlive QQmlMetaTypeData.
+    return data ? data->removeAttachedPropertyId(metaObject, index) : false;
 }
 
 static bool namespaceContainsRegistrations(const QQmlMetaTypeData *data, const QString &uri,
@@ -664,7 +797,6 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
         }
 
         data->registerType(priv);
-        priv->refCount.deref();
         addTypeToData(priv, data);
         data->urlToType.insertMulti(url, priv);
         return QQmlType(priv);

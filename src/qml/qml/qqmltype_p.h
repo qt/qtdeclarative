@@ -60,7 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlMetaTypeData;
 class QHashedCStringRef;
 class QQmlTypePrivate;
 class QHashedString;
@@ -194,23 +193,7 @@ private:
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
     int resolveCompositeEnumValue(QQmlEnginePrivate *engine, const QString &name, bool *ok) const;
     QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
-    friend class QQmlTypePrivate;
-
-    friend QString registrationTypeString(RegistrationType);
-    friend bool checkRegistration(RegistrationType, QQmlMetaTypeData *, const char *, const QString &, int);
-    friend QQmlType registerType(const QQmlPrivate::RegisterType &);
-    friend QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &);
-    friend QQmlType registerInterface(const QQmlPrivate::RegisterInterface &);
-    friend int registerQmlUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &);
     friend uint qHash(const QQmlType &t, uint seed);
-    friend Q_QML_EXPORT void qmlClearTypeRegistrations();
-    friend class QQmlMetaType;
-
-    QQmlType(QQmlMetaTypeData *data, const QQmlPrivate::RegisterInterface &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterSingletonType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeType &);
-    QQmlType(QQmlMetaTypeData *data, const QString &, const QQmlPrivate::RegisterCompositeSingletonType &);
 
     QQmlTypePrivate *d;
 };

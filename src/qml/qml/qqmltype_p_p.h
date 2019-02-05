@@ -129,8 +129,6 @@ public:
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
     mutable QList<QStringHash<int>*> scopedEnums;
 
-    static QHash<const QMetaObject *, int> attachedPropertyIds;
-
     struct PropertyCacheByMinorVersion
     {
         PropertyCacheByMinorVersion() : cache(nullptr), minorVersion(-1) {}
