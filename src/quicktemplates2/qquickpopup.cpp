@@ -1814,6 +1814,8 @@ bool QQuickPopup::hasActiveFocus() const
     \l closePolicy to \c Popup.CloseOnEscape.
 
     The default value is \c false.
+
+    \sa dim
 */
 bool QQuickPopup::isModal() const
 {
@@ -1845,7 +1847,7 @@ void QQuickPopup::setModal(bool modal)
     Unless explicitly set, this property follows the value of \l modal. To
     return to the default value, set this property to \c undefined.
 
-    \sa modal
+    \sa modal, {Overlay::modeless}{Overlay.modeless}
 */
 bool QQuickPopup::dim() const
 {
