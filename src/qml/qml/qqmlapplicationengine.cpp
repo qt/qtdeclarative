@@ -70,8 +70,10 @@ void QQmlApplicationEnginePrivate::cleanUp()
 void QQmlApplicationEnginePrivate::init()
 {
     Q_Q(QQmlApplicationEngine);
-    q->connect(q, SIGNAL(quit()), QCoreApplication::instance(), SLOT(quit()));
-    q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(), &QCoreApplication::exit);
+    q->connect(q, &QQmlApplicationEngine::quit, QCoreApplication::instance(),
+               &QCoreApplication::quit, Qt::QueuedConnection);
+    q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(),
+               &QCoreApplication::exit, Qt::QueuedConnection);
 #if QT_CONFIG(translation)
     QTranslator* qtTranslator = new QTranslator;
     if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
