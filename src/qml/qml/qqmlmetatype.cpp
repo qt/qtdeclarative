@@ -101,9 +101,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     auto *d = new QQmlTypePrivate(QQmlType::SingletonType);
     data->registerType(d);
 
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
-
+    d->setName(QString::fromUtf8(type.uri), elementName);
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
@@ -131,8 +129,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 {
     QQmlTypePrivate *d = new QQmlTypePrivate(QQmlType::CppType);
     data->registerType(d);
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
+    d->setName(QString::fromUtf8(type.uri), elementName);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -177,9 +174,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 {
     auto *d = new QQmlTypePrivate(QQmlType::CompositeType);
     data->registerType(d);
-    d->elementName = elementName;
-
-    d->module = QString::fromUtf8(type.uri);
+    d->setName(QString::fromUtf8(type.uri), elementName);
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
 
@@ -192,8 +187,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 {
     auto *d = new QQmlTypePrivate(QQmlType::CompositeSingletonType);
     data->registerType(d);
-    d->elementName = elementName;
-    d->module = QString::fromUtf8(type.uri);
+    d->setName(QString::fromUtf8(type.uri), elementName);
 
     d->version_maj = type.versionMajor;
     d->version_min = type.versionMinor;
@@ -784,7 +778,7 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
             : QQmlType::CompositeType;
     if (checkRegistration(registrationType, data, nullptr, typeName, majorVersion)) {
         auto *priv = new QQmlTypePrivate(registrationType);
-        priv->elementName = typeName;
+        priv->setName(QString(), typeName);
         priv->version_maj = majorVersion;
         priv->version_min = minorVersion;
 

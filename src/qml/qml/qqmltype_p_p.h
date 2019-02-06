@@ -139,6 +139,9 @@ public:
     QVector<PropertyCacheByMinorVersion> propertyCaches;
     QQmlPropertyCache *propertyCacheForMinorVersion(int minorVersion) const;
     void setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache);
+
+    void setName(const QString &uri, const QString &element);
+
 private:
     struct EnumInfo {
         QStringList path;

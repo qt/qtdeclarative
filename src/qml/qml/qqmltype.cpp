@@ -526,6 +526,12 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(const QQmlPropertyCache *cach
     insertEnums(cppMetaObject);
 }
 
+void QQmlTypePrivate::setName(const QString &uri, const QString &element)
+{
+    module = uri;
+    elementName = element;
+    name = uri.isEmpty() ? element : (uri + QLatin1Char('/') + element);
+}
 
 QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersion) const
 {
@@ -568,13 +574,6 @@ QString QQmlType::qmlTypeName() const
 {
     if (!d)
         return QString();
-    if (d->name.isEmpty()) {
-        if (!d->module.isEmpty())
-            d->name = static_cast<QString>(d->module) + QLatin1Char('/') + d->elementName;
-        else
-            d->name = d->elementName;
-    }
-
     return d->name;
 }
 
