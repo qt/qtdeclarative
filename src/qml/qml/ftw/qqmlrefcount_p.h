@@ -60,18 +60,18 @@ QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QQmlRefCount
 {
+    Q_DISABLE_COPY_MOVE(QQmlRefCount)
 public:
     inline QQmlRefCount();
-    inline virtual ~QQmlRefCount();
-    inline void addref();
-    inline void release();
+    inline void addref() const;
+    inline void release() const;
     inline int count() const;
 
 protected:
-    inline virtual void destroy();
+    inline virtual ~QQmlRefCount();
 
 private:
-    QAtomicInt refCount;
+    mutable QAtomicInt refCount;
 };
 
 template<class T>
@@ -116,27 +116,22 @@ QQmlRefCount::~QQmlRefCount()
     Q_ASSERT(refCount.load() == 0);
 }
 
-void QQmlRefCount::addref()
+void QQmlRefCount::addref() const
 {
     Q_ASSERT(refCount.load() > 0);
     refCount.ref();
 }
 
-void QQmlRefCount::release()
+void QQmlRefCount::release() const
 {
     Q_ASSERT(refCount.load() > 0);
     if (!refCount.deref())
-        destroy();
+        delete this;
 }
 
 int QQmlRefCount::count() const
 {
     return refCount.load();
-}
-
-void QQmlRefCount::destroy()
-{
-    delete this;
 }
 
 template<class T>
