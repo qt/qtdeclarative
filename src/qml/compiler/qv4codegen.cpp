@@ -727,9 +727,6 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
-    bool hasRest = false;
-
-    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
     {
         auto cleanup = [this, iterator, iteratorDone]() {
             iterator.loadInAccumulator();
@@ -760,27 +757,17 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
                 Reference::fromConst(this, Encode(true)).storeOnStack(iteratorDone.stackSlot());
                 bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
                 initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
-                hasRest = true;
             } else {
                 Instruction::IteratorNext next;
                 next.value = iteratorValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
                 initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
-                if (hasError) {
-                    end.link();
+                if (hasError)
                     return;
-                }
             }
         }
-
-        if (hasRest)
-            // no need to close the iterator
-            bytecodeGenerator->jump().link(end);
     }
-
-
-    end.link();
 }
 
 void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
