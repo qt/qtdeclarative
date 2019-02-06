@@ -1191,12 +1191,13 @@ bool Codegen::visit(ArrayPattern *ast)
                 ControlFlowLoop flow(this, &end, &in, cleanup);
 
                 in.link();
+                bytecodeGenerator->addLoopStart(in);
                 iterator.loadInAccumulator();
                 Instruction::IteratorNext next;
                 next.value = lhsValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
-                bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(end);
+                bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue()).link(end);
 
                 lhsValue.loadInAccumulator();
                 pushAccumulator();

@@ -239,6 +239,8 @@ private slots:
     void aggressiveGc();
     void noAccumulatorInTemplateLiteral();
 
+    void triggerBackwardJumpWithDestructuring();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -4689,6 +4691,19 @@ void tst_QJSEngine::noAccumulatorInTemplateLiteral()
         QCOMPARE(value.toString(), "RangeError: Maximum call stack size exceeded.");
     }
     qputenv("QV4_MM_AGGRESSIVE_GC", origAggressiveGc);
+}
+
+void tst_QJSEngine::triggerBackwardJumpWithDestructuring()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(
+            "function makeArray(n) { return [...Array(n).keys()]; }\n"
+            "for (let i=0;i<100;++i) {\n"
+            "    let arr = makeArray(20)\n"
+            "    arr.sort( (a, b) => b - a )\n"
+            "}"
+            );
+    QVERIFY(!value.isError());
 }
 
 QTEST_MAIN(tst_QJSEngine)
