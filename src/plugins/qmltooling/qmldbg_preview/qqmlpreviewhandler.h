@@ -104,6 +104,7 @@ signals:
 protected:
     bool eventFilter(QObject *obj, QEvent *event);
 private:
+    void doZoom();
     void tryCreateObject();
     void showObject(QObject *object);
     void setCurrentWindow(QQuickWindow *window);
@@ -121,6 +122,7 @@ private:
     QVector<QPointer<QObject>> m_createdObjects;
     QScopedPointer<QQmlComponent> m_component;
     QPointer<QQuickWindow> m_currentWindow;
+    qreal m_zoomFactor = 1.0;
     bool m_supportsMultipleWindows;
     QQmlPreviewPosition m_lastPosition;
 

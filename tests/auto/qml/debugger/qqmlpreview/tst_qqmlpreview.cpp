@@ -319,12 +319,12 @@ void tst_QQmlPreview::zoom()
     QTRY_VERIFY(m_files.contains(testFile(file)));
     float baseZoomFactor = -1;
     QTRY_VERIFY_WITH_TIMEOUT((baseZoomFactor = parseZoomFactor(m_process->output())) > 0, 30000);
-    m_client->triggerZoom(2.0f);
-    verifyZoomFactor(m_process, baseZoomFactor * 2.0f);
-    m_client->triggerZoom(1.5f);
-    verifyZoomFactor(m_process, baseZoomFactor * 1.5f);
-    m_client->triggerZoom(0.5f);
-    verifyZoomFactor(m_process, baseZoomFactor * 0.5f);
+
+    for (auto testZoomFactor : {2.0f, 1.5f, 0.5f}) {
+        m_client->triggerZoom(testZoomFactor);
+        verifyZoomFactor(m_process, baseZoomFactor * testZoomFactor);
+    }
+
     m_client->triggerZoom(-1.0f);
     verifyZoomFactor(m_process, baseZoomFactor);
     m_process->stop();
