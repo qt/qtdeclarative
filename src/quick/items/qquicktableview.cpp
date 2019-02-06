@@ -706,6 +706,7 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 void QQuickTableViewPrivate::forceLayout()
 {
     columnRowPositionsInvalid = true;
+    clearEdgeSizeCache();
     RebuildOptions rebuildOptions = RebuildOption::None;
 
     // Go through all columns from first to last, find the columns that used
