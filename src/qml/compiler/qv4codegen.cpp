@@ -1207,7 +1207,6 @@ bool Codegen::visit(ArrayPattern *ast)
 
             BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
             BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-            BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
             {
                 auto cleanup = [this, iterator, iteratorDone]() {
@@ -1217,12 +1216,6 @@ bool Codegen::visit(ArrayPattern *ast)
                     bytecodeGenerator->addInstruction(close);
                 };
                 ControlFlowLoop flow(this, &end, &in, cleanup);
-                bytecodeGenerator->jump().link(in);
-
-                BytecodeGenerator::Label body = bytecodeGenerator->label();
-
-                lhsValue.loadInAccumulator();
-                pushAccumulator();
 
                 in.link();
                 iterator.loadInAccumulator();
@@ -1230,13 +1223,14 @@ bool Codegen::visit(ArrayPattern *ast)
                 next.value = lhsValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
-                bytecodeGenerator->addJumpInstruction(Instruction::JumpFalse()).link(body);
-                bytecodeGenerator->jump().link(done);
+                bytecodeGenerator->addJumpInstruction(Instruction::JumpTrue()).link(end);
 
+                lhsValue.loadInAccumulator();
+                pushAccumulator();
+
+                bytecodeGenerator->jump().link(in);
                 end.link();
             }
-
-            done.link();
         } else {
             RegisterScope innerScope(this);
             Reference expr = expression(it->element->initializer);

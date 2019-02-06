@@ -361,6 +361,7 @@ private slots:
     void importLexicalVariables();
     void hugeObject();
     void templateStringTerminator();
+    void arrayAndException();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8867,6 +8868,14 @@ void tst_qqmlecmascript::templateStringTerminator()
     const QJSValue value = engine.evaluate("let a = 123; let b = `x${a}\ny^`; b;");
     QVERIFY(!value.isError());
     QCOMPARE(value.toString(), QLatin1String("x123\ny^"));
+}
+
+void tst_qqmlecmascript::arrayAndException()
+{
+    QJSEngine engine;
+    const QJSValue value = engine.evaluate("[...[],[,,$]]");
+    // Should not crash
+    QVERIFY(value.isError());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
