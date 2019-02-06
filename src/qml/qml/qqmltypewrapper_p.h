@@ -81,7 +81,7 @@ struct QQmlTypeWrapper : Object {
 
     QQmlType type() const;
 
-    QQmlTypePrivate *typePrivate;
+    const QQmlTypePrivate *typePrivate;
     QQmlTypeNameCache *typeNamespace;
     const QQmlImportRef *importNamespace;
 };
@@ -90,7 +90,7 @@ struct QQmlScopedEnumWrapper : Object {
     void init() { Object::init(); }
     void destroy();
     int scopeEnumIndex;
-    QQmlTypePrivate *typePrivate;
+    const QQmlTypePrivate *typePrivate;
     QQmlType type() const;
 };
 

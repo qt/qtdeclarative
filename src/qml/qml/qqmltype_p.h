@@ -52,6 +52,7 @@
 //
 
 #include <private/qtqmlglobal_p.h>
+#include <private/qqmlrefcount_p.h>
 
 #include <QtQml/qqmlprivate.h>
 #include <QtQml/qjsvalue.h>
@@ -77,16 +78,18 @@ class Q_QML_PRIVATE_EXPORT QQmlType
 public:
     QQmlType();
     QQmlType(const QQmlType &other);
+    QQmlType(QQmlType &&other);
     QQmlType &operator =(const QQmlType &other);
-    explicit QQmlType(QQmlTypePrivate *priv);
+    QQmlType &operator =(QQmlType &&other);
+    explicit QQmlType(const QQmlTypePrivate *priv);
     ~QQmlType();
 
     bool operator ==(const QQmlType &other) const {
-        return d == other.d;
+        return d.data() == other.d.data();
     }
 
-    bool isValid() const { return d != nullptr; }
-    const QQmlTypePrivate *key() const { return d; }
+    bool isValid() const { return !d.isNull(); }
+    const QQmlTypePrivate *key() const { return d.data(); }
 
     QByteArray typeName() const;
     QString qmlTypeName() const;
@@ -174,10 +177,10 @@ public:
     int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
 
-    QQmlTypePrivate *priv() const { return d; }
-    static void refHandle(QQmlTypePrivate *priv);
-    static void derefHandle(QQmlTypePrivate *priv);
-    static int refCount(QQmlTypePrivate *priv);
+    const QQmlTypePrivate *priv() const { return d.data(); }
+    static void refHandle(const QQmlTypePrivate *priv);
+    static void derefHandle(const QQmlTypePrivate *priv);
+    static int refCount(const QQmlTypePrivate *priv);
 
     enum RegistrationType {
         CppType = 0,
@@ -195,10 +198,13 @@ private:
     QQmlPropertyCache *compositePropertyCache(QQmlEnginePrivate *engine) const;
     friend uint qHash(const QQmlType &t, uint seed);
 
-    QQmlTypePrivate *d;
+    QQmlRefPointer<const QQmlTypePrivate> d;
 };
 
-inline uint qHash(const QQmlType &t, uint seed = 0) { return qHash(reinterpret_cast<quintptr>(t.d), seed); }
+inline uint qHash(const QQmlType &t, uint seed = 0)
+{
+    return qHash(reinterpret_cast<quintptr>(t.d.data()), seed);
+}
 
 QT_END_NAMESPACE
 

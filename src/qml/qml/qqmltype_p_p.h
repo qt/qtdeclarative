@@ -59,19 +59,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlTypePrivate
+class QQmlTypePrivate : public QQmlRefCount
 {
-    Q_DISABLE_COPY(QQmlTypePrivate)
+    Q_DISABLE_COPY_MOVE(QQmlTypePrivate)
 public:
     QQmlTypePrivate(QQmlType::RegistrationType type);
-    ~QQmlTypePrivate();
 
     void init() const;
     void initEnums(const QQmlPropertyCache *cache = nullptr) const;
     void insertEnums(const QMetaObject *metaObject) const;
     void insertEnumsFromPropertyCache(const QQmlPropertyCache *cache) const;
 
-    QAtomicInt refCount;
     QQmlType::RegistrationType regType;
 
     struct QQmlCppTypeData
@@ -143,6 +141,8 @@ public:
     void setName(const QString &uri, const QString &element);
 
 private:
+    ~QQmlTypePrivate() override;
+
     struct EnumInfo {
         QStringList path;
         QString metaObjectName;

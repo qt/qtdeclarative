@@ -116,7 +116,7 @@ QJSValue QQmlType::SingletonInstanceInfo::scriptApi(QQmlEngine *e) const
 }
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-    : refCount(1), regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
+    : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
     index(-1), isSetup(false), isEnumSetup(false), haveSuperType(false)
 {
@@ -155,6 +155,10 @@ QQmlTypePrivate::~QQmlTypePrivate()
     qDeleteAll(scopedEnums);
     switch (regType) {
     case QQmlType::CppType:
+        // If attached properties were successfully registered, deregister them.
+        // (They may not have been registered if some other type used the same baseMetaObject)
+        if (extraData.cd->attachedPropertiesType)
+            QQmlMetaType::unregisterAttachedPropertyId(baseMetaObject, index);
         delete extraData.cd->customParser;
         delete extraData.cd;
         break;
@@ -171,47 +175,13 @@ QQmlTypePrivate::~QQmlTypePrivate()
     }
 }
 
-QQmlType::QQmlType()
-    : d(nullptr)
-{
-}
-
-QQmlType::QQmlType(const QQmlType &other)
-    : d(other.d)
-{
-    if (d)
-        d->refCount.ref();
-}
-
-QQmlType &QQmlType::operator =(const QQmlType &other)
-{
-    if (d != other.d) {
-        if (d && !d->refCount.deref())
-            delete d;
-        d = other.d;
-        if (d)
-            d->refCount.ref();
-    }
-    return *this;
-}
-
-QQmlType::QQmlType(QQmlTypePrivate *priv)
-    : d(priv)
-{
-    if (d)
-        d->refCount.ref();
-}
-
-QQmlType::~QQmlType()
-{
-    if (d && !d->refCount.deref()) {
-        // If attached properties were successfully registered, deregister them.
-        // (They may not have been registered if some other type used the same baseMetaObject)
-        if (d->regType == CppType && d->extraData.cd->attachedPropertiesType)
-            QQmlMetaType::unregisterAttachedPropertyId(d->baseMetaObject, d->index);
-        delete d;
-    }
-}
+QQmlType::QQmlType() = default;
+QQmlType::QQmlType(const QQmlType &other) = default;
+QQmlType::QQmlType(QQmlType &&other) = default;
+QQmlType &QQmlType::operator =(const QQmlType &other) = default;
+QQmlType &QQmlType::operator =(QQmlType &&other) = default;
+QQmlType::QQmlType(const QQmlTypePrivate *priv) : d(priv) {}
+QQmlType::~QQmlType() = default;
 
 QHashedString QQmlType::module() const
 {
@@ -985,22 +955,22 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scope
     return -1;
 }
 
-void QQmlType::refHandle(QQmlTypePrivate *priv)
+void QQmlType::refHandle(const QQmlTypePrivate *priv)
 {
     if (priv)
-        priv->refCount.ref();
+        priv->addref();
 }
 
-void QQmlType::derefHandle(QQmlTypePrivate *priv)
-{
-    if (priv && !priv->refCount.deref())
-        delete priv;
-}
-
-int QQmlType::refCount(QQmlTypePrivate *priv)
+void QQmlType::derefHandle(const QQmlTypePrivate *priv)
 {
     if (priv)
-        return priv->refCount;
+        priv->release();
+}
+
+int QQmlType::refCount(const QQmlTypePrivate *priv)
+{
+    if (priv)
+        return priv->count();
     return -1;
 }
 

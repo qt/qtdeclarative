@@ -1220,7 +1220,7 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
         QList<QQmlType>::Iterator it = data->types.begin();
         while (it != data->types.end()) {
             const QQmlTypePrivate *d = (*it).priv();
-            if (d && d->refCount == 1) {
+            if (d && d->count() == 1) {
                 deletedAtLeastOneType = true;
 
                 removeQQmlTypePrivate(data->idToType, d);

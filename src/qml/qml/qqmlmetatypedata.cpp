@@ -74,7 +74,7 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     }
     types.append(QQmlType(priv));
     priv->index = types.count() - 1;
-    priv->refCount.deref();
+    priv->release();
 }
 
 QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
