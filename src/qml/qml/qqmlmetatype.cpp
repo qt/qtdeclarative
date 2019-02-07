@@ -278,6 +278,7 @@ void QQmlMetaType::clearTypeRegistrations()
     data->idToType.clear();
     data->nameToType.clear();
     data->urlToType.clear();
+    data->typePropertyCaches.clear();
     data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
     data->uriToModule.clear();
@@ -1206,6 +1207,7 @@ void QQmlMetaType::unregisterType(int typeIndex)
         removeQQmlTypePrivate(data->metaObjectToType, d);
         for (auto & module : data->uriToModule)
             module->remove(d);
+        data->clearPropertyCachesForMinorVersion(typeIndex);
         data->types[typeIndex] = QQmlType();
     }
 }
@@ -1232,6 +1234,7 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
                 for (auto &module : data->uriToModule)
                     module->remove(d);
 
+                data->clearPropertyCachesForMinorVersion(d->index);
                 *it = QQmlType();
             } else {
                 ++it;

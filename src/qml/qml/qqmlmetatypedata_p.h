@@ -83,6 +83,7 @@ struct QQmlMetaTypeData
     MetaObjects metaObjectToType;
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
     StringConverters stringConverters;
+    QVector<QHash<int, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
 
     struct VersionedUri {
         VersionedUri()
@@ -112,6 +113,11 @@ struct QQmlMetaTypeData
     QHash<int, int> qmlLists;
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
+
+    QQmlPropertyCache *propertyCacheForMinorVersion(int index, int minorVersion) const;
+    void setPropertyCacheForMinorVersion(int index, int minorVersion, QQmlPropertyCache *cache);
+    void clearPropertyCachesForMinorVersion(int index);
+
     QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 

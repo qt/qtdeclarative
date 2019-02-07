@@ -509,25 +509,6 @@ void QQmlTypePrivate::setName(const QString &uri, const QString &element)
     name = uri.isEmpty() ? element : (uri + QLatin1Char('/') + element);
 }
 
-QQmlPropertyCache *QQmlTypePrivate::propertyCacheForMinorVersion(int minorVersion) const
-{
-    for (int i = 0; i < propertyCaches.count(); ++i)
-        if (propertyCaches.at(i).minorVersion == minorVersion)
-            return propertyCaches.at(i).cache.data();
-    return nullptr;
-}
-
-void QQmlTypePrivate::setPropertyCacheForMinorVersion(int minorVersion, QQmlPropertyCache *cache)
-{
-    for (int i = 0; i < propertyCaches.count(); ++i) {
-        if (propertyCaches.at(i).minorVersion == minorVersion) {
-            propertyCaches[i].cache = cache;
-            return;
-        }
-    }
-    propertyCaches.append(PropertyCacheByMinorVersion(cache, minorVersion));
-}
-
 QByteArray QQmlType::typeName() const
 {
     if (d) {

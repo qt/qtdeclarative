@@ -243,8 +243,6 @@ private:
     QByteArray _checksum;
 };
 
-typedef QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCachePtr;
-
 inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
 {
     if (p && Q_UNLIKELY(p->notFullyResolved()))

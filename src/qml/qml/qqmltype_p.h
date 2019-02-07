@@ -89,7 +89,6 @@ public:
     }
 
     bool isValid() const { return !d.isNull(); }
-    const QQmlTypePrivate *key() const { return d.data(); }
 
     QByteArray typeName() const;
     QString qmlTypeName() const;

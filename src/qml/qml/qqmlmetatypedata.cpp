@@ -77,6 +77,27 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     priv->release();
 }
 
+QQmlPropertyCache *QQmlMetaTypeData::propertyCacheForMinorVersion(int index, int minorVersion) const
+{
+    return (index < typePropertyCaches.length())
+            ? typePropertyCaches.at(index).value(minorVersion).data()
+            : nullptr;
+}
+
+void QQmlMetaTypeData::setPropertyCacheForMinorVersion(int index, int minorVersion,
+                                                       QQmlPropertyCache *cache)
+{
+    if (index >= typePropertyCaches.length())
+        typePropertyCaches.resize(index + 1);
+    typePropertyCaches[index][minorVersion] = cache;
+}
+
+void QQmlMetaTypeData::clearPropertyCachesForMinorVersion(int index)
+{
+    if (index < typePropertyCaches.length())
+        typePropertyCaches[index].clear();
+}
+
 QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
 {
     if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
@@ -97,7 +118,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
 {
     Q_ASSERT(type.isValid());
 
-    if (QQmlPropertyCache *pc = type.key()->propertyCacheForMinorVersion(minorVersion))
+    if (QQmlPropertyCache *pc = propertyCacheForMinorVersion(type.index(), minorVersion))
         return pc;
 
     QVector<QQmlType> types;
@@ -118,8 +139,8 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         metaObject = metaObject->superClass();
     }
 
-    if (QQmlPropertyCache *pc = type.key()->propertyCacheForMinorVersion(maxMinorVersion)) {
-        const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(minorVersion, pc);
+    if (QQmlPropertyCache *pc = propertyCacheForMinorVersion(type.index(), maxMinorVersion)) {
+        setPropertyCacheForMinorVersion(type.index(), minorVersion, pc);
         return pc;
     }
 
@@ -190,13 +211,13 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
     }
 #endif
 
-    const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(minorVersion, raw);
+    setPropertyCacheForMinorVersion(type.index(), minorVersion, raw);
 
     if (hasCopied)
         raw->release();
 
     if (minorVersion != maxMinorVersion)
-        const_cast<QQmlTypePrivate*>(type.key())->setPropertyCacheForMinorVersion(maxMinorVersion, raw);
+        setPropertyCacheForMinorVersion(type.index(), maxMinorVersion, raw);
 
     return raw;
 }
