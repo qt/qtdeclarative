@@ -1112,8 +1112,6 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column)
     if (columnWidthProvider.isCallable()) {
         auto const columnAsArgument = QJSValueList() << QJSValue(column);
         columnWidth = columnWidthProvider.call(columnAsArgument).toNumber();
-        cachedColumnWidth.startIndex = column;
-        cachedColumnWidth.size = columnWidth;
         if (qIsNaN(columnWidth) || columnWidth < 0)
             columnWidth = noExplicitColumnWidth;
     } else {
@@ -1124,6 +1122,8 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column)
         columnWidth = noExplicitColumnWidth;
     }
 
+    cachedColumnWidth.startIndex = column;
+    cachedColumnWidth.size = columnWidth;
     return columnWidth;
 }
 
@@ -1146,8 +1146,6 @@ qreal QQuickTableViewPrivate::getRowHeight(int row)
     if (rowHeightProvider.isCallable()) {
         auto const rowAsArgument = QJSValueList() << QJSValue(row);
         rowHeight = rowHeightProvider.call(rowAsArgument).toNumber();
-        cachedRowHeight.startIndex = row;
-        cachedRowHeight.size = rowHeight;
         if (qIsNaN(rowHeight) || rowHeight < 0)
             rowHeight = noExplicitRowHeight;
     } else {
@@ -1158,6 +1156,8 @@ qreal QQuickTableViewPrivate::getRowHeight(int row)
         rowHeight = noExplicitRowHeight;
     }
 
+    cachedRowHeight.startIndex = row;
+    cachedRowHeight.size = rowHeight;
     return rowHeight;
 }
 
