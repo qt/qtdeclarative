@@ -741,7 +741,7 @@ void tst_FlickableInterop::touchAndDragHandlerOnFlickable()
         QQuickTouchUtils::flush(window);
     }
     if (!(buttonDragHandler && !pressDelay))
-        QVERIFY(flickable->contentY() >= dragThreshold);
+        QTRY_VERIFY(flickable->contentY() >= dragThreshold);
     if (buttonTapHandler)
         QCOMPARE(buttonTapHandler->isPressed(), false);
     touchSeq.release(1, p1, window).commit();
