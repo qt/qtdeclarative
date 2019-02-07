@@ -70,10 +70,12 @@ class Q_AUTOTEST_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(qreal activeScale READ activeScale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
-    Q_PROPERTY(qreal minimumX READ minimumX WRITE setMinimumX NOTIFY minimumXChanged)
-    Q_PROPERTY(qreal maximumX READ maximumX WRITE setMaximumX NOTIFY maximumXChanged)
-    Q_PROPERTY(qreal minimumY READ minimumY WRITE setMinimumY NOTIFY minimumYChanged)
-    Q_PROPERTY(qreal maximumY READ maximumY WRITE setMaximumY NOTIFY maximumYChanged)
+#if QT_DEPRECATED_SINCE(5, 12)
+    Q_PROPERTY(qreal minimumX READ minimumX WRITE setMinimumX NOTIFY minimumXChanged)   // ### Qt 6: remove
+    Q_PROPERTY(qreal maximumX READ maximumX WRITE setMaximumX NOTIFY maximumXChanged)   // ### Qt 6: remove
+    Q_PROPERTY(qreal minimumY READ minimumY WRITE setMinimumY NOTIFY minimumYChanged)   // ### Qt 6: remove
+    Q_PROPERTY(qreal maximumY READ maximumY WRITE setMaximumY NOTIFY maximumYChanged)   // ### Qt 6: remove
+#endif
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
 
@@ -96,14 +98,18 @@ public:
     qreal scale() const { return m_accumulatedScale; }
     qreal activeScale() const { return m_activeScale; }
     qreal rotation() const { return m_activeRotation; }
-    qreal minimumX() const { return m_minimumX; }
+
+#if QT_DEPRECATED_SINCE(5, 12)
+    void warnAboutMinMaxDeprecated() const;
+    qreal minimumX() const { warnAboutMinMaxDeprecated(); return m_minimumX; }
     void setMinimumX(qreal minX);
-    qreal maximumX() const { return m_maximumX; }
+    qreal maximumX() const { warnAboutMinMaxDeprecated(); return m_maximumX; }
     void setMaximumX(qreal maxX);
-    qreal minimumY() const { return m_minimumY; }
+    qreal minimumY() const { warnAboutMinMaxDeprecated(); return m_minimumY; }
     void setMinimumY(qreal minY);
-    qreal maximumY() const { return m_maximumY; }
+    qreal maximumY() const { warnAboutMinMaxDeprecated(); return m_maximumY; }
     void setMaximumY(qreal maxY);
+#endif
 
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
