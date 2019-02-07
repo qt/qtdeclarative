@@ -108,10 +108,11 @@ void QQuickPopupPositioner::reposition()
         return;
     }
 
-    const qreal w = popupItem->width();
-    const qreal h = popupItem->height();
-    const qreal iw = popupItem->implicitWidth();
-    const qreal ih = popupItem->implicitHeight();
+    const qreal scale = popupItem->scale();
+    const qreal w = popupItem->width() * scale;
+    const qreal h = popupItem->height() * scale;
+    const qreal iw = popupItem->implicitWidth() * scale;
+    const qreal ih = popupItem->implicitHeight() * scale;
 
     bool widthAdjusted = false;
     bool heightAdjusted = false;
@@ -257,10 +258,9 @@ void QQuickPopupPositioner::reposition()
     }
 
     if (!p->hasWidth && widthAdjusted && rect.width() > 0)
-        popupItem->setWidth(rect.width());
+        popupItem->setWidth(rect.width() / scale);
     if (!p->hasHeight && heightAdjusted && rect.height() > 0)
-        popupItem->setHeight(rect.height());
-
+        popupItem->setHeight(rect.height() / scale);
     m_positioning = false;
 }
 
