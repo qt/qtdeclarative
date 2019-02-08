@@ -2623,7 +2623,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
                 auto mouseGrabber = q->mouseGrabberItem();
                 if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
                     item->mouseUngrabEvent();
-                } else {
+                } else if (item->isEnabled() && item->isVisible()) {
                     item->grabMouse();
                 }
                 point->setAccepted(true);

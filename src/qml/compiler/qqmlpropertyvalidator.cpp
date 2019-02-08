@@ -276,7 +276,11 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
                     }
                 } else {
                     if (!enginePrivate->propertyCacheForType(pd->propType())) {
-                        return recordError(binding->location, tr("Invalid grouped property access"));
+                        return recordError(binding->location,
+                                           tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
+                                           .arg(name)
+                                           .arg(QString::fromLatin1(QMetaType::typeName(pd->propType())))
+                                          );
                     }
                 }
             }
