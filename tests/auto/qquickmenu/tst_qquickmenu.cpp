@@ -68,6 +68,7 @@ private slots:
     void mouse();
     void pressAndHold();
     void contextMenuKeyboard();
+    void disabledMenuItemKeyNavigation();
     void mnemonics();
     void menuButton();
     void addItem();
@@ -79,13 +80,19 @@ private slots:
     void removeTakeItem();
     void subMenuMouse_data();
     void subMenuMouse();
+    void subMenuDisabledMouse_data();
+    void subMenuDisabledMouse();
     void subMenuKeyboard_data();
     void subMenuKeyboard();
+    void subMenuDisabledKeyboard_data();
+    void subMenuDisabledKeyboard();
     void subMenuPosition_data();
     void subMenuPosition();
     void addRemoveSubMenus();
     void scrollable_data();
     void scrollable();
+    void disableWhenTriggered_data();
+    void disableWhenTriggered();
 };
 
 void tst_QQuickMenu::defaults()
@@ -387,6 +394,69 @@ void tst_QQuickMenu::contextMenuKeyboard()
 
     QTest::keyClick(window, Qt::Key_Escape);
     QCOMPARE(visibleSpy.count(), 4);
+    QVERIFY(!menu->isVisible());
+}
+
+// QTBUG-70181
+void tst_QQuickMenu::disabledMenuItemKeyNavigation()
+{
+    if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
+        QSKIP("This platform only allows tab focus for text controls");
+
+    QQuickApplicationHelper helper(this, QLatin1String("disabledMenuItemKeyNavigation.qml"));
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QVERIFY(QGuiApplication::focusWindow() == window);
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(firstItem);
+
+    QQuickMenuItem *secondItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(1));
+    QVERIFY(secondItem);
+
+    QQuickMenuItem *thirdItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(2));
+    QVERIFY(thirdItem);
+
+    menu->setFocus(true);
+    menu->open();
+    QVERIFY(menu->isVisible());
+    QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->property("highlighted").toBool());
+    QCOMPARE(menu->currentIndex(), -1);
+
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(menu->currentIndex(), 0);
+
+    // Shouldn't be possible to give focus to a disabled menu item.
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
+    QVERIFY(thirdItem->hasActiveFocus());
+    QVERIFY(thirdItem->hasVisualFocus());
+    QVERIFY(thirdItem->isHighlighted());
+    QCOMPARE(thirdItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Up);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(window, Qt::Key_Escape);
     QVERIFY(!menu->isVisible());
 }
 
@@ -995,6 +1065,64 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(!subSubMenu1->isVisible());
 }
 
+void tst_QQuickMenu::subMenuDisabledMouse_data()
+{
+    subMenuMouse_data();
+}
+
+// QTBUG-69540
+void tst_QQuickMenu::subMenuDisabledMouse()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
+
+    QFETCH(bool, cascade);
+
+    QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    mainMenu->setCascade(cascade);
+    QCOMPARE(mainMenu->cascade(), cascade);
+
+    QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
+    QVERIFY(menuItem1);
+
+    QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
+    QVERIFY(subMenu);
+
+    mainMenu->open();
+    QVERIFY(mainMenu->isVisible());
+    QVERIFY(!menuItem1->isHighlighted());
+    QVERIFY(!subMenu->isVisible());
+
+    // Open the sub-menu with a mouse click.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, menuItem1->mapToScene(QPoint(1, 1)).toPoint());
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(subMenu->isVisible());
+    QVERIFY(menuItem1->isHighlighted());
+    // Now the sub-menu is open. The current behavior is that the first menu item
+    // in the new menu is highlighted; make sure that we choose the next item if
+    // the first is disabled.
+    QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subMenuItem1);
+    QQuickMenuItem *subMenuItem2 = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(1));
+    QVERIFY(subMenuItem2);
+    QVERIFY(!subMenuItem1->isHighlighted());
+    QVERIFY(subMenuItem2->isHighlighted());
+
+    // Close all menus by clicking on the item that isn't disabled.
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, subMenuItem2->mapToScene(QPoint(1, 1)).toPoint());
+    QVERIFY(!mainMenu->isVisible());
+    QVERIFY(!subMenu->isVisible());
+}
+
 void tst_QQuickMenu::subMenuKeyboard_data()
 {
     QTest::addColumn<bool>("cascade");
@@ -1117,6 +1245,67 @@ void tst_QQuickMenu::subMenuKeyboard()
     QVERIFY(!subMenu1->isVisible());
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
+}
+
+void tst_QQuickMenu::subMenuDisabledKeyboard_data()
+{
+    subMenuKeyboard_data();
+}
+
+// QTBUG-69540
+void tst_QQuickMenu::subMenuDisabledKeyboard()
+{
+    QFETCH(bool, cascade);
+    QFETCH(bool, mirrored);
+
+    QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    centerOnScreen(window);
+    moveMouseAway(window);
+
+    if (mirrored)
+        window->setLocale(QLocale("ar_EG"));
+
+    QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
+    QVERIFY(mainMenu);
+    mainMenu->setCascade(cascade);
+    QCOMPARE(mainMenu->cascade(), cascade);
+
+    QQuickMenuItem *menuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
+    QVERIFY(menuItem1);
+
+    QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
+    QVERIFY(subMenu);
+
+    mainMenu->open();
+    QVERIFY(mainMenu->isVisible());
+    QVERIFY(!menuItem1->isHighlighted());
+    QVERIFY(!subMenu->isVisible());
+
+    // Highlight the top-level menu item.
+    QTest::keyClick(window, Qt::Key_Down);
+    QVERIFY(menuItem1->isHighlighted());
+
+    QQuickMenuItem *subMenuItem1 = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(0));
+    QVERIFY(subMenuItem1);
+    QQuickMenuItem *subMenuItem2 = qobject_cast<QQuickMenuItem *>(subMenu->itemAt(1));
+    QVERIFY(subMenuItem2);
+
+    // Open the sub-menu.
+    QTest::keyClick(window, mirrored ? Qt::Key_Left : Qt::Key_Right);
+    // The first sub-menu item is disabled, so it should highlight the second one.
+    QVERIFY(!subMenuItem1->isHighlighted());
+    QVERIFY(subMenuItem2->isHighlighted());
+
+    // Close the menus with escape.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QCOMPARE(mainMenu->isVisible(), cascade);
+    QVERIFY(!subMenu->isVisible());
+    QTest::keyClick(window, Qt::Key_Escape);
+    QVERIFY(!mainMenu->isVisible());
+    QVERIFY(!subMenu->isVisible());
 }
 
 void tst_QQuickMenu::subMenuPosition_data()
@@ -1334,6 +1523,74 @@ void tst_QQuickMenu::scrollable()
 
     QQuickItem *contentItem = menu->contentItem();
     QCOMPARE(contentItem->property("interactive").toBool(), true);
+}
+
+void tst_QQuickMenu::disableWhenTriggered_data()
+{
+    QTest::addColumn<int>("menuItemIndex");
+    QTest::addColumn<int>("subMenuItemIndex");
+
+    QTest::addRow("Action") << 0 << -1;
+    QTest::addRow("MenuItem with Action") << 1 << -1;
+    QTest::addRow("MenuItem with Action declared outside menu") << 2 << -1;
+    QTest::addRow("MenuItem with no Action") << 3 << -1;
+
+    QTest::addRow("Sub-Action") << 4 << 0;
+    QTest::addRow("Sub-MenuItem with Action declared inside") << 4 << 1;
+    QTest::addRow("Sub-MenuItem with Action declared outside menu") << 4 << 2;
+    QTest::addRow("Sub-MenuItem with no Action") << 4 << 3;
+}
+
+// Tests that the menu is dismissed when a menu item sets "enabled = false" in onTriggered().
+void tst_QQuickMenu::disableWhenTriggered()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
+
+    QFETCH(int, menuItemIndex);
+    QFETCH(int, subMenuItemIndex);
+
+    QQuickApplicationHelper helper(this, QLatin1String("disableWhenTriggered.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->findChild<QQuickMenu*>("Menu");
+    QVERIFY(menu);
+
+    menu->open();
+    QVERIFY(menu->isVisible());
+
+    QPointer<QQuickMenuItem> menuItem = qobject_cast<QQuickMenuItem*>(menu->itemAt(menuItemIndex));
+    QVERIFY(menuItem);
+
+    if (subMenuItemIndex == -1) {
+        // Click a top-level menu item.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+        QCOMPARE(menuItem->isEnabled(), false);
+        QVERIFY(!menu->isVisible());
+    } else {
+        // Click a sub-menu item.
+        QPointer<QQuickMenu> subMenu = menuItem->subMenu();
+        QVERIFY(subMenu);
+
+        QPointer<QQuickMenuItem> subMenuItem = qobject_cast<QQuickMenuItem*>(subMenu->itemAt(subMenuItemIndex));
+        QVERIFY(subMenuItem);
+
+        // First, open the sub-menu.
+        QTest::mouseMove(window, menuItem->mapToScene(QPoint(1, 1)).toPoint());
+        QTRY_VERIFY(subMenu->isVisible());
+        QVERIFY(menuItem->isHovered());
+        QTRY_VERIFY(subMenu->contentItem()->property("contentHeight").toReal() > 0.0);
+
+        // Click the item.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            subMenuItem->mapToScene(QPointF(subMenuItem->width() / 2, subMenuItem->height() / 2)).toPoint());
+        QCOMPARE(subMenuItem->isEnabled(), false);
+        QVERIFY(!menu->isVisible());
+    }
 }
 
 QTEST_MAIN(tst_QQuickMenu)

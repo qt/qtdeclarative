@@ -115,6 +115,8 @@ public:
     bool activateNextItem();
     bool activatePreviousItem();
 
+    QQuickMenuItem *firstEnabledMenuItem() const;
+
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
     static int contentData_count(QQmlListProperty<QObject> *prop);
     static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);

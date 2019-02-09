@@ -308,7 +308,15 @@ QQuickTheme *QtQuickControls2Plugin::createTheme(const QString &name)
     QSharedPointer<QSettings> settings = QQuickStylePrivate::settings(name);
     if (settings) {
         p->defaultFont.reset(QQuickStylePrivate::readFont(settings));
+        // Set the default font as the System scope, because that's what
+        // QQuickControlPrivate::parentFont() uses as its fallback if no
+        // parent item has a font explicitly set. QQuickControlPrivate::parentFont()
+        // is used as the starting point for font inheritance/resolution.
+        // The same goes for palettes below.
+        theme->setFont(QQuickTheme::System, *p->defaultFont);
+
         p->defaultPalette.reset(QQuickStylePrivate::readPalette(settings));
+        theme->setPalette(QQuickTheme::System, *p->defaultPalette);
     }
 #endif
     QQuickThemePrivate::instance.reset(theme);
