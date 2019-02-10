@@ -1502,7 +1502,7 @@ public:
             }
             break;
         case Qt::OffsetFromUTC:
-            m_offset = m_datetime.utcOffset() / 60;
+            m_offset = m_datetime.offsetFromUtc() / 60;
             m_timespec = QString("%1%2:%3").arg(m_offset < 0 ? '-' : '+')
                                            .arg(abs(m_offset) / 60)
                                            .arg(abs(m_offset) % 60);
