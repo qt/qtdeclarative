@@ -127,7 +127,7 @@ void tst_QuickFontMetrics::functions()
     QFontMetricsF expected = QFontMetricsF(QFont());
 
     QCOMPARE(metrics.elidedText(text, mode, width, flags), expected.elidedText(text, mode, width, flags));
-    QCOMPARE(metrics.advanceWidth(text), expected.width(text));
+    QCOMPARE(metrics.advanceWidth(text), expected.horizontalAdvance(text));
     QCOMPARE(metrics.boundingRect(text), expected.boundingRect(text));
     QCOMPARE(metrics.tightBoundingRect(text), expected.tightBoundingRect(text));
 }

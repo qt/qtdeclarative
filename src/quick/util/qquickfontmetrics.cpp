@@ -287,7 +287,7 @@ qreal QQuickFontMetrics::lineWidth() const
 */
 qreal QQuickFontMetrics::advanceWidth(const QString &text) const
 {
-    return m_metrics.width(text);
+    return m_metrics.horizontalAdvance(text);
 }
 
 /*!

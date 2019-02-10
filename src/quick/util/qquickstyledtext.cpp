@@ -675,7 +675,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
 {
     qreal imgWidth = 0.0;
     QFontMetricsF fm(layout.font());
-    const qreal spaceWidth = fm.width(QChar::Nbsp);
+    const qreal spaceWidth = fm.horizontalAdvance(QChar::Nbsp);
     const bool trailingSpace = textOut.endsWith(space);
 
     if (!updateImagePositions) {
