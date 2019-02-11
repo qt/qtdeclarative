@@ -44,6 +44,18 @@ QT_BEGIN_NAMESPACE
 
 QScopedPointer<QQuickTheme> QQuickThemePrivate::instance;
 
+static void cleanup_instance()
+{
+    QQuickThemePrivate::instance.reset();
+}
+
+static void install_instance_cleanuper()
+{
+    qAddPostRoutine(cleanup_instance);
+}
+
+Q_COREAPP_STARTUP_FUNCTION(install_instance_cleanuper)
+
 static QPlatformTheme::Font platformFont(QQuickTheme::Scope scope)
 {
     switch (scope) {
