@@ -346,11 +346,17 @@ QT_BEGIN_NAMESPACE
 
 #define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)
 
-#if defined(Q_CC_GNU) && !defined(Q_CC_INTEL)
+#if defined(Q_CC_GNU)
+#if defined(Q_CC_INTEL)
 // icc before version 1200 doesn't support computed goto, and at least up to version 18.0.0 the
 // current use results in an internal compiler error. We could enable this if/when it gets fixed
 // in a later version.
+# elif defined(Q_OS_WASM) && !defined(__asmjs)
+// Upstream llvm does not support computed goto for the wasm target, unlike the 'fastcomp' llvm fork
+// shipped with the emscripten SDK. Disable computed goto usage for non-fastcomp llvm on Wasm.
+#else
 #  define MOTH_COMPUTED_GOTO
+#endif
 #endif
 
 #define MOTH_INSTR_ALIGN_MASK (Q_ALIGNOF(QV4::Moth::Instr) - 1)
