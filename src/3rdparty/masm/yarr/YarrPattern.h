@@ -31,6 +31,7 @@
 #include "YarrUnicodeProperties.h"
 #include <wtf/CheckedArithmetic.h>
 #include <wtf/HashMap.h>
+#include <wtf/Optional.h>
 #include <wtf/PrintStream.h>
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
