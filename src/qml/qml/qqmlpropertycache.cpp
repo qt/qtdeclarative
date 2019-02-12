@@ -929,8 +929,8 @@ static bool passTypeAsInt(int type)
     if (type < int(QMetaType::User))
         return false;
 
-    // Pointers to QObjects and QGadgets can be handled as they are.
-    if (flags & (QMetaType::PointerToQObject | QMetaType::PointerToGadget))
+    // Pointers to QObjects and QGadgets, and QGadgets themselves can be handled as they are.
+    if (flags & (QMetaType::PointerToQObject | QMetaType::PointerToGadget | QMetaType::IsGadget))
         return false;
 
     // If it wasn't declared as metatype, better don't touch it.

@@ -50,6 +50,7 @@ private slots:
     void signalHandlers();
     void signalHandlersDerived();
     void passForeignEnums();
+    void passQGadget();
     void metaObjectSize_data();
     void metaObjectSize();
     void metaObjectChecksum();
@@ -337,6 +338,44 @@ void tst_qqmlpropertycache::passForeignEnums()
 }
 
 Q_DECLARE_METATYPE(MyEnum::Option1)
+
+QT_BEGIN_NAMESPACE
+class SimpleGadget
+{
+    Q_GADGET
+    Q_PROPERTY(bool someProperty READ someProperty)
+public:
+    bool someProperty() const { return true; }
+};
+
+// Avoids NeedsCreation and NeedsDestruction flags
+Q_DECLARE_TYPEINFO(SimpleGadget, Q_PRIMITIVE_TYPE);
+QT_END_NAMESPACE
+
+class GadgetEmitter : public QObject
+{
+    Q_OBJECT
+signals:
+    void emitGadget(SimpleGadget);
+};
+
+void tst_qqmlpropertycache::passQGadget()
+{
+    qRegisterMetaType<SimpleGadget>();
+
+    GadgetEmitter emitter;
+    engine.rootContext()->setContextProperty("emitter", &emitter);
+    QQmlComponent component(&engine, testFile("passQGadget.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> obj(component.create(engine.rootContext()));
+    QVariant before = obj->property("result");
+    QVERIFY(before.isNull());
+    emit emitter.emitGadget(SimpleGadget());
+    QVariant after = obj->property("result");
+    QCOMPARE(QMetaType::Type(after.type()), QMetaType::Bool);
+    QVERIFY(after.toBool());
+}
 
 class TestClass : public QObject
 {
