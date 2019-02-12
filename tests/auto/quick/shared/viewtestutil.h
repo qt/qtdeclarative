@@ -37,6 +37,8 @@ QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)
 QT_FORWARD_DECLARE_CLASS(FxViewItem)
 
+QT_BEGIN_NAMESPACE
+
 namespace QQuickViewTestUtil
 {
     QQuickView *createView();
@@ -188,6 +190,8 @@ namespace QQuickTouchUtils {
 namespace QQuickTest {
     bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage);
 }
+
+QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)

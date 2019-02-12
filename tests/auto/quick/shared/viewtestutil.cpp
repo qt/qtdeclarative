@@ -38,6 +38,7 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickitemview_p_p.h>
 
+QT_BEGIN_NAMESPACE
 
 QQuickView *QQuickViewTestUtil::createView()
 {
@@ -478,3 +479,5 @@ namespace QQuickTest {
         return true;
     }
 }
+
+QT_END_NAMESPACE
