@@ -162,7 +162,7 @@ ApplicationWindow {
 
                     Layout.alignment: Qt.AlignRight
 
-                    onClicked: tableView.model.append(appendRowForm.inputAsRow())
+                    onClicked: tableView.model.appendRow(appendRowForm.inputAsRow())
                 }
             }
             ColumnLayout {
@@ -194,7 +194,7 @@ ApplicationWindow {
 
                     Layout.alignment: Qt.AlignRight
 
-                    onClicked: tableView.model.insert(insertIndexSpinBox.value, insertRowForm.inputAsRow())
+                    onClicked: tableView.model.insertRow(insertIndexSpinBox.value, insertRowForm.inputAsRow())
                 }
             }
             GridLayout {
@@ -234,7 +234,7 @@ ApplicationWindow {
                     Layout.alignment: Qt.AlignRight
                     Layout.columnSpan: 2
 
-                    onClicked: tableView.model.move(moveFromIndexSpinBox.value, moveToIndexSpinBox.value, rowsToMoveSpinBox.value)
+                    onClicked: tableView.model.moveRow(moveFromIndexSpinBox.value, moveToIndexSpinBox.value, rowsToMoveSpinBox.value)
                 }
             }
             GridLayout {
@@ -254,7 +254,7 @@ ApplicationWindow {
                     Layout.alignment: Qt.AlignRight
                     Layout.columnSpan: 2
 
-                    onClicked: tableView.model.remove(removeIndexSpinBox.value)
+                    onClicked: tableView.model.removeRow(removeIndexSpinBox.value)
                 }
             }
             ColumnLayout {
@@ -276,7 +276,7 @@ ApplicationWindow {
                 Button {
                     text: "Set"
 
-                    onClicked: tableView.model.set(setIndexSpinBox.value, setRowForm.inputAsRow());
+                    onClicked: tableView.model.setRow(setIndexSpinBox.value, setRowForm.inputAsRow());
                 }
             }
         }
