@@ -602,16 +602,16 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
     if ((role < Qt::UserRole || role >= Qt::UserRole + mRoleNames.size()) && role != Qt::DisplayRole)
         return QVariant();
 
-    const QVariantList rowData = mRows.at(index.row()).toList();
-    const QVariantMap columnData = rowData.at(index.column()).toMap();
+    const QVariantList rowData = mRows.at(row).toList();
+    const QVariantMap columnData = rowData.at(column).toMap();
 
     int effectiveRole = role;
     if (role == Qt::DisplayRole) {
         // If the execution got to this point, then the user is requesting data for the display role,
         // but didn't specify any role with the name "display".
         // So, we give them the data of the implicit display role.
-        Q_ASSERT(mDefaultDisplayRoles.contains(index.column()));
-        effectiveRole = mDefaultDisplayRoles.value(index.column());
+        Q_ASSERT(mDefaultDisplayRoles.contains(column));
+        effectiveRole = mDefaultDisplayRoles.value(column);
     }
 
     const QString propertyName = QString::fromUtf8(roleNames().value(effectiveRole));
@@ -634,18 +634,18 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
 
     int effectiveRole = role;
     if (role == Qt::DisplayRole) {
-        Q_ASSERT(mDefaultDisplayRoles.contains(index.column()));
-        effectiveRole = mDefaultDisplayRoles.value(index.column());
+        Q_ASSERT(mDefaultDisplayRoles.contains(column));
+        effectiveRole = mDefaultDisplayRoles.value(column);
     }
 
-    const QVariantList rowData = mRows.at(index.row()).toList();
+    const QVariantList rowData = mRows.at(row).toList();
     const QString propertyName = QString::fromUtf8(roleNames().value(effectiveRole));
 
     qCDebug(lcTableModel).nospace() << "setData() called with index "
         << index << ", value " << value << " and role " << propertyName;
 
     // Verify that the role exists for this column.
-    const ColumnPropertyInfo propertyInfo = findColumnPropertyInfo(index.column(), propertyName);
+    const ColumnPropertyInfo propertyInfo = findColumnPropertyInfo(column, propertyName);
     if (!propertyInfo.isValid()) {
         QString message;
         QDebug stream(&message);
@@ -679,12 +679,12 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
         }
     }
 
-    QVariantMap modifiedColumn = rowData.at(index.column()).toMap();
+    QVariantMap modifiedColumn = rowData.at(column).toMap();
     modifiedColumn[propertyName] = value;
 
     QVariantList modifiedRow = rowData;
-    modifiedRow[index.column()] = modifiedColumn;
-    mRows[index.row()] = modifiedRow;
+    modifiedRow[column] = modifiedColumn;
+    mRows[row] = modifiedRow;
 
     QVector<int> rolesChanged;
     rolesChanged.append(role);
