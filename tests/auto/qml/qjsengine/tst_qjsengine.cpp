@@ -66,6 +66,10 @@ private slots:
     void newArray();
     void newArray_HooliganTask218092();
     void newArray_HooliganTask233836();
+    void toScriptValue_data();
+    void toScriptValue();
+    void toScriptValuenotroundtripped_data();
+    void toScriptValuenotroundtripped();
     void newVariant();
     void newVariant_valueOfToString();
     void newVariant_valueOfEnum();
@@ -481,17 +485,97 @@ void tst_QJSEngine::newArray_HooliganTask233836()
     }
 }
 
+void tst_QJSEngine::toScriptValue_data()
+{
+    QTest::addColumn<QVariant>("input");
+
+    QTest::newRow("UnknownType") << QVariant(int(QMetaType::UnknownType), nullptr);
+    QTest::newRow("Nullptr") << QVariant(int(QMetaType::Nullptr), nullptr);
+    QTest::newRow("true") << QVariant(true);
+    QTest::newRow("false") << QVariant(false);
+    QTest::newRow("int") << QVariant(int(42));
+    QTest::newRow("uint") << QVariant(uint(42));
+    QTest::newRow("longlong") << QVariant(qlonglong(4242));
+    QTest::newRow("ulonglong") << QVariant(qulonglong(4242));
+    QTest::newRow("double") << QVariant(double(42.42));
+    QTest::newRow("float") << QVariant(float(42.42));
+    QTest::newRow("qstring") << QVariant(QString::fromLatin1("hello"));
+    QTest::newRow("qbytearray") << QVariant(QByteArray("hello"));
+    QTest::newRow("short") << QVariant(short('r'));
+    QTest::newRow("ushort") << QVariant(short('b'));
+    QTest::newRow("char") << QVariant(char('r'));
+    QTest::newRow("uchar") << QVariant(uchar('b'));
+    QTest::newRow("qchar") << QVariant(QString::fromUtf8("å").at(0));
+    QTest::newRow("qdate") << QVariant(QDate(1925, 5, 8));
+    QTest::newRow("qtime") << QVariant(QTime(4, 5, 6));
+    QTest::newRow("qregularexpression") << QVariant(QRegularExpression(".*"));
+    QTest::newRow("qpointf") << QVariant(QPointF(42, 24));
+    QTest::newRow("qvariantlist") << QVariant(QVariantList() << 42.24 << 5 << "hello");
+    QTest::newRow("qvariantlist_point") << QVariant(QVariantList() << 42.24 << QPointF(42.24, 24.42) << QPointF(24.42, 42.24));
+    QVariantMap vm; vm.insert("test", 55); vm.insert("abc", 42.42);;
+    QTest::newRow("qvariantmap") << QVariant(vm);
+    vm.clear(); vm.insert("point1", QPointF(42.24, 24.42)); vm.insert("point2", QPointF(42.24, 24.42));
+    QTest::newRow("qvariantmap_point") << QVariant(vm);
+    QTest::newRow("qvariant") << QVariant(QVariant(42));
+    QTest::newRow("QList<int>") << QVariant::fromValue(QList<int>() << 1 << 2 << 3 << 4);
+    QTest::newRow("QVector<int>") << QVariant::fromValue(QVector<int>() << 1 << 2 << 3 << 4);
+    QTest::newRow("QList<QString>") << QVariant::fromValue(QVector<QString>() << "1" << "2" << "3" << "4");
+    QTest::newRow("QStringList") << QVariant::fromValue(QStringList() << "1" << "2" << "3" << "4");
+    QTest::newRow("QMap<QString, QString>") << QVariant::fromValue(QMap<QString, QString>{{ "1", "2" }, { "3", "4" }});
+    QTest::newRow("QHash<QString, QString>") << QVariant::fromValue(QHash<QString, QString>{{ "1", "2" }, { "3", "4" }});
+    QTest::newRow("QMap<QString, QPointF>") << QVariant::fromValue(QMap<QString, QPointF>{{ "1", { 42.24, 24.42 } }, { "3", { 24.42, 42.24 } }});
+    QTest::newRow("QHash<QString, QPointF>") << QVariant::fromValue(QHash<QString, QPointF>{{ "1", { 42.24, 24.42 } }, { "3", { 24.42, 42.24 } }});
+}
+
+void tst_QJSEngine::toScriptValue()
+{
+    QFETCH(QVariant, input);
+
+    QJSEngine engine;
+    QJSValue outputJS = engine.toScriptValue(input);
+    QVariant output = engine.fromScriptValue<QVariant>(outputJS);
+
+    QCOMPARE(input, output);
+}
+
+void tst_QJSEngine::toScriptValuenotroundtripped_data()
+{
+    QTest::addColumn<QVariant>("input");
+    QTest::addColumn<QVariant>("output");
+
+    QTest::newRow("QList<QObject*>") << QVariant::fromValue(QList<QObject*>() << this) << QVariant(QVariantList() << QVariant::fromValue(this));
+    QTest::newRow("QObjectList") << QVariant::fromValue(QObjectList() << this) << QVariant(QVariantList() << QVariant::fromValue(this));
+    QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
+    QTest::newRow("QVector<QPoint>") << QVariant::fromValue(QVector<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
+    QTest::newRow("VoidStar") << QVariant(int(QMetaType::VoidStar), nullptr) << QVariant(int(QMetaType::Nullptr), nullptr);
+    QTest::newRow("qregex") << QVariant(QRegExp(".*", Qt::CaseSensitive, QRegExp::RegExp2)) << QVariant(QRegularExpression(".*"));
+}
+
+// This is almost the same as toScriptValue, but the inputs don't roundtrip to
+// exactly the same value.
+void tst_QJSEngine::toScriptValuenotroundtripped()
+{
+    QFETCH(QVariant, input);
+    QFETCH(QVariant, output);
+
+    QJSEngine engine;
+    QJSValue outputJS = engine.toScriptValue(input);
+    QVariant actualOutput = engine.fromScriptValue<QVariant>(outputJS);
+
+    QCOMPARE(actualOutput, output);
+}
+
 void tst_QJSEngine::newVariant()
 {
     QJSEngine eng;
     {
         QJSValue opaque = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QVERIFY(!opaque.isUndefined());
-        QCOMPARE(opaque.isVariant(), true);
+        QCOMPARE(opaque.isVariant(), false);
         QVERIFY(!opaque.isCallable());
         QCOMPARE(opaque.isObject(), true);
         QVERIFY(!opaque.prototype().isUndefined());
-        QCOMPARE(opaque.prototype().isVariant(), true);
+        QCOMPARE(opaque.prototype().isVariant(), false);
         QVERIFY(opaque.property("valueOf").callWithInstance(opaque).equals(opaque));
     }
 }
@@ -505,7 +589,7 @@ void tst_QJSEngine::newVariant_valueOfToString()
         QJSValue value = object.property("valueOf").callWithInstance(object);
         QVERIFY(value.isObject());
         QVERIFY(value.strictlyEquals(object));
-        QCOMPARE(object.toString(), QString::fromLatin1("QVariant(QPoint, QPoint(10,20))"));
+        QCOMPARE(object.toString(), QString::fromLatin1("QPoint(10, 20)"));
     }
 }
 
@@ -1503,7 +1587,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     {
         QVariant var = qVariantFromValue(QPoint(123, 456));
         QJSValue val = eng.toScriptValue(var);
-        QVERIFY(val.isVariant());
+        QVERIFY(!val.isVariant());
         QCOMPARE(val.toVariant(), var);
     }
 

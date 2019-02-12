@@ -1710,7 +1710,7 @@ void tst_qqmlvaluetypes::sequences()
         QJSValue value = engine.toScriptValue(qcharVector);
         QCOMPARE(value.property("length").toInt(), qcharVector.length());
         for (int i = 0; i < qcharVector.length(); ++i)
-            QCOMPARE(value.property(i).toInt(), qcharVector.at(i));
+            QCOMPARE(value.property(i).toString(), qcharVector.at(i));
     }
     {
         MyTypeObject a, b, c;
