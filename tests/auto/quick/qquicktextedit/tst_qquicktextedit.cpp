@@ -1262,6 +1262,34 @@ void tst_qquicktextedit::persistentSelection()
     edit->setFocus(true);
     QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
 
+    // QTBUG-50587 (persistentSelection with readOnly)
+    edit->setReadOnly(true);
+
+    edit->setPersistentSelection(false);
+    QCOMPARE(edit->persistentSelection(), false);
+    QCOMPARE(spy.count(), 2);
+
+    edit->select(1, 4);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(false);
+    QCOMPARE(edit->property("selected").toString(), QString());
+
+    edit->setFocus(true);
+    QCOMPARE(edit->property("selected").toString(), QString());
+
+    edit->setPersistentSelection(true);
+    QCOMPARE(edit->persistentSelection(), true);
+    QCOMPARE(spy.count(), 3);
+
+    edit->select(1, 4);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(false);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
+
+    edit->setFocus(true);
+    QCOMPARE(edit->property("selected").toString(), QLatin1String("ell"));
 }
 
 void tst_qquicktextedit::selectionOnFocusOut()
