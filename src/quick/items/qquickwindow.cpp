@@ -4630,7 +4630,7 @@ void QQuickWindow::resetOpenGLState()
     Item or Window within which it was declared, you can remove that
     relationship by setting \c transientParent to \c null:
 
-    \l qml
+    \qml
     import QtQuick.Window 2.13
 
     Window {
@@ -4640,7 +4640,7 @@ void QQuickWindow::resetOpenGLState()
             visible: true
         }
     }
-    \qml
+    \endqml
 
     In order to cause the window to be centered above its transient parent by
     default, depending on the window manager, it may also be necessary to set
