@@ -119,6 +119,7 @@ static const QString displayRoleName = QStringLiteral("display");
 QQmlTableModel::QQmlTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
+    mRoleNames = QAbstractTableModel::roleNames();
 }
 
 QQmlTableModel::~QQmlTableModel()
@@ -167,6 +168,9 @@ void QQmlTableModel::setRows(const QVariant &rows)
         }
 
         if (mColumnCount > 0) {
+            qCDebug(lcTableModel) << "validating" << rowsAsVariantList.size()
+                << "rows against existing metadata";
+
             // This is not the first time the rows have been set; validate the new columns.
             for (int i = 0; i < rowsAsVariantList.size(); ++i) {
                 // validateNewRow() expects a QVariant wrapping a QJSValue, so to
@@ -178,94 +182,71 @@ void QQmlTableModel::setRows(const QVariant &rows)
         }
     }
 
-    const bool resettingModel = mRowCount != rowsAsVariantList.size();
     const int oldRowCount = mRowCount;
     const int oldColumnCount = mColumnCount;
-    if (resettingModel)
-        beginResetModel();
+
+    beginResetModel();
 
     // We don't clear the column or role data, because a TableModel should not be reused in that way.
     // Once it has valid data, its columns and roles are fixed.
     mRows = rowsAsVariantList;
     mRowCount = mRows.size();
 
-    if (mRowCount == 0) {
-        // No elements.
-        if (resettingModel)
-            endResetModel();
-
-        emit rowsChanged();
-
-        if (mRowCount != oldRowCount)
-            emit rowCountChanged();
-        if (mColumnCount != oldColumnCount)
-            emit columnCountChanged();
-        return;
-    }
-
-    if (mColumnCount == 0) {
-        // This is the first time the rows have been set, so establish the column count.
+    const bool isFirstTimeSet = mColumnCount == 0;
+    if (isFirstTimeSet && mRowCount > 0) {
+        // This is the first time the rows have been set, so establish
+        // the column count and gather column metadata.
         mColumnCount = firstRow.size();
-    }
+        qCDebug(lcTableModel) << "gathering metadata for" << mColumnCount << "columns from first row:";
 
-    bool explicitDisplayRoleIndex = false;
-
-    if (mRowCount > 0) {
         // Go through each property of each cell in the first row
         // and make a role name from it.
-        int roleKey = Qt::UserRole;
+        int userRoleKey = Qt::UserRole;
         for (int columnIndex = 0; columnIndex < mColumnCount; ++columnIndex) {
             // We need it as a QVariantMap because we need to get
             // the name of the property, which we can't do with QJSValue's API.
             const QVariantMap column = firstRow.at(columnIndex).toMap();
             const QStringList columnPropertyNames = column.keys();
+            ColumnProperties properties;
+            int propertyInfoIndex = 0;
 
-            const int firstRoleForColumn = roleKey;
-            QVector<ColumnPropertyInfo> properties;
+            qCDebug(lcTableModel).nospace() << "- column " << columnIndex << ":";
+
             for (const QString &roleName : columnPropertyNames) {
                 // QML/JS supports utf8.
-                mRoleNames[roleKey] = roleName.toUtf8().constData();
-
-                if (!explicitDisplayRoleIndex && roleName == displayRoleName) {
-                    explicitDisplayRoleIndex = true;
-                    // The user explicitly declared a "display" role, so now they're on their own.
-                    mDefaultDisplayRoles.clear();
-
-                    qCDebug(lcTableModel).nospace() << "explicit \"display\" role found; "
-                        << "clearing default display roles";
+                const QByteArray roleNameUtf8 = roleName.toUtf8();
+                if (!mRoleNames.values().contains(roleNameUtf8)) {
+                    // We don't already have this role name, so it's a user role.
+                    mRoleNames[userRoleKey] = roleName.toUtf8().constData();
+                    qCDebug(lcTableModel) << "  - added new user role" << roleName << "with key" << userRoleKey;
+                    ++userRoleKey;
+                } else {
+                    qCDebug(lcTableModel) << "  - found existing role" << roleName;
                 }
 
-                qCDebug(lcTableModel).nospace() << "added role "
-                    << roleName << " with key " << roleKey << " found in column " << columnIndex;
+                if (properties.explicitDisplayRoleIndex == -1 && roleName == displayRoleName) {
+                    // The user explicitly declared a "display" role,
+                    // so now we don't need to make it the first role in the column for them.
+                    properties.explicitDisplayRoleIndex = propertyInfoIndex;
+                }
 
+                // Keep track of the type of property so we can use it to validate new rows later on.
                 const QVariant roleValue = column.value(roleName);
-                properties.append(ColumnPropertyInfo(roleName, roleValue.type(), QString::fromLatin1(roleValue.typeName())));
+                const auto propertyInfo = ColumnPropertyInfo(roleName, roleValue.type(),
+                    QString::fromLatin1(roleValue.typeName()));
+                properties.infoForProperties.append(propertyInfo);
 
-                ++roleKey;
+                qCDebug(lcTableModel) << "    - column property" << propertyInfo.name
+                    << "has type" << propertyInfo.typeName;
+
+                ++propertyInfoIndex;
             }
 
             mColumnProperties.append(properties);
-
-            if (!explicitDisplayRoleIndex) {
-                // The "display" role wasn't specified for this column,
-                // so we use the first role that was declared for that column.
-                // TODO: make it possible to specify the display role?
-                // e.g. { myRoleName: 123, displayRole: "myRoleName" }
-                mDefaultDisplayRoles[columnIndex] = firstRoleForColumn;
-
-                qCDebug(lcTableModel).nospace() << "added implicit \"display\" role with key "
-                    << int(Qt::DisplayRole) << " for column " << columnIndex
-                    << " which will display values from the " << mRoleNames.value(firstRoleForColumn) << " role";
-            }
         }
-
-        if (!explicitDisplayRoleIndex) {
-            // There was no "display" role declared by the user, so we can provide one for them.
-            mRoleNames[Qt::DisplayRole] = displayRoleName.toUtf8().constData();
-        }
-
-        endResetModel();
     }
+
+    endResetModel();
 
     emit rowsChanged();
 
@@ -504,8 +485,8 @@ void QQmlTableModel::removeRow(int rowIndex, int rows)
     endRemoveRows();
     emit rowCountChanged();
 
-    qCDebug(lcTableModel).nospace() << "removed" << rows
-        << "items from the model, starting at index" << rowIndex;
+    qCDebug(lcTableModel).nospace() << "removed " << rows
+        << " items from the model, starting at index " << rowIndex;
 }
 
 /*!
@@ -678,7 +659,7 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
     if (column < 0 || column >= columnCount())
         return QVariant();
 
-    if ((role < Qt::UserRole || role >= Qt::UserRole + mRoleNames.size()) && role != Qt::DisplayRole)
+    if (!mRoleNames.contains(role))
         return QVariant();
 
     const QVariantList rowData = mRows.at(row).toList();
@@ -692,18 +673,11 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
         return const_cast<QQmlTableModel*>(this)->mRoleDataProvider.call(args).toVariant();
     }
 
+    // TODO: should we also allow this code to be executed if roleDataProvider doesn't
+    // handle the role/column, so that it only has to handle the case where there is
+    // more than one role in a column?
     const QVariantMap columnData = rowData.at(column).toMap();
-
-    int effectiveRole = role;
-    if (role == Qt::DisplayRole) {
-        // If the execution got to this point, then the user is requesting data for the display role,
-        // but didn't specify any role with the name "display".
-        // So, we give them the data of the implicit display role.
-        Q_ASSERT(mDefaultDisplayRoles.contains(column));
-        effectiveRole = mDefaultDisplayRoles.value(column);
-    }
-
-    const QString propertyName = QString::fromUtf8(roleNames().value(effectiveRole));
+    const QString propertyName = columnPropertyNameFromRole(column, role);
     const QVariant value = columnData.value(propertyName);
     return value;
 }
@@ -734,17 +708,11 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
     if (column < 0 || column >= columnCount())
         return false;
 
-    if ((role < Qt::UserRole || role >= Qt::UserRole + mRoleNames.size()) && role != Qt::DisplayRole)
+    if (!mRoleNames.contains(role))
         return false;
 
-    int effectiveRole = role;
-    if (role == Qt::DisplayRole) {
-        Q_ASSERT(mDefaultDisplayRoles.contains(column));
-        effectiveRole = mDefaultDisplayRoles.value(column);
-    }
-
     const QVariantList rowData = mRows.at(row).toList();
-    const QString propertyName = QString::fromUtf8(roleNames().value(effectiveRole));
+    const QString propertyName = columnPropertyNameFromRole(column, role);
 
     qCDebug(lcTableModel).nospace() << "setData() called with index "
         << index << ", value " << value << " and role " << propertyName;
@@ -757,7 +725,7 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
         stream.nospace() << "setData(): no role named " << propertyName
             << " at column index " << column << ". The available roles for that column are:\n";
 
-        const QVector<ColumnPropertyInfo> availableProperties = mColumnProperties.at(column);
+        const QVector<ColumnPropertyInfo> availableProperties = mColumnProperties.at(column).infoForProperties;
         for (auto propertyInfo : availableProperties)
             stream << "    - " << propertyInfo.name << " (" << qPrintable(propertyInfo.typeName) << ")";
 
@@ -909,7 +877,7 @@ bool QQmlTableModel::validateColumnPropertyTypes(const char *functionName,
     const QVariantList columnProperties = column.values();
     const QStringList propertyNames = column.keys();
     // Expected
-    const QVector<ColumnPropertyInfo> properties = mColumnProperties.at(columnIndex);
+    const QVector<ColumnPropertyInfo> properties = mColumnProperties.at(columnIndex).infoForProperties;
 
     // This iterates across the properties in the column. For example:
     //   0         1       2
@@ -955,7 +923,7 @@ QQmlTableModel::ColumnPropertyInfo QQmlTableModel::findColumnPropertyInfo(
 {
     // TODO: check if a hash with its string-based lookup is faster,
     // keeping in mind that we may be doing index-based lookups too.
-    const QVector<ColumnPropertyInfo> properties = mColumnProperties.at(columnIndex);
+    const QVector<ColumnPropertyInfo> properties = mColumnProperties.at(columnIndex).infoForProperties;
     for (int i = 0; i < properties.size(); ++i) {
         const ColumnPropertyInfo &info = properties.at(i);
         if (info.name == columnPropertyName)
@@ -963,6 +931,21 @@ QQmlTableModel::ColumnPropertyInfo QQmlTableModel::findColumnPropertyInfo(
     }
 
     return ColumnPropertyInfo();
+}
+
+QString QQmlTableModel::columnPropertyNameFromRole(int columnIndex, int role) const
+{
+    QString propertyName;
+    if (role == Qt::DisplayRole && mColumnProperties.at(columnIndex).explicitDisplayRoleIndex == -1) {
+        // The user is getting or setting data for the display role,
+        // but didn't specify any role with the name "display" in this column.
+        // So, we give them the implicit display role, aka the first property we find.
+        propertyName = mColumnProperties.at(columnIndex).infoForProperties.first().name;
+    } else {
+        // QML/JS supports utf8.
+        propertyName = QString::fromUtf8(mRoleNames.value(role));
+    }
+    return propertyName;
 }
 
 QT_END_NAMESPACE

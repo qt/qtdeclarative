@@ -26,59 +26,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
 import Qt.labs.qmlmodels 1.0
 
-Item {
-    id: root
-    width: 200
-    height: 200
+import "TestUtils.js" as TestUtils
 
-    property alias testModel: testModel
-    property alias tableView: tableView
-
-    function setRowsValid() {
-        testModel.rows = [
-            [
-                { name: "Max" },
-                { age: 20 }
-            ],
-            [
-                { name: "Imum" },
-                { age: 41 }
-            ],
-            [
-                { name: "Power" },
-                { age: 89 }
-            ]
+TableModel {
+    id: testModel
+    objectName: "testModel"
+    roleDataProvider: TestUtils.testModelRoleDataProvider
+    rows: [
+        [
+            { name: "John", someOtherRole1: "foo" },    // column 0
+            { age: 22, someOtherRole2: "foo" }          // column 1
+        ],
+        [
+            { name: "Oliver", someOtherRole1: "foo" },  // column 0
+            { age: 33, someOtherRole2: "foo" }          // column 1
         ]
-    }
-
-    function setRowsInvalid() {
-        testModel.rows = [
-            [
-                { nope: "Nope" },
-                { age: 20 }
-            ],
-            [
-                { nope: "Nah" },
-                { age: 41 }
-            ],
-            [
-                { nope: "No" },
-                { age: 89 }
-            ]
-        ]
-    }
-
-    TableView {
-        id: tableView
-        anchors.fill: parent
-        model: TestModel {
-            id: testModel
-        }
-        delegate: Text {
-            text: model.display
-        }
-    }
+    ]
 }

@@ -26,36 +26,20 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import Qt.labs.qmlmodels 1.0
-
-Item {
-    id: root
-    width: 200
-    height: 200
-
-    property alias testModel: testModel
-
-    TableModel {
-        id: testModel
-        objectName: "testModel"
-        rows: [
-            [
-                { name: "John", someOtherRole1: "foo" },    // column 0
-                { age: 22, someOtherRole2: "foo" }          // column 1
-            ],
-            [
-                { name: "Oliver", someOtherRole1: "foo" },  // column 0
-                { age: 33, someOtherRole2: "foo" }          // column 1
-            ]
-        ]
-    }
-    TableView {
-        anchors.fill: parent
-        model: testModel
-        delegate: Text {
-            id: textItem
-            text: model.display
+function testModelRoleDataProvider(index, role, cellData) {
+    switch (role) {
+    case "display":
+        switch (index.column) {
+        case 0:
+            return cellData.name
+        case 1:
+            return cellData.age
         }
+        break
+    case "name":
+        return cellData.name
+    case "age":
+        return cellData.age
     }
+    return cellData
 }

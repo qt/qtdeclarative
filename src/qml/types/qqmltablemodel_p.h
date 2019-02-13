@@ -114,6 +114,14 @@ private:
         QString typeName;
     };
 
+    struct ColumnProperties
+    {
+        QVector<ColumnPropertyInfo> infoForProperties;
+        // If there was a display role found in this column, it'll be stored here.
+        // The index is into infoForProperties.
+        int explicitDisplayRoleIndex = -1;
+    };
+
     enum NewRowOperationFlag {
         OtherOperation, // insert(), set(), etc.
         AppendOperation
@@ -127,22 +135,19 @@ private:
     bool validateColumnPropertyType(const char *functionName, const QString &propertyName,
         const QVariant &propertyValue, const ColumnPropertyInfo &expectedPropertyFormat, int columnIndex) const;
 
-    ColumnPropertyInfo findColumnPropertyInfo(int columnIndex, const QString &columnPropertyName) const;
+    ColumnPropertyInfo findColumnPropertyInfo(int columnIndex, const QString &columnPropertyNameFromRole) const;
+    QString columnPropertyNameFromRole(int columnIndex, int role) const;
 
     void doInsert(int rowIndex, const QVariant &row);
 
     QVariantList mRows;
     int mRowCount = 0;
     int mColumnCount = 0;
-    QVector<QVector<ColumnPropertyInfo>> mColumnProperties;
+    // Each entry contains information about the properties of the column at that index.
+    QVector<ColumnProperties> mColumnProperties;
     // key = property index (0 to number of properties across all columns)
     // value = role name
     QHash<int, QByteArray> mRoleNames;
-    // Contains the role key to be used as the display role for each column
-    // when "display" isn't explicitly specified.
-    // key = column index
-    // value = index (key) into mRoleNames
-    QHash<int, int> mDefaultDisplayRoles;
     QJSValue mRoleDataProvider;
 };
 

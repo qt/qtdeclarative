@@ -55,10 +55,14 @@ private slots:
     void setDataThroughDelegate();
     void setRowsImperatively();
     void setRowsMultipleTimes();
-    void defaultDisplayRoles();
+    void builtInRoles_data();
+    void builtInRoles();
+    void explicitDisplayRole();
     void roleDataProvider();
     void dataAndEditing();
 };
+
+static const int builtInRoleCount = 6;
 
 void tst_QQmlTableModel::appendRemoveRow()
 {
@@ -80,11 +84,15 @@ void tst_QQmlTableModel::appendRemoveRow()
     int heightSignalEmissions = 0;
 
     const QHash<int, QByteArray> roleNames = model->roleNames();
-    QCOMPARE(roleNames.size(), 3);
+    QCOMPARE(roleNames.size(), 2 + builtInRoleCount);
     QVERIFY(roleNames.values().contains("name"));
     QVERIFY(roleNames.values().contains("age"));
     QVERIFY(roleNames.values().contains("display"));
-
+    QVERIFY(roleNames.values().contains("decoration"));
+    QVERIFY(roleNames.values().contains("edit"));
+    QVERIFY(roleNames.values().contains("toolTip"));
+    QVERIFY(roleNames.values().contains("statusTip"));
+    QVERIFY(roleNames.values().contains("whatsThis"));
     QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("name")).toString(), QLatin1String("John"));
     QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("age")).toInt(), 22);
     QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("name")).toString(), QLatin1String("Oliver"));
@@ -208,10 +216,9 @@ void tst_QQmlTableModel::clear()
     QVERIFY(rowCountSpy.isValid());
 
     const QHash<int, QByteArray> roleNames = model->roleNames();
-    QCOMPARE(roleNames.size(), 3);
     QVERIFY(roleNames.values().contains("name"));
     QVERIFY(roleNames.values().contains("age"));
-    QVERIFY(roleNames.values().contains("display"));
+    QCOMPARE(roleNames.size(), 2 + builtInRoleCount);
 
     QQuickTableView *tableView = view.rootObject()->property("tableView").value<QQuickTableView*>();
     QVERIFY(tableView);
@@ -221,8 +228,8 @@ void tst_QQmlTableModel::clear()
     QVERIFY(QMetaObject::invokeMethod(model, "clear"));
     QCOMPARE(model->rowCount(), 0);
     QCOMPARE(model->columnCount(), 2);
-    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("name")), QVariant());
-    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("age")), QVariant());
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")), QVariant());
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")), QVariant());
     QCOMPARE(columnCountSpy.count(), 0);
     QCOMPARE(rowCountSpy.count(), 1);
     // Wait until updatePolish() gets called, which is where the size is recalculated.
@@ -690,10 +697,9 @@ void tst_QQmlTableModel::setDataThroughDelegate()
     QVERIFY(rowCountSpy.isValid());
 
     const QHash<int, QByteArray> roleNames = model->roleNames();
-    QCOMPARE(roleNames.size(), 3);
+    QCOMPARE(roleNames.size(), 2 + builtInRoleCount);
     QVERIFY(roleNames.values().contains("name"));
     QVERIFY(roleNames.values().contains("age"));
-    QVERIFY(roleNames.values().contains("display"));
     QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("name")).toString(), QLatin1String("John"));
     QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("age")).toInt(), 22);
     QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("name")).toString(), QLatin1String("Oliver"));
@@ -836,29 +842,65 @@ void tst_QQmlTableModel::setRowsMultipleTimes()
     QCOMPARE(tableView->columns(), 2);
 }
 
-void tst_QQmlTableModel::defaultDisplayRoles()
+void tst_QQmlTableModel::builtInRoles_data()
 {
-    QQuickView view(testFileUrl("defaultDisplayRoles.qml"));
-    QCOMPARE(view.status(), QQuickView::Ready);
-    view.show();
-    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QTest::addColumn<int>("row");
+    QTest::addColumn<int>("column");
+    QTest::addColumn<QByteArray>("roleName");
+    QTest::addColumn<QVariant>("expectedValue");
 
-    QQmlTableModel *model = view.rootObject()->property("testModel").value<QQmlTableModel*>();
+    const QByteArray displayRole = "display";
+
+    QTest::addRow("display(0,0)") << 0 << 0 << displayRole << QVariant(QLatin1String("John"));
+    QTest::addRow("display(0,1)") << 0 << 1 << displayRole << QVariant(QLatin1String("22"));
+    QTest::addRow("display(1,0)") << 1 << 0 << displayRole << QVariant(QLatin1String("Oliver"));
+    QTest::addRow("display(1,1)") << 1 << 1 << displayRole << QVariant(QLatin1String("33"));
+}
+
+void tst_QQmlTableModel::builtInRoles()
+{
+    QFETCH(int, row);
+    QFETCH(int, column);
+    QFETCH(QByteArray, roleName);
+    QFETCH(QVariant, expectedValue);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("builtInRoles.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+
+    QScopedPointer<QQmlTableModel> model(qobject_cast<QQmlTableModel*>(component.create()));
     QVERIFY(model);
     QCOMPARE(model->rowCount(), 2);
     QCOMPARE(model->columnCount(), 2);
 
-    QSignalSpy columnCountSpy(model, SIGNAL(columnCountChanged()));
-    QVERIFY(columnCountSpy.isValid());
-
-    QSignalSpy rowCountSpy(model, SIGNAL(rowCountChanged()));
-    QVERIFY(rowCountSpy.isValid());
-
     const QHash<int, QByteArray> roleNames = model->roleNames();
-    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("John"));
-    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), 22);
-    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Oliver"));
-    QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toInt(), 33);
+    QCOMPARE(roleNames.size(), 4 + builtInRoleCount);
+    QVERIFY(roleNames.values().contains("display"));
+    QVERIFY(roleNames.values().contains("decoration"));
+    QVERIFY(roleNames.values().contains("edit"));
+    QVERIFY(roleNames.values().contains("toolTip"));
+    QVERIFY(roleNames.values().contains("statusTip"));
+    QVERIFY(roleNames.values().contains("whatsThis"));
+    QVERIFY(roleNames.values().contains("name"));
+    QVERIFY(roleNames.values().contains("age"));
+    QVERIFY(roleNames.values().contains("someOtherRole1"));
+    QVERIFY(roleNames.values().contains("someOtherRole2"));
+    QCOMPARE(model->data(model->index(row, column, QModelIndex()), roleNames.key(roleName)), expectedValue);
+}
+
+void tst_QQmlTableModel::explicitDisplayRole()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("explicitDisplayRole.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+
+    QScopedPointer<QQmlTableModel> model(qobject_cast<QQmlTableModel*>(component.create()));
+    QVERIFY(model);
+    QCOMPARE(model->rowCount(), 1);
+    QCOMPARE(model->columnCount(), 2);
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("foo"));
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("bar"));
 }
 
 void tst_QQmlTableModel::roleDataProvider()

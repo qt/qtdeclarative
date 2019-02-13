@@ -52,25 +52,27 @@ Item {
         shouldModifyInvalidType()
     }
 
-    TableModel {
-        id: testModel
-        objectName: "testModel"
-        rows: [
-            [
-                { name: "John" },
-                { age: 22 }
-            ],
-            [
-                { name: "Oliver" },
-                { age: 33 }
-            ]
-        ]
-    }
     TableView {
         anchors.fill: parent
-        model: testModel
+        model: TableModel {
+            id: testModel
+            objectName: "testModel"
+            rows: [
+                [
+                    { name: "John" },
+                    { age: 22 }
+                ],
+                [
+                    { name: "Oliver" },
+                    { age: 33 }
+                ]
+            ]
+        }
+
         delegate: Text {
             id: textItem
+            // TODO: this is currently random when no roleDataProvider handles it
+            // we should allow roleDataProvider to be used to handle specific roles only
             text: model.display
 
             Connections {

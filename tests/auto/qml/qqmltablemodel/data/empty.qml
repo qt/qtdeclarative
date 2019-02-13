@@ -29,6 +29,8 @@
 import QtQuick 2.12
 import Qt.labs.qmlmodels 1.0
 
+import "TestUtils.js" as TestUtils
+
 Item {
     id: root
     width: 200
@@ -53,6 +55,7 @@ Item {
     TableModel {
         id: testModel
         objectName: "testModel"
+        roleDataProvider: TestUtils.testModelRoleDataProvider
     }
     TableView {
         id: tableView

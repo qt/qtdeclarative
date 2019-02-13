@@ -100,6 +100,7 @@ Window {
             padding: 12
             selectByMouse: true
 
+            // TODO: the property used here is undefined
             onAccepted: model.display = text
 
             Rectangle {

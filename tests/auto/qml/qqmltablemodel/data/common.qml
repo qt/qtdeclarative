@@ -115,24 +115,12 @@ Item {
         ])
     }
 
-    TableModel {
-        id: testModel
-        objectName: "testModel"
-        rows: [
-            [
-                { name: "John" },
-                { age: 22 }
-            ],
-            [
-                { name: "Oliver" },
-                { age: 33 }
-            ]
-        ]
-    }
     TableView {
         id: tableView
         anchors.fill: parent
-        model: testModel
+        model: TestModel {
+            id: testModel
+        }
         delegate: Text {
             text: model.display
         }
