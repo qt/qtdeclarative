@@ -2404,7 +2404,7 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
 
     Reference r = Reference::fromName(this, name);
     r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global);
-    if (!r.global && m_globalNames.contains(name))
+    if (!r.global && canAccelerateGlobalLookups() && m_globalNames.contains(name))
         r.global = true;
     return r;
 }

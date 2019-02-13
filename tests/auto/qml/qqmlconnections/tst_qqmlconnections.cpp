@@ -55,6 +55,7 @@ private slots:
     void disabledAtStart();
     void clearImplicitTarget();
     void onWithoutASignal();
+    void noAcceleratedGlobalLookup();
 
 private:
     QQmlEngine engine;
@@ -405,6 +406,30 @@ void tst_qqmlconnections::onWithoutASignal()
     QVERIFY(c.isError()); // Cannot assign to non-existent property "on" expected
     QScopedPointer<QQuickItem> item(qobject_cast<QQuickItem*>(c.create()));
     QVERIFY(item == nullptr); // should parse error, and not give us an item (or crash).
+}
+
+class Proxy : public QObject
+{
+    Q_OBJECT
+public:
+    enum MyEnum { EnumValue = 20, AnotherEnumValue };
+    Q_ENUM(MyEnum)
+
+signals:
+    void someSignal();
+};
+
+void tst_qqmlconnections::noAcceleratedGlobalLookup()
+{
+    qRegisterMetaType<Proxy::MyEnum>();
+    qmlRegisterType<Proxy>("test.proxy", 1, 0, "Proxy");
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("override-proxy-type.qml"));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> object(c.create());
+    const QVariant val = object->property("testEnum");
+    QCOMPARE(val.type(), QMetaType::Int);
+    QCOMPARE(val.toInt(), int(Proxy::EnumValue));
 }
 
 QTEST_MAIN(tst_qqmlconnections)

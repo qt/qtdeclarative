@@ -561,8 +561,10 @@ protected:
 
     Reference referenceForPropertyName(const Codegen::Reference &object, AST::PropertyName *name);
 
-    // Hook provided to implement QML lookup semantics
+    // Hooks provided to implement QML lookup semantics
+    virtual bool canAccelerateGlobalLookups() const { return true; }
     virtual Reference fallbackNameLookup(const QString &name);
+
     virtual void beginFunctionBodyHook() {}
 
     void emitReturn(const Reference &expr);
