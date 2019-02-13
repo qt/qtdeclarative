@@ -50,6 +50,9 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/qregexp.h>
+#if QT_CONFIG(regularexpression)
+#include <QtCore/qregularexpression.h>
+#endif
 #include <cassert>
 #include <typeinfo>
 #include <iostream>
@@ -134,6 +137,25 @@ void Heap::RegExpObject::init(const QRegExp &re)
     o->initProperties();
 }
 
+#if QT_CONFIG(regularexpression)
+// Converts a QRegularExpression to a JS RegExp.
+// The conversion is not 100% exact since ECMA regexp and QRegularExpression
+// have different semantics/flags, but we try to do our best.
+void Heap::RegExpObject::init(const QRegularExpression &re)
+{
+    Object::init();
+
+    Scope scope(internalClass->engine);
+    Scoped<QV4::RegExpObject> o(scope, this);
+
+    const uint flags = (re.patternOptions() & QRegularExpression::CaseInsensitiveOption)
+            ? CompiledData::RegExp::RegExp_IgnoreCase
+            : CompiledData::RegExp::RegExp_NoFlags;
+    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, re.pattern(), flags));
+    o->initProperties();
+}
+#endif
+
 void RegExpObject::initProperties()
 {
     setProperty(Index_LastIndex, Value::fromInt32(0));
@@ -149,6 +171,20 @@ QRegExp RegExpObject::toQRegExp() const
     Qt::CaseSensitivity caseSensitivity = (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase) ? Qt::CaseInsensitive : Qt::CaseSensitive;
     return QRegExp(*value()->pattern, caseSensitivity, QRegExp::RegExp2);
 }
+
+#if QT_CONFIG(regularexpression)
+// Converts a JS RegExp to a QRegularExpression.
+// The conversion is not 100% exact since ECMA regexp and QRegularExpression
+// have different semantics/flags, but we try to do our best.
+QRegularExpression RegExpObject::toQRegularExpression() const
+{
+    QRegularExpression::PatternOptions caseSensitivity
+            = (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase)
+            ? QRegularExpression::CaseInsensitiveOption
+            : QRegularExpression::NoPatternOption;
+    return QRegularExpression(*value()->pattern, caseSensitivity);
+}
+#endif
 
 QString RegExpObject::toString() const
 {

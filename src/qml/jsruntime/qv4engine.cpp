@@ -51,6 +51,9 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QLoggingCategory>
+#if QT_CONFIG(regularexpression)
+#include <QRegularExpression>
+#endif
 
 #ifndef V4_BOOTSTRAP
 
@@ -854,6 +857,13 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
     return memoryManager->allocate<RegExpObject>(re);
 }
 
+#if QT_CONFIG(regularexpression)
+Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &re)
+{
+    return memoryManager->allocate<RegExpObject>(re);
+}
+#endif
+
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {
     return ErrorObject::create<ErrorObject>(this, value, errorCtor());
@@ -1365,8 +1375,13 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     QV4::ScopedObject o(scope, value);
     Q_ASSERT(o);
 
-    if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>())
+    if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>()) {
+#if QT_CONFIG(regularexpression)
+        if (typeHint != QMetaType::QRegExp)
+            return re->toQRegularExpression();
+#endif
         return re->toQRegExp();
+    }
 
     if (createJSValueForObjects)
         return QVariant::fromValue(QJSValue(scope.engine, o->asReturnedValue()));
@@ -1455,8 +1470,6 @@ static QV4::ReturnedValue objectFromVariantMap(QV4::ExecutionEngine *e, const QV
     return o.asReturnedValue();
 }
 
-Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
-
 QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
 {
     int type = variant.userType();
@@ -1506,6 +1519,10 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
             case QMetaType::QRegExp:
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
+#if QT_CONFIG(regularexpression)
+            case QMetaType::QRegularExpression:
+                return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegularExpression *>(ptr)));
+#endif
             case QMetaType::QObjectStar:
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
 #if QT_CONFIG(qml_sequence_object)
@@ -1713,6 +1730,10 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
         return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(data))));
     case QMetaType::QRegExp:
         return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(data)));
+#if QT_CONFIG(regularexpression)
+    case QMetaType::QRegularExpression:
+        return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegularExpression *>(data)));
+#endif
     case QMetaType::QObjectStar:
         return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(data));
     case QMetaType::QVariant:
@@ -1955,6 +1976,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value *value, int type, void *data)
             *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
+#if QT_CONFIG(regularexpression)
+    case QMetaType::QRegularExpression:
+        if (const QV4::RegExpObject *r = value->as<QV4::RegExpObject>()) {
+            *reinterpret_cast<QRegularExpression *>(data) = r->toQRegularExpression();
+            return true;
+        } break;
+#endif
     case QMetaType::QObjectStar: {
         const QV4::QObjectWrapper *qobjectWrapper = value->as<QV4::QObjectWrapper>();
         if (qobjectWrapper || value->isNull()) {

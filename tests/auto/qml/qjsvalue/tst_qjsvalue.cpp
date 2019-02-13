@@ -1027,6 +1027,20 @@ void tst_QJSValue::toVariant()
         QJSValue rxObject = eng.toScriptValue(rx);
         QVERIFY(rxObject.isRegExp());
         QVariant var = rxObject.toVariant();
+
+        // We can't roundtrip a QRegExp this way, as toVariant() has no information on whether we
+        // want QRegExp or QRegularExpression. It will always create a QRegularExpression.
+        QCOMPARE(var.type(), QMetaType::QRegularExpression);
+        QRegularExpression result = var.toRegularExpression();
+        QCOMPARE(result.pattern(), rx.pattern());
+        QCOMPARE(result.patternOptions() & QRegularExpression::CaseInsensitiveOption, 0);
+    }
+
+    {
+        QRegularExpression rx = QRegularExpression("[0-9a-z]+");
+        QJSValue rxObject = eng.toScriptValue(rx);
+        QVERIFY(rxObject.isRegExp());
+        QVariant var = rxObject.toVariant();
         QCOMPARE(var, QVariant(rx));
     }
 
@@ -1192,6 +1206,32 @@ void tst_QJSValue::toRegExp()
     QVERIFY(qjsvalue_cast<QRegExp>(QJSValue(false)).isEmpty());
     QVERIFY(qjsvalue_cast<QRegExp>(eng.evaluate("null")).isEmpty());
     QVERIFY(qjsvalue_cast<QRegExp>(eng.toScriptValue(QVariant())).isEmpty());
+}
+
+void tst_QJSValue::toRegularExpression()
+{
+    QJSEngine eng;
+    {
+        QRegularExpression rx = qjsvalue_cast<QRegularExpression>(eng.evaluate("/foo/"));
+        QVERIFY(rx.isValid());
+        QCOMPARE(rx.pattern(), QString::fromLatin1("foo"));
+        QVERIFY(!(rx.patternOptions() & QRegularExpression::CaseInsensitiveOption));
+    }
+    {
+        QRegularExpression rx = qjsvalue_cast<QRegularExpression>(eng.evaluate("/bar/gi"));
+        QVERIFY(rx.isValid());
+        QCOMPARE(rx.pattern(), QString::fromLatin1("bar"));
+        QVERIFY(rx.patternOptions() & QRegularExpression::CaseInsensitiveOption);
+    }
+
+    QVERIFY(qjsvalue_cast<QRegularExpression>(eng.evaluate("[]")).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(eng.evaluate("{}")).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(eng.globalObject()).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(QJSValue()).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(QJSValue(123)).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(QJSValue(false)).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(eng.evaluate("null")).pattern().isEmpty());
+    QVERIFY(qjsvalue_cast<QRegularExpression>(eng.toScriptValue(QVariant())).pattern().isEmpty());
 }
 
 void tst_QJSValue::isArray_data()

@@ -81,6 +81,9 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
     void init();
     void init(QV4::RegExp *value);
     void init(const QRegExp &re);
+#if QT_CONFIG(regularexpression)
+    void init(const QRegularExpression &re);
+#endif
 };
 
 #define RegExpCtorMembers(class, Member) \
@@ -138,6 +141,9 @@ struct RegExpObject: Object {
     }
 
     QRegExp toQRegExp() const;
+#if QT_CONFIG(regularexpression)
+    QRegularExpression toQRegularExpression() const;
+#endif
     QString toString() const;
     QString source() const;
 

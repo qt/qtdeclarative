@@ -1317,6 +1317,9 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
     } else if (actual.as<QV4::RegExpObject>()) {
         switch (conversionType) {
         case QMetaType::QRegExp:
+#if QT_CONFIG(regularexpression)
+        case QMetaType::QRegularExpression:
+#endif
             return 0;
         default:
             return 10;

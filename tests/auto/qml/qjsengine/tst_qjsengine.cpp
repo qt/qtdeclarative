@@ -94,6 +94,7 @@ private slots:
     void valueConversion_basic2();
     void valueConversion_dateTime();
     void valueConversion_regExp();
+    void valueConversion_RegularExpression();
     void castWithMultipleInheritance();
     void collectGarbage();
     void gcWithNestedDataStructure();
@@ -135,6 +136,8 @@ private slots:
 
     void qRegExpInport_data();
     void qRegExpInport();
+    void qRegularExpressionImport_data();
+    void qRegularExpressionImport();
     void dateRoundtripJSQtJS();
     void dateRoundtripQtJSQt();
     void dateConversionJSQt();
@@ -520,22 +523,27 @@ void tst_QJSEngine::newVariant_valueOfEnum()
 void tst_QJSEngine::newRegExp()
 {
     QJSEngine eng;
-    QJSValue rexp = eng.toScriptValue(QRegExp("foo"));
-    QVERIFY(!rexp.isUndefined());
-    QCOMPARE(rexp.isRegExp(), true);
-    QCOMPARE(rexp.isObject(), true);
-    QCOMPARE(rexp.isCallable(), false);
-    // prototype should be RegExp.prototype
-    QVERIFY(!rexp.prototype().isUndefined());
-    QCOMPARE(rexp.prototype().isObject(), true);
-    // Get [[Class]] internal property of RegExp Prototype Object.
-    // See ECMA-262 Section 8.6.2, "Object Internal Properties and Methods".
-    // See ECMA-262 Section 15.10.6, "Properties of the RegExp Prototype Object".
-    QJSValue r = eng.evaluate("Object.prototype.toString.call(RegExp.prototype)");
-    QCOMPARE(r.toString(), QString::fromLatin1("[object Object]"));
-    QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
+    QJSValue rexps[] = {
+        eng.toScriptValue(QRegularExpression("foo")),
+        eng.toScriptValue(QRegExp("foo"))
+    };
+    for (const auto &rexp : rexps) {
+        QVERIFY(!rexp.isUndefined());
+        QCOMPARE(rexp.isRegExp(), true);
+        QCOMPARE(rexp.isObject(), true);
+        QCOMPARE(rexp.isCallable(), false);
+        // prototype should be RegExp.prototype
+        QVERIFY(!rexp.prototype().isUndefined());
+        QCOMPARE(rexp.prototype().isObject(), true);
+        // Get [[Class]] internal property of RegExp Prototype Object.
+        // See ECMA-262 Section 8.6.2, "Object Internal Properties and Methods".
+        // See ECMA-262 Section 15.10.6, "Properties of the RegExp Prototype Object".
+        QJSValue r = eng.evaluate("Object.prototype.toString.call(RegExp.prototype)");
+        QCOMPARE(r.toString(), QString::fromLatin1("[object Object]"));
+        QCOMPARE(rexp.prototype().strictlyEquals(eng.evaluate("RegExp.prototype")), true);
 
-    QCOMPARE(qjsvalue_cast<QRegExp>(rexp).pattern(), QRegExp("foo").pattern());
+        QCOMPARE(qjsvalue_cast<QRegExp>(rexp).pattern(), QRegExp("foo").pattern());
+    }
 }
 
 void tst_QJSEngine::jsRegExp()
@@ -1598,6 +1606,28 @@ void tst_QJSEngine::valueConversion_regExp()
         QVERIFY(val.isRegExp());
         QEXPECT_FAIL("", "QTBUG-6136: JSC-based back-end doesn't preserve QRegExp::minimal (always false)", Continue);
         QCOMPARE(qjsvalue_cast<QRegExp>(val).isMinimal(), in.isMinimal());
+    }
+}
+
+void tst_QJSEngine::valueConversion_RegularExpression()
+{
+    QJSEngine eng;
+    {
+        QRegularExpression in = QRegularExpression("foo");
+        QJSValue val = eng.toScriptValue(in);
+        QVERIFY(val.isRegExp());
+        QRegularExpression out = qjsvalue_cast<QRegularExpression>(val);
+        QCOMPARE(out.pattern(), in.pattern());
+        QCOMPARE(out.patternOptions(), in.patternOptions());
+    }
+    {
+        QRegularExpression in = QRegularExpression("foo",
+                                                   QRegularExpression::CaseInsensitiveOption);
+        QJSValue val = eng.toScriptValue(in);
+        QVERIFY(val.isRegExp());
+        QCOMPARE(qjsvalue_cast<QRegularExpression>(val), in);
+        QRegularExpression out = qjsvalue_cast<QRegularExpression>(val);
+        QCOMPARE(out.patternOptions(), in.patternOptions());
     }
 }
 
@@ -2950,6 +2980,8 @@ void tst_QJSEngine::reentrancy_objectCreation()
         QJSValue r2 = eng2.evaluate("new RegExp('foo', 'gim')");
         QCOMPARE(qjsvalue_cast<QRegExp>(r1), qjsvalue_cast<QRegExp>(r2));
         QCOMPARE(qjsvalue_cast<QRegExp>(r2), qjsvalue_cast<QRegExp>(r1));
+        QCOMPARE(qjsvalue_cast<QRegularExpression>(r1), qjsvalue_cast<QRegularExpression>(r2));
+        QCOMPARE(qjsvalue_cast<QRegularExpression>(r2), qjsvalue_cast<QRegularExpression>(r1));
     }
     {
         QJSValue o1 = eng1.newQObject(temp);
@@ -3143,6 +3175,56 @@ void tst_QJSEngine::qRegExpInport()
     for (int i = 0; i <= rx.captureCount(); i++)  {
         QCOMPARE(result.property(i).toString(), rx.cap(i));
     }
+}
+
+void tst_QJSEngine::qRegularExpressionImport_data()
+{
+    QTest::addColumn<QRegularExpression>("rx");
+    QTest::addColumn<QString>("string");
+    QTest::addColumn<QString>("matched");
+
+    QTest::newRow("normal")            << QRegularExpression("(test|foo)") << "test _ foo _ test _ Foo";
+    QTest::newRow("normal2")           << QRegularExpression("(Test|Foo)") << "test _ foo _ test _ Foo";
+    QTest::newRow("case insensitive")  << QRegularExpression("(test|foo)", QRegularExpression::CaseInsensitiveOption) << "test _ foo _ test _ Foo";
+    QTest::newRow("case insensitive2") << QRegularExpression("(Test|Foo)", QRegularExpression::CaseInsensitiveOption) << "test _ foo _ test _ Foo";
+    QTest::newRow("b(a*)(b*)")         << QRegularExpression("b(a*)(b*)", QRegularExpression::CaseInsensitiveOption) << "aaabbBbaAabaAaababaaabbaaab";
+    QTest::newRow("greedy")            << QRegularExpression("a*(a*)", QRegularExpression::CaseInsensitiveOption) << "aaaabaaba";
+    QTest::newRow("wildcard")          << QRegularExpression(".*\\.txt") << "file.txt";
+    QTest::newRow("wildcard 2")        << QRegularExpression("a.b\\.txt") << "ab.txt abb.rtc acb.txt";
+    QTest::newRow("slash")             << QRegularExpression("g/.*/s", QRegularExpression::CaseInsensitiveOption) << "string/string/string";
+    QTest::newRow("slash2")            << QRegularExpression("g / .* / s", QRegularExpression::CaseInsensitiveOption) << "string / string / string";
+    QTest::newRow("fixed")             << QRegularExpression("a\\*aa\\.a\\(ba\\)\\*a\\\\ba", QRegularExpression::CaseInsensitiveOption) << "aa*aa.a(ba)*a\\ba";
+    QTest::newRow("fixed insensitive") << QRegularExpression("A\\*A", QRegularExpression::CaseInsensitiveOption) << "a*A A*a A*A a*a";
+    QTest::newRow("fixed sensitive")   << QRegularExpression("A\\*A") << "a*A A*a A*A a*a";
+    QTest::newRow("html")              << QRegularExpression("<b>(.*)</b>") << "<b>bold</b><i>italic</i><b>bold</b>";
+    QTest::newRow("html minimal")      << QRegularExpression("^<b>(.*)</b>$") << "<b>bold</b><i>italic</i><b>bold</b>";
+    QTest::newRow("aaa")               << QRegularExpression("a{2,5}") << "aAaAaaaaaAa";
+    QTest::newRow("aaa minimal")       << QRegularExpression("^a{2,5}$") << "aAaAaaaaaAa";
+    QTest::newRow("minimal")           << QRegularExpression("^.*\\} [*8]$") << "}?} ?} *";
+    QTest::newRow(".? minimal")        << QRegularExpression("^.?$") << ".?";
+    QTest::newRow(".+ minimal")        << QRegularExpression("^.+$") << ".+";
+    QTest::newRow("[.?] minimal")      << QRegularExpression("^[.?]$") << ".?";
+    QTest::newRow("[.+] minimal")      << QRegularExpression("^[.+]$") << ".+";
+}
+
+void tst_QJSEngine::qRegularExpressionImport()
+{
+    QFETCH(QRegularExpression, rx);
+    QFETCH(QString, string);
+
+    QJSEngine eng;
+    QJSValue rexp;
+    rexp = eng.toScriptValue(rx);
+
+    QCOMPARE(rexp.isRegExp(), true);
+    QCOMPARE(rexp.isCallable(), false);
+
+    QJSValue func = eng.evaluate("(function(string, regexp) { return string.match(regexp); })");
+    QJSValue result = func.call(QJSValueList() << string << rexp);
+
+    const QRegularExpressionMatch match = rx.match(string);
+    for (int i = 0; i <= match.lastCapturedIndex(); i++)
+        QCOMPARE(result.property(i).toString(), match.captured(i));
 }
 
 // QScriptValue::toDateTime() returns a local time, whereas JS dates

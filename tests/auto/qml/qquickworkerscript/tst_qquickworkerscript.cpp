@@ -30,6 +30,7 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qregularexpression.h>
 #include <QtQml/qjsengine.h>
 
 #include <QtQml/qqmlcomponent.h>
@@ -118,7 +119,18 @@ void tst_QQuickWorkerScript::messaging()
     QVariant response = mo->property(mo->indexOfProperty("response")).read(worker).value<QVariant>();
     if (response.userType() == qMetaTypeId<QJSValue>())
         response = response.value<QJSValue>().toVariant();
-    QCOMPARE(response, value);
+
+    if (value.type() == QMetaType::QRegExp && response.type() == QMetaType::QRegularExpression) {
+        // toVariant() doesn't know if we want QRegExp or QRegularExpression. It always creates
+        // a QRegularExpression from a JavaScript regular expression.
+        const QRegularExpression responseRegExp = response.toRegularExpression();
+        const QRegExp valueRegExp = value.toRegExp();
+        QCOMPARE(responseRegExp.pattern(), valueRegExp.pattern());
+        QCOMPARE(bool(responseRegExp.patternOptions() & QRegularExpression::CaseInsensitiveOption),
+                 bool(valueRegExp.caseSensitivity() == Qt::CaseInsensitive));
+    } else {
+        QCOMPARE(response, value);
+    }
 
     qApp->processEvents();
     delete worker;
@@ -135,10 +147,10 @@ void tst_QQuickWorkerScript::messaging_data()
     QTest::newRow("string") << qVariantFromValue(QString("More cheeeese, Gromit!"));
     QTest::newRow("variant list") << qVariantFromValue((QVariantList() << "a" << "b" << "c"));
     QTest::newRow("date time") << qVariantFromValue(QDateTime::currentDateTime());
-#ifndef QT_NO_REGEXP
-    // Qt Script's QScriptValue -> QRegExp uses RegExp2 pattern syntax
-    QTest::newRow("regexp") << qVariantFromValue(QRegExp("^\\d\\d?$", Qt::CaseInsensitive, QRegExp::RegExp2));
-#endif
+    QTest::newRow("regexp") << qVariantFromValue(QRegExp("^\\d\\d?$", Qt::CaseInsensitive,
+                                                         QRegExp::RegExp2));
+    QTest::newRow("regularexpression") << qVariantFromValue(QRegularExpression(
+            "^\\d\\d?$", QRegularExpression::CaseInsensitiveOption));
 }
 
 void tst_QQuickWorkerScript::messaging_sendQObjectList()

@@ -62,7 +62,9 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/QUrl>
 #include <QtCore/QDir>
+#if QT_CONFIG(regularexpression)
 #include <QtCore/qregularexpression.h>
+#endif
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/qvector3d.h>
 #include <QtGui/qimagewriter.h>
@@ -640,12 +642,9 @@ void QuickTestResult::warn(const QString &message, const QUrl &location, int lin
 void QuickTestResult::ignoreWarning(const QJSValue &message)
 {
     if (message.isRegExp()) {
-        // ### we should probably handle QRegularExpression conversion engine-side
-        QRegExp re = message.toVariant().toRegExp();
-        QRegularExpression::PatternOptions opts = re.caseSensitivity() ==
-            Qt::CaseInsensitive ? QRegularExpression::CaseInsensitiveOption : QRegularExpression::NoPatternOption;
-        QRegularExpression re2(re.pattern(), opts);
-        QTestLog::ignoreMessage(QtWarningMsg, re2);
+#if QT_CONFIG(regularexpression)
+        QTestLog::ignoreMessage(QtWarningMsg, message.toVariant().toRegularExpression());
+#endif
     } else {
         QTestLog::ignoreMessage(QtWarningMsg, message.toString().toLatin1());
     }

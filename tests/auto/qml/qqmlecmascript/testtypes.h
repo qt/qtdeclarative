@@ -33,6 +33,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtCore/qpoint.h>
 #include <QtCore/qsize.h>
+#include <QtCore/qregularexpression.h>
 #include <QtQml/qqmllist.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qmatrix.h>
@@ -101,6 +102,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(QQmlListProperty<QObject> objectListProperty READ objectListProperty CONSTANT)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
     Q_PROPERTY(QRegExp regExp READ regExp WRITE setRegExp)
+    Q_PROPERTY(QRegularExpression regularExpression READ regularExpression WRITE setRegularExpression)
     Q_PROPERTY(int nonscriptable READ nonscriptable WRITE setNonscriptable SCRIPTABLE false)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
     Q_PROPERTY(QJSValue qjsvalue READ qjsvalue WRITE setQJSValue NOTIFY qjsvalueChanged)
@@ -169,6 +171,12 @@ public:
 
     QRegExp regExp() { return m_regExp; }
     void setRegExp(const QRegExp &regExp) { m_regExp = regExp; }
+
+    QRegularExpression regularExpression() { return m_regularExpression; }
+    void setRegularExpression(const QRegularExpression &regularExpression)
+    {
+        m_regularExpression = regularExpression;
+    }
 
     int console() const { return 11; }
 
@@ -270,6 +278,7 @@ private:
     int m_value;
     int m_resetProperty;
     QRegExp m_regExp;
+    QRegularExpression m_regularExpression;
     QVariant m_variant;
     QJSValue m_qjsvalue;
     int m_intProperty;
