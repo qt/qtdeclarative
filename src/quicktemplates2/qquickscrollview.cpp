@@ -154,6 +154,7 @@ public:
 
     bool wasTouched = false;
     QQuickFlickable *flickable = nullptr;
+    bool ownsFlickable = false;
 };
 
 QList<QQuickItem *> QQuickScrollViewPrivate::contentChildItems() const
@@ -174,8 +175,10 @@ QQuickItem *QQuickScrollViewPrivate::getContentItem()
 QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
 {
     Q_Q(QQuickScrollView);
-    if (!flickable)
+    if (!flickable) {
         setFlickable(new QQuickFlickable(q), content);
+        ownsFlickable = true;
+    }
     return flickable;
 }
 
@@ -563,8 +566,16 @@ void QQuickScrollView::contentSizeChange(const QSizeF &newSize, const QSizeF &ol
     Q_D(QQuickScrollView);
     QQuickPane::contentSizeChange(newSize, oldSize);
     if (d->flickable) {
-        d->flickable->setContentWidth(newSize.width());
-        d->flickable->setContentHeight(newSize.height());
+        // Only set the content size on the flickable if we created the
+        // flickable ourselves. Otherwise we can end up overwriting
+        // assignments done to those properties by the application. The
+        // exception is if the application has assigned a content size
+        // directly to the scrollview, which will then win even if the
+        // application has assigned something else to the flickable.
+        if (d->hasContentWidth || d->ownsFlickable)
+            d->flickable->setContentWidth(newSize.width());
+        if (d->hasContentHeight || d->ownsFlickable)
+            d->flickable->setContentHeight(newSize.height());
     }
 }
 
