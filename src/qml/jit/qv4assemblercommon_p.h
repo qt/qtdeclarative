@@ -709,7 +709,6 @@ public:
 private:
     void passAccumulatorAsArg_internal(int arg, bool doPush);
     static Address argStackAddress(int arg);
-    static Address inArgStackAddress(int arg);
 
 private:
     const Value* constantTable;
