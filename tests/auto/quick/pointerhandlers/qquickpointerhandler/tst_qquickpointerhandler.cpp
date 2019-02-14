@@ -188,7 +188,10 @@ public:
         QQuickPointerHandler::handlePointerEventImpl(event);
         if (!enabled())
             return;
-        ++eventCount;
+        if (event->isPressEvent())
+            ++pressEventCount;
+        if (event->isReleaseEvent())
+            ++releaseEventCount;
         EventItem *item = qmlobject_cast<EventItem *>(target());
         if (!item) {
             event->point(0)->setGrabberPointerHandler(this);
@@ -218,7 +221,8 @@ public:
                 static_cast<Qt::TouchPointState>(point->state()), stateChange, eventPos(point), point->scenePosition()));
     }
 
-    int eventCount = 0;
+    int pressEventCount = 0;
+    int releaseEventCount = 0;
 };
 
 class tst_PointerHandlers : public QQmlDataTest
@@ -646,9 +650,9 @@ void tst_PointerHandlers::handlerInWindow()
 
     QPoint p1(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(handler->eventCount, 1);
+    QTRY_COMPARE(handler->pressEventCount, 1);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(handler->eventCount, 2);
+    QTRY_COMPARE(handler->releaseEventCount, 1);
 }
 
 void tst_PointerHandlers::dynamicCreationInWindow()
@@ -670,9 +674,9 @@ void tst_PointerHandlers::dynamicCreationInWindow()
 
     QPoint p1(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(handler->eventCount, 1);
+    QTRY_COMPARE(handler->pressEventCount, 1);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(handler->eventCount, 2);
+    QTRY_COMPARE(handler->releaseEventCount, 1);
 }
 
 QTEST_MAIN(tst_PointerHandlers)

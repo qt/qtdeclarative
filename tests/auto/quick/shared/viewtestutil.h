@@ -185,6 +185,10 @@ namespace QQuickTouchUtils {
     void flush(QQuickWindow *window);
 }
 
+namespace QQuickTest {
+    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage);
+}
+
 Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
 Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)
 Q_DECLARE_METATYPE(QList<QQuickViewTestUtil::ListChange>)

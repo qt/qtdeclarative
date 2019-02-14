@@ -32,6 +32,6 @@
 int main (int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
-    QQmlApplicationEngine e(QUrl("qrc:///main.qml"));
+    QQmlApplicationEngine e(QUrl(QString("qrc:///") + argv[1]));
     return app.exec();
 }

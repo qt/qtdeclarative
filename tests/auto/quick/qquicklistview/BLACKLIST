@@ -1,5 +1,3 @@
-[QTBUG_38209]
-*
 [enforceRange_withoutHighlight]
 osx
 #QTBUG-53863

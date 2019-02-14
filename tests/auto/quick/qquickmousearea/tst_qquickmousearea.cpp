@@ -43,31 +43,6 @@
 #include <QtGui/QScreen>
 #include <qpa/qwindowsysteminterface.h>
 
-// Initialize view, set Url, center in available geometry, move mouse away if desired
-static bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage)
-{
-    v.setBaseSize(QSize(240,320));
-    v.setSource(url);
-    while (v.status() == QQuickView::Loading)
-        QTest::qWait(10);
-    if (v.status() != QQuickView::Ready) {
-        foreach (const QQmlError &e, v.errors())
-            errorMessage->append(e.toString().toLocal8Bit() + '\n');
-        return false;
-    }
-    const QRect screenGeometry = v.screen()->availableGeometry();
-    const QSize size = v.size();
-    const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
-    v.setFramePosition(screenGeometry.center() - offset);
-#if QT_CONFIG(cursor) // Get the cursor out of the way.
-    if (moveMouseOut)
-         QCursor::setPos(v.geometry().topRight() + QPoint(100, 100));
-#else
-    Q_UNUSED(moveMouseOut)
-#endif
-    return true;
-}
-
 class CircleMask : public QObject
 {
     Q_OBJECT
@@ -235,7 +210,7 @@ void tst_QQuickMouseArea::dragProperties()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragproperties.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragproperties.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -333,7 +308,7 @@ void tst_QQuickMouseArea::resetDrag()
     QQuickView window;
     QByteArray errorMessage;
     window.rootContext()->setContextProperty("haveTarget", QVariant(true));
-    QVERIFY2(initView(window, testFileUrl("dragreset.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragreset.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -363,7 +338,7 @@ void tst_QQuickMouseArea::dragging()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -428,7 +403,7 @@ void tst_QQuickMouseArea::dragSmoothed()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -482,7 +457,7 @@ void tst_QQuickMouseArea::dragThreshold()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -540,7 +515,7 @@ void tst_QQuickMouseArea::invalidDrag()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -589,7 +564,7 @@ void tst_QQuickMouseArea::cancelDragging()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
 
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -644,7 +619,7 @@ void tst_QQuickMouseArea::availableDistanceLessThanDragThreshold()
 {
     QQuickView view;
     QByteArray errorMessage;
-    QVERIFY2(initView(view, testFileUrl("availableDistanceLessThanDragThreshold.qml"), true, &errorMessage),
+    QVERIFY2(QQuickTest::initView(view, testFileUrl("availableDistanceLessThanDragThreshold.qml"), true, &errorMessage),
              errorMessage.constData());
     view.show();
     view.requestActivate();
@@ -672,7 +647,7 @@ void tst_QQuickMouseArea::setDragOnPressed()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("setDragOnPressed.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("setDragOnPressed.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -716,7 +691,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnClick()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("updateMousePosOnClick.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("updateMousePosOnClick.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -744,7 +719,7 @@ void tst_QQuickMouseArea::updateMouseAreaPosOnResize()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("updateMousePosOnResize.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("updateMousePosOnResize.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -780,7 +755,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         // We handle onPressAndHold, therefore no onClicked
         QQuickView window;
         QByteArray errorMessage;
-        QVERIFY2(initView(window, testFileUrl("clickandhold.qml"), true, &errorMessage), errorMessage.constData());
+        QVERIFY2(QQuickTest::initView(window, testFileUrl("clickandhold.qml"), true, &errorMessage), errorMessage.constData());
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         QVERIFY(window.rootObject() != nullptr);
@@ -812,7 +787,7 @@ void tst_QQuickMouseArea::noOnClickedWithPressAndHold()
         // We do not handle onPressAndHold, therefore we get onClicked
         QQuickView window;
         QByteArray errorMessage;
-        QVERIFY2(initView(window, testFileUrl("noclickandhold.qml"), true, &errorMessage), errorMessage.constData());
+        QVERIFY2(QQuickTest::initView(window, testFileUrl("noclickandhold.qml"), true, &errorMessage), errorMessage.constData());
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         QVERIFY(window.rootObject() != nullptr);
@@ -835,7 +810,7 @@ void tst_QQuickMouseArea::onMousePressRejected()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("rejectEvent.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("rejectEvent.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -882,7 +857,7 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("pressedCanceled.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("pressedCanceled.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -955,7 +930,7 @@ void tst_QQuickMouseArea::doubleClick()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("doubleclick.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("doubleclick.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -992,7 +967,7 @@ void tst_QQuickMouseArea::clickTwice()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("clicktwice.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("clicktwice.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1028,7 +1003,7 @@ void tst_QQuickMouseArea::invalidClick()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("doubleclick.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("doubleclick.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1061,7 +1036,7 @@ void tst_QQuickMouseArea::pressedOrdering()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("pressedOrdering.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("pressedOrdering.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1087,7 +1062,7 @@ void tst_QQuickMouseArea::preventStealing()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("preventstealing.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("preventstealing.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1161,7 +1136,7 @@ void tst_QQuickMouseArea::clickThrough()
     //With no handlers defined click, doubleClick and PressAndHold should propagate to those with handlers
     QScopedPointer<QQuickView> window(new QQuickView);
     QByteArray errorMessage;
-    QVERIFY2(initView(*window.data(), testFileUrl("clickThrough.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(*window.data(), testFileUrl("clickThrough.qml"), true, &errorMessage), errorMessage.constData());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1195,7 +1170,7 @@ void tst_QQuickMouseArea::clickThrough()
     window.reset(new QQuickView);
 
     //With handlers defined click, doubleClick and PressAndHold should propagate only when explicitly ignored
-    QVERIFY2(initView(*window.data(), testFileUrl("clickThrough2.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(*window.data(), testFileUrl("clickThrough2.qml"), true, &errorMessage), errorMessage.constData());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1269,7 +1244,7 @@ void tst_QQuickMouseArea::clickThrough()
     window.reset(new QQuickView);
 
     //QTBUG-34368 - Shouldn't propagate to disabled mouse areas
-    QVERIFY2(initView(*window.data(), testFileUrl("qtbug34368.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(*window.data(), testFileUrl("qtbug34368.qml"), true, &errorMessage), errorMessage.constData());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1291,7 +1266,7 @@ void tst_QQuickMouseArea::clickThrough()
     window.reset(new QQuickView);
 
     //QTBUG-49100
-    QVERIFY2(initView(*window.data(), testFileUrl("qtbug49100.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(*window.data(), testFileUrl("qtbug49100.qml"), true, &errorMessage), errorMessage.constData());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1306,7 +1281,7 @@ void tst_QQuickMouseArea::hoverPosition()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("hoverPosition.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("hoverPosition.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1325,7 +1300,7 @@ void tst_QQuickMouseArea::hoverPropagation()
     //QTBUG-18175, to behave like GV did.
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("hoverPropagation.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("hoverPropagation.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1352,7 +1327,7 @@ void tst_QQuickMouseArea::hoverVisible()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("hoverVisible.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("hoverVisible.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1380,7 +1355,7 @@ void tst_QQuickMouseArea::hoverAfterPress()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("hoverAfterPress.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("hoverAfterPress.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1406,7 +1381,7 @@ void tst_QQuickMouseArea::subtreeHoverEnabled()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("qtbug54019.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("qtbug54019.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1426,7 +1401,7 @@ void tst_QQuickMouseArea::disableAfterPress()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("dragging.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1529,7 +1504,7 @@ void tst_QQuickMouseArea::onWheel()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("wheel.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("wheel.qml"), true, &errorMessage), errorMessage.constData());
     QQuickItem *root = window.rootObject();
     QVERIFY(root != nullptr);
 
@@ -1573,7 +1548,7 @@ void tst_QQuickMouseArea::transformedMouseArea()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("transformedMouseArea.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("transformedMouseArea.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject() != nullptr);
@@ -1681,7 +1656,7 @@ void tst_QQuickMouseArea::pressedMultipleButtons()
 
     QQuickView view;
     QByteArray errorMessage;
-    QVERIFY2(initView(view, testFileUrl("simple.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(view, testFileUrl("simple.qml"), true, &errorMessage), errorMessage.constData());
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
     QVERIFY(view.rootObject() != nullptr);
@@ -1712,7 +1687,7 @@ void tst_QQuickMouseArea::changeAxis()
 {
     QQuickView view;
     QByteArray errorMessage;
-    QVERIFY2(initView(view, testFileUrl("changeAxis.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(view, testFileUrl("changeAxis.qml"), true, &errorMessage), errorMessage.constData());
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
     QTRY_VERIFY(view.rootObject() != nullptr);
@@ -1805,7 +1780,7 @@ void tst_QQuickMouseArea::moveAndReleaseWithoutPress()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("moveAndReleaseWithoutPress.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("moveAndReleaseWithoutPress.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
@@ -1845,7 +1820,7 @@ void tst_QQuickMouseArea::nestedStopAtBounds()
 
     QQuickView view;
     QByteArray errorMessage;
-    QVERIFY2(initView(view, testFileUrl("nestedStopAtBounds.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(view, testFileUrl("nestedStopAtBounds.qml"), true, &errorMessage), errorMessage.constData());
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -1898,7 +1873,7 @@ void tst_QQuickMouseArea::nestedFlickableStopAtBounds()
 {
     QQuickView view;
     QByteArray errorMessage;
-    QVERIFY2(initView(view, testFileUrl("nestedFlickableStopAtBounds.qml"), false, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(view, testFileUrl("nestedFlickableStopAtBounds.qml"), false, &errorMessage), errorMessage.constData());
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -2000,7 +1975,7 @@ void tst_QQuickMouseArea::containsPress()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("containsPress.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("containsPress.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -2053,7 +2028,7 @@ void tst_QQuickMouseArea::ignoreBySource()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("ignoreBySource.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("ignoreBySource.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
     QVERIFY(window.rootObject());
@@ -2194,7 +2169,7 @@ void tst_QQuickMouseArea::pressAndHold()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("pressAndHold.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("pressAndHold.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -2239,7 +2214,7 @@ void tst_QQuickMouseArea::pressOneAndTapAnother()
 
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("twoMouseAreas.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("twoMouseAreas.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
@@ -2292,7 +2267,7 @@ void tst_QQuickMouseArea::mask()
 {
     QQuickView window;
     QByteArray errorMessage;
-    QVERIFY2(initView(window, testFileUrl("mask.qml"), true, &errorMessage), errorMessage.constData());
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("mask.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
