@@ -261,15 +261,18 @@ void tst_QAnimationGroupJob::addChildTwice()
 {
     QAbstractAnimationJob *subGroup;
     QAbstractAnimationJob *subGroup2;
-    QAnimationGroupJob *parent = new QSequentialAnimationGroupJob();
+    auto *parent = new QSequentialAnimationGroupJob();
 
     subGroup = new QAbstractAnimationJob;
     parent->appendAnimation(subGroup);
     parent->appendAnimation(subGroup);
-    QVERIFY(parent->firstChild() && !parent->firstChild()->nextSibling());
+    QVERIFY(parent->firstChild());
+    QVERIFY(!parent->firstChild()->nextSibling());
+    QVERIFY(!parent->firstChild()->previousSibling());
 
     parent->clear();
 
+    QCOMPARE(parent->currentAnimation(), nullptr);
     QVERIFY(!parent->firstChild());
 
     // adding the same item twice to a group will remove the item from its current position

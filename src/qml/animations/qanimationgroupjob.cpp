@@ -120,13 +120,9 @@ void QAnimationGroupJob::removeAnimation(QAbstractAnimationJob *animation)
 
 void QAnimationGroupJob::clear()
 {
-    QAbstractAnimationJob *child = firstChild();
-    QAbstractAnimationJob *nextSibling = nullptr;
-    while (child != nullptr) {
-         child->m_group = nullptr;
-         nextSibling = child->nextSibling();
-         delete child;
-         child = nextSibling;
+    while (QAbstractAnimationJob *child = firstChild()) {
+        removeAnimation(child);
+        delete child;
     }
     m_firstChild = nullptr;
     m_lastChild = nullptr;
