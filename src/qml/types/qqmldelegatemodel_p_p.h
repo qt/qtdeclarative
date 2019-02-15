@@ -106,6 +106,7 @@ public:
     void referenceObject() { ++objectRef; }
     bool releaseObject() { return --objectRef == 0 && !(groups & Compositor::PersistedFlag); }
     bool isObjectReferenced() const { return objectRef != 0 || (groups & Compositor::PersistedFlag); }
+    void childContextObjectDestroyed(QObject *childContextObject);
 
     bool isReferenced() const {
         return scriptRef

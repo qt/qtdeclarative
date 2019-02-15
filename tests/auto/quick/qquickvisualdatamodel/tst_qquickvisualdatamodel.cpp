@@ -431,6 +431,7 @@ private slots:
     void asynchronousMove_data();
     void asynchronousCancel();
     void invalidContext();
+    void externalManagedModel();
 
 private:
     template <int N> void groups_verify(
@@ -4232,6 +4233,73 @@ void tst_qquickvisualdatamodel::invalidContext()
 
     item = qobject_cast<QQuickItem*>(visualModel->object(4));
     QVERIFY(!item);
+}
+
+class ObjectsProvider : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<QObject> objects READ objects NOTIFY objectsChanged)
+
+public:
+    explicit ObjectsProvider(QObject *parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE void rebuild()
+    {
+        for (auto old: m_objects)
+            old->deleteLater();
+
+        m_objects.clear();
+        emit objectsChanged();
+
+        const int size = std::rand() & 0xff;
+        for (int i = 0; i < size; ++i) {
+            auto newElement = new QObject(this);
+            QQmlEngine::setObjectOwnership(newElement, QQmlEngine::CppOwnership);
+            m_objects.push_back(newElement);
+        }
+        emit objectsChanged();
+    }
+
+    Q_INVOKABLE QQmlListProperty<QObject> objects()
+    {
+        return QQmlListProperty<QObject>(this, nullptr, &ObjectsProvider::listLength,
+                                         &ObjectsProvider::listAt);
+    }
+
+    static int listLength(QQmlListProperty<QObject> *property)
+    {
+        auto objectsProvider = qobject_cast<ObjectsProvider*>(property->object);
+        return objectsProvider ? objectsProvider->m_objects.length() : 0;
+    }
+
+    static QObject* listAt(QQmlListProperty<QObject> *property, int index)
+    {
+        auto objectsProvider = qobject_cast<ObjectsProvider*>(property->object);
+        return objectsProvider ? objectsProvider->m_objects.at(index) : nullptr;
+    }
+
+signals:
+    void objectsChanged();
+
+private:
+    QList<QObject *> m_objects;
+};
+
+void tst_qquickvisualdatamodel::externalManagedModel()
+{
+    qmlRegisterType<ObjectsProvider>("example", 1, 0, "ObjectsProvider");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("externalManagedModel.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QVERIFY(object->property("running").toBool());
+
+    // Make sure it runs to completion without crashing.
+    QTRY_VERIFY(!object->property("running").toBool());
 }
 
 QTEST_MAIN(tst_qquickvisualdatamodel)
