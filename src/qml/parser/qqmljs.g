@@ -3963,8 +3963,12 @@ ClassElementList: ClassElement;
 ClassElementList: ClassElementList ClassElement;
 /.
     case $rule_number: {
-        if (sym(2).Node)
-            sym(1).ClassElementList = sym(1).ClassElementList->append(sym(2).ClassElementList);
+        if (sym(1).Node) {
+            if (sym(2).Node)
+                sym(1).ClassElementList = sym(1).ClassElementList->append(sym(2).ClassElementList);
+        } else if (sym(2).Node) {
+            sym(1).Node = sym(2).Node;
+        }
     } break;
 ./
 
