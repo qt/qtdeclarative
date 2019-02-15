@@ -159,6 +159,8 @@ Q_SIGNALS:
     Q_REVISION(5) void bottomInsetChanged();
 
 protected:
+    friend struct QQuickPressHandler;
+
     void classBegin() override;
     void componentComplete() override;
 

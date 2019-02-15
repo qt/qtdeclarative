@@ -67,6 +67,8 @@ struct QQuickPressHandler
     void clearDelayedMouseEvent();
     bool isActive();
 
+    static bool isSignalConnected(QQuickItem *item, const char *signalName, int &signalIndex);
+
     QQuickItem *control = nullptr;
     QBasicTimer timer;
     QPointF pressPos;

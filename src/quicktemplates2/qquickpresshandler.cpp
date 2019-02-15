@@ -41,6 +41,8 @@
 #include <QtGui/qstylehints.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,11 +57,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
         timer.stop();
     }
 
-    if (pressedSignalIndex == -1)
-        pressedSignalIndex = control->metaObject()->indexOfSignal("pressed(QQuickMouseEvent*)");
-    Q_ASSERT(pressedSignalIndex != -1);
-
-    if (QObjectPrivate::get(control)->isSignalConnected(pressedSignalIndex)) {
+    if (isSignalConnected(control, "pressed(QQuickMouseEvent*)", pressedSignalIndex)) {
         QQuickMouseEvent mev;
         mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
                   QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
@@ -82,11 +80,7 @@ void QQuickPressHandler::mouseReleaseEvent(QMouseEvent *event)
     if (!longPress) {
         timer.stop();
 
-        if (releasedSignalIndex == -1)
-            releasedSignalIndex = control->metaObject()->indexOfSignal("released(QQuickMouseEvent*)");
-        Q_ASSERT(releasedSignalIndex != -1);
-
-        if (QObjectPrivate::get(control)->isSignalConnected(releasedSignalIndex)) {
+        if (isSignalConnected(control, "released(QQuickMouseEvent*)", releasedSignalIndex)) {
             QQuickMouseEvent mev;
             mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
                       QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
@@ -104,11 +98,7 @@ void QQuickPressHandler::timerEvent(QTimerEvent *)
     timer.stop();
     clearDelayedMouseEvent();
 
-    if (pressAndHoldSignalIndex == -1)
-        pressAndHoldSignalIndex = control->metaObject()->indexOfSignal("pressAndHold(QQuickMouseEvent*)");
-    Q_ASSERT(pressAndHoldSignalIndex != -1);
-
-    longPress = QObjectPrivate::get(control)->isSignalConnected(pressAndHoldSignalIndex);
+    longPress = isSignalConnected(control, "pressAndHold(QQuickMouseEvent*)", pressAndHoldSignalIndex);
     if (longPress) {
         QQuickMouseEvent mev;
         mev.reset(pressPos.x(), pressPos.y(), Qt::LeftButton, Qt::LeftButton,
@@ -134,6 +124,21 @@ void QQuickPressHandler::clearDelayedMouseEvent()
 bool QQuickPressHandler::isActive()
 {
     return !(timer.isActive() || longPress);
+}
+
+bool QQuickPressHandler::isSignalConnected(QQuickItem *item, const char *signalName, int &signalIndex)
+{
+    if (signalIndex == -1)
+        signalIndex = item->metaObject()->indexOfSignal(signalName);
+    Q_ASSERT(signalIndex != -1);
+    const auto signalMetaMethod = item->metaObject()->method(signalIndex);
+    if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea*>(item)) {
+        return textArea->isSignalConnected(signalMetaMethod);
+    } else if (QQuickTextField *textField = qobject_cast<QQuickTextField*>(item)) {
+        return textField->isSignalConnected(signalMetaMethod);
+    }
+    qFatal("Unhandled control type for signal name: %s", signalName);
+    return false;
 }
 
 QT_END_NAMESPACE
