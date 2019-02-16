@@ -643,7 +643,7 @@ QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, QT
             // Appending the elide character may push the line over the maximum width
             // in which case the elided text will need to be elided.
             QFontMetricsF metrics(layout.font());
-            if (metrics.width(elideChar) + line.naturalTextWidth() >= lineWidth)
+            if (metrics.horizontalAdvance(elideChar) + line.naturalTextWidth() >= lineWidth)
                 elideText = metrics.elidedText(elideText, Qt::TextElideMode(elideMode), lineWidth);
         }
         return elideText;

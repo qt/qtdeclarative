@@ -111,10 +111,12 @@ private slots:
     void checkDelegateWithAnchors();
     void checkColumnWidthProvider();
     void checkColumnWidthProviderInvalidReturnValues();
+    void checkColumnWidthProviderNegativeReturnValue();
     void checkColumnWidthProviderNotCallable();
     void checkRowHeightWithoutProvider();
     void checkRowHeightProvider();
     void checkRowHeightProviderInvalidReturnValues();
+    void checkRowHeightProviderNegativeReturnValue();
     void checkRowHeightProviderNotCallable();
     void checkForceLayoutFunction();
     void checkContentWidthAndHeight();
@@ -157,6 +159,8 @@ private slots:
     void checkRebuildViewportOnly();
     void useDelegateChooserWithoutDefault();
     void checkTableviewInsideAsyncLoader();
+    void hideRowsAndColumns_data();
+    void hideRowsAndColumns();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -373,12 +377,29 @@ void tst_QQuickTableView::checkColumnWidthProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Provider.*valid"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->width(), kDefaultColumnWidth);
+}
+
+void tst_QQuickTableView::checkColumnWidthProviderNegativeReturnValue()
+{
+    // Check that we fall back to use the implicit width of the delegate
+    // items if the columnWidthProvider return a negative number.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    view->rootObject()->setProperty("returnNegativeColumnWidth", true);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), 20);
 }
 
 void tst_QQuickTableView::checkColumnWidthProviderNotCallable()
@@ -453,12 +474,29 @@ void tst_QQuickTableView::checkRowHeightProviderInvalidReturnValues()
 
     tableView->setModel(model);
 
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*Provider.*valid"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*implicitHeight.*zero"));
 
     WAIT_UNTIL_POLISHED;
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
+}
+
+void tst_QQuickTableView::checkRowHeightProviderNegativeReturnValue()
+{
+    // Check that we fall back to use the implicit height of the delegate
+    // items if the rowHeightProvider return a negative number.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    view->rootObject()->setProperty("returnNegativeRowHeight", true);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), 20);
 }
 
 void tst_QQuickTableView::checkRowHeightProviderNotCallable()
@@ -538,6 +576,8 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     const qreal expectedSizeInit = (tableSize * cellSizeSmall) + ((tableSize - 1) * spacing);
     QCOMPARE(tableView->contentWidth(), expectedSizeInit);
     QCOMPARE(tableView->contentHeight(), expectedSizeInit);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.width(), cellSizeSmall);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.height(), cellSizeSmall);
 
     // Flick in 5 more rows and columns, but not so far that we start loading in
     // the ones that are bigger. Loading in more rows and columns of the same
@@ -548,6 +588,8 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
 
     QCOMPARE(tableView->contentWidth(), expectedSizeInit);
     QCOMPARE(tableView->contentHeight(), expectedSizeInit);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.width(), cellSizeSmall);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.height(), cellSizeSmall);
 
     // Flick to row and column 20 (smallCellCount), since there the row and
     // column sizes increases with 100. Check that TableView then adjusts
@@ -562,6 +604,11 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     QVERIFY(tableViewPrivate->rebuildScheduled);
     WAIT_UNTIL_POLISHED;
 
+    // Check that the average cell size is now matching the
+    // large cells since they fill up the whole view.
+    QCOMPARE(tableViewPrivate->averageEdgeSize.width(), cellSizeLarge);
+    QCOMPARE(tableViewPrivate->averageEdgeSize.height(), cellSizeLarge);
+
     const int largeSizeCellCountInView = qCeil(tableView->width() / cellSizeLarge);
     const int columnCount = smallCellCount + largeSizeCellCountInView;
     QCOMPARE(tableViewPrivate->leftColumn(), smallCellCount);
@@ -571,41 +618,47 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     const qreal secondHalfOneScreenLength = largeSizeCellCountInView * cellSizeLarge;
     const qreal lengthAfterFlick = firstHalfLength + secondHalfOneScreenLength;
 
-    const qreal averageCellSize = lengthAfterFlick / columnCount;
-    const qreal expectedSizeHalf = (tableSize * averageCellSize) + accumulatedSpacing;
+    // Check that loadedTableOuterRect has been calculated correct thus far
+    const qreal spacingAfterFlick = (smallCellCount + largeSizeCellCountInView - 1) * spacing;
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.left(), flickTo + spacing);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.right(), lengthAfterFlick + spacingAfterFlick);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.top(), flickTo + spacing);
+    QCOMPARE(tableViewPrivate->loadedTableOuterRect.bottom(), lengthAfterFlick + spacingAfterFlick);
 
-    QCOMPARE(tableView->contentWidth(), expectedSizeHalf);
-    QCOMPARE(tableView->contentHeight(), expectedSizeHalf);
+    // At this point, we should have the exact content width/height set, because
+    // TableView knows where the large cells start in the viewport, and how many
+    // columns that remain in the model. It will assume that the rest of the the
+    // columns have the same average size as the ones currently inside the viewport.
+    const qreal expectedContentSize = (smallCellCount * cellSizeSmall) + (largeCellCount * cellSizeLarge) + accumulatedSpacing;
+    QCOMPARE(tableView->contentWidth(), expectedContentSize);
+    QCOMPARE(tableView->contentHeight(), expectedContentSize);
 
     // Flick to the end (row/column 100, and overshoot a bit), and
     // check that we then end up with the exact content width/height.
     const qreal secondHalfLength = largeCellCount * cellSizeLarge;
     const qreal expectedFullSize = (firstHalfLength + secondHalfLength) + accumulatedSpacing;
-
-    // If we flick more than one page at a time, tableview will jump to the new
-    // position and rebuild the table without loading the edges in-between. Which
-    // row and column that ends up as new top-left is then based on a prediction, and
-    // therefore unreliable. To avoid this to happen (which will also affect the
-    // reported size of the table), we flick to the end position in smaller chuncks.
-    QVERIFY(!tableViewPrivate->polishScheduled);
-    QVERIFY(!tableViewPrivate->rebuildScheduled);
-    int pages = qCeil((expectedFullSize - tableView->contentX()) / tableView->width());
-    for (int i = 0; i < pages; i++) {
-        tableView->setContentX(tableView->contentX() + tableView->width() - 1);
-        tableView->setContentY(tableView->contentY() + tableView->height() - 1);
-        QVERIFY(!tableViewPrivate->rebuildScheduled);
-    }
+    const qreal overshoot = 100;
+    const qreal endPosX = expectedFullSize - tableView->width() + overshoot;
+    const qreal endPosY = expectedFullSize - tableView->height() + overshoot;
+    tableView->setContentX(endPosX);
+    tableView->setContentY(endPosY);
 
     QCOMPARE(tableView->contentWidth(), expectedFullSize);
     QCOMPARE(tableView->contentHeight(), expectedFullSize);
 
-    // Flick back to start. Since we know the actual table
-    // size, contentWidth/Height shouldn't change.
+    // Flick back to start
     tableView->setContentX(0);
     tableView->setContentY(0);
 
-    QCOMPARE(tableView->contentWidth(), expectedFullSize);
-    QCOMPARE(tableView->contentHeight(), expectedFullSize);
+    // Since we move the viewport more than a page, tableview
+    // will jump to the new position and do a rebuild.
+    QVERIFY(tableViewPrivate->polishScheduled);
+    QVERIFY(tableViewPrivate->rebuildScheduled);
+    WAIT_UNTIL_POLISHED;
+
+    // We should now have the same content width/height as when we started
+    QCOMPARE(tableView->contentWidth(), expectedSizeInit);
+    QCOMPARE(tableView->contentHeight(), expectedSizeInit);
 }
 
 void tst_QQuickTableView::checkPageFlicking()
@@ -2000,6 +2053,92 @@ void tst_QQuickTableView::checkTableviewInsideAsyncLoader()
     QVERIFY(width > 0);
     QVERIFY(height > 0);
 };
+
+#define INT_LIST(indices) QVariant::fromValue(QList<int>() << indices)
+
+void tst_QQuickTableView::hideRowsAndColumns_data()
+{
+    QTest::addColumn<QVariant>("rowsToHide");
+    QTest::addColumn<QVariant>("columnsToHide");
+
+    const auto emptyList = QVariant::fromValue(QList<int>());
+
+    // Hide rows
+    QTest::newRow("first") << INT_LIST(0) << emptyList;
+    QTest::newRow("middle 1") << INT_LIST(1) << emptyList;
+    QTest::newRow("middle 3") << INT_LIST(3) << emptyList;
+    QTest::newRow("last") << INT_LIST(4) << emptyList;
+
+    QTest::newRow("subsequent 0,1") << INT_LIST(0 << 1) << emptyList;
+    QTest::newRow("subsequent 1,2") << INT_LIST(1 << 2) << emptyList;
+    QTest::newRow("subsequent 3,4") << INT_LIST(3 << 4) << emptyList;
+
+    QTest::newRow("all but first") << INT_LIST(1 << 2 << 3 << 4) << emptyList;
+    QTest::newRow("all but last") << INT_LIST(0 << 1 << 2 << 3) << emptyList;
+    QTest::newRow("all but middle") << INT_LIST(0 << 1 << 3 << 4) << emptyList;
+
+    // Hide columns
+    QTest::newRow("first") << emptyList << INT_LIST(0);
+    QTest::newRow("middle 1") << emptyList << INT_LIST(1);
+    QTest::newRow("middle 3") << emptyList << INT_LIST(3);
+    QTest::newRow("last") << emptyList << INT_LIST(4);
+
+    QTest::newRow("subsequent 0,1") << emptyList << INT_LIST(0 << 1);
+    QTest::newRow("subsequent 1,2") << emptyList << INT_LIST(1 << 2);
+    QTest::newRow("subsequent 3,4") << emptyList << INT_LIST(3 << 4);
+
+    QTest::newRow("all but first") << emptyList << INT_LIST(1 << 2 << 3 << 4);
+    QTest::newRow("all but last") << emptyList << INT_LIST(0 << 1 << 2 << 3);
+    QTest::newRow("all but middle") << emptyList << INT_LIST(0 << 1 << 3 << 4);
+
+    // Hide both rows and columns at the same time
+    QTest::newRow("first") << INT_LIST(0) << INT_LIST(0);
+    QTest::newRow("middle 1") << INT_LIST(1) << INT_LIST(1);
+    QTest::newRow("middle 3") << INT_LIST(3) << INT_LIST(3);
+    QTest::newRow("last") << INT_LIST(4) << INT_LIST(4);
+
+    QTest::newRow("subsequent 0,1") << INT_LIST(0 << 1) << INT_LIST(0 << 1);
+    QTest::newRow("subsequent 1,2") << INT_LIST(1 << 2) << INT_LIST(1 << 2);
+    QTest::newRow("subsequent 3,4") << INT_LIST(3 << 4) << INT_LIST(3 << 4);
+
+    QTest::newRow("all but first") << INT_LIST(1 << 2 << 3 << 4) << INT_LIST(1 << 2 << 3 << 4);
+    QTest::newRow("all but last") << INT_LIST(0 << 1 << 2 << 3) << INT_LIST(0 << 1 << 2 << 3);
+    QTest::newRow("all but middle") << INT_LIST(0 << 1 << 3 << 4) << INT_LIST(0 << 1 << 3 << 4);
+
+    // Hide all rows and columns
+    QTest::newRow("all") << INT_LIST(0 << 1 << 2 << 3 << 4) << INT_LIST(0 << 1 << 2 << 3 << 4);
+}
+
+void tst_QQuickTableView::hideRowsAndColumns()
+{
+    // Check that you can hide the first row (corner case)
+    // and that we load the other columns as expected.
+    QFETCH(QVariant, rowsToHide);
+    QFETCH(QVariant, columnsToHide);
+    LOAD_TABLEVIEW("hiderowsandcolumns.qml");
+
+    const QList<int> rowsToHideList = qvariant_cast<QList<int>>(rowsToHide);
+    const QList<int> columnsToHideList = qvariant_cast<QList<int>>(columnsToHide);
+    const int modelSize = 5;
+    auto model = TestModelAsVariant(modelSize, modelSize);
+    view->rootObject()->setProperty("rowsToHide", rowsToHide);
+    view->rootObject()->setProperty("columnsToHide", columnsToHide);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int expectedRowCount = modelSize - rowsToHideList.count();
+    const int expectedColumnCount = modelSize - columnsToHideList.count();
+    QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRowCount);
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumnCount);
+
+    for (const int row : tableViewPrivate->loadedRows.keys())
+        QVERIFY(!rowsToHideList.contains(row));
+
+    for (const int column : tableViewPrivate->loadedColumns.keys())
+        QVERIFY(!columnsToHideList.contains(column));
+}
 
 QTEST_MAIN(tst_QQuickTableView)
 

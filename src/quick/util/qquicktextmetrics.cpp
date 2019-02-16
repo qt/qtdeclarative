@@ -186,7 +186,7 @@ void QQuickTextMetrics::setElideWidth(qreal elideWidth)
 */
 qreal QQuickTextMetrics::advanceWidth() const
 {
-    return m_metrics.width(m_text);
+    return m_metrics.horizontalAdvance(m_text);
 }
 
 /*!

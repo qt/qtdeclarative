@@ -524,7 +524,7 @@ void SplineEditor::setupPointListWidget()
 
     m_pointListWidget->setWidget(new QWidget(m_pointListWidget));
     QVBoxLayout *layout = new QVBoxLayout(m_pointListWidget->widget());
-    layout->setMargin(0);
+    layout->setContentsMargins(QMargins());
     layout->setSpacing(2);
     m_pointListWidget->widget()->setLayout(layout);
 

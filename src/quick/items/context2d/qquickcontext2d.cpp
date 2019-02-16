@@ -1548,7 +1548,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(const QV4::Function
     if (value->as<Object>()) {
         QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
         if (color.isValid()) {
-            r->d()->context()->state.fillStyle = color;
+            r->d()->context()->state.strokeStyle = color;
             r->d()->context()->buffer()->setStrokeStyle(color);
             r->d()->context()->m_strokeStyle.set(scope.engine, value);
         } else {
@@ -1559,7 +1559,12 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(const QV4::Function
                 r->d()->context()->m_strokeStyle.set(scope.engine, value);
                 r->d()->context()->state.strokePatternRepeatX = style->d()->patternRepeatX;
                 r->d()->context()->state.strokePatternRepeatY = style->d()->patternRepeatY;
-
+            } else if (!style && r->d()->context()->state.strokeStyle != QBrush(QColor())) {
+                // If there is no style object, then ensure that the strokeStyle is at least
+                // QColor in case it was previously set
+                r->d()->context()->state.strokeStyle = QBrush(QColor());
+                r->d()->context()->buffer()->setStrokeStyle(r->d()->context()->state.strokeStyle);
+                r->d()->context()->m_strokeStyle.set(scope.engine, value);
             }
         }
     } else if (value->isString()) {

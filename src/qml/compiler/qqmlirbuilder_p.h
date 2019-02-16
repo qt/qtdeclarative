@@ -555,6 +555,7 @@ struct Q_QML_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 
 protected:
     void beginFunctionBodyHook() override;
+    bool canAccelerateGlobalLookups() const override { return !_disableAcceleratedLookups; }
     Reference fallbackNameLookup(const QString &name) override;
 
 private:

@@ -2689,6 +2689,12 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
         q->disconnect(QGuiApplication::inputMethod(), SIGNAL(inputDirectionChanged(Qt::LayoutDirection)),
                    q, SLOT(q_updateAlignment()));
 #endif
+        if (event->reason() != Qt::ActiveWindowFocusReason
+                && event->reason() != Qt::PopupFocusReason
+                && control->textCursor().hasSelection()
+                && !persistentSelection)
+            q->deselect();
+
         emit q->editingFinished();
     }
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -45,7 +45,8 @@ Item {
     height: 450
 
     property alias tableView: tableView
-    property Component delegate: tableViewDelegate
+    property var rowsToHide
+    property var columnsToHide
 
     TableView {
         id: tableView
@@ -56,8 +57,14 @@ Item {
         delegate: tableViewDelegate
         columnSpacing: 1
         rowSpacing: 1
-        columnWidthProvider: function(column) { return "notAValidValue" }
-        rowHeightProvider: function(row) { return "notAValidValue" }
+        columnWidthProvider: function(column) {
+            if (columnsToHide.includes(column))
+                return 0;
+        }
+        rowHeightProvider: function(row) {
+            if (rowsToHide.includes(row))
+                return 0;
+        }
     }
 
     Component {
@@ -66,9 +73,11 @@ Item {
             objectName: "tableViewDelegate"
             color: "lightgray"
             border.width: 1
+            implicitWidth: 50
+            implicitHeight: 50
             Text {
                 anchors.centerIn: parent
-                text: modelData
+                text: column + "," + row
             }
         }
     }

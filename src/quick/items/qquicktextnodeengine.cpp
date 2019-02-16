@@ -1007,8 +1007,8 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
                 break;
             };
 
-            QSizeF size(fontMetrics.width(listItemBullet), fontMetrics.height());
-            qreal xoff = fontMetrics.width(QLatin1Char(' '));
+            QSizeF size(fontMetrics.horizontalAdvance(listItemBullet), fontMetrics.height());
+            qreal xoff = fontMetrics.horizontalAdvance(QLatin1Char(' '));
             if (block.textDirection() == Qt::LeftToRight)
                 xoff = -xoff - size.width();
             setPosition(pos + QPointF(xoff, 0));

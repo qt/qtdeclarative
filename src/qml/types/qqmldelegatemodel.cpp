@@ -1060,7 +1060,11 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                     = qobject_cast<QQmlAdaptorModelProxyInterface *>(cacheItem)) {
                 ctxt = new QQmlContextData;
                 ctxt->setParent(cacheItem->contextData, /*stronglyReferencedByParent*/true);
-                ctxt->contextObject = proxy->proxiedObject();
+                QObject *proxied = proxy->proxiedObject();
+                ctxt->contextObject = proxied;
+                // We don't own the proxied object. We need to clear it if it goes away.
+                QObject::connect(proxied, &QObject::destroyed,
+                                 cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
             }
         }
 
@@ -2007,6 +2011,17 @@ QV4::ReturnedValue QQmlDelegateModelItem::set_member(QQmlDelegateModelItem *cach
 QV4::ReturnedValue QQmlDelegateModelItem::get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &)
 {
     return QV4::Encode((int)thisItem->groupIndex(Compositor::Group(flag)));
+}
+
+void QQmlDelegateModelItem::childContextObjectDestroyed(QObject *childContextObject)
+{
+    if (!contextData)
+        return;
+
+    for (QQmlContextData *ctxt = contextData->childContexts; ctxt; ctxt = ctxt->nextChild) {
+        if (ctxt->contextObject == childContextObject)
+            ctxt->contextObject = nullptr;
+    }
 }
 
 

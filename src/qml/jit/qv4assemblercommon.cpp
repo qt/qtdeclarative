@@ -187,13 +187,6 @@ PlatformAssemblerCommon::Address PlatformAssemblerCommon::argStackAddress(int ar
     return Address(StackPointerRegister, offset * PointerSize);
 }
 
-JSC::MacroAssemblerBase::Address PlatformAssemblerCommon::inArgStackAddress(int arg)
-{
-    int offset = arg - ArgInRegCount;
-    Q_ASSERT(offset >= 0);
-    return Address(FramePointerRegister, -(offset + 1) * PointerSize);
-}
-
 void PlatformAssemblerCommon::passAccumulatorAsArg(int arg)
 {
 #ifndef QT_NO_DEBUG
@@ -342,10 +335,13 @@ void PlatformAssemblerCommon::tailCallRuntime(const char *functionName, const vo
 
 void PlatformAssemblerCommon::setTailCallArg(RegisterID src, int arg)
 {
-    if (arg < ArgInRegCount)
+    if (arg < ArgInRegCount) {
         move(src, registerForArg(arg));
-    else
-        storePtr(src, inArgStackAddress(arg));
+    } else {
+        // We never write to the incoming arguments space on the stack, and the tail call runtime
+        // method has the same signature as the jitted function, so it is safe for us to just reuse
+        // the arguments that we got in.
+    }
 }
 
 JSC::MacroAssemblerBase::Address PlatformAssemblerCommon::jsAlloca(int slotCount)

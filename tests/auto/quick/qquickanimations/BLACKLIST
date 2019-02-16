@@ -1,6 +1,0 @@
-# QTBUG-45466 QTBUG-29062
-[simpleProperty]
-osx-10.9 developer-build
-[simplePath]
-windows gcc developer-build
-

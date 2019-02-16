@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 Research In Motion.
+** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the tests of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -26,12 +26,40 @@
 **
 ****************************************************************************/
 
-#include <QCoreApplication>
-#include <QQmlApplicationEngine>
+import QtQuick.Window 2.2
+import QtQuick 2.6
+import QtQml.Models 2.11
+import example 1.0
 
-int main (int argc, char *argv[])
-{
-    QCoreApplication app(argc, argv);
-    QQmlApplicationEngine e(QUrl(QString("qrc:///") + argv[1]));
-    return app.exec();
+Window {
+    visible: true
+    property bool running: rebuildTimer.running
+    ListView {
+        anchors.fill: parent
+        model: delegateModel
+    }
+
+    DelegateModel {
+        id: delegateModel
+        model: objectsProvider.objects
+        delegate: Item {}
+    }
+
+    Timer {
+        id: rebuildTimer
+        running: true
+        repeat: true
+        interval: 1
+
+        property int count: 0
+        onTriggered: {
+            objectsProvider.rebuild();
+            if (++count === 10)
+                running = false;
+        }
+    }
+
+    ObjectsProvider {
+        id: objectsProvider
+    }
 }

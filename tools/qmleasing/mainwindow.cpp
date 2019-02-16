@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     splineEditor->setPreset(ui_properties.comboBox->currentText());
 
     QVBoxLayout *groupBoxLayout = new QVBoxLayout(ui_properties.groupBox);
-    groupBoxLayout->setMargin(0);
+    groupBoxLayout->setContentsMargins(QMargins());
     ui_properties.groupBox->setLayout(groupBoxLayout);
 
     groupBoxLayout->addWidget(splineEditor->pointListWidget());

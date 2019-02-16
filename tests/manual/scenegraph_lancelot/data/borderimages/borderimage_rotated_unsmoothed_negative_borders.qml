@@ -4,7 +4,7 @@ Rectangle {
     width: 320
     height: 480
 
-    color: "red"
+    color: "#C0FEFE"
 
     Item {
         x: 80
