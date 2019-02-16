@@ -45,7 +45,10 @@ void QQuickFusionTheme::initialize(QQuickTheme *theme)
 {
     const bool isDarkSystemTheme = QQuickStylePrivate::isDarkSystemTheme();
     QPalette systemPalette;
-    systemPalette.setColor(QPalette::ButtonText, isDarkSystemTheme ? Qt::white : Qt::black);
+    systemPalette.setColor(QPalette::Active, QPalette::ButtonText,
+        isDarkSystemTheme ? QColor::fromRgb(0xe7e7e7) : QColor::fromRgb(0x252525));
+    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText,
+        isDarkSystemTheme ? QColor::fromRgb(0x777777) : QColor::fromRgb(0xb6b6b6));
     theme->setPalette(QQuickTheme::System, systemPalette);
 }
 
