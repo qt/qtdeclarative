@@ -793,6 +793,7 @@ void QQuickContainer::setContentWidth(qreal width)
         return;
 
     d->contentWidth = width;
+    d->resizeContent();
     emit contentWidthChanged();
 }
 
@@ -832,6 +833,7 @@ void QQuickContainer::setContentHeight(qreal height)
         return;
 
     d->contentHeight = height;
+    d->resizeContent();
     emit contentHeightChanged();
 }
 
