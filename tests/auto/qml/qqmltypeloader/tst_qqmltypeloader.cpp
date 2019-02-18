@@ -55,6 +55,7 @@ private slots:
     void redirect();
     void qmlSingletonWithinModule();
     void multiSingletonModule();
+    void implicitComponentModule();
 };
 
 void tst_QQMLTypeLoader::testLoadComplete()
@@ -446,6 +447,31 @@ void tst_QQMLTypeLoader::qmlSingletonWithinModule()
     QVERIFY(obj->property("ok").toBool());
 }
 
+static void checkCleanCacheLoad(const QString &testCase)
+{
+#if QT_CONFIG(process)
+    const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
+    if (qEnvironmentVariableIsSet(skipKey))
+        return;
+    for (int i = 0; i < 5; ++i) {
+        QProcess child;
+        child.setProgram(QCoreApplication::applicationFilePath());
+        child.setArguments(QStringList(testCase));
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert(QLatin1String("QT_LOGGING_RULES"), QLatin1String("qt.qml.diskcache.debug=true"));
+        env.insert(QLatin1String(skipKey), QLatin1String("1"));
+        child.setProcessEnvironment(env);
+        child.start();
+        QVERIFY(child.waitForFinished());
+        QCOMPARE(child.exitCode(), 0);
+        QVERIFY(!child.readAllStandardOutput().contains("Checksum mismatch for cached version"));
+        QVERIFY(!child.readAllStandardError().contains("Checksum mismatch for cached version"));
+    }
+#else
+    Q_UNUSED(testCase);
+#endif
+}
+
 void tst_QQMLTypeLoader::multiSingletonModule()
 {
     qmlClearTypeRegistrations();
@@ -463,25 +489,18 @@ void tst_QQMLTypeLoader::multiSingletonModule()
     QVERIFY(!obj.isNull());
     QVERIFY(obj->property("ok").toBool());
 
-#if QT_CONFIG(process)
-    const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
-    if (qEnvironmentVariableIsSet(skipKey))
-        return;
-    for (int i = 0; i < 5; ++i) {
-        QProcess child;
-        child.setProgram(QCoreApplication::applicationFilePath());
-        child.setArguments(QStringList(QLatin1String("multiSingletonModule")));
-        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-        env.insert(QLatin1String("QT_LOGGING_RULES"), QLatin1String("qt.qml.diskcache.debug=true"));
-        env.insert(QLatin1String(skipKey), QLatin1String("1"));
-        child.setProcessEnvironment(env);
-        child.start();
-        QVERIFY(child.waitForFinished());
-        QCOMPARE(child.exitCode(), 0);
-        QVERIFY(!child.readAllStandardOutput().contains("Checksum mismatch for cached version"));
-        QVERIFY(!child.readAllStandardError().contains("Checksum mismatch for cached version"));
-    }
-#endif
+    checkCleanCacheLoad(QLatin1String("multiSingletonModule"));
+}
+
+void tst_QQMLTypeLoader::implicitComponentModule()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("implicitcomponent.qml"));
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+
+    checkCleanCacheLoad(QLatin1String("implicitComponentModule"));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

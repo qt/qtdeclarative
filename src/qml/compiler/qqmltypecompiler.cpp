@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
                                    QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                                   const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
+                                   QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
     : resolvedTypes(resolvedTypeCache)
     , engine(engine)
     , typeData(typeData)
@@ -70,7 +70,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
 {
     // Build property caches and VME meta object data
 
-    for (auto it = resolvedTypes.constBegin(), end = resolvedTypes.constEnd();
+    for (auto it = resolvedTypes->constBegin(), end = resolvedTypes->constEnd();
          it != end; ++it) {
         QQmlCustomParser *customParser = (*it)->type.customParser();
         if (customParser)
@@ -161,9 +161,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     qmlGenerator.generate(*document, dependencyHasher);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit = document->javaScriptCompilationUnit;
-    compilationUnit = document->javaScriptCompilationUnit;
     compilationUnit->typeNameCache = typeNameCache;
-    compilationUnit->resolvedTypes = resolvedTypes;
+    compilationUnit->resolvedTypes = *resolvedTypes;
     compilationUnit->propertyCaches = std::move(m_propertyCaches);
     Q_ASSERT(compilationUnit->propertyCaches.count() == static_cast<int>(compilationUnit->objectCount()));
 
@@ -300,7 +299,6 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
     , imports(typeCompiler->imports())
     , customParsers(typeCompiler->customParserCache())
-    , resolvedTypes(typeCompiler->resolvedTypes)
     , illegalNames(typeCompiler->enginePrivate()->v8engine()->illegalNames())
     , propertyCaches(typeCompiler->propertyCaches())
 {
@@ -334,7 +332,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         // Attached property?
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
-            auto *typeRef = resolvedTypes.value(binding->propertyNameIndex);
+            auto *typeRef = resolvedType(binding->propertyNameIndex);
             QQmlType type = typeRef ? typeRef->type : QQmlType();
             if (!type.isValid()) {
                 if (imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr)) {
@@ -405,7 +403,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
 
-                auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
+                auto *typeRef = resolvedType(obj->inheritedTypeNameIndex);
                 const QQmlType type = typeRef ? typeRef->type : QQmlType();
                 if (type.isValid()) {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type.module()).arg(type.majorVersion()).arg(type.minorVersion()));
@@ -506,7 +504,6 @@ QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
     , propertyCaches(typeCompiler->propertyCaches())
     , imports(typeCompiler->imports())
-    , resolvedTypes(&typeCompiler->resolvedTypes)
 {
 }
 
@@ -618,7 +615,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     int value = 0;
     bool ok = false;
 
-    auto *tr = resolvedTypes->value(obj->inheritedTypeNameIndex);
+    auto *tr = resolvedType(obj->inheritedTypeNameIndex);
     if (type.isValid() && tr && tr->type == type) {
         // When these two match, we can short cut the search
         QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
@@ -785,7 +782,6 @@ QQmlComponentAndAliasResolver::QQmlComponentAndAliasResolver(QQmlTypeCompiler *t
     , enginePrivate(typeCompiler->enginePrivate())
     , pool(typeCompiler->memoryPool())
     , qmlObjects(typeCompiler->qmlObjects())
-    , resolvedTypes(&typeCompiler->resolvedTypes)
     , propertyCaches(std::move(typeCompiler->takePropertyCaches()))
 {
 }
@@ -803,7 +799,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
             continue;
 
         const QmlIR::Object *targetObject = qmlObjects->at(binding->value.objectIndex);
-        auto *tr = resolvedTypes->value(targetObject->inheritedTypeNameIndex);
+        auto *tr = resolvedType(targetObject->inheritedTypeNameIndex);
         Q_ASSERT(tr);
 
         const QMetaObject *firstMetaObject = nullptr;
@@ -854,12 +850,12 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         syntheticComponent->location = binding->valueLocation;
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
-        if (!resolvedTypes->contains(syntheticComponent->inheritedTypeNameIndex)) {
+        if (!containsResolvedType(syntheticComponent->inheritedTypeNameIndex)) {
             auto typeRef = new QV4::CompiledData::ResolvedTypeReference;
             typeRef->type = componentType;
             typeRef->majorVersion = componentType.majorVersion();
             typeRef->minorVersion = componentType.minorVersion();
-            resolvedTypes->insert(syntheticComponent->inheritedTypeNameIndex, typeRef);
+            insertResolvedType(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 
         qmlObjects->append(syntheticComponent);
@@ -897,7 +893,7 @@ bool QQmlComponentAndAliasResolver::resolve()
         bool isExplicitComponent = false;
 
         if (obj->inheritedTypeNameIndex) {
-            auto *tref = resolvedTypes->value(obj->inheritedTypeNameIndex);
+            auto *tref = resolvedType(obj->inheritedTypeNameIndex);
             Q_ASSERT(tref);
             if (tref->type.metaObject() == &QQmlComponent::staticMetaObject)
                 isExplicitComponent = true;
@@ -1300,7 +1296,6 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(QQmlTypeCompiler *typeCompiler, QmlIR::JSCodeGen *v4CodeGen)
     : QQmlCompilePass(typeCompiler)
-    , resolvedTypes(typeCompiler->resolvedTypes)
     , customParsers(typeCompiler->customParserCache())
     , qmlObjects(*typeCompiler->qmlObjects())
     , propertyCaches(typeCompiler->propertyCaches())
@@ -1339,7 +1334,7 @@ bool QQmlJSCodeGenerator::compileComponent(int contextObject)
         m.idIndex = obj->id;
         m.type = propertyCaches->at(objectIndex);
 
-        auto *tref = resolvedTypes.value(obj->inheritedTypeNameIndex);
+        auto *tref = resolvedType(obj->inheritedTypeNameIndex);
         if (tref && tref->isFullyDynamicType)
             m.type = nullptr;
 

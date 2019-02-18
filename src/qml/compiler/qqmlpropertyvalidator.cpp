@@ -50,7 +50,6 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
     , compilationUnit(compilationUnit)
     , imports(imports)
     , qmlUnit(compilationUnit->unitData())
-    , resolvedTypes(compilationUnit->resolvedTypes)
     , propertyCaches(compilationUnit->propertyCaches)
     , bindingPropertyDataPerObject(&compilationUnit->bindingPropertyDataPerObject)
 {
@@ -96,7 +95,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         return QVector<QQmlCompileError>();
 
     QQmlCustomParser *customParser = nullptr;
-    if (auto typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex)) {
+    if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
         if (typeRef->type.isValid())
             customParser = typeRef->type.customParser();
     }
@@ -168,7 +167,7 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
-                auto *objectType = resolvedTypes.value(obj->inheritedTypeNameIndex);
+                auto *objectType = resolvedType(obj->inheritedTypeNameIndex);
                 if (objectType && objectType->type.isValid()) {
                     return recordError(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(name).arg(objectType->type.module()).arg(objectType->majorVersion).arg(objectType->minorVersion));
                 } else {
@@ -633,7 +632,7 @@ QQmlCompileError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *
         bool isPropertyInterceptor = false;
 
         const QV4::CompiledData::Object *targetObject = compilationUnit->objectAt(binding->value.objectIndex);
-        if (auto *typeRef = resolvedTypes.value(targetObject->inheritedTypeNameIndex)) {
+        if (auto *typeRef = resolvedType(targetObject->inheritedTypeNameIndex)) {
             QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
             const QMetaObject *mo = cache->firstCppMetaObject();
             QQmlType qmlType;

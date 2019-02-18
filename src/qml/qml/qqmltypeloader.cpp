@@ -2348,7 +2348,7 @@ void QQmlTypeData::done()
 
     QQmlEngine *const engine = typeLoader()->engine();
 
-    const auto dependencyHasher = [engine, resolvedTypeCache, this](QCryptographicHash *hash) {
+    const auto dependencyHasher = [engine, &resolvedTypeCache, this](QCryptographicHash *hash) {
         if (!resolvedTypeCache.addToHash(hash, engine))
             return false;
         return ::addTypeReferenceChecksumsToHash(m_compositeSingletons, hash, engine);
@@ -2365,7 +2365,7 @@ void QQmlTypeData::done()
 
     if (!m_document.isNull()) {
         // Compile component
-        compile(typeNameCache, resolvedTypeCache, dependencyHasher);
+        compile(typeNameCache, &resolvedTypeCache, dependencyHasher);
     } else {
         createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
     }
@@ -2638,7 +2638,8 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache, const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache,
+void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
+                           QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                            const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     Q_ASSERT(m_compiledData.isNull());
