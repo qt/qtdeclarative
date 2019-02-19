@@ -281,8 +281,22 @@ struct Q_QML_PRIVATE_EXPORT Value
 
     inline bool isUndefined() const { return _val == 0; }
     inline bool isDouble() const { return (_val >> IsDouble_Shift); }
-    inline bool isManaged() const { return _val && ((_val >> IsManagedOrUndefined_Shift) == 0); }
-    inline bool isManagedOrUndefined() const { return ((_val >> IsManagedOrUndefined_Shift) == 0); }
+    inline bool isManaged() const
+    {
+#if QT_POINTER_SIZE == 4
+        return value() && tag() == Managed_Type_Internal;
+#else
+        return _val && ((_val >> IsManagedOrUndefined_Shift) == 0);
+#endif
+    }
+    inline bool isManagedOrUndefined() const
+    {
+#if QT_POINTER_SIZE == 4
+        return tag() == Managed_Type_Internal;
+#else
+        return ((_val >> IsManagedOrUndefined_Shift) == 0);
+#endif
+    }
 
     inline bool isIntOrBool() const {
         return (_val >> IsIntegerOrBool_Shift) == 3;
