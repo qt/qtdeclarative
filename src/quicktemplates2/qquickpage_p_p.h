@@ -71,6 +71,7 @@ public:
     QString title;
     QQuickItem *header = nullptr;
     QQuickItem *footer = nullptr;
+    bool emittingImplicitSizeChangedSignals = false;
 };
 
 QT_END_NAMESPACE
