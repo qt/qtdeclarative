@@ -408,7 +408,7 @@ public:
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
-    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int revision,
+    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int typeMinorVersion,
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
@@ -499,7 +499,7 @@ private:
 
     inline QQmlPropertyCache *copy(int reserve);
 
-    void append(const QMetaObject *, int revision,
+    void append(const QMetaObject *, int typeMinorVersion,
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyRawData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());

@@ -464,7 +464,7 @@ QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
 
 QQmlPropertyCache *
 QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
-                                 int revision,
+                                 int typeMinorVersion,
                                  QQmlPropertyData::Flags propertyFlags,
                                  QQmlPropertyData::Flags methodFlags,
                                  QQmlPropertyData::Flags signalFlags)
@@ -478,19 +478,17 @@ QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                          QMetaObjectPrivate::get(metaObject)->signalCount +
                                          QMetaObjectPrivate::get(metaObject)->propertyCount);
 
-    rv->append(metaObject, revision, propertyFlags, methodFlags, signalFlags);
+    rv->append(metaObject, typeMinorVersion, propertyFlags, methodFlags, signalFlags);
 
     return rv;
 }
 
 void QQmlPropertyCache::append(const QMetaObject *metaObject,
-                               int revision,
+                               int typeMinorVersion,
                                QQmlPropertyData::Flags propertyFlags,
                                QQmlPropertyData::Flags methodFlags,
                                QQmlPropertyData::Flags signalFlags)
 {
-    Q_UNUSED(revision);
-
     _metaObject = metaObject;
 
     bool dynamicMetaObject = isDynamicMetaObject(metaObject);
@@ -640,6 +638,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
 
         data->setFlags(propertyFlags);
         data->lazyLoad(p);
+        data->setTypeMinorVersion(typeMinorVersion);
 
         data->_flags.isDirect = !dynamicMetaObject;
 
