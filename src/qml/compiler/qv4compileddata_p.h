@@ -1187,6 +1187,7 @@ public:
 
     QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
     ResolvedTypeReferenceMap resolvedTypes;
+    ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
 
     bool verifyChecksum(const DependentTypesHasher &dependencyHasher) const;
 

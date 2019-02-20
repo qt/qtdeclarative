@@ -53,6 +53,7 @@ private slots:
     void stringLiteral();
     void noSubstitutionTemplateLiteral();
     void templateLiteral();
+    void leadingSemicolonInClass();
 
 private:
     QStringList excludedDirs;
@@ -272,6 +273,15 @@ void tst_qqmlparser::templateLiteral()
     QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0);
     auto *e = templateLiteral->expression;
     QVERIFY(e);
+}
+
+void tst_qqmlparser::leadingSemicolonInClass()
+{
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(QLatin1String("class X{;n(){}}"), 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parseProgram());
 }
 
 QTEST_MAIN(tst_qqmlparser)

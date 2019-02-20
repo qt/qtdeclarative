@@ -125,6 +125,10 @@ private:
 
     inline QV4::QmlContext *currentQmlContext();
     Q_NEVER_INLINE void createQmlContext();
+    QV4::CompiledData::ResolvedTypeReference *resolvedType(int id) const
+    {
+        return compilationUnit->resolvedType(id);
+    }
 
     enum Phase {
         Startup,
@@ -141,7 +145,6 @@ private:
     const QV4::CompiledData::Unit *qmlUnit;
     QQmlGuardedContextData parentContext;
     QQmlContextData *context;
-    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QQmlPropertyCacheVector *propertyCaches;
     QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;

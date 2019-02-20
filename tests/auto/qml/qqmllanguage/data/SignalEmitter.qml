@@ -10,8 +10,18 @@ QtObject {
     signal testSignal(SignalParam spp);
 
     function emitTestSignal() {
-        testObject.expectNull = true;
-        testSignal(op);
+        var caught = false;
+        try {
+            testObject.expectNull = true;
+            testSignal(op);
+        } catch(e) {
+            // good: We want a type error here
+            caught = true;
+            if (handleSignal)
+                testObject.determineSuccess(null);
+        }
+        if (!caught && handleSignal)
+            testObject.determineSuccess("fail");
 
         testObject.expectNull = false;
         testSignal(p);
