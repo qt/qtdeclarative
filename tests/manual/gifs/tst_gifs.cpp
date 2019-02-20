@@ -733,8 +733,8 @@ void tst_Gifs::checkables()
 
     for (int i = 0; i < pressIndices.size(); ++i) {
         const int pressIndex = pressIndices.at(i);
-        const char *controlId = qPrintable(QString::fromLatin1("control%1").arg(pressIndex + 1));
-        QQuickItem *control = window->property(controlId).value<QQuickItem*>();
+        const QString controlId = QString::fromLatin1("control%1").arg(pressIndex + 1);
+        QQuickItem *control = window->property(qPrintable(controlId)).value<QQuickItem*>();
         QVERIFY(control);
 
         const QPoint pos = control->mapToScene(QPointF(control->width() / 2, control->height() / 2)).toPoint();
