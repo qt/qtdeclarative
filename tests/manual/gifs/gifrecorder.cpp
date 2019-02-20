@@ -283,7 +283,8 @@ void GifRecorder::waitForFinish()
         result = waitForProcessToFinish(ffmpegProcess, ffmpegProcessName, waitDuration);
         if (!result.success)
             QFAIL(qPrintable(result.errorMessage));
-        result = waitForProcessToFinish(convertProcess, convertProcessName, waitDuration);
+        // Conversion can take a bit longer, so double the wait time.
+        result = waitForProcessToFinish(convertProcess, convertProcessName, waitDuration * 2);
         if (!result.success)
             QFAIL(qPrintable(result.errorMessage));
 
