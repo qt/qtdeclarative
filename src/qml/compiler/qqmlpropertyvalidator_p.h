@@ -72,12 +72,15 @@ private:
     Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QV4::CompiledData::Location &location, const QString &description) const;
     Q_REQUIRED_RESULT QVector<QQmlCompileError> recordError(const QQmlCompileError &error) const;
     QString stringAt(int index) const { return compilationUnit->stringAt(index); }
+    QV4::CompiledData::ResolvedTypeReference *resolvedType(int id) const
+    {
+        return compilationUnit->resolvedType(id);
+    }
 
     QQmlEnginePrivate *enginePrivate;
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit;
     const QQmlImports &imports;
     const QV4::CompiledData::Unit *qmlUnit;
-    const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypes;
     const QQmlPropertyCacheVector &propertyCaches;
 
     QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;

@@ -151,7 +151,7 @@ inline QQmlCompileError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObje
                 if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType())) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
-                        auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
+                        auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
                         QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
                         QQmlCompileError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
@@ -215,7 +215,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache(enginePrivate);
     } else if (obj->inheritedTypeNameIndex != 0) {
-        auto *typeRef = objectContainer->resolvedTypes.value(obj->inheritedTypeNameIndex);
+        auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
 
         if (typeRef->isFullyDynamicType) {
@@ -235,7 +235,8 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 
         return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
     } else if (context.instantiatingBinding && context.instantiatingBinding->isAttachedProperty()) {
-        auto *typeRef = objectContainer->resolvedTypes.value(context.instantiatingBinding->propertyNameIndex);
+        auto *typeRef = objectContainer->resolvedType(
+                context.instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
         QQmlType qmltype = typeRef->type;
         if (!qmltype.isValid()) {
@@ -710,7 +711,7 @@ inline QQmlCompileError QQmlPropertyCacheAliasCreator<ObjectContainer>::property
         return propertyDataForAlias(component, *targetAlias, type, minorVersion, propertyFlags);
     } else if (alias.encodedMetaPropertyIndex == -1) {
         Q_ASSERT(alias.flags & QV4::CompiledData::Alias::AliasPointsToPointerObject);
-        auto *typeRef = objectContainer->resolvedTypes.value(targetObject.inheritedTypeNameIndex);
+        auto *typeRef = objectContainer->resolvedType(targetObject.inheritedTypeNameIndex);
         if (!typeRef) {
             // Can be caused by the alias target not being a valid id or property. E.g.:
             // property alias dataValue: dataVal
