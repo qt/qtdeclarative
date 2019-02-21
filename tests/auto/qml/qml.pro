@@ -70,6 +70,7 @@ PRIVATETESTS += \
     qqmltranslation \
     qqmlimport \
     qqmlobjectmodel \
+    qqmltablemodel \
     qv4assembler \
     qv4mm \
     qv4identifiertable \
