@@ -59,10 +59,10 @@ TableView {
             [{ fruitType: "Apple" }, { fruitPrice: 1.50 }],
             [{ fruitType: "Orange" }, { fruitPrice: 2.50 }]
         ]
-        roleDataProvider: function(row, column, role, cellData) {
+        roleDataProvider: function(index, role, cellData) {
             if (role === "display") {
                 if (cellData.hasOwnProperty("fruitPrice")) {
-                    console.log("taxing your fruit " + JSON.stringify(cellData))
+                    console.log("row", index.row, "taxing your fruit", JSON.stringify(cellData))
                     return (cellData.fruitPrice * (1 + taxPercent / 100)).toFixed(2);
                 }
                 else if (cellData.hasOwnProperty("fruitType"))

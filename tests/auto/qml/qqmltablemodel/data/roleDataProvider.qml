@@ -43,12 +43,12 @@ Item {
             [ { name: "Rex" }, { age: 3 } ],
             [ { name: "Buster" }, { age: 5 } ]
         ]
-        roleDataProvider: function(row, column, role, cellData) {
+        roleDataProvider: function(index, role, cellData) {
             if (role === "display") {
                 // Age will now be in dog years
                 if (cellData.hasOwnProperty("age"))
                     return (cellData.age * 7);
-                else if (column === 0)
+                else if (index.column === 0)
                     return (cellData.name);
             }
             return cellData;
