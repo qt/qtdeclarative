@@ -1614,6 +1614,7 @@ bool QQuickWindow::event(QEvent *e)
         bool delivered = d->deliverHoverEvent(d->contentItem, enter->windowPos(), d->lastMousePosition,
             QGuiApplication::keyboardModifiers(), 0L, accepted);
         enter->setAccepted(accepted);
+        d->updateCursor(mapFromGlobal(QCursor::pos()));
         return delivered;
     }
         break;
