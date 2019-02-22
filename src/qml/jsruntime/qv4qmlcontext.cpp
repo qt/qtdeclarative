@@ -215,6 +215,14 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
     Lookup * const originalLookup = lookup;
 
+    decltype(lookup->qmlContextPropertyGetter) contextGetterFunction = QQmlContextWrapper::lookupContextObjectProperty;
+
+    // minor optimization so we don't potentially try two property lookups on the same object
+    if (scopeObject == context->contextObject) {
+        scopeObject = nullptr;
+        contextGetterFunction = QQmlContextWrapper::lookupScopeObjectProperty;
+    }
+
     while (context) {
         // Search context properties
         const QV4::IdentifierHash &properties = context->propertyNames();
@@ -294,12 +302,29 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // Search context object
         if (context->contextObject) {
             bool hasProp = false;
-            result = QV4::QObjectWrapper::getQmlProperty(v4, context, context->contextObject, name, QV4::QObjectWrapper::CheckRevision, &hasProp);
+            QQmlPropertyData *propertyData = nullptr;
+            result = QV4::QObjectWrapper::getQmlProperty(v4, context, context->contextObject,
+                                                         name, QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
                 if (base)
                     *base = QV4::QObjectWrapper::wrap(v4, context->contextObject);
+
+                if (lookup && propertyData) {
+                    QQmlData *ddata = QQmlData::get(context->contextObject, false);
+                    if (ddata && ddata->propertyCache) {
+                        ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, context->contextObject)));
+                        const QObjectWrapper *That = static_cast<const QObjectWrapper *>(val->objectValue());
+                        lookup->qobjectLookup.ic = That->internalClass();
+                        lookup->qobjectLookup.staticQObject = nullptr;
+                        lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+                        lookup->qobjectLookup.propertyCache->addref();
+                        lookup->qobjectLookup.propertyData = propertyData;
+                        lookup->qmlContextPropertyGetter = contextGetterFunction;
+                    }
+                }
+
                 return result->asReturnedValue();
             }
         }
@@ -506,6 +531,36 @@ ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, Execution
     };
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, scopeObject));
+    return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
+}
+
+ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(base)
+    Scope scope(engine);
+    Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+    if (!qmlContext)
+        return QV4::Encode::undefined();
+
+    QQmlContextData *context = qmlContext->qmlContext();
+    if (!context)
+        return QV4::Encode::undefined();
+
+    QObject *contextObject = context->contextObject;
+    if (!contextObject)
+        return QV4::Encode::undefined();
+
+    if (QQmlData::wasDeleted(contextObject))
+        return QV4::Encode::undefined();
+
+    const auto revertLookup = [l, engine, base]() {
+        l->qobjectLookup.propertyCache->release();
+        l->qobjectLookup.propertyCache = nullptr;
+        l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+        return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
+    };
+
+    ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
