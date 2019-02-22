@@ -85,7 +85,7 @@ public:
     QJSValue roleDataProvider() const;
     void setRoleDataProvider(QJSValue roleDataProvider);
 
-    Q_INVOKABLE QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     Q_INVOKABLE QVariant data(const QModelIndex &index, const QString &role) const;
