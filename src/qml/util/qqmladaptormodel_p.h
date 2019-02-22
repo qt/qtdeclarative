@@ -104,11 +104,16 @@ public:
             return QVariant(); }
         virtual bool canFetchMore(const QQmlAdaptorModel &) const { return false; }
         virtual void fetchMore(QQmlAdaptorModel &) const {}
+
+        QScopedPointer<QMetaObject, QScopedPointerPodDeleter> metaObject;
+        QQmlRefPointer<QQmlPropertyCache> propertyCache;
     };
 
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
+
+    int modelItemRevision = 0;
 
     QQmlAdaptorModel();
     ~QQmlAdaptorModel();
@@ -124,6 +129,8 @@ public:
     int rowAt(int index) const;
     int columnAt(int index) const;
     int indexAt(int row, int column) const;
+
+    void useImportVersion(int minorVersion);
 
     inline bool adaptsAim() const { return qobject_cast<QAbstractItemModel *>(object()); }
     inline QAbstractItemModel *aim() { return static_cast<QAbstractItemModel *>(object()); }

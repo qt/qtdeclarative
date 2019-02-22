@@ -377,7 +377,7 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, int minorVersi
     Q_ASSERT(type.isValid());
 
     if (minorVersion == -1 || !type.containsRevisionedAttributes())
-        return cache(type.metaObject());
+        return cache(type.metaObject(), minorVersion);
 
     Locker locker(this);
     return QQmlMetaType::propertyCache(type, minorVersion);

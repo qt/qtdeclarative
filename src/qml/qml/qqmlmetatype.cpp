@@ -118,7 +118,7 @@ struct QQmlMetaTypeData
     QHash<int, int> qmlLists;
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
-    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
+    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
     void startRecordingTypeRegFailures(QStringList *storage)
@@ -2432,7 +2432,7 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject)
+QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
 {
     if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
         return rv;
@@ -2442,17 +2442,17 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject
         propertyCaches.insert(metaObject, rv);
         return rv;
     }
-    QQmlPropertyCache *super = propertyCache(metaObject->superClass());
-    QQmlPropertyCache *rv = super->copyAndAppend(metaObject);
+    QQmlPropertyCache *super = propertyCache(metaObject->superClass(), minorVersion);
+    QQmlPropertyCache *rv = super->copyAndAppend(metaObject, minorVersion);
     propertyCaches.insert(metaObject, rv);
     return rv;
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject)
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, int minorVersion)
 {
     QMutexLocker lock(metaTypeDataLock());
     QQmlMetaTypeData *data = metaTypeData();
-    return data->propertyCache(metaObject);
+    return data->propertyCache(metaObject, minorVersion);
 }
 
 QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int minorVersion)
@@ -2485,7 +2485,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         return pc;
     }
 
-    QQmlPropertyCache *raw = propertyCache(type.metaObject());
+    QQmlPropertyCache *raw = propertyCache(type.metaObject(), minorVersion);
 
     bool hasCopied = false;
 

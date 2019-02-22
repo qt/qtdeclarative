@@ -394,7 +394,7 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
     QQmlPropertyCache();
-    QQmlPropertyCache(const QMetaObject *);
+    QQmlPropertyCache(const QMetaObject *, int metaObjectRevision = 0);
     ~QQmlPropertyCache() override;
 
     void update(const QMetaObject *);
@@ -408,7 +408,7 @@ public:
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
-    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int revision,
+    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int typeMinorVersion,
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());
@@ -499,7 +499,7 @@ private:
 
     inline QQmlPropertyCache *copy(int reserve);
 
-    void append(const QMetaObject *, int revision,
+    void append(const QMetaObject *, int typeMinorVersion,
                 QQmlPropertyRawData::Flags propertyFlags = QQmlPropertyRawData::Flags(),
                 QQmlPropertyRawData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyRawData::Flags signalFlags = QQmlPropertyData::Flags());

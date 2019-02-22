@@ -359,6 +359,7 @@ public:
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
     void invalidateColumnRowPositions();
 
+    int resolveImportVersion();
     void createWrapperModel();
 
     void initItemCallback(int modelIndex, QObject *item);

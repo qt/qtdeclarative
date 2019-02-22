@@ -160,10 +160,12 @@ QVector<QQmlCompileError> QQmlPropertyValidator::validateObject(int objectIndex,
         QQmlPropertyData *pd = nullptr;
         if (!name.isEmpty()) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-                || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+                || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
                 pd = propertyResolver.signal(name, &notInRevision);
-            else
-                pd = propertyResolver.property(name, &notInRevision, isGroupProperty ? QmlIR::PropertyResolver::IgnoreRevision : QmlIR::PropertyResolver::CheckRevision);
+            } else {
+                pd = propertyResolver.property(name, &notInRevision,
+                                               QmlIR::PropertyResolver::CheckRevision);
+            }
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);

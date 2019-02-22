@@ -93,6 +93,8 @@ public:
     QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent = nullptr);
     ~QQmlTableInstanceModel() override;
 
+    void useImportVersion(int minorVersion);
+
     int count() const override { return m_adaptorModel.count(); }
     int rows() const { return m_adaptorModel.rowCount(); }
     int columns() const { return m_adaptorModel.columnCount(); }

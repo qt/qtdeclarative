@@ -103,7 +103,7 @@ public:
     static QQmlType qmlType(int typeId, TypeIdCategory category = TypeIdCategory::MetaType);
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
-    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
+    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion = -1);
     static QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
     static void freeUnusedTypesAndCaches();

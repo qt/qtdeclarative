@@ -66,6 +66,7 @@ private slots:
 
     void normalizeUrls();
     void unregisterAttachedProperties();
+    void revisionedGroupedProperties();
 };
 
 class TestType : public QObject
@@ -569,6 +570,62 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
                  attachedType.index());
 
         QVERIFY(c.create());
+    }
+}
+
+class Grouped : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int prop READ prop WRITE setProp NOTIFY propChanged REVISION 1)
+public:
+    int prop() const { return m_prop; }
+    void setProp(int prop)
+    {
+        if (prop != m_prop) {
+            m_prop = prop;
+            emit propChanged(prop);
+        }
+    }
+
+signals:
+    Q_REVISION(1) void propChanged(int prop);
+
+private:
+    int m_prop = 0;
+};
+
+class MyItem : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Grouped *grouped READ grouped CONSTANT)
+public:
+    MyItem() : m_grouped(new Grouped) {}
+    Grouped *grouped() const { return m_grouped.data(); }
+
+private:
+    QScopedPointer<Grouped> m_grouped;
+};
+
+void tst_qqmlmetatype::revisionedGroupedProperties()
+{
+    qmlClearTypeRegistrations();
+    qmlRegisterType<MyItem>("GroupedTest", 1, 0, "MyItem");
+    qmlRegisterType<MyItem, 1>("GroupedTest", 1, 1, "MyItem");
+    qmlRegisterUncreatableType<Grouped>("GroupedTest", 1, 0, "Grouped", "Grouped");
+    qmlRegisterUncreatableType<Grouped, 1>("GroupedTest", 1, 1, "Grouped", "Grouped");
+
+    {
+        QQmlEngine engine;
+        QQmlComponent valid(&engine, testFileUrl("revisionedGroupedPropertiesValid.qml"));
+        QVERIFY(valid.isReady());
+        QScopedPointer<QObject> obj(valid.create());
+        QVERIFY(!obj.isNull());
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent invalid(&engine, testFileUrl("revisionedGroupedPropertiesInvalid.qml"));
+        QVERIFY(invalid.isError());
     }
 }
 

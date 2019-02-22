@@ -109,8 +109,8 @@ public:
 
 
     // These methods may be called from the QML loader thread
-    inline QQmlPropertyCache *cache(QObject *obj);
-    inline QQmlPropertyCache *cache(const QMetaObject *);
+    inline QQmlPropertyCache *cache(QObject *obj, int minorVersion = -1);
+    inline QQmlPropertyCache *cache(const QMetaObject *, int minorVersion = -1);
 };
 
 QJSEnginePrivate::Locker::Locker(const QJSEngine *e)
@@ -160,14 +160,14 @@ and deleted before the loader thread has a chance to use or reference it.  This
 can't currently happen as the cache holds a reference to the
 QQmlPropertyCache until the QQmlEngine is destroyed.
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj)
+QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj, int minorVersion)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
         return nullptr;
 
     Locker locker(this);
     const QMetaObject *mo = obj->metaObject();
-    return QQmlMetaType::propertyCache(mo);
+    return QQmlMetaType::propertyCache(mo, minorVersion);
 }
 
 /*!
@@ -179,12 +179,12 @@ exist for the lifetime of the QQmlEngine.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject)
+QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject, int minorVersion)
 {
     Q_ASSERT(metaObject);
 
     Locker locker(this);
-    return QQmlMetaType::propertyCache(metaObject);
+    return QQmlMetaType::propertyCache(metaObject, minorVersion);
 }
 
 
