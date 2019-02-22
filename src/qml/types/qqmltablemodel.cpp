@@ -42,7 +42,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlengine.h>
-#include <private/qv4engine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -667,7 +666,7 @@ QVariant QQmlTableModel::data(const QModelIndex &index, int role) const
     if (mRoleDataProvider.isCallable()) {
         auto engine = qmlEngine(this);
         const auto args = QJSValueList() <<
-            QJSValue(engine->handle(), engine->handle()->fromVariant(QVariant(QVariant::ModelIndex, &index))) <<
+            engine->toScriptValue(index) <<
             QString::fromUtf8(mRoleNames.value(role)) <<
             engine->toScriptValue(rowData.at(column));
         return const_cast<QQmlTableModel*>(this)->mRoleDataProvider.call(args).toVariant();
