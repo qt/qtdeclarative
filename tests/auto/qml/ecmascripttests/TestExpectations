@@ -211,7 +211,6 @@ built-ins/Promise/prototype/then/ctor-throws.js fails
 built-ins/Promise/race/ctx-ctor.js fails
 built-ins/Proxy/ownKeys/return-duplicate-entries-throws.js fails
 built-ins/Proxy/ownKeys/return-duplicate-symbol-entries-throws.js fails
-built-ins/RegExp/S15.10.2.12_A2_T1.js fails
 built-ins/RegExp/prototype/Symbol.match/builtin-success-u-return-val-groups.js fails
 built-ins/RegExp/prototype/Symbol.split/species-ctor.js fails
 built-ins/RegExp/prototype/exec/S15.10.6.2_A5_T3.js fails
@@ -219,7 +218,6 @@ built-ins/RegExp/prototype/exec/failure-lastindex-access.js fails
 built-ins/RegExp/prototype/exec/success-lastindex-access.js fails
 built-ins/RegExp/prototype/source/value-line-terminator.js fails
 built-ins/RegExp/prototype/test/S15.10.6.3_A1_T22.js fails
-built-ins/RegExp/u180e.js fails
 built-ins/RegExp/unicode_restricted_brackets.js fails
 built-ins/RegExp/unicode_restricted_character_class_escape.js fails
 built-ins/RegExp/unicode_restricted_identity_escape.js fails

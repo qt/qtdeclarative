@@ -109,6 +109,15 @@ public:
     inline bool isEmpty() const { return this->empty(); }
 
     inline T &last() { return *(this->begin() + this->size() - 1); }
+
+    bool contains(const T &value) const
+    {
+        for (const T &inVector : *this) {
+            if (inVector == value)
+                return true;
+        }
+        return false;
+    }
 };
 
 template <typename T, int capacity>
