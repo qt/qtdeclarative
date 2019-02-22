@@ -362,6 +362,7 @@ private slots:
     void hugeObject();
     void templateStringTerminator();
     void arrayAndException();
+    void numberToStringWithRadix();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8876,6 +8877,21 @@ void tst_qqmlecmascript::arrayAndException()
     const QJSValue value = engine.evaluate("[...[],[,,$]]");
     // Should not crash
     QVERIFY(value.isError());
+}
+
+void tst_qqmlecmascript::numberToStringWithRadix()
+{
+    QJSEngine engine;
+    {
+        const QJSValue value = engine.evaluate(".5.toString(5)");
+        QVERIFY(!value.isError());
+        QVERIFY(value.toString().startsWith("0.2222222222"));
+    }
+    {
+        const QJSValue value = engine.evaluate(".05.toString(5)");
+        QVERIFY(!value.isError());
+        QVERIFY(value.toString().startsWith("0.01111111111"));
+    }
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

@@ -298,13 +298,22 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 
     if (frac != 0) {
         result->append(QLatin1Char('.'));
+        double magnitude = 1;
+        double next = frac;
         do {
-            frac = frac * radix;
-            char c = (char)::floor(frac);
+            next *= radix;
+            const int floored = ::floor(next);
+            char c = char(floored);
             c = (c < 10) ? (c + '0') : (c - 10 + 'a');
             result->append(QLatin1Char(c));
-            frac = frac - ::floor(frac);
-        } while (frac != 0);
+            magnitude /= radix;
+            frac -= double(floored) * magnitude;
+            next -= double(floored);
+
+            // The next digit still makes a difference
+            // if a value of "radix" for it would change frac.
+            // Otherwise we've reached the limit of numerical precision.
+        } while (frac > 0 && frac - magnitude != frac);
     }
 
     if (negative)
