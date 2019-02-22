@@ -47,7 +47,7 @@
     \note The following programs must be installed if \c setHighQuality(true)
     is called:
 
-    \li \e avconv (sudo apt-get install libav-tools)
+    \li \e ffmpeg (sudo apt-get install ffmpeg)
     \li \e convert (sudo apt-get install imagemagick)
     \li \e gifsicle (sudo apt-get install gifsicle)
 
@@ -252,19 +252,19 @@ void GifRecorder::waitForFinish()
         QSignalSpy spy(mWindow, SIGNAL(frameSwapped()));
         QVERIFY(spy.wait());
 
-        QProcess avconvProcess;
+        QProcess ffmpegProcess;
         QProcess convertProcess;
-        avconvProcess.setStandardOutputProcess(&convertProcess);
+        ffmpegProcess.setStandardOutputProcess(&convertProcess);
 
-        const QString avconvProcessName = QStringLiteral("avconv");
-        const QString avconvArgs = QString::fromLatin1("-i %1 -r 20 -f image2pipe -vcodec ppm -").arg(mByzanzOutputFileName);
-        startProcess(avconvProcess, avconvProcessName, avconvArgs);
+        const QString ffmpegProcessName = QStringLiteral("ffmpeg");
+        const QString ffmpegArgs = QString::fromLatin1("-i %1 -r 20 -f image2pipe -vcodec ppm -").arg(mByzanzOutputFileName);
+        startProcess(ffmpegProcess, ffmpegProcessName, ffmpegArgs);
 
         const QString convertProcessName = QStringLiteral("convert");
         const QString convertArgs = QString::fromLatin1("-delay 5 -loop 0 - %1").arg(mGifFileName);
         startProcess(convertProcess, convertProcessName, convertArgs);
 
-        waitForProcessToFinish(avconvProcess, avconvProcessName, waitDuration);
+        waitForProcessToFinish(ffmpegProcess, ffmpegProcessName, waitDuration);
         waitForProcessToFinish(convertProcess, convertProcessName, waitDuration);
 
         const QString gifsicleProcessName = QStringLiteral("gifsicle");
