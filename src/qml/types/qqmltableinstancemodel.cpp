@@ -82,6 +82,11 @@ QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject 
 {
 }
 
+void QQmlTableInstanceModel::useImportVersion(int minorVersion)
+{
+    m_adaptorModel.useImportVersion(minorVersion);
+}
+
 QQmlTableInstanceModel::~QQmlTableInstanceModel()
 {
     for (const auto modelItem : m_modelItems) {

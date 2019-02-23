@@ -3,7 +3,7 @@
 ** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,49 +37,51 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLINSPECTORCLIENT_P_H
-#define QQMLINSPECTORCLIENT_P_H
+import QtQuick 2.12
+import QtQuick.Window 2.12
 
-#include <private/qqmldebugclient_p.h>
+Item {
+    id: root
+    width: 640
+    height: 480
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+    property alias tableView: tableView
 
-QT_BEGIN_NAMESPACE
+    property int row: 42
+    property int column: 42
 
-class QQmlInspectorClientPrivate;
-class QQmlInspectorClient : public QQmlDebugClient
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QQmlInspectorClient)
+    property int resolvedDelegateRow: 0
+    property int resolvedDelegateColumn: 0
 
-public:
-    QQmlInspectorClient(QQmlDebugConnection *connection);
+    TableView {
+        id: tableView
+        // Dummy tableView, to let the auto test follow the
+        // same pattern for loading qml files as other tests.
+    }
 
-    int setInspectToolEnabled(bool enabled);
-    int setShowAppOnTop(bool showOnTop);
-    int setAnimationSpeed(qreal speed);
-    int select(const QList<int> &objectIds);
-    int createObject(const QString &qml, int parentId, const QStringList &imports,
-                     const QString &filename);
-    int moveObject(int childId, int newParentId);
-    int destroyObject(int objectId);
+    Item {
+        width: 100
+        height: parent.height;
+        Repeater {
+            model: 1
+            delegate: Component {
+                Rectangle {
+                    color: "blue"
+                    height: 100
+                    width: 100
+                    Component.onCompleted: {
+                        // row and column should be resolved to be the ones
+                        // found in the root item, and not in the delegate
+                        // items context. The context properties are revisioned,
+                        // and require that the QQmlDelegateModel has an import
+                        // version set (which is not the case when using a
+                        // Repeater, only when using a TableView).
+                        resolvedDelegateRow = row
+                        resolvedDelegateColumn = column
+                    }
+                }
+            }
+        }
+    }
+}
 
-signals:
-    void responseReceived(int requestId, bool result);
-
-protected:
-    void messageReceived(const QByteArray &message) override;
-};
-
-QT_END_NAMESPACE
-
-#endif // QQMLINSPECTORCLIENT_P_H
