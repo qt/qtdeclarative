@@ -3246,22 +3246,26 @@ bool Codegen::visit(DoWhileStatement *ast)
     BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
 
     ControlFlowLoop flow(this, &end, &cond);
-    bytecodeGenerator->jump().link(body);
 
-    cond.link();
-    bytecodeGenerator->addLoopStart(cond);
-
-    if (!AST::cast<TrueLiteral *>(ast->expression)) {
-        TailCallBlocker blockTailCalls(this);
-        condition(ast->expression, &body, &end, true);
-    }
+    // special case that is not a loop:
+    //   do {...} while (false)
+    if (!AST::cast<FalseLiteral *>(ast->expression))
+        bytecodeGenerator->addLoopStart(body);
 
     body.link();
     statement(ast->statement);
     setJumpOutLocation(bytecodeGenerator, ast->statement, ast->semicolonToken);
 
-    if (!AST::cast<FalseLiteral *>(ast->expression))
-        bytecodeGenerator->jump().link(cond);
+    cond.link();
+    if (AST::cast<TrueLiteral *>(ast->expression)) {
+        // do {} while (true) -> just jump back to the loop body, no need to generate a condition
+        bytecodeGenerator->jump().link(body);
+    } else if (AST::cast<FalseLiteral *>(ast->expression)) {
+        // do {} while (false) -> fall through, no need to generate a condition
+    } else {
+        TailCallBlocker blockTailCalls(this);
+        condition(ast->expression, &body, &end, false);
+    }
 
     end.link();
 
