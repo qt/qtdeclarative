@@ -379,6 +379,18 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
 
+    auto assertOrNull = [&](bool ok)
+    {
+        Q_ASSERT(ok || binding->type == QV4::CompiledData::Binding::Type_Null);
+        Q_UNUSED(ok);
+    };
+
+    auto assertType = [&](QV4::CompiledData::Binding::ValueType type)
+    {
+        Q_ASSERT(binding->type == type || binding->type == QV4::CompiledData::Binding::Type_Null);
+        Q_UNUSED(type);
+    };
+
     if (property->isQObject()) {
         if (binding->type == QV4::CompiledData::Binding::Type_Null) {
             QObject *value = nullptr;
@@ -436,25 +448,25 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QVariant::String: {
-        Q_ASSERT(binding->evaluatesToString());
+        assertOrNull(binding->evaluatesToString());
         QString value = binding->valueAsString(compilationUnit.data());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::StringList: {
-        Q_ASSERT(binding->evaluatesToString());
+        assertOrNull(binding->evaluatesToString());
         QStringList value(binding->valueAsString(compilationUnit.data()));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::ByteArray: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        assertType(QV4::CompiledData::Binding::Type_String);
         QByteArray value(binding->valueAsString(compilationUnit.data()).toUtf8());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Url: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+        assertType(QV4::CompiledData::Binding::Type_String);
         QString string = binding->valueAsString(compilationUnit.data());
         // Encoded dir-separators defeat QUrl processing - decode them first
         string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
@@ -466,7 +478,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QVariant::UInt: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+        assertType(QV4::CompiledData::Binding::Type_Number);
         double d = binding->valueAsNumber(compilationUnit->constants);
         uint value = uint(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -474,7 +486,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QVariant::Int: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+        assertType(QV4::CompiledData::Binding::Type_Number);
         double d = binding->valueAsNumber(compilationUnit->constants);
         int value = int(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
@@ -482,13 +494,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QMetaType::Float: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+        assertType(QV4::CompiledData::Binding::Type_Number);
         float value = float(binding->valueAsNumber(compilationUnit->constants));
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Double: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+        assertType(QV4::CompiledData::Binding::Type_Number);
         double value = binding->valueAsNumber(compilationUnit->constants);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
@@ -496,7 +508,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::Color: {
         bool ok = false;
         uint colorValue = QQmlStringConverters::rgbaFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         struct { void *data[4]; } buffer;
         if (QQml_valueTypeProvider()->storeValueType(property->propType(), &colorValue, &buffer, sizeof(buffer))) {
             property->writeProperty(_qobject, &buffer, propertyWriteFlags);
@@ -507,14 +519,14 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::Date: {
         bool ok = false;
         QDate value = QQmlStringConverters::dateFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Time: {
         bool ok = false;
         QTime value = QQmlStringConverters::timeFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -527,7 +539,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             const int msecsSinceStartOfDay = value.time().msecsSinceStartOfDay();
             value = QDateTime(QDate::fromJulianDay(date), QTime::fromMSecsSinceStartOfDay(msecsSinceStartOfDay));
         }
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -535,47 +547,47 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QVariant::Point: {
         bool ok = false;
         QPoint value = QQmlStringConverters::pointFFromString(binding->valueAsString(compilationUnit.data()), &ok).toPoint();
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::PointF: {
         bool ok = false;
         QPointF value = QQmlStringConverters::pointFFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Size: {
         bool ok = false;
         QSize value = QQmlStringConverters::sizeFFromString(binding->valueAsString(compilationUnit.data()), &ok).toSize();
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::SizeF: {
         bool ok = false;
         QSizeF value = QQmlStringConverters::sizeFFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Rect: {
         bool ok = false;
         QRect value = QQmlStringConverters::rectFFromString(binding->valueAsString(compilationUnit.data()), &ok).toRect();
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::RectF: {
         bool ok = false;
         QRectF value = QQmlStringConverters::rectFFromString(binding->valueAsString(compilationUnit.data()), &ok);
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QVariant::Bool: {
-        Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Boolean);
+        assertType(QV4::CompiledData::Binding::Type_Boolean);
         bool value = binding->valueAsBoolean();
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
@@ -586,7 +598,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float yp;
         } vec;
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector2D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
@@ -598,7 +610,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float zy;
         } vec;
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector3D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
@@ -611,7 +623,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float wp;
         } vec;
         bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
@@ -624,37 +636,37 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             float zp;
         } vec;
         bool ok = QQmlStringConverters::createFromString(QMetaType::QQuaternion, binding->valueAsString(compilationUnit.data()), &vec, sizeof(vec));
-        Q_ASSERT(ok);
+        assertOrNull(ok);
         Q_UNUSED(ok);
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
     case QVariant::RegExp:
-        Q_ASSERT(!"not possible");
+        assertOrNull(!"not possible");
         break;
     default: {
         // generate single literal value assignment to a list property if required
         if (property->propType() == qMetaTypeId<QList<qreal> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+            assertType(QV4::CompiledData::Binding::Type_Number);
             QList<qreal> value;
             value.append(binding->valueAsNumber(compilationUnit->constants));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<int> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Number);
+            assertType(QV4::CompiledData::Binding::Type_Number);
             double n = binding->valueAsNumber(compilationUnit->constants);
             QList<int> value;
             value.append(int(n));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<bool> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Boolean);
+            assertType(QV4::CompiledData::Binding::Type_Boolean);
             QList<bool> value;
             value.append(binding->valueAsBoolean());
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<QUrl> >()) {
-            Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_String);
+            assertType(QV4::CompiledData::Binding::Type_String);
             QString urlString = binding->valueAsString(compilationUnit.data());
             QUrl u = urlString.isEmpty() ? QUrl()
                                          : compilationUnit->finalUrl().resolved(QUrl(urlString));
@@ -663,7 +675,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<QString> >()) {
-            Q_ASSERT(binding->evaluatesToString());
+            assertOrNull(binding->evaluatesToString());
             QList<QString> value;
             value.append(binding->valueAsString(compilationUnit.data()));
             property->writeProperty(_qobject, &value, propertyWriteFlags);

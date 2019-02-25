@@ -1183,10 +1183,10 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject)
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, int minorVersion)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
-    return data->propertyCache(metaObject);
+    return data->propertyCache(metaObject, minorVersion);
 }
 
 QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, int minorVersion)

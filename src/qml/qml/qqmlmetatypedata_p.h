@@ -112,7 +112,7 @@ struct QQmlMetaTypeData
     QHash<int, int> qmlLists;
 
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
-    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject);
+    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
     void setTypeRegistrationFailures(QStringList *failures)
