@@ -1,5 +1,7 @@
 TARGET = qtquickcontrols2fusionstyleplugin
 TARGETPATH = QtQuick/Controls.2/Fusion
+
+IMPORT_NAME = QtQuick.Controls.Fusion
 IMPORT_VERSION = 2.5
 
 QT += qml quick
