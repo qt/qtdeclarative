@@ -27,7 +27,7 @@
 
 /*!
     \page qtquickcontrols2-differences.html
-    \title Differences between Qt Quick Controls 1
+    \title Differences with Qt Quick Controls 1
 
     Qt Quick Controls 1 was originally developed to support desktop platforms,
     with mobile and embedded support coming shortly afterwards. They have a
