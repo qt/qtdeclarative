@@ -263,7 +263,6 @@ void QQuickPopupPrivate::init()
     popupItem = new QQuickPopupItem(q);
     popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
-    QObject::connect(popupItem, &QQuickItem::enabledChanged, q, &QQuickPopup::enabledChanged);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     QObject::connect(popupItem, &QQuickControl::backgroundChanged, q, &QQuickPopup::backgroundChanged);
     QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
@@ -1666,8 +1665,7 @@ void QQuickPopup::setBackground(QQuickItem *background)
 
     The content item is the visual implementation of the popup. When the
     popup is made visible, the content item is automatically reparented to
-    the \l {ApplicationWindow::overlay}{overlay item} of its application
-    window.
+    the \l {Overlay::overlay}{overlay item}.
 
     \note The content item is automatically resized to fit within the
     \l padding of the popup.
@@ -1807,14 +1805,20 @@ bool QQuickPopup::hasActiveFocus() const
     This property holds whether the popup is modal.
 
     Modal popups often have a distinctive background dimming effect defined
-    in \l {ApplicationWindow::overlay}{overlay.modal}, and do not allow press
-    or release events through to items beneath them.
+    in \l {Overlay::modal}{Overlay.modal}, and do not allow press
+    or release events through to items beneath them. For example, if the user
+    accidentally clicks outside of a popup, any item beneath that popup at
+    the location of the click will not receive the event.
 
     On desktop platforms, it is common for modal popups to be closed only when
     the escape key is pressed. To achieve this behavior, set
-    \l closePolicy to \c Popup.CloseOnEscape.
+    \l closePolicy to \c Popup.CloseOnEscape. By default, \c closePolicy
+    is set to \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}, which
+    means that clicking outside of a modal popup will close it.
 
     The default value is \c false.
+
+    \sa dim
 */
 bool QQuickPopup::isModal() const
 {
@@ -1846,7 +1850,7 @@ void QQuickPopup::setModal(bool modal)
     Unless explicitly set, this property follows the value of \l modal. To
     return to the default value, set this property to \c undefined.
 
-    \sa modal
+    \sa modal, {Overlay::modeless}{Overlay.modeless}
 */
 bool QQuickPopup::dim() const
 {

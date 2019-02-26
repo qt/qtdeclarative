@@ -366,6 +366,19 @@ void QQuickPopupItem::paletteChange(const QPalette &newPalette, const QPalette &
     d->popup->paletteChange(newPalette, oldPalette);
 }
 
+void QQuickPopupItem::enabledChange()
+{
+    Q_D(QQuickPopupItem);
+    // Just having QQuickPopup connect our QQuickItem::enabledChanged() signal
+    // to its enabledChanged() signal is enough for the enabled property to work,
+    // but we must also ensure that its paletteChanged() signal is emitted
+    // so that bindings to palette are re-evaluated, because QQuickControl::palette()
+    // returns a different palette depending on whether or not the control is enabled.
+    // To save a connection, we also emit enabledChanged here.
+    emit d->popup->enabledChanged();
+    emit d->popup->paletteChanged();
+}
+
 QFont QQuickPopupItem::defaultFont() const
 {
     Q_D(const QQuickPopupItem);

@@ -943,6 +943,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     switch (change) {
     case ItemEnabledHasChanged:
         emit paletteChanged();
+        enabledChange();
         break;
     case ItemVisibleHasChanged:
 #if QT_CONFIG(quicktemplates2_hover)
@@ -2182,6 +2183,10 @@ void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &old
         emit availableWidthChanged();
     if (!qFuzzyCompare(newGeometry.height(), oldGeometry.height()))
         emit availableHeightChanged();
+}
+
+void QQuickControl::enabledChange()
+{
 }
 
 void QQuickControl::fontChange(const QFont &newFont, const QFont &oldFont)

@@ -324,9 +324,10 @@ void QQuickAbstractButtonPrivate::click()
 void QQuickAbstractButtonPrivate::trigger()
 {
     Q_Q(QQuickAbstractButton);
+    const bool wasEnabled = effectiveEnable;
     if (action && action->isEnabled())
         QQuickActionPrivate::get(action)->trigger(q, false);
-    else if (effectiveEnable)
+    if (wasEnabled && (!action || !action->isEnabled()))
         emit q->clicked();
 }
 

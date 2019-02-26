@@ -95,6 +95,7 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
     void paletteChange(const QPalette &newPalette, const QPalette &oldPalette) override;
+    void enabledChange() override;
 
     QFont defaultFont() const override;
     QPalette defaultPalette() const override;

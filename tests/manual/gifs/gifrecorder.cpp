@@ -47,7 +47,7 @@
     \note The following programs must be installed if \c setHighQuality(true)
     is called:
 
-    \li \e avconv (sudo apt-get install libav-tools)
+    \li \e ffmpeg (sudo apt-get install ffmpeg)
     \li \e convert (sudo apt-get install imagemagick)
     \li \e gifsicle (sudo apt-get install gifsicle)
 
@@ -142,29 +142,36 @@ QQuickWindow *GifRecorder::window() const
 }
 
 namespace {
-    void startProcess(QProcess &process, const QString &processName, const QString &args)
+    struct ProcessWaitResult {
+        bool success;
+        QString errorMessage;
+    };
+
+    ProcessWaitResult waitForProcessToStart(QProcess &process, const QString &processName, const QString &args)
     {
         qCDebug(lcGifRecorder) << "Starting" << processName << "with the following arguments:" << args;
         const QString command = processName + QLatin1Char(' ') + args;
         process.start(command);
         if (!process.waitForStarted(1000)) {
-            QString message = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
-            message = message.arg(processName).arg(args).arg(process.errorString());
-            QFAIL(qPrintable(message));
-        } else {
-            qCDebug(lcGifRecorder) << "Successfully started" << processName;
+            QString errorMessage = QString::fromLatin1("Could not launch %1 with the following arguments: %2\nError:\n%3");
+            errorMessage = errorMessage.arg(processName).arg(args).arg(process.errorString());
+            return { false, errorMessage };
         }
+
+        qCDebug(lcGifRecorder) << "Successfully started" << processName;
+        return { true, QString() };
     }
 
-    void waitForProcessToFinish(QProcess &process, const QString &processName, int waitDuration)
+    ProcessWaitResult waitForProcessToFinish(QProcess &process, const QString &processName, int waitDuration)
     {
         if (!process.waitForFinished(waitDuration) || process.exitCode() != 0) {
-            QString message = QString::fromLatin1("%1 failed to finish (exit code %2): %3");
-            message = message.arg(processName).arg(process.exitCode()).arg(process.errorString());
-            QFAIL(qPrintable(message));
-        } else {
-            qCDebug(lcGifRecorder) << processName << "finished";
+            QString errorMessage = QString::fromLatin1("\"%1\" failed to finish (exit code %2): %3");
+            errorMessage = errorMessage.arg(processName).arg(process.exitCode()).arg(process.errorString());
+            return { false, errorMessage };
         }
+
+        qCDebug(lcGifRecorder) << processName << "finished";
+        return { true, QString() };
     }
 }
 
@@ -222,7 +229,9 @@ void GifRecorder::start()
     connect(&mEventTimer, SIGNAL(timeout()), mWindow, SLOT(update()));
     mEventTimer.start(100);
 
-    startProcess(mByzanzProcess, byzanzProcessName, args);
+    const ProcessWaitResult result = waitForProcessToStart(mByzanzProcess, byzanzProcessName, args);
+    if (!result.success)
+        QFAIL(qPrintable(result.errorMessage));
 }
 
 void GifRecorder::waitForFinish()
@@ -252,20 +261,32 @@ void GifRecorder::waitForFinish()
         QSignalSpy spy(mWindow, SIGNAL(frameSwapped()));
         QVERIFY(spy.wait());
 
-        QProcess avconvProcess;
+        // Start ffmpeg and send its output to imagemagick's convert command.
+        // Based on the example in the documentation for QProcess::setStandardOutputProcess().
+        QProcess ffmpegProcess;
         QProcess convertProcess;
-        avconvProcess.setStandardOutputProcess(&convertProcess);
+        ffmpegProcess.setStandardOutputProcess(&convertProcess);
 
-        const QString avconvProcessName = QStringLiteral("avconv");
-        const QString avconvArgs = QString::fromLatin1("-i %1 -r 20 -f image2pipe -vcodec ppm -").arg(mByzanzOutputFileName);
-        startProcess(avconvProcess, avconvProcessName, avconvArgs);
+        const QString ffmpegProcessName = QStringLiteral("ffmpeg");
+        const QString ffmpegArgs = QString::fromLatin1("-i %1 -r 20 -f image2pipe -vcodec ppm -").arg(mByzanzOutputFileName);
+        ProcessWaitResult result = waitForProcessToStart(ffmpegProcess, ffmpegProcessName, ffmpegArgs);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
 
         const QString convertProcessName = QStringLiteral("convert");
         const QString convertArgs = QString::fromLatin1("-delay 5 -loop 0 - %1").arg(mGifFileName);
-        startProcess(convertProcess, convertProcessName, convertArgs);
 
-        waitForProcessToFinish(avconvProcess, avconvProcessName, waitDuration);
-        waitForProcessToFinish(convertProcess, convertProcessName, waitDuration);
+        result = waitForProcessToStart(convertProcess, convertProcessName, convertArgs);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
+
+        result = waitForProcessToFinish(ffmpegProcess, ffmpegProcessName, waitDuration);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
+        // Conversion can take a bit longer, so double the wait time.
+        result = waitForProcessToFinish(convertProcess, convertProcessName, waitDuration * 2);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
 
         const QString gifsicleProcessName = QStringLiteral("gifsicle");
         const QString verbose = lcGifRecorder().isDebugEnabled() ? QStringLiteral("-V") : QString();
@@ -281,12 +302,15 @@ void GifRecorder::waitForFinish()
         QProcess gifsicleProcess;
         if (lcGifRecorder().isDebugEnabled())
             gifsicleProcess.setProcessChannelMode(QProcess::ForwardedChannels);
-        startProcess(gifsicleProcess, gifsicleProcessName, gifsicleArgs);
-        waitForProcessToFinish(gifsicleProcess, gifsicleProcessName, waitDuration);
+        result = waitForProcessToStart(gifsicleProcess, gifsicleProcessName, gifsicleArgs);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
+        result = waitForProcessToFinish(gifsicleProcess, gifsicleProcessName, waitDuration);
+        if (!result.success)
+            QFAIL(qPrintable(result.errorMessage));
 
-        if (QFile::exists(mByzanzOutputFileName)) {
+        if (QFile::exists(mByzanzOutputFileName))
             QVERIFY(QFile::remove(mByzanzOutputFileName));
-        }
     }
 }
 
