@@ -214,7 +214,6 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
     if (argc >= 2 && argv[1].as<QV4::FunctionObject>())
         callbackFunction = argv[1];
 
-#if QT_CONFIG(qml_network)
     QUrl url(scope.engine->resolvedUrl(argv[0].toQStringNoThrow()));
     if (scope.engine->qmlEngine() && scope.engine->qmlEngine()->urlInterceptor())
         url = scope.engine->qmlEngine()->urlInterceptor()->intercept(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
@@ -225,9 +224,13 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
     QV4::Scoped<QV4::QmlContext> qmlcontext(scope, scope.engine->qmlContext());
 
     if (localFile.isEmpty()) {
+#if QT_CONFIG(qml_network)
         QV4Include *i = new QV4Include(url, scope.engine, qmlcontext, callbackFunction);
         result = i->result();
-
+#else
+        result = resultValue(scope.engine, NetworkError);
+        callback(callbackFunction, result);
+#endif
     } else {
         QScopedPointer<QV4::Script> script;
         QString error;
@@ -251,12 +254,6 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
 
         callback(callbackFunction, result);
     }
-
-#else
-    QV4::ScopedValue result(scope);
-    result = resultValue(scope.engine, NetworkError);
-    callback(callbackFunction, result);
-#endif
 
     return result->asReturnedValue();
 }
