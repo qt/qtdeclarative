@@ -273,9 +273,14 @@ public:
 
     inline void accept(Visitor *visitor)
     {
-        if (visitor->preVisit(this))
-            accept0(visitor);
-        visitor->postVisit(this);
+        Visitor::RecursionDepthCheck recursionCheck(visitor);
+        if (recursionCheck()) {
+            if (visitor->preVisit(this))
+                accept0(visitor);
+            visitor->postVisit(this);
+        } else {
+            visitor->throwRecursionDepthError();
+        }
     }
 
     inline static void accept(Node *node, Visitor *visitor)

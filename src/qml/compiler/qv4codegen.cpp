@@ -376,7 +376,6 @@ void Codegen::addCJump()
 
 void Codegen::statement(Statement *ast)
 {
-    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     RegisterScope scope(this);
 
     bytecodeGenerator->setLocation(ast->firstSourceLocation());
@@ -392,7 +391,6 @@ void Codegen::statement(ExpressionNode *ast)
     if (! ast) {
         return;
     } else {
-        RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
         RegisterScope scope(this);
 
         pushExpr(Result(nx));
@@ -420,7 +418,6 @@ void Codegen::condition(ExpressionNode *ast, const BytecodeGenerator::Label *ift
     if (!ast)
         return;
 
-    RecursionDepthCheck depthCheck(this, ast->lastSourceLocation());
     pushExpr(Result(iftrue, iffalse, trueBlockFollowsCondition));
     accept(ast);
     Result r = popExpr();
@@ -3825,8 +3822,14 @@ QQmlRefPointer<CompiledData::CompilationUnit> Codegen::createUnitForLoading()
 class Codegen::VolatileMemoryLocationScanner: protected QQmlJS::AST::Visitor
 {
     VolatileMemoryLocations locs;
+    Codegen *parent;
 
 public:
+    VolatileMemoryLocationScanner(Codegen *parent) :
+        QQmlJS::AST::Visitor(parent->recursionDepth()),
+        parent(parent)
+    {}
+
     Codegen::VolatileMemoryLocations scan(AST::Node *s)
     {
         s->accept(this);
@@ -3891,25 +3894,41 @@ public:
         }
     }
 
+    void throwRecursionDepthError() override
+    {
+        parent->throwRecursionDepthError();
+    }
+
 private:
-    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) const {
+    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) {
         class Collector: public QQmlJS::AST::Visitor {
+        private:
             QVector<QStringView> &ids;
+            VolatileMemoryLocationScanner *parent;
+
         public:
-            Collector(QVector<QStringView> &ids): ids(ids) {}
-            virtual bool visit(IdentifierExpression *ie) {
+            Collector(QVector<QStringView> &ids, VolatileMemoryLocationScanner *parent) :
+                QQmlJS::AST::Visitor(parent->recursionDepth()), ids(ids), parent(parent)
+            {}
+
+            bool visit(IdentifierExpression *ie) final {
                 ids.append(ie->name);
                 return false;
             }
+
+            void throwRecursionDepthError() final
+            {
+                parent->throwRecursionDepthError();
+            }
         };
-        Collector collector(ids);
+        Collector collector(ids, this);
         node->accept(&collector);
     }
 };
 
-Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast) const
+Codegen::VolatileMemoryLocations Codegen::scanVolatileMemoryLocations(AST::Node *ast)
 {
-    VolatileMemoryLocationScanner scanner;
+    VolatileMemoryLocationScanner scanner(this);
     return scanner.scan(ast);
 }
 
