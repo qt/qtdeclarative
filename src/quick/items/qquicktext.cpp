@@ -442,7 +442,7 @@ void QQuickTextPrivate::updateSize()
         if (internalWidthUpdate)
             return;
 
-        extra->doc->setPageSize(QSizeF());
+        extra->doc->setPageSize(QSizeF(q->width(), -1));
         if (q->widthValid() && (wrapMode != QQuickText::NoWrap || extra->doc->idealWidth() < availableWidth()))
             extra->doc->setTextWidth(availableWidth());
         else
@@ -1247,7 +1247,7 @@ void QQuickTextPrivate::ensureDoc()
     if (!extra.isAllocated() || !extra->doc) {
         Q_Q(QQuickText);
         extra.value().doc = new QQuickTextDocumentWithImageResources(q);
-        extra->doc->setPageSize(QSizeF(0, 0));
+        extra->doc->setPageSize(QSizeF(q->width(), -1));
         extra->doc->setDocumentMargin(0);
         extra->doc->setBaseUrl(q->baseUrl());
         qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),
