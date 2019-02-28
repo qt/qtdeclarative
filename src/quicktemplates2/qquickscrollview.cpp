@@ -129,8 +129,8 @@ public:
     QQuickFlickable *ensureFlickable(bool content);
     bool setFlickable(QQuickFlickable *flickable, bool content);
 
-    void updateContentWidth();
-    void updateContentHeight();
+    void flickableContentWidthChanged();
+    void flickableContentHeightChanged();
 
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;
@@ -154,7 +154,8 @@ public:
 
     bool wasTouched = false;
     QQuickFlickable *flickable = nullptr;
-    bool ownsFlickable = false;
+    bool flickableHasExplicitContentWidth = true;
+    bool flickableHasExplicitContentHeight = true;
 };
 
 QList<QQuickItem *> QQuickScrollViewPrivate::contentChildItems() const
@@ -176,8 +177,9 @@ QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
 {
     Q_Q(QQuickScrollView);
     if (!flickable) {
+        flickableHasExplicitContentWidth = false;
+        flickableHasExplicitContentHeight = false;
         setFlickable(new QQuickFlickable(q), content);
-        ownsFlickable = true;
     }
     return flickable;
 }
@@ -197,8 +199,8 @@ bool QQuickScrollViewPrivate::setFlickable(QQuickFlickable *item, bool content)
             QQuickScrollBarAttachedPrivate::get(attached)->setFlickable(nullptr);
 
         QObjectPrivate::disconnect(flickable->contentItem(), &QQuickItem::childrenChanged, this, &QQuickPanePrivate::contentChildrenChange);
-        QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::updateContentWidth);
-        QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::updateContentHeight);
+        QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::flickableContentWidthChanged);
+        QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::flickableContentHeightChanged);
     }
 
     flickable = item;
@@ -210,24 +212,24 @@ bool QQuickScrollViewPrivate::setFlickable(QQuickFlickable *item, bool content)
         if (hasContentWidth)
             flickable->setContentWidth(contentWidth);
         else
-            updateContentWidth();
+            flickableContentWidthChanged();
         if (hasContentHeight)
             flickable->setContentHeight(contentHeight);
         else
-            updateContentHeight();
+            flickableContentHeightChanged();
 
         if (attached)
             QQuickScrollBarAttachedPrivate::get(attached)->setFlickable(flickable);
 
         QObjectPrivate::connect(flickable->contentItem(), &QQuickItem::childrenChanged, this, &QQuickPanePrivate::contentChildrenChange);
-        QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::updateContentWidth);
-        QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::updateContentHeight);
+        QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickScrollViewPrivate::flickableContentWidthChanged);
+        QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickScrollViewPrivate::flickableContentHeightChanged);
     }
 
     return true;
 }
 
-void QQuickScrollViewPrivate::updateContentWidth()
+void QQuickScrollViewPrivate::flickableContentWidthChanged()
 {
     Q_Q(QQuickScrollView);
     if (!flickable || !componentComplete)
@@ -237,11 +239,12 @@ void QQuickScrollViewPrivate::updateContentWidth()
     if (qFuzzyCompare(cw, implicitContentWidth))
         return;
 
+    flickableHasExplicitContentWidth = true;
     implicitContentWidth = cw;
     emit q->implicitContentWidthChanged();
 }
 
-void QQuickScrollViewPrivate::updateContentHeight()
+void QQuickScrollViewPrivate::flickableContentHeightChanged()
 {
     Q_Q(QQuickScrollView);
     if (!flickable || !componentComplete)
@@ -251,29 +254,32 @@ void QQuickScrollViewPrivate::updateContentHeight()
     if (qFuzzyCompare(ch, implicitContentHeight))
         return;
 
+    flickableHasExplicitContentHeight = true;
     implicitContentHeight = ch;
     emit q->implicitContentHeightChanged();
 }
 
 qreal QQuickScrollViewPrivate::getContentWidth() const
 {
-    if (flickable) {
-        const qreal cw = flickable->contentWidth();
-        if (cw > 0)
-            return cw;
-    }
+    if (flickable && flickableHasExplicitContentWidth)
+        return flickable->contentWidth();
 
+    // The scrollview wraps a flickable created by us, and nobody searched for it and
+    // modified its contentWidth. In that case, since the application does not control
+    // this flickable, we fall back to calculate the content width based on the child
+    // items inside it.
     return QQuickPanePrivate::getContentWidth();
 }
 
 qreal QQuickScrollViewPrivate::getContentHeight() const
 {
-    if (flickable) {
-        const qreal ch = flickable->contentHeight();
-        if (ch > 0)
-            return ch;
-    }
+    if (flickable && flickableHasExplicitContentHeight)
+        return flickable->contentHeight();
 
+    // The scrollview wraps a flickable created by us, and nobody searched for it and
+    // modified its contentHeight. In that case, since the application does not control
+    // this flickable, we fall back to calculate the content height based on the child
+    // items inside it.
     return QQuickPanePrivate::getContentHeight();
 }
 
@@ -557,7 +563,13 @@ void QQuickScrollView::componentComplete()
 void QQuickScrollView::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickScrollView);
-    d->setFlickable(qobject_cast<QQuickFlickable *>(newItem), false);
+    if (newItem != d->flickable) {
+        // The new flickable was not created by us. In that case, we always
+        // assume/require that it has an explicit content size assigned.
+        d->flickableHasExplicitContentWidth = true;
+        d->flickableHasExplicitContentHeight = true;
+        d->setFlickable(qobject_cast<QQuickFlickable *>(newItem), false);
+    }
     QQuickPane::contentItemChange(newItem, oldItem);
 }
 
@@ -566,15 +578,15 @@ void QQuickScrollView::contentSizeChange(const QSizeF &newSize, const QSizeF &ol
     Q_D(QQuickScrollView);
     QQuickPane::contentSizeChange(newSize, oldSize);
     if (d->flickable) {
-        // Only set the content size on the flickable if we created the
-        // flickable ourselves. Otherwise we can end up overwriting
+        // Only set the content size on the flickable if the flickable doesn't
+        // have an explicit assignment from before. Otherwise we can end up overwriting
         // assignments done to those properties by the application. The
         // exception is if the application has assigned a content size
         // directly to the scrollview, which will then win even if the
         // application has assigned something else to the flickable.
-        if (d->hasContentWidth || d->ownsFlickable)
+        if (d->hasContentWidth || !d->flickableHasExplicitContentWidth)
             d->flickable->setContentWidth(newSize.width());
-        if (d->hasContentHeight || d->ownsFlickable)
+        if (d->hasContentHeight || !d->flickableHasExplicitContentHeight)
             d->flickable->setContentHeight(newSize.height());
     }
 }
