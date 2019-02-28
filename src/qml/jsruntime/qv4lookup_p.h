@@ -79,8 +79,9 @@ struct Lookup {
         } markDef;
         struct {
             Heap::InternalClass *ic;
-            quintptr _unused;
-            int offset;
+            quintptr unused;
+            uint index;
+            uint offset;
         } objectLookup;
         struct {
             quintptr protoId;
@@ -90,8 +91,8 @@ struct Lookup {
         struct {
             Heap::InternalClass *ic;
             Heap::InternalClass *ic2;
-            int offset;
-            int offset2;
+            uint offset;
+            uint offset2;
         } objectLookupTwoClasses;
         struct {
             quintptr protoId;
@@ -109,12 +110,14 @@ struct Lookup {
         struct {
             Heap::InternalClass *newClass;
             quintptr protoId;
-            int offset;
+            uint offset;
+            uint unused;
         } insertionLookup;
         struct {
             quintptr _unused;
             quintptr _unused2;
             uint index;
+            uint unused;
         } indexedLookup;
     };
     uint nameIndex;
@@ -152,7 +155,7 @@ struct Lookup {
     static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     Q_NEVER_INLINE static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setter0MemberData(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
     static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);

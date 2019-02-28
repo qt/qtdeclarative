@@ -86,14 +86,14 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
         Q_ASSERT(index < vtable()->nInlineProperties);
         return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
     }
-    void setInlineProperty(ExecutionEngine *e, uint index, Value v) {
-        Q_ASSERT(index < vtable()->nInlineProperties);
-        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
+    void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Value v) {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
         WriteBarrier::write(e, this, prop->data_ptr(), v.asReturnedValue());
     }
-    void setInlineProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
-        Q_ASSERT(index < vtable()->nInlineProperties);
-        Value *prop = reinterpret_cast<Value *>(this) + vtable()->inlinePropertyOffset + index;
+    void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Heap::Base *b) {
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
         WriteBarrier::write(e, this, prop->data_ptr(), Value::fromHeapObject(b).asReturnedValue());
     }
 
@@ -115,7 +115,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     void setProperty(ExecutionEngine *e, uint index, Value v) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline) {
-            setInlineProperty(e, index, v);
+            setInlinePropertyWithOffset(e, index + vtable()->inlinePropertyOffset, v);
             return;
         }
         index -= nInline;
@@ -124,7 +124,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     void setProperty(ExecutionEngine *e, uint index, Heap::Base *b) {
         uint nInline = vtable()->nInlineProperties;
         if (index < nInline) {
-            setInlineProperty(e, index, b);
+            setInlinePropertyWithOffset(e, index + vtable()->inlinePropertyOffset, b);
             return;
         }
         index -= nInline;
