@@ -65,21 +65,6 @@ ClassExpression *asAnonymousClassDefinition(Node *n)
     return c;
 }
 
-
-void Node::accept(Visitor *visitor)
-{
-    if (visitor->preVisit(this)) {
-        accept0(visitor);
-    }
-    visitor->postVisit(this);
-}
-
-void Node::accept(Node *node, Visitor *visitor)
-{
-    if (node)
-        node->accept(visitor);
-}
-
 ExpressionNode *Node::expressionCast()
 {
     return nullptr;

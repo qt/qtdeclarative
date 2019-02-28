@@ -271,11 +271,24 @@ public:
     virtual FunctionExpression *asFunctionDefinition();
     virtual ClassExpression *asClassDefinition();
 
-    void accept(Visitor *visitor);
-    static void accept(Node *node, Visitor *visitor);
+    inline void accept(Visitor *visitor)
+    {
+        if (visitor->preVisit(this))
+            accept0(visitor);
+        visitor->postVisit(this);
+    }
 
+    inline static void accept(Node *node, Visitor *visitor)
+    {
+        if (node)
+            node->accept(visitor);
+    }
+
+    // ### Remove when we can. This is part of the qmldevtools library, though.
     inline static void acceptChild(Node *node, Visitor *visitor)
-    { return accept(node, visitor); } // ### remove
+    {
+        return accept(node, visitor);
+    }
 
     virtual void accept0(Visitor *visitor) = 0;
     virtual SourceLocation firstSourceLocation() const = 0;
