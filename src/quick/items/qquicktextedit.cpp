@@ -2297,7 +2297,6 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorPositionChanged()), q, QQuickTextEdit, SIGNAL(cursorPositionChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(cursorRectangleChanged()), q, QQuickTextEdit, SLOT(moveCursorDelegate()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(linkActivated(QString)), q, QQuickTextEdit, SIGNAL(linkActivated(QString)));
-    qmlobject_connect(control, QQuickTextControl, SIGNAL(linkHovered(QString)), q, QQuickTextEdit, SIGNAL(linkHovered(QString)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(overwriteModeChanged(bool)), q, QQuickTextEdit, SIGNAL(overwriteModeChanged(bool)));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(textChanged()), q, QQuickTextEdit, SLOT(q_textChanged()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(preeditTextChanged()), q, QQuickTextEdit, SIGNAL(preeditTextChanged()));
@@ -2309,6 +2308,7 @@ void QQuickTextEditPrivate::init()
     qmlobject_connect(document, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()), q, QQuickTextEdit, SLOT(updateSize()));
     QObject::connect(document, &QQuickTextDocumentWithImageResources::contentsChange, q, &QQuickTextEdit::q_contentsChange);
     QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
+    QObject::connect(control, &QQuickTextControl::linkHovered, q, &QQuickTextEdit::q_linkHovered);
 
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
@@ -2316,6 +2316,9 @@ void QQuickTextEditPrivate::init()
     document->setUndoRedoEnabled(true);
     updateDefaultTextOption();
     q->updateSize();
+#if QT_CONFIG(cursor)
+    q->setCursor(Qt::IBeamCursor);
+#endif
 }
 
 void QQuickTextEditPrivate::resetInputMethod()
@@ -2581,6 +2584,20 @@ void QQuickTextEdit::updateCursor()
         d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
         update();
     }
+}
+
+void QQuickTextEdit::q_linkHovered(const QString &link)
+{
+    Q_D(QQuickTextEdit);
+    emit linkHovered(link);
+#if QT_CONFIG(cursor)
+    if (link.isEmpty()) {
+        setCursor(d->cursorToRestoreAfterHover);
+    } else if (cursor().shape() != Qt::PointingHandCursor) {
+        d->cursorToRestoreAfterHover = cursor().shape();
+        setCursor(Qt::PointingHandCursor);
+    }
+#endif
 }
 
 void QQuickTextEdit::q_updateAlignment()

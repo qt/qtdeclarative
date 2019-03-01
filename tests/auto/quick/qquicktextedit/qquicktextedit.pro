@@ -8,6 +8,7 @@ SOURCES += tst_qquicktextedit.cpp \
 HEADERS += ../../shared/testhttpserver.h
 
 include (../../shared/util.pri)
+include (../shared/util.pri)
 
 TESTDATA = data/*
 
