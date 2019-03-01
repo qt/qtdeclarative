@@ -67,7 +67,10 @@ TestCase {
 
     Component {
         id: scrollBar
-        ScrollBar { padding: 0 }
+        ScrollBar {
+            padding: 0
+            minimumSize: 0
+        }
     }
 
     Component {

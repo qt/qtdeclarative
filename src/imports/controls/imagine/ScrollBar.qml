@@ -48,6 +48,7 @@ T.ScrollBar {
                              implicitContentHeight + topPadding + bottomPadding)
 
     visible: control.policy !== T.ScrollBar.AlwaysOff
+    minimumSize: orientation == Qt.Horizontal ? height / width : width / height
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0
