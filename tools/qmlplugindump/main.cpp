@@ -1183,8 +1183,8 @@ int main(int argc, char *argv[])
     // find all QMetaObjects reachable from the builtin module
     QSet<const QMetaObject *> uncreatableMetas;
     QSet<const QMetaObject *> singletonMetas;
-    QMap<QString, QSet<QQmlType>> compositeTypes;
-    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes);
+    QMap<QString, QSet<QQmlType>> defaultCompositeTypes;
+    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes);
     QList<QQmlType> defaultTypes = QQmlMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
@@ -1194,6 +1194,9 @@ int main(int argc, char *argv[])
 
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;
+
+    // composite types we want to dump information of
+    QMap<QString, QSet<QQmlType>> compositeTypes;
 
     if (action == Builtins) {
         for (const QMetaObject *m : qAsConst(defaultReachable)) {
@@ -1270,6 +1273,14 @@ int main(int argc, char *argv[])
 
         QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes, defaultTypes);
         candidates.subtract(defaultReachable);
+
+        for (QString iter: compositeTypes.keys()) {
+            if (defaultCompositeTypes.contains(iter)) {
+                QSet<QQmlType> compositeTypesByName = compositeTypes.value(iter);
+                compositeTypesByName.subtract(defaultCompositeTypes.value(iter));
+                compositeTypes[iter] = compositeTypesByName;
+            }
+        }
 
         // Also eliminate meta objects with the same classname.
         // This is required because extended objects seem not to share
