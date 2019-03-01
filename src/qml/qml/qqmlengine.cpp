@@ -661,6 +661,10 @@ The following functions are also on the Qt object.
 
 /*!
 \qmlmethod object Qt::include(string url, jsobject callback)
+\deprecated
+
+This method should not be used. Use ECMAScript modules instead and the native
+JavaScript \c import and \c export statements instead.
 
 Includes another JavaScript file. This method can only be used from within JavaScript files,
 and not regular QML files.
