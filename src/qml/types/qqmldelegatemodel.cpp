@@ -2483,7 +2483,8 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     information about group membership and indexes as well as model data.  In combination
     with the move() function this can be used to implement view sorting, with remove() to filter
     items out of a view, or with setGroups() and \l Package delegates to categorize items into
-    different views.
+    different views. Different groups can only be sorted independently if they are disjunct. Moving
+    an item in one group will also move it in all other groups it is a part of.
 
     Data from models can be supplemented by inserting data directly into a DelegateModelGroup
     with the insert() function.  This can be used to introduce mock items into a view, or
