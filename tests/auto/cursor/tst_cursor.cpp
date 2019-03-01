@@ -44,6 +44,11 @@
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 
+#if QT_CONFIG(cursor)
+#  include <QtGui/qscreen.h>
+#  include <QtGui/qcursor.h>
+#endif
+
 using namespace QQuickVisualTestUtil;
 
 class tst_cursor : public QQmlDataTest
@@ -51,12 +56,24 @@ class tst_cursor : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void init();
     void controls_data();
     void controls();
     void editable();
     void pageIndicator();
     void scrollBar();
 };
+
+void tst_cursor::init()
+{
+#if QT_CONFIG(cursor)
+    // Ensure mouse cursor was not left by previous tests where widgets
+    // will appear, as it could cause events and interfere with the tests.
+    const QScreen *screen = QGuiApplication::primaryScreen();
+    const QRect availableGeometry = screen->availableGeometry();
+    QCursor::setPos(availableGeometry.topLeft());
+#endif
+}
 
 void tst_cursor::controls_data()
 {
