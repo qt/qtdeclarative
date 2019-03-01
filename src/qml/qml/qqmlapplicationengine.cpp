@@ -250,10 +250,12 @@ QQmlApplicationEngine::~QQmlApplicationEngine()
 /*!
   Loads the root QML file located at \a url. The object tree defined by the file
   is created immediately for local file urls. Remote urls are loaded asynchronously,
-  listen to the objectCreated signal to determine when the object
-  tree is ready.
+  listen to the \l {QQmlApplicationEngine::objectCreated()}{objectCreated} signal to
+  determine when the object tree is ready.
 
-  If an error occurs, error messages are printed with qWarning.
+  If an error occurs, the \l {QQmlApplicationEngine::objectCreated()}{objectCreated}
+  signal is emitted with a null pointer as parameter and error messages are printed
+  with qWarning.
 */
 void QQmlApplicationEngine::load(const QUrl &url)
 {
