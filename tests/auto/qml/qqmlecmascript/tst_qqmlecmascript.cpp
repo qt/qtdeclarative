@@ -363,6 +363,7 @@ private slots:
     void templateStringTerminator();
     void arrayAndException();
     void numberToStringWithRadix();
+    void tailCallWithArguments();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8892,6 +8893,18 @@ void tst_qqmlecmascript::numberToStringWithRadix()
         QVERIFY(!value.isError());
         QVERIFY(value.toString().startsWith("0.01111111111"));
     }
+}
+
+void tst_qqmlecmascript::tailCallWithArguments()
+{
+    QJSEngine engine;
+    const QJSValue value = engine.evaluate(
+            "'use strict';\n"
+            "[[1, 2]].map(function (a) {\n"
+            "    return (function() { return Math.min.apply(this, arguments); })(a[0], a[1]);\n"
+            "})[0];");
+    QVERIFY(!value.isError());
+    QCOMPARE(value.toInt(), 1);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

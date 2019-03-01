@@ -1561,12 +1561,14 @@ ReturnedValue Runtime::method_tailCall(CppStackFrame *frame, ExecutionEngine *en
     const Value &thisObject = tos[StackOffsets::tailCall_thisObject];
     Value *argv = reinterpret_cast<Value *>(frame->jsFrame) + tos[StackOffsets::tailCall_argv].int_32();
     int argc = tos[StackOffsets::tailCall_argc].int_32();
+    Q_ASSERT(argc >= 0);
 
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
     const FunctionObject &fo = static_cast<const FunctionObject &>(function);
-    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()) {
+    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()
+            || unsigned(argc) > fo.formalParameterCount()) {
         // Cannot tailcall, do a normal call:
         return fo.call(&thisObject, argv, argc);
     }
