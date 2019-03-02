@@ -149,10 +149,12 @@ void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
     Q_Q(QQuickPage);
     QQuickPanePrivate::itemVisibilityChanged(item);
     if (item == header) {
+        QBoolBlocker signalGuard(emittingImplicitSizeChangedSignals);
         emit q->implicitHeaderWidthChanged();
         emit q->implicitHeaderHeightChanged();
         relayout();
     } else if (item == footer) {
+        QBoolBlocker signalGuard(emittingImplicitSizeChangedSignals);
         emit q->implicitFooterWidthChanged();
         emit q->implicitFooterHeightChanged();
         relayout();
@@ -163,6 +165,11 @@ void QQuickPagePrivate::itemImplicitWidthChanged(QQuickItem *item)
 {
     Q_Q(QQuickPage);
     QQuickPanePrivate::itemImplicitWidthChanged(item);
+
+    // Avoid binding loops by skipping signal emission if we're already doing it.
+    if (emittingImplicitSizeChangedSignals)
+        return;
+
     if (item == header)
         emit q->implicitHeaderWidthChanged();
     else if (item == footer)
@@ -173,6 +180,11 @@ void QQuickPagePrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     Q_Q(QQuickPage);
     QQuickPanePrivate::itemImplicitHeightChanged(item);
+
+    // Avoid binding loops by skipping signal emission if we're already doing it.
+    if (emittingImplicitSizeChangedSignals)
+        return;
+
     if (item == header)
         emit q->implicitHeaderHeightChanged();
     else if (item == footer)

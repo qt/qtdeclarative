@@ -316,8 +316,37 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
+    // Enter/return should also work.
+    // Open the menu.
     menu->open();
     QCOMPARE(visibleSpy.count(), 3);
+    QVERIFY(menu->isVisible());
+    // Give the first item focus.
+    QTest::keyClick(window, Qt::Key_Tab);
+    QVERIFY(firstItem->hasActiveFocus());
+    QVERIFY(firstItem->hasVisualFocus());
+    QVERIFY(firstItem->isHighlighted());
+    QCOMPARE(firstItem->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(menu->currentIndex(), 0);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(0));
+    // Press enter.
+    QSignalSpy firstTriggeredSpy(firstItem, SIGNAL(triggered()));
+    QTest::keyClick(window, Qt::Key_Return);
+    QCOMPARE(firstTriggeredSpy.count(), 1);
+    QCOMPARE(visibleSpy.count(), 4);
+    QVERIFY(!menu->isVisible());
+    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!firstItem->hasActiveFocus());
+    QVERIFY(!firstItem->hasVisualFocus());
+    QVERIFY(!firstItem->isHighlighted());
+    QVERIFY(!secondItem->hasActiveFocus());
+    QVERIFY(!secondItem->hasVisualFocus());
+    QVERIFY(!secondItem->isHighlighted());
+    QCOMPARE(menu->currentIndex(), -1);
+    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
+
+    menu->open();
+    QCOMPARE(visibleSpy.count(), 5);
     QVERIFY(menu->isVisible());
     QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
@@ -393,7 +422,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QVERIFY(!thirdItem->isHighlighted());
 
     QTest::keyClick(window, Qt::Key_Escape);
-    QCOMPARE(visibleSpy.count(), 4);
+    QCOMPARE(visibleSpy.count(), 6);
     QVERIFY(!menu->isVisible());
 }
 

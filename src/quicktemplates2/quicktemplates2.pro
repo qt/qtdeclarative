@@ -1,6 +1,5 @@
 TARGET = QtQuickTemplates2
 MODULE = quicktemplates2
-CONFIG += internal_module
 
 QT += quick
 QT_PRIVATE += core-private gui-private qml-private quick-private

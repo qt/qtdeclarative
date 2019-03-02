@@ -75,6 +75,8 @@ public:
     void handleRelease(const QPointF &point) override;
     void handleUngrab() override;
 
+    virtual bool acceptKeyClick(Qt::Key key) const;
+
     bool isPressAndHoldConnected();
     void startPressAndHold();
     void stopPressAndHold();

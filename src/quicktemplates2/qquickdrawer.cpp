@@ -222,6 +222,9 @@ QQuickPopupPositioner *QQuickDrawerPrivate::getPositioner()
 
 void QQuickDrawerPositioner::reposition()
 {
+    if (m_positioning)
+        return;
+
     QQuickDrawer *drawer = static_cast<QQuickDrawer*>(popup());
     QQuickWindow *window = drawer->window();
     if (!window)

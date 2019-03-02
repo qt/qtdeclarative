@@ -66,7 +66,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAction : public QObject
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged RESET resetEnabled FINAL)
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(bool checkable READ isCheckable WRITE setCheckable NOTIFY checkableChanged FINAL)
+#if QT_CONFIG(shortcut)
     Q_PRIVATE_PROPERTY(QQuickAction::d_func(), QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
+#endif
 
 public:
     explicit QQuickAction(QObject *parent = nullptr);
@@ -88,8 +90,10 @@ public:
     bool isCheckable() const;
     void setCheckable(bool checkable);
 
+#if QT_CONFIG(shortcut)
     QKeySequence shortcut() const;
     void setShortcut(const QKeySequence &shortcut);
+#endif
 
 public Q_SLOTS:
     void toggle(QObject *source = nullptr);
@@ -101,7 +105,9 @@ Q_SIGNALS:
     void enabledChanged(bool enabled);
     void checkedChanged(bool checked);
     void checkableChanged(bool checkable);
+#if QT_CONFIG(shortcut)
     void shortcutChanged(const QKeySequence &shortcut);
+#endif
 
     void toggled(QObject *source = nullptr);
     void triggered(QObject *source = nullptr);
