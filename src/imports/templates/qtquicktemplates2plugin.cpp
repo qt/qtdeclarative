@@ -355,6 +355,9 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
     qmlRegisterType<QQuickSplitHandleAttached>();
+
+    // QtQuick.Templates 2.14 (new types and revisions in Qt 5.14)
+    qmlRegisterType<QQuickComboBox, 14>(uri, 2, 14, "ComboBox");
 }
 
 QT_END_NAMESPACE

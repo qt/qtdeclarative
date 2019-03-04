@@ -86,6 +86,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
     Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator,popup")
+    // 2.14 (Qt 5.14)
+    Q_PROPERTY(QVariant currentValue READ currentValue NOTIFY currentValueChanged FINAL REVISION 14)
+    Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION 14)
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = nullptr);
@@ -113,6 +116,9 @@ public:
 
     QString textRole() const;
     void setTextRole(const QString &role);
+
+    QString valueRole() const;
+    void setValueRole(const QString &role);
 
     QQmlComponent *delegate() const;
     void setDelegate(QQmlComponent *delegate);
@@ -155,6 +161,11 @@ public:
     qreal implicitIndicatorWidth() const;
     qreal implicitIndicatorHeight() const;
 
+    // 2.14 (Qt 5.14)
+    QVariant currentValue() const;
+    Q_INVOKABLE QVariant valueAt(int index) const;
+    Q_INVOKABLE int indexOfValue(const QVariant &value) const;
+
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
@@ -189,6 +200,9 @@ Q_SIGNALS:
     // 2.5 (Qt 5.12)
     Q_REVISION(5) void implicitIndicatorWidthChanged();
     Q_REVISION(5) void implicitIndicatorHeightChanged();
+    // 2.14 (Qt 5.14)
+    Q_REVISION(14) void valueRoleChanged();
+    Q_REVISION(14) void currentValueChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;

@@ -34,13 +34,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick 2.14
+import QtQuick.Window 2.14
+import QtQuick.Controls 2.14
+import QtQuick.Controls.impl 2.14
+import QtQuick.Templates 2.14 as T
+import QtQuick.Controls.Material 2.14
+import QtQuick.Controls.Material.impl 2.14
 
 T.ComboBox {
     id: control

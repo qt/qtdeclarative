@@ -117,18 +117,14 @@ QT_BEGIN_NAMESPACE
 
     When using models that have multiple named roles, ComboBox must be configured
     to use a specific \l {textRole}{text role} for its \l {displayText}{display text}
-    and \l delegate instances.
+    and \l delegate instances. If you want to use a role of the model item
+    that corresponds to the text role, set \l valueRole. The \l currentValue
+    property and \l indexOfValue() method can then be used to get information
+    about those values.
 
-    \code
-    ComboBox {
-        textRole: "key"
-        model: ListModel {
-            ListElement { key: "First"; value: 123 }
-            ListElement { key: "Second"; value: 456 }
-            ListElement { key: "Third"; value: 789 }
-        }
-    }
-    \endcode
+    For example:
+
+    \snippet qtquickcontrols2-combobox-valuerole.qml file
 
     \note If ComboBox is assigned a data model that has multiple named roles, but
     \l textRole is not defined, ComboBox is unable to visualize it and throws a
@@ -184,7 +180,7 @@ class QQuickComboBoxDelegateModel : public QQmlDelegateModel
 {
 public:
     explicit QQuickComboBoxDelegateModel(QQuickComboBox *combo);
-    QString stringValue(int index, const QString &role);
+    QVariant variantValue(int index, const QString &role) override;
 
 private:
     QQuickComboBox *combo = nullptr;
@@ -196,23 +192,23 @@ QQuickComboBoxDelegateModel::QQuickComboBoxDelegateModel(QQuickComboBox *combo)
 {
 }
 
-QString QQuickComboBoxDelegateModel::stringValue(int index, const QString &role)
+QVariant QQuickComboBoxDelegateModel::variantValue(int index, const QString &role)
 {
-    QVariant model = combo->model();
+    const QVariant model = combo->model();
     if (model.userType() == QMetaType::QVariantList) {
         QVariant object = model.toList().value(index);
         if (object.userType() == QMetaType::QVariantMap) {
             const QVariantMap data = object.toMap();
             if (data.count() == 1 && role == QLatin1String("modelData"))
-                return data.first().toString();
-            return data.value(role).toString();
+                return data.first();
+            return data.value(role);
         } else if (object.userType() == QMetaType::QObjectStar) {
             const QObject *data = object.value<QObject *>();
             if (data && role != QLatin1String("modelData"))
-                return data->property(role.toUtf8()).toString();
+                return data->property(role.toUtf8());
         }
     }
-    return QQmlDelegateModel::stringValue(index, role);
+    return QQmlDelegateModel::variantValue(index, role);
 }
 
 class QQuickComboBoxPrivate : public QQuickControlPrivate
@@ -235,6 +231,7 @@ public:
 
     void updateEditText();
     void updateCurrentText();
+    void updateCurrentValue();
 
     void acceptInput();
     QString tryComplete(const QString &inputText);
@@ -278,6 +275,8 @@ public:
     QString textRole;
     QString currentText;
     QString displayText;
+    QString valueRole;
+    QVariant currentValue;
     QQuickItem *pressedItem = nullptr;
     QQmlInstanceModel *delegateModel = nullptr;
     QQmlComponent *delegate = nullptr;
@@ -453,6 +452,17 @@ void QQuickComboBoxPrivate::updateCurrentText()
         q->setEditText(currentText);
 }
 
+void QQuickComboBoxPrivate::updateCurrentValue()
+{
+    Q_Q(QQuickComboBox);
+    const QVariant value = q->valueAt(currentIndex);
+    if (currentValue == value)
+        return;
+
+    currentValue = value;
+    emit q->currentValueChanged();
+}
+
 void QQuickComboBoxPrivate::acceptInput()
 {
     Q_Q(QQuickComboBox);
@@ -499,8 +509,10 @@ void QQuickComboBoxPrivate::setCurrentIndex(int index, Activation activate)
     currentIndex = index;
     emit q->currentIndexChanged();
 
-    if (componentComplete)
+    if (componentComplete) {
         updateCurrentText();
+        updateCurrentValue();
+    }
 
     if (activate)
         emit q->activated(index);
@@ -1008,6 +1020,35 @@ void QQuickComboBox::setTextRole(const QString &role)
 }
 
 /*!
+    \since QtQuick.Controls 2.14 (Qt 5.14)
+    \qmlproperty string QtQuick.Controls::ComboBox::valueRole
+
+    This property holds the model role used for storing the value associated
+    with each item in the model.
+
+    For an example of how to use this property, see \l {ComboBox Model Roles}.
+
+    \sa model, currentValue
+*/
+QString QQuickComboBox::valueRole() const
+{
+    Q_D(const QQuickComboBox);
+    return d->valueRole;
+}
+
+void QQuickComboBox::setValueRole(const QString &role)
+{
+    Q_D(QQuickComboBox);
+    if (d->valueRole == role)
+        return;
+
+    d->valueRole = role;
+    if (isComponentComplete())
+        d->updateCurrentValue();
+    emit valueRoleChanged();
+}
+
+/*!
     \qmlproperty Component QtQuick.Controls::ComboBox::delegate
 
     This property holds a delegate that presents an item in the combo box popup.
@@ -1445,6 +1486,60 @@ qreal QQuickComboBox::implicitIndicatorHeight() const
 }
 
 /*!
+    \readonly
+    \since QtQuick.Controls 2.14 (Qt 5.14)
+    \qmlproperty string QtQuick.Controls::ComboBox::currentValue
+
+    This property holds the value of the current item in the combo box.
+
+    For an example of how to use this property, see \l {ComboBox Model Roles}.
+
+    \sa currentIndex, currentText, valueRole
+*/
+QVariant QQuickComboBox::currentValue() const
+{
+    Q_D(const QQuickComboBox);
+    return d->currentValue;
+}
+
+QVariant QQuickComboBox::valueAt(int index) const
+{
+    Q_D(const QQuickComboBox);
+    if (!d->delegateModel || index < 0 || index >= d->delegateModel->count())
+        return QVariant();
+
+    // We use QVariant because the model API uses QVariant.
+    QVariant value;
+    QObject *object = d->delegateModel->object(index);
+    if (object) {
+        const QString role = d->valueRole.isEmpty() ? QStringLiteral("modelData") : d->valueRole;
+        value = d->delegateModel->variantValue(index, role);
+        d->delegateModel->release(object);
+    }
+    return value;
+}
+
+/*!
+    \since QtQuick.Controls 2.14 (Qt 5.14)
+    \qmlmethod int QtQuick.Controls::ComboBox::indexOfValue(object value)
+
+    Returns the index of the specified \a value, or \c -1 if no match is found.
+
+    For an example of how to use this method, see \l {ComboBox Model Roles}.
+
+    \sa find(), currentValue, currentIndex, valueRole
+*/
+int QQuickComboBox::indexOfValue(const QVariant &value) const
+{
+    for (int i = 0; i < count(); ++i) {
+        const QVariant ourValue = valueAt(i);
+        if (value == ourValue)
+            return i;
+    }
+    return -1;
+}
+
+/*!
     \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
     Returns the text for the specified \a index, or an empty string
@@ -1728,10 +1823,12 @@ void QQuickComboBox::componentComplete()
         static_cast<QQmlDelegateModel *>(d->delegateModel)->componentComplete();
 
     if (count() > 0) {
-        if (!d->hasCurrentIndex && d->currentIndex == -1)
+        if (!d->hasCurrentIndex && d->currentIndex == -1) {
             setCurrentIndex(0);
-        else
+        } else {
             d->updateCurrentText();
+            d->updateCurrentValue();
+        }
     }
 }
 

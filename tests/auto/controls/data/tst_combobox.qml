@@ -351,9 +351,73 @@ TestCase {
         compare(control.find(data.term, data.flags), data.index)
     }
 
+    function test_valueRole_data() {
+        return [
+            { tag: "ListModel", model: fruitmodel },
+            { tag: "ObjectArray", model: fruitarray }
+        ]
+    }
+
+    function test_valueRole(data) {
+        var control = createTemporaryObject(emptyBox, testCase,
+            { model: data.model, valueRole: "color" })
+        verify(control)
+        compare(control.count, 3)
+        compare(control.currentIndex, 0)
+        compare(control.currentValue, "red")
+
+        control.valueRole = "name"
+        compare(control.currentValue, "Apple")
+
+        control.currentIndex = 1
+        compare(control.currentIndex, 1)
+        compare(control.currentValue, "Orange")
+
+        control.valueRole = "color"
+        compare(control.currentValue, "orange")
+
+        control.model = null
+        compare(control.currentIndex, -1)
+        // An invalid QVariant is represented as undefined.
+        compare(control.currentValue, undefined)
+
+        control.valueRole = ""
+        compare(control.currentValue, undefined)
+    }
+
+    function test_valueAt() {
+        var control = createTemporaryObject(comboBox, testCase,
+            { model: fruitmodel, textRole: "name", valueRole: "color" })
+        verify(control)
+
+        compare(control.valueAt(0), "red")
+        compare(control.valueAt(1), "orange")
+        compare(control.valueAt(2), "yellow")
+        compare(control.valueAt(-1), undefined)
+        compare(control.valueAt(5), undefined)
+    }
+
+    function test_indexOfValue_data() {
+        return [
+            { tag: "red", expectedIndex: 0 },
+            { tag: "orange", expectedIndex: 1 },
+            { tag: "yellow", expectedIndex: 2 },
+            { tag: "brown", expectedIndex: -1 },
+        ]
+    }
+
+    function test_indexOfValue(data) {
+        var control = createTemporaryObject(comboBox, testCase,
+            { model: fruitmodel, textRole: "name", valueRole: "color" })
+        verify(control)
+
+        compare(control.indexOfValue(data.tag), data.expectedIndex)
+    }
+
 
     function test_arrowKeys() {
-        var control = createTemporaryObject(comboBox, testCase, {model: 3})
+        var control = createTemporaryObject(comboBox, testCase,
+            { model: fruitmodel, textRole: "name", valueRole: "color" })
         verify(control)
 
         var activatedSpy = signalSpy.createObject(control, {target: control, signalName: "activated"})
