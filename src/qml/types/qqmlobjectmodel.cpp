@@ -273,12 +273,12 @@ QQmlInstanceModel::ReleaseFlags QQmlObjectModel::release(QObject *item)
     return nullptr;
 }
 
-QString QQmlObjectModel::stringValue(int index, const QString &name)
+QVariant QQmlObjectModel::variantValue(int index, const QString &role)
 {
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.count())
         return QString();
-    return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(name).toString();
+    return QQmlEngine::contextForObject(d->children.at(index).item)->contextProperty(role);
 }
 
 QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)

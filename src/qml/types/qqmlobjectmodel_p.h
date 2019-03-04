@@ -79,7 +79,8 @@ public:
     virtual QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) = 0;
     virtual ReleaseFlags release(QObject *object) = 0;
     virtual void cancel(int) {}
-    virtual QString stringValue(int, const QString &) = 0;
+    QString stringValue(int index, const QString &role) { return variantValue(index, role).toString(); }
+    virtual QVariant variantValue(int, const QString &) = 0;
     virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
     virtual QQmlIncubator::Status incubationStatus(int index) = 0;
 
@@ -119,7 +120,7 @@ public:
     bool isValid() const override;
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
-    QString stringValue(int index, const QString &role) override;
+    QVariant variantValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &) override {}
     QQmlIncubator::Status incubationStatus(int index) override;
 

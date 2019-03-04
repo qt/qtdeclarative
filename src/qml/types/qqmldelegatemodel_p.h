@@ -114,7 +114,7 @@ public:
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object) override;
     void cancel(int index) override;
-    QString stringValue(int index, const QString &role) override;
+    QVariant variantValue(int index, const QString &role) override;
     void setWatchedRoles(const QList<QByteArray> &roles) override;
     QQmlIncubator::Status incubationStatus(int index) override;
 

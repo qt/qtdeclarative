@@ -1127,7 +1127,7 @@ QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
     return QQmlIncubator::Ready;
 }
 
-QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index, const QString &name)
+QVariant QQmlDelegateModelPrivate::variantValue(QQmlListCompositor::Group group, int index, const QString &name)
 {
     Compositor::iterator it = m_compositor.find(group, index);
     if (QQmlAdaptorModel *model = it.list<QQmlAdaptorModel>()) {
@@ -1139,20 +1139,20 @@ QString QQmlDelegateModelPrivate::stringValue(Compositor::Group group, int index
         while (dot > 0) {
             QObject *obj = qvariant_cast<QObject*>(value);
             if (!obj)
-                return QString();
-            int from = dot+1;
+                return QVariant();
+            const int from = dot + 1;
             dot = name.indexOf(QLatin1Char('.'), from);
             value = obj->property(name.midRef(from, dot - from).toUtf8());
         }
-        return value.toString();
+        return value;
     }
-    return QString();
+    return QVariant();
 }
 
-QString QQmlDelegateModel::stringValue(int index, const QString &name)
+QVariant QQmlDelegateModel::variantValue(int index, const QString &role)
 {
     Q_D(QQmlDelegateModel);
-    return d->stringValue(d->m_compositorGroup, index, name);
+    return d->variantValue(d->m_compositorGroup, index, role);
 }
 
 int QQmlDelegateModel::indexOf(QObject *item, QObject *) const
@@ -3338,9 +3338,9 @@ QQmlInstanceModel::ReleaseFlags QQmlPartsModel::release(QObject *item)
     return flags;
 }
 
-QString QQmlPartsModel::stringValue(int index, const QString &role)
+QVariant QQmlPartsModel::variantValue(int index, const QString &role)
 {
-    return QQmlDelegateModelPrivate::get(m_model)->stringValue(m_compositorGroup, index, role);
+    return QQmlDelegateModelPrivate::get(m_model)->variantValue(m_compositorGroup, index, role);
 }
 
 void QQmlPartsModel::setWatchedRoles(const QList<QByteArray> &roles)
