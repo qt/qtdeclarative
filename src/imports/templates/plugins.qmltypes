@@ -640,6 +640,7 @@ Module {
         Property { name: "width"; type: "int" }
         Property { name: "height"; type: "int" }
         Property { name: "color"; type: "QColor" }
+        Property { name: "cache"; type: "bool" }
     }
     Component {
         name: "QQuickItemDelegate"
@@ -1367,6 +1368,45 @@ Module {
         Signal { name: "hoveredChanged"; revision: 1 }
         Signal { name: "implicitIndicatorWidthChanged"; revision: 5 }
         Signal { name: "implicitIndicatorHeightChanged"; revision: 5 }
+    }
+    Component {
+        name: "QQuickSplitHandleAttached"
+        prototype: "QObject"
+        exports: ["QtQuick.Templates/SplitHandle 2.13"]
+        isCreatable: false
+        exportMetaObjectRevisions: [0]
+        Property { name: "hovered"; type: "bool"; isReadonly: true }
+        Property { name: "pressed"; type: "bool"; isReadonly: true }
+    }
+    Component {
+        name: "QQuickSplitView"
+        defaultProperty: "contentData"
+        prototype: "QQuickContainer"
+        exports: ["QtQuick.Templates/SplitView 2.13"]
+        exportMetaObjectRevisions: [0]
+        attachedType: "QQuickSplitViewAttached"
+        Property { name: "orientation"; type: "Qt::Orientation" }
+        Property { name: "resizing"; type: "bool"; isReadonly: true }
+        Property { name: "handle"; type: "QQmlComponent"; isPointer: true }
+        Method { name: "saveState"; type: "QVariant" }
+        Method {
+            name: "restoreState"
+            type: "bool"
+            Parameter { name: "state"; type: "QVariant" }
+        }
+    }
+    Component {
+        name: "QQuickSplitViewAttached"
+        prototype: "QObject"
+        Property { name: "view"; type: "QQuickSplitView"; isReadonly: true; isPointer: true }
+        Property { name: "minimumWidth"; type: "double" }
+        Property { name: "minimumHeight"; type: "double" }
+        Property { name: "preferredWidth"; type: "double" }
+        Property { name: "preferredHeight"; type: "double" }
+        Property { name: "maximumWidth"; type: "double" }
+        Property { name: "maximumHeight"; type: "double" }
+        Property { name: "fillHeight"; type: "bool" }
+        Property { name: "fillWidth"; type: "bool" }
     }
     Component {
         name: "QQuickStackView"
