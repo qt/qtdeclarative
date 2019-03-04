@@ -112,6 +112,7 @@ Makefile*
 *.Release
 *.prl
 *.pro.user
+*.pro.user.*
 *.qmlproject.user*
 moc_*.cpp
 ui_*.h
