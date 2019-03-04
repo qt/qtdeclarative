@@ -320,8 +320,11 @@ bool Object::virtualDeleteProperty(Managed *m, PropertyKey id)
 PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
 {
     if (arrayIndex != UINT_MAX && o->arrayData()) {
-        if (!arrayIndex)
-            arrayNode = o->sparseBegin();
+        SparseArrayNode *arrayNode = nullptr;
+        if (o->arrayType() == Heap::ArrayData::Sparse) {
+            SparseArray *sparse = o->arrayData()->sparse;
+            arrayNode = arrayIndex ? sparse->lowerBound(arrayIndex) : sparse->begin();
+        }
 
         // sparse arrays
         if (arrayNode) {
@@ -339,7 +342,6 @@ PropertyKey ObjectOwnPropertyKeyIterator::next(const Object *o, Property *pd, Pr
                     *attrs = a;
                 return PropertyKey::fromArrayIndex(k);
             }
-            arrayNode = nullptr;
             arrayIndex = UINT_MAX;
         }
         // dense arrays
