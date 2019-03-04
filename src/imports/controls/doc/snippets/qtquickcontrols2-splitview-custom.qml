@@ -25,8 +25,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.5
+import QtQuick 2.13
+import QtQuick.Controls 2.13
 
 Item {
     width: 200

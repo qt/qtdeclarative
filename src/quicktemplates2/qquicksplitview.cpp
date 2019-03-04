@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \inherits Control
     \instantiates QQuickSplitView
     \inqmlmodule QtQuick.Controls
-    \since 5.12
+    \since 5.13
     \ingroup qtquickcontrols2-containers
     \ingroup qtquickcontrols2-focusscopes
     \brief Lays out items with a draggable splitter between each item
@@ -1998,7 +1998,7 @@ QQuickSplitHandleAttached::QQuickSplitHandleAttached(QObject *parent)
     \inherits QtObject
     \instantiates QQuickSplitHandleAttached
     \inqmlmodule QtQuick.Controls
-    \since 5.12
+    \since 5.13
     \brief Provides attached properties for SplitView handles
 
     SplitHandle provides attached properties for \l SplitView handles.
