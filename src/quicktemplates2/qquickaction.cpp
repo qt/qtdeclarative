@@ -113,6 +113,7 @@ QT_BEGIN_NAMESPACE
     when \l trigger() is called directly.
 */
 
+#if QT_CONFIG(shortcut)
 static QKeySequence variantToKeySequence(const QVariant &var)
 {
     if (var.type() == QVariant::Int)
@@ -193,6 +194,7 @@ void QQuickActionPrivate::setShortcut(const QVariant &var)
 
     emit q->shortcutChanged(keySequence);
 }
+#endif // QT_CONFIG(shortcut)
 
 void QQuickActionPrivate::setEnabled(bool enable)
 {
@@ -202,9 +204,11 @@ void QQuickActionPrivate::setEnabled(bool enable)
 
     enabled = enable;
 
+#if QT_CONFIG(shortcut)
     defaultShortcutEntry->setEnabled(enable);
     for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(shortcutEntries))
         entry->setEnabled(enable);
+#endif
 
     emit q->enabledChanged(enable);
 }
@@ -236,16 +240,19 @@ void QQuickActionPrivate::registerItem(QQuickItem *item)
     if (!watchItem(item))
         return;
 
+#if QT_CONFIG(shortcut)
     QQuickActionPrivate::ShortcutEntry *entry = new QQuickActionPrivate::ShortcutEntry(item);
     if (item->isVisible())
         entry->grab(keySequence, enabled);
     shortcutEntries += entry;
 
     updateDefaultShortcutEntry();
+#endif
 }
 
 void QQuickActionPrivate::unregisterItem(QQuickItem *item)
 {
+#if QT_CONFIG(shortcut)
     QQuickActionPrivate::ShortcutEntry *entry = findShortcutEntry(item);
     if (!entry || !unwatchItem(item))
         return;
@@ -254,10 +261,12 @@ void QQuickActionPrivate::unregisterItem(QQuickItem *item)
     delete entry;
 
     updateDefaultShortcutEntry();
+#endif
 }
 
 void QQuickActionPrivate::itemVisibilityChanged(QQuickItem *item)
 {
+#if QT_CONFIG(shortcut)
     QQuickActionPrivate::ShortcutEntry *entry = findShortcutEntry(item);
     if (!entry)
         return;
@@ -268,6 +277,7 @@ void QQuickActionPrivate::itemVisibilityChanged(QQuickItem *item)
         entry->ungrab();
 
     updateDefaultShortcutEntry();
+#endif
 }
 
 void QQuickActionPrivate::itemDestroyed(QQuickItem *item)
@@ -275,6 +285,7 @@ void QQuickActionPrivate::itemDestroyed(QQuickItem *item)
     unregisterItem(item);
 }
 
+#if QT_CONFIG(shortcut)
 bool QQuickActionPrivate::handleShortcutEvent(QObject *object, QShortcutEvent *event)
 {
     Q_Q(QQuickAction);
@@ -316,12 +327,15 @@ void QQuickActionPrivate::updateDefaultShortcutEntry()
     else if (!defaultShortcutEntry->shortcutId())
         defaultShortcutEntry->grab(keySequence, enabled);
 }
+#endif // QT_CONFIG(shortcut)
 
 QQuickAction::QQuickAction(QObject *parent)
     : QObject(*(new QQuickActionPrivate), parent)
 {
     Q_D(QQuickAction);
+#if QT_CONFIG(shortcut)
     d->defaultShortcutEntry = new QQuickActionPrivate::ShortcutEntry(this);
+#endif
 }
 
 QQuickAction::~QQuickAction()
@@ -330,11 +344,13 @@ QQuickAction::~QQuickAction()
     if (d->group)
         d->group->removeAction(this);
 
+#if QT_CONFIG(shortcut)
     for (QQuickActionPrivate::ShortcutEntry *entry : qAsConst(d->shortcutEntries))
         d->unwatchItem(qobject_cast<QQuickItem *>(entry->target()));
 
     qDeleteAll(d->shortcutEntries);
     delete d->defaultShortcutEntry;
+#endif
 }
 
 /*!
@@ -460,6 +476,7 @@ void QQuickAction::setCheckable(bool checkable)
     emit checkableChanged(checkable);
 }
 
+#if QT_CONFIG(shortcut)
 /*!
     \qmlproperty keysequence QtQuick.Controls::Action::shortcut
 
@@ -486,6 +503,7 @@ void QQuickAction::setShortcut(const QKeySequence &shortcut)
     Q_D(QQuickAction);
     d->setShortcut(shortcut.toString());
 }
+#endif // QT_CONFIG(shortcut)
 
 /*!
     \qmlmethod void QtQuick.Controls::Action::toggle(QtObject source = null)
@@ -537,17 +555,21 @@ void QQuickActionPrivate::trigger(QObject* source, bool doToggle)
 bool QQuickAction::event(QEvent *event)
 {
     Q_D(QQuickAction);
-    if (event->type() != QEvent::Shortcut)
-        return QObject::event(event);
-    return d->handleShortcutEvent(this, static_cast<QShortcutEvent *>(event));
+#if QT_CONFIG(shortcut)
+    if (event->type() == QEvent::Shortcut)
+        return d->handleShortcutEvent(this, static_cast<QShortcutEvent *>(event));
+#endif
+    return QObject::event(event);
 }
 
 bool QQuickAction::eventFilter(QObject *object, QEvent *event)
 {
     Q_D(QQuickAction);
-    if (event->type() != QEvent::Shortcut)
-        return false;
-    return d->handleShortcutEvent(object, static_cast<QShortcutEvent *>(event));
+#if QT_CONFIG(shortcut)
+    if (event->type() == QEvent::Shortcut)
+        return d->handleShortcutEvent(object, static_cast<QShortcutEvent *>(event));
+#endif
+    return false;
 }
 
 QT_END_NAMESPACE

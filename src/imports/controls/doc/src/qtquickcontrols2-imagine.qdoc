@@ -2417,9 +2417,9 @@
     The \l {https://developers.google.com/speed/webp/}{WebP} and GIF animated
     image formats are supported by the Imagine style.
 
-    \section2 Palette
-
     \section2 Customization
+
+    \section3 Path
 
     The Imagine style allows customizing the \l {imagine-path-attached-prop}{path}
     that is used to do the image asset selection. The path can be specified for any
@@ -2454,22 +2454,39 @@
     \endtable
 
     In addition to specifying the path in QML, it is also possible to specify
-    it via an environment variable or in a configuration file. Attributes
-    specified in QML take precedence over all other methods.
+    it via an \l {imagine-customization-environment-variable}{environment variable}
+    or in a \l {imagine-customization-configuration-file}{configuration file}.
+    Attributes specified in QML take precedence over all other methods.
 
-    \section3 Configuration File
+    \section4 Configuration File
+    \target imagine-customization-configuration-file
 
     \include qquickimaginestyle.qdocinc conf
 
     See \l {Qt Quick Controls 2 Configuration File} for more details about the
     configuration file.
 
-    \section3 Environment Variables
+    \section4 Environment Variables
+    \target imagine-customization-environment-variable
 
     \include qquickimaginestyle.qdocinc env
 
     See \l {Supported Environment Variables in Qt Quick Controls 2} for the full
     list of supported environment variables.
+
+    \section3 Palette
+
+    The Imagine style supports palette customization via the \l {Control::}{palette}
+    property and the \l {Palette Configuration}{qtquickcontrols2.conf} file.
+    As with other styles, the exact \l {palette QML Basic Type}{palette roles}
+    that the Imagine style uses are style-dependent. However, as most of the visual
+    appearance of controls (for example: backgrounds) are managed through image assets,
+    only the roles that are typically used for text will have an effect.
+
+    \section3 Font
+
+    Custom fonts can be set via the \l {Control::}{font} property and the
+    \l {Font Configuration}{configuration} file.
 
     \section2 Dependency
 

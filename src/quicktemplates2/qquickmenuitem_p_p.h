@@ -73,6 +73,8 @@ public:
     void cancelArrow();
     void executeArrow(bool complete = false);
 
+    bool acceptKeyClick(Qt::Key key) const override;
+
     bool highlighted = false;
     QQuickDeferredPointer<QQuickItem> arrow;
     QQuickMenu *menu = nullptr;

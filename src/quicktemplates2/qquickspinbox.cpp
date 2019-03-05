@@ -629,7 +629,8 @@ void QQuickSpinBox::setValidator(QValidator *validator)
     is the value to be converted, and the optional second argument is the
     locale that should be used for the conversion, if applicable.
 
-    The default implementation does the conversion using \l {QtQml::Locale}{Number.toLocaleString()}:
+    The default implementation does the conversion using
+    \l {QtQml::Number::toLocaleString()}{Number.toLocaleString}():
 
     \code
     textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }
