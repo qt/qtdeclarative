@@ -85,8 +85,8 @@ struct VTable
     typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
 
     const VTable * const parent;
-    quint32 inlinePropertyOffset : 16;
-    quint32 nInlineProperties : 16;
+    quint16 inlinePropertyOffset;
+    quint16 nInlineProperties;
     quint8 isExecutionContext;
     quint8 isString;
     quint8 isObject;

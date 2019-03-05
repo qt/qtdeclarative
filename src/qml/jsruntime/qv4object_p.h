@@ -79,7 +79,7 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
     }
 
     const Value *inlinePropertyDataWithOffset(uint indexWithOffset) const {
-        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
         return reinterpret_cast<const Value *>(this) + indexWithOffset;
     }
     const Value *inlinePropertyData(uint index) const {
@@ -87,12 +87,12 @@ DECLARE_EXPORTED_HEAP_OBJECT(Object, Base) {
         return reinterpret_cast<const Value *>(this) + vtable()->inlinePropertyOffset + index;
     }
     void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Value v) {
-        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
         Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
         WriteBarrier::write(e, this, prop->data_ptr(), v.asReturnedValue());
     }
     void setInlinePropertyWithOffset(ExecutionEngine *e, uint indexWithOffset, Heap::Base *b) {
-        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < vtable()->inlinePropertyOffset + vtable()->nInlineProperties);
+        Q_ASSERT(indexWithOffset >= vtable()->inlinePropertyOffset && indexWithOffset < uint(vtable()->inlinePropertyOffset + vtable()->nInlineProperties));
         Value *prop = reinterpret_cast<Value *>(this) + indexWithOffset;
         WriteBarrier::write(e, this, prop->data_ptr(), Value::fromHeapObject(b).asReturnedValue());
     }
