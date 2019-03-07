@@ -33,15 +33,18 @@ import "TestUtils.js" as TestUtils
 TableModel {
     id: testModel
     objectName: "testModel"
-    roleDataProvider: TestUtils.testModelRoleDataProvider
+
+    TableModelColumn { display: "name" }
+    TableModelColumn { display: "age" }
+
     rows: [
-        [
-            { name: "John" },
-            { age: 22 }
-        ],
-        [
-            { name: "Oliver" },
-            { age: 33 }
-        ]
+        {
+            name: "John",
+            age: 22
+        },
+        {
+            name: "Oliver",
+            age: 33
+        }
     ]
 }

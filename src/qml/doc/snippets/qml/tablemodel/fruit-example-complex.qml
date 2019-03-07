@@ -50,10 +50,10 @@
 
 //![file]
 import QtQuick 2.12
-import QtQuick.Controls 2.5
+import QtQuick.Window 2.12
 import Qt.labs.qmlmodels 1.0
 
-ApplicationWindow {
+Window {
     width: 400
     height: 400
     visible: true
@@ -65,63 +65,67 @@ ApplicationWindow {
         boundsBehavior: Flickable.StopAtBounds
 
         model: TableModel {
-            TableModelColumn { display: "checked" }
-            TableModelColumn { display: "amount" }
-            TableModelColumn { display: "fruitType" }
-            TableModelColumn { display: "fruitName" }
-            TableModelColumn { display: "fruitPrice" }
+            TableModelColumn {
+                display: function(modelIndex) { return rows[modelIndex.row][0].checked }
+                setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][0].checked = cellData }
+            }
+            TableModelColumn {
+                display: function(modelIndex) { return rows[modelIndex.row][1].amount }
+                setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][1].amount = cellData }
+            }
+            TableModelColumn {
+                display: function(modelIndex) { return rows[modelIndex.row][2].fruitType }
+                setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][2].fruitType = cellData }
+            }
+            TableModelColumn {
+                display: function(modelIndex) { return rows[modelIndex.row][3].fruitName }
+                setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][3].fruitName = cellData }
+            }
+            TableModelColumn {
+                display: function(modelIndex) { return rows[modelIndex.row][4].fruitPrice }
+                setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][4].fruitPrice = cellData }
+            }
 
             // Each row is one type of fruit that can be ordered
 //![rows]
             rows: [
-                {
-                    // Each property is one cell/column.
-                    checked: false,
-                    amount: 1,
-                    fruitType: "Apple",
-                    fruitName: "Granny Smith",
-                    fruitPrice: 1.50
-                },
-                {
-                    checked: true,
-                    amount: 4,
-                    fruitType: "Orange",
-                    fruitName: "Navel",
-                    fruitPrice: 2.50
-                },
-                {
-                    checked: false,
-                    amount: 1,
-                    fruitType: "Banana",
-                    fruitName: "Cavendish",
-                    fruitPrice: 3.50
-                }
+                [
+                    // Each object (line) is one cell/column.
+                    { checked: false, checkable: true },
+                    { amount: 1 },
+                    { fruitType: "Apple" },
+                    { fruitName: "Granny Smith" },
+                    { fruitPrice: 1.50 }
+                ],
+                [
+                    { checked: true, checkable: true },
+                    { amount: 4 },
+                    { fruitType: "Orange" },
+                    { fruitName: "Navel" },
+                    { fruitPrice: 2.50 }
+                ],
+                [
+                    { checked: false, checkable: false },
+                    { amount: 1 },
+                    { fruitType: "Banana" },
+                    { fruitName: "Cavendish" },
+                    { fruitPrice: 3.50 }
+                ]
             ]
 //![rows]
         }
 //![delegate]
-        delegate: DelegateChooser {
-            DelegateChoice {
-                column: 0
-                delegate: CheckBox {
-                    checked: model.display
-                    onToggled: model.display = checked
-                }
-            }
-            DelegateChoice {
-                column: 1
-                delegate: SpinBox {
-                    value: model.display
-                    onValueModified: model.display = value
-                }
-            }
-            DelegateChoice {
-                delegate: TextField {
-                    text: model.display
-                    selectByMouse: true
-                    implicitWidth: 140
-                    onAccepted: model.display = text
-                }
+        delegate:  TextInput {
+            text: model.display
+            padding: 12
+            selectByMouse: true
+
+            onAccepted: model.display = text
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#efefef"
+                z: -1
             }
         }
 //![delegate]

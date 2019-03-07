@@ -45,13 +45,13 @@ ScrollView {
     clip: true
 
     function inputAsRow() {
-        return [
-            { checkable: checkableCheckBox.checked, checked: checkedCheckBox.checked },
-            { amount: amountSpinBox.value },
-            { fruitType: fruitTypeTextField.text },
-            { fruitName: fruitNameTextField.text },
-            { fruitPrice: parseFloat(fruitPriceTextField.text) },
-        ]
+        return {
+            checked: checkedCheckBox.checked,
+            amount: amountSpinBox.value,
+            fruitType: fruitTypeTextField.text,
+            fruitName: fruitNameTextField.text,
+            fruitPrice: parseFloat(fruitPriceTextField.text)
+        }
     }
 
     default property alias content: gridLayout.children
@@ -60,23 +60,11 @@ ScrollView {
         id: gridLayout
         columns: 2
 
-        RowLayout {
-            Layout.columnSpan: 2
-
-            Label {
-                text: "checkable"
-            }
-            CheckBox {
-                id: checkableCheckBox
-                checked: true
-            }
-
-            Label {
-                text: "checked"
-            }
-            CheckBox {
-                id: checkedCheckBox
-            }
+        Label {
+            text: "checked"
+        }
+        CheckBox {
+            id: checkedCheckBox
         }
 
         Label {

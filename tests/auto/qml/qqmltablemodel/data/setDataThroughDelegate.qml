@@ -41,11 +41,11 @@ Item {
     signal shouldModifyInvalidType()
 
     function modify() {
-        shouldModify();
+        shouldModify()
     }
 
     function modifyInvalidRole() {
-        shouldModifyInvalidRole();
+        shouldModifyInvalidRole()
     }
 
     function modifyInvalidType() {
@@ -54,37 +54,24 @@ Item {
 
     TableView {
         anchors.fill: parent
-        model: TableModel {
+        model: TestModel {
             id: testModel
-            objectName: "testModel"
-            rows: [
-                [
-                    { name: "John" },
-                    { age: 22 }
-                ],
-                [
-                    { name: "Oliver" },
-                    { age: 33 }
-                ]
-            ]
         }
 
         delegate: Text {
             id: textItem
-            // TODO: this is currently random when no roleDataProvider handles it
-            // we should allow roleDataProvider to be used to handle specific roles only
             text: model.display
 
             Connections {
                 target: root
                 enabled: column === 1
-                onShouldModify: model.age = 18
+                onShouldModify: model.display = 18
             }
 
             Connections {
                 target: root
                 enabled: column === 0
-                // Invalid: should be "name".
+                // Invalid: should be "display".
                 onShouldModifyInvalidRole: model.age = 100
             }
 
@@ -92,7 +79,7 @@ Item {
                 target: root
                 enabled: column === 1
                 // Invalid: should be string.
-                onShouldModifyInvalidType: model.age = "Whoops"
+                onShouldModifyInvalidType: model.display = "Whoops"
             }
         }
     }

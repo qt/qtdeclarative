@@ -64,31 +64,37 @@ ApplicationWindow {
             Layout.fillHeight: true
 
             model: TableModel {
+                TableModelColumn { display: "checked" }
+                TableModelColumn { display: "amount" }
+                TableModelColumn { display: "fruitType" }
+                TableModelColumn { display: "fruitName" }
+                TableModelColumn { display: "fruitPrice" }
+
                 // One row = one type of fruit that can be ordered
                 rows: [
-                    [
-                        // Each object (line) is one cell/column,
-                        // and each property in that object is a role.
-                        { checked: false, checkable: true },
-                        { amount: 1 },
-                        { fruitType: "Apple" },
-                        { fruitName: "Granny Smith" },
-                        { fruitPrice: 1.50 }
-                    ],
-                    [
-                        { checked: true, checkable: true },
-                        { amount: 4 },
-                        { fruitType: "Orange" },
-                        { fruitName: "Navel" },
-                        { fruitPrice: 2.50 }
-                    ],
-                    [
-                        { checked: false, checkable: true },
-                        { amount: 1 },
-                        { fruitType: "Banana" },
-                        { fruitName: "Cavendish" },
-                        { fruitPrice: 3.50 }
-                    ]
+                    {
+                        // Each object (line) is one column,
+                        // and each property in that object represents a role.
+                        checked: false,
+                        amount: 1,
+                        fruitType: "Apple",
+                        fruitName: "Granny Smith",
+                        fruitPrice: 1.50
+                    },
+                    {
+                        checked: true,
+                        amount: 4,
+                        fruitType: "Orange",
+                        fruitName: "Navel",
+                        fruitPrice: 2.50
+                    },
+                    {
+                        checked: false,
+                        amount: 1,
+                        fruitType: "Banana",
+                        fruitName: "Cavendish",
+                        fruitPrice: 3.50
+                    }
                 ]
             }
 
@@ -97,16 +103,16 @@ ApplicationWindow {
                     column: 0
                     delegate: CheckBox {
                         objectName: "tableViewCheckBoxDelegate"
-                        checked: model.checked
-                        onToggled: model.checked = checked
+                        checked: model.display
+                        onToggled: model.display = display
                     }
                 }
                 DelegateChoice {
                     column: 1
                     delegate: SpinBox {
                         objectName: "tableViewSpinBoxDelegate"
-                        value: model.amount
-                        onValueModified: model.amount = value
+                        value: model.display
+                        onValueModified: model.display = value
                     }
                 }
                 DelegateChoice {

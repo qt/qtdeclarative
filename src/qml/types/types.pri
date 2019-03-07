@@ -7,7 +7,8 @@ SOURCES += \
     $$PWD/qquickpackage.cpp \
     $$PWD/qqmlinstantiator.cpp \
     $$PWD/qqmltableinstancemodel.cpp \
-    $$PWD/qqmltablemodel.cpp
+    $$PWD/qqmltablemodel.cpp \
+    $$PWD/qqmltablemodelcolumn.cpp
 
 HEADERS += \
     $$PWD/qqmlbind_p.h \
@@ -19,7 +20,8 @@ HEADERS += \
     $$PWD/qqmlinstantiator_p.h \
     $$PWD/qqmlinstantiator_p_p.h \
     $$PWD/qqmltableinstancemodel_p.h \
-    $$PWD/qqmltablemodel_p.h
+    $$PWD/qqmltablemodel_p.h \
+    $$PWD/qqmltablemodelcolumn_p.h
 
 qtConfig(qml-worker-script) {
     SOURCES += \

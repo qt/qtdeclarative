@@ -39,35 +39,35 @@ Item {
 
     function setRowsValid() {
         testModel.rows = [
-            [
-                { name: "Max" },
-                { age: 20 }
-            ],
-            [
-                { name: "Imum" },
-                { age: 41 }
-            ],
-            [
-                { name: "Power" },
-                { age: 89 }
-            ]
+            {
+                name: "Max",
+                age: 20
+            },
+            {
+                name: "Imum",
+                age: 41
+            },
+            {
+                name: "Power",
+                age: 89
+            }
         ]
     }
 
     function setRowsInvalid() {
         testModel.rows = [
-            [
-                { nope: "Nope" },
-                { age: 20 }
-            ],
-            [
-                { nope: "Nah" },
-                { age: 41 }
-            ],
-            [
-                { nope: "No" },
-                { age: 89 }
-            ]
+            {
+                nope: "Nope",
+                age: 20
+            },
+            {
+                nope: "Nah",
+                age: 41
+            },
+            {
+                nope: "No",
+                age: 89
+            }
         ]
     }
 

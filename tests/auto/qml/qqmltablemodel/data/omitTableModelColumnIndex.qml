@@ -26,40 +26,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
 import Qt.labs.qmlmodels 1.0
 
-Item {
-    id: root
-    width: 200
-    height: 200
+TableModel {
+    objectName: "testModel"
 
-    property alias testModel: testModel
+    TableModelColumn { display: "name" }
+    TableModelColumn { display: "age" }
 
-    TableModel {
-        id: testModel
-        objectName: "testModel"
-        rows: [
-            [ { name: "Rex" }, { age: 3 } ],
-            [ { name: "Buster" }, { age: 5 } ]
-        ]
-        roleDataProvider: function(index, role, cellData) {
-            if (role === "display") {
-                // Age will now be in dog years
-                if (cellData.hasOwnProperty("age"))
-                    return (cellData.age * 7);
-                else if (index.column === 0)
-                    return (cellData.name);
-            }
-            return cellData;
+    rows: [
+        {
+            name: "John",
+            age: 22
+        },
+        {
+            name: "Oliver",
+            age: 33
         }
-    }
-    TableView {
-        anchors.fill: parent
-        model: testModel
-        delegate: Text {
-            id: textItem
-            text: model.display
-        }
-    }
+    ]
 }

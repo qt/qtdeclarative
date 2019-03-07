@@ -48,6 +48,7 @@
 #endif
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qqmltablemodel_p.h>
+#include <private/qqmltablemodelcolumn_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,6 +78,7 @@ void QQmlModelsModule::defineLabsModule()
     qmlRegisterType<QQmlDelegateChooser>(uri, 1, 0, "DelegateChooser");
     qmlRegisterType<QQmlDelegateChoice>(uri, 1, 0, "DelegateChoice");
     qmlRegisterType<QQmlTableModel>(uri, 1, 0, "TableModel");
+    qmlRegisterType<QQmlTableModelColumn>(uri, 1, 0, "TableModelColumn");
 }
 
 QT_END_NAMESPACE
