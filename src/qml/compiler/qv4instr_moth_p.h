@@ -171,7 +171,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_CmpIn(op) INSTRUCTION(op, CmpIn, 1, lhs)
 #define INSTR_CmpInstanceOf(op) INSTRUCTION(op, CmpInstanceOf, 1, lhs)
 #define INSTR_UNot(op) INSTRUCTION(op, UNot, 0)
-#define INSTR_UPlus(op) INSTRUCTION(op, UPlus, 0)
+#define INSTR_UPlus(op) INSTRUCTION(op, UPlus, 1, traceSlot)
 #define INSTR_UMinus(op) INSTRUCTION(op, UMinus, 1, traceSlot)
 #define INSTR_UCompl(op) INSTRUCTION(op, UCompl, 0)
 #define INSTR_Increment(op) INSTRUCTION(op, Increment, 1, traceSlot)

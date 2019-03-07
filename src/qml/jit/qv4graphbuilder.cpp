@@ -1472,7 +1472,7 @@ void GraphBuilder::generate_UNot()
                        createToBoolean(env()->accumulator())));
 }
 
-void GraphBuilder::generate_UPlus()
+void GraphBuilder::generate_UPlus(int /*traceSlot*/)
 {
     Node* control = createNode(opBuilder()->get<Meta::JSToNumber>(),
                                env()->accumulator());

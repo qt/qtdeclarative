@@ -615,6 +615,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
         MOTH_END_INSTR(UNot)
 
         MOTH_BEGIN_INSTR(UPlus)
+            d << TRACE_SLOT;
         MOTH_END_INSTR(UPlus)
 
         MOTH_BEGIN_INSTR(UMinus)

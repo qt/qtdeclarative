@@ -891,7 +891,7 @@ void BaselineJIT::generate_CmpInstanceOf(int lhs)
 }
 
 void BaselineJIT::generate_UNot() { as->unot(); }
-void BaselineJIT::generate_UPlus() { as->toNumber(); }
+void BaselineJIT::generate_UPlus(int /*traceSlot*/) { as->toNumber(); }
 void BaselineJIT::generate_UMinus(int /*traceSlot*/) { as->uminus(); }
 void BaselineJIT::generate_UCompl() { as->ucompl(); }
 void BaselineJIT::generate_Increment(int /*traceSlot*/) { as->inc(); }

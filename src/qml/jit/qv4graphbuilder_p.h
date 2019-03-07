@@ -261,7 +261,7 @@ protected: // ByteCodeHandler
     void generate_CmpIn(int lhs) override;
     void generate_CmpInstanceOf(int lhs) override;
     void generate_UNot() override;
-    void generate_UPlus() override;
+    void generate_UPlus(int traceSlot) override;
     void generate_UMinus(int traceSlot) override;
     void generate_UCompl() override;
     void generate_Increment(int traceSlot) override;

@@ -388,6 +388,18 @@ static inline void traceValue(ReturnedValue acc, Function *f, int slot)
 #endif
 }
 
+static inline void traceIntValue(Function *f, int slot)
+{
+#if QT_CONFIG(qml_tracing)
+    quint8 *traceInfo = f->traceInfo(slot);
+    Q_ASSERT(traceInfo);
+    *traceInfo |= quint8(ObservedTraceValues::Integer);
+#else
+    Q_UNUSED(f);
+    Q_UNUSED(slot);
+#endif
+}
+
 static inline void traceDoubleValue(Function *f, int slot)
 {
 #if QT_CONFIG(qml_tracing)
@@ -1285,7 +1297,12 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(UNot)
 
     MOTH_BEGIN_INSTR(UPlus)
-        if (Q_UNLIKELY(!ACC.isNumber())) {
+        if (Q_LIKELY(ACC.isNumber())) {
+            if (ACC.isDouble())
+                traceDoubleValue(function, traceSlot);
+            else
+                traceIntValue(function, traceSlot);
+        } else {
             acc = Encode(ACC.toNumberImpl());
             CHECK_EXCEPTION;
         }

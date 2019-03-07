@@ -293,8 +293,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     }
     case UPlus: {
         expr.loadInAccumulator();
-        Instruction::UPlus uplus;
-        bytecodeGenerator->addInstruction(uplus);
+        Instruction::UPlus uplus = {};
+        bytecodeGenerator->addTracingInstruction(uplus);
         return Reference::fromAccumulator(this);
     }
     case Not: {
@@ -313,8 +313,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         if (!_expr.accept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
-            Instruction::UPlus uplus;
-            bytecodeGenerator->addInstruction(uplus);
+            Instruction::UPlus uplus = {};
+            bytecodeGenerator->addTracingInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
             Instruction::Increment inc = {};
             bytecodeGenerator->addTracingInstruction(inc);
@@ -339,8 +339,8 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
         if (!_expr.accept(nx) || requiresReturnValue) {
             Reference e = expr.asLValue();
             e.loadInAccumulator();
-            Instruction::UPlus uplus;
-            bytecodeGenerator->addInstruction(uplus);
+            Instruction::UPlus uplus = {};
+            bytecodeGenerator->addTracingInstruction(uplus);
             Reference originalValue = Reference::fromStackSlot(this).storeRetainAccumulator();
             Instruction::Decrement dec = {};
             bytecodeGenerator->addTracingInstruction(dec);
