@@ -150,11 +150,13 @@
         \header
             \li Name
             \li Purpose
+            \li Since
         \row
             \li void applicationAvailable()
             \li Called right after the QApplication object was instantiated.
                 Use this function to setup everything that is not related
                 to QML directly.
+            \li Qt 5.12
         \row
             \li void qmlEngineAvailable(QQmlEngine*)
             \li Called when the QML engine is available.
@@ -162,10 +164,12 @@
                 \l {QQmlEngine::addPluginPath}{plugin paths},
                 and \l {QQmlFileSelector::setExtraSelectors}{extra file selectors}
                 will have been set on the engine by this point.
+            \li Qt 5.11
         \row
             \li void cleanupTestCase()
             \li Called right after the test execution has finished.
                 Use this function to clean up before everything will start to be destructed.
+            \li Qt 5.12
     \endtable
 
     Each function will be called once for each \c tst_*.qml file, so any
