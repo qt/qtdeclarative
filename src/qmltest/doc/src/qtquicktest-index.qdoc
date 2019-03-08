@@ -154,8 +154,8 @@
         \row
             \li void applicationAvailable()
             \li Called right after the QApplication object was instantiated.
-                Use this function to setup everything that is not related
-                to QML directly.
+                Use this function to perform setup that does not require a
+                \l QQmlEngine instance.
             \li Qt 5.12
         \row
             \li void qmlEngineAvailable(QQmlEngine*)
@@ -164,6 +164,11 @@
                 \l {QQmlEngine::addPluginPath}{plugin paths},
                 and \l {QQmlFileSelector::setExtraSelectors}{extra file selectors}
                 will have been set on the engine by this point.
+
+                This function can be used to \l {Choosing the Correct Integration
+                Method Between C++ and QML}{register QML types} and
+                \l {QQmlEngine::addImportPath()}{add import paths},
+                amongst other things.
             \li Qt 5.11
         \row
             \li void cleanupTestCase()
