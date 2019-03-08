@@ -1476,7 +1476,12 @@ QQuickSplitViewAttached::QQuickSplitViewAttached(QObject *parent)
 {
     Q_D(QQuickSplitViewAttached);
     QQuickItem *item = qobject_cast<QQuickItem *>(parent);
-    if (!item || QQuickItemPrivate::get(item)->isTransparentForPositioner())
+    if (!item) {
+        qmlWarning(parent) << "SplitView: attached properties can only be used on Items";
+        return;
+    }
+
+    if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
         return;
 
     d->m_splitItem = item;
@@ -1637,9 +1642,10 @@ void QQuickSplitViewAttached::setPreferredWidth(qreal width)
     d->m_isPreferredWidthSet = true;
     // Make sure that we clear this flag now, before we emit the change signals
     // which could cause another setter to be called.
-    auto splitViewPrivate = QQuickSplitViewPrivate::get(d->m_splitView);
-    const bool ignoreNextLayoutRequest = splitViewPrivate->m_ignoreNextLayoutRequest;
-    splitViewPrivate->m_ignoreNextLayoutRequest = false;
+    auto splitViewPrivate = d->m_splitView ? QQuickSplitViewPrivate::get(d->m_splitView) : nullptr;
+    const bool ignoreNextLayoutRequest = splitViewPrivate && splitViewPrivate->m_ignoreNextLayoutRequest;
+    if (splitViewPrivate)
+        splitViewPrivate->m_ignoreNextLayoutRequest = false;
 
     if (qFuzzyCompare(width, d->m_preferredWidth))
         return;
@@ -1705,9 +1711,10 @@ void QQuickSplitViewAttached::setPreferredHeight(qreal height)
     d->m_isPreferredHeightSet = true;
     // Make sure that we clear this flag now, before we emit the change signals
     // which could cause another setter to be called.
-    auto splitViewPrivate = QQuickSplitViewPrivate::get(d->m_splitView);
-    const bool ignoreNextLayoutRequest = splitViewPrivate->m_ignoreNextLayoutRequest;
-    splitViewPrivate->m_ignoreNextLayoutRequest = false;
+    auto splitViewPrivate = d->m_splitView ? QQuickSplitViewPrivate::get(d->m_splitView) : nullptr;
+    const bool ignoreNextLayoutRequest = splitViewPrivate && splitViewPrivate->m_ignoreNextLayoutRequest;
+    if (splitViewPrivate)
+        splitViewPrivate->m_ignoreNextLayoutRequest = false;
 
     if (qFuzzyCompare(height, d->m_preferredHeight))
         return;
