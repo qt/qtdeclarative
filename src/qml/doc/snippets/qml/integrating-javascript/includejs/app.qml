@@ -49,7 +49,7 @@
 ****************************************************************************/
 //![0]
 import QtQuick 2.0
-import "script.js" as MyScript
+import "script.mjs" as MyScript
 
 Item {
     width: 100; height: 100

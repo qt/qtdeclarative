@@ -517,22 +517,22 @@ void tst_qqmlecmascript::exportDate_data()
     QTest::newRow("UTC late") << testFileUrl("exportDate.4.qml") << QDateTime(date, late, Qt::UTC);
     {
         QDateTime dt(date, early, Qt::OffsetFromUTC);
-        dt.setUtcOffset(offset);
+        dt.setOffsetFromUtc(offset);
         QTest::newRow("+11:30 early") << testFileUrl("exportDate.5.qml") << dt;
     }
     {
         QDateTime dt(date, late, Qt::OffsetFromUTC);
-        dt.setUtcOffset(offset);
+        dt.setOffsetFromUtc(offset);
         QTest::newRow("+11:30 late") << testFileUrl("exportDate.6.qml") << dt;
     }
     {
         QDateTime dt(date, early, Qt::OffsetFromUTC);
-        dt.setUtcOffset(-offset);
+        dt.setOffsetFromUtc(-offset);
         QTest::newRow("-11:30 early") << testFileUrl("exportDate.7.qml") << dt;
     }
     {
         QDateTime dt(date, late, Qt::OffsetFromUTC);
-        dt.setUtcOffset(-offset);
+        dt.setOffsetFromUtc(-offset);
         QTest::newRow("-11:30 late") << testFileUrl("exportDate.8.qml") << dt;
     }
 }

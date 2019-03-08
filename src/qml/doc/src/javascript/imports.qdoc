@@ -99,8 +99,43 @@ A JavaScript resource may import another in the following fashion:
 \endcode
 For example:
 \code
-.import "factorial.js" as MathFunctions
+import * as MathFunctions from "factorial.mjs";
 \endcode
+
+The latter is standard ECMAScript syntax for importing ECMAScript modules, and
+only works from within ECMAScript modules as denoted by the \c mjs file
+extension. The former is an extension to JavaScript provided by the \c QML
+engine and will work also with non-modules.
+
+When a JavaScript file is imported this way, it is imported with a qualifier.
+The functions in that file are then accessible from the importing script via the
+qualifier (that is, as \tt{Qualifier.functionName(params)}).
+
+Sometimes it is desirable to have the functions made available in the importing
+context without needing to qualify them. In this case ECMAScript modules and the
+JavaScript \c import statement should be used without the \c as qualifier.
+
+For example, the QML code below left calls \c showCalculations() in \c script.mjs,
+which in turn can call \c factorial() in \c factorial.mjs, as it has included
+\c factorial.mjs using \c import.
+
+\table
+\row
+\li {1,2} \snippet qml/integrating-javascript/includejs/app.qml 0
+\li \snippet qml/integrating-javascript/includejs/script.mjs 0
+\row
+\li \snippet qml/integrating-javascript/includejs/factorial.mjs 0
+\endtable
+
+The \l{QtQml::Qt::include()} {Qt.include()} function includes one JavaScript
+file from another without using ECMAScript modules and without qualifying the
+import. It makes all functions and variables from the other file available in
+the current file's namespace, but ignores all pragmas and imports defined in
+that file. This is not a good idea as a function call should never modify the
+caller's context.
+
+\l{QtQml::Qt::include()} {Qt.include()} is deprecated and should be avoided. It
+will be removed in a future version of Qt.
 
 \section2 Importing a QML Module from a JavaScript Resource
 
@@ -118,33 +153,5 @@ In particular, this may be useful in order to access functionality provided
 via a singleton type; see qmlRegisterSingletonType() for more information.
 
 \note The .import syntax doesn't work for scripts used in the \l {WorkerScript}
-
-\section1 Including a JavaScript Resource from Another JavaScript Resource
-
-When a JavaScript file is imported, it must be imported with a qualifier.  The
-functions in that file are then accessible from the importing script via the
-qualifier (that is, as \tt{Qualifier.functionName(params)}).  Sometimes it is
-desirable to have the functions made available in the importing context without
-needing to qualify them, and in this circumstance the \l{QtQml::Qt::include()}
-{Qt.include()} function may be used to include one JavaScript file from another.
-This copies all functions from the other file into the current file's
-namespace, but ignores all pragmas and imports defined in that file.
-
-For example, the QML code below left calls \c showCalculations() in \c script.js,
-which in turn can call \c factorial() in \c factorial.js, as it has included
-\c factorial.js using \l {QtQml::Qt::include()}{Qt.include()}.
-
-\table
-\row
-\li {1,2} \snippet qml/integrating-javascript/includejs/app.qml 0
-\li \snippet qml/integrating-javascript/includejs/script.js 0
-\row
-\li \snippet qml/integrating-javascript/includejs/factorial.js 0
-\endtable
-
-Notice that calling \l {QtQml::Qt::include()}{Qt.include()} copies all functions
-from \c factorial.js into the \c MyScript namespace, which means the QML
-component can also access \c factorial() directly as \c MyScript.factorial().
-
 
 */

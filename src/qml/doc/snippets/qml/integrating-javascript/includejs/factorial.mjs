@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 //![0]
-// script.js
-Qt.include("factorial.js")
-
-function showCalculations(value) {
-    console.log(
-        "Call factorial() from script.js:",
-        factorial(value));
+// factorial.mjs
+export function factorial(a) {
+    a = parseInt(a);
+    if (a <= 0)
+        return 1;
+    else
+        return a * factorial(a - 1);
 }
 //![0]

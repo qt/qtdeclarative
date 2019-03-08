@@ -46,7 +46,7 @@ QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
             this, &QQmlDebugProcess::processAppOutput);
     connect(&m_process, &QProcess::errorOccurred,
             this, &QQmlDebugProcess::processError);
-    connect(&m_process, QOverload<int>::of(&QProcess::finished),
+    connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this]() {
         m_timer.stop();
         m_eventLoop.quit();

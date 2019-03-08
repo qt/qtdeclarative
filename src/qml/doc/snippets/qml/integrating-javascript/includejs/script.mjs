@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 //![0]
-// factorial.js
-function factorial(a) {
-    a = parseInt(a);
-    if (a <= 0)
-        return 1;
-    else
-        return a * factorial(a - 1);
+// script.js
+import { factorial } from "factorial.mjs"
+
+function showCalculations(value) {
+    console.log(
+        "Call factorial() from script.js:",
+        factorial(value));
 }
 //![0]

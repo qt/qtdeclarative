@@ -61,7 +61,7 @@ Item {
 
     Text {
         color: handler.active ? "darkgreen" : "black"
-        text: handler.centroid.centroid.x.toFixed(1) + "," + handler.centroid.position.y.toFixed(1)
+        text: handler.centroid.position.x.toFixed(1) + "," + handler.centroid.position.y.toFixed(1)
         x: handler.centroid.position.x - width / 2
         y: handler.centroid.position.y - height
     }

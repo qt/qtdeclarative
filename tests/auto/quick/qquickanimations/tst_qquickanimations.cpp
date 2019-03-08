@@ -1207,7 +1207,7 @@ void tst_qquickanimations::easingProperties()
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::BezierSpline);
-        QList<QPointF> points = animObject->easing().cubicBezierSpline();
+        QVector<QPointF> points = animObject->easing().toCubicSpline();
         QCOMPARE(points.count(), 3);
         QCOMPARE(points.at(0), QPointF(0.5, 0.2));
         QCOMPARE(points.at(1), QPointF(0.13, 0.65));
