@@ -534,7 +534,8 @@ void QQuickToolTipAttached::show(const QString &text, int ms)
     tip->resetHeight();
     tip->setParentItem(qobject_cast<QQuickItem *>(parent()));
     tip->setDelay(d->delay);
-    tip->show(text, ms >= 0 ? ms : d->timeout);
+    tip->setTimeout(ms >= 0 ? ms : d->timeout);
+    tip->show(text);
 }
 
 /*!

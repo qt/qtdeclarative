@@ -347,4 +347,69 @@ TestCase {
         verify(tip.visible)
         tryCompare(tip, "visible", false)
     }
+
+    Component {
+        id: timeoutButtonRowComponent
+
+        Row {
+            Button {
+                text: "Timeout: 1"
+                ToolTip.text: text
+                ToolTip.visible: down
+                ToolTip.timeout: 1
+            }
+
+            Button {
+                text: "Timeout: -1"
+                ToolTip.text: text
+                ToolTip.visible: down
+            }
+        }
+    }
+
+    // QTBUG-74226
+    function test_attachedTimeout() {
+        var row = createTemporaryObject(timeoutButtonRowComponent, testCase)
+        verify(row)
+
+        // Press the button that has no timeout; it should stay visible.
+        var button2 = row.children[1]
+        mousePress(button2)
+        compare(button2.down, true)
+        tryCompare(button2.ToolTip.toolTip, "opened", true)
+
+        // Wait a bit to make sure that it's still visible.
+        wait(50)
+        compare(button2.ToolTip.toolTip.opened, true)
+
+        // Release and should close.
+        mouseRelease(button2)
+        compare(button2.down, false)
+        tryCompare(button2.ToolTip, "visible", false)
+
+        // Now, press the first button that does have a timeout; it should close on its own eventually.
+        var button1 = row.children[0]
+        mousePress(button1)
+        compare(button1.down, true)
+        // We use a short timeout to speed up the test, but tryCompare(...opened, true) then
+        // fails because the dialog has already been hidden by that point, so just check that it's
+        // immediately visible, which is more or less the same thing.
+        compare(button1.ToolTip.visible, true)
+        tryCompare(button1.ToolTip, "visible", false)
+        mouseRelease(button2)
+
+        // Now, hover over the second button again. It should still stay visible until the mouse is released.
+        mousePress(button2)
+        compare(button2.down, true)
+        tryCompare(button2.ToolTip.toolTip, "opened", true)
+
+        // Wait a bit to make sure that it's still visible.
+        wait(50)
+        compare(button2.ToolTip.toolTip.opened, true)
+
+        // Release and should close.
+        mouseRelease(button2)
+        compare(button2.down, false)
+        tryCompare(button2.ToolTip, "visible", false)
+    }
 }
