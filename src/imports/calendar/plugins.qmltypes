@@ -7,7 +7,7 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable Qt.labs.calendar 1.0'
 
 Module {
-    dependencies: ["QtQuick 2.6"]
+    dependencies: ["QtQuick 2.12"]
     Component {
         name: "QQuickCalendar"
         prototype: "QObject"
@@ -86,8 +86,29 @@ Module {
         Property { name: "wheelEnabled"; type: "bool" }
         Property { name: "background"; type: "QQuickItem"; isPointer: true }
         Property { name: "contentItem"; type: "QQuickItem"; isPointer: true }
+        Property { name: "baselineOffset"; type: "double" }
         Property { name: "palette"; revision: 3; type: "QPalette" }
+        Property { name: "horizontalPadding"; revision: 5; type: "double" }
+        Property { name: "verticalPadding"; revision: 5; type: "double" }
+        Property { name: "implicitContentWidth"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitContentHeight"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitBackgroundWidth"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "implicitBackgroundHeight"; revision: 5; type: "double"; isReadonly: true }
+        Property { name: "topInset"; revision: 5; type: "double" }
+        Property { name: "leftInset"; revision: 5; type: "double" }
+        Property { name: "rightInset"; revision: 5; type: "double" }
+        Property { name: "bottomInset"; revision: 5; type: "double" }
         Signal { name: "paletteChanged"; revision: 3 }
+        Signal { name: "horizontalPaddingChanged"; revision: 5 }
+        Signal { name: "verticalPaddingChanged"; revision: 5 }
+        Signal { name: "implicitContentWidthChanged"; revision: 5 }
+        Signal { name: "implicitContentHeightChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundWidthChanged"; revision: 5 }
+        Signal { name: "implicitBackgroundHeightChanged"; revision: 5 }
+        Signal { name: "topInsetChanged"; revision: 5 }
+        Signal { name: "leftInsetChanged"; revision: 5 }
+        Signal { name: "rightInsetChanged"; revision: 5 }
+        Signal { name: "bottomInsetChanged"; revision: 5 }
     }
     Component {
         name: "QQuickDayOfWeekRow"

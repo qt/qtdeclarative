@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.5
-import QtQuick.Window 2.5
-import QtTest 1.0
+import QtQuick 2.13
+import QtQuick.Controls 2.13
+import QtQuick.Window 2.13
+import QtTest 1.13
 import Qt.labs.settings 1.0
 
 TestCase {
@@ -427,15 +427,45 @@ TestCase {
         compare(item2.height, testCase.height)
     }
 
-    function test_useAttachedPropertiesIncorrectly() {
-        var control = createTemporaryObject(splitViewComponent, testCase)
-        verify(control)
+    Component {
+        id: itemComponent
+        Item {}
+    }
 
-        var item = rectangleComponent.createObject(control, { implicitWidth: 25, color: "salmon" })
-        verify(item)
+    Component {
+        id: objectComponent
+        QtObject {}
+    }
 
-        ignoreWarning(/.*SplitView: attached properties must be accessed through a direct child of SplitView/)
-        testCase.SplitView.fillWidth = true;
+    function test_useAttachedPropertiesIncorrectly_data() {
+        var properties = [ "fillWidth", "fillHeight", "minimumWidth", "minimumHeight",
+            "preferredWidth", "preferredHeight",  "maximumWidth", "maximumHeight" ]
+
+        var data = []
+
+        for (var i = 0; i < properties.length; ++i) {
+            var property = properties[i]
+            data.push({ tag: "Item," + property, component: itemComponent, property: property,
+                expectedWarning: /.*SplitView: attached properties must be accessed through a direct child of SplitView/ })
+        }
+
+        for (i = 0; i < properties.length; ++i) {
+            property = properties[i]
+            data.push({ tag: "QtObject," + property, component: objectComponent, property: property,
+                expectedWarning: /.*SplitView: attached properties can only be used on Items/ })
+        }
+
+        return data
+    }
+
+    function test_useAttachedPropertiesIncorrectly(data) {
+        // The object (whatever it may be) is not managed by a SplitView.
+        var object = createTemporaryObject(data.component, testCase, { objectName: data.tag })
+        verify(object)
+
+        ignoreWarning(data.expectedWarning)
+        // Should warn, but not crash.
+        object.SplitView[data.property] = 1;
     }
 
     function test_sizes_data() {

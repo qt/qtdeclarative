@@ -344,15 +344,17 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickPopupAnchors>();
     qmlRegisterType<QQuickRangeSlider, 5>(uri, 2, 5, "RangeSlider");
     qmlRegisterType<QQuickSlider, 5>(uri, 2, 5, "Slider");
-    qmlRegisterType<QQuickSplitView, 5>(uri, 2, 5, "SplitView");
-    qmlRegisterType<QQuickSplitViewAttached>();
-    qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 5, "SplitHandle",
-        QStringLiteral("SplitHandle is only available as an attached property."));
-    qmlRegisterType<QQuickSplitHandleAttached>();
     qmlRegisterType<QQuickSpinBox, 5>(uri, 2, 5, "SpinBox");
     qmlRegisterType<QQuickTextArea, 5>(uri, 2, 5, "TextArea");
     qmlRegisterType<QQuickTextField, 5>(uri, 2, 5, "TextField");
     qmlRegisterType<QQuickToolTip, 5>(uri, 2, 5, "ToolTip");
+
+    // QtQuick.Templates 2.13 (new types and revisions in Qt 5.13)
+    qmlRegisterType<QQuickSplitView>(uri, 2, 13, "SplitView");
+    qmlRegisterType<QQuickSplitViewAttached>();
+    qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
+        QStringLiteral("SplitHandle is only available as an attached property."));
+    qmlRegisterType<QQuickSplitHandleAttached>();
 }
 
 QT_END_NAMESPACE

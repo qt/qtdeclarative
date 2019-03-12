@@ -7,7 +7,7 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable Qt.labs.platform 1.0'
 
 Module {
-    dependencies: ["QtQuick 2.8"]
+    dependencies: ["QtQuick 2.0"]
     Component {
         name: "QPlatformDialogHelper"
         prototype: "QObject"
@@ -61,6 +61,18 @@ Module {
                 "Stretch": 536870912,
                 "Reverse": 1073741824,
                 "EOL": -1
+            }
+        }
+        Enum {
+            name: "ButtonLayout"
+            values: {
+                "UnknownLayout": -1,
+                "WinLayout": 0,
+                "MacLayout": 1,
+                "KdeLayout": 2,
+                "GnomeLayout": 3,
+                "MacModelessLayout": 4,
+                "AndroidLayout": 5
             }
         }
         Signal { name: "accept" }
@@ -182,6 +194,12 @@ Module {
         Property { name: "options"; type: "QFontDialogOptions::FontDialogOptions" }
     }
     Component {
+        name: "QQuickPlatformIcon"
+        Property { name: "source"; type: "QUrl" }
+        Property { name: "name"; type: "string" }
+        Property { name: "mask"; type: "bool" }
+    }
+    Component {
         name: "QQuickPlatformMenu"
         defaultProperty: "data"
         prototype: "QObject"
@@ -206,8 +224,10 @@ Module {
         Property { name: "iconSource"; type: "QUrl" }
         Property { name: "iconName"; type: "string" }
         Property { name: "font"; type: "QFont" }
+        Property { name: "icon"; revision: 1; type: "QQuickPlatformIcon" }
         Signal { name: "aboutToShow" }
         Signal { name: "aboutToHide" }
+        Signal { name: "iconChanged"; revision: 1 }
         Method {
             name: "open"
             Parameter { name: "args"; type: "QQmlV4Function"; isPointer: true }
@@ -284,8 +304,10 @@ Module {
         Property { name: "iconName"; type: "string" }
         Property { name: "shortcut"; type: "QVariant" }
         Property { name: "font"; type: "QFont" }
+        Property { name: "icon"; revision: 1; type: "QQuickPlatformIcon" }
         Signal { name: "triggered" }
         Signal { name: "hovered" }
+        Signal { name: "iconChanged"; revision: 1 }
         Method { name: "toggle" }
     }
     Component {
@@ -422,8 +444,11 @@ Module {
     Component {
         name: "QQuickPlatformSystemTrayIcon"
         prototype: "QObject"
-        exports: ["Qt.labs.platform/SystemTrayIcon 1.0"]
-        exportMetaObjectRevisions: [0]
+        exports: [
+            "Qt.labs.platform/SystemTrayIcon 1.0",
+            "Qt.labs.platform/SystemTrayIcon 1.1"
+        ]
+        exportMetaObjectRevisions: [0, 1]
         Property { name: "available"; type: "bool"; isReadonly: true }
         Property { name: "supportsMessages"; type: "bool"; isReadonly: true }
         Property { name: "visible"; type: "bool" }
@@ -431,11 +456,15 @@ Module {
         Property { name: "iconName"; type: "string" }
         Property { name: "tooltip"; type: "string" }
         Property { name: "menu"; type: "QQuickPlatformMenu"; isPointer: true }
+        Property { name: "geometry"; revision: 1; type: "QRect"; isReadonly: true }
+        Property { name: "icon"; revision: 1; type: "QQuickPlatformIcon" }
         Signal {
             name: "activated"
             Parameter { name: "reason"; type: "QPlatformSystemTrayIcon::ActivationReason" }
         }
         Signal { name: "messageClicked" }
+        Signal { name: "geometryChanged"; revision: 1 }
+        Signal { name: "iconChanged"; revision: 1 }
         Method { name: "show" }
         Method { name: "hide" }
         Method {
