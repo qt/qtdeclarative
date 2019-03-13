@@ -464,27 +464,10 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(centroid().sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
         // apply rotation + scaling around the centroid - then apply translation.
-        QMatrix4x4 mat, startMatrix;
-
-        const QVector3D centroidParentVector(centroidParentPos);
-        mat.translate(centroidParentVector);
-        mat.rotate(float(m_activeRotation), 0, 0, 1);
-        mat.scale(float(m_activeScale));
-        mat.translate(-centroidParentVector);
-        mat.translate(QVector3D(m_activeTranslation));
-
-        QVector3D xformOrigin(target()->transformOriginPoint());
-        startMatrix.translate(float(m_startPos.x()), float(m_startPos.y()));
-        startMatrix.translate(xformOrigin);
-        startMatrix.scale(float(m_startScale));
-        startMatrix.rotate(float(m_startRotation), 0, 0, -1);
-        startMatrix.translate(-xformOrigin);
-
-        mat = mat * startMatrix;
-
-        QPointF xformOriginPoint = target()->transformOriginPoint();
-        QPointF pos = mat * xformOriginPoint;
-        pos -= xformOriginPoint;
+        QPointF pos = QQuickItemPrivate::get(target())->adjustedPosForTransform(centroidParentPos,
+                                                                                m_startPos, m_activeTranslation,
+                                                                                m_startScale, m_activeScale,
+                                                                                m_startRotation, m_activeRotation);
 
         if (xAxis()->enabled())
             pos.setX(qBound(xAxis()->minimum(), pos.x(), xAxis()->maximum()));
