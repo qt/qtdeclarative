@@ -223,41 +223,9 @@ ReturnedValue NumberPrototype::method_toString(const FunctionObject *b, const Va
             return v4->throwError(QStringLiteral("Number.prototype.toString: %0 is not a valid radix").arg(radix));
         }
 
-        if (std::isnan(num)) {
-            return Encode(v4->newString(QStringLiteral("NaN")));
-        } else if (qt_is_inf(num)) {
-            return Encode(v4->newString(QLatin1String(num < 0 ? "-Infinity" : "Infinity")));
-        }
-
-        if (radix != 10) {
-            QString str;
-            bool negative = false;
-            if (num < 0) {
-                negative = true;
-                num = -num;
-            }
-            double frac = num - std::floor(num);
-            num = Value::toInteger(num);
-            do {
-                char c = (char)std::fmod(num, radix);
-                c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                str.prepend(QLatin1Char(c));
-                num = std::floor(num / radix);
-            } while (num != 0);
-            if (frac != 0) {
-                str.append(QLatin1Char('.'));
-                do {
-                    frac = frac * radix;
-                    char c = (char)std::floor(frac);
-                    c = (c < 10) ? (c + '0') : (c - 10 + 'a');
-                    str.append(QLatin1Char(c));
-                    frac = frac - std::floor(frac);
-                } while (frac != 0);
-            }
-            if (negative)
-                str.prepend(QLatin1Char('-'));
-            return Encode(v4->newString(str));
-        }
+        QString str;
+        RuntimeHelpers::numberToString(&str, num, radix);
+        return Encode(v4->newString(str));
     }
 
     return Encode(Value::fromDouble(num).toString(v4));

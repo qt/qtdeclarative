@@ -298,13 +298,22 @@ void RuntimeHelpers::numberToString(QString *result, double num, int radix)
 
     if (frac != 0) {
         result->append(QLatin1Char('.'));
+        double magnitude = 1;
+        double next = frac;
         do {
-            frac = frac * radix;
-            char c = (char)::floor(frac);
+            next *= radix;
+            const int floored = ::floor(next);
+            char c = char(floored);
             c = (c < 10) ? (c + '0') : (c - 10 + 'a');
             result->append(QLatin1Char(c));
-            frac = frac - ::floor(frac);
-        } while (frac != 0);
+            magnitude /= radix;
+            frac -= double(floored) * magnitude;
+            next -= double(floored);
+
+            // The next digit still makes a difference
+            // if a value of "radix" for it would change frac.
+            // Otherwise we've reached the limit of numerical precision.
+        } while (frac > 0 && frac - magnitude != frac);
     }
 
     if (negative)
@@ -1600,12 +1609,14 @@ ReturnedValue Runtime::method_tailCall(CppStackFrame *frame, ExecutionEngine *en
     const Value &thisObject = tos[StackOffsets::tailCall_thisObject];
     Value *argv = reinterpret_cast<Value *>(frame->jsFrame) + tos[StackOffsets::tailCall_argv].int_32();
     int argc = tos[StackOffsets::tailCall_argc].int_32();
+    Q_ASSERT(argc >= 0);
 
     if (!function.isFunctionObject())
         return engine->throwTypeError();
 
     const FunctionObject &fo = static_cast<const FunctionObject &>(function);
-    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()) {
+    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()
+            || unsigned(argc) > fo.formalParameterCount()) {
         // Cannot tailcall, do a normal call:
         return fo.call(&thisObject, argv, argc);
     }

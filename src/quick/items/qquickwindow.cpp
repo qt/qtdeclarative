@@ -1613,7 +1613,9 @@ bool QQuickWindow::event(QEvent *e)
         bool accepted = enter->isAccepted();
         bool delivered = d->deliverHoverEvent(d->contentItem, enter->windowPos(), d->lastMousePosition,
             QGuiApplication::keyboardModifiers(), 0L, accepted);
+        d->lastMousePosition = enter->windowPos();
         enter->setAccepted(accepted);
+        d->updateCursor(mapFromGlobal(QCursor::pos()));
         return delivered;
     }
         break;
@@ -2527,18 +2529,22 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QQuickPointerEvent *event, 
     int pointCount = event->pointCount();
     QVector<QQuickItem *> targetItems;
     bool isTouchEvent = (event->asPointerTouchEvent() != nullptr);
-    if (isTouchEvent && event->isPressEvent() && isDeliveringTouchAsMouse() &&
-            pointerEventInstance(touchMouseDevice)->pointById(touchMouseId)->grabberPointerHandler()) {
-        // When a second point is pressed, if the first point's existing
-        // grabber was a pointer handler while a filtering parent is filtering
-        // the same first point _as mouse_: we're starting over with delivery,
-        // so we need to allow the second point to now be sent as a synth-mouse
-        // instead of the first one, so that filtering parents (maybe even the
-        // same one) can get a chance to see the second touchpoint as a
-        // synth-mouse and perhaps grab it.  Ideally we would always do this
-        // when a new touchpoint is pressed, but this compromise fixes
-        // QTBUG-70998 and avoids breaking tst_FlickableInterop::touchDragSliderAndFlickable
-        cancelTouchMouseSynthesis();
+    if (isTouchEvent && event->isPressEvent() && isDeliveringTouchAsMouse()) {
+        if (const QQuickEventPoint *point = pointerEventInstance(touchMouseDevice)->pointById(touchMouseId)) {
+            // When a second point is pressed, if the first point's existing
+            // grabber was a pointer handler while a filtering parent is filtering
+            // the same first point _as mouse_: we're starting over with delivery,
+            // so we need to allow the second point to now be sent as a synth-mouse
+            // instead of the first one, so that filtering parents (maybe even the
+            // same one) can get a chance to see the second touchpoint as a
+            // synth-mouse and perhaps grab it.  Ideally we would always do this
+            // when a new touchpoint is pressed, but this compromise fixes
+            // QTBUG-70998 and avoids breaking tst_FlickableInterop::touchDragSliderAndFlickable
+            if (point->grabberPointerHandler())
+                cancelTouchMouseSynthesis();
+        } else {
+            qCWarning(DBG_TOUCH_TARGET) << "during delivery of touch press, synth-mouse ID" << touchMouseId << "is missing from" << event;
+        }
     }
     for (int i = 0; i < pointCount; ++i) {
         auto point = event->point(i);

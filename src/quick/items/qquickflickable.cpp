@@ -786,7 +786,7 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.vTime = d->timeline.time();
     if (isMoving() || isFlicking())
         movementEnding(true, false);
-    if (-pos != d->hData.move.value())
+    if (!qFuzzyCompare(-pos, d->hData.move.value()))
         d->hData.move.setValue(-pos);
 }
 
@@ -804,7 +804,7 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.vTime = d->timeline.time();
     if (isMoving() || isFlicking())
         movementEnding(false, true);
-    if (-pos != d->vData.move.value())
+    if (!qFuzzyCompare(-pos, d->vData.move.value()))
         d->vData.move.setValue(-pos);
 }
 

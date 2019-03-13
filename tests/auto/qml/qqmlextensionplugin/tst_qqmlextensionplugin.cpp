@@ -109,7 +109,10 @@ void tst_qqmlextensionplugin::iidCheck()
 
     if (qobject_cast<QQmlExtensionPlugin *>(loader.instance())) {
         QString iid = loader.metaData().value(QStringLiteral("IID")).toString();
-        QCOMPARE(iid, QLatin1String(QQmlExtensionInterface_iid));
+        if (iid == QLatin1String(QQmlExtensionInterface_iid_old))
+            qWarning() << "Old extension plugin found. Update the IID" << loader.metaData();
+        else
+            QCOMPARE(iid, QLatin1String(QQmlExtensionInterface_iid));
     }
 }
 

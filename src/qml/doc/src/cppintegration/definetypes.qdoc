@@ -66,6 +66,8 @@ this manner, but the type cannot be used instantiated as a QML object type
 from QML. This is useful, for example, if a type has enums that should be
 exposed to QML but the type itself should not be instantiable.
 
+For a quick guide to choosing the correct approach to expose C++ types to QML,
+see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
 \section2 Registering an Instantiable Object Type
 

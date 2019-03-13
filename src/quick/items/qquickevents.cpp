@@ -864,8 +864,11 @@ void QQuickEventPoint::setGrabberItem(QQuickItem *grabber)
             QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(grabber->window());
             windowPriv->sendUngrabEvent(oldGrabberItem, windowPriv->isDeliveringTouchAsMouse());
         }
-        for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
-            passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
+        if (grabber) {
+            for (QPointer<QQuickPointerHandler> passiveGrabber : m_passiveGrabbers)
+                if (passiveGrabber)
+                    passiveGrabber->onGrabChanged(passiveGrabber, OverrideGrabPassive, this);
+        }
     }
 }
 

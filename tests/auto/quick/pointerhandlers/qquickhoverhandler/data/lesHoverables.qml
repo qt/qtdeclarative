@@ -90,7 +90,7 @@ Rectangle {
         id: paddle
         objectName: "paddle"
         width: 100
-        height: 40
+        height: 100
         color: paddleHH.hovered ? "indianred" : "#888"
         x: (parent.width - width) / 2
         y: parent.height - 100

@@ -353,6 +353,7 @@ void QQmlDelegateModel::componentComplete()
     \l{QtQuick.XmlListModel::XmlListModel}{XmlListModel}.
 
     \sa {qml-data-models}{Data Models}
+    \keyword dm-model-property
 */
 QVariant QQmlDelegateModel::model() const
 {
@@ -493,11 +494,10 @@ void QQmlDelegateModel::setDelegate(QQmlComponent *delegate)
     \c view.qml:
     \snippet delegatemodel/delegatemodel_rootindex/view.qml 0
 
-    If the \l model is a QAbstractItemModel subclass, the delegate can also
-    reference a \c hasModelChildren property (optionally qualified by a
-    \e model. prefix) that indicates whether the delegate's model item has
-    any child nodes.
-
+    If the \l {dm-model-property}{model} is a QAbstractItemModel subclass,
+    the delegate can also reference a \c hasModelChildren property (optionally
+    qualified by a \e model. prefix) that indicates whether the delegate's
+    model item has any child nodes.
 
     \sa modelIndex(), parentModelIndex()
 */
@@ -699,6 +699,7 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
     The following example illustrates using groups to select items in a model.
 
     \snippet delegatemodel/delegatemodelgroup.qml 0
+    \keyword dm-groups-property
 */
 
 QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
@@ -2274,7 +2275,7 @@ void QQmlDelegateModelAttached::resetCurrentIndex()
 }
 
 /*!
-    \qmlattachedproperty int QtQml.Models::DelegateModel::model
+    \qmlattachedproperty model QtQml.Models::DelegateModel::model
 
     This attached property holds the data model this delegate instance belongs to.
 
@@ -2482,7 +2483,8 @@ void QQmlDelegateModelGroupPrivate::destroyingPackage(QQuickPackage *package)
     information about group membership and indexes as well as model data.  In combination
     with the move() function this can be used to implement view sorting, with remove() to filter
     items out of a view, or with setGroups() and \l Package delegates to categorize items into
-    different views.
+    different views. Different groups can only be sorted independently if they are disjunct. Moving
+    an item in one group will also move it in all other groups it is a part of.
 
     Data from models can be supplemented by inserting data directly into a DelegateModelGroup
     with the insert() function.  This can be used to introduce mock items into a view, or
@@ -3094,6 +3096,11 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
     \qmlmethod QtQml.Models::DelegateModelGroup::move(var from, var to, int count)
 
     Moves \a count at \a from in a group \a to a new position.
+
+    \note The DelegateModel acts as a proxy model: it holds the delegates in a
+    different order than the \l{dm-model-property}{underlying model} has them.
+    Any subsequent changes to the underlying model will not undo whatever
+    reordering you have done via this function.
 */
 
 void QQmlDelegateModelGroup::move(QQmlV4Function *args)

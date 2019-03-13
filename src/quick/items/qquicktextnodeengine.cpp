@@ -967,9 +967,14 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     mergeFormats(block.layout(), &colorChanges);
 
-    QPointF blockPosition = textDocument->documentLayout()->blockBoundingRect(block).topLeft() + position;
+    const QTextCharFormat charFormat = block.charFormat();
+    const QRectF blockBoundingRect = textDocument->documentLayout()->blockBoundingRect(block).translated(position);
+
+    if (charFormat.background().style() != Qt::NoBrush)
+        m_backgrounds.append(qMakePair(blockBoundingRect, charFormat.background().color()));
+
     if (QTextList *textList = block.textList()) {
-        QPointF pos = blockPosition;
+        QPointF pos = blockBoundingRect.topLeft();
         QTextLayout *layout = block.layout();
         if (layout->lineCount() > 0) {
             QTextLine firstLine = layout->lineAt(0);
@@ -982,7 +987,6 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             if (block.textDirection() == Qt::RightToLeft)
                 pos.rx() += textRect.width();
 
-            const QTextCharFormat charFormat = block.charFormat();
             QFont font(charFormat.font());
             QFontMetricsF fontMetrics(font);
             QTextListFormat listFormat = textList->format();
@@ -1043,11 +1047,11 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
         int fontHeight = fontMetrics.descent() + fontMetrics.ascent();
         int valign = charFormat.verticalAlignment();
         if (valign == QTextCharFormat::AlignSuperScript)
-            setPosition(QPointF(blockPosition.x(), blockPosition.y() - fontHeight / 2));
+            setPosition(QPointF(blockBoundingRect.x(), blockBoundingRect.y() - fontHeight / 2));
         else if (valign == QTextCharFormat::AlignSubScript)
-            setPosition(QPointF(blockPosition.x(), blockPosition.y() + fontHeight / 6));
+            setPosition(QPointF(blockBoundingRect.x(), blockBoundingRect.y() + fontHeight / 6));
         else
-            setPosition(blockPosition);
+            setPosition(blockBoundingRect.topLeft());
 
         if (text.contains(QChar::ObjectReplacementCharacter)) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
@@ -1101,7 +1105,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
 #if QT_CONFIG(im)
     if (preeditLength >= 0 && textPos <= block.position() + preeditPosition) {
-        setPosition(blockPosition);
+        setPosition(blockBoundingRect.topLeft());
         textPos = block.position() + preeditPosition;
         QTextLine line = block.layout()->lineForTextPosition(preeditPosition);
         if (!currentLine().isValid()
