@@ -4,6 +4,7 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
+    labsanimation \
     labsmodels
 
 qtConfig(thread): SUBDIRS += folderlistmodel

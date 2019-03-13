@@ -29,6 +29,7 @@ PRIVATETESTS += \
     qquickanimations \
     qquickapplication \
     qquickbehaviors \
+    qquickboundaryrule \
     qquickfontloader \
     qquickfontloader_static \
     qquickfontmetrics \
