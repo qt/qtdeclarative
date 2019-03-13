@@ -59,9 +59,9 @@ receiving this signal should be \c onClicked. In the example below, whenever
 the button is clicked, the \c onClicked handler is invoked, applying a random
 color to the parent \l Rectangle:
 
-\qml
-import QtQuick 2.\QtMinorVersion
-import QtQuick.Controls 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
+import QtQuick.Controls 2.\1
 
 Rectangle {
     id: rect
@@ -87,8 +87,8 @@ these signals are written in the form \e on<Property>Changed, where
 
 For example, the \l MouseArea type has a \l {MouseArea::pressed}{pressed} property. To receive a notification whenever this property changes, write a signal handler named \c onPressedChanged:
 
-\qml
-import QtQuick 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
 
 Rectangle {
     id: rect
@@ -116,9 +116,9 @@ received by the root \l Rectangle instead, by placing the \c onClicked handler
 in a \l Connections object that has its \l {Connections::target}{target} set to
 the \c button:
 
-\qml
-import QtQuick 2.\QtMinorVersion
-import QtQuick.Controls 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
+import QtQuick.Controls 2.\1
 
 Rectangle {
     id: rect
@@ -151,8 +151,8 @@ For example, \l{Component::completed}{Component.onCompleted} is an attached
 signal handler. It is often used to execute some JavaScript code when its
 creation process is complete. Here is an example:
 
-\qml
-import QtQuick 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
 
 Rectangle {
     width: 200; height: 200
@@ -195,9 +195,9 @@ root \l Rectangle object has an \c activated signal, which is emitted whenever t
 child \l TapHandler is \c tapped. In this particular example the activated signal
 is emitted with the x and y coordinates of the mouse click:
 
-\qml
+\qml \QtMinorVersion
 // SquareButton.qml
-import QtQuick 2.\QtMinorVersion
+import QtQuick 2.\1
 
 Rectangle {
     id: root
@@ -237,8 +237,8 @@ signal to be received by a method instead of a signal handler.
 
 Below, the \c messageReceived signal is connected to three methods using the \c connect() method:
 
-\qml
-import QtQuick 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
 
 Rectangle {
     id: relay
@@ -289,8 +289,8 @@ Rectangle {
 By connecting signals to other signals, the \c connect() method can form different
 signal chains.
 
-\qml
-import QtQuick 2.\QtMinorVersion
+\qml \QtMinorVersion
+import QtQuick 2.\1
 
 Rectangle {
     id: forwarder

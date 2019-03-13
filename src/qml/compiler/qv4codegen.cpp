@@ -727,9 +727,6 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     bytecodeGenerator->addInstruction(iteratorObjInstr);
     iterator.storeConsumeAccumulator();
 
-    bool hasRest = false;
-
-    BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
     {
         auto cleanup = [this, iterator, iteratorDone]() {
             iterator.loadInAccumulator();
@@ -760,27 +757,17 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
                 Reference::fromConst(this, Encode(true)).storeOnStack(iteratorDone.stackSlot());
                 bytecodeGenerator->addInstruction(Instruction::DestructureRestElement());
                 initializeAndDestructureBindingElement(e, Reference::fromAccumulator(this), isDefinition);
-                hasRest = true;
             } else {
                 Instruction::IteratorNext next;
                 next.value = iteratorValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
                 initializeAndDestructureBindingElement(e, iteratorValue, isDefinition);
-                if (hasError) {
-                    end.link();
+                if (hasError)
                     return;
-                }
             }
         }
-
-        if (hasRest)
-            // no need to close the iterator
-            bytecodeGenerator->jump().link(end);
     }
-
-
-    end.link();
 }
 
 void Codegen::destructurePattern(Pattern *p, const Reference &rhs)
@@ -1220,7 +1207,6 @@ bool Codegen::visit(ArrayPattern *ast)
 
             BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
             BytecodeGenerator::Label end = bytecodeGenerator->newLabel();
-            BytecodeGenerator::Label done = bytecodeGenerator->newLabel();
 
             {
                 auto cleanup = [this, iterator, iteratorDone]() {
@@ -1230,12 +1216,6 @@ bool Codegen::visit(ArrayPattern *ast)
                     bytecodeGenerator->addInstruction(close);
                 };
                 ControlFlowLoop flow(this, &end, &in, cleanup);
-                bytecodeGenerator->jump().link(in);
-
-                BytecodeGenerator::Label body = bytecodeGenerator->label();
-
-                lhsValue.loadInAccumulator();
-                pushAccumulator();
 
                 in.link();
                 iterator.loadInAccumulator();
@@ -1243,13 +1223,14 @@ bool Codegen::visit(ArrayPattern *ast)
                 next.value = lhsValue.stackSlot();
                 next.done = iteratorDone.stackSlot();
                 bytecodeGenerator->addInstruction(next);
-                bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpFalse()).link(body);
-                bytecodeGenerator->jump().link(done);
+                bytecodeGenerator->addTracingJumpInstruction(Instruction::JumpTrue()).link(end);
 
+                lhsValue.loadInAccumulator();
+                pushAccumulator();
+
+                bytecodeGenerator->jump().link(in);
                 end.link();
             }
-
-            done.link();
         } else {
             RegisterScope innerScope(this);
             Reference expr = expression(it->element->initializer);

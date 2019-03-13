@@ -141,7 +141,7 @@
     \l QUICK_TEST_MAIN_WITH_SETUP macro can be used. This can be useful for
     setting context properties on the QML engine, amongst other things.
 
-    The macro is identical to \l QUICK_TEST_MAIN, except that it takes an
+    The macro is identical to \c QUICK_TEST_MAIN, except that it takes an
     additional \c QObject* argument. The test framework will call slots and
     invokable functions with the following names:
 
