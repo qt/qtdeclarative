@@ -267,7 +267,6 @@ void QQuickPinchHandler::onActiveChanged()
 {
     QQuickMultiPointHandler::onActiveChanged();
     if (active()) {
-        m_startMatrix = QMatrix4x4();
         m_startAngles = angles(m_centroid.sceneGrabPosition());
         m_startDistance = averageTouchPointDistance(m_centroid.sceneGrabPosition());
         m_activeRotation = 0;
@@ -275,12 +274,7 @@ void QQuickPinchHandler::onActiveChanged()
         if (const QQuickItem *t = target()) {
             m_startScale = t->scale(); // TODO incompatible with independent x/y scaling
             m_startRotation = t->rotation();
-            QVector3D xformOrigin(t->transformOriginPoint());
-            m_startMatrix.translate(float(t->x()), float(t->y()));
-            m_startMatrix.translate(xformOrigin);
-            m_startMatrix.scale(float(m_startScale));
-            m_startMatrix.rotate(float(m_startRotation), 0, 0, -1);
-            m_startMatrix.translate(-xformOrigin);
+            m_startPos = t->position();
         } else {
             m_startScale = m_accumulatedScale;
             m_startRotation = 0;
@@ -470,7 +464,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         const QPointF centroidStartParentPos = target()->parentItem()->mapFromScene(m_centroid.sceneGrabPosition());
         m_activeTranslation = QVector2D(centroidParentPos - centroidStartParentPos);
         // apply rotation + scaling around the centroid - then apply translation.
-        QMatrix4x4 mat;
+        QMatrix4x4 mat, startMatrix;
 
         const QVector3D centroidParentVector(centroidParentPos);
         mat.translate(centroidParentVector);
@@ -479,7 +473,14 @@ void QQuickPinchHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         mat.translate(-centroidParentVector);
         mat.translate(QVector3D(m_activeTranslation));
 
-        mat = mat * m_startMatrix;
+        QVector3D xformOrigin(target()->transformOriginPoint());
+        startMatrix.translate(float(m_startPos.x()), float(m_startPos.y()));
+        startMatrix.translate(xformOrigin);
+        startMatrix.scale(float(m_startScale));
+        startMatrix.rotate(float(m_startRotation), 0, 0, -1);
+        startMatrix.translate(-xformOrigin);
+
+        mat = mat * startMatrix;
 
         QPointF xformOriginPoint = target()->transformOriginPoint();
         QPointF pos = mat * xformOriginPoint;

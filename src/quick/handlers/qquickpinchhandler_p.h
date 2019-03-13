@@ -158,7 +158,6 @@ private:
     qreal m_accumulatedStartCentroidDistance = 0;
     QVector<PointData> m_startAngles;
     QQuickMatrix4x4 m_transform;
-    QMatrix4x4 m_startMatrix;
 };
 
 QT_END_NAMESPACE
