@@ -120,7 +120,7 @@ interpolation behaviors are definable. The
 {Animation and Transitions} article has more information about creating state
 animations.
 
-The \l {animation/states}{States and Transitions example}
+The \l {Qt Quick Examples - Animation}{Animation} example
 demonstrates how to declare a basic set of states and apply animated
 transitions between them.
 
