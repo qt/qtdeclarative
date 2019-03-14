@@ -525,7 +525,7 @@ public:
 
         metaObject.reset(builder.toMetaObject());
         *static_cast<QMetaObject *>(this) = *metaObject;
-        propertyCache = new QQmlPropertyCache(metaObject.data(), model.modelItemRevision);
+        propertyCache.adopt(new QQmlPropertyCache(metaObject.data(), model.modelItemRevision));
     }
 };
 
@@ -659,8 +659,8 @@ public:
     {
         VDMListDelegateDataType *dataType = const_cast<VDMListDelegateDataType *>(this);
         if (!propertyCache) {
-            dataType->propertyCache = new QQmlPropertyCache(
-                        &QQmlDMListAccessorData::staticMetaObject, model.modelItemRevision);
+            dataType->propertyCache.adopt(new QQmlPropertyCache(
+                        &QQmlDMListAccessorData::staticMetaObject, model.modelItemRevision));
         }
 
         return new QQmlDMListAccessorData(
