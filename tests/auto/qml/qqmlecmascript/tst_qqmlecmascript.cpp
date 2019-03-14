@@ -365,6 +365,7 @@ private slots:
     void numberToStringWithRadix();
     void tailCallWithArguments();
     void deleteSparseInIteration();
+    void saveAccumulatorBeforeToInt32();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8927,6 +8928,17 @@ void tst_qqmlecmascript::deleteSparseInIteration()
     QCOMPARE(value.property("0").toInt(), 1);
     QCOMPARE(value.property("1").toInt(), 2);
     QCOMPARE(value.property("2").toInt(), 4096);
+}
+
+void tst_qqmlecmascript::saveAccumulatorBeforeToInt32()
+{
+    QJSEngine engine;
+
+    // Infinite recursion produces a range error, but should not crash.
+    // Also, any GC runs in between should not trash the temporary results of "a+a".
+    const QJSValue value = engine.evaluate("function a(){a(a&a+a)}a()");
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
