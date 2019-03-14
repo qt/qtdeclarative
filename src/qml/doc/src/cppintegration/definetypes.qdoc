@@ -142,9 +142,10 @@ types:
 \li qmlRegisterType() (with no parameters) registers a C++ type that is not
 instantiable and cannot be referred to from QML. This enables the engine to
 coerce any inherited types that are instantiable from QML.
-\li qmlRegisterInterface() registers a Qt interface type with a specific QML
-type name. The type is not instantiable from QML but can be referred to by its
-type name.
+\li qmlRegisterInterface() registers an existing Qt interface type. The type is
+not instantiable from QML, and you cannot declare QML properties with it. Using
+C++ properties of this type from QML will do the expected interface casts,
+though.
 \li qmlRegisterUncreatableType() registers a named C++ type that is not
 instantiable but should be identifiable as a type to the QML type system. This
 is useful if a type's enums or attached properties should be accessible from QML
