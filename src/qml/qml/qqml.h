@@ -584,7 +584,6 @@ namespace QtQml {
                                                       const QMetaObject *, bool create);
 #ifndef Q_QDOC
 }
-#endif
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
@@ -593,6 +592,8 @@ QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
 using namespace QtQml;
 
 QT_WARNING_POP
+
+#endif // Q_QDOC
 
 //The C++ version of protected namespaces in qmldir
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
