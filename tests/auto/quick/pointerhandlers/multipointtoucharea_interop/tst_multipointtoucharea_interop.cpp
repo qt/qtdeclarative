@@ -55,6 +55,7 @@ private slots:
 
     void touchDrag();
     void touchesThenPinch();
+    void unloadHandlerWithPassiveGrab();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -280,6 +281,24 @@ void tst_MptaInterop::touchesThenPinch()
     touch.release(2, p2).commit();
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(mptaReleasedSpy.count(), 1);
+}
+
+void tst_MptaInterop::unloadHandlerWithPassiveGrab()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "unloadHandlerOnPress.qml");
+    QQuickView * window = windowPtr.data();
+
+    QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
+    QVERIFY(handler);
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta);
+
+    QPoint point(90, 90);
+    QTest::mousePress(window, Qt::LeftButton, 0, point);
+    QCOMPARE(window->mouseGrabberItem(), mpta);
+    QTRY_VERIFY(handler.isNull()); // it got unloaded
+    QTest::mouseRelease(window, Qt::LeftButton, 0, point); // QTBUG-73819: don't crash
 }
 
 QTEST_MAIN(tst_MptaInterop)

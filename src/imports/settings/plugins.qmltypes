@@ -11,13 +11,10 @@ Module {
     Component {
         name: "QQmlSettings"
         prototype: "QObject"
-        exports: [
-            "Qt.labs.settings/Settings 1.0",
-            "Qt.labs.settings/Settings 1.1"
-        ]
-        exportMetaObjectRevisions: [0, 1]
+        exports: ["Qt.labs.settings/Settings 1.0"]
+        exportMetaObjectRevisions: [0]
         Property { name: "category"; type: "string" }
-        Property { name: "fileName"; revision: 1; type: "string" }
+        Property { name: "fileName"; type: "string" }
         Method {
             name: "value"
             type: "QVariant"
@@ -34,5 +31,6 @@ Module {
             Parameter { name: "key"; type: "string" }
             Parameter { name: "value"; type: "QVariant" }
         }
+        Method { name: "sync" }
     }
 }

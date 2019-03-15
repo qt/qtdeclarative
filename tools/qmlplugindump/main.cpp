@@ -163,10 +163,6 @@ public:
 */
 static QHash<QByteArray, QSet<QQmlType> > qmlTypesByCppName;
 
-/* A composite type is completely specified by name, major version and minor version.
-*/
-static QMap<QString, QSet<QQmlType> > qmlTypesByCompositeName;
-
 static QHash<QByteArray, QByteArray> cppToId;
 
 /* Takes a C++ type name, such as Qt::LayoutDirection or QString and
@@ -208,14 +204,15 @@ QByteArray convertToId(const QMetaObject *mo)
 
 
 // Collect all metaobjects for types registered with qmlRegisterType() without parameters
-void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<const QMetaObject *>& metas ) {
+void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<const QMetaObject *>& metas,
+                                               QMap<QString, QSet<QQmlType>> &compositeTypes) {
     const auto qmlAllTypes = QQmlMetaType::qmlAllTypes();
     for (const QQmlType &ty : qmlAllTypes) {
         if (!metas.contains(ty.baseMetaObject())) {
             if (!ty.isComposite()) {
                 collectReachableMetaObjects(engine, ty, &metas);
             } else {
-                qmlTypesByCompositeName[ty.elementName()].insert(ty);
+                compositeTypes[ty.elementName()].insert(ty);
             }
        }
     }
@@ -224,6 +221,7 @@ void collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate *engine, QSet<c
 QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
                                                       QSet<const QMetaObject *> &noncreatables,
                                                       QSet<const QMetaObject *> &singletons,
+                                                      QMap<QString, QSet<QQmlType>> &compositeTypes,
                                                       const QList<QQmlType> &skip = QList<QQmlType>())
 {
     QSet<const QMetaObject *> metas;
@@ -239,7 +237,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
             qmlTypesByCppName[ty.baseMetaObject()->className()].insert(ty);
             collectReachableMetaObjects(QQmlEnginePrivate::get(engine), ty, &metas);
         } else {
-            qmlTypesByCompositeName[ty.elementName()].insert(ty);
+            compositeTypes[ty.elementName()].insert(ty);
         }
     }
 
@@ -304,7 +302,7 @@ QSet<const QMetaObject *> collectReachableMetaObjects(QQmlEngine *engine,
         }
     }
 
-    collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate::get(engine), metas);
+    collectReachableMetaObjectsWithoutQmlName(QQmlEnginePrivate::get(engine), metas, compositeTypes);
 
     return metas;
 }
@@ -1184,7 +1182,8 @@ int main(int argc, char *argv[])
     // find all QMetaObjects reachable from the builtin module
     QSet<const QMetaObject *> uncreatableMetas;
     QSet<const QMetaObject *> singletonMetas;
-    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas);
+    QMap<QString, QSet<QQmlType>> defaultCompositeTypes;
+    QSet<const QMetaObject *> defaultReachable = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultCompositeTypes);
     QList<QQmlType> defaultTypes = QQmlMetaType::qmlTypes();
 
     // add some otherwise unreachable QMetaObjects
@@ -1194,6 +1193,9 @@ int main(int argc, char *argv[])
 
     // this will hold the meta objects we want to dump information of
     QSet<const QMetaObject *> metas;
+
+    // composite types we want to dump information of
+    QMap<QString, QSet<QQmlType>> compositeTypes;
 
     if (action == Builtins) {
         for (const QMetaObject *m : qAsConst(defaultReachable)) {
@@ -1268,8 +1270,16 @@ int main(int argc, char *argv[])
             }
         }
 
-        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, defaultTypes);
+        QSet<const QMetaObject *> candidates = collectReachableMetaObjects(&engine, uncreatableMetas, singletonMetas, compositeTypes, defaultTypes);
         candidates.subtract(defaultReachable);
+
+        for (QString iter: compositeTypes.keys()) {
+            if (defaultCompositeTypes.contains(iter)) {
+                QSet<QQmlType> compositeTypesByName = compositeTypes.value(iter);
+                compositeTypesByName.subtract(defaultCompositeTypes.value(iter));
+                compositeTypes[iter] = compositeTypesByName;
+            }
+        }
 
         // Also eliminate meta objects with the same classname.
         // This is required because extended objects seem not to share
@@ -1324,8 +1334,8 @@ int main(int argc, char *argv[])
         dumper.dump(QQmlEnginePrivate::get(&engine), meta, uncreatableMetas.contains(meta), singletonMetas.contains(meta));
     }
 
-    QMap<QString, QSet<QQmlType> >::const_iterator iter = qmlTypesByCompositeName.constBegin();
-    for (; iter != qmlTypesByCompositeName.constEnd(); ++iter)
+    QMap<QString, QSet<QQmlType> >::const_iterator iter = compositeTypes.constBegin();
+    for (; iter != compositeTypes.constEnd(); ++iter)
         dumper.dumpComposite(&engine, iter.value(), defaultReachableNames);
 
     // define QEasingCurve as an extension of QQmlEasingValueType, this way

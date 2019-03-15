@@ -132,6 +132,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \list
     \li \c PKM (since Qt 5.10)
     \li \c KTX (since Qt 5.11)
+    \li \c ASTC (since Qt 5.13)
     \endlist
 
     \note Semi-transparent original images require alpha pre-multiplication
@@ -139,7 +140,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     Quick. This can be done with the following ImageMagick command
     line:
     \badcode
-    convert MYORIGIMAGE \( +clone -alpha Extract \) -channel RGB -compose Multiply -composite MYPMIMAGE
+    convert foo.png \( +clone -alpha Extract \) -channel RGB -compose Multiply -composite foo_pm.png
     \endcode
 
     \section1 Automatic Detection of File Extension

@@ -361,6 +361,9 @@ private slots:
     void importLexicalVariables();
     void hugeObject();
     void templateStringTerminator();
+    void arrayAndException();
+    void numberToStringWithRadix();
+    void tailCallWithArguments();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8874,6 +8877,41 @@ void tst_qqmlecmascript::templateStringTerminator()
     const QJSValue value = engine.evaluate("let a = 123; let b = `x${a}\ny^`; b;");
     QVERIFY(!value.isError());
     QCOMPARE(value.toString(), QLatin1String("x123\ny^"));
+}
+
+void tst_qqmlecmascript::arrayAndException()
+{
+    QJSEngine engine;
+    const QJSValue value = engine.evaluate("[...[],[,,$]]");
+    // Should not crash
+    QVERIFY(value.isError());
+}
+
+void tst_qqmlecmascript::numberToStringWithRadix()
+{
+    QJSEngine engine;
+    {
+        const QJSValue value = engine.evaluate(".5.toString(5)");
+        QVERIFY(!value.isError());
+        QVERIFY(value.toString().startsWith("0.2222222222"));
+    }
+    {
+        const QJSValue value = engine.evaluate(".05.toString(5)");
+        QVERIFY(!value.isError());
+        QVERIFY(value.toString().startsWith("0.01111111111"));
+    }
+}
+
+void tst_qqmlecmascript::tailCallWithArguments()
+{
+    QJSEngine engine;
+    const QJSValue value = engine.evaluate(
+            "'use strict';\n"
+            "[[1, 2]].map(function (a) {\n"
+            "    return (function() { return Math.min.apply(this, arguments); })(a[0], a[1]);\n"
+            "})[0];");
+    QVERIFY(!value.isError());
+    QCOMPARE(value.toInt(), 1);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

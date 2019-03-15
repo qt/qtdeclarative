@@ -57,8 +57,9 @@
 
     \section1 GridView Example
 
-    The \e {GridView Example} adds drag and drop to a \l GridView, allowing you to reorder the
-    list. It also uses a \l DelegateModel to move a delegate item to the
+    The \e {GridView Example} adds drag and drop to a \l GridView, allowing you
+    to visually reorder the delegates without changing the underlying
+    \l ListModel. It uses a \l DelegateModel to move a delegate item to the
     position of another item it is dragged over.
 
     \snippet draganddrop/views/gridview.qml 0

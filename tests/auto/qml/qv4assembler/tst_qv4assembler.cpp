@@ -35,7 +35,7 @@
 #include <QtQml/qqmlapplicationengine.h>
 
 #ifdef Q_OS_WIN
-#include <Windows.h>
+#include <windows.h>
 #endif
 
 class tst_QV4Assembler : public QQmlDataTest

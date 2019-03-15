@@ -60,6 +60,7 @@ private slots:
     void hoverHandlerAndUnderlyingHoverHandler();
     void mouseAreaAndUnderlyingHoverHandler();
     void hoverHandlerAndUnderlyingMouseArea();
+    void movingItemWithHoverHandler();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -227,6 +228,42 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingMouseArea()
     QCOMPARE(sidebarHoveredSpy.count(), 4);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
+}
+
+void tst_HoverHandler::movingItemWithHoverHandler()
+{
+   if (isPlatformWayland())
+        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "lesHoverables.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem * paddle = window->rootObject()->findChild<QQuickItem *>("paddle");
+    QVERIFY(paddle);
+    QQuickHoverHandler *paddleHH = paddle->findChild<QQuickHoverHandler *>("paddleHH");
+    QVERIFY(paddleHH);
+
+    // Find the global coordinate of the paddle
+    const QPoint p(paddle->mapToScene(paddle->clipRect().center()).toPoint());
+    const QPoint paddlePos = window->mapToGlobal(p);
+
+    // Now hide the window, put the cursor where the paddle was and show it again
+    window->hide();
+    QTRY_COMPARE(window->isVisible(), false);
+    QCursor::setPos(paddlePos);
+    window->show();
+    QTest::qWaitForWindowExposed(window);
+
+    QTRY_COMPARE(paddleHH->isHovered(), true);
+
+    paddle->setX(100);
+    QTRY_COMPARE(paddleHH->isHovered(), false);
+
+    paddle->setX(p.x());
+    QTRY_COMPARE(paddleHH->isHovered(), true);
+
+    paddle->setX(540);
+    QTRY_COMPARE(paddleHH->isHovered(), false);
 }
 
 QTEST_MAIN(tst_HoverHandler)

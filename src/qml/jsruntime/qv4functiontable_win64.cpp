@@ -43,7 +43,7 @@
 
 #include <QtCore/qdebug.h>
 
-#include <Windows.h>
+#include <windows.h>
 
 QT_BEGIN_NAMESPACE
 

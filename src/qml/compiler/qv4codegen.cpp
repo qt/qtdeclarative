@@ -1216,6 +1216,7 @@ bool Codegen::visit(ArrayPattern *ast)
                     bytecodeGenerator->addInstruction(close);
                 };
                 ControlFlowLoop flow(this, &end, &in, cleanup);
+
                 in.link();
                 bytecodeGenerator->addLoopStart(in);
                 iterator.loadInAccumulator();

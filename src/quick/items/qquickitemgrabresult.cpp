@@ -226,10 +226,12 @@ bool QQuickItemGrabResult::event(QEvent *e)
     Q_D(QQuickItemGrabResult);
     if (e->type() == Event_Grab_Completed) {
         // JS callback
-        if (d->qmlEngine && d->callback.isCallable())
+        if (d->qmlEngine && d->callback.isCallable()) {
             d->callback.call(QJSValueList() << d->qmlEngine->newQObject(this));
-        else
+            deleteLater();
+        } else {
             Q_EMIT ready();
+        }
         return true;
     }
     return QObject::event(e);

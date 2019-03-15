@@ -121,6 +121,7 @@ bool QuickTestEvent::keyClickChar(const QString &character, int modifiers, int d
     return true;
 }
 
+#if QT_CONFIG(shortcut)
 // valueToKeySequence() is copied from qquickshortcut.cpp
 static QKeySequence valueToKeySequence(const QVariant &value)
 {
@@ -128,13 +129,16 @@ static QKeySequence valueToKeySequence(const QVariant &value)
         return QKeySequence(static_cast<QKeySequence::StandardKey>(value.toInt()));
     return QKeySequence::fromString(value.toString());
 }
+#endif
 
 bool QuickTestEvent::keySequence(const QVariant &keySequence)
 {
     QWindow *window = activeWindow();
     if (!window)
         return false;
+#if QT_CONFIG(shortcut)
     QTest::keySequence(window, valueToKeySequence(keySequence));
+#endif
     return true;
 }
 
