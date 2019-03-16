@@ -364,6 +364,7 @@ private slots:
     void arrayAndException();
     void numberToStringWithRadix();
     void tailCallWithArguments();
+    void deleteSparseInIteration();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -8912,6 +8913,27 @@ void tst_qqmlecmascript::tailCallWithArguments()
             "})[0];");
     QVERIFY(!value.isError());
     QCOMPARE(value.toInt(), 1);
+}
+
+void tst_qqmlecmascript::deleteSparseInIteration()
+{
+    QJSEngine engine;
+    const QJSValue value = engine.evaluate(
+            "(function() {\n"
+            "    var obj = { 1: null, 2: null, 4096: null };\n"
+            "    var iterated = [];\n"
+            "    for (var t in obj) {\n"
+            "        if (t == 2)\n"
+            "            delete obj[t];\n"
+            "        iterated.push(t);\n"
+            "    }\n"
+            "    return iterated;"
+            "})()");
+    QVERIFY(value.isArray());
+    QCOMPARE(value.property("length").toInt(), 3);
+    QCOMPARE(value.property("0").toInt(), 1);
+    QCOMPARE(value.property("1").toInt(), 2);
+    QCOMPARE(value.property("2").toInt(), 4096);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

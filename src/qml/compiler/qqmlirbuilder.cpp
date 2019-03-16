@@ -566,7 +566,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiQualifiedId *id)
 
 void IRBuilder::accept(QQmlJS::AST::Node *node)
 {
-    QQmlJS::AST::Node::acceptChild(node, this);
+    QQmlJS::AST::Node::accept(node, this);
 }
 
 bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)

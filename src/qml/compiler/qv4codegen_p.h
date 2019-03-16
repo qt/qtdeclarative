@@ -192,8 +192,24 @@ public:
 
         bool isLValue() const { return !isReadonly && type > Accumulator; }
 
-        Reference(Codegen *cg, Type type = Invalid) : type(type), constant(0), codegen(cg) {}
-        Reference(): constant(0) {}
+        Reference(Codegen *cg, Type t = Invalid) : Reference()
+        {
+            type = t;
+            codegen = cg;
+        }
+
+        Reference() :
+            constant(0),
+            isArgOrEval(false),
+            isReadonly(false),
+            isReferenceToConst(false),
+            requiresTDZCheck(false),
+            subscriptRequiresTDZCheck(false),
+            stackSlotIsLocalOrArgument(false),
+            isVolatile(false),
+            global(false)
+        {}
+
         Reference(const Reference &) = default;
         Reference(Reference &&) = default;
         Reference &operator =(const Reference &) = default;
@@ -395,15 +411,16 @@ public:
             Moth::StackSlot property; // super property
         };
         QString name;
-        mutable bool isArgOrEval = false;
-        bool isReadonly = false;
-        bool isReferenceToConst = false;
-        bool requiresTDZCheck = false;
-        bool subscriptRequiresTDZCheck = false;
-        bool stackSlotIsLocalOrArgument = false;
-        bool isVolatile = false;
-        bool global = false;
         Codegen *codegen = nullptr;
+
+        quint32 isArgOrEval:1;
+        quint32 isReadonly:1;
+        quint32 isReferenceToConst:1;
+        quint32 requiresTDZCheck:1;
+        quint32 subscriptRequiresTDZCheck:1;
+        quint32 stackSlotIsLocalOrArgument:1;
+        quint32 isVolatile:1;
+        quint32 global:1;
 
     private:
         void storeAccumulator() const;
@@ -499,6 +516,10 @@ protected:
         void setResult(const Reference &result) {
             _result = result;
         }
+
+        void setResult(Reference &&result) {
+            _result = std::move(result);
+        }
     };
 
     void enterContext(AST::Node *node);
@@ -544,9 +565,22 @@ protected:
     void condition(AST::ExpressionNode *ast, const BytecodeGenerator::Label *iftrue,
                    const BytecodeGenerator::Label *iffalse,
                    bool trueBlockFollowsCondition);
-    Reference expression(AST::ExpressionNode *ast);
 
-    void accept(AST::Node *node);
+    inline Reference expression(AST::ExpressionNode *ast)
+    {
+        if (!ast || hasError)
+            return Reference();
+
+        pushExpr();
+        ast->accept(this);
+        return popResult();
+    }
+
+    inline void accept(AST::Node *node)
+    {
+        if (!hasError && node)
+            node->accept(this);
+    }
 
     void program(AST::Program *ast);
     void statementList(AST::StatementList *ast);
@@ -670,6 +704,11 @@ protected:
     bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r, const AST::SourceLocation &loc);
     virtual void throwSyntaxError(const AST::SourceLocation &loc, const QString &detail);
     virtual void throwReferenceError(const AST::SourceLocation &loc, const QString &detail);
+    void throwRecursionDepthError() override
+    {
+        throwSyntaxError(AST::SourceLocation(),
+                         QStringLiteral("Maximum statement or expression depth exceeded"));
+    }
 
 public:
     QList<DiagnosticMessage> errors() const;
@@ -684,6 +723,7 @@ public:
     void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
 
     Arguments pushTemplateArgs(AST::TemplateLiteral *args);
+    bool handleTaggedTemplate(Reference base, AST::TaggedTemplate *ast);
     void createTemplateObject(AST::TemplateLiteral *t);
 
     void setUseFastLookups(bool b) { useFastLookups = b; }
@@ -714,13 +754,40 @@ public:
         m_globalNames = globalNames;
     }
 
+    static const char *s_globalNames[];
 
 protected:
     friend class ScanFunctions;
     friend struct ControlFlow;
     friend struct ControlFlowCatch;
     friend struct ControlFlowFinally;
-    Result _expr;
+
+    inline void setExprResult(const Reference &result) { m_expressions.back().setResult(result); }
+    inline void setExprResult(Reference &&result) { m_expressions.back().setResult(std::move(result)); }
+    inline Reference exprResult() const { return m_expressions.back().result(); }
+
+    inline bool exprAccept(Format f) { return m_expressions.back().accept(f); }
+
+    inline const Result &currentExpr() const { return m_expressions.back(); }
+
+    inline void pushExpr(Result &&expr) { m_expressions.push_back(std::move(expr)); }
+    inline void pushExpr(const Result &expr) { m_expressions.push_back(expr); }
+    inline void pushExpr() { m_expressions.emplace_back(); }
+
+    inline Result popExpr()
+    {
+        const Result result = m_expressions.back();
+        m_expressions.pop_back();
+        return result;
+    }
+
+    inline Reference popResult() {
+        const Reference result = m_expressions.back().result();
+        m_expressions.pop_back();
+        return result;
+    }
+
+    std::vector<Result> m_expressions;
     VolatileMemoryLocations _volatileMemoryLocations;
     Module *_module;
     int _returnAddress;
@@ -769,33 +836,8 @@ protected:
         bool _onoff;
     };
 
-    class RecursionDepthCheck {
-    public:
-        RecursionDepthCheck(Codegen *cg, const AST::SourceLocation &loc)
-            : _cg(cg)
-        {
-#ifdef QT_NO_DEBUG
-            const int depthLimit = 4000; // limit to ~1000 deep
-#else
-            const int depthLimit = 1000; // limit to ~250 deep
-#endif // QT_NO_DEBUG
-
-            ++_cg->_recursionDepth;
-            if (_cg->_recursionDepth > depthLimit)
-                _cg->throwSyntaxError(loc, QStringLiteral("Maximum statement or expression depth exceeded"));
-        }
-
-        ~RecursionDepthCheck()
-        { --_cg->_recursionDepth; }
-
-    private:
-        Codegen *_cg;
-    };
-    int _recursionDepth = 0;
-    friend class RecursionDepthCheck;
-
 private:
-    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast) const;
+    VolatileMemoryLocations scanVolatileMemoryLocations(AST::Node *ast);
     void handleConstruct(const Reference &base, AST::ArgumentList *args);
 };
 

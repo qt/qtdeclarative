@@ -55,17 +55,8 @@ QSet<QString> illegalNames;
 
 void setupIllegalNames()
 {
-    // #### this in incomplete
-    illegalNames.insert(QStringLiteral("Math"));
-    illegalNames.insert(QStringLiteral("Array"));
-    illegalNames.insert(QStringLiteral("String"));
-    illegalNames.insert(QStringLiteral("Function"));
-    illegalNames.insert(QStringLiteral("Boolean"));
-    illegalNames.insert(QStringLiteral("Number"));
-    illegalNames.insert(QStringLiteral("Date"));
-    illegalNames.insert(QStringLiteral("RegExp"));
-    illegalNames.insert(QStringLiteral("Error"));
-    illegalNames.insert(QStringLiteral("Object"));
+    for (const char **g = QV4::Compiler::Codegen::s_globalNames; *g != nullptr; ++g)
+        illegalNames.insert(QString::fromLatin1(*g));
 }
 
 struct Error

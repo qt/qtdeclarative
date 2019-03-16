@@ -69,37 +69,7 @@ void Lookup::resolveProtoGetter(PropertyKey name, const Heap::Object *proto)
 
 ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *object)
 {
-    Heap::Object *obj = object->d();
-    PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-    if (name.isArrayIndex()) {
-        indexedLookup.index = name.asArrayIndex();
-        getter = getterIndexed;
-        return getter(this, engine, *object);
-    }
-
-    auto index = obj->internalClass->findValueOrGetter(name);
-    if (index.isValid()) {
-        PropertyAttributes attrs = index.attrs;
-        uint nInline = obj->vtable()->nInlineProperties;
-        if (attrs.isData()) {
-            if (index.index < obj->vtable()->nInlineProperties) {
-                index.index += obj->vtable()->inlinePropertyOffset;
-                getter = getter0Inline;
-            } else {
-                index.index -= nInline;
-                getter = getter0MemberData;
-            }
-        } else {
-            getter = getterAccessor;
-        }
-        objectLookup.ic = obj->internalClass;
-        objectLookup.offset = index.index;
-        return getter(this, engine, *object);
-    }
-
-    protoLookup.protoId = obj->internalClass->protoId;
-    resolveProtoGetter(name, obj->prototype());
-    return getter(this, engine, *object);
+    return object->resolveLookupGetter(engine, this);
 }
 
 ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object)
@@ -409,7 +379,7 @@ ReturnedValue Lookup::getterIndexed(Lookup *l, ExecutionEngine *engine, const Va
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.type() == l->primitiveLookup.type) {
+    if (object.type() == l->primitiveLookup.type && !object.isObject()) {
         Heap::Object *o = l->primitiveLookup.proto;
         if (l->primitiveLookup.protoId == o->internalClass->protoId)
             return l->primitiveLookup.data->asReturnedValue();
@@ -420,7 +390,7 @@ ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, c
 
 ReturnedValue Lookup::primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
-    if (object.type() == l->primitiveLookup.type) {
+    if (object.type() == l->primitiveLookup.type && !object.isObject()) {
         Heap::Object *o = l->primitiveLookup.proto;
         if (l->primitiveLookup.protoId == o->internalClass->protoId) {
             const Value *getter = l->primitiveLookup.data;
@@ -473,49 +443,7 @@ ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engi
 
 bool Lookup::resolveSetter(ExecutionEngine *engine, Object *object, const Value &value)
 {
-    Scope scope(engine);
-    ScopedString name(scope, scope.engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
-
-    Heap::InternalClass *c = object->internalClass();
-    PropertyKey key = name->toPropertyKey();
-    auto idx = c->findValueOrSetter(key);
-    if (idx.isValid()) {
-        if (object->isArrayObject() && idx.index == Heap::ArrayObject::LengthPropertyIndex) {
-            Q_ASSERT(!idx.attrs.isAccessor());
-            setter = arrayLengthSetter;
-            return setter(this, engine, *object, value);
-        } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
-            objectLookup.ic = object->internalClass();
-            objectLookup.offset = idx.index;
-            setter = idx.index < object->d()->vtable()->nInlineProperties ? Lookup::setter0Inline : Lookup::setter0;
-            return setter(this, engine, *object, value);
-        } else {
-            // ### handle setter
-            setter = setterFallback;
-        }
-        return setter(this, engine, *object, value);
-    }
-
-    insertionLookup.protoId = c->protoId;
-    if (!object->put(key, value)) {
-        setter = Lookup::setterFallback;
-        return false;
-    }
-
-    if (object->internalClass() == c) {
-        // ### setter in the prototype, should handle this
-        setter = setterFallback;
-        return true;
-    }
-    idx = object->internalClass()->findValueOrSetter(key);
-    if (!idx.isValid() || idx.attrs.isAccessor()) { // ### can this even happen?
-        setter = setterFallback;
-        return false;
-    }
-    insertionLookup.newClass = object->internalClass();
-    insertionLookup.offset = idx.index;
-    setter = setterInsert;
-    return true;
+    return object->resolveLookupSetter(engine, this, value);
 }
 
 bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)

@@ -435,6 +435,12 @@ public:
     bool visit(QQmlJS::AST::UiScriptBinding *ast) override;
     bool visit(QQmlJS::AST::UiSourceElement *ast) override;
 
+    void throwRecursionDepthError() override
+    {
+        recordError(AST::SourceLocation(),
+                    QStringLiteral("Maximum statement or expression depth exceeded"));
+    }
+
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects

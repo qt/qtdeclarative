@@ -57,7 +57,8 @@ using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
 
 ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType)
-    : _cg(cg)
+    : QQmlJS::AST::Visitor(cg->recursionDepth())
+    , _cg(cg)
     , _sourceCode(sourceCode)
     , _context(nullptr)
     , _allowFuncDecls(true)
@@ -94,25 +95,6 @@ void ScanFunctions::leaveEnvironment()
 {
     _contextStack.pop();
     _context = _contextStack.isEmpty() ? nullptr : _contextStack.top();
-}
-
-bool ScanFunctions::preVisit(Node *ast)
-{
-    if (_cg->hasError)
-        return false;
-    ++_recursionDepth;
-
-    if (_recursionDepth > 1000) {
-        _cg->throwSyntaxError(ast->lastSourceLocation(), QStringLiteral("Maximum statement or expression depth exceeded"));
-        return false;
-    }
-
-    return true;
-}
-
-void ScanFunctions::postVisit(Node *)
-{
-    --_recursionDepth;
 }
 
 void ScanFunctions::checkDirectivePrologue(StatementList *ast)
@@ -892,4 +874,9 @@ void ScanFunctions::calcEscapingVariables()
             }
         }
     }
+}
+
+void ScanFunctions::throwRecursionDepthError()
+{
+    _cg->throwRecursionDepthError();
 }
