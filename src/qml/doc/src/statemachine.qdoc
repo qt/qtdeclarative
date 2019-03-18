@@ -27,7 +27,7 @@
 
 /*!
   \qmlmodule QtQml.StateMachine 1.\QtMinorVersion
-  \title Declarative State Machine QML Types
+  \title Qt QML State Machine QML Types
   \brief Provides QML types to create and execute state graphs.
 
   The following is a list of QML types provided by the module:
@@ -322,7 +322,7 @@
   \section1 Related Information
 
   \list
-   \li \l{Declarative State Machine QML Types}
+   \li \l{Qt QML State Machine QML Types}
    \li \l{The State Machine Framework}
   \endlist
 */
