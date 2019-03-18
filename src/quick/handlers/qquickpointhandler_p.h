@@ -55,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickPointHandler : public QQuickSinglePointHandler
+class Q_QUICK_PRIVATE_EXPORT QQuickPointHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
