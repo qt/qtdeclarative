@@ -33,6 +33,7 @@
 
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qjsvalue_p.h>
 
 #include "../../shared/util.h"
 
@@ -46,6 +47,7 @@ private slots:
     void gcStats();
     void multiWrappedQObjects();
     void accessParentOnDestruction();
+    void clearICParent();
 };
 
 void tst_qv4mm::gcStats()
@@ -106,6 +108,30 @@ void tst_qv4mm::accessParentOnDestruction()
     QCOMPARE(obj->property("iterations").toInt(), 100);
     QCOMPARE(obj->property("creations").toInt(), 100);
     QCOMPARE(obj->property("destructions").toInt(), 100);
+}
+
+void tst_qv4mm::clearICParent()
+{
+    QJSEngine engine;
+    QJSValue value = engine.evaluate(
+        "(function() {\n"
+        "   var test = Object.create(null);\n"
+        "   for (var i = 0; i < 100; i++)\n"
+        "      test[(\"key_\"+i)] = true;\n"
+        "   for (var i = 0; i < 100; i++)\n"
+        "      delete test[\"key_\" + i];\n"
+        "   return test;\n"
+        "})();"
+    );
+    engine.collectGarbage();
+    QV4::Value *v4Value = QJSValuePrivate::getValue(&value);
+    QVERIFY(v4Value);
+    QV4::Heap::Object *v4Object = v4Value->toObject(engine.handle());
+    QVERIFY(v4Object);
+
+    // It should garbage collect the parents of the internalClass,
+    // as those aren't used anywhere else.
+    QCOMPARE(v4Object->internalClass->parent, nullptr);
 }
 
 QTEST_MAIN(tst_qv4mm)

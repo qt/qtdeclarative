@@ -257,11 +257,15 @@ void InternalClass::init(Heap::InternalClass *other)
 
 void InternalClass::destroy()
 {
-#ifndef QT_NO_DEBUG
     for (const auto &t : transitions) {
-        Q_ASSERT(!t.lookup || !t.lookup->isMarked());
-    }
+        if (t.lookup) {
+#ifndef QT_NO_DEBUG
+            Q_ASSERT(t.lookup->parent == this);
 #endif
+            t.lookup->parent = nullptr;
+        }
+    }
+
     if (parent && parent->engine && parent->isMarked())
         parent->removeChildEntry(this);
 
@@ -659,8 +663,6 @@ void InternalClass::markObjects(Heap::Base *b, MarkStack *stack)
     Heap::InternalClass *ic = static_cast<Heap::InternalClass *>(b);
     if (ic->prototype)
         ic->prototype->mark(stack);
-    if (ic->parent)
-        ic->parent->mark(stack);
 
     ic->nameMap.mark(stack);
 }
