@@ -44,6 +44,7 @@
 #include "qv4object_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4value_p.h"
+#include "qv4mm_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -204,7 +205,62 @@ void SharedInternalClassDataPrivate<PropertyKey>::mark(MarkStack *s)
         data->mark(s);
 }
 
+SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPrivate(
+        const SharedInternalClassDataPrivate<PropertyAttributes> &other, uint pos,
+        PropertyAttributes value)
+    : refcount(1),
+      m_alloc(pos + 8),
+      m_size(pos + 1),
+      m_engine(other.m_engine)
+{
+    m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
+    data = new PropertyAttributes[m_alloc];
+    if (other.data)
+        memcpy(data, other.data, (m_size - 1) * sizeof(PropertyAttributes));
+    data[pos] = value;
+}
 
+SharedInternalClassDataPrivate<PropertyAttributes>::SharedInternalClassDataPrivate(
+        const SharedInternalClassDataPrivate<PropertyAttributes> &other)
+    : refcount(1),
+      m_alloc(other.m_alloc),
+      m_size(other.m_size),
+      m_engine(other.m_engine)
+{
+    if (m_alloc) {
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(m_alloc * sizeof(PropertyAttributes));
+        data = new PropertyAttributes[m_alloc];
+        memcpy(data, other.data, m_size*sizeof(PropertyAttributes));
+    } else {
+        data = nullptr;
+    }
+}
+
+SharedInternalClassDataPrivate<PropertyAttributes>::~SharedInternalClassDataPrivate()
+{
+    m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
+            -qptrdiff(m_alloc * sizeof(PropertyAttributes)));
+    delete [] data;
+}
+
+void SharedInternalClassDataPrivate<PropertyAttributes>::grow() {
+    if (!m_alloc) {
+        m_alloc = 4;
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
+                2 * m_alloc * sizeof(PropertyAttributes));
+    } else {
+        m_engine->memoryManager->changeUnmanagedHeapSizeUsage(
+                m_alloc * sizeof(PropertyAttributes));
+    }
+
+    auto *n = new PropertyAttributes[m_alloc * 2];
+    if (data) {
+        memcpy(n, data, m_alloc*sizeof(PropertyAttributes));
+        delete [] data;
+    }
+    data = n;
+    m_alloc *= 2;
+}
 
 namespace Heap {
 

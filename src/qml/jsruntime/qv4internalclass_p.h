@@ -149,55 +149,31 @@ inline PropertyHash::Entry *PropertyHash::lookup(PropertyKey identifier) const
     }
 }
 
-template<typename T>
-struct SharedInternalClassDataPrivate {
-    SharedInternalClassDataPrivate(ExecutionEngine *)
+template<class T>
+struct SharedInternalClassDataPrivate {};
+
+template<>
+struct SharedInternalClassDataPrivate<PropertyAttributes> {
+    SharedInternalClassDataPrivate(ExecutionEngine *engine)
         : refcount(1),
           m_alloc(0),
           m_size(0),
-          data(nullptr)
+          data(nullptr),
+          m_engine(engine)
     { }
-    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other)
-        : refcount(1),
-          m_alloc(other.m_alloc),
-          m_size(other.m_size)
-    {
-        if (m_alloc) {
-            data = new T[m_alloc];
-            memcpy(data, other.data, m_size*sizeof(T));
-        }
-    }
-    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate &other, uint pos, T value)
-        : refcount(1),
-          m_alloc(pos + 8),
-          m_size(pos + 1)
-    {
-        data = new T[m_alloc];
-        if (other.data)
-            memcpy(data, other.data, (m_size - 1)*sizeof(T));
-        data[pos] = value;
-    }
-    ~SharedInternalClassDataPrivate() { delete [] data; }
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyAttributes> &other);
+    SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyAttributes> &other,
+                                   uint pos, PropertyAttributes value);
+    ~SharedInternalClassDataPrivate();
 
-
-    void grow() {
-        if (!m_alloc)
-            m_alloc = 4;
-        T *n = new T[m_alloc * 2];
-        if (data) {
-            memcpy(n, data, m_alloc*sizeof(T));
-            delete [] data;
-        }
-        data = n;
-        m_alloc *= 2;
-    }
+    void grow();
 
     uint alloc() const { return m_alloc; }
     uint size() const { return m_size; }
     void setSize(uint s) { m_size = s; }
 
-    T at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
-    void set(uint i, T t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
+    PropertyAttributes at(uint i) { Q_ASSERT(data && i < m_alloc); return data[i]; }
+    void set(uint i, PropertyAttributes t) { Q_ASSERT(data && i < m_alloc); data[i] = t; }
 
     void mark(MarkStack *) {}
 
@@ -205,7 +181,8 @@ struct SharedInternalClassDataPrivate {
 private:
     uint m_alloc;
     uint m_size;
-    T *data;
+    PropertyAttributes *data;
+    ExecutionEngine *m_engine;
 };
 
 template<>
