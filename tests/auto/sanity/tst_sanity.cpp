@@ -137,6 +137,12 @@ protected:
         m_errors += QString("%1:%2 : %3").arg(m_fileName).arg(node->firstSourceLocation().startLine).arg(error);
     }
 
+    void throwRecursionDepthError()
+    {
+        m_errors += QString::fromLatin1("%1: Maximum statement or expression depth exceeded")
+                            .arg(m_fileName);
+    }
+
 private:
     QString m_fileName;
     QStringList m_errors;
