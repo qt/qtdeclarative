@@ -299,6 +299,7 @@ private slots:
     void retrieveQmlTypeId();
 
     void polymorphicFunctionLookup();
+    void anchorsToParentInPropertyChanges();
 
 private:
     QQmlEngine engine;
@@ -5067,6 +5068,16 @@ void tst_qqmllanguage::polymorphicFunctionLookup()
     QVERIFY(!o.isNull());
 
     QVERIFY(o->property("ok").toBool());
+}
+
+void tst_qqmllanguage::anchorsToParentInPropertyChanges()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("anchorsToParentInPropertyChagnes.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("edgeWidth").toInt(), 200);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
